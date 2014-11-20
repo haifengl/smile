@@ -1,0 +1,295 @@
+/******************************************************************************
+ *                   Confidential Proprietary                                 *
+ *         (c) Copyright Haifeng Li 2011, All Rights Reserved                 *
+ ******************************************************************************/
+package smile.projection;
+
+import smile.math.Math;
+import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.SingularValueDecomposition;
+
+/**
+ * Principal component analysis. PCA is an orthogonal
+ * linear transformation that transforms a number of possibly correlated
+ * variables into a smaller number of uncorrelated variables called principal
+ * components. The first principal component accounts for as much of the
+ * variability in the data as possible, and each succeeding component accounts
+ * for as much of the remaining variability as possible. PCA is theoretically
+ * the optimum transform for given data in least square terms.
+ * PCA can be thought of as revealing the internal structure of the data in
+ * a way which best explains the variance in the data. If a multivariate
+ * dataset is visualized as a set of coordinates in a high-dimensional data
+ * space, PCA supplies the user with a lower-dimensional picture when viewed
+ * from its (in some sense) most informative viewpoint.
+ * <p>
+ * PCA is mostly used as a tool in exploratory data analysis and for making
+ * predictive models. PCA involves the calculation of the eigenvalue
+ * decomposition of a data covariance matrix or singular value decomposition
+ * of a data matrix, usually after mean centering the data for each attribute.
+ * The results of a PCA are usually discussed in terms of component scores and
+ * loadings.
+ * <p>
+ * As a linear technique, PCA is built for several purposes: first, it enables us to
+ * decorrelate the original variables; second, to carry out data compression,
+ * where we pay decreasing attention to the numerical accuracy by which we
+ * encode the sequence of principal components; third, to reconstruct the
+ * original input data using a reduced number of variables according to a
+ * least-squares criterion; and fourth, to identify potential clusters in the data.
+ * <p>
+ * In certain applications, PCA can be misleading. PCA is heavily influenced
+ * when there are outliers in the data. In other situations, the linearity
+ * of PCA may be an obstacle to successful data reduction and compression.
+ *
+ * @see KPCA
+ * @see PPCA
+ * @see GHA
+ * 
+ * @author Haifeng Li
+ */
+public class PCA implements Projection<double[]> {
+
+    /**
+     * The dimension of feature space.
+     */
+    private int p;
+    /**
+     * The dimension of input space.
+     */
+    private int n;
+    /**
+     * The sample mean.
+     */
+    private double[] mu;
+    /**
+     * The projected sample mean.
+     */
+    private double[] pmu;
+    /**
+     * The matrix of variable loadings, whose columns contain the eigenvectors.
+     */
+    private double[][] eigvectors;
+    /**
+     * Eigenvalues of principal components.
+     */
+    private double[] eigvalues;
+    /**
+     * The proportion of variance contained in each principal component.
+     */
+    private double[] proportion;
+    /**
+     * The cumulative proportion of variance contained in principal components.
+     */
+    private double[] cumulativeProportion;
+    /**
+     * Projection matrix.
+     */
+    private double[][] projection;
+
+    /**
+     * Constructor. Learn principal component analysis with covariance matrix.
+     */
+    public PCA(double[][] data) {
+        this(data, false);
+    }
+
+    /**
+     * Constructor. Learn principal component analysis.
+     * @param data  training data of which each row is a sample. If the sample size
+     * is larger than the data dimension and cor = false, SVD is employed for
+     * efficiency. Otherwise, eigen decomposition on covariance or correlation
+     * matrix is performed.
+     * @param cor true if use correlation matrix instead of covariance matrix if ture.
+     */
+    public PCA(double[][] data, boolean cor) {
+        int m = data.length;
+        n = data[0].length;
+
+        mu = Math.colMean(data);
+        double[][] x = Math.clone(data);
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                x[i][j] = data[i][j] - mu[j];
+            }
+        }
+
+        if (m > n && !cor) {
+            SingularValueDecomposition svd = SingularValueDecomposition.decompose(x);
+            eigvalues = svd.getSingularValues();
+            for (int i = 0; i < eigvalues.length; i++) {
+                eigvalues[i] *= eigvalues[i];
+            }
+
+            eigvectors = svd.getV();
+
+        } else {
+
+            double[][] cov = new double[n][n];
+            for (int k = 0; k < m; k++) {
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j <= i; j++) {
+                        cov[i][j] += x[k][i] * x[k][j];
+                    }
+                }
+            }
+
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j <= i; j++) {
+                    cov[i][j] /= m; // divide m instead of m-1 for S-PLUS compatibilit
+                    cov[j][i] = cov[i][j];
+                }
+            }
+
+            double[] sd = null;
+            if (cor) {
+                sd = new double[n];
+                for (int i = 0; i < n; i++) {
+                    sd[i] = Math.sqrt(cov[i][i]);
+                }
+
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j <= i; j++) {
+                        cov[i][j] /= sd[i] * sd[j];
+                        cov[j][i] = cov[i][j];
+                    }
+                }
+            }
+
+            EigenValueDecomposition eigen = EigenValueDecomposition.decompose(cov, true);
+
+            double[][] loadings = eigen.getEigenVectors();
+            if (cor) {
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j < n; j++) {
+                        loadings[i][j] /= sd[i];
+                    }
+                }
+            }
+
+            eigvalues = eigen.getEigenValues();
+            eigvectors = loadings;
+        }
+
+        proportion = eigvalues.clone();
+        Math.unitize1(proportion);
+
+        cumulativeProportion = new double[eigvalues.length];
+        cumulativeProportion[0] = proportion[0];
+        for (int i = 1; i < eigvalues.length; i++) {
+            cumulativeProportion[i] = cumulativeProportion[i - 1] + proportion[i];
+        }
+
+        setProjection(0.95);
+    }
+
+    /**
+     * Returns the center of data.
+     */
+    public double[] getCenter() {
+        return mu;
+    }
+
+    /**
+     * Returns the variable loading matrix, ordered from largest to smallest
+     * by corresponding eigenvalues. The matrix columns contain the eigenvectors.
+     */
+    public double[][] getLoadings() {
+        return eigvectors;
+    }
+
+    /**
+     * Returns the principal component variances, ordered from largest to smallest,
+     * which are the eigenvalues of the covariance or correlation matrix of learning data.
+     */
+    public double[] getVariance() {
+        return eigvalues;
+    }
+
+    /**
+     * Returns the proportion of variance contained in each principal component,
+     * ordered from largest to smallest.
+     */
+    public double[] getVarianceProportion() {
+        return proportion;
+    }
+
+    /**
+     * Returns the cumulative proportion of variance contained in principal components,
+     * ordered from largest to smallest.
+     */
+    public double[] getCumulativeVarianceProportion() {
+        return cumulativeProportion;
+    }
+
+    /**
+     * Returns the projection matrix W. The dimension reduced data can be obtained
+     * by y = W' * x.
+     */
+    public double[][] getProjection() {
+        return projection;
+    }
+
+    /**
+     * Set the projection matrix with given number of principal components.
+     * @param p choose top p principal components used for projection.
+     */
+    public void setProjection(int p) {
+        if (p < 1 || p > n) {
+            throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
+        }
+
+        this.p = p;
+        projection = new double[p][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < p; j++) {
+                projection[j][i] = eigvectors[i][j];
+            }
+        }
+
+        pmu = new double[p];
+        Math.ax(projection, mu, pmu);
+    }
+
+    /**
+     * Set the projection matrix with top principal components that contain
+     * (more than) the given percentage of variance.
+     * @param p the required percentage of variance.
+     */
+    public void setProjection(double p) {
+        if (p <= 0 || p > 1) {
+            throw new IllegalArgumentException("Invalid percentage of variance: " + p);
+        }
+
+        for (int k = 0; k < n; k++) {
+            if (cumulativeProportion[k] >= p) {
+                setProjection(k + 1);
+                break;
+            }
+        }
+    }
+
+    @Override
+    public double[] project(double[] x) {
+        if (x.length != n) {
+            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, n));
+        }
+
+        double[] y = new double[p];
+        Math.ax(projection, x, y);
+        Math.minus(y, pmu);
+        return y;
+    }
+
+    @Override
+    public double[][] project(double[][] x) {
+        if (x[0].length != mu.length) {
+            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x[0].length, n));
+        }
+
+        double[][] y = new double[x.length][p];
+        for (int i = 0; i < x.length; i++) {
+            Math.ax(projection, x[i], y[i]);
+            Math.minus(y[i], pmu);
+        }
+        return y;
+    }
+}
