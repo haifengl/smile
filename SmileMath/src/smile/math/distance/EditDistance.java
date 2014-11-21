@@ -13,7 +13,7 @@ import smile.math.Math;
  * strings is given by the minimum number of operations needed to transform one
  * string into the other, where an operation is an insertion, deletion, or
  * substitution of a single character. A generalization of the Levenshtein
- * distance (Damerau–Levenshtein distance) allows the transposition of two
+ * distance (Damerau-Levenshtein distance) allows the transposition of two
  * characters as an operation.
  * <p>
  * Given two strings x and y of length m and n (suppose n &ge; m), this
@@ -88,7 +88,7 @@ public class EditDistance implements Metric<String> {
     }
 
     /**
-     * Constructor. Damerau–Levenshtein distance.
+     * Constructor. Damerau-Levenshtein distance.
      * @param maxStringLength the maximum length of strings that will be
      * feed to this algorithm.
      * @param damerau if true, calculate Damerau-Levenshtein distance instead

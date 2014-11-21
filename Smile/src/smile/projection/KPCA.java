@@ -29,7 +29,7 @@ import smile.math.matrix.EigenValueDecomposition;
  *
  * <h2>References</h2>
  * <ol>
- * <li>Bernhard Schölkopf, Alexander Smola, and Klaus-Robert Müller. Nonlinear Component Analysis as a Kernel Eigenvalue Problem. Neural Computation, 1998.</li>
+ * <li>Bernhard Scholkopf, Alexander Smola, and Klaus-Robert Muller. Nonlinear Component Analysis as a Kernel Eigenvalue Problem. Neural Computation, 1998.</li>
  * </ol>
  *
  * @see smile.math.kernel.MercerKernel

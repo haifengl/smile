@@ -60,7 +60,7 @@ import smile.stat.distribution.Distribution;
  * 
  * <h2>References</h2>
  * <ol>
- * <li> Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schütze. Introduction to Information Retrieval, Chapter 13, 2009.</li>
+ * <li> Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze. Introduction to Information Retrieval, Chapter 13, 2009.</li>
  * </ol>
  * 
  * @author Haifeng Li

@@ -23,7 +23,7 @@ import smile.math.special.Erf;
  * then their linear combination will also be normally distributed.
  * The converse is also true: if X<sub>1</sub> and X<sub>2</sub> are independent and their sum X<sub>1</sub> + X<sub>2</sub>
  * is distributed normally, then both X<sub>1</sub> and X<sub>2</sub> must also be normal, which is
- * known as the Cramér’s theorem. Of all probability distributions over the
+ * known as the Cramer's theorem. Of all probability distributions over the
  * reals with mean &mu; and variance &sigma;<sup>2</sup>, the normal
  * distribution N(&mu;, &sigma;<sup>2</sup>) is the one with the maximum entropy.
  * <p>
@@ -45,7 +45,7 @@ import smile.math.special.Erf;
  * <li> The binomial distribution B(n, p) is approximately normal N(np, np(1-p)) for large n and for p not too close to zero or one.
  * <li> The Poisson(&lambda;) distribution is approximately normal N(&lambda;, &lambda;) for large values of &lambda;.
  * <li> The chi-squared distribution &Chi;<sup>2</sup>(k) is approximately normal N(k, 2k) for large k.
- * <li> The Student’s t-distribution t(&nu;) is approximately normal N(0, 1) when &nu; is large.
+ * <li> The Student's t-distribution t(&nu;) is approximately normal N(0, 1) when &nu; is large.
  * </ul>
  * 
  * @author Haifeng Li

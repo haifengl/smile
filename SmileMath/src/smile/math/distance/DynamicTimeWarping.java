@@ -8,7 +8,7 @@ package smile.math.distance;
 /**
  * Dynamic time warping is an algorithm for measuring similarity between two
  * sequences which may vary in time or speed. DTW has been applied to video,
- * audio, and graphics — indeed, any data which can be turned into a linear
+ * audio, and graphics - indeed, any data which can be turned into a linear
  * representation can be analyzed with DTW. A well known application has been
  * automatic speech recognition, to cope with different speaking speeds.
  * <p>

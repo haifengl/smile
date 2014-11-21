@@ -6,7 +6,7 @@
 /**
  * Multidimensional scaling. MDS is a set of related statistical techniques
  * often used in information visualization for exploring similarities or
- * dissimilarities in data. An MDS algorithm starts with a matrix of item–item
+ * dissimilarities in data. An MDS algorithm starts with a matrix of item-item
  * similarities, then assigns a location to each item in N-dimensional space.
  * For sufficiently small N, the resulting locations may be displayed in a
  * graph or 3D visualization.

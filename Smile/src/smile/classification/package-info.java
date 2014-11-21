@@ -108,7 +108,7 @@
  * on model parameters.</dd>
  * <dt>Bias-variance tradeoff</dt>
  * <dd>Mean squared error (MSE) can be broken down into two components:
- * variance and squared bias, known as the bias–variance decomposition.
+ * variance and squared bias, known as the bias-variance decomposition.
  * Thus in order to minimize the MSE, we need to minimize both the bias and
  * the variance. However, this is not trivial. Therefore, there is a tradeoff
  * between bias and variance.</dd>

@@ -124,7 +124,7 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
      * 
      * <h2>References</h2>
      * <ol>
-     * <li> D. Arthur and S. Vassilvitskii. "K-means++: the advantages of careful seeding". ACM-SIAM symposium on Discrete algorithms, 1027–1035, 2007.</li>
+     * <li> D. Arthur and S. Vassilvitskii. "K-means++: the advantages of careful seeding". ACM-SIAM symposium on Discrete algorithms, 1027-1035, 2007.</li>
      * <li> Anna D. Peterson, Arka P. Ghosh and Ranjan Maitra. A systematic evaluation of different methods for initializing the K-means clustering algorithm. 2010.</li>
      * </ol>
      * 
@@ -231,7 +231,7 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
      * 
      * <h2>References</h2>
      * <ol>
-     * <li> D. Arthur and S. Vassilvitskii. "K-means++: the advantages of careful seeding". ACM-SIAM symposium on Discrete algorithms, 1027–1035, 2007.</li>
+     * <li> D. Arthur and S. Vassilvitskii. "K-means++: the advantages of careful seeding". ACM-SIAM symposium on Discrete algorithms, 1027-1035, 2007.</li>
      * <li> Anna D. Peterson, Arka P. Ghosh and Ranjan Maitra. A systematic evaluation of different methods for initializing the K-means clustering algorithm. 2010.</li>
      * </ol>
      * 

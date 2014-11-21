@@ -10,11 +10,11 @@ import smile.stat.distribution.Distribution;
 import smile.math.Math;
 
 /**
- * The Kolmogorov–Smirnov test (K–S test) is a form of minimum distance
+ * The Kolmogorov-Smirnov test (K-S test) is a form of minimum distance
  * estimation used as a non-parametric test of equality of one-dimensional
  * probability distributions. K-S test is used to compare a sample with a reference
- * probability distribution (one-sample K–S test), or to compare two samples
- * (two-sample K–S test). The Kolmogorov–Smirnov statistic quantifies a
+ * probability distribution (one-sample K-S test), or to compare two samples
+ * (two-sample K-S test). The Kolmogorov-Smirnov statistic quantifies a
  * distance between the empirical distribution function of the sample and the
  * cumulative distribution function of the reference distribution, or between
  * the empirical distribution functions of two samples. The null distribution
@@ -29,14 +29,14 @@ import smile.math.Math;
  * both location and shape of the empirical cumulative distribution functions
  * of the two samples.
  * <p>
- * The Kolmogorov–Smirnov test can be modified to serve goodness of fit test.
+ * The Kolmogorov-Smirnov test can be modified to serve goodness of fit test.
  * In the special case of testing for normality of the distribution, samples
  * are standardized and compared with a standard normal distribution. This is
  * equivalent to setting the mean and variance of the reference distribution
  * equal to the sample estimates, and it is known that using the sample to
  * modify the null hypothesis reduces the power of a test. Correcting for this
  * bias leads to the Lilliefors test. However, even Lilliefors' modification
- * is less powerful than the Shapiro–Wilk test or Anderson–Darling test for
+ * is less powerful than the Shapiro-Wilk test or Anderson-Darling test for
  * testing normality.
  *
  * @author Haifeng Li

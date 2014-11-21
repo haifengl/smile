@@ -25,8 +25,6 @@ import smile.math.Math;
  * of pointers are indexes where each column starts. This format is efficient
  * for arithmetic operations, column slicing, and matrix-vector products.
  * One typically uses SparseDataset for construction of SparseMatrix.
- * 
- * @see smile.data.SparseDataset
  *
  * @author Haifeng Li
  */

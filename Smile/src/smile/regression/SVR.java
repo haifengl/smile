@@ -23,12 +23,12 @@ import smile.util.MulticoreExecutor;
  *
  * <h2>References</h2>
  * <ol>
- * <li> A. J Smola and B. Sch�lkopf. A Tutorial on Support Vector Regression.</li>
+ * <li> A. J Smola and B. Scholkopf. A Tutorial on Support Vector Regression.</li>
  * <li> Gary William Flake and Steve Lawrence. Efficient SVM Regression Training with SMO.</li>
- * <li> Christopher J. C. Burges. A Tutorial on Support Vector Machines for Pattern Recognition. Data Mining and Knowledge Discovery 2:121�167, 1998.</li>
+ * <li> Christopher J. C. Burges. A Tutorial on Support Vector Machines for Pattern Recognition. Data Mining and Knowledge Discovery 2:121-167, 1998.</li>
  * <li> John Platt. Sequential Minimal Optimization: A Fast Algorithm for Training Support Vector Machines.</li>
- * <li> Rong-En Fan, Pai-Hsuen, and Chih-Jen Lin. Working Set Selection Using Second Order Information for Training Support Vector Machines. JMLR, 6:1889�1918, 2005.</li>
- * <li> Antoine Bordes, Seyda Ertekin, Jason Weston and L�on Bottou. Fast Kernel Classifiers with Online and Active Learning, Journal of Machine Learning Research, 6:1579-1619, 2005.</li>
+ * <li> Rong-En Fan, Pai-Hsuen, and Chih-Jen Lin. Working Set Selection Using Second Order Information for Training Support Vector Machines. JMLR, 6:1889-1918, 2005.</li>
+ * <li> Antoine Bordes, Seyda Ertekin, Jason Weston and Leon Bottou. Fast Kernel Classifiers with Online and Active Learning, Journal of Machine Learning Research, 6:1579-1619, 2005.</li>
  * <li> Tobias Glasmachers and Christian Igel. Second Order SMO Improves SVM Online and Active Learning.</li>
  * <li> Chih-Chung Chang and Chih-Jen Lin. LIBSVM: a Library for Support Vector Machines.</li>
  * </ol>

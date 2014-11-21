@@ -44,7 +44,7 @@ import smile.util.MulticoreExecutor;
  * <h2>References</h2>
  * <ol>
  * <li> Jiawei Han, Jian Pei, Yiwen Yin, and Runying Mao. Mining frequent patterns without candidate generation. Data Mining and Knowledge Discovery 8:53-87, 2004.</li>
- * <li> G�sta Grahne and Jianfei Zhu. Fast algorithms for frequent itemset mining using FP-trees. IEEE TRANS. ON KNOWLEDGE AND DATA ENGINEERING 17(10):1347-1362, 2005.</li>
+ * <li> Gosta Grahne and Jianfei Zhu. Fast algorithms for frequent itemset mining using FP-trees. IEEE TRANS. ON KNOWLEDGE AND DATA ENGINEERING 17(10):1347-1362, 2005.</li>
  * <li> Christian Borgelt. An Implementation of the FP-growth Algorithm. OSDM, 1-5, 2005.</li>
  * </ol>
  * 
