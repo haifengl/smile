@@ -1,7 +1,7 @@
 SMILE
 =====
 
-SMILE (Statistical Machine Intelligence and Learning Engine) is a pure Java library of various state-of-are machine learning algorithms. SMILE is self contained and requires only Java standard library.
+SMILE (Statistical Machine Intelligence and Learning Engine) is a pure Java library of various state-of-art machine learning algorithms. SMILE is self contained and requires only Java standard library.
 
 SMILE is well documented and you can browse the <a href="https://haifengl.github.io/smile/doc/index.html">javadoc</a> for more information.
 
