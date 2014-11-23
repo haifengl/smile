@@ -8,7 +8,7 @@ package smile.math.distance;
 /**
  * In coding theory, the Lee distance is a distance between two strings
  * x<sub>1</sub>x<sub>2</sub>...x<sub>n</sub> and y<sub>1</sub>y<sub>2</sub>...y<sub>n</sub>
- * of equal length n over the q-ary alphabet {0,1,…,q-1} of size q &ge; 2, defined as
+ * of equal length n over the q-ary alphabet {0,1,...,q-1} of size q &ge; 2, defined as
  * <p>
  * sum min(|x<sub>i</sub>-y<sub>i</sub>|, q-|x<sub>i</sub>-y<sub>i</sub>|)
  * <p>

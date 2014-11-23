@@ -32,7 +32,7 @@ import smile.math.Math;
  *
  * <h2>References</h2>
  * <ol>
- * <li> Terence D. Sanger. Optimal unsupervised learning in a single-layer linear feedforward neural network. Neural Networks 2(6):459–473, 1989.</li>
+ * <li> Terence D. Sanger. Optimal unsupervised learning in a single-layer linear feedforward neural network. Neural Networks 2(6):459-473, 1989.</li>
  * <li> Simon Haykin. Neural Networks: A Comprehensive Foundation (2 ed.). 1998. </li>
  * </ol>
  * 

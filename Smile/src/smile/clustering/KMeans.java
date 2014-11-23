@@ -33,7 +33,7 @@ import smile.util.MulticoreExecutor;
  * k-means++ initialization, the algorithm is guaranteed to find a solution
  * that is O(log k) competitive to the optimal k-means solution.
  * <p>
- * We also k-d trees to speed up each k-means step as described in the filter
+ * We also use k-d trees to speed up each k-means step as described in the filter
  * algorithm by Kanungo, et al.
  * <p>
  * K-means is a hard clustering method, i.e. each sample is assigned to
@@ -44,7 +44,7 @@ import smile.util.MulticoreExecutor;
  * <h2>References</h2>
  * <ol>
  * <li> Tapas Kanungo, David M. Mount, Nathan S. Netanyahu, Christine D. Piatko, Ruth Silverman, and Angela Y. Wu. An Efficient k-Means Clustering Algorithm: Analysis and Implementation. IEEE TRANS. PAMI, 2002.</li>
- * <li> D. Arthur and S. Vassilvitskii. "K-means++: the advantages of careful seeding". ACM-SIAM symposium on Discrete algorithms, 1027�1035, 2007.</li>
+ * <li> D. Arthur and S. Vassilvitskii. "K-means++: the advantages of careful seeding". ACM-SIAM symposium on Discrete algorithms, 1027-1035, 2007.</li>
  * <li> Anna D. Peterson, Arka P. Ghosh and Ranjan Maitra. A systematic evaluation of different methods for initializing the K-means clustering algorithm. 2010.</li>
  * </ol>
  * 

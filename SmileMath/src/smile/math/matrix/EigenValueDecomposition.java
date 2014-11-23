@@ -35,11 +35,11 @@ import smile.math.Math;
  * Let A be a real n-by-n matrix with strictly positive entries a<sub>ij</sub>
  * > 0. Then the following statements hold.
  * <ol>
- * <li> There is a positive real number r, called the Perron�Frobenius
+ * <li> There is a positive real number r, called the Perron-Frobenius
  * eigenvalue, such that r is an eigenvalue of A and any other eigenvalue &lambda;
  * (possibly complex) is strictly smaller than r in absolute value,
  * |&lambda;| < r.
- * <li> The Perron�Frobenius eigenvalue is simple: r is a simple root of the
+ * <li> The Perron-Frobenius eigenvalue is simple: r is a simple root of the
  * characteristic polynomial of A. Consequently, both the right and the left
  * eigenspace associated to r is one-dimensional.
  * <li> There exists a left eigenvector v of A associated with r (row vector)
@@ -319,7 +319,6 @@ public class EigenValueDecomposition {
     /**
      * Calculate the page rank vector.
      * @param A the matrix supporting matrix vector multiplication operation.
-     * @param p on input, it is the non-zero initial guess of the page rank, usually 1/n.
      * @param v the teleportation vector.
      * @param damping the damper factor.
      * @param tol the desired convergence tolerance.

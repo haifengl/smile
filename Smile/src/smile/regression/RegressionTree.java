@@ -148,7 +148,7 @@ public class RegressionTree implements Regression<double[]> {
         /**
          * Constructor.
          * 
-         * @param attributes the attributes of independent variable.
+         * @param numFeatures the number of features.
          * @param J the maximum number of leaf nodes in the tree.
          */
         public Trainer(int numFeatures, int J) {
@@ -1022,8 +1022,6 @@ public class RegressionTree implements Regression<double[]> {
      * @param numFeatures the number of sparse binary features.
      * @param x the training instances. 
      * @param y the response variable.
-     * @param order  the index of training values in ascending order. Note
-     * that only numeric attributes need be sorted.
      * @param J the maximum number of leaf nodes in the tree.
      * @param samples the sample set of instances for stochastic learning.
      * samples[i] should be 0 or 1 to indicate if the instance is used for training.

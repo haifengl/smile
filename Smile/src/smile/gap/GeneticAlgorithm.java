@@ -103,8 +103,8 @@ import smile.util.MulticoreExecutor;
  * <p>
  * The number of iterations t during each fitness assessment is a knob that
  * adjusts the degree of exploitation in the algorithm. If t is very large,
- * then we�re doing more hill-climbing and thus more exploiting; whereas if
- * t is very small, then we�re spending more time in the outer algorithm and
+ * then we're doing more hill-climbing and thus more exploiting; whereas if
+ * t is very small, then we're spending more time in the outer algorithm and
  * thus doing more exploring.
  * 
  * @author Haifeng Li

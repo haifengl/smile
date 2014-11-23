@@ -9,7 +9,7 @@ package smile.wavelet;
  * Coiflet wavelets. Coiflet wavelets have scaling functions with vanishing
  * moments. The wavelet is near symmetric, their wavelet functions have N / 3
  * vanishing moments and scaling functions N / 3 ? 1, and has been used in
- * many applications using Calderón-Zygmund Operators.
+ * many applications using Calderon-Zygmund Operators.
  *
  * @author Haifeng Li
  */

@@ -8,19 +8,19 @@ package smile.math.distance;
 import smile.math.Math;
 
 /**
- * The Jensen–Shannon divergence is a popular method of measuring the
+ * The Jensen-Shannon divergence is a popular method of measuring the
  * similarity between two probability distributions. It is also known
  * as information radius or total divergence to the average.
  * <p>
- * The Jensen–Shannon divergence is a symmetrized and smoothed version of the
- * Kullback–Leibler divergence . It is defined by
+ * The Jensen-Shannon divergence is a symmetrized and smoothed version of the
+ * Kullback-Leibler divergence . It is defined by
  * <p>
  * J(P||Q) = (D(P||M) + D(Q||M)) / 2
  * <p>
  * where M = (P+Q)/2 and D(&middot;||&middot;) is KL divergence.
- * Different from the Kullback–Leibler divergence, it is always a finite value.
+ * Different from the Kullback-Leibler divergence, it is always a finite value.
  * <p>
- * The square root of the Jensen–Shannon divergence is a metric, which is
+ * The square root of the Jensen-Shannon divergence is a metric, which is
  * calculated by this class.
  * 
  * @author Haifeng Li
