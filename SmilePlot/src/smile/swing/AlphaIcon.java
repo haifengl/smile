@@ -10,8 +10,7 @@ import javax.swing.Icon;
  * An Icon wrapper that paints the contained icon with a specified transparency.
  * <P>
  * <B>Note:</B> This class is not suitable for wrapping an
- * <CODE>ImageIcon</CODE> that holds an animated image. To show an animated
- * ImageIcon with transparency, use the companion class {@link AlphaImageIcon}.
+ * <CODE>ImageIcon</CODE> that holds an animated image.
  */
 public class AlphaIcon implements Icon {
 

@@ -21,12 +21,15 @@ smile.math.rbf
 smile.math.special
 smile.mds
 smile.neighbor
+smile.plot
 smile.projection
 smile.regression
 smile.sequence
 smile.sort
 smile.stat.distribution
 smile.stat.hypothesis
+smile.swing
+smile.swing.table
 smile.taxonomy
 smile.util
 smile.validation
