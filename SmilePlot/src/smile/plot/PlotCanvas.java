@@ -928,7 +928,7 @@ public class PlotCanvas extends JPanel {
 
         // There is a known issue with JTables whereby the changes made in a
         // cell editor are not committed when focus is lost.
-        // This can result in the table staying in ‘edit mode’ with the stale
+        // This can result in the table staying in 'edit mode' with the stale
         // value in the cell being edited still showing, although the change
         // has not actually been committed to the model.
         //
