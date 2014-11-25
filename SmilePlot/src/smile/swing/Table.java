@@ -51,7 +51,6 @@ import smile.swing.table.ShortArrayCellRenderer;
 import smile.swing.table.TableCopyPasteAdapter;
 
 /**
- *
  * Customized JTable with optional row number header. It also provides the
  * renderer and editor Color and Font. It also provides a renderer for
  * Float/Double of special values (such as NaN and Infinity).
