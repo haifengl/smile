@@ -1,5 +1,8 @@
 *.class
 
+# Demo program
+SmileDemo
+
 # javadoc
 doc/
 
