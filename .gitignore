@@ -1,5 +1,8 @@
 *.class
 
+# Demo program
+SmileDemo
+
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
