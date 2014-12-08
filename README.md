@@ -1,11 +1,11 @@
-SMILE
-=====
+SmileMiner
+==========
 
-SMILE (Statistical Machine Intelligence and Learning Engine) is a pure Java library of various state-of-art machine learning algorithms. SMILE is self contained and requires only Java standard library.
+SmileMiner (Statistical Machine Intelligence and Learning Engine) is a pure Java library of various state-of-art machine learning algorithms. SmileMiner is self contained and requires only Java standard library.
 
-SMILE is well documented and you can browse the <a href="http://haifengl.github.io/smile/doc/index.html">javadoc</a> for more information.
+SmileMiner is well documented and you can browse the <a href="http://haifengl.github.io/smile/doc/index.html">javadoc</a> for more information.
 
-To see SMILE in action, please download the <a href="http://haifengl.github.io/smile/smile-demo.jar">demo</a> jar file and then run <tt>java -jar smile-demo.jar</tt>.
+To see SmileMiner in action, please download the <a href="http://haifengl.github.io/smile/smile-demo.jar">demo</a> jar file and then run <tt>java -jar smile-demo.jar</tt>.
 
 * Classification:
 Support Vector Machines, Decision Trees, AdaBoost, Gradient Boosting, Random Forest, Logistic Regression, Neural Networks, RBF Networks, Maximum Entropy Classifier, KNN, Naïve Bayesian, Fisher/Linear/Quadratic/Regularized Discriminant Analysis.
@@ -37,7 +37,7 @@ Hidden Markov Model.
 SmilePlot
 =========
 
-SMILE also has a Swing-based data visualization library SmilePlot, which provides scatter plot, line plot, staircase plot, bar plot, box plot, histogram, 3D histogram, dendrogram, heatmap, hexmap, qq plot, contour plot, surface, and wireframe. The class PlotCanvas provides builtin functions such as zoom in/out, export, print, customization, etc.
+SmileMiner also has a Swing-based data visualization library SmilePlot, which provides scatter plot, line plot, staircase plot, bar plot, box plot, histogram, 3D histogram, dendrogram, heatmap, hexmap, QQ plot, contour plot, surface, and wireframe. The class PlotCanvas provides builtin functions such as zoom in/out, export, print, customization, etc.
 
 SmilePlot requires SwingX library for JXTable. But if your environment cannot use SwingX, it is easy to remove this dependency by using JTable.
 
