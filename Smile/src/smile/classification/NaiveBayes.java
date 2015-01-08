@@ -222,6 +222,7 @@ public class NaiveBayes implements OnlineClassifier<double[]> {
                 if (prob <= 0.0 || prob >= 1.0) {
                     throw new IllegalArgumentException("Invlaid priori probability: " + prob);
                 }
+                   sum += prob;
             }
             
             if (Math.abs(sum - 1.0) > 1E-10) {
