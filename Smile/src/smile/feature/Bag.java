@@ -40,15 +40,18 @@ public class Bag<T> {
 
     /**
      * Constructor.
-     * @param features the list of feature objects.
+     * @param features the list of feature objects. The feature objects should be unique in the list.
+     * Note that the Bag class doesn't learn the features, but just use them as attributes.
      * @param binary true to check if feature object appear in a collection
      * instead of their frequencies.
      */
     public Bag(T[] features, boolean binary) {
         this.binary = binary;
         this.features = new HashMap<T, Integer>();
-        for (int i = 0; i < features.length; i++) {
-            this.features.put(features[i], i);
+        for (int i = 0, k = 0; i < features.length; i++) {
+            if (!this.features.containsKey(features[i])) {
+                this.features.put(features[i], k++);
+            }
         }
     }
     
