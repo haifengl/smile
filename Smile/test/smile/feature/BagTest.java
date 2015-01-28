@@ -7,6 +7,9 @@ package smile.feature;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -37,6 +40,27 @@ public class BagTest {
     
     @After
     public void tearDown() {
+    }
+
+
+    @Test
+    /**
+     * Test of the uniqueness of features in the class Bag
+     */
+    public void testUniquenessOfFeatures() {
+        System.out.println("unique features");
+        String[] featuresForBirdStories = {"crane", "sparrow", "hawk", "owl", "kiwi"};
+        String[] featuresForBuildingStories = {"truck", "concrete", "foundation", "steel", "crane"};
+        String testMessage = "This story is about a crane and a sparrow";
+
+        ArrayList<String> mergedFeatureLists = new ArrayList<String>();
+        mergedFeatureLists.addAll(Arrays.asList(featuresForBirdStories));
+        mergedFeatureLists.addAll(Arrays.asList(featuresForBuildingStories));
+
+        Bag<String> bag = new Bag<String>(mergedFeatureLists.toArray(new String[featuresForBirdStories.length + featuresForBuildingStories.length]));
+
+        double[] result = bag.feature(testMessage.split(" "));
+        assertEquals(9, result.length);
     }
 
     /**
