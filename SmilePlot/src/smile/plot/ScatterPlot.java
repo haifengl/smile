@@ -89,6 +89,9 @@ public class ScatterPlot extends Plot {
 
     /**
      * Constructor.
+     * @param data The array of data to plot. The elements should be of dimension 2 or 3.
+     * @param y The class label of each data point of size n in the range [0, k), where n is the size of data and k is the number of classes.
+     * @param legends The legend of each class, of size k.
      */
     public ScatterPlot(double[][] data, int[] y, char[] legends) {
         this(data, y, legends, (Color[]) null);
@@ -96,6 +99,10 @@ public class ScatterPlot extends Plot {
 
     /**
      * Constructor.
+     * @param data The array of data to plot. The elements should be of dimension 2 or 3.
+     * @param y The class label of each data point of size n in the range [0, k), where n is the size of data and k is the number of classes.
+     * @param legends The legend of each class, of size k.
+     * @param color The color of all data points.
      */
     public ScatterPlot(double[][] data, int[] y, char[] legends, Color color) {
         this(data, y, legends, (Color[]) null);
@@ -104,6 +111,9 @@ public class ScatterPlot extends Plot {
 
     /**
      * Constructor.
+     * @param data The array of data to plot. The elements should be of dimension 2 or 3.
+     * @param y The class label of each data point of size n in the range [0, k), where n is the size of data and k is the number of classes.
+     * @param palette The color of each class, of size k.
      */
     public ScatterPlot(double[][] data, int[] y, Color[] palette) {
         this(data, y, null, palette);
@@ -111,6 +121,10 @@ public class ScatterPlot extends Plot {
 
     /**
      * Constructor.
+     * @param data The array of data to plot. The elements should be of dimension 2 or 3.
+     * @param y The class label of each data point of size n in the range [0, k), where n is the size of data and k is the number of classes.
+     * @param legend The legend of all data points.
+     * @param palette The color of each class, of size k.
      */
     public ScatterPlot(double[][] data, int[] y, char legend, Color[] palette) {
         this(data, y, null, palette);
@@ -119,6 +133,10 @@ public class ScatterPlot extends Plot {
 
     /**
      * Constructor.
+     * @param data The array of data to plot. The elements should be of dimension 2 or 3.
+     * @param y The class label of each data point of size n in the range [0, k), where n is the size of data and k is the number of classes.
+     * @param legends The legend of each class, of size k.
+     * @param palette The color of each class, of size k.
      */
     public ScatterPlot(double[][] data, int[] y, char[] legends, Color[] palette) {
         if (data.length != y.length) {
