@@ -7,6 +7,8 @@ package smile.plot;
 
 import java.awt.Color;
 import java.util.Arrays;
+import java.util.HashMap;
+
 import smile.math.Math;
 
 /**
@@ -34,6 +36,7 @@ public class ScatterPlot extends Plot {
      */
     private Color[] palette;
 
+    private HashMap<Integer,Integer> valueLookupTable;
     /**
      * The legend of points.
      */
@@ -128,19 +131,26 @@ public class ScatterPlot extends Plot {
         // class label set.
         int[] id = Math.unique(y);
         Arrays.sort(id);
-        
+
+        valueLookupTable = new HashMap<Integer, Integer>(id.length);
+
+        for (int i =0; i <  id.length; i++) {
+            valueLookupTable.put(id[i], i);
+        }
+
         for (int i = 0; i < id.length; i++) {
             if (id[i] < 0) {
                 throw new IllegalArgumentException("Negative class label: " + id[i]); 
             }
         }
         
-        int k = Math.max(id);
-        if (legends != null && k >= legends.length) {
+        int k = id.length;
+
+        if (legends != null && k > legends.length) {
             throw new IllegalArgumentException("Too few legends.");
         }
         
-        if (palette != null && k >= palette.length) {
+        if (palette != null && k > palette.length) {
             throw new IllegalArgumentException("Too few colors.");
         }
 
@@ -167,11 +177,11 @@ public class ScatterPlot extends Plot {
             } else {
                 for (int i = 0; i < data.length; i++) {
                     if (palette != null) {
-                        g.setColor(palette[y[i]]);
+                        g.setColor(palette[valueLookupTable.get(y[i])]);
                     }
                     
                     if (legends != null) {
-                        g.drawPoint(legends[y[i]], data[i]);
+                        g.drawPoint(legends[valueLookupTable.get(y[i])], data[i]);
                     } else {
                         g.drawPoint(legend, data[i]);
                     }
