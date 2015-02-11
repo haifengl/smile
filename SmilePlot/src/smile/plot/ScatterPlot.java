@@ -134,11 +134,8 @@ public class ScatterPlot extends Plot {
 
         valueLookupTable = new HashMap<Integer, Integer>(id.length);
 
-        for (int i =0; i <  id.length; i++) {
-            valueLookupTable.put(id[i], i);
-        }
-
         for (int i = 0; i < id.length; i++) {
+            valueLookupTable.put(id[i], i);
             if (id[i] < 0) {
                 throw new IllegalArgumentException("Negative class label: " + id[i]); 
             }
