@@ -7,6 +7,8 @@ package smile.plot;
 
 import java.awt.Color;
 import java.util.Arrays;
+import java.util.HashMap;
+
 import smile.math.Math;
 
 /**
@@ -34,6 +36,7 @@ public class ScatterPlot extends Plot {
      */
     private Color[] palette;
 
+    private HashMap<Integer,Integer> classLookupTable;
     /**
      * The legend of points.
      */
@@ -90,8 +93,8 @@ public class ScatterPlot extends Plot {
     /**
      * Constructor.
      * @param data The array of data to plot. The elements should be of dimension 2 or 3.
-     * @param y The class label of each data point of size n in the range [0, k), where n is the size of data and k is the number of classes.
-     * @param legends The legend of each class, of size k.
+     * @param y The class label of each data point of size n, where n is the size of data.
+     * @param legends The legend of each class, of size k, where k is the amount of unique values in y.
      */
     public ScatterPlot(double[][] data, int[] y, char[] legends) {
         this(data, y, legends, (Color[]) null);
@@ -100,8 +103,8 @@ public class ScatterPlot extends Plot {
     /**
      * Constructor.
      * @param data The array of data to plot. The elements should be of dimension 2 or 3.
-     * @param y The class label of each data point of size n in the range [0, k), where n is the size of data and k is the number of classes.
-     * @param legends The legend of each class, of size k.
+     * @param y The class label of each data point of size n, where n is the size of data.
+     * @param legends The legend of each class, of size k, where k is the amount of unique values in y.
      * @param color The color of all data points.
      */
     public ScatterPlot(double[][] data, int[] y, char[] legends, Color color) {
@@ -112,8 +115,8 @@ public class ScatterPlot extends Plot {
     /**
      * Constructor.
      * @param data The array of data to plot. The elements should be of dimension 2 or 3.
-     * @param y The class label of each data point of size n in the range [0, k), where n is the size of data and k is the number of classes.
-     * @param palette The color of each class, of size k.
+     * @param y The class label of each data point of size n, where n is the size of data.
+     * @param palette The color of each class, of size k, where k is the amount of unique values in y.
      */
     public ScatterPlot(double[][] data, int[] y, Color[] palette) {
         this(data, y, null, palette);
@@ -122,9 +125,9 @@ public class ScatterPlot extends Plot {
     /**
      * Constructor.
      * @param data The array of data to plot. The elements should be of dimension 2 or 3.
-     * @param y The class label of each data point of size n in the range [0, k), where n is the size of data and k is the number of classes.
+     * @param y The class label of each data point of size n, where n is the size of data.
      * @param legend The legend of all data points.
-     * @param palette The color of each class, of size k.
+     * @param palette The color of each class, of size k, where k is the amount of unique values in y.
      */
     public ScatterPlot(double[][] data, int[] y, char legend, Color[] palette) {
         this(data, y, null, palette);
@@ -134,9 +137,9 @@ public class ScatterPlot extends Plot {
     /**
      * Constructor.
      * @param data The array of data to plot. The elements should be of dimension 2 or 3.
-     * @param y The class label of each data point of size n in the range [0, k), where n is the size of data and k is the number of classes.
-     * @param legends The legend of each class, of size k.
-     * @param palette The color of each class, of size k.
+     * @param y The class label of each data point of size n, where n is the size of data.
+     * @param legends The legend of each class, of size k, where k is the amount of unique values in y.
+     * @param palette The color of each class, of size k, where k is the amount of unique values in y.
      */
     public ScatterPlot(double[][] data, int[] y, char[] legends, Color[] palette) {
         if (data.length != y.length) {
@@ -146,19 +149,20 @@ public class ScatterPlot extends Plot {
         // class label set.
         int[] id = Math.unique(y);
         Arrays.sort(id);
-        
+
+        classLookupTable = new HashMap<Integer, Integer>(id.length);
+
         for (int i = 0; i < id.length; i++) {
-            if (id[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + id[i]); 
-            }
+            classLookupTable.put(id[i], i);
         }
         
-        int k = Math.max(id);
-        if (legends != null && k >= legends.length) {
+        int k = id.length;
+
+        if (legends != null && k > legends.length) {
             throw new IllegalArgumentException("Too few legends.");
         }
         
-        if (palette != null && k >= palette.length) {
+        if (palette != null && k > palette.length) {
             throw new IllegalArgumentException("Too few colors.");
         }
 
@@ -185,11 +189,11 @@ public class ScatterPlot extends Plot {
             } else {
                 for (int i = 0; i < data.length; i++) {
                     if (palette != null) {
-                        g.setColor(palette[y[i]]);
+                        g.setColor(palette[classLookupTable.get(y[i])]);
                     }
                     
                     if (legends != null) {
-                        g.drawPoint(legends[y[i]], data[i]);
+                        g.drawPoint(legends[classLookupTable.get(y[i])], data[i]);
                     } else {
                         g.drawPoint(legend, data[i]);
                     }
