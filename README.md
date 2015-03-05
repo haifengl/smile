@@ -3,7 +3,7 @@ SmileMiner
 
 SmileMiner (Statistical Machine Intelligence and Learning Engine) is a pure Java library of various state-of-art machine learning algorithms. SmileMiner is self contained and requires only Java standard library.
 
-SmileMiner is well documented and you can browse the <a href="http://haifengl.github.io/smile/doc/index.html">javadoc</a> for more information. A basic tutorial is avilable on the project <a href="http://github.com/haifengl/smile/wiki/Tutorial:-A-Gentle-Introduction-of-SmileMiner">wiki</a>.
+SmileMiner is well documented and you can browse the <a href="http://haifengl.github.io/smile/doc/index.html">javadoc</a> for more information. A basic tutorial is available on the project <a href="http://github.com/haifengl/smile/wiki/Tutorial:-A-Gentle-Introduction-of-SmileMiner">wiki</a>.
 
 To see SmileMiner in action, please download the <a href="http://haifengl.github.io/smile/smile-demo.jar">demo</a> jar file and then run <tt>java -jar smile-demo.jar</tt>.
 
