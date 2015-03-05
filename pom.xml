@@ -4,11 +4,43 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>smile</groupId>
-    <artifactId>smile</artifactId>
+    <groupId>io.smile</groupId>
+    <artifactId>smile-all</artifactId>
     <packaging>pom</packaging>
-    <version>1.0</version>
-    <name>Statisticcal Machine Intelligence and Learning Engine</name>
+    <version>1.0.0</version>
+    <name>Smile All</name>
+    <description>Statisticcal Machine Intelligence and Learning Engine -- All</description>
+    <url>http://github.com/haifengl/smile</url>
+
+    <licenses>
+        <license>
+        <name>Apache License, Version 2.0</name>
+        <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        <distribution>repo</distribution>
+        </license>
+    </licenses>
+ 
+    <developers>
+        <developer>
+            <name>Haifeng Li</name>
+            <email>haifengl@usc.edu</email>
+            <url>http://haifengl.wordpress.com</url>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>America/New_York</timezone>
+            <properties>
+                <twitter>@haifeng</twitter>
+            </properties>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git@github.com:haifengl/smile.git</connection>
+        <developerConnection>scm:git:git@github.com:haifengl/smile.git</developerConnection>
+        <url>git@github.com:haifengl/smile.git</url>
+    </scm>
 
     <modules>
         <module>SmileMath</module>

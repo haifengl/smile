@@ -5,25 +5,114 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>smile</groupId>
-        <artifactId>smile</artifactId>
-        <version>1.0</version>
+        <groupId>io.smile</groupId>
+        <artifactId>smile-all</artifactId>
+        <version>1.0.0</version>
     </parent>
 
     <artifactId>smile-data</artifactId>
     <packaging>jar</packaging>
 
-    <name>Statisticcal Machine Intelligence and Learning Engine -- Data</name>
+    <name>Smile Data</name>
+    <description>Statisticcal Machine Intelligence and Learning Engine -- Data</description>
+    <url>http://github.com/haifengl/smile</url>
 
+    <licenses>
+        <license>
+        <name>Apache License, Version 2.0</name>
+        <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        <distribution>repo</distribution>
+        </license>
+    </licenses>
+ 
+    <developers>
+        <developer>
+            <name>Haifeng Li</name>
+            <email>haifengl@usc.edu</email>
+            <url>http://haifengl.wordpress.com</url>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>America/New_York</timezone>
+            <properties>
+                <twitter>@haifeng</twitter>
+            </properties>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git@github.com:haifengl/smile.git</connection>
+        <developerConnection>scm:git:git@github.com:haifengl/smile.git</developerConnection>
+        <url>git@github.com:haifengl/smile.git</url>
+    </scm>
+      
     <dependencies>
         <dependency>
-            <groupId>smile</groupId>
+            <groupId>io.smile</groupId>
             <artifactId>smile-math</artifactId>
-            <version>1.0</version>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 
     <build>
         <sourceDirectory>src</sourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <copy file="pom.xml" tofile="${basedir}/target/pom.xml"/>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 </project>
