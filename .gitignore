@@ -2,6 +2,11 @@
 
 # Demo program
 SmileDemo
+SmileNLP
+SmileTestData
+
+# javadoc
+doc/
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
