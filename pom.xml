@@ -4,7 +4,7 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.smile</groupId>
+    <groupId>com.github.haifengl</groupId>
     <artifactId>smile-all</artifactId>
     <packaging>pom</packaging>
     <version>1.0.0</version>

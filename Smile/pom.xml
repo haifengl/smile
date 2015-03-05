@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.smile</groupId>
+        <groupId>com.github.haifengl</groupId>
         <artifactId>smile-all</artifactId>
         <version>1.0.0</version>
     </parent>
@@ -49,17 +49,17 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.smile</groupId>
+            <groupId>com.github.haifengl</groupId>
             <artifactId>smile-math</artifactId>
             <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>io.smile</groupId>
+            <groupId>com.github.haifengl</groupId>
             <artifactId>smile-data</artifactId>
             <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>io.smile</groupId>
+            <groupId>com.github.haifengl</groupId>
             <artifactId>smile-graph</artifactId>
             <version>1.0.0</version>
         </dependency>
