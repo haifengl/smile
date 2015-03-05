@@ -1,11 +1,26 @@
 SmileMiner
 ==========
 
-SmileMiner (Statistical Machine Intelligence and Learning Engine) is a set of pure Java libraries of various state-of-art machine learning algorithms. SmileMiner is self contained and requires only Java standard library.
+SmileMiner (Statistical Machine Intelligence and Learning Engine) is a set of pure Java libraries of various state-of-art machine learning algorithms. SmileMiner is self contained and requires only Java standard library. The major components include
+
+* Smile
+The core machine learning library
+* SmileMath
+Mathematical functions (basic, special, kernel, distance, rbf, etc.), sorting, random number generators, optimization, linear algebra, statistical distributions, and hypothesis testing.
+* SmileData
+Parsers for arff, libsvm, delimited text, sparse matrix, microarray gene expression data.
+* SmileGraph
+Graph algorithms on adjacency list and matrix.
+* SmileInterpolation
+One and two dimensional interpolation.
+* SmilePlot
+Swing-based data visualization library.
 
 SmileMiner is well documented and you can browse the <a href="http://haifengl.github.io/smile/doc/index.html">javadoc</a> for more information. A basic tutorial is available on the project <a href="http://github.com/haifengl/smile/wiki/Tutorial:-A-Gentle-Introduction-of-SmileMiner">wiki</a>.
 
 To see SmileMiner in action, please download the <a href="http://haifengl.github.io/smile/smile-demo.jar">demo</a> jar file and then run <tt>java -jar smile-demo.jar</tt>.
+
+SmileMiner implements the following major machine learning algorithms
 
 * Classification:
 Support Vector Machines, Decision Trees, AdaBoost, Gradient Boosting, Random Forest, Logistic Regression, Neural Networks, RBF Networks, Maximum Entropy Classifier, KNN, Naïve Bayesian, Fisher/Linear/Quadratic/Regularized Discriminant Analysis.
