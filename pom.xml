@@ -23,7 +23,7 @@
     <developers>
         <developer>
             <name>Haifeng Li</name>
-            <email>haifengl@usc.edu</email>
+            <email>haifeng.hli@gmail.com</email>
             <url>http://haifengl.wordpress.com</url>
             <roles>
                 <role>architect</role>
@@ -31,7 +31,7 @@
             </roles>
             <timezone>America/New_York</timezone>
             <properties>
-                <twitter>@haifeng</twitter>
+                <twitter>@haifengl</twitter>
             </properties>
         </developer>
     </developers>
@@ -50,4 +50,19 @@
         <module>Smile</module>
         <module>SmilePlot</module>
     </modules>
+    
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>1.5</source>
+                        <target>1.5</target>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

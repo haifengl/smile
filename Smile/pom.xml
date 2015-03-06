@@ -28,7 +28,7 @@
     <developers>
         <developer>
             <name>Haifeng Li</name>
-            <email>haifengl@usc.edu</email>
+            <email>haifeng.hli@gmail.com</email>
             <url>http://haifengl.wordpress.com</url>
             <roles>
                 <role>architect</role>
@@ -36,7 +36,7 @@
             </roles>
             <timezone>America/New_York</timezone>
             <properties>
-                <twitter>@haifeng</twitter>
+                <twitter>@haifengl</twitter>
             </properties>
         </developer>
     </developers>
@@ -65,6 +65,17 @@
         </dependency>
     </dependencies>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
     <build>
         <sourceDirectory>src</sourceDirectory>
         <plugins>
@@ -92,7 +103,7 @@
                     <execution>
                         <id>attach-sources</id>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>jar-no-fork</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -122,6 +133,17 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.3</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
             </plugin>
         </plugins>
     </build>
