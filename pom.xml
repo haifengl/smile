@@ -6,10 +6,11 @@
 
     <groupId>com.github.haifengl</groupId>
     <artifactId>smile-all</artifactId>
+    <version>1.0.1</version>
     <packaging>pom</packaging>
-    <version>1.0.0</version>
-    <name>Smile All</name>
-    <description>Statisticcal Machine Intelligence and Learning Engine -- All</description>
+
+    <name>Smile Aggregate POM</name>
+    <description>Statisticcal Machine Intelligence and Learning Engine -- Aggregate</description>
     <url>http://github.com/haifengl/smile</url>
 
     <licenses>

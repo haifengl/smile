@@ -4,13 +4,9 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.github.haifengl</groupId>
-        <artifactId>smile-all</artifactId>
-        <version>1.0.0</version>
-    </parent>
-
+    <groupId>com.github.haifengl</groupId>
     <artifactId>smile-interpolation</artifactId>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <name>Smile Interpolation</name>
@@ -51,7 +47,7 @@
         <dependency>
             <groupId>com.github.haifengl</groupId>
             <artifactId>smile-math</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
         </dependency>
     </dependencies>
 

@@ -4,13 +4,9 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.github.haifengl</groupId>
-        <artifactId>smile-all</artifactId>
-        <version>1.0.0</version>
-    </parent>
-
+    <groupId>com.github.haifengl</groupId>
     <artifactId>smile-plot</artifactId>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <name>Smile Plot</name>
@@ -51,12 +47,12 @@
         <dependency>
             <groupId>com.github.haifengl</groupId>
             <artifactId>smile-math</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.haifengl</groupId>
             <artifactId>smile-core</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
              <groupId>org.swinglabs.swingx</groupId>
