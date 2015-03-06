@@ -20,6 +20,14 @@ SmileMiner is well documented and you can browse the <a href="http://haifengl.gi
 
 To see SmileMiner in action, please download the <a href="http://haifengl.github.io/smile/smile-demo.jar">demo</a> jar file and then run <tt>java -jar smile-demo.jar</tt>.
 
+You can use the libraries through Maven central repository by adding the following to your project pom.xml file.
+<dependency>
+  <groupId>com.github.haifengl</groupId>
+  <artifactId>smile-core</artifactId>
+  <version>1.0.0</version>
+</dependency>
+You can similarily replace artifactId smile-core with smile-math, smile-data, smile-graph, smile-interpolation, or smile-plot for other modules.
+
 SmileMiner implements the following major machine learning algorithms
 
 * Classification:
