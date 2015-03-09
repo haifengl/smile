@@ -66,6 +66,15 @@ SmileMiner also has a Swing-based data visualization library SmilePlot, which pr
 
 SmilePlot requires SwingX library for JXTable. But if your environment cannot use SwingX, it is easy to remove this dependency by using JTable.
 
+To use SmilePlot, add the following to dependencies
+```
+    <dependency>
+      <groupId>com.github.haifengl</groupId>
+      <artifactId>smile-plot</artifactId>
+      <version>1.0.1</version>
+    </dependency>
+```
+
 Demo Gallery
 ============
 <table class="center">
