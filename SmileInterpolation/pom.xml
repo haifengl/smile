@@ -47,7 +47,7 @@
         <dependency>
             <groupId>com.github.haifengl</groupId>
             <artifactId>smile-math</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2</version>
         </dependency>
     </dependencies>
 

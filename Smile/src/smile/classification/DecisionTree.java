@@ -374,7 +374,10 @@ public class DecisionTree implements Classifier<double[]> {
             }
             
             if (M < p) {
-                Math.permutate(variables);
+                synchronized (DecisionTree.class) {
+                    Math.permutate(variables);
+                }
+
                 // Random forest already runs on parallel.
                 for (int j = 0; j < M; j++) {
                     Node split = findBestSplit(n, count, falseCount, impurity, variables[j]);

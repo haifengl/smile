@@ -6,7 +6,7 @@
 
     <groupId>com.github.haifengl</groupId>
     <artifactId>smile-all</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <packaging>pom</packaging>
 
     <name>Smile Aggregate POM</name>
