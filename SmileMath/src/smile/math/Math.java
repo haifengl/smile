@@ -53,15 +53,15 @@ public class Math {
      * The machine precision for the double type, which is the difference between 1
      * and the smallest value greater than 1 that is representable for the double type.
      */
-    public static final double EPSILON = Math.pow(2.0, -52.0);
+    public static double EPSILON = Math.pow(2.0, -52.0);
     /**
      * The base of the exponent of the double type.
      */
-    public static final int RADIX = 2;
+    public static int RADIX = 2;
     /**
      * The number of digits (in radix base) in the mantissa.
      */
-    public static final int DIGITS = 53;
+    public static int DIGITS = 53;
     /**
      * Rounding style.
      * <ul>
@@ -73,17 +73,17 @@ public class Math {
      * <li> 5 if floating-point addition rounds in the ieee style, and there is partial underflow
      * </ul>
      */
-    public static final int ROUND_STYLE = 2;
+    public static int ROUND_STYLE = 2;
     /**
      * The largest negative integer such that 1.0 + RADIX<sup>MACHEP</sup> &ne; 1.0,
      * except that machep is bounded below by -(DIGITS+3)
      */
-    public static final int MACHEP = -52;
+    public static int MACHEP = -52;
     /**
      * The largest negative integer such that 1.0 - RADIX<sup>NEGEP</sup> &ne; 1.0,
      * except that negeps is bounded below by -(DIGITS+3)
      */
-    public static final int NEGEP = -53;
+    public static int NEGEP = -53;
     /**
      * High quality random number generator.
      */
@@ -92,7 +92,6 @@ public class Math {
     /**
      * Dynamically determines the machine parameters of the floating-point arithmetic.
      */
-/*
     static {
         double beta, betain, betah, a, b, ZERO, ONE, TWO, temp, tempa, temp1;
         int i, itemp;
@@ -164,7 +163,6 @@ public class Math {
         }
         EPSILON = a;
     }
-*/
     
     /**
      * Private constructor.

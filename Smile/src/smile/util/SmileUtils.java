@@ -150,7 +150,7 @@ public class SmileUtils {
         int[] ni = kmeans.getClusterSize();
         GaussianRadialBasis[] rbf = new GaussianRadialBasis[k];
         for (int i = 0; i < k; i++) {
-            if (ni[i] >= 5 || sigma[i] == 0.0) {
+            if (ni[i] >= 5 || sigma[i] != 0.0) {
                 sigma[i] = Math.sqrt(sigma[i] / ni[i]);
             } else {
                 sigma[i] = Double.POSITIVE_INFINITY;
@@ -164,7 +164,7 @@ public class SmileUtils {
                 }
                 sigma[i] /= 2.0;
             }
-            
+
             rbf[i] = new GaussianRadialBasis(r * sigma[i]);            
         }
         

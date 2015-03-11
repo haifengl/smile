@@ -159,7 +159,7 @@ public class QRDecomposition {
             L[i][i] = Rdiagonal[i];
 
             for (int j = 0; j < i; j++) {
-                    L[i][j] = QR[j][i];
+                L[i][j] = QR[j][i];
             }
         }
 
