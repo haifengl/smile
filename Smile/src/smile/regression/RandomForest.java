@@ -332,7 +332,7 @@ public class RandomForest implements Regression<double[]> {
         try {
             trees = MulticoreExecutor.run(tasks);
         } catch (Exception ex) {
-            System.err.println(ex);
+            ex.printStackTrace();
 
             trees = new ArrayList<RegressionTree>(T);
             for (int i = 0; i < T; i++) {

@@ -377,7 +377,12 @@ public class RegressionTree implements Regression<double[]> {
             // Loop through features and compute the reduction of squared error,
             // which is trueCount * trueMean^2 + falseCount * falseMean^2 - count * parentMean^2                    
             if (M < p) {
-                Math.permutate(variables);
+                // Training of Random Forest will get into this race condition.
+                // smile.math.Math uses a static object of random number generator.
+                synchronized (RegressionTree.class) {
+                    Math.permutate(variables);
+                }
+                
                 // Random forest already runs on parallel.
                 for (int j = 0; j < M; j++) {
                     Node split = findBestSplit(n, sum, variables[j]);
