@@ -42,6 +42,11 @@ import smile.neighbor.Neighbor;
  * can lead to a drastically different (and incorrect) low-dimensional
  * embedding. Conversely, if k is too small, the neighborhood graph may
  * become too sparse to approximate geodesic paths accurately.
+ * <p>
+ * This class implements C-Isomap that involves magnifying the regions
+ * of high density and shrink the regions of low density of data points
+ * in the manifold. Edge weights that are maximized in Multi-Dimensional
+ * Scaling(MDS) are modified, with everything else remaining unaffected.
  * 
  * @see LLE
  * @see LaplacianEigenmap
@@ -69,12 +74,23 @@ public class IsoMap {
     private Graph graph;
 
     /**
-     * Constructor.
+     * Constructor. C-Isomap algorithm by default.
      * @param data the dataset.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
      */
     public IsoMap(double[][] data, int d, int k) {
+        this(data, d, k, true);
+    }
+    
+    /**
+     * Constructor.
+     * @param data the dataset.
+     * @param d the dimension of the manifold.
+     * @param k k-nearest neighbor.
+     * @param CIsomap C-Isomap algorithm if true, otherwise standard algorithm.
+     */
+    public IsoMap(double[][] data, int d, int k, boolean CIsomap) {
         int n = data.length;
 
         KNNSearch<double[], double[]> knn = null;
@@ -97,8 +113,10 @@ public class IsoMap {
         }
 
         // C-Isomap
-        for (Edge edge : graph.getEdges()) {
-            edge.weight /= (M[edge.v1] * M[edge.v2]);
+        if (CIsomap) {
+            for (Edge edge : graph.getEdges()) {
+                edge.weight /= (M[edge.v1] * M[edge.v2]);
+            }
         }
         
         // Use largest connected component.

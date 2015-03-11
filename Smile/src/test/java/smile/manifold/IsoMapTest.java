@@ -1063,7 +1063,7 @@ public class IsoMapTest {
         double[][] data = new double[1000][];
         System.arraycopy(dat, 0, data, 0, data.length);
         
-        IsoMap isomap = new IsoMap(data, 2, 7);
+        IsoMap isomap = new IsoMap(data, 2, 7, false);
 
         double sign = Math.signum(points[0][0] / isomap.getCoordinates()[0][0]);
         for (int i = 0; i < points.length; i++) {
@@ -1075,6 +1075,7 @@ public class IsoMapTest {
             points[i][1] *= sign;
         }
 
+        // This is the results of standard Isomap.
         assertTrue(Math.equals(points, isomap.getCoordinates(), 1E-6));
     }
 }
