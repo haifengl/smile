@@ -91,4 +91,13 @@ public class MulticoreExecutor {
         
         return results;
     }
+    
+    /**
+     * Shutdown the thread pool.
+     */
+    public static void shutdown() {
+        if (threads != null) {
+            threads.shutdown();
+        }
+    }
 }
