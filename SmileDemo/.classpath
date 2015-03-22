@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/main/resources"/>
+	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Smile"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SmilePlot"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SmileMath"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SmileGraph"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SmileData"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SmileInterpolation"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

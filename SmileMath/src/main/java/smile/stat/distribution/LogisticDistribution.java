@@ -59,7 +59,7 @@ public class LogisticDistribution extends AbstractDistribution {
     /**
      * Constructor.
      */
-    LogisticDistribution(double mu, double scale) {
+    public LogisticDistribution(double mu, double scale) {
         if (scale <= 0.0) {
             throw new IllegalArgumentException("Invalid scale: " + scale);
         }

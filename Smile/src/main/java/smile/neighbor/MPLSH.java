@@ -36,7 +36,7 @@ import smile.stat.distribution.GaussianDistribution;
  * Multi-probe LSH intelligently probes multiple buckets that are likely to
  * contain query results in a hash table.
  *
- * TODO: not efficient. don't export it to outside now.
+ * TODO: not efficient. better not use it right now.
  * 
  * <h2>References</h2>
  * <ol>
@@ -50,7 +50,7 @@ import smile.stat.distribution.GaussianDistribution;
  *
  * @author Haifeng Li
  */
-class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<double[], E>, RNNSearch<double[], E> {
+public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<double[], E>, RNNSearch<double[], E> {
     /**
      * The entry in the hash table.
      */
