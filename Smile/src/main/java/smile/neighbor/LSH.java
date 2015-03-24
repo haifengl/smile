@@ -15,10 +15,7 @@
  *******************************************************************************/
 package smile.neighbor;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import smile.math.IntArrayList;
 import smile.math.Math;
 import smile.sort.HeapSelect;
@@ -477,36 +474,13 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
 
     @Override
     public Neighbor<double[], E> nearest(double[] q) {
-        IntArrayList candidates = new IntArrayList();
-
-        for (Hash h : hash) {
-            BucketEntry bucket = h.get(q);
-            if (bucket != null) {
-                int m = bucket.entry.size();
-                for (int i = 0; i < m; i++) {
-                    int index = bucket.entry.get(i);
-                    candidates.add(index);
-                }
-            }
-        }
-
+        Set<Integer> candidates = obtainCandidates(q);
         Neighbor<double[], E> neighbor = new Neighbor<double[], E>(null, null, -1, Double.MAX_VALUE);
-
-        int[] cand = candidates.toArray();
-        Arrays.sort(cand);
-        int prev = -1;
-        for (int index : cand) {
-            if (index == prev) {
-                continue;
-            } else {
-                prev = index;
-            }
-
+        for (int index : candidates) {
             double[] key = keys.get(index);
             if (q == key && identicalExcluded) {
                 continue;
             }
-
             double distance = Math.distance(q, key);
             if (distance < neighbor.distance) {
                 neighbor.index = index;
@@ -524,20 +498,7 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
         if (k < 1) {
             throw new IllegalArgumentException("Invalid k: " + k);
         }
-
-        IntArrayList candidates = new IntArrayList();
-
-        for (Hash h : hash) {
-            BucketEntry bucket = h.get(q);
-            if (bucket != null) {
-                int m = bucket.entry.size();
-                for (int i = 0; i < m; i++) {
-                    int index = bucket.entry.get(i);
-                    candidates.add(index);
-                }
-            }
-        }
-
+        Set<Integer> candidates = obtainCandidates(q);
         Neighbor<double[], E> neighbor = new Neighbor<double[], E>(null, null, 0, Double.MAX_VALUE);
         @SuppressWarnings("unchecked")
         Neighbor<double[], E>[] neighbors = (Neighbor<double[], E>[]) java.lang.reflect.Array.newInstance(neighbor.getClass(), k);
@@ -546,18 +507,8 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
             heap.add(neighbor);
         }
 
-        int[] cand = candidates.toArray();
-        Arrays.sort(cand);
-        
-        int prev = -1;
         int hit = 0;
-        for (int index : cand) {
-            if (index == prev) {
-                continue;
-            } else {
-                prev = index;
-            }
-
+        for (int index : candidates) {
             double[] key = keys.get(index);
             if (q == key && identicalExcluded) {
                 continue;
@@ -589,31 +540,8 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
         if (radius <= 0.0) {
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
-
-        IntArrayList candidates = new IntArrayList();
-
-        for (Hash h : hash) {
-            BucketEntry bucket = h.get(q);
-            if (bucket != null) {
-                int m = bucket.entry.size();
-                for (int i = 0; i < m; i++) {
-                    int index = bucket.entry.get(i);
-                    candidates.add(index);
-                }
-            }
-        }
-        
-        int[] cand = candidates.toArray();
-        Arrays.sort(cand);
-        
-        int prev = -1;
-        for (int index : cand) {
-            if (index == prev) {
-                continue;
-            } else {
-                prev = index;
-            }
-
+        Set<Integer> candidates = obtainCandidates(q);
+        for (int index : candidates) {
             double[] key = keys.get(index);
             if (q == key && identicalExcluded) {
                 continue;
@@ -624,5 +552,24 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
                 neighbors.add(new Neighbor<double[], E>(key, data.get(index), index, distance));
             }
         }
+    }
+
+    /**
+     * Obtaining Candidates
+     * @return Indices of Candidates
+     */
+    private Set<Integer> obtainCandidates(double[] q) {
+        Set<Integer> candidates = new HashSet<Integer>();
+        for (Hash h : hash) {
+            BucketEntry bucket = h.get(q);
+            if (bucket != null) {
+                int m = bucket.entry.size();
+                for (int i = 0; i < m; i++) {
+                    int index = bucket.entry.get(i);
+                    candidates.add(index);
+                }
+            }
+        }
+        return candidates;
     }
 }
