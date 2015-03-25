@@ -247,7 +247,7 @@ public class DelimitedTextParser {
             throw new IOException("Empty data source.");
         }
         
-        String[] s = line.split(delimiter, -1);
+        String[] s = line.split(delimiter, 0);
         int start = 0;
         int dimension = s.length;
         if (hasRowNames) {
@@ -359,7 +359,7 @@ public class DelimitedTextParser {
                 continue;
             }
 
-            String[] s = line.split(delimiter, -1);
+            String[] s = line.split(delimiter, 0);
             if (s.length != n) {
                 throw new ParseException(String.format("%d columns, expected %d", s.length, n), s.length);
             }
