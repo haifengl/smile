@@ -59,6 +59,10 @@ BK-Tree, Cover Tree, KD-Tree, LSH
 * Sequence Learning:
 Hidden Markov Model.
 
+Model Serialization
+===================
+You may notice that none of models support Java Serializable interface. It is because the exact format is hard to keep stable, class changes can easily make your serialized data unreadable, reading/writing the data in non-Java code is almost impossible. Currently, we suggest <a href="http://xstream.codehaus.org">XStream</a> to serialize the trained models. XStream is a simple library to serialize objects to XML and back again. XStream is easy to use and doesn't require mappings (actually requires no modifications to objects). <a href="http://code.google.com/p/protostuff/">Protostuff</a> is a nice alternative that supports forward-backward compatibility (schema evolution) and validation. Beyond XML, Protostuff support many other formats such as JSON, YAML, protobuf, etc. For some predicitive models, we look forward to supporting PMML (Predictive Model Markup Language), an XML-based file format developed by the Data Mining Group.
+
 SmilePlot
 =========
 
