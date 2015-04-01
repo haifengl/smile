@@ -59,7 +59,7 @@ import java.util.LinkedHashMap;
  * @author Qiyang Zuo
  *
  */
-public class SNLSH<E> implements NearestNeighborSearch<String, E>, KNNSearch<String, E>, RNNSearch<Long, String> {
+public class SNLSH<E> implements NearestNeighborSearch<String, E>, KNNSearch<String, E>, RNNSearch<String, E> {
 
 
     private final int bandSize;
@@ -136,7 +136,7 @@ public class SNLSH<E> implements NearestNeighborSearch<String, E>, KNNSearch<Str
         for (int index : candidates) {
             long sign = signs.get(index);
             double distance = HammingDistance.d(fpq, sign);
-            if (!keys.get(index).equals(q)) {
+            if (!keys.get(index).equals(q) && identicalExcluded) {
                 heap.add(new Neighbor<String, E>(keys.get(index), data.get(index), index, distance));
             }
         }
@@ -151,8 +151,21 @@ public class SNLSH<E> implements NearestNeighborSearch<String, E>, KNNSearch<Str
         return new Neighbor<String, E>(null, null, -1, Double.MAX_VALUE);
     }
 
-    public void range(Long q, double radius, List<Neighbor<Long, String>> neighbors) {
-
+    public void range(String q, double radius, List<Neighbor<String, E>> neighbors) {
+        if (radius <= 0.0) {
+            throw new IllegalArgumentException("Invalid radius: " + radius);
+        }
+        long fpq = simhash64(q);
+        Set<Integer> candidates = obtainCandidates(q);
+        for (int index : candidates) {
+            double distance = HammingDistance.d(fpq, signs.get(index));
+            if (distance <= radius) {
+                if (keys.get(index).equals(q) && identicalExcluded) {
+                    continue;
+                }
+                neighbors.add(new Neighbor<String, E>(keys.get(index), data.get(index), index, distance));
+            }
+        }
     }
 
     private class Band extends LinkedHashMap<Long, Bucket> {}
@@ -223,6 +236,4 @@ public class SNLSH<E> implements NearestNeighborSearch<String, E>, KNNSearch<Str
         }
         return candidates;
     }
-
-
 }

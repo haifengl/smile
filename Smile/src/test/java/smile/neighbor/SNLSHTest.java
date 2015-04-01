@@ -1,6 +1,10 @@
 package smile.neighbor;
 
+import com.google.common.collect.Lists;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Qiyang Zuo
@@ -30,7 +34,7 @@ public class SNLSHTest {
     }
 
     @Test
-    public void testNN() {
+    public void testNearest() {
         SNLSH<String> lsh = new SNLSH(8, 2);
         for (String t : texts) {
             lsh.put(t, t);
@@ -39,6 +43,21 @@ public class SNLSHTest {
         Neighbor<String, String> n = lsh.nearest(texts[0]);
         System.out.println("neighbor" + " : " + n.key + " distance: " + n.distance);
         System.out.println("----------test nearest end-------");
+    }
+
+    @Test
+    public void testRange() {
+        SNLSH<String> lsh = new SNLSH<String>(8, 2);
+        for (String t : texts) {
+            lsh.put(t, t);
+        }
+        List<Neighbor<String, String>> ns = Lists.newArrayList();
+        lsh.range(texts[0], 10, ns);
+        System.out.println("-------test range begin-------");
+        for (Neighbor<String, String> n : ns) {
+            System.out.println(n.key + "  distance: " + n.distance);
+        }
+        System.out.println("-----test range end ----------");
     }
 
 
