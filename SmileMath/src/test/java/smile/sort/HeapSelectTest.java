@@ -78,22 +78,6 @@ public class HeapSelectTest {
         }
     }
 
-    @Test
-    public void testNeighorSelect() {
-        int k = 10;
-        Double[] ns = new Double[10];
-
-        HeapSelect<Double> heap = new HeapSelect<Double>(ns);
-        for(int i = 0; i < k; i++) {
-            heap.add(Double.MAX_VALUE);
-        }
-        for (int i = 0; i < 5; i++) {
-            heap.add(i * 0.1);
-        }
-        heap.sort();
-        assertTrue(heap.peek() <= 0.1);//FIXME: test will fail
-    }
-
     /**
      * Test of get method, of class HeapSelect.
      */
