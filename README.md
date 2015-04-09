@@ -57,7 +57,7 @@ Classical MDS, Isotonic MDS, Sammon Mapping
 BK-Tree, Cover Tree, KD-Tree, LSH
 
 * Sequence Learning:
-Hidden Markov Model.
+Hidden Markov Model, Conditional Random Field.
 
 Model Serialization
 ===================
