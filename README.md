@@ -16,7 +16,7 @@ One and two dimensional interpolation.
 * SmilePlot
 Swing-based data visualization library.
 
-SmileMiner is well documented and you can browse the <a href="http://haifengl.github.io/smile/doc/index.html">javadoc</a> for more information. A basic tutorial is available on the project <a href="http://github.com/haifengl/smile/wiki/Tutorial:-A-Gentle-Introduction-of-SmileMiner">wiki</a>.
+SmileMiner is well documented and you can browse the <a href="http://haifengl.github.io/smile/doc/index.html">javadoc</a> for more information. A basic tutorial is available on the project <a href="http://github.com/haifengl/smile/wiki">wiki</a>.
 
 To see SmileMiner in action, please download the <a href="http://haifengl.github.io/smile/smile-demo.jar">demo</a> jar file and then run <tt>java -jar smile-demo.jar</tt>.
 
