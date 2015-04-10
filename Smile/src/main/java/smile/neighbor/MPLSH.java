@@ -1009,8 +1009,9 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
         if (hit < k) {
             @SuppressWarnings("unchecked")
             Neighbor<double[], E>[] n2 = (Neighbor<double[], E>[]) java.lang.reflect.Array.newInstance(neighbor.getClass(), hit);
+            int start = k - hit;
             for (int i = 0; i < hit; i++) {
-                n2[i] = neighbors[i + 1];
+                n2[i] = neighbors[i + start];
             }
             neighbors = n2;
         }
