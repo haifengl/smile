@@ -338,7 +338,7 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
 
         algorithm = new DefaultMutableTreeNode(new LaplaceInterpolationDemo());
         category.add(algorithm);
-/*
+
         category = new DefaultMutableTreeNode("Nearest Neighbor Search");
         top.add(category);
 
@@ -353,7 +353,7 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
 
         algorithm = new DefaultMutableTreeNode(new ApproximateStringSearchDemo());
         category.add(algorithm);
-*/
+
         category = new DefaultMutableTreeNode("Distributions");
         top.add(category);
 
