@@ -30,11 +30,7 @@ public enum EnglishDictionary implements Dictionary {
     /**
      * A concise dictionary of common terms in English.
      */
-    CONCISE("/smile/nlp/dictionary/dictionary_en.txt"),
-    /**
-     * A very large dictionary. Suitable for spell check.
-     */
-    COMPREHENSIVE("/smile/nlp/dictionary/dictionary_en_spell_check_oriented.txt");
+    CONCISE("/smile/nlp/dictionary/dictionary_en.txt");
 
     /**
      * A list of abbreviations.

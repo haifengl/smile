@@ -29,7 +29,7 @@ import java.util.ArrayList;
  * the removal or replacement of an ending. For details, see
  * <p>
  * Paice, Another stemmer, SIGIR Forum, 24(3), 56-61, 1990.
- * 
+ * <p>
  * http://www.comp.lancs.ac.uk/computing/research/stemming/Links/paice.htm
  *
  * @author Haifeng Li
