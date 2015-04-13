@@ -60,6 +60,9 @@ public class SNLSHTest {
         MaxHeap<Neighbor<String, String>> heap = new MaxHeap<Neighbor<String, String>>(neighbors);
         long sign1 = SimHash.simhash64(q);
         for (String t : trainData) {
+            if(t.equals(q)) {
+                continue;
+            }
             long sign2 = signCache.get(t);
             double distance = HammingDistance.d(sign1, sign2);
             heap.add(new Neighbor<String, String>(t, t, 0, distance));
@@ -73,6 +76,9 @@ public class SNLSHTest {
         double minDist = Double.MAX_VALUE;
         String minKey = null;
         for (String t : trainData) {
+            if (t.equals(q)) {
+                continue;
+            }
             long sign2 = signCache.get(t);
             double distance = HammingDistance.d(sign1, sign2);
             if (distance < minDist) {
@@ -81,6 +87,17 @@ public class SNLSHTest {
             }
         }
         return new Neighbor<String, String>(minKey, minKey, 0, minDist);
+    }
+
+    private void linearRange(String q, double d, List<Neighbor<String,String>> neighbors) {
+        long sign1 = SimHash.simhash64(q);
+        for (String t : trainData) {
+            long sign2 = signCache.get(t);
+            double distance = HammingDistance.d(sign1, sign2);
+            if (distance <= d) {
+                neighbors.add(new Neighbor<String, String>(t, t, 0, distance));
+            }
+        }
     }
 
     @Test
@@ -170,4 +187,33 @@ public class SNLSHTest {
     }
 
 
+    @Test
+    public void testRangeRecall() {
+        SNLSH<String> lsh = new SNLSH<String>(8);
+        for (String t : trainData) {
+            lsh.put(t, t);
+        }
+        double dist = 15.0;
+        double recall = 0.0;
+        for (String q : testData) {
+            List<Neighbor<String, String>> n1 = Lists.newArrayList();
+            lsh.range(q, dist, n1);
+            List<Neighbor<String, String>> n2 = Lists.newArrayList();
+            linearRange(q, dist, n2);
+            int hit = 0;
+            for (int m = 0; m < n1.size(); m++) {
+                for (int n = 0; n < n2.size(); n++) {
+                    if (n1.get(m).value.equals(n2.get(n).value)) {
+                        hit++;
+                        break;
+                    }
+                }
+            }
+            if (n2.size() > 0) {
+                recall += 1.0 * hit / n2.size();
+            }
+        }
+        recall /= testData.size();
+        System.out.println("SNLSH range recall is " + recall);
+    }
 }
