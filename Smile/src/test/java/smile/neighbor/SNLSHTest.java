@@ -67,6 +67,22 @@ public class SNLSHTest {
         return heap.toSortedArray();
     }
 
+    private Neighbor<String, String> linearNearest(String q) {
+        Neighbor<String, String> neighbor = new Neighbor<String, String>(null, null, 0, 0);
+        long sign1 = SimHash.simhash64(q);
+        double minDist = Double.MAX_VALUE;
+        String minKey = null;
+        for (String t : trainData) {
+            long sign2 = signCache.get(t);
+            double distance = HammingDistance.d(sign1, sign2);
+            if (distance < minDist) {
+                minDist = distance;
+                minKey = t;
+            }
+        }
+        return new Neighbor<String, String>(minKey, minKey, 0, minDist);
+    }
+
     @Test
     public void testKNN() {
         SNLSH<String> lsh = new SNLSH<String>(8);
@@ -105,7 +121,7 @@ public class SNLSHTest {
             recall += 1.0 * hit / k;
         }
         recall /= testData.size();
-        System.out.println("recall is " + recall);
+        System.out.println("SNLSH KNN recall is " + recall);
     }
 
     @Test
@@ -118,6 +134,24 @@ public class SNLSHTest {
         Neighbor<String, String> n = lsh.nearest(texts[0]);
         System.out.println("neighbor" + " : " + n.key + " distance: " + n.distance);
         System.out.println("----------test nearest end-------");
+    }
+
+    @Test
+    public void testNearestRecall() {
+        SNLSH<String> lsh = new SNLSH<String>(8);
+        for(String t : trainData) {
+            lsh.put(t, t);
+        }
+        double recall = 0.0;
+        for (String q : testData) {
+            Neighbor<String, String> n1 = lsh.nearest(q);
+            Neighbor<String, String> n2 = linearNearest(q);
+            if (n1.value.equals(n2.value)) {
+                recall++;
+            }
+        }
+        recall /= testData.size();
+        System.out.println("SNLSH Nearest recall is " + recall);
     }
 
     @Test
