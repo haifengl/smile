@@ -17,9 +17,7 @@
  */
 package smile.neighbor;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import smile.math.distance.HammingDistance;
@@ -33,7 +31,7 @@ import java.util.LinkedList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 
-
+import static smile.hash.SimHash.simhash64;
 
 /**
  *
@@ -52,7 +50,6 @@ import java.util.LinkedHashMap;
  * <h2>References</h2>
  * <ol>
  * <li>Moses S. Charikar. Similarity Estimation Techniques from Rounding Algorithms</li>
- * <li> Alexis Joly and Olivier Buisson. A posteriori multi-probe locality sensitive hashing. ACM international conference on Multimedia, 2008. </li>
  * </ol>
  *
  * @see LSH
@@ -86,14 +83,13 @@ public class SNLSH<E> implements NearestNeighborSearch<String, E>, KNNSearch<Str
      */
     private List<Long> signs;
 
-    private final int shingleSize;
     /**
      * Whether to exclude query object self from the neighborhood.
      */
     private boolean identicalExcluded = true;
 
     @SuppressWarnings("unchecked")
-    public SNLSH(int bandSize, int shingleSize) {
+    public SNLSH(int bandSize) {
         if (bandSize < 2 || bandSize > 32) {
             throw new IllegalArgumentException("Invalid band size!");
         }
@@ -104,7 +100,6 @@ public class SNLSH<E> implements NearestNeighborSearch<String, E>, KNNSearch<Str
         data = Lists.newArrayList();
         keys = Lists.newArrayList();
         signs = Lists.newArrayList();
-        this.shingleSize = shingleSize;
     }
 
     public void put(String k, E v) {
@@ -177,52 +172,7 @@ public class SNLSH<E> implements NearestNeighborSearch<String, E>, KNNSearch<Str
     }
 
 
-    private long simhash64(String text) {
-        Set<String> shingles = shingling(text, shingleSize);
-        return simhash64(shingles);
-    }
 
-    private long simhash64(Set<String> shingles) {
-        if (shingles == null || shingles.isEmpty()) {
-            return 0;
-        }
-        int[] bits = new int[BITS];
-        for (String s : shingles) {
-            long hc = hf.hashString(s, Charsets.UTF_8).padToLong();
-            for (int i = 0; i < BITS; i++) {
-                if (((hc >>> i) & 1) == 1) {
-                    bits[i]++;
-                } else {
-                    bits[i]--;
-                }
-            }
-        }
-        long hash = 0;
-        long one = 1;
-        for (int i = 0; i < BITS; i++) {
-            if (bits[i] >= 0) {
-                hash |= one;
-            }
-            one <<= 1;
-        }
-        return hash;
-    }
-
-    private static Set<String> shingling(String text, int shingleSize) {
-        if (shingleSize < 1) {
-            throw new IllegalArgumentException("Invalid shingle size!");
-        }
-        Set<String> shingles = Sets.newHashSet();
-        if (text.length() <= shingleSize) {
-            shingles.add(text);
-        } else {
-            for (int i = 0; i + shingleSize <= text.length(); i++) {
-                shingles.add(text.substring(i, i + shingleSize));
-            }
-        }
-//        shingles.addAll(Splitter.on(" ").omitEmptyStrings().splitToList(text));
-        return shingles;
-    }
 
     private Set<Integer> obtainCandidates(String q) {
         Set<Integer> candidates = new HashSet<Integer>();
