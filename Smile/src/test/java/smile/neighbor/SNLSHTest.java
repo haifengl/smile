@@ -92,6 +92,9 @@ public class SNLSHTest {
     private void linearRange(String q, double d, List<Neighbor<String,String>> neighbors) {
         long sign1 = SimHash.simhash64(q);
         for (String t : trainData) {
+            if (t.equals(q)) {
+                continue;
+            }
             long sign2 = signCache.get(t);
             double distance = HammingDistance.d(sign1, sign2);
             if (distance <= d) {
