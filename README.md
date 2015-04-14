@@ -13,6 +13,8 @@ Parsers for arff, libsvm, delimited text, sparse matrix, microarray gene express
 Graph algorithms on adjacency list and matrix.
 * SmileInterpolation
 One and two dimensional interpolation.
+* SmileNLP
+Natural Language Processing
 * SmilePlot
 Swing-based data visualization library.
 
@@ -58,6 +60,9 @@ BK-Tree, Cover Tree, KD-Tree, LSH
 
 * Sequence Learning:
 Hidden Markov Model, Conditional Random Field.
+
+* Natural Language Processing:
+Sentence Splitting and Tokenizer, Bigram Statistical Test, Phrase Extractor, Keyword Extractor, Stemmer, POS Tagging, Relevance Ranking
 
 Model Serialization
 ===================
