@@ -62,7 +62,7 @@ BK-Tree, Cover Tree, KD-Tree, LSH
 Hidden Markov Model, Conditional Random Field.
 
 * Natural Language Processing:
-Sentence Splitting and Tokenizer, Bigram Statistical Test, Phrase Extractor, Keyword Extractor, Stemmer, POS Tagging, Relevance Ranking
+Sentence Splitter and Tokenizer, Bigram Statistical Test, Phrase Extractor, Keyword Extractor, Stemmer, POS Tagging, Relevance Ranking
 
 Model Serialization
 ===================
