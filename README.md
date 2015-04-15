@@ -14,7 +14,7 @@ Graph algorithms on adjacency list and matrix.
 * **SmileInterpolation**
 One and two dimensional interpolation.
 * **SmileNLP**
-Natural Language Processing
+Natural language processing.
 * **SmilePlot**
 Swing-based data visualization library.
 
@@ -30,7 +30,7 @@ You can use the libraries through Maven central repository by adding the followi
       <version>1.0.3</version>
     </dependency>
 ```
-You can similarily replace artifactId smile-core with smile-math, smile-data, smile-graph, smile-interpolation, or smile-plot for other modules.
+You can similarily replace artifactId smile-core with smile-math, smile-data, smile-graph, smile-interpolation, smile-nlp, or smile-plot for other modules.
 
 SmileMiner implements the following major machine learning algorithms
 
