@@ -6,7 +6,7 @@
 
     <groupId>com.github.haifengl</groupId>
     <artifactId>smile-all</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <packaging>pom</packaging>
 
     <name>Smile Aggregate POM</name>
@@ -49,6 +49,7 @@
         <module>SmileGraph</module>
         <module>SmileInterpolation</module>
         <module>Smile</module>
+        <module>SmileNLP</module>
         <module>SmilePlot</module>
     </modules>
     
