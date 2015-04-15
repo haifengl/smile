@@ -4,13 +4,9 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>io.smile</groupId>
-        <artifactId>smile-all</artifactId>
-        <version>1.0.0</version>
-    </parent>
-
+    <groupId>com.github.haifengl</groupId>
     <artifactId>smile-core</artifactId>
+    <version>1.0.3</version>
     <packaging>jar</packaging>
 
     <name>Smile Core</name>
@@ -28,7 +24,7 @@
     <developers>
         <developer>
             <name>Haifeng Li</name>
-            <email>haifengl@usc.edu</email>
+            <email>haifeng.hli@gmail.com</email>
             <url>http://haifengl.wordpress.com</url>
             <roles>
                 <role>architect</role>
@@ -36,7 +32,7 @@
             </roles>
             <timezone>America/New_York</timezone>
             <properties>
-                <twitter>@haifeng</twitter>
+                <twitter>@haifengl</twitter>
             </properties>
         </developer>
     </developers>
@@ -49,50 +45,50 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.smile</groupId>
+            <groupId>com.github.haifengl</groupId>
             <artifactId>smile-math</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.3</version>
         </dependency>
         <dependency>
-            <groupId>io.smile</groupId>
+            <groupId>com.github.haifengl</groupId>
             <artifactId>smile-data</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.3</version>
         </dependency>
         <dependency>
-            <groupId>io.smile</groupId>
+            <groupId>com.github.haifengl</groupId>
             <artifactId>smile-graph</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
     <build>
-        <sourceDirectory>src</sourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <tasks>
-                                <copy file="pom.xml" tofile="${basedir}/target/pom.xml"/>
-                            </tasks>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
+                <version>2.4</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>jar-no-fork</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -100,6 +96,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.2</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -122,6 +119,17 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.3</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
             </plugin>
         </plugins>
     </build>

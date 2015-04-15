@@ -8,6 +8,7 @@ smile.data.parser.microarray
 smile.feature
 smile.gap
 smile.graph
+smile.hash
 smile.imputation
 smile.interpolation
 smile.interpolation.variogram
@@ -21,6 +22,14 @@ smile.math.rbf
 smile.math.special
 smile.mds
 smile.neighbor
+smile.nlp
+smile.nlp.collocation
+smile.nlp.dictionary
+smile.nlp.keyword
+smile.nlp.pos
+smile.nlp.relevance
+smile.nlp.stemmer
+smile.nlp.tokenizer
 smile.plot
 smile.projection
 smile.regression
