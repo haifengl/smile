@@ -4,9 +4,6 @@
 SmileDemo/src/main/resources
 SmileTestData
 
-# javadoc
-doc/
-
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
