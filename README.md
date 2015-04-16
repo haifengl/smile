@@ -34,34 +34,34 @@ You can similarily replace artifactId smile-core with smile-math, smile-data, sm
 
 SmileMiner implements the following major machine learning algorithms
 
-* Classification:
+* **Classification**
 Support Vector Machines, Decision Trees, AdaBoost, Gradient Boosting, Random Forest, Logistic Regression, Neural Networks, RBF Networks, Maximum Entropy Classifier, KNN, Naïve Bayesian, Fisher/Linear/Quadratic/Regularized Discriminant Analysis.
 
-* Regression:
+* **Regression**
 Support Vector Regression, Gaussian Process, Regression Trees, Gradient Boosting, Random Forest, RBF Networks, OLS, LASSO, Ridge Regression.
 
-* Feature Selection:
+* **Feature Selection**
 Genetic Algorithm based Feature Selection, Ensemble Learning based Feature Selection, Signal Noise ratio, Sum Squares ratio.
 
-* Clustering:
+* **Clustering**
 BIRCH, CLARANS, DBScan, DENCLUE, Deterministic Annealing, K-Means, X-Means, G-Means, Neural Gas, Growing Neural Gas, Hierarchical Clustering, Sequential Information Bottleneck, Self-Organizing Maps, Spectral Clustering, Minimum Entropy Clustering.
 
-* Association Rule & Frequent Itemset Mining:
+* **Association Rule & Frequent Itemset Mining**
 FP-growth mining algorithm
 
-* Manifold learning:
+* **Manifold learning**
 IsoMap, LLE, Laplacian Eigenmap, PCA, Kernel PCA, Probabilistic PCA, GHA, Random Projection
 
-* Multi-Dimensional Scaling:
+* **Multi-Dimensional Scaling**
 Classical MDS, Isotonic MDS, Sammon Mapping
 
-* Nearest Neighbor Search:
+* **Nearest Neighbor Search**
 BK-Tree, Cover Tree, KD-Tree, LSH
 
-* Sequence Learning:
+* **Sequence Learning**
 Hidden Markov Model, Conditional Random Field.
 
-* Natural Language Processing:
+* **Natural Language Processing**
 Sentence Splitter and Tokenizer, Bigram Statistical Test, Phrase Extractor, Keyword Extractor, Stemmer, POS Tagging, Relevance Ranking
 
 Model Serialization
