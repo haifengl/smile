@@ -24,8 +24,6 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import smile.math.Math;
 
-import java.util.Arrays;
-
 /**
  *
  * @author Haifeng Li

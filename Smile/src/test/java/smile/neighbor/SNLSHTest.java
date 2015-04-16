@@ -1,7 +1,5 @@
 package smile.neighbor;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,9 +9,7 @@ import smile.util.MaxHeap;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Qiyang Zuo
@@ -28,54 +24,58 @@ public class SNLSHTest {
             "I want to be far from other cases"
     };
 
-    private List<String> testData;
-    private List<String> trainData;
-    private Map<String, Long> signCache;
+    private List<List<String>> testData;
+    private List<List<String>> trainData;
+    private List<List<String>> toyData;
+    private Map<List<String>, Long> signCache; //tokens<->sign
 
     @Before
     public void before() throws IOException {
         trainData = loadData("/smile/data/msrp/msr_paraphrase_train.txt");
         testData = loadData("/smile/data/msrp/msr_paraphrase_test.txt");
-        signCache = new HashMap<String, Long>();
-        for (String q : trainData) {
-            long sign = SimHash.simhash64(q);
-            signCache.put(q, sign);
+        signCache = new HashMap<List<String>, Long>();
+        for (List<String> tokens : trainData) {
+            long sign = SimHash.simhash64(tokens);
+            signCache.put(tokens, sign);
+        }
+        toyData = new ArrayList<List<String>>();
+        for (String text : texts) {
+            toyData.add(tokenize(text, " "));
         }
     }
 
-    private List<String> loadData(String path) throws IOException {
-        List<String> data = Lists.newArrayList();
+    private List<List<String>> loadData(String path) throws IOException {
+        List<List<String>> data = new ArrayList<List<String>>();
         List<String> lines = IOUtils.readLines(this.getClass().getResourceAsStream(path));
         for (String line : lines) {
-            List<String> s = Splitter.on("\t").omitEmptyStrings().splitToList(line);
-            data.add(s.get(s.size() - 1));
-            data.add(s.get(s.size() - 2));
+            List<String> s = tokenize(line, "\t");
+            data.add(tokenize(s.get(s.size() - 1), " "));
+            data.add(tokenize(s.get(s.size() - 2), " "));
         }
         return data.subList(2, data.size());
     }
 
-    private Neighbor<String, String>[] linearKNN(String q, int k) {
+    private Neighbor<List<String>, List<String>>[] linearKNN(List<String> q, int k) {
         @SuppressWarnings("unchecked")
-        Neighbor<String, String>[] neighbors = (Neighbor<String, String>[])Array.newInstance(Neighbor.class, k);
-        MaxHeap<Neighbor<String, String>> heap = new MaxHeap<Neighbor<String, String>>(neighbors);
+        Neighbor<List<String>, List<String>>[] neighbors = (Neighbor<List<String>, List<String>>[])Array.newInstance(Neighbor.class, k);
+        MaxHeap<Neighbor<List<String>, List<String>>> heap = new MaxHeap<Neighbor<List<String>, List<String>>>(neighbors);
         long sign1 = SimHash.simhash64(q);
-        for (String t : trainData) {
+        for (List<String> t : trainData) {
             if(t.equals(q)) {
                 continue;
             }
             long sign2 = signCache.get(t);
             double distance = HammingDistance.d(sign1, sign2);
-            heap.add(new Neighbor<String, String>(t, t, 0, distance));
+            heap.add(new Neighbor<List<String>, List<String>>(t, t, 0, distance));
         }
         return heap.toSortedArray();
     }
 
-    private Neighbor<String, String> linearNearest(String q) {
-        Neighbor<String, String> neighbor = new Neighbor<String, String>(null, null, 0, 0);
+    private Neighbor<List<String>, List<String>> linearNearest(List<String> q) {
         long sign1 = SimHash.simhash64(q);
         double minDist = Double.MAX_VALUE;
-        String minKey = null;
-        for (String t : trainData) {
+        List<String> minKey = null;
+        for (List<String> t : trainData) {
             if (t.equals(q)) {
                 continue;
             }
@@ -86,30 +86,28 @@ public class SNLSHTest {
                 minKey = t;
             }
         }
-        return new Neighbor<String, String>(minKey, minKey, 0, minDist);
+        return new Neighbor<List<String>, List<String>>(minKey, minKey, 0, minDist);
     }
 
-    private void linearRange(String q, double d, List<Neighbor<String,String>> neighbors) {
+    private void linearRange(List<String> q, double d, List<Neighbor<List<String>,List<String>>> neighbors) {
         long sign1 = SimHash.simhash64(q);
-        for (String t : trainData) {
+        for (List<String> t : trainData) {
             if (t.equals(q)) {
                 continue;
             }
             long sign2 = signCache.get(t);
             double distance = HammingDistance.d(sign1, sign2);
             if (distance <= d) {
-                neighbors.add(new Neighbor<String, String>(t, t, 0, distance));
+                neighbors.add(new Neighbor<List<String>, List<String>>(t, t, 0, distance));
             }
         }
     }
 
     @Test
     public void testKNN() {
-        SNLSH<String> lsh = new SNLSH<String>(8);
-        for (String t : texts) {
-            lsh.put(t, t);
-        }
-        Neighbor<String, String>[] ns = lsh.knn(texts[0], 10);
+        SNLSH<List<String>> lsh = createLSH(toyData);
+        List<String> tokens = tokenize(texts[0]," ");
+        Neighbor<List<String>, List<String>>[] ns = lsh.knn(tokens, 10);
 
         System.out.println("-----test knn: ------");
         for (int i = 0; i < ns.length; i++) {
@@ -120,15 +118,12 @@ public class SNLSHTest {
 
     @Test
     public void testKNNRecall() {
-        SNLSH<String> lsh = new SNLSH<String>(8);
-        for(String t : trainData) {
-            lsh.put(t, t);
-        }
+        SNLSH<List<String>> lsh = createLSH(trainData);
         double recall = 0.0;
-        for (String q : testData) {
+        for (List<String> q : testData) {
             int k = 3;
-            Neighbor<String, String>[] n1 = lsh.knn(q, k);
-            Neighbor<String, String>[] n2 = linearKNN(q, k);
+            Neighbor<List<String>, List<String>>[] n1 = lsh.knn(q, k);
+            Neighbor<List<String>, List<String>>[] n2 = linearKNN(q, k);
             int hit = 0;
             for (int m = 0; m < n1.length && n1[m] != null; m++) {
                 for (int n = 0; n < n2.length && n2[n] != null; n++) {
@@ -146,26 +141,20 @@ public class SNLSHTest {
 
     @Test
     public void testNearest() {
-        SNLSH<String> lsh = new SNLSH<String>(8);
-        for (String t : texts) {
-            lsh.put(t, t);
-        }
+        SNLSH<List<String>> lsh = createLSH(toyData);
         System.out.println("----------test nearest start:-------");
-        Neighbor<String, String> n = lsh.nearest(texts[0]);
+        Neighbor<List<String>, List<String>> n = lsh.nearest(tokenize(texts[0]," "));
         System.out.println("neighbor" + " : " + n.key + " distance: " + n.distance);
         System.out.println("----------test nearest end-------");
     }
 
     @Test
     public void testNearestRecall() {
-        SNLSH<String> lsh = new SNLSH<String>(8);
-        for(String t : trainData) {
-            lsh.put(t, t);
-        }
+        SNLSH<List<String>> lsh = createLSH(trainData);
         double recall = 0.0;
-        for (String q : testData) {
-            Neighbor<String, String> n1 = lsh.nearest(q);
-            Neighbor<String, String> n2 = linearNearest(q);
+        for (List<String> q : testData) {
+            Neighbor<List<String>, List<String>> n1 = lsh.nearest(q);
+            Neighbor<List<String>, List<String>> n2 = linearNearest(q);
             if (n1.value.equals(n2.value)) {
                 recall++;
             }
@@ -176,14 +165,11 @@ public class SNLSHTest {
 
     @Test
     public void testRange() {
-        SNLSH<String> lsh = new SNLSH<String>(8);
-        for (String t : texts) {
-            lsh.put(t, t);
-        }
-        List<Neighbor<String, String>> ns = Lists.newArrayList();
-        lsh.range(texts[0], 10, ns);
+        SNLSH<List<String>> lsh = createLSH(toyData);
+        List<Neighbor<List<String>, List<String>>> ns = new ArrayList<Neighbor<List<String>, List<String>>>();
+        lsh.range(tokenize(texts[0], " "), 10, ns);
         System.out.println("-------test range begin-------");
-        for (Neighbor<String, String> n : ns) {
+        for (Neighbor<List<String>, List<String>> n : ns) {
             System.out.println(n.key + "  distance: " + n.distance);
         }
         System.out.println("-----test range end ----------");
@@ -192,16 +178,13 @@ public class SNLSHTest {
 
     @Test
     public void testRangeRecall() {
-        SNLSH<String> lsh = new SNLSH<String>(8);
-        for (String t : trainData) {
-            lsh.put(t, t);
-        }
+        SNLSH<List<String>> lsh = createLSH(trainData);
         double dist = 15.0;
         double recall = 0.0;
-        for (String q : testData) {
-            List<Neighbor<String, String>> n1 = Lists.newArrayList();
+        for (List<String> q : testData) {
+            List<Neighbor<List<String>, List<String>>> n1 = new ArrayList<Neighbor<List<String>, List<String>>>();
             lsh.range(q, dist, n1);
-            List<Neighbor<String, String>> n2 = Lists.newArrayList();
+            List<Neighbor<List<String>, List<String>>> n2 = new ArrayList<Neighbor<List<String>, List<String>>>();
             linearRange(q, dist, n2);
             int hit = 0;
             for (int m = 0; m < n1.size(); m++) {
@@ -218,5 +201,28 @@ public class SNLSHTest {
         }
         recall /= testData.size();
         System.out.println("SNLSH range recall is " + recall);
+    }
+
+    private SNLSH<List<String>> createLSH(List<List<String>> data) {
+        SNLSH<List<String>> lsh = new SNLSH<List<String>>(8);
+        for (List<String> tokens : data) {
+            lsh.put(tokens, tokens);
+        }
+        return lsh;
+    }
+
+    private List<String> tokenize(String line, String regex) {
+        List<String> tokens = new LinkedList<String>();
+        if (line == null || line.length() == 0) {
+            throw new IllegalArgumentException("Line should not be blank!");
+        }
+        String[] ss = line.split(regex);
+        for (String s : ss) {
+            if (s == null || s.length() == 0) {
+                continue;
+            }
+            tokens.add(s);
+        }
+        return tokens;
     }
 }
