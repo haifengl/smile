@@ -35,6 +35,34 @@ import static smile.neighbor.SNLSH.SimHash.simhash64;
  * test data set: http://research.microsoft.com/en-us/downloads/607d14d9-20cd-47e3-85bc-a2f65cd28042/
  */
 public class SNLSHTest {
+
+    private class Sentence extends SNLSH.AbstractSentence {
+        public Sentence(String line) {
+            this.line = line;
+            this.tokens = tokenize(line);
+        }
+
+        @Override
+        List<String> tokenize(String line) {
+            return tokenize(line, " ");
+        }
+
+        private List<String> tokenize(String line, String regex) {
+            List<String> tokens = new LinkedList<String>();
+            if (line == null || line.length() == 0) {
+                throw new IllegalArgumentException("Line should not be blank!");
+            }
+            String[] ss = line.split(regex);
+            for (String s : ss) {
+                if (s == null || s.length() == 0) {
+                    continue;
+                }
+                tokens.add(s);
+            }
+            return tokens;
+        }
+    }
+
     private String[] texts = {
             "This is a test case",
             "This is another test case",
@@ -42,106 +70,106 @@ public class SNLSHTest {
             "I want to be far from other cases"
     };
 
-    private List<List<String>> testData;
-    private List<List<String>> trainData;
-    private List<List<String>> toyData;
-    private Map<List<String>, Long> signCache; //tokens<->sign
+    private List<Sentence> testData;
+    private List<Sentence> trainData;
+    private List<Sentence> toyData;
+    private Map<String, Long> signCache; //tokens<->sign
 
     @Before
     public void before() throws IOException {
         trainData = loadData("/smile/data/msrp/msr_paraphrase_train.txt");
         testData = loadData("/smile/data/msrp/msr_paraphrase_test.txt");
-        signCache = new HashMap<List<String>, Long>();
-        for (List<String> tokens : trainData) {
-            long sign = simhash64(tokens);
-            signCache.put(tokens, sign);
+        signCache = new HashMap<String, Long>();
+        for (Sentence sentence : trainData) {
+            long sign = simhash64(sentence.tokens);
+            signCache.put(sentence.line, sign);
         }
-        toyData = new ArrayList<List<String>>();
+        toyData = new ArrayList<Sentence>();
         for (String text : texts) {
-            toyData.add(tokenize(text, " "));
+            toyData.add(new Sentence(text));
         }
     }
 
-    private List<List<String>> loadData(String path) throws IOException {
-        List<List<String>> data = new ArrayList<List<String>>();
+    private List<Sentence> loadData(String path) throws IOException {
+        List<Sentence> data = new ArrayList<Sentence>();
         List<String> lines = IOUtils.readLines(this.getClass().getResourceAsStream(path));
         for (String line : lines) {
             List<String> s = tokenize(line, "\t");
-            data.add(tokenize(s.get(s.size() - 1), " "));
-            data.add(tokenize(s.get(s.size() - 2), " "));
+            data.add(new Sentence(s.get(s.size() - 1)));
+            data.add(new Sentence(s.get(s.size() - 2)));
         }
         return data.subList(2, data.size());
     }
 
-    private Neighbor<List<String>, List<String>>[] linearKNN(List<String> q, int k) {
+    private Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[] linearKNN(SNLSH.AbstractSentence q, int k) {
         @SuppressWarnings("unchecked")
-        Neighbor<List<String>, List<String>>[] neighbors = (Neighbor<List<String>, List<String>>[])Array.newInstance(Neighbor.class, k);
-        MaxHeap<Neighbor<List<String>, List<String>>> heap = new MaxHeap<Neighbor<List<String>, List<String>>>(neighbors);
-        long sign1 = simhash64(q);
-        for (List<String> t : trainData) {
-            if(t.equals(q)) {
+        Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[] neighbors = (Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[])Array.newInstance(Neighbor.class, k);
+        MaxHeap<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> heap = new MaxHeap<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>>(neighbors);
+        long sign1 = simhash64(q.tokens);
+        for (Sentence sentence : trainData) {
+            if(sentence.line.equals(q.line)) {
                 continue;
             }
-            long sign2 = signCache.get(t);
+            long sign2 = signCache.get(sentence.line);
             double distance = HammingDistance.d(sign1, sign2);
-            heap.add(new Neighbor<List<String>, List<String>>(t, t, 0, distance));
+            heap.add(new Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>(sentence, sentence, 0, distance));
         }
         return heap.toSortedArray();
     }
 
-    private Neighbor<List<String>, List<String>> linearNearest(List<String> q) {
-        long sign1 = simhash64(q);
+    private Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence> linearNearest(SNLSH.AbstractSentence q) {
+        long sign1 = simhash64(q.tokens);
         double minDist = Double.MAX_VALUE;
-        List<String> minKey = null;
-        for (List<String> t : trainData) {
-            if (t.equals(q)) {
+        Sentence minKey = null;
+        for (Sentence sentence : trainData) {
+            if (sentence.line.equals(q.line)) {
                 continue;
             }
-            long sign2 = signCache.get(t);
+            long sign2 = signCache.get(sentence.line);
             double distance = HammingDistance.d(sign1, sign2);
             if (distance < minDist) {
                 minDist = distance;
-                minKey = t;
+                minKey = sentence;
             }
         }
-        return new Neighbor<List<String>, List<String>>(minKey, minKey, 0, minDist);
+        return new Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>(minKey, minKey, 0, minDist);
     }
 
-    private void linearRange(List<String> q, double d, List<Neighbor<List<String>,List<String>>> neighbors) {
-        long sign1 = simhash64(q);
-        for (List<String> t : trainData) {
-            if (t.equals(q)) {
+    private void linearRange(Sentence q, double d, List<Neighbor<SNLSH.AbstractSentence,SNLSH.AbstractSentence>> neighbors) {
+        long sign1 = simhash64(q.tokens);
+        for (Sentence sentence : trainData) {
+            if (sentence.line.equals(q.line)) {
                 continue;
             }
-            long sign2 = signCache.get(t);
+            long sign2 = signCache.get(sentence.line);
             double distance = HammingDistance.d(sign1, sign2);
             if (distance <= d) {
-                neighbors.add(new Neighbor<List<String>, List<String>>(t, t, 0, distance));
+                neighbors.add(new Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>(sentence, sentence, 0, distance));
             }
         }
     }
 
     @Test
     public void testKNN() {
-        SNLSH<List<String>> lsh = createLSH(toyData);
-        List<String> tokens = tokenize(texts[0]," ");
-        Neighbor<List<String>, List<String>>[] ns = lsh.knn(tokens, 10);
+        SNLSH<SNLSH.AbstractSentence> lsh = createLSH(toyData);
+        SNLSH.AbstractSentence sentence = new Sentence(texts[0]);
+        Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[] ns = lsh.knn(sentence, 10);
 
         System.out.println("-----test knn: ------");
         for (int i = 0; i < ns.length; i++) {
-            System.out.println("neighbor" + i + " : " + ns[i].key + " distance: " + ns[i].distance);
+            System.out.println("neighbor" + i + " : " + ns[i].key.line + ". distance: " + ns[i].distance);
         }
         System.out.println("------test knn end------");
     }
 
     @Test
     public void testKNNRecall() {
-        SNLSH<List<String>> lsh = createLSH(trainData);
+        SNLSH<SNLSH.AbstractSentence> lsh = createLSH(trainData);
         double recall = 0.0;
-        for (List<String> q : testData) {
+        for (SNLSH.AbstractSentence q : testData) {
             int k = 3;
-            Neighbor<List<String>, List<String>>[] n1 = lsh.knn(q, k);
-            Neighbor<List<String>, List<String>>[] n2 = linearKNN(q, k);
+            Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[] n1 = lsh.knn(q, k);
+            Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[] n2 = linearKNN(q, k);
             int hit = 0;
             for (int m = 0; m < n1.length && n1[m] != null; m++) {
                 for (int n = 0; n < n2.length && n2[n] != null; n++) {
@@ -159,20 +187,20 @@ public class SNLSHTest {
 
     @Test
     public void testNearest() {
-        SNLSH<List<String>> lsh = createLSH(toyData);
+        SNLSH<SNLSH.AbstractSentence> lsh = createLSH(toyData);
         System.out.println("----------test nearest start:-------");
-        Neighbor<List<String>, List<String>> n = lsh.nearest(tokenize(texts[0]," "));
+        Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence> n = lsh.nearest((SNLSH.AbstractSentence)new Sentence(texts[0]));
         System.out.println("neighbor" + " : " + n.key + " distance: " + n.distance);
         System.out.println("----------test nearest end-------");
     }
 
     @Test
     public void testNearestRecall() {
-        SNLSH<List<String>> lsh = createLSH(trainData);
+        SNLSH<SNLSH.AbstractSentence> lsh = createLSH(trainData);
         double recall = 0.0;
-        for (List<String> q : testData) {
-            Neighbor<List<String>, List<String>> n1 = lsh.nearest(q);
-            Neighbor<List<String>, List<String>> n2 = linearNearest(q);
+        for (SNLSH.AbstractSentence q : testData) {
+            Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence> n1 = lsh.nearest(q);
+            Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence> n2 = linearNearest(q);
             if (n1.value.equals(n2.value)) {
                 recall++;
             }
@@ -183,11 +211,11 @@ public class SNLSHTest {
 
     @Test
     public void testRange() {
-        SNLSH<List<String>> lsh = createLSH(toyData);
-        List<Neighbor<List<String>, List<String>>> ns = new ArrayList<Neighbor<List<String>, List<String>>>();
-        lsh.range(tokenize(texts[0], " "), 10, ns);
+        SNLSH<SNLSH.AbstractSentence> lsh = createLSH(toyData);
+        List<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> ns = new ArrayList<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>>();
+        lsh.range(new Sentence(texts[0]), 10, ns);
         System.out.println("-------test range begin-------");
-        for (Neighbor<List<String>, List<String>> n : ns) {
+        for (Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence> n : ns) {
             System.out.println(n.key + "  distance: " + n.distance);
         }
         System.out.println("-----test range end ----------");
@@ -196,13 +224,13 @@ public class SNLSHTest {
 
     @Test
     public void testRangeRecall() {
-        SNLSH<List<String>> lsh = createLSH(trainData);
+        SNLSH<SNLSH.AbstractSentence> lsh = createLSH(trainData);
         double dist = 15.0;
         double recall = 0.0;
-        for (List<String> q : testData) {
-            List<Neighbor<List<String>, List<String>>> n1 = new ArrayList<Neighbor<List<String>, List<String>>>();
+        for (Sentence q : testData) {
+            List<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> n1 = new ArrayList<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>>();
             lsh.range(q, dist, n1);
-            List<Neighbor<List<String>, List<String>>> n2 = new ArrayList<Neighbor<List<String>, List<String>>>();
+            List<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> n2 = new ArrayList<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>>();
             linearRange(q, dist, n2);
             int hit = 0;
             for (int m = 0; m < n1.size(); m++) {
@@ -221,10 +249,10 @@ public class SNLSHTest {
         System.out.println("SNLSH range recall is " + recall);
     }
 
-    private SNLSH<List<String>> createLSH(List<List<String>> data) {
-        SNLSH<List<String>> lsh = new SNLSH<List<String>>(8);
-        for (List<String> tokens : data) {
-            lsh.put(tokens, tokens);
+    private SNLSH<SNLSH.AbstractSentence> createLSH(List<Sentence> data) {
+        SNLSH<SNLSH.AbstractSentence> lsh = new SNLSH<SNLSH.AbstractSentence>(8);
+        for (Sentence sentence : data) {
+            lsh.put(sentence, sentence);
         }
         return lsh;
     }
