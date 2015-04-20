@@ -17,13 +17,15 @@
  */
 package smile.neighbor;
 
+import smile.hash.MurmurHash;
 import smile.math.distance.HammingDistance;
 import smile.util.MaxHeap;
 
 import java.lang.reflect.Array;
+import java.nio.ByteBuffer;
 import java.util.*;
 
-import static smile.hash.SimHash.simhash64;
+import static smile.neighbor.SNLSH.SimHash.simhash64;
 
 /**
  *
@@ -173,5 +175,37 @@ public class SNLSH<E> implements NearestNeighborSearch<List<String>, E>, KNNSear
             }
         }
         return candidates;
+    }
+
+    public static class SimHash {
+        private static final long seed = System.currentTimeMillis();
+
+        public static long simhash64(List<String> tokens) {
+            final int BITS = 64;
+            if (tokens == null || tokens.isEmpty()) {
+                return 0;
+            }
+            int[] bits = new int[BITS];
+            for (String s : tokens) {
+                ByteBuffer buffer = ByteBuffer.wrap(s.getBytes());
+                long hc = MurmurHash.hash2_64(buffer, 0, buffer.array().length, seed);
+                for (int i = 0; i < BITS; i++) {
+                    if (((hc >>> i) & 1) == 1) {
+                        bits[i]++;
+                    } else {
+                        bits[i]--;
+                    }
+                }
+            }
+            long hash = 0;
+            long one = 1;
+            for (int i = 0; i < BITS; i++) {
+                if (bits[i] >= 0) {
+                    hash |= one;
+                }
+                one <<= 1;
+            }
+            return hash;
+        }
     }
 }

@@ -1,15 +1,33 @@
+/**
+ * ****************************************************************************
+ * Copyright (c) 2010 Haifeng Li
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * *****************************************************************************
+ */
 package smile.neighbor;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
-import smile.hash.SimHash;
 import smile.math.distance.HammingDistance;
 import smile.util.MaxHeap;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.*;
+
+import static smile.neighbor.SNLSH.SimHash.simhash64;
 
 /**
  * @author Qiyang Zuo
@@ -35,7 +53,7 @@ public class SNLSHTest {
         testData = loadData("/smile/data/msrp/msr_paraphrase_test.txt");
         signCache = new HashMap<List<String>, Long>();
         for (List<String> tokens : trainData) {
-            long sign = SimHash.simhash64(tokens);
+            long sign = simhash64(tokens);
             signCache.put(tokens, sign);
         }
         toyData = new ArrayList<List<String>>();
@@ -59,7 +77,7 @@ public class SNLSHTest {
         @SuppressWarnings("unchecked")
         Neighbor<List<String>, List<String>>[] neighbors = (Neighbor<List<String>, List<String>>[])Array.newInstance(Neighbor.class, k);
         MaxHeap<Neighbor<List<String>, List<String>>> heap = new MaxHeap<Neighbor<List<String>, List<String>>>(neighbors);
-        long sign1 = SimHash.simhash64(q);
+        long sign1 = simhash64(q);
         for (List<String> t : trainData) {
             if(t.equals(q)) {
                 continue;
@@ -72,7 +90,7 @@ public class SNLSHTest {
     }
 
     private Neighbor<List<String>, List<String>> linearNearest(List<String> q) {
-        long sign1 = SimHash.simhash64(q);
+        long sign1 = simhash64(q);
         double minDist = Double.MAX_VALUE;
         List<String> minKey = null;
         for (List<String> t : trainData) {
@@ -90,7 +108,7 @@ public class SNLSHTest {
     }
 
     private void linearRange(List<String> q, double d, List<Neighbor<List<String>,List<String>>> neighbors) {
-        long sign1 = SimHash.simhash64(q);
+        long sign1 = simhash64(q);
         for (List<String> t : trainData) {
             if (t.equals(q)) {
                 continue;
