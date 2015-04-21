@@ -21,7 +21,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import smile.math.distance.HammingDistance;
-import smile.util.MaxHeap;
+import smile.sort.HeapSelect;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -104,17 +104,36 @@ public class SNLSHTest {
     private Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[] linearKNN(SNLSH.AbstractSentence q, int k) {
         @SuppressWarnings("unchecked")
         Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[] neighbors = (Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[])Array.newInstance(Neighbor.class, k);
-        MaxHeap<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> heap = new MaxHeap<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>>(neighbors);
+        HeapSelect<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> heap = new HeapSelect<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>>(neighbors);
+        Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence> neighbor = new Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>(null, null, 0, Double.MAX_VALUE);
+        for (int i = 0; i < k; i++) {
+            heap.add(neighbor);
+        }
         long sign1 = simhash64(q.tokens);
+        int hit = 0;
         for (Sentence sentence : trainData) {
             if(sentence.line.equals(q.line)) {
                 continue;
             }
             long sign2 = signCache.get(sentence.line);
             double distance = HammingDistance.d(sign1, sign2);
-            heap.add(new Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>(sentence, sentence, 0, distance));
+            if(distance < heap.peek().distance) {
+                heap.add(new Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>(sentence, sentence, 0, distance));
+                hit++;
+            }
         }
-        return heap.toSortedArray();
+        heap.sort();
+        if (hit < k) {
+            @SuppressWarnings("unchecked")
+            Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[] n2 = (Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[])Array.newInstance(Neighbor.class, hit);
+            int start = k - hit;
+            for (int i = 0; i < hit; i++) {
+                n2[i] = neighbors[i + start];
+            }
+            neighbors = n2;
+        }
+
+        return neighbors;
     }
 
     private Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence> linearNearest(SNLSH.AbstractSentence q) {
@@ -190,7 +209,7 @@ public class SNLSHTest {
         SNLSH<SNLSH.AbstractSentence> lsh = createLSH(toyData);
         System.out.println("----------test nearest start:-------");
         Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence> n = lsh.nearest((SNLSH.AbstractSentence)new Sentence(texts[0]));
-        System.out.println("neighbor" + " : " + n.key + " distance: " + n.distance);
+        System.out.println("neighbor" + " : " + n.key.line + " distance: " + n.distance);
         System.out.println("----------test nearest end-------");
     }
 
@@ -216,7 +235,7 @@ public class SNLSHTest {
         lsh.range(new Sentence(texts[0]), 10, ns);
         System.out.println("-------test range begin-------");
         for (Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence> n : ns) {
-            System.out.println(n.key + "  distance: " + n.distance);
+            System.out.println(n.key.line + "  distance: " + n.distance);
         }
         System.out.println("-----test range end ----------");
     }

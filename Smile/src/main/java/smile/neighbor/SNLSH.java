@@ -19,7 +19,7 @@ package smile.neighbor;
 
 import smile.hash.MurmurHash;
 import smile.math.distance.HammingDistance;
-import smile.util.MaxHeap;
+import smile.sort.HeapSelect;
 
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
@@ -117,15 +117,36 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         Set<Integer> candidates = obtainCandidates(q.tokens);
 
         Neighbor<AbstractSentence, E>[] neighbors = (Neighbor<AbstractSentence, E>[])Array.newInstance(Neighbor.class, k);
-        MaxHeap<Neighbor<AbstractSentence, E>> heap = new MaxHeap<Neighbor<AbstractSentence, E>>(neighbors);
+        HeapSelect<Neighbor<AbstractSentence, E>> heap = new HeapSelect<Neighbor<AbstractSentence, E>>(neighbors);
+        Neighbor<AbstractSentence, E> neighbor = new Neighbor<AbstractSentence, E>(null, null, 0, Double.MAX_VALUE);
+        for (int i = 0; i < k; i++) {
+            heap.add(neighbor);
+        }
+        int hit = 0;
         for (int index : candidates) {
+            AbstractSentence key = keys.get(index);
+            if (q.line.equals(key.line) && identicalExcluded) {
+                continue;
+            }
             long sign = signs.get(index);
             double distance = HammingDistance.d(fpq, sign);
-            if (!keys.get(index).line.equals(q.line) && identicalExcluded) {
+            if (distance < heap.peek().distance) {
                 heap.add(new Neighbor<AbstractSentence, E>(keys.get(index), data.get(index), index, distance));
+                hit++;
             }
         }
-        return heap.toSortedArray();
+        heap.sort();
+        if (hit < k) {
+            @SuppressWarnings("unchecked")
+            Neighbor<AbstractSentence, E>[] n2 = (Neighbor<AbstractSentence, E>[])Array.newInstance(Neighbor.class, hit);
+            int start = k - hit;
+            for (int i = 0; i < hit; i++) {
+                n2[i] = neighbors[i + start];
+            }
+            neighbors = n2;
+        }
+
+        return neighbors;
     }
 
     @SuppressWarnings("unchecked")
@@ -162,9 +183,6 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         return hash >>> ((bandNum * (BITS / this.bandSize))) & mask;
     }
 
-
-
-
     private Set<Integer> obtainCandidates(List<String> q) {
         Set<Integer> candidates = new HashSet<Integer>();
         long sign = simhash64(q);
@@ -179,7 +197,7 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
     }
 
     public static class SimHash {
-        private static final long seed = System.currentTimeMillis();
+        private static final long seed = 0; //do not change seed
 
         public static long simhash64(List<String> tokens) {
             final int BITS = 64;
@@ -213,11 +231,6 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
     public static abstract class AbstractSentence {
         public String line;
         public List<String> tokens;
-        AbstractSentence(){}
-        private AbstractSentence(String line) {
-            this.line = line;
-            this.tokens = tokenize(line);
-        }
         abstract List<String> tokenize(String line);
     }
 }
