@@ -1,20 +1,18 @@
-/**
- * ****************************************************************************
+/*******************************************************************************
  * Copyright (c) 2010 Haifeng Li
- * <p/>
+ *   
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *  
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * *****************************************************************************
- */
+ *******************************************************************************/
 package smile.neighbor;
 
 import smile.hash.MurmurHash;
@@ -34,7 +32,6 @@ import java.util.HashSet;
 import static smile.neighbor.SNLSH.SimHash.simhash64;
 
 /**
- *
  * Locality-Sensitive Hashing for Signatures.
  * LSH is an efficient algorithm for approximate nearest neighbor search
  * in high dimensional spaces by performing probabilistic dimension reduction of data.
@@ -54,7 +51,6 @@ import static smile.neighbor.SNLSH.SimHash.simhash64;
  *
  * @see LSH
  * @author Qiyang Zuo
- *
  */
 public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E>, KNNSearch<SNLSH.AbstractSentence, E>, RNNSearch<SNLSH.AbstractSentence, E> {
 
@@ -143,7 +139,6 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         }
         heap.sort();
         if (hit < k) {
-            @SuppressWarnings("unchecked")
             Neighbor<AbstractSentence, E>[] n2 = (Neighbor<AbstractSentence, E>[])Array.newInstance(Neighbor.class, hit);
             int start = k - hit;
             for (int i = 0; i < hit; i++) {
@@ -155,7 +150,6 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         return neighbors;
     }
 
-    @SuppressWarnings("unchecked")
     public Neighbor<AbstractSentence, E> nearest(AbstractSentence q) {
         Neighbor<AbstractSentence, E>[] ns = knn(q, 1);
         if(ns.length>0) {
@@ -181,8 +175,10 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         }
     }
 
+    @SuppressWarnings("serial")
     private class Band extends LinkedHashMap<Long, Bucket> {}
 
+    @SuppressWarnings("serial")
     private class Bucket extends LinkedList<Integer> {}
 
     private long bandHash(long hash, int bandNum) {

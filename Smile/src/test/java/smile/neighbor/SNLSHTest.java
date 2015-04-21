@@ -1,23 +1,20 @@
-/**
- * ****************************************************************************
+/*******************************************************************************
  * Copyright (c) 2010 Haifeng Li
- * <p/>
+ *   
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *  
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * *****************************************************************************
- */
+ *******************************************************************************/
 package smile.neighbor;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import smile.math.distance.HammingDistance;
@@ -31,12 +28,14 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import smile.data.parser.IOUtils;
 import static smile.neighbor.SNLSH.SimHash.simhash64;
 
 /**
+ * Test data set: http://research.microsoft.com/en-us/downloads/607d14d9-20cd-47e3-85bc-a2f65cd28042/
+ * 
  * @author Qiyang Zuo
- * @since 15/3/31
- * test data set: http://research.microsoft.com/en-us/downloads/607d14d9-20cd-47e3-85bc-a2f65cd28042/
+ * @since 03/31/15
  */
 public class SNLSHTest {
 
