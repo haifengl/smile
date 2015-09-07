@@ -78,7 +78,7 @@ public class SimpleCorpusTest {
     @Test
     public void testSize() {
         System.out.println("size");
-        assertEquals(52093, corpus.size());
+        assertEquals(51797, corpus.size());
     }
 
     /**
@@ -96,7 +96,7 @@ public class SimpleCorpusTest {
     @Test
     public void testGetNumTerms() {
         System.out.println("getNumTerms");
-        assertEquals(13976, corpus.getNumTerms());
+        assertEquals(14335, corpus.getNumTerms());
     }
 
     /**
@@ -105,7 +105,7 @@ public class SimpleCorpusTest {
     @Test
     public void testGetNumBigrams() {
         System.out.println("getNumBigrams");
-        assertEquals(16321, corpus.getNumBigrams());
+        assertEquals(17121, corpus.getNumBigrams());
     }
 
     /**
