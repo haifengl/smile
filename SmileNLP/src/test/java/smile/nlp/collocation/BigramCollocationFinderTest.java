@@ -115,7 +115,7 @@ public class BigramCollocationFinderTest {
         BigramCollocationFinder instance = new BigramCollocationFinder(5);
         BigramCollocation[] result = instance.find(corpus, p);
 
-        assertEquals(57, result.length);
+        assertEquals(52, result.length);
         for (int i = 0; i < result.length; i++) {
             System.out.println(result[i]);
         }
