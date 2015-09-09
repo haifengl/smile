@@ -1,8 +1,7 @@
 *.class
 
 # Demo program
-SmileDemo
-SmileNLP
+SmileDemo/src/main/resources
 SmileTestData
 
 # javadoc
