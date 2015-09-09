@@ -234,13 +234,10 @@ public class SimpleCorpus implements Corpus {
 
     @Override
     public Iterator<Text> search(String term) {
-        if (invertedFile.containsKey(term))
-        {
+        if (invertedFile.containsKey(term)) {
             ArrayList<Text> hits = new ArrayList<Text>(invertedFile.get(term));
             return hits.iterator();
-        }
-        else
-        {
+        } else {
             return Collections.emptyIterator();
         }
     }
@@ -260,9 +257,7 @@ public class SimpleCorpus implements Corpus {
 
             Collections.sort(rank, Collections.reverseOrder());
             return rank.iterator();
-        }
-        else
-        {
+        } else {
             return Collections.emptyIterator();
         }
     }
@@ -278,10 +273,10 @@ public class SimpleCorpus implements Corpus {
         }
 
         int n = hits.size();
-        if (n == 0)
-        {
+        if (n == 0) {
             return Collections.emptyIterator();
         }
+        
         ArrayList<Relevance> rank = new ArrayList<Relevance>(n);
         for (SimpleText doc : hits) {
             double r = 0.0;
