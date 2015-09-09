@@ -1,0 +1,46 @@
+/*******************************************************************************
+ * Copyright (c) 2010 Haifeng Li
+ *   
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *  
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
+package smile.swing;
+
+import javax.swing.Action;
+import javax.swing.JButton;
+
+/**
+ * Action initialized JButton. If the button has an icon, the text label
+ * won't show on button.
+ * 
+ * @author Haifeng Li
+ */
+@SuppressWarnings("serial")
+public class Button extends JButton {
+    /**
+     * Constructor.
+     * @param action the Action used to specify the new button.
+     */
+    public Button(Action action) {
+        super(action);
+        
+        if (getIcon() != null) {
+            String desc = (String) action.getValue(Action.SHORT_DESCRIPTION);
+            if (desc == null) {
+                desc = getText();
+            }
+            
+            setToolTipText(desc);
+            setText(null);
+        }        
+    }
+}
