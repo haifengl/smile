@@ -234,23 +234,37 @@ public class SimpleCorpus implements Corpus {
 
     @Override
     public Iterator<Text> search(String term) {
-    	ArrayList<Text> hits = new ArrayList<Text>(invertedFile.get(term));
-        return hits.iterator();
+        if (invertedFile.containsKey(term))
+        {
+            ArrayList<Text> hits = new ArrayList<Text>(invertedFile.get(term));
+            return hits.iterator();
+        }
+        else
+        {
+            return Collections.emptyIterator();
+        }
     }
 
     @Override
     public Iterator<Relevance> search(RelevanceRanker ranker, String term) {
-        List<SimpleText> hits = invertedFile.get(term);
-        int n = hits.size();
+        if (invertedFile.containsKey(term)) {
+            List<SimpleText> hits = invertedFile.get(term);
 
-        ArrayList<Relevance> rank = new ArrayList<Relevance>(n);
-        for (SimpleText doc : hits) {
-            int tf = doc.tf(term);
-            rank.add(new Relevance(doc, ranker.rank(this, doc, term, tf, n)));
+            int n = hits.size();
+
+            ArrayList<Relevance> rank = new ArrayList<Relevance>(n);
+            for (SimpleText doc : hits) {
+                int tf = doc.tf(term);
+                rank.add(new Relevance(doc, ranker.rank(this, doc, term, tf, n)));
+            }
+
+            Collections.sort(rank, Collections.reverseOrder());
+            return rank.iterator();
         }
-
-        Collections.sort(rank, Collections.reverseOrder());
-        return rank.iterator();
+        else
+        {
+            return Collections.emptyIterator();
+        }
     }
 
     @Override
@@ -258,10 +272,16 @@ public class SimpleCorpus implements Corpus {
         Set<SimpleText> hits = new HashSet<SimpleText>();
 
         for (int i = 0; i < terms.length; i++) {
-            hits.addAll(invertedFile.get(terms[i]));
+            if (invertedFile.containsKey(terms[i])) {
+                hits.addAll(invertedFile.get(terms[i]));
+            }
         }
 
         int n = hits.size();
+        if (n == 0)
+        {
+            return Collections.emptyIterator();
+        }
         ArrayList<Relevance> rank = new ArrayList<Relevance>(n);
         for (SimpleText doc : hits) {
             double r = 0.0;
