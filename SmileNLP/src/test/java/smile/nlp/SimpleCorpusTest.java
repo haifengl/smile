@@ -19,6 +19,7 @@ package smile.nlp;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collections;
 import java.util.Iterator;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -150,6 +151,17 @@ public class SimpleCorpusTest {
     }
 
     /**
+     * Test of search method, of class SimpleCorpus, without hits.
+     */
+    @Test
+    public void testSearchNoResult() {
+        System.out.println("search 'romantic'");
+        Iterator<Relevance> hits = corpus.search(new BM25(), "find");
+        assertEquals(Collections.emptyIterator(),hits);
+    }
+
+
+    /**
      * Test of search method, of class SimpleCorpus.
      */
     @Test
@@ -161,5 +173,16 @@ public class SimpleCorpusTest {
             Relevance hit = hits.next();
             System.out.println(hit.doc() + "\t" + hit.score());
         }
+    }
+
+    /**
+     * Test of search method, of class SimpleCorpus.
+     */
+    @Test
+    public void testSearch2WithNoHits() {
+        System.out.println("search 'romantic comedy'");
+        String[] terms = {"find", "words"};
+        Iterator<Relevance> hits = corpus.search(new BM25(), terms);
+        assertEquals(Collections.emptyIterator(),hits);
     }
 }
