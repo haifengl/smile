@@ -58,7 +58,7 @@ public class MulticoreExecutor {
         }
         
         if (nprocs > 1) {
-            threads = (ThreadPoolExecutor) Executors.newFixedThreadPool(nprocs);
+            threads = (ThreadPoolExecutor) Executors.newFixedThreadPool(nprocs, new SimpleDeamonThreadFactory());
         }
     }
 
