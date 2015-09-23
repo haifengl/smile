@@ -19,7 +19,7 @@ import java.util.Comparator;
 
 /**
  * Quicksort is a well-known sorting algorithm that, on average, makes O(n log n)
- * comparisons to sort n items. For large n (say > 1000), Quicksort is faster,
+ * comparisons to sort n items. For large n (say &gt; 1000), Quicksort is faster,
  * on most machines, by a factor of 1.5 or 2 than other O(n log n) algorithms.
  * However, in the worst case, it makes O(n<sup>2</sup>) comparisons. Quicksort
  * requires a bit of extra memory.

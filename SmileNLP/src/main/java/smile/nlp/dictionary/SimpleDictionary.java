@@ -43,15 +43,11 @@ public class SimpleDictionary implements Dictionary {
     public SimpleDictionary(String resource) {
         dict = new HashSet<String>();
 
-        BufferedReader input = null;
-        try {
-            File file = new File(resource);
-            if (file.exists()) {
-                input = new BufferedReader(new FileReader(resource));
-            } else {
-                input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)));
-            }
-
+        File file = new File(resource);
+        try (BufferedReader input = file.exists() ?
+             new BufferedReader(new FileReader(resource)) :
+             new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
+            
             String line = null;
             while ((line = input.readLine()) != null) {
                 line = line.trim();
@@ -62,14 +58,6 @@ public class SimpleDictionary implements Dictionary {
             }
         } catch (IOException ex) {
             ex.printStackTrace();
-        } finally {
-            try {
-                if (input != null) {
-                    input.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 

@@ -34,7 +34,7 @@ import smile.sort.QuickSort;
  * Three common types of correlation are Pearson, Spearman (for ranked data)
  * and Kendall (for uneven or multiple rankings), and can be selected using
  * the table below.
- * <table border="1" style="border-collapse: collapse" width="95%" cellspacing="0" bordercolor="#000080" id="table3">
+ * <table summary="" border="1" style="border-collapse: collapse" width="95%" cellspacing="0" id="table3">
  *   <tr>
  *     <td align="center" colspan="2" width="100%" bgcolor="#FFFF99">
  *     <p align="left" style="margin-top: 0; margin-bottom: 0">
@@ -51,7 +51,7 @@ import smile.sort.QuickSort;
  *     <td width="5%" align="center" bgcolor="#FF66FF">
  *     <p style="margin-top: 0; margin-bottom: 0">N</td>
  *     <td width="*" align="left">
- * <table border="1" style="border-collapse: collapse" width="100%" cellspacing="0" bordercolor="#000080" id="table4">
+ * <table summary="" border="1" style="border-collapse: collapse" width="100%" cellspacing="0" id="table4">
  *   <tr>
  *     <td align="center" colspan="2" width="100%" bgcolor="#FFFF99">
  *     <p align="left" style="margin-top: 0; margin-bottom: 0">Equidistant
@@ -194,7 +194,7 @@ public class CorTest {
      * The raw scores are converted to ranks and the differences between
      * the ranks of each observation on the two variables are calculated.
      * <p>
-     *  The p-value is calculated by approximation, which is good for n > 10.
+     *  The p-value is calculated by approximation, which is good for n &gt; 10.
      */
     public static CorTest spearman(double[] x, double[] y) {
         if (x.length != y.length) {
@@ -240,7 +240,7 @@ public class CorTest {
      * Coefficient is used to measure the degree of correspondence
      * between sets of rankings where the measures are not equidistant.
      * It is used with non-parametric data. The p-value is calculated by
-     * approximation, which is good for n > 10.
+     * approximation, which is good for n &gt; 10.
      */
     public static CorTest kendall(double[] x, double[] y) {
         if (x.length != y.length) {

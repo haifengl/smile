@@ -44,12 +44,12 @@ import smile.math.Math;
  * is defined by x A = &lambda; x.
  * <p>
  * Let A be a real n-by-n matrix with strictly positive entries a<sub>ij</sub>
- * > 0. Then the following statements hold.
+ * &gt; 0. Then the following statements hold.
  * <ol>
  * <li> There is a positive real number r, called the Perron-Frobenius
  * eigenvalue, such that r is an eigenvalue of A and any other eigenvalue &lambda;
  * (possibly complex) is strictly smaller than r in absolute value,
- * |&lambda;| < r.
+ * |&lambda;| &lt; r.
  * <li> The Perron-Frobenius eigenvalue is simple: r is a simple root of the
  * characteristic polynomial of A. Consequently, both the right and the left
  * eigenspace associated to r is one-dimensional.
@@ -227,7 +227,7 @@ public class EigenValueDecomposition {
      * On output, it is the eigen vector corresponding largest eigen value.
      * @param p the origin in the shifting power method. A - pI will be
      * used in the iteration to accelerate the method. p should be such that
-     * |(&lambda;<sub>2</sub> - p) / (&lambda;<sub>1</sub> - p)| < |&lambda;<sub>2</sub> / &lambda;<sub>1</sub>|,
+     * |(&lambda;<sub>2</sub> - p) / (&lambda;<sub>1</sub> - p)| &lt; |&lambda;<sub>2</sub> / &lambda;<sub>1</sub>|,
      * where &lambda;<sub>2</sub> is the second largest eigenvalue in magnitude.
      * If we known the eigenvalue spectrum of A, (&lambda;<sub>2</sub> + &lambda;<sub>n</sub>)/2
      * is the optimal choice of p, where &lambda;<sub>n</sub> is the smallest eigenvalue
@@ -253,7 +253,7 @@ public class EigenValueDecomposition {
      * On output, it is the eigen vector corresponding largest eigen value.
      * @param p the origin in the shifting power method. A - pI will be
      * used in the iteration to accelerate the method. p should be such that
-     * |(&lambda;<sub>2</sub> - p) / (&lambda;<sub>1</sub> - p)| < |&lambda;<sub>2</sub> / &lambda;<sub>1</sub>|,
+     * |(&lambda;<sub>2</sub> - p) / (&lambda;<sub>1</sub> - p)| &lt; |&lambda;<sub>2</sub> / &lambda;<sub>1</sub>|,
      * where &lambda;<sub>2</sub> is the second largest eigenvalue in magnitude.
      * If we known the eigenvalue spectrum of A, (&lambda;<sub>2</sub> + &lambda;<sub>n</sub>)/2
      * is the optimal choice of p, where &lambda;<sub>n</sub> is the smallest eigenvalue

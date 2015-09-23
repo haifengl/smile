@@ -30,18 +30,18 @@ import java.util.regex.Pattern;
  * Anglo-Saxon genitive of nouns are split into their component morphemes,
  * and each morpheme is tagged separately. Examples
  * <ul>
- * <li> children's --> children 's
- * <li> parents' --> parents '
- * <li> won't --> will not
- * <li> can't -> can not
- * <li> shan't -> shall not
- * <li> cannot -> can not
- * <li> weren't -> were not
- * <li> 'tisn't -> it is not
- * <li> 'tis -> it is
- * <li> gonna --> gon na
- * <li> I'm --> I 'm
- * <li> he'll -> he 'll
+ * <li> children's -&gt; children 's
+ * <li> parents' -&gt; parents '
+ * <li> won't -&gt; will not
+ * <li> can't -&gt; can not
+ * <li> shan't -&gt; shall not
+ * <li> cannot -&gt; can not
+ * <li> weren't -&gt; were not
+ * <li> 'tisn't -&gt; it is not
+ * <li> 'tis -&gt; it is
+ * <li> gonna -&gt; gon na
+ * <li> I'm -&gt; I 'm
+ * <li> he'll -&gt; he 'll
  * </ul>
  * This tokenizer assumes that the text has already been segmented into
  * sentences. Any periods -- apart from those at the end of a string or before

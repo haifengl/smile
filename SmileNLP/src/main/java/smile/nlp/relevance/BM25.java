@@ -110,7 +110,7 @@ public class BM25 implements RelevanceRanker {
 
     /**
      * Returns a relevance score between a term and a document based on a corpus.
-     * @param freq normalized term frequency of searching term in the document to rank.
+     * @param termFreq normalized term frequency of searching term in the document to rank.
      * @param N the number of documents in the corpus.
      * @param n the number of documents containing the given term in the corpus;
      */

@@ -66,7 +66,7 @@ public class Erf {
 
     /**
      * The complementary error function with fractional error everywhere less
-     * than 1.2 &times 10<sup>-7</sup>. This concise routine is faster than erfc.
+     * than 1.2 &times; 10<sup>-7</sup>. This concise routine is faster than erfc.
      */
     public static double erfcc(double x) {
         double z = Math.abs(x);

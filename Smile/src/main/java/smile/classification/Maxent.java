@@ -113,7 +113,7 @@ public class Maxent implements Classifier<int[]> {
         }
         
         /**
-         * Sets the regularization factor. &lambda; > 0 gives a "regularized"
+         * Sets the regularization factor. &lambda; &gt; 0 gives a "regularized"
          * estimate of linear weights which often has superior generalization
          * performance, especially when the dimensionality is high.
          * 
@@ -166,7 +166,7 @@ public class Maxent implements Classifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda &lambda; > 0 gives a "regularized" estimate of linear
+     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
      * weights which often has superior generalization performance, especially
      * when the dimensionality is high.
      */
@@ -181,7 +181,7 @@ public class Maxent implements Classifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda &lambda; > 0 gives a "regularized" estimate of linear
+     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
      * weights which often has superior generalization performance, especially
      * when the dimensionality is high.
      * @param tol tolerance for stopping iterations.

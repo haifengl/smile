@@ -39,7 +39,7 @@ import smile.math.Math;
  * for x &ge; 0. An important property of the exponential distribution is that
  * it is memoryless. This means that if a random variable T is exponentially
  * distributed, its conditional probability obeys
- * Pr(T > s + t | T > s) = Pr(T > t) for all s, t &ge; 0.
+ * Pr(T &gt; s + t | T &gt; s) = Pr(T &gt; t) for all s, t &ge; 0.
  * <p>
  * In queuing theory, the service times of agents in a system are often modeled as
  * exponentially distributed variables. Reliability theory and reliability

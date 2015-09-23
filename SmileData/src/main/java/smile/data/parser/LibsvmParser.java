@@ -113,72 +113,74 @@ public class LibsvmParser {
      * @throws java.io.FileNotFoundException
      */
     public SparseDataset parse(String name, InputStream stream) throws IOException, ParseException {
+
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-
-        String line = reader.readLine();
-        if (line == null) {
-            throw new IOException("Empty data source.");
-        }
-        
-        String[] tokens = line.trim().split("\\s+");
-        boolean classification = true;
-        Attribute response = null;
         try {
-            Integer.valueOf(tokens[0]);
-            response = new NominalAttribute("class");
-        } catch (NumberFormatException e) {
-            try {
-                Double.valueOf(tokens[0]);
-                response = new NominalAttribute("response");
-                classification = false;
-            } catch (NumberFormatException ex) {
-                System.err.println(ex);
-                throw new NumberFormatException("Unrecognized response variable value: " + tokens[0]);
+            String line = reader.readLine();
+            if (line == null) {
+                throw new IOException("Empty data source.");
             }
-        }
-        
-        SparseDataset sparse = new SparseDataset(name, response);
-        for (int i = 0; line != null; i++) {
-            tokens = line.trim().split("\\s+");
-            
-            if (classification) {
-                int y = Integer.valueOf(tokens[0]);
-                sparse.set(i, y);
-            } else {
-                double y = Double.valueOf(tokens[0]);
-                sparse.set(i, y);
-            }
-            
-            for (int k = 1; k < tokens.length; k++) {
-                String[] pair = tokens[k].split(":");
-                if (pair.length != 2) {
-                    throw new NumberFormatException("Invalid data: " + tokens[k]);                    
-                }
-                
-                int j = Integer.valueOf(pair[0]) - 1;
-                double x = Double.valueOf(pair[1]);
-                sparse.set(i, j, x);
-            }
-            
-            line = reader.readLine();
-        }
-        
-        stream.close();
 
-        if (classification) {
-            int n = sparse.size();
-            int[] y = sparse.toArray(new int[n]);
-            int[] label = Math.unique(y);
-            Arrays.sort(label);
-            for (int c : label) {
-                response.valueOf(String.valueOf(c));
+            String[] tokens = line.trim().split("\\s+");
+            boolean classification = true;
+            Attribute response = null;
+            try {
+                Integer.valueOf(tokens[0]);
+                response = new NominalAttribute("class");
+            } catch (NumberFormatException e) {
+                try {
+                    Double.valueOf(tokens[0]);
+                    response = new NominalAttribute("response");
+                    classification = false;
+                } catch (NumberFormatException ex) {
+                    System.err.println(ex);
+                    throw new NumberFormatException("Unrecognized response variable value: " + tokens[0]);
+                }
             }
-            
-            for (int i = 0; i < n; i++) {
-                sparse.get(i).y = Arrays.binarySearch(label, y[i]);
+
+            SparseDataset sparse = new SparseDataset(name, response);
+            for (int i = 0; line != null; i++) {
+                tokens = line.trim().split("\\s+");
+
+                if (classification) {
+                    int y = Integer.valueOf(tokens[0]);
+                    sparse.set(i, y);
+                } else {
+                    double y = Double.valueOf(tokens[0]);
+                    sparse.set(i, y);
+                }
+
+                for (int k = 1; k < tokens.length; k++) {
+                    String[] pair = tokens[k].split(":");
+                    if (pair.length != 2) {
+                        throw new NumberFormatException("Invalid data: " + tokens[k]);
+                    }
+
+                    int j = Integer.valueOf(pair[0]) - 1;
+                    double x = Double.valueOf(pair[1]);
+                    sparse.set(i, j, x);
+                }
+
+                line = reader.readLine();
             }
+
+            if (classification) {
+                int n = sparse.size();
+                int[] y = sparse.toArray(new int[n]);
+                int[] label = Math.unique(y);
+                Arrays.sort(label);
+                for (int c : label) {
+                    response.valueOf(String.valueOf(c));
+                }
+
+                for (int i = 0; i < n; i++) {
+                    sparse.get(i).y = Arrays.binarySearch(label, y[i]);
+                }
+            }
+
+            return sparse;
+        } finally {
+            reader.close();
         }
-        
-        return sparse;
     }    
 }

@@ -4322,7 +4322,7 @@ public class Math {
 
     /**
      * Solve the tridiagonal linear set which is of diagonal dominance
-     * |b<sub>i</sub>| > |a<sub>i</sub>| + |c<sub>i</sub>|.
+     * |b<sub>i</sub>| &gt; |a<sub>i</sub>| + |c<sub>i</sub>|.
      * <pre>
      * | b0 c0  0  0  0 ...                        |
      * | a1 b1 c1  0  0 ...                        |
@@ -4462,7 +4462,7 @@ public class Math {
 
     /**
      * Solves A * x = b by iterative biconjugate gradient method.
-     * This method can be called repeatedly, with maxIter < n, to monitor how
+     * This method can be called repeatedly, with maxIter &lt; n, to monitor how
      * error decreases.
      * @param A the matrix supporting matrix vector multiplication operation.
      * @param b the right hand side of linear equations.
@@ -4485,7 +4485,7 @@ public class Math {
     
     /**
      * Solves A * x = b by iterative biconjugate gradient method.
-     * This method can be called repeatedly, with maxIter < n, to monitor how
+     * This method can be called repeatedly, with maxIter &lt; n, to monitor how
      * error decreases.
      * @param A the matrix supporting matrix vector multiplication operation.
      * @param Ap the preconditioned matrix of A.

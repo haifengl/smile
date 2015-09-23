@@ -113,42 +113,41 @@ public class BinarySparseDatasetParser {
      * @throws java.io.FileNotFoundException
      */
     public BinarySparseDataset parse(String name, InputStream stream) throws IOException, ParseException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
 
-        BinarySparseDataset sparse = new BinarySparseDataset(name);
+           BinarySparseDataset sparse = new BinarySparseDataset(name);
         
-        String line = reader.readLine();
-        if (line == null) {
-            throw new IOException("Empty data source.");
-        }
+           String line = reader.readLine();
+           if (line == null) {
+                throw new IOException("Empty data source.");
+           }
         
-        Set<Integer> items = new HashSet<Integer>();
-        do {
-            line = line.trim();
-            if (line.isEmpty()) {
-                continue;
-            }
+           Set<Integer> items = new HashSet<Integer>();
+           do {
+                line = line.trim();
+                if (line.isEmpty()) {
+                    continue;
+                }
 
-            String[] s = line.split("\\s+");
+                String[] s = line.split("\\s+");
             
-            items.clear();
-            for (int i = 0; i < s.length; i++) {
-                items.add(Integer.parseInt(s[i]));
-            }
+                items.clear();
+                for (int i = 0; i < s.length; i++) {
+                    items.add(Integer.parseInt(s[i]));
+                }
 
-            int j = 0;
-            int[] point = new int[items.size()];
-            for (int i : items) {
-                point[j++] = i;
-            }
+                int j = 0;
+                int[] point = new int[items.size()];
+                for (int i : items) {
+                    point[j++] = i;
+                }
 
-            Arrays.sort(point);
-            sparse.add(point);
-            line = reader.readLine();
-        } while (line != null);
+                Arrays.sort(point);
+                sparse.add(point);
+                line = reader.readLine();
+            } while (line != null);
 
-        stream.close();
-
-        return sparse;
+            return sparse;
+        }
     }
 }
