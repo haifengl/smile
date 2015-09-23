@@ -172,8 +172,8 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
     }
 
     /**
-     * Uses inversion by chop-down search from the mode when the mean < 20
-     * and the patchwork-rejection method when the mean > 20.
+     * Uses inversion by chop-down search from the mode when the mean &lt; 20
+     * and the patchwork-rejection method when the mean &gt; 20.
      */
     @Override
     public double rand() {

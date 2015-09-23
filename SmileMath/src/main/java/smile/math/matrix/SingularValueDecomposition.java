@@ -24,7 +24,7 @@ import smile.math.Math;
  * an m-by-n orthogonal matrix U, an n-by-n diagonal matrix &Sigma;, and
  * an n-by-n orthogonal matrix V so that A = U*&Sigma;*V'.
  * <p>
- * For m < n, only the first m columns of V are computed and &Sigma; is m-by-m.
+ * For m &lt; n, only the first m columns of V are computed and &Sigma; is m-by-m.
  * <p>
  * The singular values, &sigma;<sub>k</sub> = &Sigma;<sub>kk</sub>, are ordered
  * so that &sigma;<sub>0</sub> &ge; &sigma;<sub>1</sub> &ge; ... &ge; &sigma;<sub>n-1</sub>.

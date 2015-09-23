@@ -28,7 +28,7 @@
  * <li> Weighted Pair Group Method with Arithmetic mean, or WPGMA. </li>
  * <li> Weighted Pair Group Method using Centroids, or WPGMC (also known as median linkage) </li>
  * <li> Ward's linkage</li>
- * </ol>
+ * </ul>
  * 
  * @author Haifeng Li
  */

@@ -47,8 +47,7 @@ public class MaxentTest {
         ArrayList<int[]> x = new ArrayList<int[]>();
         ArrayList<Integer> y = new ArrayList<Integer>();
 
-        BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)));
-        try {
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
             String[] words = input.readLine().split(" ");
             int nseq = Integer.valueOf(words[0]);
             int k = Integer.valueOf(words[1]);
@@ -71,12 +70,6 @@ public class MaxentTest {
             }
         } catch (IOException ex) {
             System.err.println(ex);
-        } finally {
-            try {
-                input.close();
-            } catch (IOException e) {
-                System.err.println(e);
-            }
         }
 
         Dataset dataset = new Dataset();

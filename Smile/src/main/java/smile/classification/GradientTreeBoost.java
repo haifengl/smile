@@ -41,7 +41,7 @@ import smile.validation.ClassificationMeasure;
  * may include effects of the interaction between up to two variables, and
  * so on. Hastie et al. comment that typically 4 &le; J &le; 8 work well
  * for boosting and results are fairly insensitive to the choice of in
- * this range, J = 2 is insufficient for many applications, and J > 10 is
+ * this range, J = 2 is insufficient for many applications, and J &gt; 10 is
  * unlikely to be required.
  * <p>
  * Fitting the training set too closely can lead to degradation of the model's
@@ -57,7 +57,7 @@ import smile.validation.ClassificationMeasure;
  * Another regularization approach is the shrinkage which times a parameter
  * &eta; (called the "learning rate") to update term.
  * Empirically it has been found that using small learning rates (such as
- * &eta; < 0.1) yields dramatic improvements in model's generalization ability
+ * &eta; &lt; 0.1) yields dramatic improvements in model's generalization ability
  * over gradient boosting without shrinking (&eta; = 1). However, it comes at
  * the price of increasing computational time both during training and
  * prediction: lower learning rate requires more iterations.

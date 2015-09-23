@@ -17,6 +17,7 @@ package smile.demo.data.clustering;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  *
@@ -1501,16 +1502,14 @@ public class NeuralGasData {
             if (k == 7)
                 sample.initDiscreteSignals();
             
-            try {
-                FileWriter fstream = new FileWriter(files[k]);
-                BufferedWriter out = new BufferedWriter(fstream);
+            try (BufferedWriter out = new BufferedWriter(new FileWriter(files[k]))) {
                 for (int i = 0; i < 5000; i++) {
                     sample.getSignal(k);
                     out.write(sample.SignalX + "\t" + sample.SignalY+"\n");
                 }
                 out.close();
-            } catch (Exception e) {
-                System.err.println("Error: " + e.getMessage());
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }

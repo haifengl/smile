@@ -54,8 +54,8 @@ public class LancasterStemmer implements Stemmer {
          * Load rules from Lancaster_rules.txt
          */
         RULES = new ArrayList<String>();
-        BufferedReader input = new BufferedReader(new InputStreamReader(LancasterStemmer.class.getResourceAsStream("/smile/nlp/stemmer/Lancaster_rules.txt")));
-        try {
+
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(LancasterStemmer.class.getResourceAsStream("/smile/nlp/stemmer/Lancaster_rules.txt")))) {
             String line = null;
             while ((line = input.readLine()) != null) {
                 String rule = line.trim();
@@ -69,12 +69,6 @@ public class LancasterStemmer implements Stemmer {
             }
         } catch (IOException ex) {
             System.err.println(ex);
-        } finally {
-            try {
-                input.close();
-            } catch (IOException e) {
-                System.err.println(e);
-            }
         }
 
         // Now assign the number of the first rule that starts with each letter

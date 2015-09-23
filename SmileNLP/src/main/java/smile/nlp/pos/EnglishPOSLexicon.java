@@ -69,8 +69,8 @@ public class EnglishPOSLexicon {
      * character 0xBE replaced with a '~'.
      */
     static {
-        BufferedReader input = new BufferedReader(new InputStreamReader(EnglishPOSLexicon.class.getResourceAsStream("/smile/nlp/pos/part-of-speech_en.txt")));
-        try {
+
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(EnglishPOSLexicon.class.getResourceAsStream("/smile/nlp/pos/part-of-speech_en.txt")))) {
 
             String line = null;
             while ((line = input.readLine()) != null) {
@@ -132,14 +132,6 @@ public class EnglishPOSLexicon {
             }
         } catch (IOException ex) {
             System.err.println(ex);
-        } finally {
-            try {
-                if (input != null) {
-                    input.close();
-                }
-            } catch (IOException e) {
-                System.err.println(e);
-            }
         }
     }
 

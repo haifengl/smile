@@ -21,7 +21,7 @@ import smile.math.SparseArray;
 
 /**
  * The Laplacian Kernel. k(u, v) = e<sup>-||u-v|| / &sigma;</sup>,
- * where &sigma; > 0 is the scale parameter of the kernel.
+ * where &sigma; &gt; 0 is the scale parameter of the kernel.
 
  * @author Haifeng Li
  */

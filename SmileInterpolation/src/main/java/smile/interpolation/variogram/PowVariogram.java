@@ -25,7 +25,7 @@ import smile.math.Math;
  * <p>
  * where &beta; is fixed and &alpha; is fitted by unweighted least squares
  * over all pairs of data points. The value of &beta; should be in the range
- * 1 &le; &beta; < 2. A good general choice is 1.5, but for functions with
+ * 1 &le; &beta; &lt; 2. A good general choice is 1.5, but for functions with
  * a strong linear trend, we may experiment with values as large as 1.99.
  * <p>
  * The parameter c is the so-called nugget effect. Though the value of the

@@ -59,6 +59,7 @@ public class Datum <T> {
      * <li> Inventory data </li>
      * <li> Call Center data </li>
      * <li> Trading data </li>
+     * </ul>
      */
     public Timestamp timestamp;
 

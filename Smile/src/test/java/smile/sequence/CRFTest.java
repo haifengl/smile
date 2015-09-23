@@ -65,8 +65,7 @@ public class CRFTest {
         ArrayList<Integer> label = new ArrayList<Integer>();
 
         int id = 1;
-        BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)));
-        try {
+        try(BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
             String[] words = input.readLine().split(" ");
             int nseq = Integer.valueOf(words[0]);
             k = Integer.valueOf(words[1]);
@@ -120,12 +119,6 @@ public class CRFTest {
             y.add(yy);
         } catch (IOException ex) {
             System.err.println(ex);
-        } finally {
-            try {
-                input.close();
-            } catch (IOException e) {
-                System.err.println(e);
-            }
         }
 
         dataset.p = p;
@@ -152,8 +145,7 @@ public class CRFTest {
         ArrayList<Integer> label = new ArrayList<Integer>();
 
         int id = 1;
-        BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)));
-        try {
+        try(BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
             String[] words = input.readLine().split(" ");
             int nseq = Integer.valueOf(words[0]);
             k = Integer.valueOf(words[1]);
@@ -214,12 +206,6 @@ public class CRFTest {
             y.add(yy);
         } catch (IOException ex) {
             System.err.println(ex);
-        } finally {
-            try {
-                input.close();
-            } catch (IOException e) {
-                System.err.println(e);
-            }
         }
 
         dataset.p = p;

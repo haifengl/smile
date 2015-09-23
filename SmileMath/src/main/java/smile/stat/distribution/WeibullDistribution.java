@@ -22,8 +22,8 @@ import smile.math.Math;
  * The Weibull distribution is one of the most widely used lifetime distributions
  * in reliability engineering. It is a versatile distribution that can take on
  * the characteristics of other types of distributions, based on the value of
- * the shape parameter. The distribution has two parameters: k > 0 is the shape
- * parameter and &lambda; > 0 is the scale parameter of the distribution.
+ * the shape parameter. The distribution has two parameters: k &gt; 0 is the shape
+ * parameter and &lambda; &gt; 0 is the scale parameter of the distribution.
  * The probability density function is
  * f(x;&lambda;,k) = k/&lambda; (x/&lambda;)<sup>k-1</sup>e<sup>-(x/&lambda;)<sup>k</sup></sup>
  * for x &ge; 0.
@@ -31,8 +31,8 @@ import smile.math.Math;
  * The Weibull distribution is often used in the field of life data analysis
  * due to its flexibility - it can mimic the behavior of other statistical
  * distributions such as the normal and the exponential. If the failure rate
- * decreases over time, then k < 1. If the failure rate is constant over time,
- * then k = 1. If the failure rate increases over time, then k > 1.
+ * decreases over time, then k &lt; 1. If the failure rate is constant over time,
+ * then k = 1. If the failure rate increases over time, then k &gt; 1.
  * <p>
  * An understanding of the failure rate may provide insight as to what is
  * causing the failures:

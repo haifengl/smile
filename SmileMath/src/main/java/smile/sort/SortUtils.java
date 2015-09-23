@@ -64,7 +64,7 @@ public class SortUtils {
     /**
      * To restore the max-heap condition when a node's priority is increased.
      * We move up the heap, exchaning the node at position k with its parent
-     * (at postion k/2) if necessary, continuing as long as a[k/2] < a[k] or
+     * (at postion k/2) if necessary, continuing as long as a[k/2] &lt; a[k] or
      * until we reach the top of the heap.
      */
     public static void siftUp(int[] arr, int k) {
@@ -77,7 +77,7 @@ public class SortUtils {
     /**
      * To restore the max-heap condition when a node's priority is increased.
      * We move up the heap, exchaning the node at position k with its parent
-     * (at postion k/2) if necessary, continuing as long as a[k/2] < a[k] or
+     * (at postion k/2) if necessary, continuing as long as a[k/2] &lt; a[k] or
      * until we reach the top of the heap.
      */
     public static void siftUp(float[] arr, int k) {
@@ -90,7 +90,7 @@ public class SortUtils {
     /**
      * To restore the max-heap condition when a node's priority is increased.
      * We move up the heap, exchaning the node at position k with its parent
-     * (at postion k/2) if necessary, continuing as long as a[k/2] < a[k] or
+     * (at postion k/2) if necessary, continuing as long as a[k/2] &lt; a[k] or
      * until we reach the top of the heap.
      */
     public static void siftUp(double[] arr, int k) {
@@ -103,7 +103,7 @@ public class SortUtils {
     /**
      * To restore the max-heap condition when a node's priority is increased.
      * We move up the heap, exchaning the node at position k with its parent
-     * (at postion k/2) if necessary, continuing as long as a[k/2] < a[k] or
+     * (at postion k/2) if necessary, continuing as long as a[k/2] &lt; a[k] or
      * until we reach the top of the heap.
      */
     public static <T extends Comparable<? super T>> void siftUp(T[] arr, int k) {
