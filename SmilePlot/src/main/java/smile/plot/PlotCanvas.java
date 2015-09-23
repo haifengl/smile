@@ -1526,6 +1526,7 @@ public class PlotCanvas extends JPanel {
      * <li> q : solid square
      * <li> Q : large solid square
      * <li> others : dot
+     * </ul>
      * @return the scatter plot for the given points.
      */
     public ScatterPlot points(double[][] data, char legend) {
@@ -1553,6 +1554,7 @@ public class PlotCanvas extends JPanel {
      * <li> q : solid square
      * <li> Q : large solid square
      * <li> others : dot
+     * </ul>
      * @return the scatter plot for the given points.
      */
     public ScatterPlot points(String id, double[][] data, char legend) {
@@ -1626,6 +1628,7 @@ public class PlotCanvas extends JPanel {
      * <li> q : solid square
      * <li> Q : large solid square
      * <li> others : dot
+     * </ul>
      * @return the scatter plot for the given points.
      */
     public ScatterPlot points(double[][] data, char legend, Color color) {
@@ -1654,6 +1657,7 @@ public class PlotCanvas extends JPanel {
      * <li> q : solid square
      * <li> Q : large solid square
      * <li> others : dot
+     * </ul>
      * @return the scatter plot for the given points.
      */
     public ScatterPlot points(String id, double[][] data, char legend, Color color) {

@@ -150,40 +150,41 @@ public class SparseDatasetParser {
      */
     public SparseDataset parse(String name, InputStream stream) throws IOException, ParseException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-
-        // process header
-        int nrow = 1;
-        String line = reader.readLine();
-        for (; nrow <= 3 && line != null; nrow++) {            
-            String[] tokens = line.trim().split(" ");
-            if (tokens.length >= 3) {
-                break;
+        try {
+            // process header
+            int nrow = 1;
+            String line = reader.readLine();
+            for (; nrow <= 3 && line != null; nrow++) {
+                String[] tokens = line.trim().split(" ");
+                if (tokens.length >= 3) {
+                    break;
+                }
+                line = reader.readLine();
             }
-            line = reader.readLine();
-        }
-        
-        if (line == null) {
-            throw new IOException("Empty data source.");
-        }
-        
-        SparseDataset sparse = new SparseDataset(name);
-        do {
-            String[] tokens = line.trim().split(" ");
-            if (tokens.length != 3) {
-                throw new ParseException("Invalid number of tokens.", nrow);
-            }
-            
-            int d = Integer.valueOf(tokens[0]) - arrayStartingIndex;
-            int w = Integer.valueOf(tokens[1]) - arrayStartingIndex;
-            double c = Double.valueOf(tokens[2]);
-            sparse.set(d, w, c);
-            
-            line = reader.readLine();
-            nrow++;
-        } while (line != null);
-        
-        stream.close();
 
-        return sparse;
+            if (line == null) {
+                throw new IOException("Empty data source.");
+            }
+
+            SparseDataset sparse = new SparseDataset(name);
+            do {
+                String[] tokens = line.trim().split(" ");
+                if (tokens.length != 3) {
+                    throw new ParseException("Invalid number of tokens.", nrow);
+                }
+
+                int d = Integer.valueOf(tokens[0]) - arrayStartingIndex;
+                int w = Integer.valueOf(tokens[1]) - arrayStartingIndex;
+                double c = Double.valueOf(tokens[2]);
+                sparse.set(d, w, c);
+
+                line = reader.readLine();
+                nrow++;
+            } while (line != null);
+
+            return sparse;
+        } finally {
+            reader.close();
+        }
     }
 }

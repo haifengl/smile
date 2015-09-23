@@ -102,7 +102,7 @@ public class SparseMatrix implements IMatrix {
     /**
      * Constructor.
      * @param D a dense matrix to converted into sparse matrix format.
-     * @param tol the tolerance to regard a value as zero if |x| < tol.
+     * @param tol the tolerance to regard a value as zero if |x| &lt; tol.
      */
     public SparseMatrix(double[][] D, double tol) {
         nrows = D.length;
