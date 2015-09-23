@@ -45,9 +45,7 @@ public enum EnglishDictionary implements Dictionary {
     private EnglishDictionary(String resource) {
         dict = new HashSet<String>();
 
-        BufferedReader input = null;
-        try {
-            input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)));
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
         
             String line = null;
             while ((line = input.readLine()) != null) {
@@ -59,14 +57,6 @@ public enum EnglishDictionary implements Dictionary {
             }
         } catch (IOException ex) {
             ex.printStackTrace();
-        } finally {
-            try {
-                if (input != null) {
-                    input.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 

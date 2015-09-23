@@ -392,60 +392,59 @@ public class ArffParser {
      * Parse a dataset from given stream.
      */
     public AttributeDataset parse(InputStream stream) throws IOException, ParseException {
-        Reader r = new BufferedReader(new InputStreamReader(stream));
-        StreamTokenizer tokenizer = new StreamTokenizer(r);
-        initTokenizer(tokenizer);
+        try (Reader r = new BufferedReader(new InputStreamReader(stream))) {
+            StreamTokenizer tokenizer = new StreamTokenizer(r);
+            initTokenizer(tokenizer);
 
-        List<Attribute> attributes = new ArrayList<Attribute>();
-        String relationName = readHeader(tokenizer, attributes);
+            List<Attribute> attributes = new ArrayList<Attribute>();
+            String relationName = readHeader(tokenizer, attributes);
 
-        if (attributes.isEmpty()) {
-            throw new IOException("no header information available");
-        }
-        
-        Attribute response = null;
-        Attribute[] attr = new Attribute[attributes.size()];
-        attributes.toArray(attr);
-        
-        for (int i = 0; i < attributes.size(); i++) {
-            if (responseIndex == i) {
-                response = attributes.remove(i);
-                break;
+            if (attributes.isEmpty()) {
+                throw new IOException("no header information available");
             }
-        }
         
-        AttributeDataset data = new AttributeDataset(relationName, attributes.toArray(new Attribute[attributes.size()]), response);
+            Attribute response = null;
+            Attribute[] attr = new Attribute[attributes.size()];
+            attributes.toArray(attr);
         
-        while (true) {
-            // Check if end of file reached.
-            getFirstToken(tokenizer);
-            if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
-                break;
+            for (int i = 0; i < attributes.size(); i++) {
+                if (responseIndex == i) {
+                    response = attributes.remove(i);
+                    break;
+                }
             }
+        
+            AttributeDataset data = new AttributeDataset(relationName, attributes.toArray(new Attribute[attributes.size()]), response);
+        
+            while (true) {
+                // Check if end of file reached.
+                getFirstToken(tokenizer);
+                if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
+                    break;
+                }
 
-            // Parse instance
-            if (tokenizer.ttype == '{') {
-                data.add(getSparseInstance(tokenizer, attr));
-            } else {
-                data.add(getInstance(tokenizer, attr));
+                // Parse instance
+                if (tokenizer.ttype == '{') {
+                    data.add(getSparseInstance(tokenizer, attr));
+                } else {
+                    data.add(getInstance(tokenizer, attr));
+                }
             }
-        }
         
-        stream.close();
-        
-        for (Attribute attribute : attributes) {
-            if (attribute instanceof NominalAttribute) {
-                NominalAttribute a = (NominalAttribute) attribute;
-                a.setOpen(false);
-            }
+            for (Attribute attribute : attributes) {
+                if (attribute instanceof NominalAttribute) {
+                    NominalAttribute a = (NominalAttribute) attribute;
+                    a.setOpen(false);
+                }
             
-            if (attribute instanceof StringAttribute) {
-                StringAttribute a = (StringAttribute) attribute;
-                a.setOpen(false);
+                if (attribute instanceof StringAttribute) {
+                    StringAttribute a = (StringAttribute) attribute;
+                    a.setOpen(false);
+                }
             }
-        }
         
-        return data;
+            return data;
+        }
     }
 
     /**

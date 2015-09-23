@@ -91,9 +91,8 @@ public class SparseMatrixParser {
         int[] colIndex;
         int[] rowIndex;
         double[] data;
-        Scanner scanner = null;
-        try {
-        	scanner = new Scanner(stream);
+
+        try (Scanner scanner = new Scanner(stream)) {
             String line = scanner.nextLine();
             String[] tokens = line.split("\\s+");
             if (tokens.length == 3) {
@@ -139,10 +138,6 @@ public class SparseMatrixParser {
             for (int i = 0; i < n; i++) {
                 data[i] = scanner.nextDouble();
             }
-        } finally {
-        	if (scanner != null) {
-        		scanner.close();
-        	}
         }
         
         SparseMatrix matrix = new SparseMatrix(nrows, ncols, data, rowIndex, colIndex);

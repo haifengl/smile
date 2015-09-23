@@ -82,20 +82,13 @@ public class BagTest {
         System.out.println("feature");
         String[][] text = new String[2000][];
 
-        BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("/smile/data/text/movie.txt")));
-        try {
+        try(BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("/smile/data/text/movie.txt")))) {
             for (int i = 0; i < text.length; i++) {
                 String[] words = input.readLine().trim().split("\\s+");
                 text[i] = words;
             }
         } catch (IOException ex) {
             System.err.println(ex);
-        } finally {
-            try {
-                input.close();
-            } catch (IOException e) {
-                System.err.println(e);
-            }
         }
 
         String[] feature = {

@@ -38,8 +38,7 @@ public class SimpleCorpusTest {
     SimpleCorpus corpus = new SimpleCorpus();
 
     public SimpleCorpusTest() {
-        BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("/smile/data/text/quote.tok.gt9.5000")));
-        try {
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("/smile/data/text/quote.tok.gt9.5000")))) {
             String line = null;
             int id = 0;
             while ((line = input.readLine()) != null) {
@@ -49,11 +48,6 @@ public class SimpleCorpusTest {
                 }
             }
         } catch (IOException ex) {
-        } finally {
-            try {
-                input.close();
-            } catch (IOException e) {
-            }
         }
     }
 

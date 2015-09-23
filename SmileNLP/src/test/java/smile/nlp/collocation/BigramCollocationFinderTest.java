@@ -59,8 +59,8 @@ public class BigramCollocationFinderTest {
     public void testFind_Corpus_int() {
         System.out.println("find");
         SimpleCorpus corpus = new SimpleCorpus();
-        BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("/smile/data/text/quote.tok.gt9.5000")));
-        try {
+
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("/smile/data/text/quote.tok.gt9.5000")))) {
             String line = null;
             int id = 0;
             while ((line = input.readLine()) != null) {
@@ -69,12 +69,8 @@ public class BigramCollocationFinderTest {
                     corpus.add(String.valueOf(id++), null, line);
                 }
             }
-        } catch (IOException ex) {
-        } finally {
-            try {
-                input.close();
-            } catch (IOException e) {
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         int k = 10;
@@ -93,8 +89,8 @@ public class BigramCollocationFinderTest {
     public void testFind_Corpus_double() {
         System.out.println("find");
         SimpleCorpus corpus = new SimpleCorpus();
-        BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("/smile/data/text/quote.tok.gt9.5000")));
-        try {
+
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("/smile/data/text/quote.tok.gt9.5000")))) {
             String line = null;
             int id = 0;
             while ((line = input.readLine()) != null) {
@@ -103,12 +99,8 @@ public class BigramCollocationFinderTest {
                     corpus.add(String.valueOf(id), null, line);
                 }
             }
-        } catch (IOException ex) {
-        } finally {
-            try {
-                input.close();
-            } catch (IOException e) {
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         double p = 0.0001;

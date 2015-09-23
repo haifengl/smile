@@ -41,13 +41,13 @@ import smile.math.matrix.LUDecomposition;
  * as the kriging estimate of a Gaussian random field in spatial statistics.
  * <p>
  * A significant problem with Gaussian process prediction is that it typically
- * scales as O(n<sup>3</sup>). For large problems (e.g. n > 10,000) both
+ * scales as O(n<sup>3</sup>). For large problems (e.g. n &gt; 10,000) both
  * storing the Gram matrix and solving the associated linear systems are
  * prohibitive on modern workstations. An extensive range of proposals have
  * been suggested to deal with this problem. A popular approach is the
  * reduced-rank Approximations of the Gram Matrix, known as Nystrom approximation.
  * Greedy approximation is another popular approach that uses an active set of
- * training points of size m selected from the training set of size n > m.
+ * training points of size m selected from the training set of size n &gt; m.
  * We assume that it is impossible to search for the optimal subset of size m
  * due to combinatorics. The points in the active set could be selected
  * randomly, but in general we might expect better performance if the points

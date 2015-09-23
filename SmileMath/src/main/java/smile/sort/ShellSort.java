@@ -36,8 +36,8 @@ package smile.sort;
  * improved the bound to O(n log<sub><small>2</small></sub> n). This is worse than the
  * optimal comparison sorts, which are O(n log n).
  * <p>
- * For n < 50, roughly, Shell sort is competitive with the more complicated
- * Quicksort on many machines. For n > 50, Quicksort is generally faster.
+ * For n &lt; 50, roughly, Shell sort is competitive with the more complicated
+ * Quicksort on many machines. For n &gt; 50, Quicksort is generally faster.
  * 
  * @author Haifeng Li
  */

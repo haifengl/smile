@@ -46,7 +46,7 @@ public class IQAgent {
     /**
      * Constructor.
      * @param nbuf batch size. You may use 10000 if you expected
-     * > 10<sup>6</sup> data values. Otherwise, 1000 should be fine.
+     * &gt; 10<sup>6</sup> data values. Otherwise, 1000 should be fine.
      */
     public IQAgent(int nbuf) {
         this.nbuf = nbuf;

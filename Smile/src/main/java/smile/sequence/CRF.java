@@ -499,7 +499,7 @@ public class CRF implements SequenceLabeler<double[]> {
         /**
          * Constructor.
          *
-         * @param numFeature the number of sparse binary features.
+         * @param numFeatures the number of sparse binary features.
          * @param numClasses the maximum number of classes.
          */
         public Trainer(int numFeatures, int numClasses) {

@@ -52,9 +52,9 @@ import java.util.Arrays;
  * Given a n-by-n band matrix with m<sub>1</sub> rows below the diagonal and m<sub>2</sub> rows above.
  * The matrix is compactly stored in an array A[0,n-1][0,m<sub>1</sub>+m<sub>2</sub>]. The diagonal
  * elements are in A[0,n-1][m<sub>1</sub>]. Subdiagonal elements are in A[j,n-1][0,m<sub>1</sub>-1]
- * with j > 0 appropriate to the number of elements on each subdiagonal.
- * Superdiagonal elements are in A[0,j][m<sub>1</sub>+1,m<sub>2</sub>+m<sub>2</sub>] with j < n-1 appropriate to
- * the number of elements on each superdiagonal.
+ * with j &gt; 0 appropriate to the number of elements on each subdiagonal.
+ * Superdiagonal elements are in A[0,j][m<sub>1</sub>+1,m<sub>2</sub>+m<sub>2</sub>]
+ * with j &lt; n-1 appropriate to the number of elements on each superdiagonal.
  * 
  * @author Haifeng Li
  */

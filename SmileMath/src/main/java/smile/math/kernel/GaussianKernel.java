@@ -20,7 +20,7 @@ import smile.math.Math;
 
 /**
  * The Gaussian Mercer Kernel. k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>,
- * where &sigma; > 0 is the scale parameter of the kernel.
+ * where &sigma; &gt; 0 is the scale parameter of the kernel.
  * <p>
  * The Gaussian kernel is a good choice for a great deal of applications,
  * although sometimes it is remarked as being overused.

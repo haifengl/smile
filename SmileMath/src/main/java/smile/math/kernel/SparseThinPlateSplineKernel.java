@@ -23,7 +23,7 @@ import smile.math.SparseArray;
 
 /**
  * The Thin Plate Spline Kernel. k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;),
- * where &sigma; > 0 is the scale parameter of the kernel.
+ * where &sigma; &gt; 0 is the scale parameter of the kernel.
  * 
  * @author Haifeng Li
  */

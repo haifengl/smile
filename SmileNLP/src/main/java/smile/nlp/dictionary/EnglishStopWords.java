@@ -56,8 +56,7 @@ public enum EnglishStopWords implements StopWords {
     private EnglishStopWords(String resource) {
         dict = new HashSet<String>();
 
-        BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)));
-        try {
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
             String line = null;
             while ((line = input.readLine()) != null) {
                 line = line.trim();
@@ -67,12 +66,6 @@ public enum EnglishStopWords implements StopWords {
             }
         } catch (IOException ex) {
             System.err.println(ex);
-        } finally {
-            try {
-                input.close();
-            } catch (IOException e) {
-                System.err.println(e);
-            }
         }
     }
 

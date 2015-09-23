@@ -220,7 +220,9 @@ public class DelimitedTextParser {
      */
     public AttributeDataset parse(String name, Attribute[] attributes, File file) throws FileNotFoundException, IOException, ParseException {
         AttributeDataset data = new AttributeDataset(name, attributes);
-        parse(data, new BufferedReader(new InputStreamReader(new FileInputStream(file))));
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
+           parse(data, reader);
+        }
         return data;
     }
 
@@ -231,46 +233,45 @@ public class DelimitedTextParser {
      * @throws java.io.FileNotFoundException
      */
     public AttributeDataset parse(String name, InputStream stream) throws IOException, ParseException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-
-        // process header
-        String line = reader.readLine();
-        while (line != null) {
-            if (line.isEmpty() || line.startsWith(comment)) {
-                line = reader.readLine();
-            } else {
-                break;
-            }        
-        }
-        
-        if (line == null) {
-            throw new IOException("Empty data source.");
-        }
-        
-        String[] s = line.split(delimiter, 0);
-        int start = 0;
-        int dimension = s.length;
-        if (hasRowNames) {
-            dimension--;
-            start = 1;
-        }
-
-        if (responseIndex >= s.length) {
-            throw new ParseException("Invalid response variable index: " + responseIndex, responseIndex);
-        }
-
-        if (responseIndex >= 0) {
-            dimension--;
-        }
-
-        Attribute[] attributes = new Attribute[dimension];
-
-        if (hasColumnNames) {
-            for (int i = 0, j = start; i < dimension; j++) {
-                if (j != responseIndex) {
-                    attributes[i++] = new NumericAttribute(s[j]);
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+            // process header
+            String line = reader.readLine();
+            while (line != null) {
+                if (line.isEmpty() || line.startsWith(comment)) {
+                    line = reader.readLine();
                 } else {
-                    switch (response.type) {
+                    break;
+                }
+            }
+
+            if (line == null) {
+                throw new IOException("Empty data source.");
+            }
+
+            String[] s = line.split(delimiter, 0);
+            int start = 0;
+            int dimension = s.length;
+            if (hasRowNames) {
+                dimension--;
+                start = 1;
+            }
+
+            if (responseIndex >= s.length) {
+                throw new ParseException("Invalid response variable index: " + responseIndex, responseIndex);
+            }
+
+            if (responseIndex >= 0) {
+                dimension--;
+            }
+
+            Attribute[] attributes = new Attribute[dimension];
+
+            if (hasColumnNames) {
+                for (int i = 0, j = start; i < dimension; j++) {
+                    if (j != responseIndex) {
+                        attributes[i++] = new NumericAttribute(s[j]);
+                    } else {
+                        switch (response.type) {
                         case NOMINAL:
                             response = new NominalAttribute(s[j]);
                             break;
@@ -279,53 +280,54 @@ public class DelimitedTextParser {
                             break;
                         default:
                             throw new IllegalStateException("Invalid response variable type.");
+                        }
                     }
                 }
-            }
-        } else {
-            for (int i = 0; i < dimension; i++) {
-                attributes[i] = new NumericAttribute("V" + (i + 1));
-            }
-        }
-
-        AttributeDataset data = new AttributeDataset(name, attributes, response);
-
-        if (!hasColumnNames) {
-            String rowName = hasRowNames ? s[0] : null;
-            double[] x = new double[attributes.length];
-            double y = Double.NaN;
-
-            for (int i = hasRowNames ? 1 : 0, k = 0; i < s.length; i++) {
-                if (i == responseIndex) {
-                    y = response.valueOf(s[i]);
-                } else if (missing != null && missing.equalsIgnoreCase(s[i])) {
-                    x[k++] = Double.NaN;
-                } else {
-                    x[k] = attributes[k].valueOf(s[i]);
-                    k++;
+            } else {
+                for (int i = 0; i < dimension; i++) {
+                    attributes[i] = new NumericAttribute("V" + (i + 1));
                 }
             }
 
-            Datum<double[]> datum = new Datum<double[]>(x, y);
-            datum.name = rowName;
-            data.add(datum);
-        }
-        
-        parse(data, reader);
-        
-        for (Attribute attribute : attributes) {
-            if (attribute instanceof NominalAttribute) {
-                NominalAttribute a = (NominalAttribute) attribute;
-                a.setOpen(false);
+            AttributeDataset data = new AttributeDataset(name, attributes, response);
+
+            if (!hasColumnNames) {
+                String rowName = hasRowNames ? s[0] : null;
+                double[] x = new double[attributes.length];
+                double y = Double.NaN;
+
+                for (int i = hasRowNames ? 1 : 0, k = 0; i < s.length; i++) {
+                    if (i == responseIndex) {
+                        y = response.valueOf(s[i]);
+                    } else if (missing != null && missing.equalsIgnoreCase(s[i])) {
+                        x[k++] = Double.NaN;
+                    } else {
+                        x[k] = attributes[k].valueOf(s[i]);
+                        k++;
+                    }
+                }
+
+                Datum<double[]> datum = new Datum<double[]>(x, y);
+                datum.name = rowName;
+                data.add(datum);
             }
-            
-            if (attribute instanceof StringAttribute) {
-                StringAttribute a = (StringAttribute) attribute;
-                a.setOpen(false);
+
+            parse(data, reader);
+
+            for (Attribute attribute : attributes) {
+                if (attribute instanceof NominalAttribute) {
+                    NominalAttribute a = (NominalAttribute) attribute;
+                    a.setOpen(false);
+                }
+
+                if (attribute instanceof StringAttribute) {
+                    StringAttribute a = (StringAttribute) attribute;
+                    a.setOpen(false);
+                }
             }
+
+            return data;
         }
-        
-        return data;
     }
     
     /**
@@ -383,7 +385,5 @@ public class DelimitedTextParser {
             datum.name = rowName;
             data.add(datum);
         }
-        
-        reader.close();
     }
 }

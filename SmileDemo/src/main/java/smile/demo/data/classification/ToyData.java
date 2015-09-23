@@ -16,8 +16,10 @@
 
 package smile.demo.data.classification;
 
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+
 import smile.math.Math;
 import smile.stat.distribution.MultivariateGaussianDistribution;
 
@@ -89,38 +91,26 @@ public class ToyData {
         int n = 100;
         double[][] s = toy.sample(n);
 
-        FileOutputStream out;
-        PrintStream p;
-
-        try {
-            out = new FileOutputStream("toy-train.txt");
-            p = new PrintStream(out);
+        try (PrintStream p = new PrintStream(new FileOutputStream("toy-train.txt")) ) {
 
             for (int i = 0; i < s.length; i++) {
                 int label = i / n;
                 p.format("%d\t% .4f\t% .4f\n", label, s[i][0], s[i][1]);
             }
-
-            p.close();
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 
         n = 10000;
         s = toy.sample(n);
-        try {
-            out = new FileOutputStream("toy-test.txt");
-            p = new PrintStream(out);
+        try (PrintStream p = new PrintStream(new FileOutputStream("toy-test.txt")) ) {
 
             for (int i = 0; i < s.length; i++) {
                 int label = i / n;
                 p.format("%d\t% .4f\t% .4f\n", label, s[i][0], s[i][1]);
             }
-
-            p.close();
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-
     }
 }

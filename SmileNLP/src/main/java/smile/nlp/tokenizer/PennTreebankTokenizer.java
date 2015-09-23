@@ -24,17 +24,17 @@ import java.util.regex.Pattern;
  * Verb contractions and the Anglo-Saxon genitive of nouns are split into their
  * component morphemes, and each morpheme is tagged separately. Examples
  * <ul>
- * <li> children's --> children 's
- * <li> parents' --> parents '
- * <li> won't --> wo n't
- * <li> can't -> ca n't
- * <li> weren't -> were n't
- * <li> cannot -> can not
- * <li> 'tisn't -> 't is n't
- * <li> 'tis -> 't is
- * <li> gonna --> gon na
- * <li> I'm --> I 'm
- * <li> he'll -> he 'll
+ * <li> children's -&gt; children 's
+ * <li> parents' -&gt; parents '
+ * <li> won't --&gt; wo n't
+ * <li> can't -&gt; ca n't
+ * <li> weren't -&gt; were n't
+ * <li> cannot -&gt; can not
+ * <li> 'tisn't -&gt; 't is n't
+ * <li> 'tis -&gt; 't is
+ * <li> gonna -&gt; gon na
+ * <li> I'm -&gt; I 'm
+ * <li> he'll -&gt; he 'll
  * </ul>
  * This tokenizer assumes that the text has already been segmented into
  * sentences. Any periods -- apart from those at the end of a string or before

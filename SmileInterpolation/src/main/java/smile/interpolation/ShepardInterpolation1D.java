@@ -20,12 +20,12 @@ import smile.math.Math;
 /**
  * Shepard interplation is a special case of normalized radial basis function
  * interpolation if the function &phi;(r) goes to infinity as r &rarr; 0, and is
- * finite for r > 0. In this case, the weights w<sub>i</sub> are just equal to
+ * finite for r &gt; 0. In this case, the weights w<sub>i</sub> are just equal to
  * the respective function values y<sub>i</sub>. So we need not solve linear
  * equations and thus it works for very large N.
  * <p>
  * An example of such &phi; is &phi;(r) = r<sup>-p</sup> with (typically)
- * 1 < p &le; 3.
+ * 1 &lt; p &le; 3.
  * <p>
  * Shepard interpolation is rarely as accurate as the well-tuned application of
  * other radial basis functions. However, it is simple, fast, and often jut the
@@ -52,7 +52,7 @@ public class ShepardInterpolation1D implements Interpolation {
      * Constructor.
      * @param x the point set.
      * @param y the function values at given points.
-     * @param p the parameter in the radial basis function &phi(r) = r<sup>-p</sup>.
+     * @param p the parameter in the radial basis function &phi;(r) = r<sup>-p</sup>.
      */
     public ShepardInterpolation1D(double[] x, double[] y, double p) {
         this.x = x;

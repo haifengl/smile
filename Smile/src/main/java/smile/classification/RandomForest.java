@@ -40,7 +40,7 @@ import smile.validation.ClassificationMeasure;
  * <li> If the number of cases in the training set is N, randomly sample N cases
  * with replacement from the original data. This sample will
  * be the training set for growing the tree. 
- * <li> If there are M input variables, a number m << M is specified such
+ * <li> If there are M input variables, a number m &lt;&lt; M is specified such
  * that at each node, m variables are selected at random out of the M and
  * the best split on these m is used to split the node. The value of m is
  * held constant during the forest growing. 
