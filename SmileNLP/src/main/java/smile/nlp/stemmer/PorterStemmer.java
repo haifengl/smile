@@ -17,9 +17,9 @@
 package smile.nlp.stemmer;
 
 /**
- * Porter's stemming algorithm. The Stemmer is based on the idea that the
+ * Porter's stemming algorithm. The stemmer is based on the idea that the
  * suffixes in the English language are mostly made up of a combination of
- * smaller and simpler suffixes. This Stemmer is a linear step Stemmer.
+ * smaller and simpler suffixes. This is a linear step stemmer.
  * Specifically it has five steps applying rules within each step. Within
  * each step, if a suffix rule matched to a word, then the conditions
  * attached to that rule are tested on what would be the resulting stem,
