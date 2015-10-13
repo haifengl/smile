@@ -87,10 +87,10 @@ public class MultivariateGaussianDistributionTest {
         }
         MultivariateGaussianDistribution est = new MultivariateGaussianDistribution(data, true);
         for (int i = 0; i < mu.length; i++) {
-            assertEquals(mu[i], est.mean()[i], 1E-1);
+            assertEquals(mu[i], est.mean()[i], 1.5E-1);
         }
         for (int i = 0; i < mu.length; i++) {
-            assertEquals(sigma[0][i], est.cov()[i][i], 1E-1);
+            assertEquals(sigma[0][i], est.cov()[i][i], 1.5E-1);
             for (int j = 0; j < mu.length; j++) {
                 if (i != j) {
                     assertEquals(0, est.cov()[i][j], 1E-10);
