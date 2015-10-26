@@ -119,8 +119,9 @@ public class Maxent implements Classifier<int[]> {
          * 
          * @param lambda regularization factor.
          */
-        public void setRegularizationFactor(double lambda) {
+        public Trainer setRegularizationFactor(double lambda) {
             this.lambda = lambda;
+            return this;
         }
         
         /**
@@ -128,8 +129,9 @@ public class Maxent implements Classifier<int[]> {
          * 
          * @param tol tolerance for stopping iterations.
          */
-        public void setTolerance(double tol) {
+        public Trainer setTolerance(double tol) {
             this.tol = tol;
+            return this;
         }
         
         /**
@@ -137,8 +139,9 @@ public class Maxent implements Classifier<int[]> {
          * 
          * @param maxIter maximum number of iterations.
          */
-        public void setMaxNumIteration(int maxIter) {
+        public Trainer setMaxNumIteration(int maxIter) {
             this.maxIter = maxIter;
+            return this;
         }
         
         @Override

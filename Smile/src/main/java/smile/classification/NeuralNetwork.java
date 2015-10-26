@@ -308,23 +308,25 @@ public class NeuralNetwork implements OnlineClassifier<double[]> {
          * Sets the learning rate.
          * @param eta the learning rate.
          */
-        public void setLearningRate(double eta) {
+        public Trainer setLearningRate(double eta) {
             if (eta <= 0) {
                 throw new IllegalArgumentException("Invalid learning rate: " + eta);
             }
             this.eta = eta;
+            return this;
         }
 
         /**
          * Sets the momentum factor.
          * @param alpha the momentum factor.
          */
-        public void setMomentum(double alpha) {
+        public Trainer setMomentum(double alpha) {
             if (alpha < 0.0 || alpha >= 1.0) {
                 throw new IllegalArgumentException("Invalid momentum factor: " + alpha);
             }
 
             this.alpha = alpha;
+            return this;
         }
 
         /**
@@ -332,24 +334,26 @@ public class NeuralNetwork implements OnlineClassifier<double[]> {
          * is simply ''decayed'' or shrunk according w = w * (1 - eta * lambda).
          * @param lambda the weight decay for regularization.
          */
-        public void setWeightDecay(double lambda) {
+        public Trainer setWeightDecay(double lambda) {
             if (lambda < 0.0 || lambda > 0.1) {
                 throw new IllegalArgumentException("Invalid momentum factor: " + alpha);
             }
 
             this.lambda = lambda;
+            return this;
         }
 
         /**
          * Sets the number of epochs of stochastic learning.
          * @param epochs the number of epochs of stochastic learning.
          */
-        public void setNumEpochs(int epochs) {
+        public Trainer setNumEpochs(int epochs) {
             if (epochs < 1) {
                 throw new IllegalArgumentException("Invlaid numer of epochs of stochastic learning:" + epochs);
             }
         
             this.epochs = epochs;
+            return this;
         }
         
         @Override
