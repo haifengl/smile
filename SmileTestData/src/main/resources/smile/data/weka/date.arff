@@ -1,0 +1,7 @@
+@RELATION Timestamps
+ 
+@ATTRIBUTE timestamp DATE "yyyy-MM-dd HH:mm:ss"
+ 
+@DATA 
+"2001-04-03 12:12:12"
+"2001-05-03 12:59:55"
