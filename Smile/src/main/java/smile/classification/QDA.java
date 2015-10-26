@@ -94,14 +94,16 @@ public class QDA implements Classifier<double[]> {
          * is 1E-4.
          */
         public Trainer() {
+
         }
         
         /**
          * Sets a priori probabilities of each class.
          * @param priori a priori probabilities of each class.
          */
-        public void setPriori(double[] priori) {
+        public Trainer setPriori(double[] priori) {
             this.priori = priori;
+            return this;
         }
         
         /**
@@ -110,12 +112,13 @@ public class QDA implements Classifier<double[]> {
          * @param tol a tolerance to decide if a covariance matrix is singular.
          * The trainer will reject variables whose variance is less than tol<sup>2</sup>.
          */
-        public void setTolerance(double tol) {
+        public Trainer setTolerance(double tol) {
             if (tol < 0.0) {
                 throw new IllegalArgumentException("Invalid tol: " + tol);
             }
 
             this.tol = tol;
+            return this;
         }
         
         @Override

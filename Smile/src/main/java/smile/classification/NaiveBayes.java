@@ -251,8 +251,9 @@ public class NaiveBayes implements OnlineClassifier<double[]> {
          * 
          * @param priori a priori probabilities of each class.
          */
-        public void setPriori(double[] priori) {
+        public Trainer setPriori(double[] priori) {
             this.priori = priori;
+            return this;
         }
         
         /**
@@ -260,12 +261,13 @@ public class NaiveBayes implements OnlineClassifier<double[]> {
          * 
          * @param sigma the prior count of add-k smoothing of evidence.
          */
-        public void setSmooth(double sigma) {
+        public Trainer setSmooth(double sigma) {
             if (sigma < 0) {
                 throw new IllegalArgumentException("Invalid add-k smoothing parameter: " + sigma);
             }
 
             this.sigma = sigma;
+            return this;
         }
         
         @Override

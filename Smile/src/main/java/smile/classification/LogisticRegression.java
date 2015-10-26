@@ -124,6 +124,7 @@ public class LogisticRegression implements Classifier<double[]> {
          * Constructor.
          */
         public Trainer() {
+
         }
         
         /**
@@ -133,8 +134,9 @@ public class LogisticRegression implements Classifier<double[]> {
          * 
          * @param lambda regularization factor.
          */
-        public void setRegularizationFactor(double lambda) {
+        public Trainer setRegularizationFactor(double lambda) {
             this.lambda = lambda;
+            return this;
         }
         
         /**
@@ -142,12 +144,13 @@ public class LogisticRegression implements Classifier<double[]> {
          * 
          * @param tol the tolerance for stopping iterations.
          */
-        public void setTolerance(double tol) {
+        public Trainer setTolerance(double tol) {
             if (tol <= 0.0) {
                 throw new IllegalArgumentException("Invalid tolerance: " + tol);
             }
 
             this.tol = tol;
+            return this;
         }
 
         /**
@@ -155,12 +158,13 @@ public class LogisticRegression implements Classifier<double[]> {
          * 
          * @param maxIter the maximum number of iterations.
          */
-        public void setMaxNumIteration(int maxIter) {
+        public Trainer setMaxNumIteration(int maxIter) {
             if (maxIter <= 0) {
                 throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
             }
 
             this.maxIter = maxIter;
+            return this;
         }
         
         @Override

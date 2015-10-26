@@ -153,26 +153,29 @@ public class RBFNetwork<T> implements Classifier<T> {
          * @param rbf the radial basis function.
          * @param m the number of basis functions.
          */
-        public void setRBF(RadialBasisFunction rbf, int m) {
+        public Trainer setRBF(RadialBasisFunction rbf, int m) {
             this.m = m;
             this.rbf = rep(rbf, m);
+            return this;
         }
         
         /**
          * Sets the radial basis functions.
          * @param rbf the radial basis functions.
          */
-        public void setRBF(RadialBasisFunction[] rbf) {
+        public Trainer setRBF(RadialBasisFunction[] rbf) {
             this.m = rbf.length;
             this.rbf = rbf;
+            return this;
         }
         
         /**
          * Sets true to learn normalized RBF network.
          * @param normalized true to learn normalized RBF network.
          */
-        public void setNormalized(boolean normalized) {
+        public Trainer setNormalized(boolean normalized) {
             this.normalized = normalized;
+            return this;
         }
         
         @Override

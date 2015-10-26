@@ -125,7 +125,7 @@ public class SVMTest {
             System.out.println("Polynomial ONE vs. ALL error = " + error);
             assertTrue(error <= 5);
         } catch (Exception ex) {
-            System.err.println(ex);
+            ex.printStackTrace();
         }
     }
 
@@ -141,6 +141,7 @@ public class SVMTest {
             AttributeDataset train = parser.parse(this.getClass().getResourceAsStream("/smile/data/weka/segment-challenge.arff"));
             AttributeDataset test = parser.parse(this.getClass().getResourceAsStream("/smile/data/weka/segment-test.arff"));
 
+            System.out.println(train.size() + " " + test.size());
             double[][] x = train.toArray(new double[0][]);
             int[] y = train.toArray(new int[0]);
             double[][] testx = test.toArray(new double[0][]);
@@ -160,7 +161,7 @@ public class SVMTest {
             System.out.format("Segment error rate = %.2f%%\n", 100.0 * error / testx.length);
             assertTrue(error < 70);
         } catch (Exception ex) {
-            System.err.println(ex);
+            ex.printStackTrace();
         }
     }
 
@@ -212,7 +213,7 @@ public class SVMTest {
             System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
             assertTrue(error < 95);
         } catch (Exception ex) {
-            System.err.println(ex);
+            ex.printStackTrace();
         }
     }
 }

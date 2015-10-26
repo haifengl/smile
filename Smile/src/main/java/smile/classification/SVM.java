@@ -22,6 +22,7 @@ import java.util.concurrent.Callable;
 
 import smile.math.DoubleArrayList;
 import smile.math.Math;
+import smile.math.Random;
 import smile.math.SparseArray;
 import smile.math.kernel.MercerKernel;
 import smile.math.kernel.LinearKernel;
@@ -262,24 +263,26 @@ public class SVM <T> implements OnlineClassifier<T> {
          * 
          * @param tol the tolerance of convergence test.
          */
-        public void setTolerance(double tol) {
+        public Trainer setTolerance(double tol) {
             if (tol <= 0.0) {
                 throw new IllegalArgumentException("Invlaid tolerance of convergence test:" + tol);
             }
 
             this.tol = tol;
+            return this;
         }
 
         /**
          * Sets the number of epochs of stochastic learning.
          * @param epochs the number of epochs of stochastic learning.
          */
-        public void setNumEpochs(int epochs) {
+        public Trainer setNumEpochs(int epochs) {
             if (epochs < 1) {
                 throw new IllegalArgumentException("Invlaid numer of epochs of stochastic learning:" + epochs);
             }
         
             this.epochs = epochs;
+            return this;
         }
         
         @Override
@@ -480,7 +483,8 @@ public class SVM <T> implements OnlineClassifier<T> {
             }
 
             // train SVM in a stochastic order.
-            int[] index = Math.permutate(n);
+            Random random = new Random(Thread.currentThread().getId() * System.currentTimeMillis());
+            int[] index = random.permutate(n);
             for (int i = 0; i < n; i++) {
                 if (weight == null) {
                     process(x[index[i]], y[index[i]]);
@@ -1187,7 +1191,7 @@ public class SVM <T> implements OnlineClassifier<T> {
             try {
                 MulticoreExecutor.run(tasks);
             } catch (Exception e) {
-                System.err.println(e.getMessage());
+                e.printStackTrace();
             }
         } else {
             List<TrainingTask> tasks = new ArrayList<TrainingTask>(k * (k - 1) / 2);
