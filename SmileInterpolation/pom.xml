@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <name>Smile Interpolation</name>
-    <description>Statisticcal Machine Intelligence and Learning Engine -- Interpolation</description>
+    <description>Statistical Machine Intelligence and Learning Engine -- Interpolation</description>
     <url>http://github.com/haifengl/smile</url>
 
     <licenses>

@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <name>Smile Data</name>
-    <description>Statisticcal Machine Intelligence and Learning Engine -- Data</description>
+    <description>Statistical Machine Intelligence and Learning Engine -- Data</description>
     <url>http://github.com/haifengl/smile</url>
 
     <licenses>

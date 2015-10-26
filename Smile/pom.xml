@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <name>Smile Core</name>
-    <description>Statisticcal Machine Intelligence and Learning Engine -- Core</description>
+    <description>Statistical Machine Intelligence and Learning Engine -- Core</description>
     <url>http://github.com/haifengl/smile</url>
 
     <licenses>

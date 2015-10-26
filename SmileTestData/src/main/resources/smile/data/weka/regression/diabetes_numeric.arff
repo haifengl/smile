@@ -1,0 +1,64 @@
+% This data set concerns the study of the factors affecting patterns of
+% insulin-dependent diabetes mellitus in children.  The objective is to
+% investigate the dependence of the level of serum C-peptide on the
+% various other factors in order to understand the patterns of residual
+% insulin secretion. The response measurement is the logarithm of
+% C-peptide concentration (pmol/ml) at the diagnosis, and the predictor
+% measurements age and base deficit, a measure of acidity.
+%
+% Source: collection of regression datasets by Luis Torgo (ltorgo@ncc.up.pt) at
+% http://www.ncc.up.pt/~ltorgo/Regression/DataSets.html
+% Original source: Book Generalized Additive Models (p.304) by Hastie &
+% Tibshirani, Chapman & Hall.  
+% Characteristics: 43 cases; 3 continuous variables
+
+@relation diabetes_numeric
+
+@attribute age numeric
+@attribute deficit numeric
+@attribute c_peptide numeric
+
+@data
+5.2,-8.1,4.8
+8.8,-16.1,4.1
+10.5,-.9,5.2
+10.6,-7.8,5.5
+10.4,-29,5
+1.8,-19.2,3.4
+12.7,-18.9,3.4
+15.6,-10.6,4.9
+5.8,-2.8,5.6
+1.9,-25,3.7
+2.2,-3.1,3.9
+4.8,-7.8,4.5
+7.9,-13.9,4.8
+5.2,-4.5,4.9
+.9,-11.6,3
+11.8,-2.1,4.6
+7.9,-2,4.8
+11.5,-9,5.5
+10.6,-11.2,4.5
+8.5,-.2,5.3
+11.1,-6.1,4.7
+12.8,-1,6.6
+11.3,-3.6,5.1
+1,-8.2,3.9
+14.5,-.5,5.7
+11.9,-2,5.1
+8.1,-1.6,5.2
+13.8,-11.9,3.7
+15.5,-.7,4.9
+9.8,-1.2,4.8
+11,-14.3,4.4
+12.4,-.8,5.2
+11.1,-16.8,5.1
+5.1,-5.1,4.6
+4.8,-9.5,3.9
+4.2,-17,5.1
+6.9,-3.3,5.1
+13.2,-.7,6
+9.9,-3.3,4.9
+12.5,-13.6,4.1
+13.2,-1.9,4.6
+8.9,-10,4.9
+10.8,-13.5,5.1

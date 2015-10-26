@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
 
     <name>Smile Aggregate POM</name>
-    <description>Statisticcal Machine Intelligence and Learning Engine -- Aggregate</description>
+    <description>Statistical Machine Intelligence and Learning Engine -- Aggregate</description>
     <url>http://github.com/haifengl/smile</url>
 
     <licenses>
