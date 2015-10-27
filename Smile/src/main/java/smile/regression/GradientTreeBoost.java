@@ -219,56 +219,61 @@ public class GradientTreeBoost implements Regression<double[]> {
          * Sets the loss function.
          * @param loss the loss function.
          */
-        public void setLoss(Loss loss) {
+        public Trainer setLoss(Loss loss) {
             this.loss = loss;
+            return this;
         }
         
         /**
          * Sets the number of trees in the random forest.
          * @param T the number of trees.
          */
-        public void setNumTrees(int T) {
+        public Trainer setNumTrees(int T) {
             if (T < 1) {
                 throw new IllegalArgumentException("Invlaid number of trees: " + T);
             }
 
             this.T = T;
+            return this;
         }
         
         /**
          * Sets the maximum number of leaf nodes in the tree.
          * @param J the maximum number of leaf nodes in the tree.
          */
-        public void setMaximumLeafNodes(int J) {
+        public Trainer setMaximumLeafNodes(int J) {
             if (J < 2) {
                 throw new IllegalArgumentException("Invalid number of leaf nodes: " + J);
             }
             
             this.J = J;
+            return this;
         }
         
         /**
          * Sets the shrinkage parameter in (0, 1] controls the learning rate of procedure.
          * @param shrinkage the learning rate.
          */
-        public void setShrinkage(double shrinkage) {
+        public Trainer setShrinkage(double shrinkage) {
             if (shrinkage <= 0 || shrinkage > 1) {
                 throw new IllegalArgumentException("Invalid shrinkage: " + shrinkage);
             }
 
             this.shrinkage = shrinkage;
+            return this;
         }
 
         /**
          * Sets the sampling rate for stochastic tree boosting.
          * @param f the sampling rate for stochastic tree boosting.
          */
-        public void setSamplingRates(double f) {
+        public Trainer setSamplingRates(double f) {
             if (f <= 0 || f > 1) {
                 throw new IllegalArgumentException("Invalid sampling fraction: " + f);
             }
 
             this.f = f;
+            return this;
         }
         
         @Override

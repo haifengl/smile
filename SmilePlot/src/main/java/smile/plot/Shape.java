@@ -45,8 +45,9 @@ public abstract class Shape {
     /**
      * Set the color of component.
      */
-    public void setColor(Color color) {
+    public Shape setColor(Color color) {
         this.color = color;
+        return this;
     }
 
     /**

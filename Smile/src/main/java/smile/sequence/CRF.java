@@ -240,8 +240,9 @@ public class CRF implements SequenceLabeler<double[]> {
      * sequence by individual prediction on each position. This usually produces
      * better accuracy although the results may not be coherent.
      */
-    public void setViterbi(boolean viterbi) {
+    public CRF setViterbi(boolean viterbi) {
         this.viterbi = viterbi;
+        return this;
     }
 
     @Override
@@ -520,28 +521,31 @@ public class CRF implements SequenceLabeler<double[]> {
          *
          * @param maxLeaves the maximum number of leaf nodes in the tree.
          */
-        public void setMaximumLeafNodes(int maxLeaves) {
+        public Trainer setMaximumLeafNodes(int maxLeaves) {
             if (maxLeaves < 2) {
                 throw new IllegalArgumentException("Invalid number of leaf nodes: " + maxLeaves);
             }
 
             this.maxLeaves = maxLeaves;
+            return this;
         }
 
-        public void setLearningRate(double eta) {
+        public Trainer setLearningRate(double eta) {
             if (eta <= 0.0) {
                 throw new IllegalArgumentException("Invalid learning rate: " + eta);
             }
 
             this.eta = eta;
+            return this;
         }
 
-        public void setNumIterations(int iters) {
+        public Trainer setNumIterations(int iters) {
             if (iters < 1) {
                 throw new IllegalArgumentException("Invalid number of iterations: " + iters);
             }
 
             this.iters = iters;
+            return this;
         }
 
         public CRF train(double[][][] sequences, int[][] labels) {
@@ -842,7 +846,6 @@ public class CRF implements SequenceLabeler<double[]> {
      * Create a trellis of a given sequence for forward-backward algorithm.
      *
      * @param sequence the feature sequence.
-     * @param label the label sequence.
      */
     private TrellisNode[][] getTrellis(double[][] sequence) {
         TrellisNode[][] trellis = new TrellisNode[sequence.length][numClasses];
@@ -871,7 +874,6 @@ public class CRF implements SequenceLabeler<double[]> {
      * Create a trellis of a given sequence for forward-backward algorithm.
      *
      * @param sequence the feature sequence.
-     * @param label the label sequence.
      */
     private TrellisNode[][] getTrellis(int[][] sequence) {
         TrellisNode[][] trellis = new TrellisNode[sequence.length][numClasses];

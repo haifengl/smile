@@ -149,11 +149,12 @@ public final class DoubleArrayList {
      * @param val value to be stored at the specified position 
      * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
      */
-    public void set(int index, double val) {
+    public DoubleArrayList set(int index, double val) {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException(String.valueOf(index));
         }
         data[index] = val;
+        return this;
     }
 
     /**

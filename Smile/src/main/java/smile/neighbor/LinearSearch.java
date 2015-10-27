@@ -63,8 +63,9 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
     /**
      * Set if exclude query object self from the neighborhood.
      */
-    public void setIdenticalExcluded(boolean excluded) {
+    public LinearSearch setIdenticalExcluded(boolean excluded) {
         identicalExcluded = excluded;
+        return this;
     }
 
     /**

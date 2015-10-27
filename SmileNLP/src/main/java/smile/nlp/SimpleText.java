@@ -113,16 +113,18 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
      * Sets the anchor text. Note that anchor is all link labels in the corpus
      * pointing to this text. So addAnchor is more appropriate in most cases.
      */
-    public void setAnchor(String anchor) {
+    public SimpleText setAnchor(String anchor) {
     	this.anchor = anchor;
+        return this;
     }
     
-    public void addAnchor(String linkLabel) {
+    public SimpleText addAnchor(String linkLabel) {
     	if (anchor == null) {
     		anchor = linkLabel;
     	} else {
     		anchor = anchor + " " + linkLabel;
     	}
+        return this;
     }
     
     @Override

@@ -156,8 +156,9 @@ public class Matrix implements IMatrix {
     }
 
     @Override
-    public void set(int i, int j, double x) {
+    public Matrix set(int i, int j, double x) {
         A[i][j] = x;
+        return this;
     }
 
     @Override

@@ -141,8 +141,9 @@ public class GHA implements Projection<double[]> {
     /**
      * Set the learning rate.
      */
-    public void setLearningRate(double r) {
+    public GHA setLearningRate(double r) {
         this.r = r;
+        return this;
     }
 
     @Override

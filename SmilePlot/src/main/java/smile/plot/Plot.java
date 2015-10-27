@@ -61,8 +61,9 @@ public abstract class Plot extends Shape {
     /**
      * Set the id of plot.
      */
-    public void setID(String id) {
+    public Plot setID(String id) {
         this.id = id;
+        return this;
     }
 
     /**

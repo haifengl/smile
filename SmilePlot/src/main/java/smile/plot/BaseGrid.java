@@ -60,8 +60,9 @@ class BaseGrid {
     /**
      * Set if labels and tickmarks are visible.
      */
-    public void setLabelVisible(int i, boolean v) {
+    public BaseGrid setLabelVisible(int i, boolean v) {
         axis[i].setLabelVisible(v);
+        return this;
     }
 
     /**
@@ -74,8 +75,9 @@ class BaseGrid {
     /**
      * Set if the grid visible.
      */
-    public void setGridVisible(int i, boolean v) {
+    public BaseGrid setGridVisible(int i, boolean v) {
         axis[i].setGridVisible(v);
+        return this;
     }
 
     /**
@@ -88,10 +90,11 @@ class BaseGrid {
     /**
      * Set if the frame visible.
      */
-    public void setFrameVisible(boolean v) {
+    public BaseGrid setFrameVisible(boolean v) {
         for (int i = 0; i < axis.length; i++) {
             axis[i].setGridVisible(v);
         }
+        return this;
     }
 
     /**
@@ -111,7 +114,7 @@ class BaseGrid {
     /**
      * Set axis labels.
      */
-    public void setAxisLabel(String... axisLabels) {
+    public BaseGrid setAxisLabel(String... axisLabels) {
         if (axisLabels.length != base.getDimension()) {
             throw new IllegalArgumentException("Axis label size don't match base dimension.");
         }
@@ -119,6 +122,8 @@ class BaseGrid {
         for (int i = 0; i < axisLabels.length; i++) {
             axis[i].setAxisLabel(axisLabels[i]);
         }
+
+        return this;
     }
 
     /**
@@ -135,8 +140,9 @@ class BaseGrid {
     /**
      * Set axis labels.
      */
-    public void setAxisLabel(int i, String axisLabel) {
+    public BaseGrid setAxisLabel(int i, String axisLabel) {
         axis[i].setAxisLabel(axisLabel);
+        return this;
     }
 
     /**
@@ -149,11 +155,12 @@ class BaseGrid {
     /**
      * Set the base coordinate space.
      */
-    public void setBase(Base base) {
+    public BaseGrid setBase(Base base) {
         this.base = base;
         for (int i = 0; i < axis.length; i++) {
             axis[i].setBase(base);
         }
+        return this;
     }
 
     /**

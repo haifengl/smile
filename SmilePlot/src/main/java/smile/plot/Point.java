@@ -73,8 +73,9 @@ public class Point extends Shape {
     /**
      * Set the legend of point.
      */
-    public void setLegend(char legend) {
+    public Point setLegend(char legend) {
         this.legend = legend;
+        return this;
     }
 
     @Override

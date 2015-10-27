@@ -1169,13 +1169,14 @@ public class PlotCanvas extends JPanel {
      * sides have the same margin size.
      * @param margin the size of margin.
      */
-    public void setMargin(double margin) {
+    public PlotCanvas setMargin(double margin) {
         if (margin < 0.0 || margin >= 0.3) {
             throw new IllegalArgumentException("Invalid margin: " + margin);
         }
         
         this.margin = margin;
         repaint();
+        return this;
     }
 
     /**
@@ -1196,8 +1197,9 @@ public class PlotCanvas extends JPanel {
     /**
      * Set the main title of canvas.
      */
-    public void setTitle(String title) {
+    public PlotCanvas setTitle(String title) {
         this.title = title;
+        return this;
     }
 
     /**
@@ -1217,15 +1219,17 @@ public class PlotCanvas extends JPanel {
     /**
      * Set the font for title.
      */
-    public void setTitleFont(Font font) {
+    public PlotCanvas setTitleFont(Font font) {
         this.titleFont = font;
+        return this;
     }
 
     /**
      * Set the color for title.
      */
-    public void setTitleColor(Color color) {
+    public PlotCanvas setTitleColor(Color color) {
         this.titleColor = color;
+        return this;
     }
 
     /**
@@ -1256,17 +1260,19 @@ public class PlotCanvas extends JPanel {
     /**
      * Sets the labels/legends of axes.
      */
-    public void setAxisLabels(String... labels) {
+    public PlotCanvas setAxisLabels(String... labels) {
         baseGrid.setAxisLabel(labels);
         repaint();
+        return this;
     }
 
     /**
      * Sets the label/legend of an axis.
      */
-    public void setAxisLabel(int axis, String label) {
+    public PlotCanvas setAxisLabel(int axis, String label) {
         baseGrid.setAxisLabel(axis, label);
         repaint();
+        return this;
     }
 
     /**

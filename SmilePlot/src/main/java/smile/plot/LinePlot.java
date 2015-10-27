@@ -53,9 +53,10 @@ public class LinePlot extends ScatterPlot {
     }
 
     @Override
-    public void setColor(Color color) {
+    public LinePlot setColor(Color color) {
         super.setColor(color);
         line.setColor(color);
+        return this;
     }
 
     @Override
@@ -73,14 +74,16 @@ public class LinePlot extends ScatterPlot {
     /**
      * Set the line stroke style.
      */
-    public void setStroke(Stroke stroke) {
+    public LinePlot setStroke(Stroke stroke) {
         line.setStroke(stroke);
+        return this;
     }
 
     @Override
-    public void setLegend(char legend) {
+    public LinePlot setLegend(char legend) {
         super.setLegend(legend);
         drawDot = true;
+        return this;
     }
 
     @Override

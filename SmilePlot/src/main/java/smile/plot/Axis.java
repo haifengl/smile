@@ -298,27 +298,28 @@ public class Axis {
     /**
      * Set the base coordinate space.
      */
-    public void setBase(Base base) {
+    public Axis setBase(Base base) {
         this.base = base;
         if (getAxisLabel() != null) {
             setAxisLabel(getAxisLabel());
         }
         init();
-
+        return this;
     }
     
     /**
      * Sets the rotation degree of grid label strings.
      * @param rotation rotation degree.
      */
-    public void setRotation(double rotation) {
+    public Axis setRotation(double rotation) {
         this.rotation = rotation;
+        return this;
     }
 
     /**
      * Add a label to the axis at given location.
      */
-    public void addLabel(String label, double location) {
+    public Axis addLabel(String label, double location) {
         if (labels == null) {
             labels = new HashMap<String, Double>();
         }
@@ -327,12 +328,13 @@ public class Axis {
         setSlice();
         initGridLines();
         initGridLabels();
+        return this;
     }
 
     /**
      * Add a label to the axis at given location.
      */
-    public void addLabel(String[] label, double[] location) {
+    public Axis addLabel(String[] label, double[] location) {
         if (label.length != location.length) {
             throw new IllegalArgumentException("Label size and location size don't match.");
         }
@@ -348,12 +350,13 @@ public class Axis {
         setSlice();
         initGridLines();
         initGridLabels();
+        return this;
     }
 
     /**
      * Remove a label from the axis.
      */
-    public void removeLabel(String label) {
+    public Axis removeLabel(String label) {
         if (labels == null) {
             throw new IllegalStateException();
         }
@@ -361,6 +364,7 @@ public class Axis {
         labels.remove(label);
         setSlice();
         initGridLabels();
+        return this;
     }
 
     /**
@@ -373,8 +377,9 @@ public class Axis {
     /**
      * Set the visibility of the grid lines and their labels.
      */
-    public void setGridVisible(boolean v) {
+    public Axis setGridVisible(boolean v) {
         gridVisible = v;
+        return this;
     }
 
     /**
@@ -387,8 +392,9 @@ public class Axis {
     /**
      * Set the visibility of the frame grid lines and their labels.
      */
-    public void setFrameVisible(boolean v) {
+    public Axis setFrameVisible(boolean v) {
         frameVisible = v;
+        return this;
     }
 
     /**
@@ -401,8 +407,9 @@ public class Axis {
     /**
      * Set the visibility of the axis label.
      */
-    public void setLabelVisible(boolean v) {
+    public Axis setLabelVisible(boolean v) {
         labelVisible = v;
+        return this;
     }
 
     /**
@@ -415,7 +422,7 @@ public class Axis {
     /**
      * Sets the label of this axis.
      */
-    public void setAxisLabel(String label) {
+    public Axis setAxisLabel(String label) {
         if (label == null) {
             if (index == 0) {
                 label = "X";
@@ -456,6 +463,7 @@ public class Axis {
 
             axisLabel.setFont(axisLabelFont);
         }
+        return this;
     }
 
     /**

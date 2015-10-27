@@ -116,24 +116,25 @@ public class AdjacencyList implements Graph {
     }
 
     @Override
-    public void setWeight(int source, int target, double weight) {
+    public AdjacencyList setWeight(int source, int target, double weight) {
         if (digraph) {
             for (Edge edge : graph[source]) {
                 if (edge.v2 == target) {
                     edge.weight = weight;
-                    return;
+                    return this;
                 }
             }
         } else {
             for (Edge edge : graph[source]) {
                 if ((edge.v1 == source && edge.v2 == target) || (edge.v2 == source && edge.v1 == target)) {
                     edge.weight = weight;
-                    return;
+                    return this;
                 }
             }
         }
 
         addEdge(source, target, weight);
+        return this;
     }
 
     @Override
