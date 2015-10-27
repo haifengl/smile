@@ -44,7 +44,7 @@ public interface IMatrix {
     /**
      * Set the entry value at row i and column j.
      */
-    public void set(int i, int j, double x);
+    public IMatrix set(int i, int j, double x);
 
     /**
      * y = A * x

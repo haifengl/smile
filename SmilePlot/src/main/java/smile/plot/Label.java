@@ -98,8 +98,9 @@ public class Label extends Shape {
     /**
      * Set the text of label.
      */
-    public void setText(String text) {
+    public Label setText(String text) {
         this.text = text;
+        return this;
     }
 
     /**
@@ -112,8 +113,9 @@ public class Label extends Shape {
     /**
      * Set the coordinate of label.
      */
-    public void setCoordinate(double... coord) {
+    public Label setCoordinate(double... coord) {
         this.coord = coord;
+        return this;
     }
 
     /**
@@ -126,8 +128,9 @@ public class Label extends Shape {
     /**
      * Set the rotation angel of label.
      */
-    public void setRotation(double angle) {
+    public Label setRotation(double angle) {
         this.rotation = angle;
+        return this;
     }
 
     /**
@@ -140,8 +143,9 @@ public class Label extends Shape {
     /**
      * Set the font of label.
      */
-    public void setFont(Font font) {
+    public Label setFont(Font font) {
         this.font = font;
+        return this;
     }
 
     /**

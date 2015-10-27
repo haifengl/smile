@@ -218,8 +218,9 @@ public class ScatterPlot extends Plot {
     /**
      * Set the legend of points.
      */
-    public void setLegend(char legend) {
+    public ScatterPlot setLegend(char legend) {
         this.legend = legend;
+        return this;
     }
 
     /**

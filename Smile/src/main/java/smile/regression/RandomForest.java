@@ -139,12 +139,13 @@ public class RandomForest implements Regression<double[]> {
          * Sets the number of trees in the random forest.
          * @param T the number of trees.
          */
-        public void setNumTrees(int T) {
+        public Trainer setNumTrees(int T) {
             if (T < 1) {
                 throw new IllegalArgumentException("Invlaid number of trees: " + T);
             }
 
             this.T = T;
+            return this;
         }
         
         /**
@@ -153,12 +154,13 @@ public class RandomForest implements Regression<double[]> {
          * the decision at a node of the tree. floor(sqrt(dim)) seems to give
          * generally good performance, where dim is the number of variables.
          */
-        public void setNumRandomFeatures(int M) {
+        public Trainer setNumRandomFeatures(int M) {
             if (M < 1) {
                 throw new IllegalArgumentException("Invalid number of random selected features for splitting: " + M);
             }
 
             this.M = M;
+            return this;
         }
         
         /**
@@ -166,12 +168,13 @@ public class RandomForest implements Regression<double[]> {
          * @param S the number of instances in a node below which the tree will
          * not split, setting S = 5 generally gives good results.
          */
-        public void setMinimumNodeSize(int S) {
+        public Trainer setMinimumNodeSize(int S) {
             if (S <= 0) {
                 throw new IllegalArgumentException("Invalid minimum size of leaf nodes: " + S);
             }
 
             this.S = S;
+            return this;
         }
         
         @Override

@@ -35,10 +35,10 @@ public interface AnchorText {
      * Sets the anchor text. Note that anchor is all link labels in the corpus
      * pointing to this text. So addAnchor is more appropriate in most cases.
      */
-    public void setAnchor(String anchor);
+    public AnchorText setAnchor(String anchor);
     
     /**
      * Add a link label to the anchor text.
      */
-    public void addAnchor(String linkLabel);
+    public AnchorText addAnchor(String linkLabel);
 }

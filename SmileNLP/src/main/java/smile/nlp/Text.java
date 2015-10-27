@@ -47,8 +47,9 @@ public class Text {
     	return id;
     }
 
-    public void setID(String id) {
+    public Text setID(String id) {
     	this.id = id;
+        return this;
     }
     
     /**
@@ -58,8 +59,9 @@ public class Text {
     	return title;
     }
 
-    public void setTitle(String title) {
+    public Text setTitle(String title) {
     	this.title = title;
+        return this;
     }
     
     /**
@@ -69,8 +71,8 @@ public class Text {
     	return body;
     }
 
-    public void setBody(String body) {
+    public Text setBody(String body) {
     	this.body = body;
+        return this;
     }
-
 }

@@ -141,8 +141,9 @@ public class BandMatrix implements IMatrix {
     }
 
     @Override
-    public void set(int i, int j, double x) {
+    public BandMatrix set(int i, int j, double x) {
         A[i][j-i+m1] = x;
+        return this;
     }
 
     /**

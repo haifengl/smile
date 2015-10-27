@@ -175,12 +175,13 @@ public class SVR<T> implements Regression<T> {
          * 
          * @param tol the tolerance of convergence test.
          */
-        public void setTolerance(double tol) {
+        public Trainer setTolerance(double tol) {
             if (tol <= 0.0) {
                 throw new IllegalArgumentException("Invlaid tolerance of convergence test:" + tol);
             }
 
             this.tol = tol;
+            return this;
         }
 
         @Override
