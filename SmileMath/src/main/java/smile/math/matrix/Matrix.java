@@ -15,7 +15,9 @@
  *******************************************************************************/
 package smile.math.matrix;
 
+import java.util.Arrays;
 import smile.math.Math;
+import smile.stat.distribution.GaussianDistribution;
 
 /**
  * A matrix is a rectangular array of numbers. An item in a matrix is called
@@ -112,6 +114,7 @@ public class Matrix implements IMatrix {
 
     /**
      * Constructor. Note that this is a shallow copy of A.
+     * If the matrix is updated, no check on if the matrix is symmetric.
      * @param A the array of matrix.
      * @param symmetric true if the matrix is symmetric.
      */
@@ -126,6 +129,9 @@ public class Matrix implements IMatrix {
 
     /**
      * Constructor. Note that this is a shallow copy of A.
+     * If the matrix is updated, no check on if the matrix is symmetric
+     * and/or positive definite. The symmetric and positive definite
+     * properties are intended for read-only matrices.
      * @param A the array of matrix.
      * @param symmetric true if the matrix is symmetric.
      * @param positive true if the matrix is positive definite.
@@ -138,6 +144,55 @@ public class Matrix implements IMatrix {
         this.A = A;
         this.symmetric = symmetric;
         this.positive = positive;
+    }
+
+    /**
+     * Constructor of all-zero matrix.
+     */
+    public Matrix(int rows, int cols) {
+        A = new double[rows][cols];
+    }
+
+    /**
+     * Constructor. Fill the matrix with given value.
+     */
+    public Matrix(int rows, int cols, double value) {
+        A = new double[rows][cols];
+        for (int i = 0; i < rows; i++) {
+            Arrays.fill(A[i], value);
+        }
+    }
+
+    /**
+     * Constructor of matrix with normal random values with given mean and standard dev.
+     */
+    public Matrix(int rows, int cols, double mu, double sigma) {
+        GaussianDistribution g = new GaussianDistribution(mu, sigma);
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                A[i][j] = g.rand();
+            }
+        }
+    }
+
+    /**
+     * Return the two-dimensional array of matrix.
+     * @return the two-dimensional array of matrix.
+     */
+    public double[][] array() {
+        return A;
+    }
+
+    /**
+     * Sets the diagonal to the values of <code>diag</code> as long
+     * as possible (i.e while there are elements left in diag or the dim of matrix
+     * is not big enough.
+     */
+    public void setDiag(double[] diag) {
+        for (int i = 0; i < ncols() && i < nrows() && i < diag.length; i++) {
+            set(i, i, diag[i]);
+        }
     }
 
     @Override
@@ -203,6 +258,96 @@ public class Matrix implements IMatrix {
         for (int i = 0; i < n; i++) {
             x[i] = A[i][i] != 0.0 ? b[i] / A[i][i] : b[i];
         }
+    }
+
+    /**
+     * A = A + B
+     * @return this matrix
+     */
+    public Matrix add(Matrix b) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        int m = A.length;
+        int n = A[0].length;
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                A[i][j] += b.A[i][j];
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Element-wise multiplication A = A * x
+     */
+    public Matrix scale(double x) {
+
+        int m = A.length;
+        int n = A[0].length;
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                A[i][j] *= x;
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Element-wise division A = A / x
+     */
+    public Matrix divide(double x) {
+
+        int m = A.length;
+        int n = A[0].length;
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                A[i][j] /= x;
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Replaces NaN's with given value.
+     */
+    public Matrix replaceNaN(double x) {
+        int m = A.length;
+        int n = A[0].length;
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (Double.isNaN(A[i][j])) {
+                    A[i][j] = x;
+                }
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Returns the sum of all elements in the matrix.
+     * @return the sum of all elements.
+     */
+    public double sum() {
+        double s = 0.0;
+        int m = A.length;
+        int n = A[0].length;
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                s += A[i][j];
+            }
+        }
+
+        return s;
     }
 
     /**
