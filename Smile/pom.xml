@@ -42,6 +42,10 @@
         <developerConnection>scm:git:git@github.com:haifengl/smile.git</developerConnection>
         <url>git@github.com:haifengl/smile.git</url>
     </scm>
+    
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -77,6 +81,28 @@
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
+    
+    <profiles>
+        <profile>
+            <id>doclint-java8-disable</id>
+            
+            <activation>
+                <jdk>[1.8,)</jdk>
+            </activation>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <additionalparam>-Xdoclint:none</additionalparam>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>
@@ -107,7 +133,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>2.10.2</version>
                 <configuration>
-                    <additionalparam>-Xdoclint:none</additionalparam>
+                    <!-- <additionalparam>-Xdoclint:none</additionalparam> -->
                 </configuration>
                 <executions>
                     <execution>
