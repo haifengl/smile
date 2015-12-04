@@ -42,7 +42,7 @@ public class HellingerKernel implements MercerKernel<double[]> {
         
         double sum = 0;
         for (int i = 0; i < x.length; i++) {
-            sum += Math.sqr(x[i] * y[i]);
+            sum += Math.sqrt(x[i] * y[i]);
         }
 
         return sum;
