@@ -43,7 +43,7 @@ public class PearsonKernel implements MercerKernel<double[]> {
      */
     public void setOmega(double omega) {
         this.omega = omega;
-        this.constant = 2 * Math.sqrt(java.lang.Math.pow(2, (1 / omega)) - 1) / sigma;
+        this.constant = 2 * Math.sqrt(Math.pow(2, (1 / omega)) - 1) / sigma;
     }
 
     /**
@@ -60,7 +60,7 @@ public class PearsonKernel implements MercerKernel<double[]> {
      */
     public void setSigma(double sigma) {
         this.sigma = sigma;
-        this.constant = 2 * Math.sqrt(java.lang.Math.pow(2, (1 / omega)) - 1) / sigma;
+        this.constant = 2 * Math.sqrt(Math.pow(2, (1 / omega)) - 1) / sigma;
     }
     
     /**
@@ -100,8 +100,8 @@ public class PearsonKernel implements MercerKernel<double[]> {
             xy += x[i] * y[i];
         }
         
-        double m = constant * java.lang.Math.sqrt(-2.0 * xy + xx + yy);
-        return 1.0 / java.lang.Math.pow(1.0 + m * m, omega);
+        double m = constant * Math.sqrt(-2.0 * xy + xx + yy);
+        return 1.0 / Math.pow(1.0 + m * m, omega);
 
     }
 }
