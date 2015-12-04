@@ -231,7 +231,11 @@ public class DecisionTree implements Classifier<double[]> {
         /**
          * Used by the ID3, C4.5 and C5.0 tree generation algorithms.
          */
-        ENTROPY
+        ENTROPY,
+        /**
+         * Classification error.
+         */
+        CLASSIFICATION_ERROR
     }
     
     /**
@@ -685,6 +689,15 @@ public class DecisionTree implements Classifier<double[]> {
                         impurity -= p * Math.log2(p);
                     }
                 }
+                break;
+            case CLASSIFICATION_ERROR:
+                impurity = 0;
+                for (int i = 0; i < count.length; i++) {
+                    if (count[i] > 0) {
+                        impurity = Math.max(impurity, count[i] / (double)n);
+                    }
+                }
+                impurity = Math.abs(1 - impurity);
                 break;
         }
 
