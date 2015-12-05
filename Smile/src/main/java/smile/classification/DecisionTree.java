@@ -377,7 +377,6 @@ public class DecisionTree implements Classifier<double[]> {
             // Sample count in each class.
             int n = 0;
             int[] count = new int[k];
-            int[] falseCount = new int[k];
             for (int i = 0; i < N; i++) {
                 if (samples[i] > 0) {
                     n += samples[i];
@@ -400,7 +399,7 @@ public class DecisionTree implements Classifier<double[]> {
 
                 // Random forest already runs on parallel.
                 for (int j = 0; j < M; j++) {
-                    Node split = findBestSplit(n, count, falseCount, impurity, variables[j]);
+                    Node split = findBestSplit(n, count, impurity, variables[j]);
                     if (split.splitScore > node.splitScore) {
                         node.splitFeature = split.splitFeature;
                         node.splitValue = split.splitValue;
@@ -428,7 +427,7 @@ public class DecisionTree implements Classifier<double[]> {
                     }
                 } catch (Exception ex) {
                     for (int j = 0; j < M; j++) {
-                        Node split = findBestSplit(n, count, falseCount, impurity, variables[j]);
+                        Node split = findBestSplit(n, count, impurity, variables[j]);
                         if (split.splitScore > node.splitScore) {
                             node.splitFeature = split.splitFeature;
                             node.splitValue = split.splitValue;
@@ -474,9 +473,7 @@ public class DecisionTree implements Classifier<double[]> {
 
             @Override
             public Node call() {
-                // An array to store sample count in each class for false child node.
-                int[] falseCount = new int[k];
-                return findBestSplit(n, count, falseCount, impurity, j);
+                return findBestSplit(n, count, impurity, j);
             }
         }
         
@@ -484,14 +481,14 @@ public class DecisionTree implements Classifier<double[]> {
          * Finds the best split cutoff for attribute j at the current node.
          * @param n the number instances in this node.
          * @param count the sample count in each class.
-         * @param falseCount an array to store sample count in each class for false child node.
          * @param impurity the impurity of this node.
          * @param j the attribute to split on.
          */
-        public Node findBestSplit(int n, int[] count, int[] falseCount, double impurity, int j) {
+        public Node findBestSplit(int n, int[] count, double impurity, int j) {
             int N = x.length;
             Node splitNode = new Node();
 
+            int[] falseCount = new int[k];
             if (attributes[j].type == Attribute.Type.NOMINAL) {
                 int m = ((NominalAttribute) attributes[j]).size();
                 int[][] trueCount = new int[m][k];
