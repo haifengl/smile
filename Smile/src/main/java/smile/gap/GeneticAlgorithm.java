@@ -260,11 +260,12 @@ public class GeneticAlgorithm <T extends Chromosome> {
      * Elitism can very rapidly increase performance of GA, because it prevents
      * losing the best found solution.
      */
-    public void setElitism(int elitism) {
+    public GeneticAlgorithm setElitism(int elitism) {
         if (elitism < 0 || elitism >= size) {
             throw new IllegalArgumentException("Invalid elitism: " + elitism);
         }
         this.elitism = elitism;
+        return this;
     }
 
     /**
@@ -280,7 +281,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
      * @param size the size of tournament pool.
      * @param p the best-player-wins probability.
      */
-    public void setTournament(int size, double p) {
+    public GeneticAlgorithm setTournament(int size, double p) {
         if (size < 1) {
             throw new IllegalArgumentException("Invalid tournament size: " + size);
         }
@@ -291,6 +292,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
         
         tournamentSize = size;
         tournamentProbability = p;
+        return this;
     }
 
     /**
@@ -312,12 +314,13 @@ public class GeneticAlgorithm <T extends Chromosome> {
      * Sets it be zero to disable local search.
      * @param t the number of iterations of local search.
      */
-    public void setLocalSearchSteps(int t) {
+    public GeneticAlgorithm setLocalSearchSteps(int t) {
         if (t < 0) {
             throw new IllegalArgumentException("Invalid of number of iterations of local search: " + t);
         }
         
         this.t = t;
+        return this;
     }
     
     /**

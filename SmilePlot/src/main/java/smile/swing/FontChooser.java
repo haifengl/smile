@@ -328,7 +328,7 @@ public class FontChooser extends JComponent {
      *
      * @see #getSelectedFontFamily
      **/
-    public void setSelectedFontFamily(String name) {
+    public FontChooser setSelectedFontFamily(String name) {
         String[] names = getFontFamilies();
         for (int i = 0; i < names.length; i++) {
             if (names[i].toLowerCase().equals(name.toLowerCase())) {
@@ -337,6 +337,7 @@ public class FontChooser extends JComponent {
             }
         }
         updateSampleFont();
+        return this;
     }
 
     /**
@@ -351,7 +352,7 @@ public class FontChooser extends JComponent {
      * @see java.awt.Font#ITALIC
      * @see #getSelectedFontStyle
      **/
-    public void setSelectedFontStyle(int style) {
+    public FontChooser setSelectedFontStyle(int style) {
         for (int i = 0; i < FONT_STYLE_CODES.length; i++) {
             if (FONT_STYLE_CODES[i] == style) {
                 getFontStyleList().setSelectedIndex(i);
@@ -359,6 +360,7 @@ public class FontChooser extends JComponent {
             }
         }
         updateSampleFont();
+        return this;
     }
 
     /**
@@ -367,7 +369,7 @@ public class FontChooser extends JComponent {
      *
      * @see #getSelectedFontSize
      **/
-    public void setSelectedFontSize(int size) {
+    public FontChooser setSelectedFontSize(int size) {
         String sizeString = String.valueOf(size);
         for (int i = 0; i < this.fontSizeStrings.length; i++) {
             if (this.fontSizeStrings[i].equals(sizeString)) {
@@ -377,6 +379,7 @@ public class FontChooser extends JComponent {
         }
         getFontSizeTextField().setText(sizeString);
         updateSampleFont();
+        return this;
     }
 
     /**
@@ -386,10 +389,11 @@ public class FontChooser extends JComponent {
      * @see #getSelectedFont
      * @see java.awt.Font
      **/
-    public void setSelectedFont(Font font) {
+    public FontChooser setSelectedFont(Font font) {
         setSelectedFontFamily(font.getFamily());
         setSelectedFontStyle(font.getStyle());
         setSelectedFontSize(font.getSize());
+        return this;
     }
 
     /**

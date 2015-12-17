@@ -165,8 +165,9 @@ public class BKTree<E> implements RNNSearch<E, E> {
     /**
      * Set if exclude query object self from the neighborhood.
      */
-    public void setIdenticalExcluded(boolean excluded) {
+    public BKTree setIdenticalExcluded(boolean excluded) {
         identicalExcluded = excluded;
+        return this;
     }
 
     /**

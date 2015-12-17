@@ -108,7 +108,14 @@ public class RandomForest implements Classifier<double[]> {
          * where dim is the number of variables.        
          */
         private int M = -1;
-        
+
+        /**
+         * Default constructor of 500 trees.
+         */
+        public Trainer() {
+
+        }
+
         /**
          * Constructor.
          * 
@@ -142,12 +149,13 @@ public class RandomForest implements Classifier<double[]> {
          * Sets the number of trees in the random forest.
          * @param T the number of trees.
          */
-        public void setNumTrees(int T) {
+        public Trainer setNumTrees(int T) {
             if (T < 1) {
                 throw new IllegalArgumentException("Invlaid number of trees: " + T);
             }
 
             this.T = T;
+            return this;
         }
         
         /**
@@ -156,12 +164,13 @@ public class RandomForest implements Classifier<double[]> {
          * the decision at a node of the tree. floor(sqrt(dim)) seems to give
          * generally good performance, where dim is the number of variables.
          */
-        public void setNumRandomFeatures(int M) {
+        public Trainer setNumRandomFeatures(int M) {
             if (M < 1) {
                 throw new IllegalArgumentException("Invalid number of random selected features for splitting: " + M);
             }
 
             this.M = M;
+            return this;
         }
         
         @Override

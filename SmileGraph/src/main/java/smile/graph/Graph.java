@@ -85,7 +85,7 @@ public interface Graph
      * @param target the id of target vertex of the edge.
      * @param weight the edge weight
      */
-    public void setWeight(int source, int target, double weight);
+    public Graph setWeight(int source, int target, double weight);
 
     /**
      * Returns a set of the edges contained in this graph.

@@ -151,6 +151,13 @@ public class DecisionTree implements Classifier<double[]> {
         private int J = 100;
 
         /**
+         * Default constructor of maximal 100 leaf nodes in the tree.
+         */
+        public Trainer() {
+
+        }
+
+        /**
          * Constructor.
          * 
          * @param J the maximum number of leaf nodes in the tree.
@@ -183,20 +190,22 @@ public class DecisionTree implements Classifier<double[]> {
          * Sets the splitting rule.
          * @param rule the splitting rule.
          */
-        public void setSplitRule(SplitRule rule) {
+        public Trainer setSplitRule(SplitRule rule) {
             this.rule = rule;
+            return this;
         }
         
         /**
          * Sets the maximum number of leaf nodes in the tree.
          * @param J the maximum number of leaf nodes in the tree.
          */
-        public void setMaximumLeafNodes(int J) {
+        public Trainer setMaximumLeafNodes(int J) {
             if (J < 2) {
                 throw new IllegalArgumentException("Invalid number of leaf nodes: " + J);
             }
             
             this.J = J;
+            return this;
         }
         
         @Override
@@ -222,7 +231,11 @@ public class DecisionTree implements Classifier<double[]> {
         /**
          * Used by the ID3, C4.5 and C5.0 tree generation algorithms.
          */
-        ENTROPY
+        ENTROPY,
+        /**
+         * Classification error.
+         */
+        CLASSIFICATION_ERROR
     }
     
     /**
@@ -676,6 +689,15 @@ public class DecisionTree implements Classifier<double[]> {
                         impurity -= p * Math.log2(p);
                     }
                 }
+                break;
+            case CLASSIFICATION_ERROR:
+                impurity = 0;
+                for (int i = 0; i < count.length; i++) {
+                    if (count[i] > 0) {
+                        impurity = Math.max(impurity, count[i] / (double)n);
+                    }
+                }
+                impurity = Math.abs(1 - impurity);
                 break;
         }
 

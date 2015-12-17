@@ -243,7 +243,7 @@ public class PCA implements Projection<double[]> {
      * Set the projection matrix with given number of principal components.
      * @param p choose top p principal components used for projection.
      */
-    public void setProjection(int p) {
+    public PCA setProjection(int p) {
         if (p < 1 || p > n) {
             throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
         }
@@ -258,6 +258,8 @@ public class PCA implements Projection<double[]> {
 
         pmu = new double[p];
         Math.ax(projection, mu, pmu);
+
+        return this;
     }
 
     /**
@@ -265,7 +267,7 @@ public class PCA implements Projection<double[]> {
      * (more than) the given percentage of variance.
      * @param p the required percentage of variance.
      */
-    public void setProjection(double p) {
+    public PCA setProjection(double p) {
         if (p <= 0 || p > 1) {
             throw new IllegalArgumentException("Invalid percentage of variance: " + p);
         }
@@ -276,6 +278,8 @@ public class PCA implements Projection<double[]> {
                 break;
             }
         }
+
+        return this;
     }
 
     @Override

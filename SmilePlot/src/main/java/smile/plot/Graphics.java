@@ -112,8 +112,9 @@ public class Graphics {
     /**
      * Set the font.
      */
-    public void setFont(Font font) {
+    public Graphics setFont(Font font) {
         g2d.setFont(font);
+        return this;
     }
 
     /**
@@ -126,22 +127,24 @@ public class Graphics {
     /**
      * Set the color.
      */
-    public void setColor(Color color) {
+    public Graphics setColor(Color color) {
         g2d.setColor(color);
+        return this;
     }
 
     /**
      * Get the current paint object.
      */
-    public void getPaint() {
-        g2d.getPaint();
+    public Paint getPaint() {
+        return g2d.getPaint();
     }
 
     /**
      * Set the paint object.
      */
-    public void setPaint(Paint paint) {
+    public Graphics setPaint(Paint paint) {
         g2d.setPaint(paint);
+        return this;
     }
 
     /**
@@ -154,8 +157,9 @@ public class Graphics {
     /**
      * Set the stroke.
      */
-    public void setStroke(Stroke stroke) {
+    public Graphics setStroke(Stroke stroke) {
         g2d.setStroke(stroke);
+        return this;
     }
 
     /**

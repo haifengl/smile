@@ -1,8 +1,13 @@
 *.class
 
+<<<<<<< HEAD
 # Demo program
 SmileDemo/src/main/resources
 SmileTestData
+=======
+# javadoc
+doc/
+>>>>>>> master
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
@@ -14,3 +19,5 @@ SmileTestData
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+**/target

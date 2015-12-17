@@ -103,6 +103,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
          * to covariance matrix singularity is 1E-4.
          */
         public Trainer() {
+
         }
         
         /**
@@ -110,12 +111,13 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
          * 
          * @param L the dimensionality of mapped space.
          */
-        public void setDimension(int L) {
+        public Trainer setDimension(int L) {
             if (L < 1) {
                 throw new IllegalArgumentException("Invalid mapping space dimension: " + L);
             }
 
             this.L = L;
+            return this;
         }
         
         /**
@@ -124,12 +126,13 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
          * @param tol a tolerance to decide if a covariance matrix is singular.
          * The trainer will reject variables whose variance is less than tol<sup>2</sup>.
          */
-        public void setTolerance(double tol) {
+        public Trainer setTolerance(double tol) {
             if (tol < 0.0) {
                 throw new IllegalArgumentException("Invalid tol: " + tol);
             }
 
             this.tol = tol;
+            return this;
         }
         
         @Override

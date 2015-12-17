@@ -137,8 +137,9 @@ public class Line extends Shape {
     /**
      * Set the line stroke style.
      */
-    public void setStroke(Stroke stroke) {
+    public Line setStroke(Stroke stroke) {
         this.stroke = stroke;
+        return this;
     }
 
     @Override

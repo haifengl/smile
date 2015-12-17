@@ -95,7 +95,14 @@ public class AdaBoost implements Classifier<double[]> {
          * The maximum number of leaf nodes in the tree.
          */
         private int J = 2;
-        
+
+        /**
+         * Default constructor of 500 trees and maximal 2 leaf nodes in the tree.
+         */
+        public Trainer() {
+
+        }
+
         /**
          * Constructor.
          * 
@@ -103,7 +110,7 @@ public class AdaBoost implements Classifier<double[]> {
          */
         public Trainer(int T) {
             if (T < 1) {
-                throw new IllegalArgumentException("Invlaid number of trees: " + T);
+                throw new IllegalArgumentException("Invalid number of trees: " + T);
             }
 
             this.T = T;
@@ -119,7 +126,7 @@ public class AdaBoost implements Classifier<double[]> {
             super(attributes);
 
             if (T < 1) {
-                throw new IllegalArgumentException("Invlaid number of trees: " + T);
+                throw new IllegalArgumentException("Invalid number of trees: " + T);
             }
 
             this.T = T;
@@ -129,24 +136,26 @@ public class AdaBoost implements Classifier<double[]> {
          * Sets the number of trees in the random forest.
          * @param T the number of trees.
          */
-        public void setNumTrees(int T) {
+        public Trainer setNumTrees(int T) {
             if (T < 1) {
-                throw new IllegalArgumentException("Invlaid number of trees: " + T);
+                throw new IllegalArgumentException("Invalid number of trees: " + T);
             }
 
             this.T = T;
+            return this;
         }
         
         /**
          * Sets the maximum number of leaf nodes in the tree.
          * @param J the maximum number of leaf nodes in the tree.
          */
-        public void setMaximumLeafNodes(int J) {
+        public Trainer setMaximumLeafNodes(int J) {
             if (J < 2) {
                 throw new IllegalArgumentException("Invalid number of leaf nodes: " + J);
             }
             
             this.J = J;
+            return this;
         }
         
         @Override

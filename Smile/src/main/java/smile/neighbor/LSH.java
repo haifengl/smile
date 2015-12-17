@@ -460,8 +460,9 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
     /**
      * Set if exclude query object self from the neighborhood.
      */
-    public void setIdenticalExcluded(boolean excluded) {
+    public LSH setIdenticalExcluded(boolean excluded) {
         identicalExcluded = excluded;
+        return this;
     }
 
     /**

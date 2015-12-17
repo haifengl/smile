@@ -179,12 +179,13 @@ public class RegressionTree implements Regression<double[]> {
          * Sets the maximum number of leaf nodes in the tree.
          * @param J the maximum number of leaf nodes in the tree.
          */
-        public void setMaximumLeafNodes(int J) {
+        public Trainer setMaximumLeafNodes(int J) {
             if (J < 2) {
                 throw new IllegalArgumentException("Invalid number of leaf nodes: " + J);
             }
             
             this.J = J;
+            return this;
         }
         
         @Override
@@ -472,8 +473,6 @@ public class RegressionTree implements Regression<double[]> {
         /**
          * Finds the best split cutoff for attribute j at the current node.
          * @param n the number instances in this node.
-         * @param count the sample count in each class.
-         * @param impurity the impurity of this node.
          * @param j the attribute to split on.
          */
         public Node findBestSplit(int n, double sum, int j) {

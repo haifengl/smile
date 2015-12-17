@@ -81,11 +81,12 @@ public class AdjacencyMatrix implements Graph {
     }
 
     @Override
-    public void setWeight(int source, int target, double weight) {
+    public AdjacencyMatrix setWeight(int source, int target, double weight) {
         graph[source][target] = weight;
         if (!digraph) {
             graph[target][source] = weight;
         }
+        return this;
     }
 
     @Override
