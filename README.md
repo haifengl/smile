@@ -20,7 +20,7 @@ Swing-based data visualization library.
 
 SmileMiner is well documented and you can browse the <a href="http://haifengl.github.io/smile/doc/index.html">javadoc</a> for more information. Tutorials are available on the project <a href="http://github.com/haifengl/smile/wiki">wiki</a>. A basic tutorial is also included at the bottom of this file.
 
-To see SmileMiner in action, please download the <a href="http://haifengl.github.io/smile/smile-demo.jar">demo</a> jar file and then run <tt>java -jar smile-demo.jar</tt>.
+To see SmileMiner in action, please click <a href="http://haifengl.github.io/smile/smile-demo.jnlp">this</a> or download the <a href="http://haifengl.github.io/smile/smile-demo.jar">demo</a> jar file and then run <tt>java -jar smile-demo.jar</tt>.
 
 You can use the libraries through Maven central repository by adding the following to your project pom.xml file.
 ```
