@@ -1,0 +1,12 @@
+@relation sparse
+ 
+@attribute V1 integer
+@attribute V2 {U, W, X, Y}
+@attribute V3 {U, W, X, Y}
+@attribute V4 {U, W, X, Y}
+@attribute class {"class A", "class B"}
+ 
+
+@data
+{1 X, 3 Y, 4 "class A"}
+{2 W, 4 "class B"}

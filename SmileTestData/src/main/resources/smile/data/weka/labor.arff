@@ -1,0 +1,164 @@
+% Date: Tue, 15 Nov 88 15:44:08 EST
+% From: stan <stan@csi2.UofO.EDU>
+% To: aha@ICS.UCI.EDU
+% 
+% 1. Title: Final settlements in labor negotitions in Canadian industry
+% 
+% 2. Source Information
+%    -- Creators: Collective Barganing Review, montly publication,
+%       Labour Canada, Industrial Relations Information Service,
+%         Ottawa, Ontario, K1A 0J2, Canada, (819) 997-3117
+%         The data includes all collective agreements reached
+%         in the business and personal services sector for locals
+%         with at least 500 members (teachers, nurses, university
+%         staff, police, etc) in Canada in 87 and first quarter of 88.   
+%    -- Donor: Stan Matwin, Computer Science Dept, University of Ottawa,
+%                 34 Somerset East, K1N 9B4, (stan@uotcsi2.bitnet)
+%    -- Date: November 1988
+%  
+% 3. Past Usage:
+%    -- testing concept learning software, in particular
+%       an experimental method to learn two-tiered concept descriptions.
+%       The data was used to learn the description of an acceptable
+%       and unacceptable contract.
+%       The unacceptable contracts were either obtained by interviewing
+%       experts, or by inventing near misses.
+%       Examples of use are described in:
+%         Bergadano, F., Matwin, S., Michalski, R.,
+%         Zhang, J., Measuring Quality of Concept Descriptions, 
+%         Procs. of the 3rd European Working Sessions on Learning,
+%         Glasgow, October 1988.
+%         Bergadano, F., Matwin, S., Michalski, R., Zhang, J.,
+%         Representing and Acquiring Imprecise and Context-dependent
+%         Concepts in Knowledge-based Systems, Procs. of ISMIS'88,
+%         North Holland, 1988.
+% 4. Relevant Information:
+%    -- data was used to test 2tier approach with learning
+% from positive and negative examples
+% 
+% 5. Number of Instances: 57 
+% 
+% 6. Number of Attributes: 16 
+% 
+% 7. Attribute Information:
+%    1.  dur: duration of agreement 
+%        [1..7]
+%    2   wage1.wage : wage increase in first year of contract 
+%        [2.0 .. 7.0]
+%    3   wage2.wage : wage increase in second year of contract
+%        [2.0 .. 7.0]
+%    4   wage3.wage : wage increase in third year of contract
+%        [2.0 .. 7.0]
+%    5   cola : cost of living allowance 
+%        [none, tcf, tc]
+%    6   hours.hrs : number of working hours during week
+%        [35 .. 40]
+%    7   pension : employer contributions to pension plan
+%        [none, ret_allw, empl_contr]
+%    8   stby_pay : standby pay
+%        [2 .. 25]
+%    9   shift_diff : shift differencial : supplement for work on II and III shift
+%        [1 .. 25]
+%   10   educ_allw.boolean : education allowance 
+%        [true false]
+%   11   holidays : number of statutory holidays 
+%        [9 .. 15]
+%   12   vacation : number of paid vacation days
+%        [ba, avg, gnr]
+%   13   lngtrm_disabil.boolean : 
+%        employer's help during employee longterm disabil
+%        ity [true , false]
+%   14   dntl_ins : employers contribution towards the dental plan
+%        [none, half, full]
+%   15   bereavement.boolean : employer's financial contribution towards the 
+%        covering the costs of bereavement
+%        [true , false]
+%   16   empl_hplan : employer's contribution towards the health plan
+%        [none, half, full]
+% 
+% 8. Missing Attribute Values: None
+% 
+% 9. Class Distribution:
+% 
+% 10. Exceptions from format instructions: no commas between attribute values.
+% 
+% 
+@relation 'labor-neg-data'
+@attribute 'duration' real
+@attribute 'wage-increase-first-year' real
+@attribute 'wage-increase-second-year' real
+@attribute 'wage-increase-third-year' real
+@attribute 'cost-of-living-adjustment' {'none','tcf','tc'}
+@attribute 'working-hours' real
+@attribute 'pension' {'none','ret_allw','empl_contr'}
+@attribute 'standby-pay' real
+@attribute 'shift-differential' real
+@attribute 'education-allowance' {'yes','no'}
+@attribute 'statutory-holidays' real
+@attribute 'vacation' {'below_average','average','generous'}
+@attribute 'longterm-disability-assistance' {'yes','no'}
+@attribute 'contribution-to-dental-plan' {'none','half','full'}
+@attribute 'bereavement-assistance' {'yes','no'}
+@attribute 'contribution-to-health-plan' {'none','half','full'}
+@attribute 'class' {'bad','good'}
+@data
+1,5,?,?,?,40,?,?,2,?,11,'average',?,?,'yes',?,'good'
+2,4.5,5.8,?,?,35,'ret_allw',?,?,'yes',11,'below_average',?,'full',?,'full','good'
+?,?,?,?,?,38,'empl_contr',?,5,?,11,'generous','yes','half','yes','half','good'
+3,3.7,4,5,'tc',?,?,?,?,'yes',?,?,?,?,'yes',?,'good'
+3,4.5,4.5,5,?,40,?,?,?,?,12,'average',?,'half','yes','half','good'
+2,2,2.5,?,?,35,?,?,6,'yes',12,'average',?,?,?,?,'good'
+3,4,5,5,'tc',?,'empl_contr',?,?,?,12,'generous','yes','none','yes','half','good'
+3,6.9,4.8,2.3,?,40,?,?,3,?,12,'below_average',?,?,?,?,'good'
+2,3,7,?,?,38,?,12,25,'yes',11,'below_average','yes','half','yes',?,'good'
+1,5.7,?,?,'none',40,'empl_contr',?,4,?,11,'generous','yes','full',?,?,'good'
+3,3.5,4,4.6,'none',36,?,?,3,?,13,'generous',?,?,'yes','full','good'
+2,6.4,6.4,?,?,38,?,?,4,?,15,?,?,'full',?,?,'good'
+2,3.5,4,?,'none',40,?,?,2,'no',10,'below_average','no','half',?,'half','bad'
+3,3.5,4,5.1,'tcf',37,?,?,4,?,13,'generous',?,'full','yes','full','good'
+1,3,?,?,'none',36,?,?,10,'no',11,'generous',?,?,?,?,'good'
+2,4.5,4,?,'none',37,'empl_contr',?,?,?,11,'average',?,'full','yes',?,'good'
+1,2.8,?,?,?,35,?,?,2,?,12,'below_average',?,?,?,?,'good'
+1,2.1,?,?,'tc',40,'ret_allw',2,3,'no',9,'below_average','yes','half',?,'none','bad'
+1,2,?,?,'none',38,'none',?,?,'yes',11,'average','no','none','no','none','bad'
+2,4,5,?,'tcf',35,?,13,5,?,15,'generous',?,?,?,?,'good'
+2,4.3,4.4,?,?,38,?,?,4,?,12,'generous',?,'full',?,'full','good'
+2,2.5,3,?,?,40,'none',?,?,?,11,'below_average',?,?,?,?,'bad'
+3,3.5,4,4.6,'tcf',27,?,?,?,?,?,?,?,?,?,?,'good'
+2,4.5,4,?,?,40,?,?,4,?,10,'generous',?,'half',?,'full','good'
+1,6,?,?,?,38,?,8,3,?,9,'generous',?,?,?,?,'good'
+3,2,2,2,'none',40,'none',?,?,?,10,'below_average',?,'half','yes','full','bad'
+2,4.5,4.5,?,'tcf',?,?,?,?,'yes',10,'below_average','yes','none',?,'half','good'
+2,3,3,?,'none',33,?,?,?,'yes',12,'generous',?,?,'yes','full','good'
+2,5,4,?,'none',37,?,?,5,'no',11,'below_average','yes','full','yes','full','good'
+3,2,2.5,?,?,35,'none',?,?,?,10,'average',?,?,'yes','full','bad'
+3,4.5,4.5,5,'none',40,?,?,?,'no',11,'average',?,'half',?,?,'good'
+3,3,2,2.5,'tc',40,'none',?,5,'no',10,'below_average','yes','half','yes','full','bad'
+2,2.5,2.5,?,?,38,'empl_contr',?,?,?,10,'average',?,?,?,?,'bad'
+2,4,5,?,'none',40,'none',?,3,'no',10,'below_average','no','none',?,'none','bad'
+3,2,2.5,2.1,'tc',40,'none',2,1,'no',10,'below_average','no','half','yes','full','bad'
+2,2,2,?,'none',40,'none',?,?,'no',11,'average','yes','none','yes','full','bad'
+1,2,?,?,'tc',40,'ret_allw',4,0,'no',11,'generous','no','none','no','none','bad'
+1,2.8,?,?,'none',38,'empl_contr',2,3,'no',9,'below_average','yes','half',?,'none','bad'
+3,2,2.5,2,?,37,'empl_contr',?,?,?,10,'average',?,?,'yes','none','bad'
+2,4.5,4,?,'none',40,?,?,4,?,12,'average','yes','full','yes','half','good'
+1,4,?,?,'none',?,'none',?,?,'yes',11,'average','no','none','no','none','bad'
+2,2,3,?,'none',38,'empl_contr',?,?,'yes',12,'generous','yes','none','yes','full','bad'
+2,2.5,2.5,?,'tc',39,'empl_contr',?,?,?,12,'average',?,?,'yes',?,'bad'
+2,2.5,3,?,'tcf',40,'none',?,?,?,11,'below_average',?,?,'yes',?,'bad'
+2,4,4,?,'none',40,'none',?,3,?,10,'below_average','no','none',?,'none','bad'
+2,4.5,4,?,?,40,?,?,2,'no',10,'below_average','no','half',?,'half','bad'
+2,4.5,4,?,'none',40,?,?,5,?,11,'average',?,'full','yes','full','good'
+2,4.6,4.6,?,'tcf',38,?,?,?,?,?,?,'yes','half',?,'half','good'
+2,5,4.5,?,'none',38,?,14,5,?,11,'below_average','yes',?,?,'full','good'
+2,5.7,4.5,?,'none',40,'ret_allw',?,?,?,11,'average','yes','full','yes','full','good'
+2,7,5.3,?,?,?,?,?,?,?,11,?,'yes','full',?,?,'good'
+3,2,3,?,'tcf',?,'empl_contr',?,?,'yes',?,?,'yes','half','yes',?,'good'
+3,3.5,4,4.5,'tcf',35,?,?,?,?,13,'generous',?,?,'yes','full','good'
+3,4,3.5,?,'none',40,'empl_contr',?,6,?,11,'average','yes','full',?,'full','good'
+3,5,4.4,?,'none',38,'empl_contr',10,6,?,11,'generous','yes',?,?,'full','good'
+3,5,5,5,?,40,?,?,?,?,12,'average',?,'half','yes','half','good'
+3,6,6,4,?,35,?,?,14,?,9,'generous','yes','full','yes','full','good'
+%
+%
+%

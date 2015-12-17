@@ -133,11 +133,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>2.10.2</version>
                 <configuration>
-<<<<<<< HEAD
-                    <additionalparam>-Xdoclint:none</additionalparam>
-=======
                     <!-- <additionalparam>-Xdoclint:none</additionalparam> -->
->>>>>>> master
                 </configuration>
                 <executions>
                     <execution>

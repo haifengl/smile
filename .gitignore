@@ -1,10 +1,5 @@
 *.class
 
-<<<<<<< HEAD
-# Demo program
-SmileDemo/src/main/resources
-SmileTestData
-=======
 # javadoc
 doc/
 >>>>>>> master
