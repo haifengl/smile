@@ -44,13 +44,14 @@
     </scm>
 
     <modules>
-        <module>SmileMath</module>
-        <module>SmileData</module>
-        <module>SmileGraph</module>
-        <module>SmileInterpolation</module>
-        <module>Smile</module>
-        <module>SmileNLP</module>
-        <module>SmilePlot</module>
+        <module>test-data</module>
+        <module>math</module>
+        <module>data</module>
+        <module>graph</module>
+        <module>interpolation</module>
+        <module>core</module>
+        <module>nlp</module>
+        <module>plot</module>
     </modules>
     
     <properties>
