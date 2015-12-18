@@ -517,7 +517,7 @@ public class LASSO  implements Regression<double[]> {
         }
 
         @Override
-        public void set(int i, int j, double x) {
+        public PCGMatrix set(int i, int j, double x) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
