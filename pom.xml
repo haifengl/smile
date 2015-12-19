@@ -44,7 +44,6 @@
     </scm>
 
     <modules>
-        <module>test-data</module>
         <module>math</module>
         <module>data</module>
         <module>graph</module>
@@ -52,6 +51,8 @@
         <module>core</module>
         <module>nlp</module>
         <module>plot</module>
+        <module>test-data</module>
+        <module>benchmark</module>
     </modules>
     
     <properties>
