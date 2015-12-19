@@ -6,7 +6,7 @@
 
     <groupId>com.github.haifengl</groupId>
     <artifactId>smile-math</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <packaging>jar</packaging>
 
     <name>Smile Math</name>

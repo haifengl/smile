@@ -6,7 +6,7 @@
 
     <groupId>com.github.haifengl</groupId>
     <artifactId>smile-test-data</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <packaging>jar</packaging>
 
     <name>Smile Test Data</name>
