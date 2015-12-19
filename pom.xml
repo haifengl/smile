@@ -51,8 +51,6 @@
         <module>core</module>
         <module>nlp</module>
         <module>plot</module>
-        <module>test-data</module>
-        <module>benchmark</module>
     </modules>
     
     <properties>

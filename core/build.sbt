@@ -1,2 +1,1 @@
 name := "smile-core"
-
