@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.classification;
+package smile.benchmark;
 
-import smile.sort.QuickSort;
 import smile.data.Attribute;
-import smile.math.Math;
-import smile.validation.LOOCV;
-import smile.data.parser.ArffParser;
 import smile.data.AttributeDataset;
 import smile.data.NominalAttribute;
 import smile.data.parser.DelimitedTextParser;
+import smile.classification.RandomForest;
 
 /**
  *
@@ -30,18 +27,20 @@ import smile.data.parser.DelimitedTextParser;
  */
 public class Benchmark {
 
-    public Benchmark() {
-    }
-
     public static void main(String[] args) {
         System.out.println("Random Forest benchmark");
         DelimitedTextParser parser = new DelimitedTextParser();
         parser.setDelimiter(",");
         parser.setColumnNames(true);
         parser.setResponseIndex(new NominalAttribute("class"), 8);
+        Attribute[] attributes = new Attribute[8];
+        for (int i = 0; i < attributes.length; i++) {
+            attributes[i] = new NominalAttribute("V"+(i+1));
+        }
+
         try {
-            AttributeDataset train = parser.parse("Benchmark Train", this.getClass().getResourceAsStream("/smile/data/benchm-ml/train-1m.csv"));
-            AttributeDataset test = parser.parse("Benchmark Test", this.getClass().getResourceAsStream("/smile/data/benchm-ml/test.csv"));
+            AttributeDataset train = parser.parse("Benchmark train", attributes, "benchm-ml/train-1m.csv");
+            AttributeDataset test = parser.parse("Benchmark Test", attributes, "/smile/data/benchm-ml/test.csv");
 
             double[][] x = train.toArray(new double[train.size()][]);
             int[] y = train.toArray(new int[train.size()]);

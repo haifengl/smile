@@ -216,39 +216,4 @@ public class RandomForestTest {
             System.err.println(ex);
         }
     }
-
-    @Test
-    public void testBenchmark() {
-        System.out.println("Random Forest benchmark");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setDelimiter(",");
-        parser.setColumnNames(true);
-        parser.setResponseIndex(new NominalAttribute("class"), 8);
-        try {
-            AttributeDataset train = parser.parse("Benchmark Train", this.getClass().getResourceAsStream("/smile/data/benchm-ml/train-1m.csv"));
-            AttributeDataset test = parser.parse("Benchmark Test", this.getClass().getResourceAsStream("/smile/data/benchm-ml/test.csv"));
-
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-
-            long start = System.currentTimeMillis();
-            RandomForest forest = new RandomForest(x, y, 100);
-            long end = System.currentTimeMillis();
-            System.out.format("Random forest 100 trees training time: %.2f%% s\n", (end-start)/1000.0);
-
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (forest.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
-
-            System.out.format("Benchmark OOB error rate = %.2f%%\n", 100.0 * forest.error());
-            System.out.format("Benchmark error rate = %.2f%%\n", 100.0 * error / testx.length);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
-    }
 }
