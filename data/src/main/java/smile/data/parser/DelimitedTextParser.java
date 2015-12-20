@@ -352,7 +352,13 @@ public class DelimitedTextParser {
         } 
         
         String line = null;
+        boolean firstLine = true;
         while ((line = reader.readLine()) != null) {
+            if (hasColumnNames && firstLine) {
+                firstLine = false;
+                continue;
+            }
+
             if (line.isEmpty()) {
                 continue;
             }
