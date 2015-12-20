@@ -219,7 +219,7 @@ public class DelimitedTextParser {
      * @throws java.io.FileNotFoundException
      */
     public AttributeDataset parse(String name, Attribute[] attributes, File file) throws FileNotFoundException, IOException, ParseException {
-        AttributeDataset data = new AttributeDataset(name, attributes);
+        AttributeDataset data = new AttributeDataset(name, attributes, response);
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
            parse(data, reader);
         }
