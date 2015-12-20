@@ -17,9 +17,12 @@ package smile.benchmark
 
 import smile.data._
 import smile.data.parser.DelimitedTextParser
-import smile.classification.{SVM, RandomForest}
+import smile.classification.{LogisticRegression, NeuralNetwork, SVM, RandomForest, RBFNetwork}
 import smile.math.Math
+import smile.math.distance.EuclideanDistance
 import smile.math.kernel.GaussianKernel
+import smile.math.rbf.GaussianRadialBasis
+import smile.util.SmileUtils
 
 /**
  *
@@ -28,10 +31,11 @@ import smile.math.kernel.GaussianKernel
 object Benchmark {
 
   def main(args: Array[String]): Unit = {
+    //airline
     usps
   }
 
-  def benchm() {
+  def airline() {
     val parser = new DelimitedTextParser()
     parser.setDelimiter(",")
     parser.setColumnNames(true)
@@ -46,8 +50,8 @@ object Benchmark {
     attributes(6) = new NominalAttribute("V7")
     attributes(7) = new NumericAttribute("V8")
 
-    val train = parser.parse("Benchmark train", attributes, "test-data/src/main/resources/smile/data/benchm-ml/train-1m.csv")
-    val test = parser.parse("Benchmark Test", attributes, "test-data/src/main/resources//smile/data/benchm-ml/test.csv")
+    val train = parser.parse("Benchmark train", attributes, "test-data/src/main/resources/smile/data/airline/train-1m.csv")
+    val test = parser.parse("Benchmark Test", attributes, "test-data/src/main/resources//smile/data/airline/test.csv")
 
     val x = train.toArray(new Array[Array[Double]](train.size))
     val y = train.toArray(new Array[Int](train.size))
@@ -55,9 +59,9 @@ object Benchmark {
     val testy = test.toArray(new Array[Int](test.size))
 
     val start = System.currentTimeMillis()
-    val forest = new RandomForest(x, y, 200)
+    val forest = new RandomForest(x, y, 100)
     val end = System.currentTimeMillis()
-    println("Random forest 200 trees training time: %.2fs" format ((end-start)/1000.0))
+    println("Random forest 100 trees training time: %.2fs" format ((end-start)/1000.0))
 
     val error = (0 until testx.length).foldLeft(0) { (e, i) =>
       if (forest.predict(testx(i)) != testy(i)) e + 1 else e
@@ -78,6 +82,7 @@ object Benchmark {
     val y = train.toArray(new Array[Int](train.size))
     val testx = test.toArray(new Array[Array[Double]](test.size))
     val testy = test.toArray(new Array[Int](test.size))
+    val c = Math.max(y: _*) + 1
 
     var start = System.currentTimeMillis
     val forest = new RandomForest(x, y, 200)
@@ -87,17 +92,15 @@ object Benchmark {
     var error = (0 until testx.length).foldLeft(0) { (e, i) =>
       if (forest.predict(testx(i)) != testy(i)) e + 1 else e
     }
-
     println("Random Forest OOB error rate = %.2f%%" format (100.0 * forest.error()))
     println("Random Forest error rate = %.2f%%" format (100.0 * error / testx.length))
 
     start = System.currentTimeMillis
-    val svm = new SVM[Array[Double]](new GaussianKernel(8.0), 5.0, Math.max(y: _*) + 1, SVM.Multiclass.ONE_VS_ONE)
+    val svm = new SVM[Array[Double]](new GaussianKernel(8.0), 5.0, c, SVM.Multiclass.ONE_VS_ONE)
     svm.learn(x, y)
     svm.finish
     end = System.currentTimeMillis
     println("SVM one epoch training time: %.2fs" format ((end-start)/1000.0))
-
     error = (0 until testx.length).foldLeft(0) { (e, i) =>
       if (svm.predict(testx(i)) != testy(i)) e + 1 else e
     }
@@ -118,7 +121,49 @@ object Benchmark {
     error = (0 until testx.length).foldLeft(0) { (e, i) =>
       if (svm.predict(testx(i)) != testy(i)) e + 1 else e
     }
-
     println("SVM error rate = %.2f%%" format (100.0 * error / testx.length))
+
+    start = System.currentTimeMillis
+    val centers = new Array[Array[Double]](200)
+    val basis = SmileUtils.learnGaussianRadialBasis(x, centers)
+    val rbf = new RBFNetwork[Array[Double]](x, y, new EuclideanDistance, new GaussianRadialBasis(8.0), centers)
+    end = System.currentTimeMillis
+    println("RBF 200 centers training time: %.2fs" format ((end-start)/1000.0))
+
+    error = (0 until testx.length).foldLeft(0) { (e, i) =>
+      if (rbf.predict(testx(i)) != testy(i)) e + 1 else e
+    }
+    println("RBF error rate = %.2f%%" format (100.0 * error / testx.length))
+
+    start = System.currentTimeMillis
+    val logit = new LogisticRegression(x, y, 0.3, 1E-3, 1000)
+    end = System.currentTimeMillis
+    println("Logistic regression training time: %.2fs" format ((end-start)/1000.0))
+
+    error = (0 until testx.length).foldLeft(0) { (e, i) =>
+      if (logit.predict(testx(i)) != testy(i)) e + 1 else e
+    }
+    println("Logistic error rate = %.2f%%" format (100.0 * error / testx.length))
+
+    val p = x(0).length
+    val mu = Math.colMean(x)
+    val sd = Math.colSd(x)
+    x.foreach { xi =>
+      (0 until p) foreach { j => xi(j) = (xi(j) - mu(j)) / sd(j)}
+    }
+    testx.foreach { xi =>
+      (0 until p) foreach { j => xi(j) = (xi(j) - mu(j)) / sd(j)}
+    }
+
+    start = System.currentTimeMillis
+    val nnet = new NeuralNetwork(NeuralNetwork.ErrorFunction.LEAST_MEAN_SQUARES, NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, p, 40, c)
+    (0 until 30) foreach { _ => nnet.learn(x, y) }
+    end = System.currentTimeMillis
+    println("Neural Network 30 epoch training time: %.2fs" format ((end-start)/1000.0))
+
+    error = (0 until testx.length).foldLeft(0) { (e, i) =>
+      if (nnet.predict(testx(i)) != testy(i)) e + 1 else e
+    }
+    println("Neural Network error rate = %.2f%%" format (100.0 * error / testx.length))
   }
 }
