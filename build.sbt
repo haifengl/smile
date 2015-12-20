@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
   autoScalaLibrary := false
 )
 
-lazy val root = project.in(file(".")).aggregate(core, data, math, graph, plot, interpolation, nlp, demo, testData)
+lazy val root = project.in(file(".")).aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, testData)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
@@ -29,6 +29,8 @@ lazy val nlp = project.in(file("nlp")).settings(commonSettings: _*).dependsOn(co
 lazy val plot = project.in(file("plot")).settings(commonSettings: _*).dependsOn(core)
 
 lazy val demo = project.in(file("demo")).settings(commonSettings: _*).dependsOn(core, interpolation, plot)
+
+lazy val benchmark = project.in(file("benchmark")).settings(commonSettings: _*).dependsOn(core, testData)
 
 lazy val testData = project.in(file("test-data")).settings(commonSettings: _*)
 
