@@ -23,6 +23,7 @@ import smile.math.distance.EuclideanDistance
 import smile.math.kernel.GaussianKernel
 import smile.math.rbf.GaussianRadialBasis
 import smile.util.SmileUtils
+import smile.validation.AUC
 
 /**
  *
@@ -31,7 +32,7 @@ import smile.util.SmileUtils
 object Benchmark {
 
   def main(args: Array[String]): Unit = {
-    //airline
+    airline
     usps
   }
 
@@ -50,7 +51,7 @@ object Benchmark {
     attributes(6) = new NominalAttribute("V7")
     attributes(7) = new NumericAttribute("V8")
 
-    val train = parser.parse("Benchmark train", attributes, "test-data/src/main/resources/smile/data/airline/train-1m.csv")
+    val train = parser.parse("Benchmark train", attributes, "test-data/src/main/resources/smile/data/airline/train-0.1m.csv")
     val test = parser.parse("Benchmark Test", attributes, "test-data/src/main/resources//smile/data/airline/test.csv")
 
     val x = train.toArray(new Array[Array[Double]](train.size))
@@ -63,12 +64,18 @@ object Benchmark {
     val end = System.currentTimeMillis()
     println("Random forest 100 trees training time: %.2fs" format ((end-start)/1000.0))
 
+    val posteriori = Array(0.0, 0.0)
+    val prob = new Array[Double](testx.length)
     val error = (0 until testx.length).foldLeft(0) { (e, i) =>
-      if (forest.predict(testx(i)) != testy(i)) e + 1 else e
+      val yi = forest.predict(testx(i), posteriori)
+      prob(i) = posteriori(0)
+      if (yi != testy(i)) e + 1 else e
     }
 
-    println("Benchmark OOB error rate = %.2f%%" format (100.0 * forest.error()))
-    println("Benchmark error rate = %.2f%%" format (100.0 * error / testx.length))
+    val auc = 100.0 * new AUC().measure(testy, prob)
+    println("Airline OOB error rate = %.2f%%" format (100.0 * forest.error()))
+    println("Airline error rate = %.2f%%" format (100.0 * error / testx.length))
+    println("Airline AUC = %.2f%%" format auc)
   }
 
   def usps() {
