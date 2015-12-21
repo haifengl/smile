@@ -40,16 +40,22 @@ public class AUC {
     public AUC() {
     }
 
-    public double measure(int[] truth, double[] prediction) {
-        if (truth.length != prediction.length) {
-            throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
+    /**
+     * Caulculate AUC for binary classifier.
+     * @param truth The sample labels
+     * @param probability The posterior probability of positive class.
+     * @return AUC
+     */
+    public double measure(int[] truth, double[] probability) {
+        if (truth.length != probability.length) {
+            throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, probability.length));
         }
 
         int totalPositive = 0;
         int totalNegative = 0;
 
         int[] label = truth.clone();
-        double[] pred = prediction.clone();
+        double[] predicition = probability.clone();
         for (int i = 0; i < truth.length; i++) {
             if (label[i] == 0) {
                 totalNegative++;
@@ -60,7 +66,7 @@ public class AUC {
             }
         }
 
-        QuickSort.sort(pred, label);
+        QuickSort.sort(predicition, label);
 
         double fp = 0;
         double tp = 0;
@@ -70,7 +76,7 @@ public class AUC {
         double fPrev = Double.MIN_VALUE;
 
         for (int i = 0; i < truth.length; i++) {
-            double curF = pred[i];
+            double curF = predicition[i];
             if (curF != fPrev) {
                 area += Math.abs(fp - fpPrev) * ((tp + tpPrev) / 2.0);
                 fPrev = curF;
