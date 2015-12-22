@@ -32,6 +32,9 @@ import smile.sort.QuickSort;
  * <p>
  * AUC is quite noisy as a classification measure and has some other
  * significant problems in model comparison.
+ *<p>
+ * We calculate AUC based on Mann–Whitney U test
+ * (https://en.wikipedia.org/wiki/Mann–Whitney_U_test).
  *
  * @author Haifeng Li
  */
@@ -51,48 +54,44 @@ public class AUC {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, probability.length));
         }
 
-        int totalPositive = 0;
-        int totalNegative = 0;
+        int pos = 0;
+        int neg = 0;
+
+        for (int i = 0; i < truth.length; i++) {
+            if (truth[i] == 0) {
+                neg++;
+            } else if (truth[i] == 1) {
+                pos++;
+            } else {
+                throw new IllegalArgumentException("AUC is only for binary classification. Invalid label: " + truth[i]);
+            }
+        }
 
         int[] label = truth.clone();
         double[] predicition = probability.clone();
-        for (int i = 0; i < truth.length; i++) {
-            if (label[i] == 0) {
-                totalNegative++;
-            } else if (label[i] == 1) {
-                totalPositive++;
-            } else {
-                throw new IllegalArgumentException("AUC is only for binary classification. Invalid label: " + label[i]);
-            }
-        }
 
         QuickSort.sort(predicition, label);
 
-        double fp = 0;
-        double tp = 0;
-        double fpPrev = 0;
-        double tpPrev = 0;
-        double area = 0;
-        double fPrev = Double.MIN_VALUE;
-
-        for (int i = 0; i < truth.length; i++) {
-            double curF = predicition[i];
-            if (curF != fPrev) {
-                area += Math.abs(fp - fpPrev) * ((tp + tpPrev) / 2.0);
-                fPrev = curF;
-                fpPrev = fp;
-                tpPrev = tp;
-            }
-
-            if (label[i] == +1) {
-                tp++;
+        double[] rank = new double[label.length];
+        for (int i = 0; i < predicition.length; i++) {
+            if (i == predicition.length - 1 || predicition[i] != predicition[i+1]) {
+                rank[i] = i + 1;
             } else {
-                fp++;
+                int j = i + 1;
+                for (; j < predicition.length && predicition[j] == predicition[i]; j++);
+                double r = (i + 1 + j) / 2.0;
+                for (int k = i; k < j && k < predicition.length; k++) rank[k] = r;
+                i = j - 1;
             }
         }
 
-        area += Math.abs(totalNegative - fpPrev) * ((totalPositive + tpPrev) / 2.0);
-        area /= ((double) totalPositive * totalNegative);
-        return area;
+        double auc = 0.0;
+        for (int i = 0; i < label.length; i++) {
+            if (label[i] == 1)
+                auc += rank[i];
+        }
+
+        auc = (auc - (pos * (pos+1) / 2)) / (pos * neg);
+        return auc;
     }
 }

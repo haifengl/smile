@@ -37,6 +37,7 @@ object Benchmark {
   }
 
   def airline() {
+    println("Airline")
     val parser = new DelimitedTextParser()
     parser.setDelimiter(",")
     parser.setColumnNames(true)
@@ -53,6 +54,7 @@ object Benchmark {
 
     val train = parser.parse("Benchmark train", attributes, "test-data/src/main/resources/smile/data/airline/train-0.1m.csv")
     val test = parser.parse("Benchmark Test", attributes, "test-data/src/main/resources//smile/data/airline/test.csv")
+    println("class: " + train.response.asInstanceOf[NominalAttribute].values.mkString(", "))
 
     val x = train.toArray(new Array[Array[Double]](train.size))
     val y = train.toArray(new Array[Int](train.size))
@@ -60,22 +62,23 @@ object Benchmark {
     val testy = test.toArray(new Array[Int](test.size))
 
     val start = System.currentTimeMillis()
-    val forest = new RandomForest(x, y, 100)
+    val forest = new RandomForest(x, y, 500)
     val end = System.currentTimeMillis()
-    println("Random forest 100 trees training time: %.2fs" format ((end-start)/1000.0))
+    println("Random Forest 500 trees training time: %.2fs" format ((end-start)/1000.0))
 
     val posteriori = Array(0.0, 0.0)
     val prob = new Array[Double](testx.length)
     val error = (0 until testx.length).foldLeft(0) { (e, i) =>
       val yi = forest.predict(testx(i), posteriori)
-      prob(i) = posteriori(0)
+      prob(i) = posteriori(1)
+      println(prob(i), testy(i))
       if (yi != testy(i)) e + 1 else e
     }
 
     val auc = 100.0 * new AUC().measure(testy, prob)
-    println("Airline OOB error rate = %.2f%%" format (100.0 * forest.error()))
-    println("Airline error rate = %.2f%%" format (100.0 * error / testx.length))
-    println("Airline AUC = %.2f%%" format auc)
+    println("Random Forest OOB error rate = %.2f%%" format (100.0 * forest.error()))
+    println("Random Forest error rate = %.2f%%" format (100.0 * error / testx.length))
+    println("Random Forest AUC = %.2f%%" format auc)
   }
 
   def usps() {
@@ -116,11 +119,13 @@ object Benchmark {
 
     println("SVM one more epoch...")
     start = System.currentTimeMillis
+    svm.learn(x, y)
+    /*
     (0 until x.length) foreach { _ =>
       val j = Math.randomInt(x.length)
       svm.learn(x(j), y(j))
     }
-
+*/
     svm.finish
     end = System.currentTimeMillis
     println("SVM one more epoch training time: %.2fs" format ((end-start)/1000.0))
