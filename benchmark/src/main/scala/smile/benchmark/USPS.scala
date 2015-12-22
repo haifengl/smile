@@ -31,10 +31,10 @@ import smile.util.SmileUtils
 object USPS {
 
   def main(args: Array[String]): Unit = {
-    usps
+    benchmark
   }
 
-  def usps() {
+  def benchmark() {
     println("USPS")
     val parser = new DelimitedTextParser
     parser.setResponseIndex(new NominalAttribute("class"), 0)
