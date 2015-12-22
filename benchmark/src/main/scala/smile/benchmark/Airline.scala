@@ -32,10 +32,10 @@ import smile.validation.AUC
 object Airline {
 
   def main(args: Array[String]): Unit = {
-    airline
+    benchmark
   }
 
-  def airline() {
+  def benchmark() {
     println("Airline")
     val parser = new DelimitedTextParser()
     parser.setDelimiter(",")
@@ -83,7 +83,7 @@ object Airline {
     start = System.currentTimeMillis()
     val boost = new GradientTreeBoost(attributes, x, y, 300, 512, 0.01, 0.5)
     end = System.currentTimeMillis()
-    println("Gradient Tree Boost 100 trees training time: %.2fs" format ((end-start)/1000.0))
+    println("Gradient Tree Boost 300 trees training time: %.2fs" format ((end-start)/1000.0))
 
     error = (0 until testx.length).foldLeft(0) { (e, i) =>
       val yi = boost.predict(testx(i), posteriori)
