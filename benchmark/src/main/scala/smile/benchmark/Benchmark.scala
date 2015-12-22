@@ -63,7 +63,7 @@ object Benchmark {
 
     // Random Forest
     var start = System.currentTimeMillis()
-    val forest = new RandomForest(attributes, x, y, 500, 3)
+    val forest = new RandomForest(attributes, x, y, 500, 2)
     var end = System.currentTimeMillis()
     println("Random Forest 500 trees training time: %.2fs" format ((end-start)/1000.0))
 
@@ -82,7 +82,7 @@ object Benchmark {
 
     // Gradient Tree Boost
     start = System.currentTimeMillis()
-    val boost = new GradientTreeBoost(attributes, x, y, 100, 1000, 0.01, 0.7)
+    val boost = new GradientTreeBoost(attributes, x, y, 300, 512, 0.01, 0.5)
     end = System.currentTimeMillis()
     println("Gradient Tree Boost 100 trees training time: %.2fs" format ((end-start)/1000.0))
 

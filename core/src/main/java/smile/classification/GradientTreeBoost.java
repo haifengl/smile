@@ -287,7 +287,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
      * @param T the number of iterations (trees).
      */
     public GradientTreeBoost(Attribute[] attributes, double[][] x, int[] y, int T) {
-        this(attributes, x, y, T, 100, x.length < 2000 ? 0.005 : 0.05, 0.7);
+        this(attributes, x, y, T, 6, x.length < 2000 ? 0.005 : 0.05, 0.7);
     }
     
     /**

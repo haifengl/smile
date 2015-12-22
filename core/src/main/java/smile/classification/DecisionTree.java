@@ -908,7 +908,7 @@ public class DecisionTree implements Classifier<double[]> {
         }
                 
         this.attributes = attributes;
-        this.J = Integer.MAX_VALUE;
+        this.J = x.length / 10;
         this.M = M;
         this.order = order;
         importance = new double[attributes.length];
