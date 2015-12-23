@@ -61,14 +61,15 @@ object USPS {
 
     // Gradient Tree Boost
     start = System.currentTimeMillis
-    val boost = new GradientTreeBoost(x, y, 200)
+    val gbt = new GradientTreeBoost(x, y, 200)
     end = System.currentTimeMillis
     println("Gradient Tree Boost training time: %.2fs" format ((end-start)/1000.0))
     error = (0 until testx.length).foldLeft(0) { (e, i) =>
-      if (boost.predict(testx(i)) != testy(i)) e + 1 else e
+      if (gbt.predict(testx(i)) != testy(i)) e + 1 else e
     }
 
     println("Gradient Tree Boost error rate = %.2f%%" format (100.0 * error / testx.length))
+
     // SVM
     start = System.currentTimeMillis
     val svm = new SVM[Array[Double]](new GaussianKernel(8.0), 5.0, c, SVM.Multiclass.ONE_VS_ONE)

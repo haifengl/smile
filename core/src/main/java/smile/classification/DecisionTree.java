@@ -911,6 +911,7 @@ public class DecisionTree implements Classifier<double[]> {
         this.J = x.length / 10;
         this.M = M;
         this.order = order;
+        this.rule = SplitRule.GINI;
         importance = new double[attributes.length];
 
         int n = y.length;
