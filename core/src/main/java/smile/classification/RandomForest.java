@@ -200,14 +200,26 @@ public class RandomForest implements Classifier<double[]> {
          */
         int[] y;
         /**
+         * The number of variables to pick up in each node.
+         */
+        int M;
+        /**
+         * The maximum number of leaf nodes in the tree.
+         */
+        int J;
+        /**
+         * The splitting rule.
+         */
+        DecisionTree.SplitRule rule;
+        /**
+         * Priors of the classes.
+         */
+        int[] classWeight;
+        /**
          * The index of training values in ascending order. Note that only
          * numeric attributes will be sorted.
          */
         int[][] order;
-        /**
-         * The number of variables to pick up in each node.
-         */
-        int M;
         /**
          * The out-of-bag predictions.
          */
@@ -216,12 +228,15 @@ public class RandomForest implements Classifier<double[]> {
         /**
          * Constructor.
          */
-        TrainingTask(Attribute[] attributes, double[][] x, int[] y, int M, int[][] order, int[][] prediction) {
+        TrainingTask(Attribute[] attributes, double[][] x, int[] y, int M, int J, DecisionTree.SplitRule rule, int[] classWeight, int[][] order, int[][] prediction) {
             this.attributes = attributes;
             this.x = x;
             this.y = y;
-            this.order = order;
             this.M = M;
+            this.J = J;
+            this.rule = rule;
+            this.classWeight = classWeight;
+            this.order = order;
             this.prediction = prediction;
         }
 
@@ -231,10 +246,11 @@ public class RandomForest implements Classifier<double[]> {
             Random random = new Random(Thread.currentThread().getId() * System.currentTimeMillis());
             int[] samples = new int[n]; // Training samples draw with replacement.
             for (int i = 0; i < n; i++) {
-                samples[random.nextInt(n)]++;
+                int x = random.nextInt(n);
+                samples[x] += classWeight[y[x]];
             }
             
-            DecisionTree tree = new DecisionTree(attributes, x, y, M, samples, order);
+            DecisionTree tree = new DecisionTree(attributes, x, y, M, J, rule, samples, order);
             
             for (int i = 0; i < n; i++) {
                 if (samples[i] == 0) {
@@ -285,7 +301,22 @@ public class RandomForest implements Classifier<double[]> {
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int T) {
         this(attributes, x, y, T, (int) Math.floor(Math.sqrt(x[0].length)));        
     }
-    
+
+    /**
+     * Constructor. Learns a random forest for classification.
+     *
+     * @param attributes the attribute properties.
+     * @param x the training instances.
+     * @param y the response variable.
+     * @param T the number of trees.
+     * @param M the number of random selected features to be used to determine
+     * the decision at a node of the tree. floor(sqrt(dim)) seems to give
+     * generally good performance, where dim is the number of variables.
+     */
+    public RandomForest(Attribute[] attributes, double[][] x, int[] y, int T, int M) {
+        this(attributes, x, y, T, M, x.length / 10, DecisionTree.SplitRule.GINI, null);
+
+    }
     /**
      * Constructor. Learns a random forest for classification.
      *
@@ -296,8 +327,9 @@ public class RandomForest implements Classifier<double[]> {
      * @param M the number of random selected features to be used to determine
      * the decision at a node of the tree. floor(sqrt(dim)) seems to give
      * generally good performance, where dim is the number of variables.
+     * @param classWeight Priors of the classes.
      */
-    public RandomForest(Attribute[] attributes, double[][] x, int[] y, int T, int M) {
+    public RandomForest(Attribute[] attributes, double[][] x, int[] y, int T, int M, int J, DecisionTree.SplitRule rule, int[] classWeight) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -337,12 +369,17 @@ public class RandomForest implements Classifier<double[]> {
             }
         }
 
+        if (classWeight == null) {
+            classWeight = new int[k];
+            for (int i = 0; i < k; i++) classWeight[i] = 1;
+        }
+
         int n = x.length;
         int[][] prediction = new int[n][k]; // out-of-bag prediction
         int[][] order = SmileUtils.sort(attributes, x);
         List<TrainingTask> tasks = new ArrayList<TrainingTask>();
         for (int i = 0; i < T; i++) {
-            tasks.add(new TrainingTask(attributes, x, y, M, order, prediction));
+            tasks.add(new TrainingTask(attributes, x, y, M, J, rule, classWeight, order, prediction));
         }
         
         try {
@@ -457,16 +494,18 @@ public class RandomForest implements Classifier<double[]> {
         }
 
         int[] y = new int[k];
-        
+        double[] pos = new double[k];
         for (DecisionTree tree : trees) {
-            y[tree.predict(x)]++;
+            y[tree.predict(x, pos)]++;
+            for (int i = 0; i < k; i++) {
+                posteriori[i] += pos[i];
+            }
         }
-        
-        double n = trees.size();
+
         for (int i = 0; i < k; i++) {
-            posteriori[i] = y[i] / n;
+            posteriori[i] /= trees.size();
         }
-        
+
         return Math.whichMax(y);
     }    
     

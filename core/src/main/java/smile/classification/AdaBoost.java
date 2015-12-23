@@ -275,7 +275,7 @@ public class AdaBoost implements Classifier<double[]> {
                 samples[s]++;
             }
             
-            trees[t] = new DecisionTree(attributes, x, y, J, samples, order, DecisionTree.SplitRule.GINI);
+            trees[t] = new DecisionTree(attributes, x, y, J, DecisionTree.SplitRule.GINI, samples, order);
             
             for (int i = 0; i < n; i++) {
                 err[i] = trees[t].predict(x[i]) != y[i];

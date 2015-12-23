@@ -24,6 +24,7 @@ import smile.data.Attribute;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
 import smile.math.Math;
+import smile.math.Random;
 import smile.sort.QuickSort;
 import smile.util.MulticoreExecutor;
 
@@ -113,6 +114,11 @@ public class RegressionTree implements Regression<double[]> {
      * attributes will be sorted.
      */
     private transient int[][] order;
+    /**
+     * Random number generator for training, used in training. Math.random uses a static
+     * object, which will cause troubles in training ensemble methods.
+     */
+    private transient Random random = new Random();
 
     /**
      * Trainer for regression tree.
@@ -389,11 +395,7 @@ public class RegressionTree implements Regression<double[]> {
             // Loop through features and compute the reduction of squared error,
             // which is trueCount * trueMean^2 + falseCount * falseMean^2 - count * parentMean^2                    
             if (M < p) {
-                // Training of Random Forest will get into this race condition.
-                // smile.math.Math uses a static object of random number generator.
-                synchronized (RegressionTree.class) {
-                    Math.permutate(variables);
-                }
+                random.permutate(variables);
                 
                 // Random forest already runs on parallel.
                 for (int j = 0; j < M; j++) {

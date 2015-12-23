@@ -21,7 +21,7 @@ package smile.validation;
  * performance of a binary classification test. Specificity measures the
  * proportion of negatives which are correctly identified.
  * <p>
- * SPC = TN / N = TN / (FP + TN) = 1 ? FPR
+ * SPC = TN / N = TN / (FP + TN) = 1 - FPR
  * <p>
  * Sensitivity and specificity are closely related to the concepts of type
  * I and type II errors. For any test, there is usually a trade-off between
