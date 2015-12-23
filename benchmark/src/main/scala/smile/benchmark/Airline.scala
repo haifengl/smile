@@ -60,6 +60,7 @@ object Airline {
     println("V6: " + attributes(5).asInstanceOf[NominalAttribute].values.mkString(", "))
     println("V7: " + attributes(6).asInstanceOf[NominalAttribute].values.mkString(", "))
     println("class: " + train.response.asInstanceOf[NominalAttribute].values.mkString(", "))
+    println("train data size: " + train.size + ", test data size: " + test.size)
 
     val x = train.toArray(new Array[Array[Double]](train.size))
     val y = train.toArray(new Array[Int](train.size))
