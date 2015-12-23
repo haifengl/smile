@@ -80,7 +80,7 @@ public class AdaBoostTest {
                     error++;
             }
             
-            System.out.println("Decision Tree error = " + error);
+            System.out.println("AdaBoost error = " + error);
         } catch (Exception ex) {
             System.err.println(ex);
         }

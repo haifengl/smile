@@ -246,8 +246,8 @@ public class RandomForest implements Classifier<double[]> {
             Random random = new Random(Thread.currentThread().getId() * System.currentTimeMillis());
             int[] samples = new int[n]; // Training samples draw with replacement.
             for (int i = 0; i < n; i++) {
-                int x = random.nextInt(n);
-                samples[x] += classWeight[y[x]];
+                int xi = random.nextInt(n);
+                samples[xi] += classWeight[y[xi]];
             }
             
             DecisionTree tree = new DecisionTree(attributes, x, y, M, J, rule, samples, order);
@@ -314,7 +314,7 @@ public class RandomForest implements Classifier<double[]> {
      * generally good performance, where dim is the number of variables.
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int T, int M) {
-        this(attributes, x, y, T, M, x.length / 10, DecisionTree.SplitRule.GINI, null);
+        this(attributes, x, y, T, M, x.length, DecisionTree.SplitRule.GINI, null);
 
     }
     /**
@@ -502,10 +502,7 @@ public class RandomForest implements Classifier<double[]> {
             }
         }
 
-        for (int i = 0; i < k; i++) {
-            posteriori[i] /= trees.size();
-        }
-
+        Math.unitize1(posteriori);
         return Math.whichMax(y);
     }    
     
