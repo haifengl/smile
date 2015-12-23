@@ -69,7 +69,7 @@ object Airline {
 
     // Random Forest
     var start = System.currentTimeMillis()
-    val forest = new RandomForest(attributes, x, y, 500, 2, 1000, DecisionTree.SplitRule.GINI, classWeight)
+    val forest = new RandomForest(attributes, x, y, 500, 2, 512, DecisionTree.SplitRule.GINI, classWeight)
     var end = System.currentTimeMillis()
     println("Random Forest 500 trees training time: %.2fs" format ((end-start)/1000.0))
 

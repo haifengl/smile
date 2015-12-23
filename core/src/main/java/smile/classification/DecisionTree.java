@@ -932,7 +932,7 @@ public class DecisionTree implements Classifier<double[]> {
      * @param M the number of input variables to pick to split on at each
      * node. It seems that dim/3 give generally good performance, where dim
      * is the number of variables.
-     * @param J the maximum number of leaf nodes in the tree.
+     * @param J the maximum number of leaf nodes in the tree. Ignored for now.
      * @param rule the splitting rule.
      * @param order the index of training values in ascending order. Note
      * that only numeric attributes need be sorted.
