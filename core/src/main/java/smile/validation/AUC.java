@@ -49,7 +49,7 @@ public class AUC {
      * @param probability The posterior probability of positive class.
      * @return AUC
      */
-    public double measure(int[] truth, double[] probability) {
+    public static double measure(int[] truth, double[] probability) {
         if (truth.length != probability.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, probability.length));
         }

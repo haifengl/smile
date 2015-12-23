@@ -52,7 +52,13 @@ object Airline {
     attributes(7) = new NumericAttribute("V8")
 
     val train = parser.parse("Benchmark train", attributes, "test-data/src/main/resources/smile/data/airline/train-0.1m.csv")
-    val test = parser.parse("Benchmark test", attributes, "test-data/src/main/resources//smile/data/airline/test.csv")
+    val test  = parser.parse("Benchmark test",  attributes, "test-data/src/main/resources/smile/data/airline/test.csv")
+    println("V1: " + attributes(0).asInstanceOf[NominalAttribute].values.mkString(", "))
+    println("V2: " + attributes(1).asInstanceOf[NominalAttribute].values.mkString(", "))
+    println("V3: " + attributes(2).asInstanceOf[NominalAttribute].values.mkString(", "))
+    println("V5: " + attributes(4).asInstanceOf[NominalAttribute].values.mkString(", "))
+    println("V6: " + attributes(5).asInstanceOf[NominalAttribute].values.mkString(", "))
+    println("V7: " + attributes(6).asInstanceOf[NominalAttribute].values.mkString(", "))
     println("class: " + train.response.asInstanceOf[NominalAttribute].values.mkString(", "))
 
     val x = train.toArray(new Array[Array[Double]](train.size))
@@ -74,7 +80,7 @@ object Airline {
       if (yi != testy(i)) e + 1 else e
     }
 
-    var auc = 100.0 * new AUC().measure(testy, prob)
+    var auc = 100.0 * AUC.measure(testy, prob)
     println("Random Forest OOB error rate = %.2f%%" format (100.0 * forest.error()))
     println("Random Forest error rate = %.2f%%" format (100.0 * error / testx.length))
     println("Random Forest AUC = %.2f%%" format auc)
@@ -91,7 +97,7 @@ object Airline {
       if (yi != testy(i)) e + 1 else e
     }
 
-    auc = 100.0 * new AUC().measure(testy, prob)
+    auc = 100.0 * AUC.measure(testy, prob)
     println("Gradient Tree Boost error rate = %.2f%%" format (100.0 * error / testx.length))
     println("Gradient Tree Boost AUC = %.2f%%" format auc)
   }
