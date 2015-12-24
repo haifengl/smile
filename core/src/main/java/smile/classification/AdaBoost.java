@@ -398,7 +398,6 @@ public class AdaBoost implements Classifier<double[]> {
             for (int i = 0; i < k; i++) posteriori[i] /= sum;
             return y > 0 ? 1 : 0;
         } else {
-            double[] y = new double[k];
             for (int i = 0; i < trees.length; i++) {
                 posteriori[trees[i].predict(x)] += alpha[i];
             }
