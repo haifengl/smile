@@ -22,7 +22,7 @@ package smile
  */
 package object benchmark {
 
-  val home = System.getProperty("smile.home", ".")
+  val home = System.getProperty("smile.home", "src/universal/data")
 
   def dataFile(path: String) = {
     new java.io.File(s"$home/../data/$path")

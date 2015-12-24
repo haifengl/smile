@@ -28,7 +28,7 @@ lazy val root = project.in(file("."))
       packageDescription := "Statistical Machine Intelligence and Learning Engine",
       executableScriptName := "smile",
       bashScriptExtraDefines += """addJava "-Dsmile.home=${app_home}"""",
-      bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/bin/init.scala"""",
+      bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.scala"""",
       mainClass in Compile := Some("smile.shell.Shell")
     ): _*
   )

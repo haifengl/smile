@@ -45,9 +45,16 @@ package object shell {
     )
   }
 
-  def benchmark(data: String = "") = data match {
-    case "airline" => smile.benchmark.Airline.benchmark
-    case "usps" => smile.benchmark.USPS.benchmark
-    case _ => println("Available benchmarks: airline, usps")
+  def benchmark(tests: String*) = {
+    tests foreach ( _ match {
+      case "airline" => smile.benchmark.Airline.benchmark
+      case "usps" => smile.benchmark.USPS.benchmark
+      case test => println(
+        s"""
+           |Unknown benchmark $test
+           |Available benchmarks: airline, usps
+         """.stripMargin
+      )
+    })
   }
 }

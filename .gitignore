@@ -1,7 +1,7 @@
 *.class
 
 # javadoc
-doc/
+src/universal/doc/api/
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
@@ -15,3 +15,4 @@ doc/
 hs_err_pid*
 
 **/target
+
