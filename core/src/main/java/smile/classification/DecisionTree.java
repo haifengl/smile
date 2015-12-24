@@ -330,9 +330,7 @@ public class DecisionTree implements Classifier<double[]> {
          */
         public int predict(double[] x, double[] posteriori) {
             if (trueChild == null && falseChild == null) {
-                for (int i = 0; i < posteriori.length; i++) {
-                    posteriori[i] = this.posteriori[i];
-                }
+                System.arraycopy(this.posteriori, 0, posteriori, 0, k);
                 return output;
             } else {
                 if (attributes[splitFeature].type == Attribute.Type.NOMINAL) {
@@ -675,11 +673,12 @@ public class DecisionTree implements Classifier<double[]> {
             double[] trueChildPosteriori = new double[k];
             double[] falseChildPosteriori = new double[k];
             for (int i = 0; i < n; i++) {
+                int yi = y[i];
                 if (trueSamples[i] > 0) {
-                    trueChildPosteriori[y[i]] += trueSamples[i];
+                    trueChildPosteriori[yi] += trueSamples[i];
                 }
                 if (falseSamples[i] > 0) {
-                    falseChildPosteriori[y[i]] += falseSamples[i];
+                    falseChildPosteriori[yi] += falseSamples[i];
                 }
             }
             for (int i = 0; i < k; i++) {
@@ -807,7 +806,23 @@ public class DecisionTree implements Classifier<double[]> {
     public DecisionTree(Attribute[] attributes, double[][] x, int[] y, int J, SplitRule rule) {
         this(attributes, x, y, J, rule, null, null);
     }
-    
+
+    /**
+     * Constructor. Learns a classification tree for AdaBoost.
+     * @param attributes the attribute properties.
+     * @param x the training instances.
+     * @param y the response variable.
+     * @param J the maximum number of leaf nodes in the tree.
+     * @param rule the splitting rule.
+     * @param order the index of training values in ascending order. Note
+     * that only numeric attributes need be sorted.
+     * @param samples the sample set of instances for stochastic learning.
+     * samples[i] is the number of sampling for instance i.
+     */
+    DecisionTree(Attribute[] attributes, double[][] x, int[] y, int J, SplitRule rule, int[] samples, int[][] order) {
+        this(attributes, x, y, x[0].length, J, rule, samples, order);
+    }
+
     /**
      * Constructor. Learns a classification tree for AdaBoost.
      * @param attributes the attribute properties.
@@ -820,7 +835,7 @@ public class DecisionTree implements Classifier<double[]> {
      * @param samples the sample set of instances for stochastic learning.
      * samples[i] is the number of sampling for instance i.
      */
-    DecisionTree(Attribute[] attributes, double[][] x, int[] y, int J, SplitRule rule, int[] samples, int[][] order) {
+    DecisionTree(Attribute[] attributes, double[][] x, int[] y, int M, int J, SplitRule rule, int[] samples, int[][] order) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -857,9 +872,9 @@ public class DecisionTree implements Classifier<double[]> {
         }
                 
         this.attributes = attributes;
+        this.M = M;
         this.J = J;
         this.rule = rule;
-        this.M = attributes.length;
         importance = new double[attributes.length];
         
         if (order != null) {
@@ -939,6 +954,7 @@ public class DecisionTree implements Classifier<double[]> {
      * @param samples the sample set of instances for stochastic learning.
      * samples[i] is the number of sampling for instance i.
      */
+    /*
     DecisionTree(Attribute[] attributes, double[][] x, int[] y, int M, int J, SplitRule rule, int[] samples, int[][] order) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
@@ -990,7 +1006,7 @@ public class DecisionTree implements Classifier<double[]> {
             trainRoot.split(null);
         }
     }
-    
+    */
     /**
      * Returns the variable importance. Every time a split of a node is made
      * on variable the (GINI, information gain, etc.) impurity criterion for
