@@ -1,3 +1,7 @@
+// BuildInfo
+
+name := "smile"
+
 lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
@@ -12,25 +16,41 @@ lazy val commonSettings = Seq(
   autoScalaLibrary := false
 )
 
-lazy val root = project.in(file(".")).aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, testData)
+// SBT native packager
+enablePlugins(JavaAppPackaging)
+
+lazy val root = project.in(file("."))
+  .settings(
+    commonSettings ++ Seq(
+      maintainer := "Haifeng Li <haifeng.hli@gmail.com>",
+      packageName := "smile",
+      packageSummary := "SMILE",
+      packageDescription := "Statistical Machine Intelligence and Learning Engine",
+      executableScriptName := "smile",
+      bashScriptExtraDefines += """addJava "-Dsmile.home=${app_home}"""",
+      bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/bin/init.scala"""",
+      mainClass in Compile := Some("smile.shell.Shell")
+    ): _*
+  )
+  .aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, shell)
+  .dependsOn(demo, benchmark, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
-lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph, testData % "test")
+lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph)
 
-lazy val data = project.in(file("data")).settings(commonSettings: _*).dependsOn(math, testData % "test")
+lazy val data = project.in(file("data")).settings(commonSettings: _*).dependsOn(math)
 
 lazy val graph = project.in(file("graph")).settings(commonSettings: _*).dependsOn(math)
 
 lazy val interpolation = project.in(file("interpolation")).settings(commonSettings: _*).dependsOn(math)
 
-lazy val nlp = project.in(file("nlp")).settings(commonSettings: _*).dependsOn(core, testData % "test")
+lazy val nlp = project.in(file("nlp")).settings(commonSettings: _*).dependsOn(core)
 
 lazy val plot = project.in(file("plot")).settings(commonSettings: _*).dependsOn(core)
 
 lazy val demo = project.in(file("demo")).settings(commonSettings: _*).dependsOn(core, interpolation, plot)
 
-lazy val benchmark = project.in(file("benchmark")).settings(commonSettings: _*).dependsOn(core, testData)
+lazy val benchmark = project.in(file("benchmark")).settings(commonSettings: _*).dependsOn(core)
 
-lazy val testData = project.in(file("test-data")).settings(commonSettings: _*)
-
+lazy val shell = project.in(file("shell")).settings(commonSettings: _*).dependsOn(core, benchmark, demo)

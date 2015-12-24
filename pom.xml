@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.haifengl</groupId>
-    <artifactId>smile-all</artifactId>
+    <artifactId>smile</artifactId>
     <version>1.0.4</version>
     <packaging>pom</packaging>
 
@@ -98,8 +98,8 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <configuration>
-                        <source>1.6</source>
-                        <target>1.6</target>
+                        <source>1.7</source>
+                        <target>1.7</target>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -113,9 +113,6 @@
                         <autoReleaseAfterClose>true</autoReleaseAfterClose>
                     </configuration>
                 </plugin>
-                
-                
-                
             </plugins>
         </pluginManagement>
     </build>
