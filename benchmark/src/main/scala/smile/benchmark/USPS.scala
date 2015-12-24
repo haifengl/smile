@@ -39,8 +39,8 @@ object USPS {
     val parser = new DelimitedTextParser
     parser.setResponseIndex(new NominalAttribute("class"), 0)
 
-    val train = parser.parse("USPS Train", this.getClass.getResourceAsStream("/smile/data/usps/zip.train"))
-    val test = parser.parse("USPS Test", this.getClass.getResourceAsStream("/smile/data/usps/zip.test"))
+    val train = parser.parse(dataFile("usps/zip.train"))
+    val test = parser.parse(dataFile("usps/zip.test"))
     val x = train.toArray(new Array[Array[Double]](train.size))
     val y = train.toArray(new Array[Int](train.size))
     val testx = test.toArray(new Array[Array[Double]](test.size))

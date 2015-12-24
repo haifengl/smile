@@ -218,7 +218,18 @@ public class DelimitedTextParser {
      * @param attributes the list attributes of data in proper order.
      * @throws java.io.FileNotFoundException
      */
-    public AttributeDataset parse(String name, Attribute[] attributes, File file) throws FileNotFoundException, IOException, ParseException {
+    public AttributeDataset parse(Attribute[] attributes, File file) throws IOException, ParseException {
+        String name = file.getPath();
+        return parse(name, attributes, file);
+    }
+
+    /**
+     * Parse a dataset from given file.
+     * @param file the file of data source.
+     * @param attributes the list attributes of data in proper order.
+     * @throws java.io.FileNotFoundException
+     */
+    public AttributeDataset parse(String name, Attribute[] attributes, File file) throws IOException, ParseException {
         AttributeDataset data = new AttributeDataset(name, attributes, response);
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
            parse(data, reader);
