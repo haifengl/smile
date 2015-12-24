@@ -63,13 +63,13 @@ object Airline {
     println("train data positive : negative = " + Math.sum(y) + " : " + (y.length - Math.sum(y)))
     println("test data positive : negative = " + Math.sum(testy) + " : " + (testy.length - Math.sum(testy)))
 
-    // The data is highly unbalanced. class weight 1 : 4 should help some.
+    // The data is highly unbalanced. class weight 1 : 4 should improve sensitivity.
     // To match other tests, we keep it 1 : 1 here though.
-    val classWeight = Array(1, 4)
+    val classWeight = Array(1, 1)
 
     // Random Forest
     var start = System.currentTimeMillis()
-    val forest = new RandomForest(attributes, x, y, 500, 2, 512, DecisionTree.SplitRule.GINI, classWeight)
+    val forest = new RandomForest(attributes, x, y, 500, 2, 410, DecisionTree.SplitRule.ENTROPY, classWeight)
     var end = System.currentTimeMillis()
     println("Random Forest 500 trees training time: %.2fs" format ((end-start)/1000.0))
 
@@ -79,7 +79,7 @@ object Airline {
     val posteriori = Array(0.0, 0.0)
     val (rfpred, rfprob) = (0 until testx.length).map { i =>
       val yi = forest.predict(testx(i), posteriori)
-      println(posteriori(1),testy(i))
+      //println(posteriori(1),testy(i))
       (yi, posteriori(1))
     }.unzip
 

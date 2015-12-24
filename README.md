@@ -6,7 +6,7 @@ SMILE (Statistical Machine Intelligence and Learning Engine) is a set of pure Ja
 * **Core**
 The core machine learning library
 * **Math**
-Mathematical functions (basic, special, kernel, distance, rbf, etc.), sorting, random number generators, optimization, linear algebra, statistical distributions, and hypothesis testing.
+Linear algebra, statistical distribution, hypothesis tests, random number generators, sort, special functions, various kernel, distance and rbf functions.
 * **Data**
 Parsers for arff, libsvm, delimited text, sparse matrix, microarray gene expression data.
 * **Graph**
