@@ -118,7 +118,7 @@ public class RegressionTree implements Regression<double[]> {
      * Random number generator for training, used in training. Math.random uses a static
      * object, which will cause troubles in training ensemble methods.
      */
-    private transient Random random = new Random();
+    private transient Random random = new Random(Thread.currentThread().getId() * System.currentTimeMillis());
 
     /**
      * Trainer for regression tree.
