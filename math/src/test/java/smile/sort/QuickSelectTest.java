@@ -115,16 +115,16 @@ public class QuickSelectTest {
     public void testMedianObject() {
         System.out.println("median object");
         Integer[] data1 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-        assertEquals(5, QuickSelect.median(data1), 1E-10);
+        assertEquals(5, QuickSelect.median(data1));
         Integer[] data2 = {5, 2, 3, 4, 1, 6, 7, 8, 9};
-        assertEquals(5, QuickSelect.median(data2), 1E-10);
+        assertEquals(5, QuickSelect.median(data2));
         Integer[] data3 = {1, 2, 3, 4, 9, 6, 7, 8, 5};
-        assertEquals(5, QuickSelect.median(data3), 1E-10);
+        assertEquals(5, QuickSelect.median(data3));
         Integer[] data4 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-        assertEquals(5, QuickSelect.median(data4), 1E-10);
+        assertEquals(5, QuickSelect.median(data4));
         Integer[] data5 = {5, 1, 2, 3, 4, 0, 6, 7, 8, 9};
-        assertEquals(5, QuickSelect.median(data5), 1E-10);
+        assertEquals(5, QuickSelect.median(data5));
         Integer[] data6 = {0, 1, 2, 3, 4, 9, 6, 7, 8, 5};
-        assertEquals(5, QuickSelect.median(data6), 1E-10);
+        assertEquals(5, QuickSelect.median(data6));
     }
 }
