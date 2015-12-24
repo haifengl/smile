@@ -1,1 +1,0 @@
-name := "smile-test-data"
