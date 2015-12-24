@@ -59,9 +59,9 @@
             <version>1.0.4</version>
         </dependency>
         <dependency>
-             <groupId>org.swinglabs.swingx</groupId>
-             <artifactId>swingx-all</artifactId>
-             <version>1.6.4</version>
+	        <groupId>org.swinglabs</groupId>
+            <artifactId>swingx</artifactId>
+            <version>1.6.1</version>
         </dependency>
     </dependencies>
 
