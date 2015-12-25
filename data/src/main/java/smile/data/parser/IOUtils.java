@@ -16,6 +16,7 @@
 package smile.data.parser;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -30,6 +31,12 @@ import java.util.List;
  * @author Haifeng Li
  */
 public class IOUtils {
+    private static String home = System.getProperty("smile.home", "src/universal/data");
+
+    public static File getDataFile(String path) {
+        return new java.io.File(home + "/../data/" + path);
+    }
+
     /**
      * Returns the lines of an <code>InputStream</code> as a list of Strings.
      *

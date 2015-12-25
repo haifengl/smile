@@ -42,8 +42,8 @@ public abstract class ManifoldDemo extends JPanel implements Runnable, ActionLis
     };
 
     private static String[] datasource = {
-        "/smile/demo/data/manifold/swissroll.txt",
-        "/smile/demo/data/manifold/face.txt"
+        "manifold/swissroll.txt",
+        "manifold/face.txt"
     };
 
     static AttributeDataset[] dataset = new AttributeDataset[datasetName.length];
@@ -125,7 +125,7 @@ public abstract class ManifoldDemo extends JPanel implements Runnable, ActionLis
                 parser.setDelimiter("[\t]+");
 
                 try {
-                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], this.getClass().getResourceAsStream(datasource[datasetIndex]));
+                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getDataFile(datasource[datasetIndex]));
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.err.println(ex);

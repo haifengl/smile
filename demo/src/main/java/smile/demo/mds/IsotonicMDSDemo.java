@@ -46,12 +46,12 @@ public class IsotonicMDSDemo extends JPanel implements Runnable, ActionListener 
     };
 
     private static final String[] datasource = {
-        "/smile/demo/data/projection/BritishTowns.txt",
-        "/smile/demo/data/projection/eurodist.txt",
-        "/smile/demo/data/projection/morsecode.txt",
-        "/smile/demo/data/projection/colorstimuli.txt",
-        "/smile/demo/data/projection/bank05d.txt",
-        "/smile/demo/data/projection/bank25d.txt"
+        "projection/BritishTowns.txt",
+        "projection/eurodist.txt",
+        "projection/morsecode.txt",
+        "projection/colorstimuli.txt",
+        "projection/bank05d.txt",
+        "projection/bank25d.txt"
     };
 
     static AttributeDataset[] dataset = new AttributeDataset[datasetName.length];
@@ -160,7 +160,7 @@ public class IsotonicMDSDemo extends JPanel implements Runnable, ActionListener 
                 }
 
                 try {
-                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], this.getClass().getResourceAsStream(datasource[datasetIndex]));
+                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getDataFile(datasource[datasetIndex]));
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.err.println(ex);
