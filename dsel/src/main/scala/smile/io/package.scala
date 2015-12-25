@@ -16,7 +16,10 @@
 
 package smile
 
+import java.io.PrintWriter
+import scala.io.Source
 import scala.language.implicitConversions
+import com.thoughtworks.xstream.XStream
 import smile.data._, parser._, parser.microarray._
 import smile.math.matrix.SparseMatrix
 
@@ -27,6 +30,23 @@ import smile.math.matrix.SparseMatrix
  */
 package object io {
   implicit def pimpDataset(data: Dataset[Array[Double]]) = new PimpedDataset(data)
+
+  /** Writes an object/model to a file. */
+  def write[T <: Object](x: T, file: String): Unit = {
+    val xstream = new XStream
+    val xml = xstream.toXML(x)
+    new PrintWriter(file) {
+      write(xml)
+      close
+    }
+  }
+
+  /** Reads an object/model back from a file created by write command. */
+  def read(file: String): AnyRef = {
+    val xml = Source.fromFile(file).mkString
+    val xstream = new XStream
+    xstream.fromXML(xml)
+  }
 
   /** Reads an ARFF file. */
   def readArff(file: String): AttributeDataset = {
