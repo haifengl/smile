@@ -38,7 +38,7 @@ package object util {
     def apply[A](f: => A) = {
       val s = System.nanoTime
       val ret = f
-      if (echo) println("time: " + (System.nanoTime - s)/1e6 + " ms")
+      if (echo) println("runtime: " + (System.nanoTime - s)/1e6 + " ms")
       ret
     }
   }

@@ -12,6 +12,7 @@ lazy val commonSettings = Seq(
   autoAPIMappings := true,
   libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test",
   scalaVersion := "2.11.7",
+  scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8"),
   parallelExecution in Test := false,
   crossPaths := false,
   autoScalaLibrary := false

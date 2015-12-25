@@ -35,7 +35,7 @@ package object classification {
    * @tparam T the data type
    * @return the predicted class label
    */
-  def predict[T <: AnyRef](classifier: Classifier[T], x: T, posteriori: Array[Double] = null) = {
+  def predict[T <: AnyRef](classifier: Classifier[T], x: T, posteriori: Array[Double] = null): Int = {
     if (posteriori == null)
       classifier.predict(x)
     else
