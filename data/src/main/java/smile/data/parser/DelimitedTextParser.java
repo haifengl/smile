@@ -93,8 +93,9 @@ public class DelimitedTextParser {
     /**
      * Set the delimiter character/string.
      */
-    public void setDelimiter(String delimiter) {
+    public DelimitedTextParser setDelimiter(String delimiter) {
         this.delimiter = delimiter;
+        return this;
     }
 
     /**
@@ -107,8 +108,9 @@ public class DelimitedTextParser {
     /**
      * Set the character/string that starts a comment line.
      */
-    public void setCommentStartWith(String comment) {
+    public DelimitedTextParser setCommentStartWith(String comment) {
         this.comment = comment;
+        return this;
     }
 
     /**
@@ -121,20 +123,22 @@ public class DelimitedTextParser {
     /**
      * Set the missing value placeholder.
      */
-    public void setMissingValuePlaceholder(String missing) {
+    public DelimitedTextParser setMissingValuePlaceholder(String missing) {
         this.missing = missing;
+        return this;
     }
 
     /**
      * Sets the attribute and column index (starting at 0) of dependent/response variable.
      */
-    public void setResponseIndex(Attribute response, int index) {
+    public DelimitedTextParser setResponseIndex(Attribute response, int index) {
         if (response.type != Attribute.Type.NOMINAL && response.type != Attribute.Type.NUMERIC) {
             throw new IllegalArgumentException("The response variable is not numeric or nominal.");
         }
         
         this.response = response;
         this.responseIndex = index;
+        return this;
     }
 
     /**
@@ -147,8 +151,9 @@ public class DelimitedTextParser {
     /**
      * Set if the dataset has row names (at column 0).
      */
-    public void setRowNames(boolean hasRowNames) {
+    public DelimitedTextParser setRowNames(boolean hasRowNames) {
         this.hasRowNames = hasRowNames;
+        return this;
     }
 
     /**
@@ -161,8 +166,9 @@ public class DelimitedTextParser {
     /**
      * Set if the dataset has column names (at row 0).
      */
-    public void setColumnNames(boolean hasColNames) {
+    public DelimitedTextParser setColumnNames(boolean hasColNames) {
         this.hasColumnNames = hasColNames;
+        return this;
     }
 
     /**
@@ -353,9 +359,7 @@ public class DelimitedTextParser {
     /**
      * Parse a dataset from a buffered reader.
      * @param data the dataset.
-     * @param description the detailed description of dataset.
      * @param reader the buffered reader for data.
-     * @param attributes the list attributes of data in proper order.
      * @throws java.io.IOException
      */
     private void parse(AttributeDataset data, BufferedReader reader) throws IOException, ParseException {
