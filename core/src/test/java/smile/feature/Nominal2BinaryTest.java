@@ -61,7 +61,7 @@ public class Nominal2BinaryTest {
         ArffParser arffParser = new ArffParser();
         arffParser.setResponseIndex(4);
         try {
-            AttributeDataset weather = arffParser.parse(this.getClass().getResourceAsStream("/smile/data/weka/weather.nominal.arff"));
+            AttributeDataset weather = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/weather.nominal.arff"));
             double[][] x = weather.toArray(new double[weather.size()][]);
             
             Nominal2Binary n2b = new Nominal2Binary(weather.attributes());
@@ -102,7 +102,7 @@ public class Nominal2BinaryTest {
         ArffParser arffParser = new ArffParser();
         arffParser.setResponseIndex(4);
         try {
-            AttributeDataset weather = arffParser.parse(this.getClass().getResourceAsStream("/smile/data/weka/weather.nominal.arff"));
+            AttributeDataset weather = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/weather.nominal.arff"));
             double[][] x = weather.toArray(new double[weather.size()][]);
             
             Nominal2Binary n2b = new Nominal2Binary(weather.attributes());

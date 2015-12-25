@@ -16,6 +16,7 @@
 
 package smile.nlp.collocation;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -62,9 +63,9 @@ public class AprioriPhraseExtractorTest {
      * Test of extract method, of class AprioriPhraseExtractorTest.
      */
     @Test
-    public void testExtract() {
+    public void testExtract() throws FileNotFoundException {
         System.out.println("extract");
-        Scanner scanner = new Scanner(this.getClass().getResourceAsStream("/smile/data/text/turing.txt"));
+        Scanner scanner = new Scanner(smile.data.parser.IOUtils.getDataReader("text/turing.txt"));
         String text = scanner.useDelimiter("\\Z").next();
         scanner.close();
         

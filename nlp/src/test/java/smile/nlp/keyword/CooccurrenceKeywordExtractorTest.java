@@ -16,6 +16,7 @@
 
 package smile.nlp.keyword;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -57,9 +58,9 @@ public class CooccurrenceKeywordExtractorTest {
      * Test of extract method, of class KeywordExtractorTest.
      */
     @Test
-    public void testExtract() {
+    public void testExtract() throws FileNotFoundException {
         System.out.println("extract");
-        Scanner scanner = new Scanner(this.getClass().getResourceAsStream("/smile/data/text/turing.txt"));
+        Scanner scanner = new Scanner(smile.data.parser.IOUtils.getDataReader("text/turing.txt"));
         String text = scanner.useDelimiter("\\Z").next();
         scanner.close();
 

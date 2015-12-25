@@ -56,7 +56,7 @@ public class BinarySparseDatasetParserTest {
         System.out.println("parse");
         try {
             BinarySparseDatasetParser parser = new BinarySparseDatasetParser();
-            BinarySparseDataset data = parser.parse(this.getClass().getResourceAsStream("/smile/data/transaction/kosarak.dat"));
+            BinarySparseDataset data = parser.parse(smile.data.parser.IOUtils.getDataFile("transaction/kosarak.dat"));
             assertEquals(990002, data.size());
             assertEquals(41271, data.ncols());
             assertEquals(1, data.get(0, 1));

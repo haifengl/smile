@@ -58,7 +58,7 @@ public class ArffParserTest {
         try {
             ArffParser arffParser = new ArffParser();
             arffParser.setResponseIndex(4);
-            AttributeDataset weather = arffParser.parse(this.getClass().getResourceAsStream("/smile/data/weka/weather.nominal.arff"));
+            AttributeDataset weather = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/weather.nominal.arff"));
             double[][] x = weather.toArray(new double[weather.size()][]);
             int[] y = weather.toArray(new int[weather.size()]);
             
@@ -96,7 +96,7 @@ public class ArffParserTest {
         try {
             ArffParser arffParser = new ArffParser();
             arffParser.setResponseIndex(4);
-            AttributeDataset iris = arffParser.parse(this.getClass().getResourceAsStream("/smile/data/weka/iris.arff"));
+            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/iris.arff"));
             double[][] x = iris.toArray(new double[iris.size()][]);
             int[] y = iris.toArray(new int[iris.size()]);
             
@@ -133,7 +133,7 @@ public class ArffParserTest {
         System.out.println("string");
         try {
             ArffParser arffParser = new ArffParser();
-            AttributeDataset string = arffParser.parse(this.getClass().getResourceAsStream("/smile/data/weka/string.arff"));
+            AttributeDataset string = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/string.arff"));
             double[][] x = string.toArray(new double[string.size()][]);
             
             for (Attribute attribute : string.attributes()) {
@@ -160,7 +160,7 @@ public class ArffParserTest {
         System.out.println("sparse");
         try {
             ArffParser arffParser = new ArffParser();
-            AttributeDataset sparse = arffParser.parse(this.getClass().getResourceAsStream("/smile/data/weka/sparse.arff"));
+            AttributeDataset sparse = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/sparse.arff"));
             double[][] x = sparse.toArray(new double[sparse.size()][]);
                         
             assertEquals(2, sparse.size());
