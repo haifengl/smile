@@ -44,8 +44,8 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
     };
 
     private static final String[] datasource = {
-        "/smile/demo/data/classification/iris.txt",
-        "/smile/demo/data/classification/pendigits.txt"
+        "classification/iris.txt",
+        "pendigits.txt"
     };
 
     static AttributeDataset[] dataset = new AttributeDataset[datasetName.length];
@@ -160,7 +160,7 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
                 }
 
                 try {
-                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], this.getClass().getResourceAsStream(datasource[datasetIndex]));
+                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getDataFile(datasource[datasetIndex]));
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.out.println(ex);

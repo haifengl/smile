@@ -41,11 +41,11 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
     };
 
     private static String[] datasource = {
-        "/smile/demo/data/classification/iris.txt",
-        "/smile/demo/data/projection/USArrests.txt",
-        "/smile/demo/data/projection/food.txt",
-        "/smile/demo/data/classification/pendigits.txt",
-        "/smile/demo/data/projection/COMBO17.dat"
+        "classification/iris.txt",
+        "projection/USArrests.txt",
+        "projection/food.txt",
+        "classification/pendigits.txt",
+        "projection/COMBO17.dat"
     };
 
     static AttributeDataset[] dataset = new AttributeDataset[datasetName.length];
@@ -136,7 +136,7 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
                 }
 
                 try {
-                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], this.getClass().getResourceAsStream(datasource[datasetIndex]));
+                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getDataFile(datasource[datasetIndex]));
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.out.println(ex);

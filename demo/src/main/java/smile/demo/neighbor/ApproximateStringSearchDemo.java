@@ -24,7 +24,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
-import java.io.InputStream;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +96,7 @@ public class ApproximateStringSearchDemo extends JPanel implements Runnable, Act
             List<String> words = new ArrayList<String>();
 
             try {
-                InputStream stream = this.getClass().getResourceAsStream("/smile/neighbor/index.noun");
+                FileInputStream stream = new FileInputStream(smile.data.parser.IOUtils.getDataFile("index.noun"));
                 BufferedReader input = new BufferedReader(new InputStreamReader(stream));
                 String line = input.readLine();
                 while (line != null) {

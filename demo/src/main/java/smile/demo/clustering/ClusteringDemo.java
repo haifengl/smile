@@ -48,22 +48,22 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
     };
 
     private static String[] datasource = {
-        "/smile/demo/data/clustering/gaussian/one.txt",
-        "/smile/demo/data/clustering/gaussian/two.txt",
-        "/smile/demo/data/clustering/gaussian/three.txt",
-        "/smile/demo/data/clustering/gaussian/five.txt",
-        "/smile/demo/data/clustering/gaussian/six.txt",
-        "/smile/demo/data/clustering/gaussian/elongate.txt",
-        "/smile/demo/data/clustering/nonconvex/cross.txt",
-        "/smile/demo/data/clustering/nonconvex/d4.txt",
-        "/smile/demo/data/clustering/nonconvex/face.txt",
-        "/smile/demo/data/clustering/nonconvex/pie.txt",
-        "/smile/demo/data/clustering/nonconvex/ring.txt",
-        "/smile/demo/data/clustering/nonconvex/sincos.txt",
-        "/smile/demo/data/clustering/chameleon/t4.8k.txt",
-        "/smile/demo/data/clustering/chameleon/t5.8k.txt",
-        "/smile/demo/data/clustering/chameleon/t7.10k.txt",
-        "/smile/demo/data/clustering/chameleon/t8.8k.txt"
+        "clustering/gaussian/one.txt",
+        "clustering/gaussian/two.txt",
+        "clustering/gaussian/three.txt",
+        "clustering/gaussian/five.txt",
+        "clustering/gaussian/six.txt",
+        "clustering/gaussian/elongate.txt",
+        "clustering/nonconvex/cross.txt",
+        "clustering/nonconvex/d4.txt",
+        "clustering/nonconvex/face.txt",
+        "clustering/nonconvex/pie.txt",
+        "clustering/nonconvex/ring.txt",
+        "clustering/nonconvex/sincos.txt",
+        "clustering/chameleon/t4.8k.txt",
+        "clustering/chameleon/t5.8k.txt",
+        "clustering/chameleon/t7.10k.txt",
+        "clustering/chameleon/t8.8k.txt"
     };
 
     static double[][][] dataset = null;
@@ -86,7 +86,7 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
             DelimitedTextParser parser = new DelimitedTextParser();
             parser.setDelimiter("[\t ]+");
             try {
-                AttributeDataset data = parser.parse(datasetName[datasetIndex], this.getClass().getResourceAsStream(datasource[datasetIndex]));
+                AttributeDataset data = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getDataFile(datasource[datasetIndex]));
                 dataset[datasetIndex] = data.toArray(new double[data.size()][]);
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
@@ -180,7 +180,7 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
                 DelimitedTextParser parser = new DelimitedTextParser();
                 parser.setDelimiter("[\t ]+");
                 try {
-                    AttributeDataset data = parser.parse(datasetName[datasetIndex], this.getClass().getResourceAsStream(datasource[datasetIndex]));
+                    AttributeDataset data = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getDataFile(datasource[datasetIndex]));
                     dataset[datasetIndex] = data.toArray(new double[data.size()][]);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);

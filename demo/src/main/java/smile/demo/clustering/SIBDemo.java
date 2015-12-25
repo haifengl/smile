@@ -52,9 +52,9 @@ public class SIBDemo extends JPanel implements Runnable, ActionListener {
     private int clusterNumber = 5;
     private String[] datasetName = {"NIPS", "KOS", "Enron"};
     private String[] datasource =  {
-        "/smile/demo/data/text/nips.txt",
-        "/smile/demo/data/text/kos.txt",
-        "/smile/demo/data/text/enron.txt"
+        "text/nips.txt",
+        "text/kos.txt",
+        "text/enron.txt"
     };
 
     private SparseDataset[] dataset = new SparseDataset[datasetName.length];
@@ -123,7 +123,7 @@ public class SIBDemo extends JPanel implements Runnable, ActionListener {
         if (dataset[datasetIndex] == null) {
             try {
                 SparseDatasetParser parser = new SparseDatasetParser(1);
-                dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], this.getClass().getResourceAsStream(datasource[datasetIndex]));
+                dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getDataFile(datasource[datasetIndex]));
                 for (int i = dataset[datasetIndex].size(); i-- > 0; ) {
                     if (dataset[datasetIndex].get(i).x.isEmpty()) {
                         dataset[datasetIndex].remove(i);
