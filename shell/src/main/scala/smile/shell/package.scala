@@ -17,12 +17,13 @@
 package smile
 
 /**
- * Common smile shell command.
+ * Common shell commands.
  *
  * @author Haifeng Li
  */
 package object shell {
 
+  /** Print help summary */
   def help = {
     println(
       """
@@ -45,6 +46,7 @@ package object shell {
     )
   }
 
+  /** Built in benchmarks */
   def benchmark(tests: String*) = {
     tests foreach ( _ match {
       case "airline" => smile.benchmark.Airline.benchmark

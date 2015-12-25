@@ -6,9 +6,10 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://github.com/haifengl/smile")),
-  version := "1.0.4",
+  version := "1.1.0",
   javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-g:lines"),
   javacOptions in (Compile, doc) ++= Seq("-Xdoclint:none"),
+  autoAPIMappings := true,
   libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test",
   scalaVersion := "2.11.7",
   parallelExecution in Test := false,
@@ -18,6 +19,12 @@ lazy val commonSettings = Seq(
 
 // SBT native packager
 enablePlugins(JavaAppPackaging)
+
+// Unidoc unifies scaladoc/javadoc across multiple projects.
+import UnidocKeys._
+
+// Publish javadoc to Github
+import com.typesafe.sbt.SbtGit.{GitKeys => git}
 
 lazy val root = project.in(file("."))
   .settings(
@@ -32,8 +39,17 @@ lazy val root = project.in(file("."))
       mainClass in Compile := Some("smile.shell.Shell")
     ): _*
   )
-  .aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, shell)
-  .dependsOn(demo, benchmark, shell)
+  .settings(unidocSettings: _*)
+  .settings(scalaJavaUnidocSettings: _*)
+  .settings(site.settings ++ ghpages.settings: _*)
+  .settings(
+    name := "smile",
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(demo, benchmark, shell),
+    site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "doc/api"),
+    git.gitRemoteRepo := "git@github.com:haifengl/smile.git"
+  )
+  .aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, dsel, shell)
+  .dependsOn(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, dsel, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
@@ -53,4 +69,6 @@ lazy val demo = project.in(file("demo")).settings(commonSettings: _*).dependsOn(
 
 lazy val benchmark = project.in(file("benchmark")).settings(commonSettings: _*).dependsOn(core)
 
-lazy val shell = project.in(file("shell")).settings(commonSettings: _*).dependsOn(core, benchmark, demo)
+lazy val dsel = project.in(file("dsel")).settings(commonSettings: _*).dependsOn(interpolation, nlp, plot)
+
+lazy val shell = project.in(file("shell")).settings(commonSettings: _*).dependsOn(benchmark, demo, dsel)
