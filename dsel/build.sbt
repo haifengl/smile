@@ -6,3 +6,4 @@ crossPaths := true
 
 autoScalaLibrary := true
 
+libraryDependencies += "com.thoughtworks.xstream" % "xstream" % "1.4.8"
