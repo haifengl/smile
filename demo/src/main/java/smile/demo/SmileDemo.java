@@ -531,7 +531,7 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
      * this method should be invoked from the
      * event dispatch thread.
      */
-    private static void createAndShowGUI() {
+    public static void createAndShowGUI(boolean exitOnClose) {
         try {
             for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -551,8 +551,12 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         //Create and set up the window.
         JFrame frame = new JFrame("Smile Demo");
         frame.setSize(new Dimension(1000, 1000));
-        frame.setLocationRelativeTo( null );
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
+
+        if (exitOnClose)
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        else
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         //Add content to the window.
         frame.add(new SmileDemo());
@@ -568,7 +572,7 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                createAndShowGUI();
+                createAndShowGUI(true);
             }
         });
     }

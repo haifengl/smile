@@ -31,6 +31,8 @@ package object shell {
         |   help -- print this summary
         |   :help -- print Scala shell command summary
         |   :quit -- exit the shell
+        |   demo -- show demo window
+        |   benchmark -- benchmark tests
         |
         | I/O:
         |   read --
@@ -48,15 +50,15 @@ package object shell {
 
   /** Built in benchmarks */
   def benchmark(tests: String*) = {
-    tests foreach ( _ match {
-      case "airline" => smile.benchmark.Airline.benchmark
-      case "usps" => smile.benchmark.USPS.benchmark
-      case test => println(
-        s"""
-           |Unknown benchmark $test
-           |Available benchmarks: airline, usps
-         """.stripMargin
-      )
+    smile.benchmark.Benchmark.main(tests.toArray)
+  }
+
+  /** Show demo window */
+  def demo = {
+    javax.swing.SwingUtilities.invokeLater(new Runnable {
+      override def run(): Unit = {
+        smile.demo.SmileDemo.createAndShowGUI(false)
+      }
     })
   }
 }
