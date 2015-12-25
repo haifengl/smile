@@ -15,12 +15,7 @@
  *******************************************************************************/
 package smile.data.parser;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +30,10 @@ public class IOUtils {
 
     public static File getDataFile(String path) {
         return new java.io.File(home + "/../data/" + path);
+    }
+
+    public static BufferedReader getDataReader(String path) throws FileNotFoundException {
+        return new BufferedReader(new InputStreamReader(new FileInputStream(getDataFile("text/quote.tok.gt9.5000"))));
     }
 
     /**

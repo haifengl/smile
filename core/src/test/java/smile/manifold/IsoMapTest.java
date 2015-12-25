@@ -38,7 +38,7 @@ public class IsoMapTest {
         parser.setDelimiter("\t");
 
         try {
-            swissroll = parser.parse("Swissroll", this.getClass().getResourceAsStream("/smile/data/manifold/swissroll.txt"));
+            swissroll = parser.parse("Swissroll", smile.data.parser.IOUtils.getDataFile("manifold/swissroll.txt"));
         } catch (Exception e) {
             System.err.println(e);
         }

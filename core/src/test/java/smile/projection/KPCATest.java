@@ -223,7 +223,7 @@ public class KPCATest {
         ArffParser arffParser = new ArffParser();
         arffParser.setResponseIndex(4);
         try {
-            AttributeDataset iris = arffParser.parse(this.getClass().getResourceAsStream("/smile/data/weka/iris.arff"));
+            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/iris.arff"));
 
             double[][] x = iris.toArray(new double[iris.size()][]);
             KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(Math.sqrt(2.5)), 1E-4);
@@ -255,7 +255,7 @@ public class KPCATest {
         ArffParser arffParser = new ArffParser();
         arffParser.setResponseIndex(4);
         try {
-            AttributeDataset iris = arffParser.parse(this.getClass().getResourceAsStream("/smile/data/weka/iris.arff"));
+            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/iris.arff"));
 
             double[][] x = iris.toArray(new double[iris.size()][]);
             KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(Math.sqrt(2.5)), 29);

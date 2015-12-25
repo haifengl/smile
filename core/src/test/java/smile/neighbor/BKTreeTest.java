@@ -17,8 +17,6 @@
 package smile.neighbor;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,8 +40,7 @@ public class BKTreeTest {
 
     public BKTreeTest() {
         try {
-            InputStream stream = this.getClass().getResourceAsStream("/smile/data/neighbor/index.noun");
-            BufferedReader input = new BufferedReader(new InputStreamReader(stream));
+            BufferedReader input = smile.data.parser.IOUtils.getDataReader("neighbor/index.noun");
             String line = input.readLine();
             while (line != null) {
                 if (!line.startsWith(" ")) {

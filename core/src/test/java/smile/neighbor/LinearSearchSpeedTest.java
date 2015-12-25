@@ -17,8 +17,6 @@
 package smile.neighbor;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
@@ -70,8 +68,7 @@ public class LinearSearchSpeedTest {
         List<String> words = new ArrayList<String>();
         long start = System.currentTimeMillis();
         try {
-            InputStream stream = this.getClass().getResourceAsStream("/smile/data/neighbor/index.noun");
-            BufferedReader input = new BufferedReader(new InputStreamReader(stream));
+            BufferedReader input = smile.data.parser.IOUtils.getDataReader("neighbor/index.noun");
             String line = input.readLine();
             while (line != null) {
                 if (!line.startsWith(" ")) {
@@ -181,8 +178,8 @@ public class LinearSearchSpeedTest {
         DelimitedTextParser parser = new DelimitedTextParser();
         parser.setResponseIndex(new NominalAttribute("class"), 0);
         try {
-            AttributeDataset train = parser.parse("USPS Train", this.getClass().getResourceAsStream("/smile/data/usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", this.getClass().getResourceAsStream("/smile/data/usps/zip.test"));
+            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getDataFile("usps/zip.train"));
+            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getDataFile("usps/zip.test"));
 
             x = train.toArray(new double[train.size()][]);
             testx = test.toArray(new double[test.size()][]);

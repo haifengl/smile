@@ -56,7 +56,7 @@ public class SparseDatasetParserTest {
         System.out.println("parse");
         try {
             SparseDatasetParser parser = new SparseDatasetParser(1);
-            SparseDataset data = parser.parse(this.getClass().getResourceAsStream("/smile/data/text/kos.txt"));
+            SparseDataset data = parser.parse(smile.data.parser.IOUtils.getDataFile("text/kos.txt"));
             assertEquals(3430, data.size());
             assertEquals(6906, data.ncols());
             assertEquals(353160, data.length());

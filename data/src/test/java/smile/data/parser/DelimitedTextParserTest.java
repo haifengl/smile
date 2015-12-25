@@ -59,7 +59,7 @@ public class DelimitedTextParserTest {
         try {
             DelimitedTextParser parser = new DelimitedTextParser();
             parser.setResponseIndex(new NominalAttribute("class"), 0);
-            AttributeDataset usps = parser.parse("USPS Train", this.getClass().getResourceAsStream("/smile/data/usps/zip.train"));
+            AttributeDataset usps = parser.parse("USPS Train", smile.data.parser.IOUtils.getDataFile("usps/zip.train"));
             double[][] x = usps.toArray(new double[usps.size()][]);
             int[] y = usps.toArray(new int[usps.size()]);
             

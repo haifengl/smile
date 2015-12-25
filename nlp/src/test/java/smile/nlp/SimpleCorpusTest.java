@@ -18,7 +18,6 @@ package smile.nlp;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.Iterator;
 import org.junit.After;
@@ -38,7 +37,7 @@ public class SimpleCorpusTest {
     SimpleCorpus corpus = new SimpleCorpus();
 
     public SimpleCorpusTest() {
-        try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("/smile/data/text/quote.tok.gt9.5000")))) {
+        try (BufferedReader input = smile.data.parser.IOUtils.getDataReader("text/quote.tok.gt9.5000")) {
             String line = null;
             int id = 0;
             while ((line = input.readLine()) != null) {

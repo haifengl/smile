@@ -55,19 +55,19 @@ public class MissingValueImputationTest {
     public void setUp() {
         try {
             arffParser.setResponseIndex(4);
-            iris = arffParser.parse(this.getClass().getResourceAsStream("/smile/data/weka/iris.arff"));
+            iris = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/iris.arff"));
 
             arffParser.setResponseIndex(35);
-            soybean = arffParser.parse(this.getClass().getResourceAsStream("/smile/data/weka/soybean.arff"));
+            soybean = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/soybean.arff"));
 
             arffParser.setResponseIndex(19);
-            segment = arffParser.parse(this.getClass().getResourceAsStream("/smile/data/weka/segment-challenge.arff"));
+            segment = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/segment-challenge.arff"));
 
             csvParser.setDelimiter(",");
-            movement = csvParser.parse("Movement", this.getClass().getResourceAsStream("/smile/data/uci/movement_libras.data"));
+            movement = csvParser.parse("Movement", smile.data.parser.IOUtils.getDataFile("uci/movement_libras.data"));
 
             csvParser.setDelimiter(" +");
-            control = csvParser.parse("Control", this.getClass().getResourceAsStream("/smile/data/uci/synthetic_control.data"));
+            control = csvParser.parse("Control", smile.data.parser.IOUtils.getDataFile("uci/synthetic_control.data"));
         } catch (Exception e) {
             System.err.println(e);
         }
