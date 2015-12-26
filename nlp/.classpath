@@ -7,5 +7,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SmileMath"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Smile"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SmileData"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

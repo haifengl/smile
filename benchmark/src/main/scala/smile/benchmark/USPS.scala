@@ -55,7 +55,7 @@ object USPS {
 
     var pred = testx.map(forest.predict(_))
     println("Random Forest OOB error rate = %.2f%%" format (100.0 * forest.error()))
-    println("Random Forest error rate = %.2f%%" format new Accuracy().measure(testy, pred))
+    println("Random Forest accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
 
     // Gradient Tree Boost
     println("Training Gradient Tree Boost...")
@@ -64,7 +64,7 @@ object USPS {
     }
 
     pred = testx.map(gbt.predict(_))
-    println("Gradient Tree Boost error rate = %.2f%%" format new Accuracy().measure(testy, pred))
+    println("Gradient Tree Boost accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
 
     // SV
     println("Training SVM, one epoch...")
@@ -76,7 +76,7 @@ object USPS {
     }
 
     pred = testx.map(svm.predict(_))
-    println("SVM error rate = %.2f%%" format new Accuracy().measure(testy, pred))
+    println("SVM accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
 
     println("Training SVM one more epoch...")
     time {
@@ -85,7 +85,7 @@ object USPS {
     }
 
     pred = testx.map(svm.predict(_))
-    println("SVM error rate = %.2f%%" format new Accuracy().measure(testy, pred))
+    println("SVM accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
 
     // RBF Network
     println("Training RBF Network...")
@@ -96,7 +96,7 @@ object USPS {
     }
 
     pred = testx.map(rbf.predict(_))
-    println("RBF Network error rate = %.2f%%" format new Accuracy().measure(testy, pred))
+    println("RBF Network accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
 
     // Logistic Regression
     println("Training Logistic regression...")
@@ -105,7 +105,7 @@ object USPS {
     }
 
     pred = testx.map(logit.predict(_))
-    println("Logistic Regression error rate = %.2f%%" format new Accuracy().measure(testy, pred))
+    println("Logistic Regression accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
 
     // Neural Network
     val p = x(0).length
@@ -126,6 +126,6 @@ object USPS {
     }
 
     pred = testx.map(nnet.predict(_))
-    println("Nuural Network error rate = %.2f%%" format new Accuracy().measure(testy, pred))
+    println("Nuural Network accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
   }
 }
