@@ -49,8 +49,8 @@ lazy val root = project.in(file("."))
     site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "doc/api"),
     git.gitRemoteRepo := "git@github.com:haifengl/smile.git"
   )
-  .aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, dsel, shell)
-  .dependsOn(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, dsel, shell)
+  .aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
+  .dependsOn(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
@@ -68,8 +68,8 @@ lazy val plot = project.in(file("plot")).settings(commonSettings: _*).dependsOn(
 
 lazy val demo = project.in(file("demo")).settings(commonSettings: _*).dependsOn(core, interpolation, plot)
 
-lazy val benchmark = project.in(file("benchmark")).settings(commonSettings: _*).dependsOn(core)
+lazy val benchmark = project.in(file("benchmark")).settings(commonSettings: _*).dependsOn(core, scala)
 
-lazy val dsel = project.in(file("dsel")).settings(commonSettings: _*).dependsOn(interpolation, nlp, plot)
+lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(interpolation, nlp, plot)
 
-lazy val shell = project.in(file("shell")).settings(commonSettings: _*).dependsOn(benchmark, demo, dsel)
+lazy val shell = project.in(file("shell")).settings(commonSettings: _*).dependsOn(benchmark, demo, scala)

@@ -28,10 +28,17 @@ import java.util.List;
 public class IOUtils {
     private static String home = System.getProperty("smile.home", "src/universal/data");
 
-    public static File getDataFile(String path) {
-        return new java.io.File(home + "/../data/" + path);
+    /** Get the file path of sample dataset. */
+    public static String getDataPath(String path) {
+        return home + "/../data/" + path;
     }
 
+    /** Get the file object of sample dataset. */
+    public static File getDataFile(String path) {
+        return new java.io.File(getDataPath(path));
+    }
+
+    /** Get the reader of sample datasets. */
     public static BufferedReader getDataReader(String path) throws FileNotFoundException {
         return new BufferedReader(new InputStreamReader(new FileInputStream(getDataFile("text/quote.tok.gt9.5000"))));
     }
