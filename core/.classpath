@@ -7,6 +7,5 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/SmileGraph"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SmileMath"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SmileData"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SmileTestData"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
