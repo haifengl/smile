@@ -132,7 +132,7 @@ public class DelimitedTextParser {
      * Sets the attribute and column index (starting at 0) of dependent/response variable.
      */
     public DelimitedTextParser setResponseIndex(Attribute response, int index) {
-        if (response.type != Attribute.Type.NOMINAL && response.type != Attribute.Type.NUMERIC) {
+        if (response.getType() != Attribute.Type.NOMINAL && response.getType() != Attribute.Type.NUMERIC) {
             throw new IllegalArgumentException("The response variable is not numeric or nominal.");
         }
         
@@ -175,7 +175,7 @@ public class DelimitedTextParser {
      * Parse a dataset from given URI.
      * @throws java.io.FileNotFoundException
      */
-    public AttributeDataset parse(URI uri) throws FileNotFoundException, IOException, ParseException {
+    public AttributeDataset parse(URI uri) throws IOException, ParseException {
         return parse(new File(uri));
     }
 
@@ -185,7 +185,7 @@ public class DelimitedTextParser {
      * @param attributes the list attributes of data in proper order.
      * @throws java.io.FileNotFoundException
      */
-    public AttributeDataset parse(String name, Attribute[] attributes, URI uri) throws FileNotFoundException, IOException, ParseException {
+    public AttributeDataset parse(String name, Attribute[] attributes, URI uri) throws IOException, ParseException {
         return parse(name, attributes, new File(uri));
     }
 
@@ -194,7 +194,7 @@ public class DelimitedTextParser {
      * @param path the file path of data source.
      * @throws java.io.FileNotFoundException
      */
-    public AttributeDataset parse(String path) throws FileNotFoundException, IOException, ParseException {
+    public AttributeDataset parse(String path) throws IOException, ParseException {
         return parse(new File(path));
     }
 
@@ -204,7 +204,7 @@ public class DelimitedTextParser {
      * @param attributes the list attributes of data in proper order.
      * @throws java.io.FileNotFoundException
      */
-    public AttributeDataset parse(String name, Attribute[] attributes, String path) throws FileNotFoundException, IOException, ParseException {
+    public AttributeDataset parse(String name, Attribute[] attributes, String path) throws IOException, ParseException {
         return parse(name, attributes, new File(path));
     }
 
@@ -213,7 +213,7 @@ public class DelimitedTextParser {
      * @param file the file of data source.
      * @throws java.io.FileNotFoundException
      */
-    public AttributeDataset parse(File file) throws FileNotFoundException, IOException, ParseException {
+    public AttributeDataset parse(File file) throws IOException, ParseException {
         String name = file.getPath();
         return parse(name, new FileInputStream(file));
     }
@@ -297,7 +297,7 @@ public class DelimitedTextParser {
                     if (j != responseIndex) {
                         attributes[i++] = new NumericAttribute(s[j]);
                     } else {
-                        switch (response.type) {
+                        switch (response.getType()) {
                         case NOMINAL:
                             response = new NominalAttribute(s[j]);
                             break;
@@ -378,11 +378,6 @@ public class DelimitedTextParser {
         String line = null;
         boolean firstLine = true;
         while ((line = reader.readLine()) != null) {
-            if (hasColumnNames && firstLine) {
-                firstLine = false;
-                continue;
-            }
-
             if (line.isEmpty()) {
                 continue;
             }
@@ -394,6 +389,19 @@ public class DelimitedTextParser {
             String[] s = line.split(delimiter, 0);
             if (s.length != n) {
                 throw new ParseException(String.format("%d columns, expected %d", s.length, n), s.length);
+            }
+
+            if (hasColumnNames && firstLine) {
+                firstLine = false;
+                for (int i = hasRowNames ? 1 : 0, k = 0; i < s.length; i++) {
+                    if (i == responseIndex) {
+                        response.setName(s[i]);
+                    } else {
+                        attributes[k].setName(s[i]);
+                        k++;
+                    }
+                }
+                continue;
             }
 
             String rowName = hasRowNames ? s[0] : null;

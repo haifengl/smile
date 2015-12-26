@@ -52,7 +52,7 @@ public abstract class Attribute {
     /**
      * The type of attribute.
      */
-    public final Type type;
+    private Type type;
     
     /**
      * Optional weight of this attribute. By default, it is 1.0. The particular
@@ -60,17 +60,17 @@ public abstract class Attribute {
      * Although there are on explicit requirements on the weights, in general,
      * they should be positive.
      */
-    public final double weight;
+    private double weight;
 
     /**
      * The name of attribute.
      */
-    public final String name;
+    private String name;
 
     /**
      * The detailed description of the attribute.
      */
-    public final String description;
+    private String description;
 
     /**
      * Constructor.
@@ -101,6 +101,37 @@ public abstract class Attribute {
         this.name = name;
         this.description = description;
         this.weight = weight;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Attribute setName(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Attribute setDescription(String description) {
+        this.description = description;
+        return this;
+    }
+
+    public double getWeight() {
+        return weight;
+    }
+
+    public Attribute setWeight(double weight) {
+        this.weight = weight;
+        return this;
     }
 
     /**

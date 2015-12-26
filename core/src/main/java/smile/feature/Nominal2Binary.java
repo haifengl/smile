@@ -69,9 +69,9 @@ public class Nominal2Binary implements Feature<double[]> {
             Attribute attribute = attributes[j];
             if (attribute instanceof NominalAttribute) {
                 NominalAttribute nominal = (NominalAttribute) attribute;
-                double weight = nominal.weight;             
-                String name = nominal.name;
-                String description = nominal.description;
+                double weight = nominal.getWeight();
+                String name = nominal.getName();
+                String description = nominal.getDescription();
                 
                 for (int k = 0; k < nominal.size(); k++, i++) {
                     features[i] = new NumericAttribute(name + "_" + k, description, weight);

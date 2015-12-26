@@ -40,20 +40,20 @@ object Airline {
     parser.setColumnNames(true)
     parser.setResponseIndex(new NominalAttribute("class"), 8)
     val attributes = new Array[Attribute](8)
-    attributes(0) = new NominalAttribute("V1")
-    attributes(1) = new NominalAttribute("V2")
-    attributes(2) = new NominalAttribute("V3")
-    attributes(3) = new NumericAttribute("V4")
-    attributes(4) = new NominalAttribute("V5")
-    attributes(5) = new NominalAttribute("V6")
-    attributes(6) = new NominalAttribute("V7")
-    attributes(7) = new NumericAttribute("V8")
+    attributes(0) = new NominalAttribute("V0")
+    attributes(1) = new NominalAttribute("V1")
+    attributes(2) = new NominalAttribute("V2")
+    attributes(3) = new NumericAttribute("V3")
+    attributes(4) = new NominalAttribute("V4")
+    attributes(5) = new NominalAttribute("V5")
+    attributes(6) = new NominalAttribute("V6")
+    attributes(7) = new NumericAttribute("V7")
 
     val train = parser.parse(attributes, smile.data.parser.IOUtils.getDataFile("airline/train-0.1m.csv"))
     val test  = parser.parse(attributes, smile.data.parser.IOUtils.getDataFile("airline/test.csv"))
     attributes.foreach { attr =>
       if (attr.isInstanceOf[NominalAttribute])
-        println(attr.name + attr.asInstanceOf[NominalAttribute].values.mkString(", "))
+        println(attr.getName + attr.asInstanceOf[NominalAttribute].values.mkString(", "))
     }
     println("class: " + train.response.asInstanceOf[NominalAttribute].values.mkString(", "))
     println("train data size: " + train.size + ", test data size: " + test.size)
@@ -65,12 +65,12 @@ object Airline {
 
     // The data is highly unbalanced. class weight 1 : 4 should improve sensitivity.
     // To match other tests, we keep it 1 : 1 here though.
-    val classWeight = Array(1, 1)
+    val classWeight = Array(1, 2)
 
     // Random Forest
     println("Training Random Forest of 500 trees...")
     val forest = time {
-      new RandomForest(attributes, x, y, 500, 2, 110, DecisionTree.SplitRule.ENTROPY, classWeight)
+      new RandomForest(attributes, x, y, 500, 3, 300, DecisionTree.SplitRule.ENTROPY, classWeight)
     }
 
     val pred = new Array[Int](testy.length)
@@ -91,7 +91,7 @@ object Airline {
     println("Random Forest AUC = %.2f%%" format (100.0 * AUC.measure(testy, prob)))
 
     for (i <- 0 until attributes.length) {
-      println(s"importance of ${attributes(i).name} = ${forest.importance()(i)}")
+      println(s"importance of ${attributes(i).getName} = ${forest.importance()(i)}")
     }
 
     // Gradient Tree Boost

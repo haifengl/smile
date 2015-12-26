@@ -99,7 +99,7 @@ public class HeatmapDemo extends JPanel {
             String[] genes = data.toArray(new String[data.size()]);
             String[] arrays = new String[data.attributes().length];
             for (int i = 0; i < arrays.length; i++) {
-                arrays[i] = data.attributes()[i].name;
+                arrays[i] = data.attributes()[i].getName();
             }
 
             JFrame frame = new JFrame("Heatmap");

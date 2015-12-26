@@ -123,7 +123,7 @@ public class NumericAttributeFeature implements Feature<double[]> {
                 if (scaling == Scaling.NONE) {
                     features[i] = attribute;
                 } else {
-                    features[i] = new NumericAttribute(attribute.name + "_" + scaling, attribute.description, attribute.weight);
+                    features[i] = new NumericAttribute(attribute.getName() + "_" + scaling, attribute.getDescription(), attribute.getWeight());
                 }
                 
                 map[i++] = j;
@@ -166,7 +166,7 @@ public class NumericAttributeFeature implements Feature<double[]> {
                 if (scaling == Scaling.NONE) {
                     features[i] = attribute;
                 } else {
-                    features[i] = new NumericAttribute(attribute.name + "_" + scaling, attribute.description, attribute.weight);
+                    features[i] = new NumericAttribute(attribute.getName() + "_" + scaling, attribute.getDescription(), attribute.getWeight());
                     if (scaling == Scaling.NORMALIZATION || scaling == Scaling.STANDARDIZATION) {
                         for (int k = 0; k < n; k++) {
                             x[k] = data[k][j];
@@ -249,7 +249,7 @@ public class NumericAttributeFeature implements Feature<double[]> {
         for (int i = 0, j = 0; j < attributes.length; j++) {
             Attribute attribute = attributes[j];
             if (attribute instanceof NumericAttribute) {
-                features[i] = new NumericAttribute(attribute.name + "_" + scaling, attribute.description, attribute.weight);
+                features[i] = new NumericAttribute(attribute.getName() + "_" + scaling, attribute.getDescription(), attribute.getWeight());
                 for (int k = 0; k < n; k++) {
                     x[k] = data[k][j];
                 }
@@ -293,7 +293,7 @@ public class NumericAttributeFeature implements Feature<double[]> {
         for (int i = 0, j = 0; j < attributes.length; j++) {
             Attribute attribute = attributes[j];
             if (attribute instanceof NumericAttribute) {
-                features[i] = new NumericAttribute(attribute.name + "_" + scaling, attribute.description, attribute.weight);
+                features[i] = new NumericAttribute(attribute.getName() + "_" + scaling, attribute.getDescription(), attribute.getWeight());
                 for (int k = 0; k < n; k++) {
                     x[k] = data[k][j];
                 }

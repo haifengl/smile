@@ -49,7 +49,7 @@ public class SmileUtils {
         int[][] index = new int[p][];
         
         for (int j = 0; j < p; j++) {
-            if (attributes[j].type == Attribute.Type.NUMERIC) {
+            if (attributes[j].getType() == Attribute.Type.NUMERIC) {
                 for (int i = 0; i < n; i++) {
                     a[i] = x[i][j];
                 }

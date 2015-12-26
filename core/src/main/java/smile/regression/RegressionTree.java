@@ -275,20 +275,20 @@ public class RegressionTree implements Regression<double[]> {
             if (trueChild == null && falseChild == null) {
                 return output;
             } else {
-                if (attributes[splitFeature].type == Attribute.Type.NOMINAL) {
+                if (attributes[splitFeature].getType() == Attribute.Type.NOMINAL) {
                     if (Math.equals(x[splitFeature], splitValue)) {
                         return trueChild.predict(x);
                     } else {
                         return falseChild.predict(x);
                     }
-                } else if (attributes[splitFeature].type == Attribute.Type.NUMERIC) {
+                } else if (attributes[splitFeature].getType() == Attribute.Type.NUMERIC) {
                     if (x[splitFeature] <= splitValue) {
                         return trueChild.predict(x);
                     } else {
                         return falseChild.predict(x);
                     }
                 } else {
-                    throw new IllegalStateException("Unsupported attribute type: " + attributes[splitFeature].type);
+                    throw new IllegalStateException("Unsupported attribute type: " + attributes[splitFeature].getType());
                 }
             }
         }
@@ -480,7 +480,7 @@ public class RegressionTree implements Regression<double[]> {
         public Node findBestSplit(int n, double sum, int j) {
             int N = x.length;
             Node split = new Node(0.0);
-            if (attributes[j].type == Attribute.Type.NOMINAL) {
+            if (attributes[j].getType() == Attribute.Type.NOMINAL) {
                 int m = ((NominalAttribute) attributes[j]).size();
                 double[] trueSum = new double[m];
                 int[] trueCount = new int[m];
@@ -521,7 +521,7 @@ public class RegressionTree implements Regression<double[]> {
                         split.falseChildOutput = falseMean;
                     }
                 }
-            } else if (attributes[j].type == Attribute.Type.NUMERIC) {
+            } else if (attributes[j].getType() == Attribute.Type.NUMERIC) {
                 double trueSum = 0.0;
                 int trueCount = 0;
                 double prevx = Double.NaN;
@@ -568,7 +568,7 @@ public class RegressionTree implements Regression<double[]> {
                     }
                 }
             } else {
-                throw new IllegalStateException("Unsupported attribute type: " + attributes[j].type);
+                throw new IllegalStateException("Unsupported attribute type: " + attributes[j].getType());
             }
 
             return split;
@@ -588,7 +588,7 @@ public class RegressionTree implements Regression<double[]> {
             int[] trueSamples = new int[n];
             int[] falseSamples = new int[n];
 
-            if (attributes[node.splitFeature].type == Attribute.Type.NOMINAL) {
+            if (attributes[node.splitFeature].getType() == Attribute.Type.NOMINAL) {
                 for (int i = 0; i < n; i++) {
                     if (samples[i] > 0) {
                         if (x[i][node.splitFeature] == node.splitValue) {
@@ -600,7 +600,7 @@ public class RegressionTree implements Regression<double[]> {
                         }
                     }
                 }
-            } else if (attributes[node.splitFeature].type == Attribute.Type.NUMERIC) {
+            } else if (attributes[node.splitFeature].getType() == Attribute.Type.NUMERIC) {
                 for (int i = 0; i < n; i++) {
                     if (samples[i] > 0) {
                         if (x[i][node.splitFeature] <= node.splitValue) {
@@ -613,7 +613,7 @@ public class RegressionTree implements Regression<double[]> {
                     }
                 }
             } else {
-                throw new IllegalStateException("Unsupported attribute type: " + attributes[node.splitFeature].type);
+                throw new IllegalStateException("Unsupported attribute type: " + attributes[node.splitFeature].getType());
             }
             
             if (tc == 0 || fc == 0) {
