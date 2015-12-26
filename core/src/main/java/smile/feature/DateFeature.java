@@ -110,9 +110,9 @@ public class DateFeature implements Feature<double[]> {
             Attribute attribute = attributes[j];
             if (attribute instanceof DateAttribute) {
                 DateAttribute date = (DateAttribute) attribute;
-                double weight = date.weight;           
-                String name = date.name;
-                String description = date.description;
+                double weight = date.getWeight();
+                String name = date.getName();
+                String description = date.getDescription();
                 
                 for (int k = 0; k < types.length; k++, i++) {
                     features[i] = new NumericAttribute(name + "_" + types[k], description, weight);

@@ -181,7 +181,7 @@ public class SparseDataset implements Iterable<Datum<SparseArray>> {
             throw new IllegalArgumentException("The dataset has no response values.");            
         }
         
-        if (response.type != Attribute.Type.NOMINAL) {
+        if (response.getType() != Attribute.Type.NOMINAL) {
             throw new IllegalArgumentException("The response variable is not nominal.");
         }
         
@@ -210,7 +210,7 @@ public class SparseDataset implements Iterable<Datum<SparseArray>> {
             throw new IllegalArgumentException("The dataset has no response values.");            
         }
         
-        if (response.type != Attribute.Type.NUMERIC) {
+        if (response.getType() != Attribute.Type.NUMERIC) {
             throw new IllegalArgumentException("The response variable is not numeric.");
         }
         
@@ -498,7 +498,7 @@ public class SparseDataset implements Iterable<Datum<SparseArray>> {
             throw new IllegalArgumentException("The dataset has no response values.");            
         }
         
-        if (response.type != Attribute.Type.NOMINAL) {
+        if (response.getType() != Attribute.Type.NOMINAL) {
             throw new IllegalArgumentException("The response variable is not nominal.");
         }
         
@@ -543,7 +543,7 @@ public class SparseDataset implements Iterable<Datum<SparseArray>> {
             throw new IllegalArgumentException("The dataset has no response values.");            
         }
         
-        if (response.type != Attribute.Type.NUMERIC) {
+        if (response.getType() != Attribute.Type.NUMERIC) {
             throw new IllegalArgumentException("The response variable is not numeric.");
         }
         

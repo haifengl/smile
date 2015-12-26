@@ -100,7 +100,7 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
             Attribute[] attr = dataset[datasetIndex].attributes();
             labels = new String[attr.length];
             for (int i = 0; i < labels.length; i++) {
-                labels[i] = attr[i].name;
+                labels[i] = attr[i].getName();
             }
         }
 

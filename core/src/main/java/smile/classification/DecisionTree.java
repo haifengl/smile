@@ -307,20 +307,20 @@ public class DecisionTree implements Classifier<double[]> {
             if (trueChild == null && falseChild == null) {
                 return output;
             } else {
-                if (attributes[splitFeature].type == Attribute.Type.NOMINAL) {
+                if (attributes[splitFeature].getType() == Attribute.Type.NOMINAL) {
                     if (x[splitFeature] == splitValue) {
                         return trueChild.predict(x);
                     } else {
                         return falseChild.predict(x);
                     }
-                } else if (attributes[splitFeature].type == Attribute.Type.NUMERIC) {
+                } else if (attributes[splitFeature].getType() == Attribute.Type.NUMERIC) {
                     if (x[splitFeature] <= splitValue) {
                         return trueChild.predict(x);
                     } else {
                         return falseChild.predict(x);
                     }
                 } else {
-                    throw new IllegalStateException("Unsupported attribute type: " + attributes[splitFeature].type);
+                    throw new IllegalStateException("Unsupported attribute type: " + attributes[splitFeature].getType());
                 }
             }
         }
@@ -333,20 +333,20 @@ public class DecisionTree implements Classifier<double[]> {
                 System.arraycopy(this.posteriori, 0, posteriori, 0, k);
                 return output;
             } else {
-                if (attributes[splitFeature].type == Attribute.Type.NOMINAL) {
+                if (attributes[splitFeature].getType() == Attribute.Type.NOMINAL) {
                     if (x[splitFeature] == splitValue) {
                         return trueChild.predict(x, posteriori);
                     } else {
                         return falseChild.predict(x, posteriori);
                     }
-                } else if (attributes[splitFeature].type == Attribute.Type.NUMERIC) {
+                } else if (attributes[splitFeature].getType() == Attribute.Type.NUMERIC) {
                     if (x[splitFeature] <= splitValue) {
                         return trueChild.predict(x, posteriori);
                     } else {
                         return falseChild.predict(x, posteriori);
                     }
                 } else {
-                    throw new IllegalStateException("Unsupported attribute type: " + attributes[splitFeature].type);
+                    throw new IllegalStateException("Unsupported attribute type: " + attributes[splitFeature].getType());
                 }
             }
         }
@@ -531,7 +531,7 @@ public class DecisionTree implements Classifier<double[]> {
             int N = x.length;
             Node splitNode = new Node();
 
-            if (attributes[j].type == Attribute.Type.NOMINAL) {
+            if (attributes[j].getType() == Attribute.Type.NOMINAL) {
                 int m = ((NominalAttribute) attributes[j]).size();
                 int[][] trueCount = new int[m][k];
 
@@ -567,7 +567,7 @@ public class DecisionTree implements Classifier<double[]> {
                         splitNode.falseChildOutput = falseLabel;
                     }
                 }
-            } else if (attributes[j].type == Attribute.Type.NUMERIC) {
+            } else if (attributes[j].getType() == Attribute.Type.NUMERIC) {
                 int[] trueCount = new int[k];
                 double prevx = Double.NaN;
                 int prevy = -1;
@@ -615,7 +615,7 @@ public class DecisionTree implements Classifier<double[]> {
                     }
                 }
             } else {
-                throw new IllegalStateException("Unsupported attribute type: " + attributes[j].type);
+                throw new IllegalStateException("Unsupported attribute type: " + attributes[j].getType());
             }
 
             return splitNode;
@@ -635,7 +635,7 @@ public class DecisionTree implements Classifier<double[]> {
             int[] trueSamples = new int[n];
             int[] falseSamples = new int[n];
 
-            if (attributes[node.splitFeature].type == Attribute.Type.NOMINAL) {
+            if (attributes[node.splitFeature].getType() == Attribute.Type.NOMINAL) {
                 for (int i = 0; i < n; i++) {
                     if (samples[i] > 0) {
                         if (x[i][node.splitFeature] == node.splitValue) {
@@ -647,7 +647,7 @@ public class DecisionTree implements Classifier<double[]> {
                         }
                     }
                 }
-            } else if (attributes[node.splitFeature].type == Attribute.Type.NUMERIC) {
+            } else if (attributes[node.splitFeature].getType() == Attribute.Type.NUMERIC) {
                 for (int i = 0; i < n; i++) {
                     if (samples[i] > 0) {
                         if (x[i][node.splitFeature] <= node.splitValue) {
@@ -660,7 +660,7 @@ public class DecisionTree implements Classifier<double[]> {
                     }
                 }
             } else {
-                throw new IllegalStateException("Unsupported attribute type: " + attributes[node.splitFeature].type);
+                throw new IllegalStateException("Unsupported attribute type: " + attributes[node.splitFeature].getType());
             }
 
             if (tc == 0 || fc == 0) {
