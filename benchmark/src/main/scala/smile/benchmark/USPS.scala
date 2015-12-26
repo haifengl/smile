@@ -22,7 +22,9 @@ import smile.math.Math
 import smile.math.distance.EuclideanDistance
 import smile.math.kernel.GaussianKernel
 import smile.math.rbf.GaussianRadialBasis
-import smile.util.SmileUtils
+import smile.validation.Accuracy
+import smile.io._
+import smile.util._
 
 /**
  *
@@ -41,83 +43,69 @@ object USPS {
 
     val train = parser.parse(smile.data.parser.IOUtils.getDataFile("usps/zip.train"))
     val test = parser.parse(smile.data.parser.IOUtils.getDataFile("usps/zip.test"))
-    val x = train.toArray(new Array[Array[Double]](train.size))
-    val y = train.toArray(new Array[Int](train.size))
-    val testx = test.toArray(new Array[Array[Double]](test.size))
-    val testy = test.toArray(new Array[Int](test.size))
+    val (x, y) = train.unzip
+    val (testx, testy) = test.unzip
     val c = Math.max(y: _*) + 1
 
     // Random Forest
-    var start = System.currentTimeMillis
-    val forest = new RandomForest(x, y, 200)
-    var end = System.currentTimeMillis
-    println("Random Forest 200 trees training time: %.2fs" format ((end-start)/1000.0))
-
-    var error = (0 until testx.length).foldLeft(0) { (e, i) =>
-      if (forest.predict(testx(i)) != testy(i)) e + 1 else e
+    println("Training Random Forest of 200 trees...")
+    val forest = time {
+      new RandomForest(x, y, 200)
     }
+
+    var pred = testx.map(forest.predict(_))
     println("Random Forest OOB error rate = %.2f%%" format (100.0 * forest.error()))
-    println("Random Forest error rate = %.2f%%" format (100.0 * error / testx.length))
+    println("Random Forest error rate = %.2f%%" format new Accuracy().measure(testy, pred))
 
     // Gradient Tree Boost
-    start = System.currentTimeMillis
-    val gbt = new GradientTreeBoost(x, y, 200)
-    end = System.currentTimeMillis
-    println("Gradient Tree Boost training time: %.2fs" format ((end-start)/1000.0))
-    error = (0 until testx.length).foldLeft(0) { (e, i) =>
-      if (gbt.predict(testx(i)) != testy(i)) e + 1 else e
+    println("Training Gradient Tree Boost...")
+    val gbt = time {
+      new GradientTreeBoost(x, y, 200)
     }
 
-    println("Gradient Tree Boost error rate = %.2f%%" format (100.0 * error / testx.length))
+    pred = testx.map(gbt.predict(_))
+    println("Gradient Tree Boost error rate = %.2f%%" format new Accuracy().measure(testy, pred))
 
-    // SVM
-    start = System.currentTimeMillis
-    val svm = new SVM[Array[Double]](new GaussianKernel(8.0), 5.0, c, SVM.Multiclass.ONE_VS_ONE)
-    svm.learn(x, y)
-    svm.finish
-    end = System.currentTimeMillis
-    println("SVM one epoch training time: %.2fs" format ((end-start)/1000.0))
-    error = (0 until testx.length).foldLeft(0) { (e, i) =>
-      if (svm.predict(testx(i)) != testy(i)) e + 1 else e
+    // SV
+    println("Training SVM, one epoch...")
+    val svm = time {
+      val svm = new SVM[Array[Double]](new GaussianKernel(8.0), 5.0, c, SVM.Multiclass.ONE_VS_ONE)
+      svm.learn(x, y)
+      svm.finish
+      svm
     }
 
-    println("SVM error rate = %.2f%%" format (100.0 * error / testx.length))
+    pred = testx.map(svm.predict(_))
+    println("SVM error rate = %.2f%%" format new Accuracy().measure(testy, pred))
 
-    println("SVM one more epoch...")
-    start = System.currentTimeMillis
-    svm.learn(x, y)
-    svm.finish
-    end = System.currentTimeMillis
-    println("SVM one more epoch training time: %.2fs" format ((end-start)/1000.0))
-
-    error = (0 until testx.length).foldLeft(0) { (e, i) =>
-      if (svm.predict(testx(i)) != testy(i)) e + 1 else e
+    println("Training SVM one more epoch...")
+    time {
+      svm.learn(x, y)
+      svm.finish
     }
-    println("SVM error rate = %.2f%%" format (100.0 * error / testx.length))
+
+    pred = testx.map(svm.predict(_))
+    println("SVM error rate = %.2f%%" format new Accuracy().measure(testy, pred))
 
     // RBF Network
-    start = System.currentTimeMillis
+    println("Training RBF Network...")
     val centers = new Array[Array[Double]](200)
     val basis = SmileUtils.learnGaussianRadialBasis(x, centers)
-    val rbf = new RBFNetwork[Array[Double]](x, y, new EuclideanDistance, new GaussianRadialBasis(8.0), centers)
-    end = System.currentTimeMillis
-    println("RBF 200 centers training time: %.2fs" format ((end-start)/1000.0))
-
-    error = (0 until testx.length).foldLeft(0) { (e, i) =>
-      if (rbf.predict(testx(i)) != testy(i)) e + 1 else e
+    val rbf = time {
+      new RBFNetwork[Array[Double]](x, y, new EuclideanDistance, new GaussianRadialBasis(8.0), centers)
     }
-    println("RBF error rate = %.2f%%" format (100.0 * error / testx.length))
+
+    pred = testx.map(rbf.predict(_))
+    println("RBF Network error rate = %.2f%%" format new Accuracy().measure(testy, pred))
 
     // Logistic Regression
-    start = System.currentTimeMillis
-    val logit = new LogisticRegression(x, y, 0.3, 1E-3, 1000)
-    end = System.currentTimeMillis
-    println("Logistic regression training time: %.2fs" format ((end-start)/1000.0))
-
-    error = (0 until testx.length).foldLeft(0) { (e, i) =>
-      if (logit.predict(testx(i)) != testy(i)) e + 1 else e
+    println("Training Logistic regression...")
+    val logit = time {
+      new LogisticRegression(x, y, 0.3, 1E-3, 1000)
     }
-    println("Logistic error rate = %.2f%%" format (100.0 * error / testx.length))
+
+    pred = testx.map(logit.predict(_))
+    println("Logistic Regression error rate = %.2f%%" format new Accuracy().measure(testy, pred))
 
     // Neural Network
     val p = x(0).length
@@ -130,15 +118,14 @@ object USPS {
       (0 until p) foreach { j => xi(j) = (xi(j) - mu(j)) / sd(j)}
     }
 
-    start = System.currentTimeMillis
-    val nnet = new NeuralNetwork(NeuralNetwork.ErrorFunction.LEAST_MEAN_SQUARES, NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, p, 40, c)
-    (0 until 30) foreach { _ => nnet.learn(x, y) }
-    end = System.currentTimeMillis
-    println("Neural Network 30 epoch training time: %.2fs" format ((end-start)/1000.0))
-
-    error = (0 until testx.length).foldLeft(0) { (e, i) =>
-      if (nnet.predict(testx(i)) != testy(i)) e + 1 else e
+    println("Training Neural Network, 30 epoch...")
+    val nnet = time {
+      val nnet = new NeuralNetwork(NeuralNetwork.ErrorFunction.LEAST_MEAN_SQUARES, NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, p, 40, c)
+      (0 until 30) foreach { _ => nnet.learn(x, y) }
+      nnet
     }
-    println("Neural Network error rate = %.2f%%" format (100.0 * error / testx.length))
+
+    pred = testx.map(nnet.predict(_))
+    println("Nuural Network error rate = %.2f%%" format new Accuracy().measure(testy, pred))
   }
 }

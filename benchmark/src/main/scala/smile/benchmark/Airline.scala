@@ -18,8 +18,10 @@ package smile.benchmark
 import smile.data._
 import smile.data.parser.DelimitedTextParser
 import smile.classification._
+import smile.io._
 import smile.math.Math
 import smile.validation._
+import smile.util._
 
 /**
  *
@@ -56,10 +58,8 @@ object Airline {
     println("class: " + train.response.asInstanceOf[NominalAttribute].values.mkString(", "))
     println("train data size: " + train.size + ", test data size: " + test.size)
 
-    val x = train.toArray(new Array[Array[Double]](train.size))
-    val y = train.toArray(new Array[Int](train.size))
-    val testx = test.toArray(new Array[Array[Double]](test.size))
-    val testy = test.toArray(new Array[Int](test.size))
+    val (x, y) = train.unzip
+    val (testx, testy) = test.unzip
     println("train data positive : negative = " + Math.sum(y) + " : " + (y.length - Math.sum(y)))
     println("test data positive : negative = " + Math.sum(testy) + " : " + (testy.length - Math.sum(testy)))
 
@@ -68,10 +68,10 @@ object Airline {
     val classWeight = Array(1, 1)
 
     // Random Forest
-    var start = System.currentTimeMillis()
-    val forest = new RandomForest(attributes, x, y, 500, 2, 410, DecisionTree.SplitRule.ENTROPY, classWeight)
-    var end = System.currentTimeMillis()
-    println("Random Forest 500 trees training time: %.2fs" format ((end-start)/1000.0))
+    println("Training Random Forest of 500 trees...")
+    val forest = time {
+      new RandomForest(attributes, x, y, 500, 2, 110, DecisionTree.SplitRule.ENTROPY, classWeight)
+    }
 
     val pred = new Array[Int](testy.length)
     val prob = new Array[Double](testy.length)
@@ -79,7 +79,6 @@ object Airline {
     val posteriori = Array(0.0, 0.0)
     val (rfpred, rfprob) = (0 until testx.length).map { i =>
       val yi = forest.predict(testx(i), posteriori)
-      //println(posteriori(1),testy(i))
       (yi, posteriori(1))
     }.unzip
 
@@ -96,10 +95,10 @@ object Airline {
     }
 
     // Gradient Tree Boost
-    start = System.currentTimeMillis()
-    val gbt = new GradientTreeBoost(attributes, x, y, 300, 512, 0.01, 0.5)
-    end = System.currentTimeMillis()
-    println("Gradient Tree Boost 300 trees training time: %.2fs" format ((end-start)/1000.0))
+    println("Training Gradient Boosted Trees of 300 trees...")
+    val gbt = time {
+      new GradientTreeBoost(attributes, x, y, 300, 512, 0.01, 0.5)
+    }
 
     val (gbtpred, gbtprob) = (0 until testx.length).map { i =>
       val yi = gbt.predict(testx(i), posteriori)

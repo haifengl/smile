@@ -16,7 +16,7 @@
 
 package smile
 
-import java.io.PrintWriter
+import java.io.{File, PrintWriter}
 import scala.io.Source
 import scala.language.implicitConversions
 import com.thoughtworks.xstream.XStream
@@ -96,7 +96,6 @@ package object io {
    * @param arrayIndexStartBase the starting index of array. By default, it is
    * 0 as in C/C++ and Java. But it could be 1 to parse data produced
    * by other programming language such as Fortran.
-
    */
   def readSparseData(file: String, arrayIndexStartBase: Int = 0): SparseDataset = {
     new SparseDatasetParser(arrayIndexStartBase).parse(file)
