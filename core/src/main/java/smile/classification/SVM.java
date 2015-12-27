@@ -57,7 +57,7 @@ import smile.util.MulticoreExecutor;
  * of C and kernel's parameters is often selected by a grid-search with
  * cross validation.
  * <p>
- * The dominant approach for creating multi-class SVMs so is to reduce the
+ * The dominant approach for creating multi-class SVMs is to reduce the
  * single multi-class problem into multiple binary classification problems.
  * Common methods for such reduction is to build binary classifiers which
  * distinguish between (i) one of the labels to the rest (one-versus-all)
