@@ -65,12 +65,12 @@ object Airline {
 
     // The data is highly unbalanced. class weight 1 : 4 should improve sensitivity.
     // To match other tests, we keep it 1 : 1 here though.
-    val classWeight = Array(1, 2)
+    val classWeight = Array(1, 1)
 
     // Random Forest
     println("Training Random Forest of 500 trees...")
     val forest = time {
-      new RandomForest(attributes, x, y, 500, 3, 300, DecisionTree.SplitRule.ENTROPY, classWeight)
+      new RandomForest(attributes, x, y, 500, 2, 400, DecisionTree.SplitRule.ENTROPY, classWeight)
     }
 
     val pred = new Array[Int](testy.length)
