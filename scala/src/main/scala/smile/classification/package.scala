@@ -93,6 +93,7 @@ package object classification {
    * @param strategy multi-class classification strategy, one vs all or one vs one.
    * @param epoch the number of training epochs
    * @tparam T the data type
+   *
    * @return SVM model.
    */
   def svm[T <: AnyRef](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, strategy: SVM.Multiclass = SVM.Multiclass.ONE_VS_ONE, epoch: Int = 1): SVM[T] = {
@@ -157,7 +158,8 @@ package object classification {
    * @param J maximum number of leaf nodes.
    * @param splitRule Decision tree node split rule.
    * @param classWeight Priors of the classes.
-   * @return Random forest model.
+   *
+   * @return Random forest classification model.
    */
   def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, J: Int = -1, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
     val k = Math.max(y: _*) + 1
@@ -258,6 +260,8 @@ package object classification {
    * @param J the number of leaves in each tree.
    * @param eta the shrinkage parameter in (0, 1] controls the learning rate of procedure.
    * @param f the sampling fraction for stochastic tree boosting.
+   *
+   * @return Gradient boosted trees.
    */
   def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 6, eta: Double = 0.05, f: Double = 0.7) {
     val k = Math.max(y: _*) + 1
@@ -308,6 +312,8 @@ package object classification {
    *                   are treated as numeric values.
    * @param T the number of trees.
    * @param J the maximum number of leaf nodes in the trees.
+   *
+   * @return AdaBoost model.
    */
   def adaboost(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 2): AdaBoost = {
     val k = Math.max(y: _*) + 1
@@ -355,10 +361,112 @@ package object classification {
    * @param L the dimensionality of mapped space. The default value is the number of classes - 1.
    * @param tol a tolerance to decide if a covariance matrix is singular; it
    *            will reject variables whose variance is less than tol<sup>2</sup>.
+   *
+   * @return fisher discriminant analysis model.
    */
   def fisher(x: Array[Array[Double]], y: Array[Int], L: Int = -1, tol: Double = 1E-4): FLD = {
     time {
       new FLD(x, y, L, tol)
+    }
+  }
+
+  /**
+   * Linear discriminant analysis. LDA is based on the Bayes decision theory
+   * and assumes that the conditional probability density functions are normally
+   * distributed. LDA also makes the simplifying homoscedastic assumption (i.e.
+   * that the class covariances are identical) and that the covariances have full
+   * rank. With these assumptions, the discriminant function of an input being
+   * in a class is purely a function of this linear combination of independent
+   * variables.
+   * <p>
+   * LDA is closely related to ANOVA (analysis of variance) and linear regression
+   * analysis, which also attempt to express one dependent variable as a
+   * linear combination of other features or measurements. In the other two
+   * methods, however, the dependent variable is a numerical quantity, while
+   * for LDA it is a categorical variable (i.e. the class label). Logistic
+   * regression and probit regression are more similar to LDA, as they also
+   * explain a categorical variable. These other methods are preferable in
+   * applications where it is not reasonable to assume that the independent
+   * variables are normally distributed, which is a fundamental assumption
+   * of the LDA method.
+   * <p>
+   * One complication in applying LDA (and Fisher's discriminant) to real data
+   * occurs when the number of variables/features does not exceed
+   * the number of samples. In this case, the covariance estimates do not have
+   * full rank, and so cannot be inverted. This is known as small sample size
+   * problem.
+   *
+   * @param x training samples.
+   * @param y training labels in [0, k), where k is the number of classes.
+   * @param priori the priori probability of each class. If null, it will be
+   *               estimated from the training data.
+   * @param tol a tolerance to decide if a covariance matrix is singular; it
+   *            will reject variables whose variance is less than tol<sup>2</sup>.
+   *
+   * @return linear discriminant analysis model.
+   */
+  def lda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 1E-4): LDA = {
+    time {
+      new LDA(x, y, priori, tol)
+    }
+  }
+
+  /**
+   * Quadratic discriminant analysis. QDA is closely related to linear discriminant
+   * analysis (LDA). Like LDA, QDA models the conditional probability density
+   * functions as a Gaussian distribution, then uses the posterior distributions
+   * to estimate the class for a given test data. Unlike LDA, however,
+   * in QDA there is no assumption that the covariance of each of the classes
+   * is identical. Therefore, the resulting separating surface between
+   * the classes is quadratic.
+   * <p>
+   * The Gaussian parameters for each class can be estimated from training data
+   * with maximum likelihood (ML) estimation. However, when the number of
+   * training instances is small compared to the dimension of input space,
+   * the ML covariance estimation can be ill-posed. One approach to resolve
+   * the ill-posed estimation is to regularize the covariance estimation.
+   * One of these regularization methods is {@link rda regularized discriminant analysis}.
+   *
+   * @param x training samples.
+   * @param y training labels in [0, k), where k is the number of classes.
+   * @param priori the priori probability of each class. If null, it will be
+   *               estimated from the training data.
+   * @param tol a tolerance to decide if a covariance matrix is singular; it
+   *            will reject variables whose variance is less than tol<sup>2</sup>.
+   *
+   * @return Quadratic discriminant analysis model.
+   */
+  def qda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 1E-4): QDA = {
+    time {
+      new QDA(x, y, priori, tol)
+    }
+  }
+
+  /**
+   * Regularized discriminant analysis. RDA is a compromise between LDA and QDA,
+   * which allows one to shrink the separate covariances of QDA toward a common
+   * variance as in LDA. This method is very similar in flavor to ridge regression.
+   * The regularized covariance matrices of each class is
+   * &Sigma;<sub>k</sub>(&alpha;) = &alpha; &Sigma;<sub>k</sub> + (1 - &alpha;) &Sigma;.
+   * The quadratic discriminant function is defined using the shrunken covariance
+   * matrices &Sigma;<sub>k</sub>(&alpha;). The parameter &alpha; in [0, 1]
+   * controls the complexity of the model. When &alpha; is one, RDA becomes QDA.
+   * While &alpha; is zero, RDA is equivalent to LDA. Therefore, the
+   * regularization factor &alpha; allows a continuum of models between LDA and QDA.
+   *
+   * @param x training samples.
+   * @param y training labels in [0, k), where k is the number of classes.
+   * @param alpha regularization factor in [0, 1] allows a continuum of models
+   *              between LDA and QDA.
+   * @param priori the priori probability of each class.
+   * @param tol tolerance to decide if a covariance matrix is singular; it
+   *            will reject variables whose variance is less than tol<sup>2</sup>.
+   *
+   * @return Regularized discriminant analysis model.
+   */
+  def rda(x: Array[Array[Double]], y: Array[Int], alpha: Double, priori: Array[Double] = null, tol: Double = 1E-4): RDA = {
+    time {
+      new RDA(x, y, priori, alpha, tol)
     }
   }
 }
