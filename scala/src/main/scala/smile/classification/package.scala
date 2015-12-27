@@ -309,7 +309,7 @@ package object classification {
    * @param T the number of trees.
    * @param J the maximum number of leaf nodes in the trees.
    */
-  def adaboost(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 2) {
+  def adaboost(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 2): AdaBoost = {
     val k = Math.max(y: _*) + 1
 
     val attr = if (attributes == null) {
@@ -320,6 +320,45 @@ package object classification {
 
     time {
       new AdaBoost(attr, x, y, T, J)
+    }
+  }
+
+  /**
+   * Fisher's linear discriminant. Fisher defined the separation between two
+   * distributions to be the ratio of the variance between the classes to
+   * the variance within the classes, which is, in some sense, a measure
+   * of the signal-to-noise ratio for the class labeling. FLD finds a linear
+   * combination of features which maximizes the separation after the projection.
+   * The resulting combination may be used for dimensionality reduction
+   * before later classification.
+   * <p>
+   * The terms Fisher's linear discriminant and LDA are often used
+   * interchangeably, although FLD actually describes a slightly different
+   * discriminant, which does not make some of the assumptions of LDA such
+   * as normally distributed classes or equal class covariances.
+   * When the assumptions of LDA are satisfied, FLD is equivalent to LDA.
+   * <p>
+   * FLD is also closely related to principal component analysis (PCA), which also
+   * looks for linear combinations of variables which best explain the data.
+   * As a supervised method, FLD explicitly attempts to model the
+   * difference between the classes of data. On the other hand, PCA is a
+   * unsupervised method and does not take into account any difference in class.
+   * <p>
+   * One complication in applying FLD (and LDA) to real data
+   * occurs when the number of variables/features does not exceed
+   * the number of samples. In this case, the covariance estimates do not have
+   * full rank, and so cannot be inverted. This is known as small sample size
+   * problem.
+   *
+   * @param x training instances.
+   * @param y training labels in [0, k), where k is the number of classes.
+   * @param L the dimensionality of mapped space. The default value is the number of classes - 1.
+   * @param tol a tolerance to decide if a covariance matrix is singular; it
+   *            will reject variables whose variance is less than tol<sup>2</sup>.
+   */
+  def fisher(x: Array[Array[Double]], y: Array[Int], L: Int = -1, tol: Double = 1E-4): FLD = {
+    time {
+      new FLD(x, y, L, tol)
     }
   }
 }
