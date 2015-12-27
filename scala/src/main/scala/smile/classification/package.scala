@@ -150,16 +150,16 @@ package object classification {
    * @param y the response variable.
    * @param attributes the attribute properties. If not provided, all attributes
    *                   are treated as numeric values.
-   * @param ntrees the number of trees.
+   * @param T the number of trees.
    * @param mtry the number of random selected features to be used to determine
    *             the decision at a node of the tree. floor(sqrt(dim)) seems to give
    *             generally good performance, where dim is the number of variables.
-   * @param maxLeafNodes maximum number of leaf nodes.
+   * @param J maximum number of leaf nodes.
    * @param splitRule Decision tree node split rule.
    * @param classWeight Priors of the classes.
    * @return Random forest model.
    */
-  def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, mtry: Int = -1, maxLeafNodes: Int = 500, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
+  def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, J: Int = -1, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
     val k = Math.max(y: _*) + 1
 
     val attr = if (attributes == null) {
@@ -170,10 +170,12 @@ package object classification {
 
     val m = if (mtry <= 0) Math.floor(Math.sqrt(k)).toInt else mtry
 
+    val j = if (J <= 1) Math.min(500, x.length / 50) else J
+
     val weight = if (classWeight == null) Array.fill[Int](k)(1) else classWeight
 
     time {
-      new RandomForest(attr, x, y, ntrees, m, maxLeafNodes, splitRule, weight)
+      new RandomForest(attr, x, y, T, m, j, splitRule, weight)
     }
   }
 
@@ -242,6 +244,12 @@ package object classification {
    * to nodes containing fewer than this number of training set instances.
    * Imposing this limit helps to reduce variance in predictions at leaves.
    *
+   * <h2>References</h2>
+   * <ol>
+   * <li> J. H. Friedman. Greedy Function Approximation: A Gradient Boosting Machine, 1999.</li>
+   * <li> J. H. Friedman. Stochastic Gradient Boosting, 1999.</li>
+   * </ol>
+   *
    * @param x the training instances.
    * @param y the class labels.
    * @param attributes the attribute properties. If not provided, all attributes
@@ -251,7 +259,7 @@ package object classification {
    * @param eta the shrinkage parameter in (0, 1] controls the learning rate of procedure.
    * @param f the sampling fraction for stochastic tree boosting.
    */
-  def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 200, J: Int = 6, eta: Double = 0.05, f: Double = 0.7) {
+  def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 6, eta: Double = 0.05, f: Double = 0.7) {
     val k = Math.max(y: _*) + 1
 
     val attr = if (attributes == null) {
@@ -262,6 +270,56 @@ package object classification {
 
     time {
       new GradientTreeBoost(attr, x, y, T, J, eta, f)
+    }
+  }
+
+  /**
+   * AdaBoost (Adaptive Boosting) classifier with decision trees. In principle,
+   * AdaBoost is a meta-algorithm, and can be used in conjunction with many other
+   * learning algorithms to improve their performance. In practice, AdaBoost with
+   * decision trees is probably the most popular combination. AdaBoost is adaptive
+   * in the sense that subsequent classifiers built are tweaked in favor of those
+   * instances misclassified by previous classifiers. AdaBoost is sensitive to
+   * noisy data and outliers. However in some problems it can be less susceptible
+   * to the over-fitting problem than most learning algorithms.
+   * <p>
+   * AdaBoost calls a weak classifier repeatedly in a series of rounds from
+   * total T classifiers. For each call a distribution of weights is updated
+   * that indicates the importance of examples in the data set for the
+   * classification. On each round, the weights of each incorrectly classified
+   * example are increased (or alternatively, the weights of each correctly
+   * classified example are decreased), so that the new classifier focuses more
+   * on those examples.
+   * <p>
+   * The basic AdaBoost algorithm is only for binary classification problem.
+   * For multi-class classification, a common approach is reducing the
+   * multi-class classification problem to multiple two-class problems.
+   * This implementation is a multi-class AdaBoost without such reductions.
+   *
+   * <h2>References</h2>
+   * <ol>
+   * <li> Yoav Freund, Robert E. Schapire. A Decision-Theoretic Generalization of on-Line Learning and an Application to Boosting, 1995.</li>
+   * <li> Ji Zhu, Hui Zhou, Saharon Rosset and Trevor Hastie. Multi-class Adaboost, 2009.</li>
+   * </ol>
+   *
+   * @param x the training instances.
+   * @param y the response variable.
+   * @param attributes the attribute properties. If not provided, all attributes
+   *                   are treated as numeric values.
+   * @param T the number of trees.
+   * @param J the maximum number of leaf nodes in the trees.
+   */
+  def adaboost(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 2) {
+    val k = Math.max(y: _*) + 1
+
+    val attr = if (attributes == null) {
+      val attr = new Array[Attribute](k)
+      for (i <- 0 until k) attr(i) = new NumericAttribute(s"V$i")
+      attr
+    } else attributes
+
+    time {
+      new AdaBoost(attr, x, y, T, J)
     }
   }
 }
