@@ -66,7 +66,7 @@ import smile.validation.ClassificationMeasure;
  * minor modification to the algorithm, motivated by Breiman's bagging method.
  * Specifically, he proposed that at each iteration of the algorithm, a base
  * learner should be fit on a subsample of the training set drawn at random
- * without replacement. Friedman observed a substantional improvement in
+ * without replacement. Friedman observed a substantial improvement in
  * gradient boosting's accuracy with this modification.
  * <p>
  * Subsample size is some constant fraction f of the size of the training set.
