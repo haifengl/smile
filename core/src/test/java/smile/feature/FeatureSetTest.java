@@ -69,7 +69,7 @@ public class FeatureSetTest {
             assertEquals(11, attributes.length);
             for (int i = 0; i < attributes.length; i++) {
                 System.out.println(attributes[i]);
-                assertEquals(Attribute.Type.NUMERIC, attributes[i].type);
+                assertEquals(Attribute.Type.NUMERIC, attributes[i].getType());
             }
         } catch (Exception ex) {
             System.err.println(ex);
@@ -98,8 +98,8 @@ public class FeatureSetTest {
             
             Attribute[] attributes = features.attributes();
             for (int i = 0; i < attributes.length; i++) {
-                assertEquals(attributes[i].name, dataset.attributes()[i].name);
-                assertEquals(attributes[i].type, dataset.attributes()[i].type);
+                assertEquals(attributes[i].getName(), dataset.attributes()[i].getName());
+                assertEquals(attributes[i].getType(), dataset.attributes()[i].getType());
             }
         } catch (Exception ex) {
             System.err.println(ex);

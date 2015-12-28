@@ -25,7 +25,6 @@ import smile.data.Attribute;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
 import smile.math.Math;
-import smile.math.Random;
 import smile.sort.QuickSort;
 import smile.util.MulticoreExecutor;
 
@@ -137,11 +136,6 @@ public class DecisionTree implements Classifier<double[]> {
      * attributes will be sorted.
      */
     private transient int[][] order;
-    /**
-     * Random number generator for training, used in training. Math.random uses a static
-     * object, which will cause troubles in training ensemble methods.
-     */
-    private transient Random random = new Random(Thread.currentThread().getId() * System.currentTimeMillis());
 
     /**
      * Trainer for decision tree classifiers.
@@ -472,7 +466,7 @@ public class DecisionTree implements Classifier<double[]> {
             }
             
             if (M < p) {
-                random.permutate(variables);
+                Math.permutate(variables);
 
                 // Random forest already runs on parallel.
                 for (int j = 0; j < M; j++) {

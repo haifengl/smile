@@ -81,7 +81,7 @@ public class Math {
      * <li> 2 if floating-point addition rounds in the ieee style
      * <li> 3 if floating-point addition chops, and there is partial underflow
      * <li> 4 if floating-point addition rounds, but not in the ieee style, and there is partial underflow
-     * <li> 5 if floating-point addition rounds in the ieee style, and there is partial underflow
+     * <li> 5 if floating-point addition rounds in the IEEEE style, and there is partial underflow
      * </ul>
      */
     public static int ROUND_STYLE = 2;
@@ -98,7 +98,20 @@ public class Math {
     /**
      * High quality random number generator.
      */
-    private static smile.math.Random random = new smile.math.Random();
+    private static ThreadLocal<smile.math.Random> random = new ThreadLocal() {
+        protected synchronized Object initialValue() {
+            if (Thread.currentThread().getId() == 1) {
+                // For main thread, we use the default seed so that we can
+                // get repeatable results for random algorithms.
+                return new smile.math.Random();
+            } else {
+                // Make sure other threads not to use the same seed.
+                // This is very important for some algorithms such as random forest.
+                // Otherwise, all trees of random forest are same except the main thread one.
+                return new smile.math.Random(Thread.currentThread().getId() * System.currentTimeMillis());
+            }
+        }
+    };
 
     /**
      * Dynamically determines the machine parameters of the floating-point arithmetic.
@@ -781,53 +794,33 @@ public class Math {
     }
 
     /**
-     * Generate a random number in [0, 1). This method is properly synchronized
-     * to allow correct use by more than one thread. However, if many threads
-     * need to generate pseudorandom numbers at a great rate, it may reduce
-     * contention for each thread to have its own pseudorandom-number generator. 
+     * Generate a random number in [0, 1).
      */
     public static double random() {
-        synchronized(random) {
-            return random.nextDouble();
-        }
+        return random.get().nextDouble();
     }
 
     /**
-     * Generate n random numbers in [0, 1). This method is properly synchronized
-     * to allow correct use by more than one thread. However, if many threads
-     * need to generate pseudorandom numbers at a great rate, it may reduce
-     * contention for each thread to have its own pseudorandom-number generator.
+     * Generate n random numbers in [0, 1).
      */
     public static double[] random(int n) {
         double[] x = new double[n];
-        synchronized(random) {
-            random.nextDoubles(x);
-        }
+        random.get().nextDoubles(x);
         return x;
     }
 
     /**
-     * Generate a uniform random number in the range [lo, hi). This method is
-     * properly synchronized to allow correct use by more than one thread.
-     * However, if many threads need to generate pseudorandom numbers at a
-     * great rate, it may reduce contention for each thread to have its own
-     * pseudorandom-number generator.
+     * Generate a uniform random number in the range [lo, hi).
      * @param lo lower limit of range
      * @param hi upper limit of range
      * @return a uniform random real in the range [lo, hi)
      */
     public static double random(double lo, double hi) {
-        synchronized(random) {
-            return random.nextDouble(lo, hi);
-        }       
+        return random.get().nextDouble(lo, hi);
     }
 
     /**
-     * Generate n uniform random numbers in the range [lo, hi). This method is
-     * properly synchronized to allow correct use by more than one thread.
-     * However, if many threads need to generate pseudorandom numbers at a
-     * great rate, it may reduce contention for each thread to have its own
-     * pseudorandom-number generator.
+     * Generate n uniform random numbers in the range [lo, hi).
      * @param n size of the array
      * @param lo lower limit of range
      * @param hi upper limit of range
@@ -835,35 +828,23 @@ public class Math {
      */
     public static double[] random(double lo, double hi, int n) {
         double[] x = new double[n];
-        synchronized(random) {
-            random.nextDoubles(x, lo, hi);
-        }
+        random.get().nextDoubles(x, lo, hi);
         return x;
     }
 
     /**
-     * Returns a random integer in [0, n). This method is properly synchronized
-     * to allow correct use by more than one thread. However, if many threads
-     * need to generate pseudorandom numbers at a great rate, it may reduce
-     * contention for each thread to have its own pseudorandom-number generator.
+     * Returns a random integer in [0, n).
      */
     public static int randomInt(int n) {
-        synchronized(random) {
-            return random.nextInt(n);
-        } 
+        return random.get().nextInt(n);
     }
 
     /**
-     * Returns a random integer in [lo, hi). This method is properly synchronized
-     * to allow correct use by more than one thread. However, if many threads
-     * need to generate pseudorandom numbers at a great rate, it may reduce
-     * contention for each thread to have its own pseudorandom-number generator.
+     * Returns a random integer in [lo, hi).
      */
     public static int randomInt(int lo, int hi) {
         int w = hi - lo;
-        synchronized(random) {
-            return lo + random.nextInt(w);
-        }       
+        return lo + random.get().nextInt(w);
     }
 
     /**
@@ -871,57 +852,35 @@ public class Math {
      * sampling without replacement.
      */
     public static int[] permutate(int n) {
-        synchronized(random) {
-            return random.permutate(n);
-        }
+        return random.get().permutate(n);
     }
     
     /**
-     * Generates a permutation of given array. This method is properly synchronized
-     * to allow correct use by more than one thread. However, if many threads
-     * need to generate pseudorandom numbers at a great rate, it may reduce
-     * contention for each thread to have its own pseudorandom-number generator.
+     * Generates a permutation of given array.
      */
     public static void permutate(int[] x) {
-      synchronized(random) {
-          random.permutate(x);
-      }
+        random.get().permutate(x);
     }
 
     /**
-     * Generates a permutation of given array. This method is properly synchronized
-     * to allow correct use by more than one thread. However, if many threads
-     * need to generate pseudorandom numbers at a great rate, it may reduce
-     * contention for each thread to have its own pseudorandom-number generator.
+     * Generates a permutation of given array.
      */
     public static void permutate(float[] x) {
-        synchronized(random) {
-            random.permutate(x);
-        }
+        random.get().permutate(x);
     }
 
     /**
-     * Generates a permutation of given array. This method is properly synchronized
-     * to allow correct use by more than one thread. However, if many threads
-     * need to generate pseudorandom numbers at a great rate, it may reduce
-     * contention for each thread to have its own pseudorandom-number generator.
+     * Generates a permutation of given array.
      */
     public static void permutate(double[] x) {
-        synchronized(random) {
-            random.permutate(x);
-        }
+        random.get().permutate(x);
     }
 
     /**
-     * Generates a permutation of given array. This method is properly synchronized
-     * to allow correct use by more than one thread. However, if many threads
-     * need to generate pseudorandom numbers at a great rate, it may reduce
-     * contention for each thread to have its own pseudorandom-number generator.
+     * Generates a permutation of given array.
      */
     public static void permutate(Object[] x) {
-        synchronized(random) {
-            random.permutate(x);
-        }
+        random.get().permutate(x);
     }
 
     /**
