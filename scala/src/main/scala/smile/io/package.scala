@@ -16,9 +16,8 @@
 
 package smile
 
-import java.io.{File, PrintWriter}
+import java.io.PrintWriter
 import scala.io.Source
-import scala.language.implicitConversions
 import com.thoughtworks.xstream.XStream
 import smile.data._, parser._, parser.microarray._
 import smile.math.matrix.SparseMatrix
@@ -29,8 +28,6 @@ import smile.math.matrix.SparseMatrix
  * @author Haifeng Li
  */
 package object io {
-  implicit def pimpDataset(data: Dataset[Array[Double]]) = new PimpedDataset(data)
-
   /** Writes an object/model to a file. */
   def write[T <: Object](x: T, file: String): Unit = {
     val xstream = new XStream
@@ -218,28 +215,5 @@ package object io {
    */
   def readTxt(file: String): AttributeDataset = {
     new TXTParser().parse(file)
-  }
-}
-
-package io {
-  private[io] class PimpedDataset(data: Dataset[Array[Double]]) {
-    /** Copy the data. If the data contains a response variable, it won't be copied. */
-    def copy: Array[Array[Double]] = {
-      data.toArray(new Array[Array[Double]](data.size))
-    }
-
-    /** Split the data into x and y of Int */
-    def unzip: (Array[Array[Double]], Array[Int]) = {
-      val x = data.toArray(new Array[Array[Double]](data.size))
-      val y = data.toArray(new Array[Int](data.size))
-      (x, y)
-    }
-
-    /** Split the data into x and y of Double */
-    def unzip2: (Array[Array[Double]], Array[Double]) = {
-      val x = data.toArray(new Array[Array[Double]](data.size))
-      val y = data.toArray(new Array[Double](data.size))
-      (x, y)
-    }
   }
 }

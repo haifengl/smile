@@ -6,9 +6,6 @@ crossPaths := true
 
 autoScalaLibrary := true
 
-// Don't publish to central Maven repo
-publishArtifact := false
-
 // SBT BuildInfo
 enablePlugins(BuildInfoPlugin)
 

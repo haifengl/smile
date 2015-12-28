@@ -42,6 +42,7 @@ lazy val root = project.in(file("."))
       mainClass in Compile := Some("smile.shell.Shell")
     ): _*
   )
+  .dependsOn(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
   .aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
 
 // Don't publish to central Maven repo
