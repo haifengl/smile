@@ -6,10 +6,9 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://github.com/haifengl/smile")),
-  version := "1.1.0",
+  version := "1.1.0-SNAPSHOT",
   javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-g:lines"),
   javacOptions in (Compile, doc) ++= Seq("-Xdoclint:none"),
-  autoAPIMappings := true,
   libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test",
   scalaVersion := "2.11.7",
   scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8"),
@@ -21,15 +20,10 @@ lazy val commonSettings = Seq(
 // SBT native packager
 enablePlugins(JavaAppPackaging)
 
-// Unidoc unifies scaladoc/javadoc across multiple projects.
-import UnidocKeys._
-
-// Publish javadoc to Github
-import com.typesafe.sbt.SbtGit.{GitKeys => git}
-
 lazy val root = project.in(file("."))
   .settings(
     commonSettings ++ Seq(
+      name := "smile",
       maintainer := "Haifeng Li <haifeng.hli@gmail.com>",
       packageName := "smile",
       packageSummary := "SMILE",
@@ -39,15 +33,6 @@ lazy val root = project.in(file("."))
       bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.scala"""",
       mainClass in Compile := Some("smile.shell.Shell")
     ): _*
-  )
-  .settings(unidocSettings: _*)
-  .settings(scalaJavaUnidocSettings: _*)
-  .settings(site.settings ++ ghpages.settings: _*)
-  .settings(
-    name := "smile",
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(demo, benchmark, shell),
-    site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "doc/api"),
-    git.gitRemoteRepo := "git@github.com:haifengl/smile.git"
   )
   .aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
   .dependsOn(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
