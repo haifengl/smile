@@ -786,8 +786,10 @@ public class Math {
      * need to generate pseudorandom numbers at a great rate, it may reduce
      * contention for each thread to have its own pseudorandom-number generator. 
      */
-    public static synchronized double random() {
-        return random.nextDouble();
+    public static double random() {
+        synchronized(random) {
+            return random.nextDouble();
+        }
     }
 
     /**
@@ -796,9 +798,11 @@ public class Math {
      * need to generate pseudorandom numbers at a great rate, it may reduce
      * contention for each thread to have its own pseudorandom-number generator.
      */
-    public static synchronized double[] random(int n) {
+    public static double[] random(int n) {
         double[] x = new double[n];
-        random.nextDoubles(x);
+        synchronized(random) {
+            random.nextDoubles(x);
+        }
         return x;
     }
 
@@ -812,8 +816,10 @@ public class Math {
      * @param hi upper limit of range
      * @return a uniform random real in the range [lo, hi)
      */
-    public static synchronized double random(double lo, double hi) {
-        return random.nextDouble(lo, hi);
+    public static double random(double lo, double hi) {
+        synchronized(random) {
+            return random.nextDouble(lo, hi);
+        }       
     }
 
     /**
@@ -827,9 +833,11 @@ public class Math {
      * @param hi upper limit of range
      * @return a uniform random real in the range [lo, hi)
      */
-    public static synchronized double[] random(double lo, double hi, int n) {
+    public static double[] random(double lo, double hi, int n) {
         double[] x = new double[n];
-        random.nextDoubles(x, lo, hi);
+        synchronized(random) {
+            random.nextDoubles(x, lo, hi);
+        }
         return x;
     }
 
@@ -839,8 +847,10 @@ public class Math {
      * need to generate pseudorandom numbers at a great rate, it may reduce
      * contention for each thread to have its own pseudorandom-number generator.
      */
-    public static synchronized int randomInt(int n) {
-        return random.nextInt(n);
+    public static int randomInt(int n) {
+        synchronized(random) {
+            return random.nextInt(n);
+        } 
     }
 
     /**
@@ -849,9 +859,11 @@ public class Math {
      * need to generate pseudorandom numbers at a great rate, it may reduce
      * contention for each thread to have its own pseudorandom-number generator.
      */
-    public static synchronized int randomInt(int lo, int hi) {
+    public static int randomInt(int lo, int hi) {
         int w = hi - lo;
-        return lo + random.nextInt(w);
+        synchronized(random) {
+            return lo + random.nextInt(w);
+        }       
     }
 
     /**
@@ -859,7 +871,9 @@ public class Math {
      * sampling without replacement.
      */
     public static int[] permutate(int n) {
-        return random.permutate(n);
+        synchronized(random) {
+            return random.permutate(n);
+        }
     }
     
     /**
@@ -869,7 +883,9 @@ public class Math {
      * contention for each thread to have its own pseudorandom-number generator.
      */
     public static void permutate(int[] x) {
-        random.permutate(x);
+      synchronized(random) {
+          random.permutate(x);
+      }
     }
 
     /**
@@ -879,7 +895,9 @@ public class Math {
      * contention for each thread to have its own pseudorandom-number generator.
      */
     public static void permutate(float[] x) {
-        random.permutate(x);
+        synchronized(random) {
+            random.permutate(x);
+        }
     }
 
     /**
@@ -889,7 +907,9 @@ public class Math {
      * contention for each thread to have its own pseudorandom-number generator.
      */
     public static void permutate(double[] x) {
-        random.permutate(x);
+        synchronized(random) {
+            random.permutate(x);
+        }
     }
 
     /**
@@ -899,7 +919,9 @@ public class Math {
      * contention for each thread to have its own pseudorandom-number generator.
      */
     public static void permutate(Object[] x) {
-        random.permutate(x);
+        synchronized(random) {
+            random.permutate(x);
+        }
     }
 
     /**
