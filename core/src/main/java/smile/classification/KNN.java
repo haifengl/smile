@@ -120,7 +120,7 @@ public class KNN<T> implements Classifier<T> {
     }
     
     /**
-     * Constructor. By default, this is a 1-NN classifier.
+     * Constructor.
      * @param knn k-nearest neighbor search data structure of training instances.
      * @param y training labels in [0, c), where c is the number of classes.
      * @param k the number of neighbors for classification.
