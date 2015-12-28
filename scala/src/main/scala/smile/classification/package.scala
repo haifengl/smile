@@ -121,6 +121,101 @@ package object classification {
   }
 
   /**
+   * Logistic regression. Logistic regression (logit model) is a generalized
+   * linear model used for binomial regression. Logistic regression applies
+   * maximum likelihood estimation after transforming the dependent into
+   * a logit variable. A logit is the natural log of the odds of the dependent
+   * equaling a certain value or not (usually 1 in binary logistic models,
+   * the highest value in multinomial models). In this way, logistic regression
+   * estimates the odds of a certain event (value) occurring.
+   * <p>
+   * Goodness-of-fit tests such as the likelihood ratio test are available
+   * as indicators of model appropriateness, as is the Wald statistic to test
+   * the significance of individual independent variables.
+   * <p>
+   * Logistic regression has many analogies to ordinary least squares (OLS)
+   * regression. Unlike OLS regression, however, logistic regression does not
+   * assume linearity of relationship between the raw values of the independent
+   * variables and the dependent, does not require normally distributed variables,
+   * does not assume homoscedasticity, and in general has less stringent
+   * requirements.
+   * <p>
+   * Compared with linear discriminant analysis, logistic regression has several
+   * advantages:
+   * <ul>
+   * <li> It is more robust: the independent variables don't have to be normally
+   * distributed, or have equal variance in each group
+   * <li> It does not assume a linear relationship between the independent
+   * variables and dependent variable.
+   * <li> It may handle nonlinear effects since one can add explicit interaction
+   * and power terms.
+   * </ul>
+   * However, it requires much more data to achieve stable, meaningful results.
+   * <p>
+   * Logistic regression also has strong connections with neural network and
+   * maximum entropy modeling. For example, binary logistic regression is
+   * equivalent to a one-layer, single-output neural network with a logistic
+   * activation function trained under log loss. Similarly, multinomial logistic
+   * regression is equivalent to a one-layer, softmax-output neural network.
+   * <p>
+   * Logistic regression estimation also obeys the maximum entropy principle, and
+   * thus logistic regression is sometimes called "maximum entropy modeling",
+   * and the resulting classifier the "maximum entropy classifier".
+   *
+   * @param x training samples.
+   * @param y training labels in [0, k), where k is the number of classes.
+   * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+   *               weights which often has superior generalization performance, especially
+   *               when the dimensionality is high.
+   * @param tol the tolerance for stopping iterations.
+   * @param maxIter the maximum number of iterations.
+   *
+   * @return Logistic regression model.
+   */
+  def logit(x: Array[Array[Double]], y: Array[Int], lambda: Double = 0.0, tol: Double = 1E-5, maxIter: Int = 500): LogisticRegression = {
+    time {
+      new LogisticRegression(x, y, lambda, tol, maxIter)
+    }
+  }
+
+  /**
+   * Maximum Entropy Classifier. Maximum entropy is a technique for learning
+   * probability distributions from data. In maximum entropy models, the
+   * observed data itself is assumed to be the testable information. Maximum
+   * entropy models don't assume anything about the probability distribution
+   * other than what have been observed and always choose the most uniform
+   * distribution subject to the observed constraints.
+   * <p>
+   * Basically, maximum entropy classifier is another name of multinomial logistic
+   * regression applied to categorical independent variables, which are
+   * converted to binary dummy variables. Maximum entropy models are widely
+   * used in natural language processing.  Here, we provide an implementation
+   * which assumes that binary features are stored in a sparse array, of which
+   * entries are the indices of nonzero features.
+   *
+   * <ol>
+   * <li> A. L. Berger, S. D. Pietra, and V. J. D. Pietra. A maximum entropy approach to natural language processing. Computational Linguistics 22(1):39-71, 1996.</li>
+   * </ol>
+   *
+   * @param x training samples. Each sample is represented by a set of sparse
+   *          binary features. The features are stored in an integer array, of which
+   *          are the indices of nonzero features.
+   * @param y training labels in [0, k), where k is the number of classes.
+   * @param p the dimension of feature space.
+   * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+   *               weights which often has superior generalization performance, especially
+   *               when the dimensionality is high.
+   * @param tol tolerance for stopping iterations.
+   * @param maxIter maximum number of iterations.
+   * @return Maximum entropy model.
+   */
+  def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent = {
+    time {
+      new Maxent(p, x, y, lambda, tol, maxIter)
+    }
+  }
+
+  /**
    * Support vector machines for classification. The basic support vector machine
    * is a binary linear classifier which chooses the hyperplane that represents
    * the largest separation, or margin, between the two classes. If such a
@@ -406,7 +501,6 @@ package object classification {
    * to nodes containing fewer than this number of training set instances.
    * Imposing this limit helps to reduce variance in predictions at leaves.
    *
-   * <h2>References</h2>
    * <ol>
    * <li> J. H. Friedman. Greedy Function Approximation: A Gradient Boosting Machine, 1999.</li>
    * <li> J. H. Friedman. Stochastic Gradient Boosting, 1999.</li>
@@ -460,7 +554,6 @@ package object classification {
    * multi-class classification problem to multiple two-class problems.
    * This implementation is a multi-class AdaBoost without such reductions.
    *
-   * <h2>References</h2>
    * <ol>
    * <li> Yoav Freund, Robert E. Schapire. A Decision-Theoretic Generalization of on-Line Learning and an Application to Boosting, 1995.</li>
    * <li> Ji Zhu, Hui Zhou, Saharon Rosset and Trevor Hastie. Multi-class Adaboost, 2009.</li>
