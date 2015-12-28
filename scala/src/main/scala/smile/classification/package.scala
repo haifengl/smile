@@ -16,8 +16,6 @@
 
 package smile
 
-import java.lang.Package
-
 import smile.classification._
 import smile.data._
 import smile.math._, distance._, kernel._
@@ -185,6 +183,90 @@ package object classification {
       }
     }
     svm
+  }
+
+  /**
+   * Decision tree for classification. A decision tree can be learned by
+   * splitting the training set into subsets based on an attribute value
+   * test. This process is repeated on each derived subset in a recursive
+   * manner called recursive partitioning. The recursion is completed when
+   * the subset at a node all has the same value of the target variable,
+   * or when splitting no longer adds value to the predictions.
+   * <p>
+   * The algorithms that are used for constructing decision trees usually
+   * work top-down by choosing a variable at each step that is the next best
+   * variable to use in splitting the set of items. "Best" is defined by how
+   * well the variable splits the set into homogeneous subsets that have
+   * the same value of the target variable. Different algorithms use different
+   * formulae for measuring "best". Used by the CART algorithm, Gini impurity
+   * is a measure of how often a randomly chosen element from the set would
+   * be incorrectly labeled if it were randomly labeled according to the
+   * distribution of labels in the subset. Gini impurity can be computed by
+   * summing the probability of each item being chosen times the probability
+   * of a mistake in categorizing that item. It reaches its minimum (zero) when
+   * all cases in the node fall into a single target category. Information gain
+   * is another popular measure, used by the ID3, C4.5 and C5.0 algorithms.
+   * Information gain is based on the concept of entropy used in information
+   * theory. For categorical variables with different number of levels, however,
+   * information gain are biased in favor of those attributes with more levels.
+   * Instead, one may employ the information gain ratio, which solves the drawback
+   * of information gain.
+   * <p>
+   * Classification and Regression Tree techniques have a number of advantages
+   * over many of those alternative techniques.
+   * <dl>
+   * <dt>Simple to understand and interpret.</dt>
+   * <dd>In most cases, the interpretation of results summarized in a tree is
+   * very simple. This simplicity is useful not only for purposes of rapid
+   * classification of new observations, but can also often yield a much simpler
+   * "model" for explaining why observations are classified or predicted in a
+   * particular manner.</dd>
+   * <dt>Able to handle both numerical and categorical data.</dt>
+   * <dd>Other techniques are usually specialized in analyzing datasets that
+   * have only one type of variable. </dd>
+   * <dt>Tree methods are nonparametric and nonlinear.</dt>
+   * <dd>The final results of using tree methods for classification or regression
+   * can be summarized in a series of (usually few) logical if-then conditions
+   * (tree nodes). Therefore, there is no implicit assumption that the underlying
+   * relationships between the predictor variables and the dependent variable
+   * are linear, follow some specific non-linear link function, or that they
+   * are even monotonic in nature. Thus, tree methods are particularly well
+   * suited for data mining tasks, where there is often little a priori
+   * knowledge nor any coherent set of theories or predictions regarding which
+   * variables are related and how. In those types of data analytics, tree
+   * methods can often reveal simple relationships between just a few variables
+   * that could have easily gone unnoticed using other analytic techniques.</dd>
+   * </dl>
+   * One major problem with classification and regression trees is their high
+   * variance. Often a small change in the data can result in a very different
+   * series of splits, making interpretation somewhat precarious. Besides,
+   * decision-tree learners can create over-complex trees that cause over-fitting.
+   * Mechanisms such as pruning are necessary to avoid this problem.
+   * Another limitation of trees is the lack of smoothness of the prediction
+   * surface.
+   * <p>
+   * Some techniques such as bagging, boosting, and random forest use more than
+   * one decision tree for their analysis.
+   *
+   * @param x the training instances.
+   * @param y the response variable.
+   * @param J the maximum number of leaf nodes in the tree.
+   * @param attributes the attribute properties.
+   * @param splitRule the splitting rule.
+   * @return Decision tree model.
+   */
+  def cart(x: Array[Array[Double]], y: Array[Int], J: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
+    val k = Math.max(y: _*) + 1
+
+    val attr = if (attributes == null) {
+      val attr = new Array[Attribute](k)
+      for (i <- 0 until k) attr(i) = new NumericAttribute(s"V$i")
+      attr
+    } else attributes
+
+    time {
+      new DecisionTree(attr, x, y, J, splitRule)
+    }
   }
 
   /**
