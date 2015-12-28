@@ -72,7 +72,7 @@ public class NumericAttributeFeatureTest {
             assertEquals(256, attributes.length);
             for (int i = 0; i < attributes.length; i++) {
                 System.out.println(attributes[i]);
-                assertEquals(Attribute.Type.NUMERIC, attributes[i].type);
+                assertEquals(Attribute.Type.NUMERIC, attributes[i].getType());
             }
         } catch (Exception ex) {
             System.err.println(ex);

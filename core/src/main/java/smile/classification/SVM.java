@@ -22,7 +22,6 @@ import java.util.concurrent.Callable;
 
 import smile.math.DoubleArrayList;
 import smile.math.Math;
-import smile.math.Random;
 import smile.math.SparseArray;
 import smile.math.kernel.MercerKernel;
 import smile.math.kernel.LinearKernel;
@@ -483,8 +482,7 @@ public class SVM <T> implements OnlineClassifier<T> {
             }
 
             // train SVM in a stochastic order.
-            Random random = new Random(Thread.currentThread().getId() * System.currentTimeMillis());
-            int[] index = random.permutate(n);
+            int[] index = Math.permutate(n);
             for (int i = 0; i < n; i++) {
                 if (weight == null) {
                     process(x[index[i]], y[index[i]]);

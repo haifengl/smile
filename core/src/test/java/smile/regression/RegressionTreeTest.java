@@ -104,7 +104,7 @@ public class RegressionTreeTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(response);
         try {
-            AttributeDataset data = parser.parse(this.getClass().getResourceAsStream(url));
+            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getDataFile(url));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
             
@@ -140,15 +140,15 @@ public class RegressionTreeTest {
      */
     @Test
     public void testAll() {
-        test("CPU", "/smile/data/weka/cpu.arff", 6);
-        //test("2dplanes", "/smile/data/weka/regression/2dplanes.arff", 6);
-        //test("abalone", "/smile/data/weka/regression/abalone.arff", 8);
-        //test("ailerons", "/smile/data/weka/regression/ailerons.arff", 40);
-        //test("bank32nh", "/smile/data/weka/regression/bank32nh.arff", 32);
-        test("autoMPG", "/smile/data/weka/regression/autoMpg.arff", 7);
-        test("cal_housing", "/smile/data/weka/regression/cal_housing.arff", 8);
-        test("puma8nh", "/smile/data/weka/regression/puma8NH.arff", 8);
-        test("kin8nm", "/smile/data/weka/regression/kin8nm.arff", 8);
+        test("CPU", "weka/cpu.arff", 6);
+        //test("2dplanes", "weka/regression/2dplanes.arff", 6);
+        //test("abalone", "weka/regression/abalone.arff", 8);
+        //test("ailerons", "weka/regression/ailerons.arff", 40);
+        //test("bank32nh", "weka/regression/bank32nh.arff", 32);
+        test("autoMPG", "weka/regression/autoMpg.arff", 7);
+        test("cal_housing", "weka/regression/cal_housing.arff", 8);
+        test("puma8nh", "weka/regression/puma8NH.arff", 8);
+        test("kin8nm", "weka/regression/kin8nm.arff", 8);
     }
     
     /**

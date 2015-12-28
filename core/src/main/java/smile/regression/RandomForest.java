@@ -22,7 +22,6 @@ import java.util.concurrent.Callable;
 import smile.data.Attribute;
 import smile.data.NumericAttribute;
 import smile.math.Math;
-import smile.math.Random;
 import smile.util.MulticoreExecutor;
 import smile.util.SmileUtils;
 import smile.validation.RMSE;
@@ -238,10 +237,9 @@ public class RandomForest implements Regression<double[]> {
         @Override
         public RegressionTree call() {
             int n = x.length;
-            Random random = new Random(Thread.currentThread().getId() * System.currentTimeMillis());
             int[] samples = new int[n]; // Training samples draw with replacement.
             for (int i = 0; i < n; i++) {
-                samples[random.nextInt(n)]++;
+                samples[Math.randomInt(n)]++;
             }
             
             RegressionTree tree = new RegressionTree(attributes, x, y, M, S, order, samples);

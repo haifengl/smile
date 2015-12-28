@@ -23,7 +23,6 @@ import java.util.concurrent.Callable;
 import smile.data.Attribute;
 import smile.data.NumericAttribute;
 import smile.math.Math;
-import smile.math.Random;
 import smile.util.MulticoreExecutor;
 import smile.util.SmileUtils;
 import smile.validation.Accuracy;
@@ -243,10 +242,9 @@ public class RandomForest implements Classifier<double[]> {
         @Override
         public DecisionTree call() {            
             int n = x.length;
-            Random random = new Random(Thread.currentThread().getId() * System.currentTimeMillis());
             int[] samples = new int[n]; // Training samples draw with replacement.
             for (int i = 0; i < n; i++) {
-                int xi = random.nextInt(n);
+                int xi = Math.randomInt(n);
                 samples[xi] += classWeight[y[xi]];
             }
             

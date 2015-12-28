@@ -114,11 +114,6 @@ public class RegressionTree implements Regression<double[]> {
      * attributes will be sorted.
      */
     private transient int[][] order;
-    /**
-     * Random number generator for training, used in training. Math.random uses a static
-     * object, which will cause troubles in training ensemble methods.
-     */
-    private transient Random random = new Random(Thread.currentThread().getId() * System.currentTimeMillis());
 
     /**
      * Trainer for regression tree.
@@ -395,7 +390,7 @@ public class RegressionTree implements Regression<double[]> {
             // Loop through features and compute the reduction of squared error,
             // which is trueCount * trueMean^2 + falseCount * falseMean^2 - count * parentMean^2                    
             if (M < p) {
-                random.permutate(variables);
+                Math.permutate(variables);
                 
                 // Random forest already runs on parallel.
                 for (int j = 0; j < M; j++) {
