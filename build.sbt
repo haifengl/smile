@@ -14,7 +14,15 @@ lazy val commonSettings = Seq(
   scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8"),
   parallelExecution in Test := false,
   crossPaths := false,
-  autoScalaLibrary := false
+  autoScalaLibrary := false,
+  publishMavenStyle := true,
+  publishTo := {
+    val nexus = "https://oss.sonatype.org/"
+    if (isSnapshot.value)
+      Some("snapshots" at nexus + "content/repositories/snapshots")
+    else
+      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+  }
 )
 
 // SBT native packager
@@ -35,7 +43,9 @@ lazy val root = project.in(file("."))
     ): _*
   )
   .aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
-  .dependsOn(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
+
+// Don't publish to central Maven repo
+publishArtifact := false
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
