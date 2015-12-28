@@ -16,9 +16,12 @@
 
 package smile
 
+import java.lang.Package
+
 import smile.classification._
 import smile.data._
-import smile.math._, kernel._
+import smile.math._, distance._, kernel._
+import smile.neighbor._
 import smile.util._
 
 /**
@@ -42,6 +45,81 @@ package object classification {
       classifier.predict(x)
     else
       classifier.predict(x, posteriori)
+  }
+
+  /**
+   * K-nearest neighbor classifier. The k-nearest neighbor algorithm (k-NN) is
+   * a method for classifying objects by a majority vote of its neighbors,
+   * with the object being assigned to the class most common amongst its k
+   * nearest neighbors (k is a positive integer, typically small).
+   * k-NN is a type of instance-based learning, or lazy learning where the
+   * function is only approximated locally and all computation
+   * is deferred until classification.
+   * <p>
+   * The best choice of k depends upon the data; generally, larger values of
+   * k reduce the effect of noise on the classification, but make boundaries
+   * between classes less distinct. A good k can be selected by various
+   * heuristic techniques, e.g. cross-validation. In binary problems, it is
+   * helpful to choose k to be an odd number as this avoids tied votes.
+   * <p>
+   * A drawback to the basic majority voting classification is that the classes
+   * with the more frequent instances tend to dominate the prediction of the
+   * new object, as they tend to come up in the k nearest neighbors when
+   * the neighbors are computed due to their large number. One way to overcome
+   * this problem is to weight the classification taking into account the
+   * distance from the test point to each of its k nearest neighbors.
+   * <p>
+   * Often, the classification accuracy of k-NN can be improved significantly
+   * if the distance metric is learned with specialized algorithms such as
+   * Large Margin Nearest Neighbor or Neighborhood Components Analysis.
+   * <p>
+   * Nearest neighbor rules in effect compute the decision boundary in an
+   * implicit manner. It is also possible to compute the decision boundary
+   * itself explicitly, and to do so in an efficient manner so that the
+   * computational complexity is a function of the boundary complexity.
+   * <p>
+   * The nearest neighbor algorithm has some strong consistency results. As
+   * the amount of data approaches infinity, the algorithm is guaranteed to
+   * yield an error rate no worse than twice the Bayes error rate (the minimum
+   * achievable error rate given the distribution of the data). k-NN is
+   * guaranteed to approach the Bayes error rate, for some value of k (where k
+   * increases as a function of the number of data points).
+   *
+   * @param knn k-nearest neighbor search data structure of training instances.
+   * @param y training labels in [0, c), where c is the number of classes.
+   * @param k the number of neighbors for classification.
+   */
+  def knn[T <: AnyRef](x: KNNSearch[T, T], y: Array[Int], k: Int): KNN[T] = {
+    time {
+      new KNN(x, y, k)
+    }
+  }
+
+  /**
+   * K-nearest neighbor classifier.
+   *
+   * @param x training samples.
+   * @param y training labels in [0, c), where c is the number of classes.
+   * @param distance the distance measure for finding nearest neighbors.
+   * @param k the number of neighbors for classification.
+   */
+  def knn[T <: AnyRef](x: Array[T], y: Array[Int], distance: Distance[T], k: Int): KNN[T] = {
+    time {
+      new KNN(x, y, distance, k)
+    }
+  }
+
+  /**
+   * K-nearest neighbor classifier.
+   *
+   * @param x training samples.
+   * @param y training labels in [0, c), where c is the number of classes.
+   * @param k the number of neighbors for classification.
+   */
+  def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]] = {
+    time {
+      KNN.learn(x, y, k)
+    }
   }
 
   /**
