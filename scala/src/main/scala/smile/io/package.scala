@@ -17,7 +17,6 @@
 package smile
 
 import java.io.PrintWriter
-import scala.io.Source
 import com.thoughtworks.xstream.XStream
 import smile.data._, parser._, parser.microarray._
 import smile.math.matrix.SparseMatrix
@@ -40,7 +39,7 @@ package object io {
 
   /** Reads an object/model back from a file created by write command. */
   def read(file: String): AnyRef = {
-    val xml = Source.fromFile(file).mkString
+    val xml = scala.io.Source.fromFile(file).mkString
     val xstream = new XStream
     xstream.fromXML(xml)
   }
