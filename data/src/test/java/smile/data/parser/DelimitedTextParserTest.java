@@ -63,9 +63,9 @@ public class DelimitedTextParserTest {
             double[][] x = usps.toArray(new double[usps.size()][]);
             int[] y = usps.toArray(new int[usps.size()]);
             
-            assertEquals(Attribute.Type.NOMINAL, usps.response().type);
+            assertEquals(Attribute.Type.NOMINAL, usps.response().getType());
             for (Attribute attribute : usps.attributes()) {
-                assertEquals(Attribute.Type.NUMERIC, attribute.type);
+                assertEquals(Attribute.Type.NUMERIC, attribute.getType());
             }
 
             assertEquals(7291, usps.size());
