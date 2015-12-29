@@ -26,7 +26,7 @@ import java.util.List;
  * @author Haifeng Li
  */
 public class IOUtils {
-    private static String home = System.getProperty("smile.home", "src/universal/data");
+    private static String home = System.getProperty("smile.home", "shell/src/universal/bin");
 
     /** Get the file path of sample dataset. */
     public static String getDataPath(String path) {
