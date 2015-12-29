@@ -63,8 +63,8 @@ public class RESParserTest {
             String[] id = data.toArray(new String[data.size()]);
             
             for (Attribute attribute : data.attributes()) {
-                assertEquals(Attribute.Type.NUMERIC, attribute.type);
-                System.out.println(attribute.name + "\t" + attribute.description);
+                assertEquals(Attribute.Type.NUMERIC, attribute.getType());
+                System.out.println(attribute.getName() + "\t" + attribute.getDescription());
             }
 
             assertEquals(7129, data.size());

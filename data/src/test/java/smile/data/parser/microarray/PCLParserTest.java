@@ -63,8 +63,8 @@ public class PCLParserTest {
             String[] id = data.toArray(new String[data.size()]);
             
             for (Attribute attribute : data.attributes()) {
-                assertEquals(Attribute.Type.NUMERIC, attribute.type);
-                System.out.println(attribute.name);
+                assertEquals(Attribute.Type.NUMERIC, attribute.getType());
+                System.out.println(attribute.getName());
             }
 
             assertEquals(6694, data.size());
