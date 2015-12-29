@@ -217,7 +217,7 @@ public class BoxPlot extends Plot {
 
     /**
      * Create a plot canvas with multiple box plots of given data.
-     * @param data a data matrix of which each column will create a box plot.
+     * @param data a data matrix of which each row will create a box plot.
      */
     public static PlotCanvas plot(double[]... data) {
         double[] lowerBound = {0, Math.min(data)};
@@ -234,7 +234,7 @@ public class BoxPlot extends Plot {
 
     /**
      * Create a plot canvas with multiple box plots of given data.
-     * @param data a data matrix of which each column will create a box plot.
+     * @param data a data matrix of which each row will create a box plot.
      * @param labels the labels for each box plot.
      */
     public static PlotCanvas plot(double[][] data, String[] labels) {

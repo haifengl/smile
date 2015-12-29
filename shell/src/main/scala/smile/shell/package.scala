@@ -23,9 +23,43 @@ package smile
  */
 package object shell {
 
+  /** Built in benchmarks */
+  def benchmark(tests: String*) = {
+    smile.benchmark.Benchmark.main(tests.toArray)
+  }
+
+  /** Show demo window */
+  def demo = {
+    javax.swing.SwingUtilities.invokeLater(new Runnable {
+      override def run(): Unit = {
+        smile.demo.SmileDemo.createAndShowGUI(false)
+      }
+    })
+  }
+
   /** Print help summary */
-  def help = {
-    println(
+  def help(command: String = "") = command match {
+    case "read" => println(
+      """
+        |
+      """.stripMargin)
+    case "write" => println(
+      """
+        |
+      """.stripMargin)
+    case "plot" => println(
+      """
+        |
+      """.stripMargin)
+    case "line" => println(
+      """
+        |
+      """.stripMargin)
+    case "boxplot" => println(
+      """
+        |
+      """.stripMargin)
+    case "stair" => println(
       """
         | General:
         |   help -- print this summary
@@ -44,21 +78,9 @@ package object shell {
         |
         | Graphics:
         |   plot --
-      """.stripMargin
-    )
-  }
-
-  /** Built in benchmarks */
-  def benchmark(tests: String*) = {
-    smile.benchmark.Benchmark.main(tests.toArray)
-  }
-
-  /** Show demo window */
-  def demo = {
-    javax.swing.SwingUtilities.invokeLater(new Runnable {
-      override def run(): Unit = {
-        smile.demo.SmileDemo.createAndShowGUI(false)
-      }
-    })
+        |   line --
+        |   boxplot --
+      """.stripMargin)
+    case unknown => println(s"""Unknown command: $unknown, type "help" to see available commands.""")
   }
 }
