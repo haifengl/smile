@@ -1,7 +1,7 @@
 *.class
 
 # javadoc
-src/universal/doc/api/
+shell/src/universal/doc/api/
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/

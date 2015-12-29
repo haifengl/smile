@@ -25,24 +25,7 @@ lazy val commonSettings = Seq(
   }
 )
 
-// SBT native packager
-enablePlugins(JavaAppPackaging)
-
-lazy val root = project.in(file("."))
-  .settings(
-    commonSettings ++ Seq(
-      name := "smile",
-      maintainer := "Haifeng Li <haifeng.hli@gmail.com>",
-      packageName := "smile",
-      packageSummary := "SMILE",
-      packageDescription := "Statistical Machine Intelligence and Learning Engine",
-      executableScriptName := "smile",
-      bashScriptExtraDefines += """addJava "-Dsmile.home=${app_home}"""",
-      bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.scala"""",
-      mainClass in Compile := Some("smile.shell.Shell")
-    ): _*
-  )
-  .dependsOn(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
+lazy val root = project.in(file(".")).settings(commonSettings: _*)
   .aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
 
 // Don't publish to central Maven repo

@@ -6,8 +6,6 @@ crossPaths := true
 
 autoScalaLibrary := true
 
-target in Compile in doc := baseDirectory.value / "../src/universal/doc/api/scala"
-
 scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits")
 
 scalacOptions in (Compile, doc) ++= Opts.doc.title("SMILE &mdash; Statistical Machine Intelligence and Learning Engine")

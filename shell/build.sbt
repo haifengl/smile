@@ -6,6 +6,25 @@ crossPaths := true
 
 autoScalaLibrary := true
 
+mainClass in Compile := Some("smile.shell.Shell")
+
+// SBT native packager
+enablePlugins(JavaAppPackaging)
+
+maintainer := "Haifeng Li <haifeng.hli@gmail.com>"
+
+packageName := "smile"
+
+packageSummary := "SMILE"
+
+packageDescription := "Statistical Machine Intelligence and Learning Engine"
+
+executableScriptName := "smile"
+
+bashScriptExtraDefines += """addJava "-Dsmile.home=${app_home}""""
+
+bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.scala""""
+
 // SBT BuildInfo
 enablePlugins(BuildInfoPlugin)
 

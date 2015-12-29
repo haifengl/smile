@@ -7,8 +7,8 @@ check_error() {
 }
 
 rm -rf src/universal/doc/api/
-javadoc -source "1.7" -Xdoclint:none -doctitle "SMILE &mdash; Statistical Machine Intelligence and Learning Engine" -classpath ~/.ivy2/cache/org.swinglabs/swingx/jars/* -d src/universal/doc/api/java  -subpackages smile -sourcepath math/src/main/java:data/src/main/java:core/src/main/java:graph/src/main/java:interpolation/src/main/java:nlp/src/main/java:plot/src/main/java
-check_error "Javadoc"
+javadoc -source "1.7" -Xdoclint:none -doctitle "SMILE &mdash; Statistical Machine Intelligence and Learning Engine" -classpath ~/.ivy2/cache/org.swinglabs/swingx/jars/* -d shell/src/universal/doc/api  -subpackages smile -sourcepath math/src/main/java:data/src/main/java:core/src/main/java:graph/src/main/java:interpolation/src/main/java:nlp/src/main/java:plot/src/main/java
+check_error "javadoc"
 
 sbt universal:packageZipTarball
 check_error "Packaging .tgz"
