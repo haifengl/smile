@@ -119,7 +119,7 @@ package object plot {
    *               from the line on purpose.
    * @param color the color of line.
    *
-   * @return a plot canvas which can be added other shapes.
+   * @return a tuple of window frame and plot canvas which can be added other shapes.
    */
   def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, legend: Char = ' '): (JFrame, PlotCanvas) = {
     val canvas = LinePlot.plot(data, style, color)
@@ -129,6 +129,69 @@ package object plot {
       scatter.setColor(color)
       canvas.add(scatter)
     }
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * A boxplot is a convenient way of graphically depicting groups of numerical
+   * data through their five-number summaries (the smallest observation
+   * (sample minimum), lower quartile (Q1), median (Q2), upper quartile (Q3),
+   * and largest observation (sample maximum). A boxplot may also indicate
+   * which observations, if any, might be considered outliers.
+   * <p>
+   * Boxplots can be useful to display differences between populations without
+   * making any assumptions of the underlying statistical distribution: they are
+   * non-parametric. The spacings between the different parts of the box help
+   * indicate the degree of dispersion (spread) and skewness in the data, and
+   * identify outliers.
+   * <p>
+   * For a data set, we construct a boxplot in the following manner:
+   * <ul>
+   * <li> Calculate the first q<sub>1</sub>, the median q<sub>2</sub> and third
+   * quartile q<sub>3</sub>.
+   * <li> Calculate the interquartile range (IQR) by subtracting the first
+   * quartile from the third quartile. (q<sub>3</sub> ? q<sub>1</sub>)
+   * <li> Construct a box above the number line bounded on the bottom by the first
+   * quartile (q<sub>1</sub>) and on the top by the third quartile (q<sub>3</sub>).
+   * <li> Indicate where the median lies inside of the box with the presence of
+   * a line dividing the box at the median value.
+   * <li> Any data observation which lies more than 1.5*IQR lower than the first
+   * quartile or 1.5IQR higher than the third quartile is considered an outlier.
+   * Indicate where the smallest value that is not an outlier is by connecting it
+   * to the box with a horizontal line or "whisker". Optionally, also mark the
+   * position of this value more clearly using a small vertical line. Likewise,
+   * connect the largest value that is not an outlier to the box by a "whisker"
+   * (and optionally mark it with another small vertical line).
+   * <li> Indicate outliers by dots.
+   * </ul>
+   *
+   * @param data a data matrix of which each row will create a box plot.
+   *
+   * @return a tuple of window frame and plot canvas which can be added other shapes.
+   */
+  def boxplot(data: Array[Double]*): (JFrame, PlotCanvas) = {
+    val canvas = BoxPlot.plot(data: _*)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Box plot.
+   *
+   * @param data a data matrix of which each row will create a box plot.
+   * @param labels the labels for each box plot.
+   *
+   * @return a tuple of window frame and plot canvas which can be added other shapes.
+   */
+  def boxplot(data: Array[Array[Double]], labels: Array[String]): (JFrame, PlotCanvas) = {
+    val canvas = BoxPlot.plot(data, labels)
 
     val win = window()
     win.add(canvas)
