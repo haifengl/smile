@@ -198,4 +198,92 @@ package object plot {
 
     (win, canvas)
   }
+
+  /**
+   * A contour plot is a graphical technique for representing a 3-dimensional
+   * surface by plotting constant z slices, called contours, on a 2-dimensional
+   * format. That is, given a value for z, lines are drawn for connecting the
+   * (x, y) coordinates where that z value occurs. The contour plot is an
+   * alternative to a 3-D surface plot.
+   *
+   * @param z the data matrix to create contour plot.
+   *
+   * @return a tuple of window frame and plot canvas which can be added other shapes.
+   */
+  def contour(z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+    val canvas = Contour.plot(z)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * A contour plot is a graphical technique for representing a 3-dimensional
+   * surface by plotting constant z slices, called contours, on a 2-dimensional
+   * format. That is, given a value for z, lines are drawn for connecting the
+   * (x, y) coordinates where that z value occurs. The contour plot is an
+   * alternative to a 3-D surface plot.
+   *
+   * @param z the data matrix to create contour plot.
+   * @param levels the level values of contours.
+   * @param palette the color for each contour level.
+   *
+   * @return a tuple of window frame and plot canvas which can be added other shapes.
+   */
+  def contour(z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): (JFrame, PlotCanvas) = {
+    val canvas = Contour.plot(z, levels, palette)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * A contour plot is a graphical technique for representing a 3-dimensional
+   * surface by plotting constant z slices, called contours, on a 2-dimensional
+   * format. That is, given a value for z, lines are drawn for connecting the
+   * (x, y) coordinates where that z value occurs. The contour plot is an
+   * alternative to a 3-D surface plot.
+   *
+   * @param x the x coordinates of the data grid of z. Must be in ascending order.
+   * @param y the y coordinates of the data grid of z. Must be in ascending order.
+   * @param z the data matrix to create contour plot.
+   *
+   * @return a tuple of window frame and plot canvas which can be added other shapes.
+   */
+  def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+    val canvas = Contour.plot(x, y, z)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * A contour plot is a graphical technique for representing a 3-dimensional
+   * surface by plotting constant z slices, called contours, on a 2-dimensional
+   * format. That is, given a value for z, lines are drawn for connecting the
+   * (x, y) coordinates where that z value occurs. The contour plot is an
+   * alternative to a 3-D surface plot.
+   *
+   * @param x the x coordinates of the data grid of z. Must be in ascending order.
+   * @param y the y coordinates of the data grid of z. Must be in ascending order.
+   * @param z the data matrix to create contour plot.
+   * @param levels the level values of contours.
+   * @param palette the color for each contour level.
+   *
+   * @return a tuple of window frame and plot canvas which can be added other shapes.
+   */
+  def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): (JFrame, PlotCanvas) = {
+    val canvas = Contour.plot(x, y, z, levels, palette)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
 }
