@@ -27,6 +27,20 @@ import smile.sort.HeapSelect;
  * maintain, so linear search has no space complexity beyond the storage of
  * the database. Although it is very simple, naive search outperforms space
  * partitioning approaches (e.g. K-D trees) on higher dimensional spaces.
+ * <p>
+ * By default, the query object (reference equality) is excluded from the neighborhood.
+ * You may change this behavior with <code>setIdenticalExcluded</code>. Note that
+ * you may observe weird behavior with String objects. JVM will pool the string literal
+ * objects. So the below variables
+ * <code>
+ *     String a = "ABC";
+ *     String b = "ABC";
+ *     String c = "AB" + "C";
+ * </code>
+ * are actually equal in reference test <code>a == b == c</code>. With toy data that you
+ * type explicitly in the code, this will cause problems. Fortunately, the data would be
+ * read from secondary storage in production.
+ * </p>
  *
  * @param <T> the type of data objects.
  *

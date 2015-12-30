@@ -43,6 +43,20 @@ import static smile.neighbor.SNLSH.SimHash.simhash64;
  * measure the similarity of a pair of sets if they are identical in at least one band.
  * By choosing the size of bands appropriately, we can eliminate from
  * consideration most of the pairs that do not meet our threshold of similarity.
+ * <p>
+ * By default, the query object (reference equality) is excluded from the neighborhood.
+ * You may change this behavior with <code>setIdenticalExcluded</code>. Note that
+ * you may observe weird behavior with String objects. JVM will pool the string literal
+ * objects. So the below variables
+ * <code>
+ *     String a = "ABC";
+ *     String b = "ABC";
+ *     String c = "AB" + "C";
+ * </code>
+ * are actually equal in reference test <code>a == b == c</code>. With toy data that you
+ * type explicitly in the code, this will cause problems. Fortunately, the data would be
+ * read from secondary storage in production.
+ * </p>
  *
  * <h2>References</h2>
  * <ol>
@@ -127,7 +141,7 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         int hit = 0;
         for (int index : candidates) {
             AbstractSentence key = keys.get(index);
-            if (q.line.equals(key.line) && identicalExcluded) {
+            if (q.line == key.line && identicalExcluded) {
                 continue;
             }
             long sign = signs.get(index);
@@ -167,10 +181,9 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         for (int index : candidates) {
             double distance = HammingDistance.d(fpq, signs.get(index));
             if (distance <= radius) {
-                if (keys.get(index).line.equals(q.line) && identicalExcluded) {
-                    continue;
+                if (keys.get(index).line != q.line || !identicalExcluded) {
+                    neighbors.add(new Neighbor<AbstractSentence, E>(keys.get(index), data.get(index), index, distance));
                 }
-                neighbors.add(new Neighbor<AbstractSentence, E>(keys.get(index), data.get(index), index, distance));
             }
         }
     }
