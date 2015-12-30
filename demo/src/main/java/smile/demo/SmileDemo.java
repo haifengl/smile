@@ -71,6 +71,7 @@ import smile.demo.plot.QQPlotDemo;
 import smile.demo.plot.ScatterPlotDemo;
 import smile.demo.plot.StaircasePlotDemo;
 import smile.demo.plot.SurfaceDemo;
+import smile.demo.plot.SparseMatrixPlotDemo;
 import smile.demo.interpolation.Interpolation1Demo;
 import smile.demo.interpolation.Interpolation2Demo;
 import smile.demo.interpolation.LaplaceInterpolationDemo;
@@ -493,6 +494,9 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         category.add(algorithm);
 
         algorithm = new DefaultMutableTreeNode(new SurfaceDemo());
+        category.add(algorithm);
+
+        algorithm = new DefaultMutableTreeNode(new SparseMatrixPlotDemo());
         category.add(algorithm);
     }
 

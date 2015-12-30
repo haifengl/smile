@@ -28,7 +28,21 @@ import smile.math.distance.Metric;
  * root. Root may have zero or more subtrees. The k-th subtree is
  * recursively built of all elements b such that d(a,b) = k. BK-trees can be
  * used for approximate string matching in a dictionary.
- * 
+ * <p>
+ * By default, the query object (reference equality) is excluded from the neighborhood.
+ * You may change this behavior with <code>setIdenticalExcluded</code>. Note that
+ * you may observe weird behavior with String objects. JVM will pool the string literal
+ * objects. So the below variables
+ * <code>
+ *     String a = "ABC";
+ *     String b = "ABC";
+ *     String c = "AB" + "C";
+ * </code>
+ * are actually equal in reference test <code>a == b == c</code>. With toy data that you
+ * type explicitly in the code, this will cause problems. Fortunately, the data would be
+ * read from secondary storage in production.
+ * </p>
+ *
  * <h2>References</h2>
  * <ol>
  * <li> W. Burkhard and R. Keller. Some approaches to best-match file searching. CACM, 1973. </li>
@@ -188,7 +202,7 @@ public class BKTree<E> implements RNNSearch<E, E> {
         int d = (int) distance.d(node.object, q);
 
         if (d <= k) {
-            if (d > 0 || !identicalExcluded) {
+            if (node.object != q || !identicalExcluded) {
                 neighbors.add(new Neighbor<E, E>(node.object, node.object, node.index, d));
             }
         }

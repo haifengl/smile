@@ -32,6 +32,20 @@ import smile.stat.distribution.GaussianDistribution;
  * is to hash the input items so that similar items are mapped to the same
  * buckets with high probability (the number of buckets being much smaller
  * than the universe of possible input items).
+ * <p>
+ * By default, the query object (reference equality) is excluded from the neighborhood.
+ * You may change this behavior with <code>setIdenticalExcluded</code>. Note that
+ * you may observe weird behavior with String objects. JVM will pool the string literal
+ * objects. So the below variables
+ * <code>
+ *     String a = "ABC";
+ *     String b = "ABC";
+ *     String c = "AB" + "C";
+ * </code>
+ * are actually equal in reference test <code>a == b == c</code>. With toy data that you
+ * type explicitly in the code, this will cause problems. Fortunately, the data would be
+ * read from secondary storage in production.
+ * </p>
  *
  * <h2>References</h2>
  * <ol>

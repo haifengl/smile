@@ -80,8 +80,8 @@ public class SNLSHTest {
 
     @Before
     public void before() throws IOException {
-        trainData = loadData("/smile/data/msrp/msr_paraphrase_train.txt");
-        testData = loadData("/smile/data/msrp/msr_paraphrase_test.txt");
+        trainData = loadData("msrp/msr_paraphrase_train.txt");
+        testData = loadData("msrp/msr_paraphrase_test.txt");
         signCache = new HashMap<String, Long>();
         for (Sentence sentence : trainData) {
             long sign = simhash64(sentence.tokens);
@@ -95,7 +95,7 @@ public class SNLSHTest {
 
     private List<Sentence> loadData(String path) throws IOException {
         List<Sentence> data = new ArrayList<Sentence>();
-        List<String> lines = IOUtils.readLines(this.getClass().getResourceAsStream(path));
+        List<String> lines = IOUtils.readLines(IOUtils.getDataReader(path));
         for (String line : lines) {
             List<String> s = tokenize(line, "\t");
             data.add(new Sentence(s.get(s.size() - 1)));

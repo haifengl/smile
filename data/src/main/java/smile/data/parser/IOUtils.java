@@ -40,7 +40,7 @@ public class IOUtils {
 
     /** Get the reader of sample datasets. */
     public static BufferedReader getDataReader(String path) throws FileNotFoundException {
-        return new BufferedReader(new InputStreamReader(new FileInputStream(getDataFile("text/quote.tok.gt9.5000"))));
+        return new BufferedReader(new InputStreamReader(new FileInputStream(getDataFile(path))));
     }
 
     /**

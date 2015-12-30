@@ -28,6 +28,20 @@ import smile.sort.DoubleHeapSelect;
  * tree has a theoretical bound that is based on the dataset's doubling constant.
  * The bound on search time is O(c<sup>12</sup> log node) where c is the expansion
  * constant of the dataset.
+ * <p>
+ * By default, the query object (reference equality) is excluded from the neighborhood.
+ * You may change this behavior with <code>setIdenticalExcluded</code>. Note that
+ * you may observe weird behavior with String objects. JVM will pool the string literal
+ * objects. So the below variables
+ * <code>
+ *     String a = "ABC";
+ *     String b = "ABC";
+ *     String c = "AB" + "C";
+ * </code>
+ * are actually equal in reference test <code>a == b == c</code>. With toy data that you
+ * type explicitly in the code, this will cause problems. Fortunately, the data would be
+ * read from secondary storage in production.
+ * </p>
  *
  * <h2>References</h2>
  * <ol>
@@ -176,7 +190,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
 
         /**
          * Constructor.
-         * @param d the distance of the node to the query.
+         * @param dist the distance of the node to the query.
          * @param node the node.
          */
         DistanceNode(double dist, Node node) {
@@ -188,7 +202,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
         public int compareTo(DistanceNode o) {
             return (int) Math.signum(dist - o.dist);
         }
-    };
+    }
 
     /**
      * Constructor.
@@ -226,8 +240,9 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
     /**
      * Set if exclude query object self from the neighborhood.
      */
-    public void setIdenticalExcluded(boolean excluded) {
+    public CoverTree setIdenticalExcluded(boolean excluded) {
         identicalExcluded = excluded;
+        return this;
     }
 
     /**
