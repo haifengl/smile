@@ -39,13 +39,73 @@ package object shell {
 
   /** Print help summary */
   def help(command: String = "") = command match {
+    case "help" => println("print the command summary")
     case "read" => println(
       """
+        |  def read(file: String): AnyRef
         |
+        |  Reads an object/model back from a file created by write command.
       """.stripMargin)
     case "write" => println(
       """
+        |  def write[T <: Object](x: T, file: String): Unit
         |
+        |  Writes an object/model to a file.
+      """.stripMargin)
+    case "readArff" => println(
+      """
+        |  def readArff(file: String): AttributeDataset
+        |
+        |  Reads an ARFF file.
+      """.stripMargin)
+    case "readLibsvm" => println(
+      """
+        |  def readLibsvm(file: String): SparseDataset
+        |
+        |  Reads a LivSVM file.
+      """.stripMargin)
+    case "readSparseMatrix" => println(
+      """
+        |  def readSparseMatrix(file: String): SparseMatrix
+        |
+        |  Reads Harwell-Boeing column-compressed sparse matrix.
+      """.stripMargin)
+    case "readSparseData" => println(
+      """
+        |  def readSparseData(file: String, arrayIndexStartBase: Int = 0): SparseDataset
+        |
+        |  Reads spare dataset in coordinate triple tuple list format.
+        |  Coordinate file stores a list of (row, column, value) tuples:
+        |
+        |    instanceID attributeID value
+        |    instanceID attributeID value
+        |    instanceID attributeID value
+        |    instanceID attributeID value
+        |    ...
+        |    instanceID attributeID value
+        |    instanceID attributeID value
+        |    instanceID attributeID value
+        |
+        |  Ideally, the entries are sorted (by row index, then column index) to
+        |  improve random access times. This format is good for incremental matrix
+        |  construction.
+        |
+        |  Optionally, there may be 2 header lines
+        |
+        |    D    // The number of instances
+        |    W    // The number of attributes
+        |
+        |  or 3 header lines
+        |
+        |    D    // The number of instances
+        |    W    // The number of attributes
+        |    N    // The total number of nonzero items in the dataset.
+        |
+        |  These header lines will be ignored.
+        |
+        |  @param arrayIndexStartBase the starting index of array. By default, it is
+        |    0 as in C/C++ and Java. But it could be 1 to parse data produced
+        |    by other programming language such as Fortran.
       """.stripMargin)
     case "plot" => println(
       """
@@ -59,18 +119,28 @@ package object shell {
       """
         |
       """.stripMargin)
-    case "stair" => println(
+    case "" => println(
       """
         | General:
-        |   help -- print this summary
+        |   help  -- print this summary
         |   :help -- print Scala shell command summary
         |   :quit -- exit the shell
-        |   demo -- show demo window
+        |   demo  -- show demo window
         |   benchmark -- benchmark tests
         |
         | I/O:
-        |   read --
-        |   write --
+        |   read  -- Reads an object/model back from a file created by write command.
+        |   write -- Writes an object/model to a file.
+        |   readArff -- Reads an ARFF file.
+        |   readLibsvm -- Reads a LivSVM file.
+        |   readSparseMatrix -- Reads Harwell - Boeing column - compressed sparse matrix.
+        |   readSparseData -- Reads spare dataset in coordinate triple tuple list format.
+        |   readBinarySparseData -- Reads binary sparse dataset.
+        |   readTable -- Reads a delimited text file.
+        |   readGct -- Reads GCT microarray gene expression file.
+        |   readPcl -- Reads PCL microarray gene expression file.
+        |   readRes -- Reads RES microarray gene expression file.
+        |   readTxt -- Reads TXT microarray gene expression file.
         |
         | Classification:
         |   randomForest --
@@ -81,6 +151,6 @@ package object shell {
         |   line --
         |   boxplot --
       """.stripMargin)
-    case unknown => println(s"""Unknown command: $unknown, type "help" to see available commands.""")
+    case unknown => println(s"""Unknown command: $unknown, type "help()" to see available commands.""")
   }
 }
