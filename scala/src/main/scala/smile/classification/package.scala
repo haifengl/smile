@@ -83,7 +83,7 @@ package object classification {
    * guaranteed to approach the Bayes error rate, for some value of k (where k
    * increases as a function of the number of data points).
    *
-   * @param knn k-nearest neighbor search data structure of training instances.
+   * @param x k-nearest neighbor search data structure of training instances.
    * @param y training labels in [0, c), where c is the number of classes.
    * @param k the number of neighbors for classification.
    */
@@ -517,7 +517,7 @@ package object classification {
    *
    * @return Gradient boosted trees.
    */
-  def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 6, eta: Double = 0.05, f: Double = 0.7) {
+  def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 6, eta: Double = 0.05, f: Double = 0.7): GradientTreeBoost = {
     val k = Math.max(y: _*) + 1
 
     val attr = if (attributes == null) {
