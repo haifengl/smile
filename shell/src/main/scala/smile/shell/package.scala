@@ -217,6 +217,14 @@ package object shell {
         |                from the line on purpose.
         |  @param color the color of line.
       """.stripMargin)
+    case "staircase" => println(
+      """
+        |  def staircase(data: Array[Double]*): (JFrame, PlotCanvas)
+        |
+        |  Create a plot canvas with the staircase line plot of given data.
+        |
+        |  @param data a n x 2 or n x 3 matrix that describes coordinates of points.
+      """.stripMargin)
     case "boxplot" => println(
       """
         |  def boxplot(data: Array[Double]*): (JFrame, PlotCanvas)
@@ -236,6 +244,65 @@ package object shell {
         |
         |  @param data a data matrix of which each row will create a box plot.
         |  @param labels the labels for each box plot.
+      """.stripMargin)
+    case "contour" => println(
+      """
+        |  def contour(z: Array[Array[Double]]): (JFrame, PlotCanvas)
+        |  def contour(z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): (JFrame, PlotCanvas)
+        |  def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas)
+        |  def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): (JFrame, PlotCanvas)
+        |
+        |  A contour plot is a graphical technique for representing a 3-dimensional
+        |  surface by plotting constant z slices, called contours, on a 2-dimensional
+        |  format. That is, given a value for z, lines are drawn for connecting the
+        |  (x, y) coordinates where that z value occurs. The contour plot is an
+        |  alternative to a 3-D surface plot.
+        |
+        |  @param z the data matrix to create contour plot.
+        |  @param x the x coordinates of the data grid of z. Must be in ascending order.
+        |  @param y the y coordinates of the data grid of z. Must be in ascending order.
+        |  @param levels the level values of contours.
+        |  @param palette the color for each contour level.
+      """.stripMargin)
+    case "surface" => println(
+      """
+        |  def surface(z: Array[Array[Double]], palette: Array[Color] = null): (JFrame, PlotCanvas)
+        |  def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color] = null): (JFrame, PlotCanvas)
+        |
+        |  Create a plot canvas with the 3D surface plot of given data.
+        |
+        |  @param x the x-axis values of surface.
+        |  @param y the y-axis values of surface.
+        |  @param z the z-axis values of surface.
+        |  @param palette the color palette.
+      """.stripMargin)
+    case "wireframe" => println(
+      """
+        |  def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): (JFrame, PlotCanvas)
+        |
+        |  Create a wire frame plot canvas.
+        |
+        |  @param vertices an m x n x 2 or m x n x 3 array which are coordinates of m x n grid.
+        |  @param edges an m-by-2 array of which each row is the vertex indices of two
+        |               end points of each edge.
+      """.stripMargin)
+    case "qqplot" => println(
+      """
+        |  def qqplot(x: Array[Double]): (JFrame, PlotCanvas)
+        |  def qqplot(x: Array[Double], d: Distribution): (JFrame, PlotCanvas)
+        |  def qqplot(x: Array[Double], y: Array[Double]): (JFrame, PlotCanvas)
+        |  def qqplot(x: Array[Int], d: DiscreteDistribution): (JFrame, PlotCanvas)
+        |  def qqplot(x: Array[Int], y: Array[Int]): (JFrame, PlotCanvas)
+        |
+        |  A Q-Q plot ("Q" stands for quantile) is a probability plot, a kind of
+        |  graphical method for comparing two probability distributions, by
+        |  plotting their quantiles against each other. In addition, Q-Q plots
+        |  can be used as a graphical means of estimating parameters in a
+        |  location-scale family of distributions.
+        |
+        |  @param x a sample set.
+        |  @param y a sample set.
+        |  @param d a distribution.
       """.stripMargin)
     case "predict" => println(
       """
@@ -865,6 +932,12 @@ package object shell {
         |   plot -- Scatter plot.
         |   line -- Scatter plot which connects points by straight lines.
         |   boxplot -- Boxplots can be useful to display differences between populations.
+        |   contour -- Contour plot of a 3-dimensional surface.
+        |   surface -- 3D surface plot.
+        |   wireframe -- 3D presentation of physical object.
+        |   grid -- 2D grid plot.
+        |   qqplot -- Q-Q plot ("Q" stands for quantile) for comparing two probability distributions.
+        |   dendrogram -- Tree diagram to illustrate the arrangement of the clusters produced by hierarchical clustering.
       """.stripMargin)
     case unknown => println(s"""Unknown command: $unknown, type "help()" to see available commands.""")
   }

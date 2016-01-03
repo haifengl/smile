@@ -18,6 +18,8 @@ package smile
 
 import java.awt.{Dimension, Color}
 import javax.swing.{JFrame, WindowConstants}
+import smile.stat.distribution.{Distribution, DiscreteDistribution}
+import smile.math.matrix.SparseMatrix
 
 /**
  * Graphics & plotting shell commands.
@@ -129,6 +131,19 @@ package object plot {
       scatter.setColor(color)
       canvas.add(scatter)
     }
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the staircase line plot of given data.
+   * @param data a n x 2 or n x 3 matrix that describes coordinates of points.
+   */
+  def staircase(data: Array[Double]*): (JFrame, PlotCanvas) = {
+    val canvas = StaircasePlot.plot(data: _*)
 
     val win = window()
     win.add(canvas)
@@ -280,6 +295,219 @@ package object plot {
    */
   def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): (JFrame, PlotCanvas) = {
     val canvas = Contour.plot(x, y, z, levels, palette)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the 3D surface plot of given data.
+   *
+   * @param z the z-axis values of surface.
+   *
+   * @return a tuple of window frame and plot canvas which can be added other shapes.
+   */
+  def surface(z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+    val canvas = Surface.plot(z)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the 3D surface plot of given data.
+   *
+   * @param z the z-axis values of surface.
+   * @param palette the color palette.
+   *
+   * @return a tuple of window frame and plot canvas which can be added other shapes.
+   */
+  def surface(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+    val canvas = Surface.plot(z, palette)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the 3D surface plot of given data.
+   *
+   * @param x the x-axis values of surface.
+   * @param y the y-axis values of surface.
+   * @param z the z-axis values of surface.
+   *
+   * @return a tuple of window frame and plot canvas which can be added other shapes.
+   */
+  def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+    val canvas = Surface.plot(x, y, z)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the 3D surface plot of given data.
+   *
+   * @param x the x-axis values of surface.
+   * @param y the y-axis values of surface.
+   * @param z the z-axis values of surface.
+   * @param palette the color palette.
+   *
+   * @return a tuple of window frame and plot canvas which can be added other shapes.
+   */
+  def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+    val canvas = Surface.plot(x, y, z, palette)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a wire frame plot canvas.
+   * A wire frame model specifies each edge of the physical object where two
+   * mathematically continuous smooth surfaces meet, or by connecting an
+   * object's constituent vertices using straight lines or curves.
+   *
+   * @param vertices an m x n x 2 or m x n x 3 array which are coordinates of m x n grid.
+   * @param edges an m-by-2 array of which each row is the vertex indices of two
+   *              end points of each edge.
+   */
+  def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): (JFrame, PlotCanvas) = {
+    val canvas = Wireframe.plot(vertices, edges)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a 2D grid plot.
+   *
+   * @param data an m x n x 2 array which are coordinates of m x n grid.
+   */
+  def grid(data: Array[Array[Array[Double]]]): (JFrame, PlotCanvas) = {
+    val canvas = Grid.plot(data)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the one sample Q-Q plot to standard normal
+   * distribution. The x-axis is the quantiles of x and the y-axis is the
+   * quantiles of normal distribution.
+   * @param x a sample set.
+   */
+  def qqplot(x: Array[Double]): (JFrame, PlotCanvas) = {
+    val canvas = QQPlot.plot(x)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the one sample Q-Q plot to given distribution.
+   * The x-axis is the quantiles of x and the y-axis is the quantiles of
+   * given distribution.
+   * @param x a sample set.
+   * @param d a distribution.
+   */
+  def qqplot(x: Array[Double], d: Distribution): (JFrame, PlotCanvas) = {
+    val canvas = QQPlot.plot(x, d)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the two sample Q-Q plot.
+   * The x-axis is the quantiles of x and the y-axis is the quantiles of y.
+   * @param x a sample set.
+   * @param y a sample set.
+   */
+  def qqplot(x: Array[Double], y: Array[Double]): (JFrame, PlotCanvas) = {
+    val canvas = QQPlot.plot(x, y)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the one sample Q-Q plot to given distribution.
+   * The x-axis is the quantiles of x and the y-axis is the quantiles of
+   * given distribution.
+   * @param x a sample set.
+   * @param d a distribution.
+   */
+  def qqplot(x: Array[Int], d: DiscreteDistribution): (JFrame, PlotCanvas) = {
+    val canvas = QQPlot.plot(x, d)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the two sample Q-Q plot.
+   * The x-axis is the quantiles of x and the y-axis is the quantiles of y.
+   * @param x a sample set.
+   * @param y a sample set.
+   */
+  def qqplot(x: Array[Int], y: Array[Int]): (JFrame, PlotCanvas) = {
+    val canvas = QQPlot.plot(x, y)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a sparse matrix plot canvas.
+   * @param matrix a sparse matrix.
+   */
+  def plot(matrix: SparseMatrix): (JFrame, PlotCanvas) = {
+    val canvas = SparseMatrixPlot.plot(matrix)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a dendrogram plot.
+   *
+   * @param merge an n-1 by 2 matrix of which row i describes the merging of clusters at
+   *              step i of the clustering. If an element j in the row is less than n, then
+   *              observation j was merged at this stage. If j &ge; n then the merge
+   *              was with the cluster formed at the (earlier) stage j-n of the algorithm.
+   * @param height a set of n-1 non-decreasing real values, which are the clustering height,
+   *               i.e., the value of the criterion associated with the clustering method
+   *               for the particular agglomeration.
+   */
+  def dendrogram(merge: Array[Array[Int]], height: Array[Double]): (JFrame, PlotCanvas) = {
+    val canvas = Dendrogram.plot(merge, height)
 
     val win = window()
     win.add(canvas)

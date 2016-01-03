@@ -144,7 +144,33 @@ public class Dendrogram extends Plot {
 
         g.setColor(c);
     }
-    
+
+    /**
+     * Create a dendrogram plot.
+     * @param merge an n-1 by 2 matrix of which row i describes the merging of clusters at
+     * step i of the clustering. If an element j in the row is less than n, then
+     * observation j was merged at this stage. If j &ge; n then the merge
+     * was with the cluster formed at the (earlier) stage j-n of the algorithm.
+     * @param height a set of n-1 non-decreasing real values, which are the clustering height,
+     * i.e., the value of the criterion associated with the clustering method
+     * for the particular agglomeration.
+     */
+    public static PlotCanvas plot(int[][] merge, double[] height) {
+        int n = merge.length + 1;
+        Dendrogram dendrogram = new Dendrogram(merge, height);
+
+        double[] lowerBound = {-n / 100, 0};
+        double[] upperBound = {n + n / 100, 1.01 * dendrogram.getHeight()};
+
+        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
+        canvas.getAxis(0).setGridVisible(false);
+        canvas.getAxis(0).setLabelVisible(false);
+
+        canvas.add(dendrogram);
+
+        return canvas;
+    }
+
     /**
      * Create a dendrogram plot.
      * @param id the id of the plot.
