@@ -28,7 +28,7 @@ package object plot {
 
   val windowCount = new java.util.concurrent.atomic.AtomicInteger
 
-  /** Create a window/JFrame */
+  /** Create a plot window. */
   def window(title: String = ""): JFrame = {
     val t = if (title.isEmpty) { "SMILE Plot " + windowCount.addAndGet(1) } else title
     val frame = new JFrame(t)
