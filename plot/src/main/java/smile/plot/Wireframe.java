@@ -91,6 +91,8 @@ public class Wireframe extends Plot {
      * Create a 2D grid plot canvas.
      * @param id the id of the plot.
      * @param vertices an m x n x 2 array which are coordinates of m x n grid.
+     * @param edges an m-by-2 array of which each row is the vertex indices of two
+     * end points of each edge.
      */
     public static PlotCanvas plot(String id, double[][] vertices, int[][] edges) {
         double[] lowerBound = Math.colMin(vertices);
