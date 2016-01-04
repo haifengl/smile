@@ -1,5 +1,3 @@
-// BuildInfo
-
 name := "smile"
 
 lazy val commonSettings = Seq(

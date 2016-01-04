@@ -18,9 +18,9 @@ Natural language processing.
 * **Plot**
 Swing-based data visualization library.
 
-SMILE is well documented and you can browse the <a href="http://haifengl.github.io/smile/doc/index.html">javadoc</a> for more information. Tutorials are available on the project <a href="http://github.com/haifengl/smile/wiki">wiki</a>. A basic tutorial is also included at the bottom of this file.
+SMILE is well documented and you can browse the [javadoc](http://haifengl.github.io/smile/doc/index.html) for more information. Tutorials are available on the project <a href="http://github.com/haifengl/smile/wiki">wiki</a>. A basic tutorial is also included at the bottom of this file.
 
-To see SMILE in action, please download the <a href="http://haifengl.github.io/smile/smile-demo.jar">demo</a> jar file and then run <tt>java -jar smile-demo.jar</tt>.
+To see SMILE in action, please download the [demo](http://haifengl.github.io/smile/smile-demo.jar) jar file and then run <tt>java -jar smile-demo.jar</tt>.
 
 You can use the libraries through Maven central repository by adding the following to your project pom.xml file.
 ```
