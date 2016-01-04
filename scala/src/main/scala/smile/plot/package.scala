@@ -139,7 +139,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the staircase line plot of given data.
+   * Create a plot canvas with the staircase line plot.
    * @param data a n x 2 or n x 3 matrix that describes coordinates of points.
    */
   def staircase(data: Array[Double]*): (JFrame, PlotCanvas) = {
@@ -303,7 +303,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the 3D surface plot of given data.
+   * Create a 3D surface plot.
    *
    * @param z the z-axis values of surface.
    *
@@ -319,7 +319,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the 3D surface plot of given data.
+   * Create a 3D surface plot.
    *
    * @param z the z-axis values of surface.
    * @param palette the color palette.
@@ -336,7 +336,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the 3D surface plot of given data.
+   * Create a 3D surface plot.
    *
    * @param x the x-axis values of surface.
    * @param y the y-axis values of surface.
@@ -354,7 +354,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the 3D surface plot of given data.
+   * Create a 3D surface plot.
    *
    * @param x the x-axis values of surface.
    * @param y the y-axis values of surface.
@@ -373,7 +373,7 @@ package object plot {
   }
 
   /**
-   * Create a wire frame plot canvas.
+   * Create a wire frame plot.
    * A wire frame model specifies each edge of the physical object where two
    * mathematically continuous smooth surfaces meet, or by connecting an
    * object's constituent vertices using straight lines or curves.
@@ -406,7 +406,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the pseudo heat map plot of given data.
+   * Create a pseudo heat map plot.
    * @param z a data matrix to be shown in pseudo heat map.
    */
   def heatmap(z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
@@ -419,7 +419,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the pseudo heat map plot of given data.
+   * Create a pseudo heat map plot.
    * @param z a data matrix to be shown in pseudo heat map.
    * @param palette the color palette.
    */
@@ -433,7 +433,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the pseudo heat map plot of given data.
+   * Create a pseudo heat map plot.
    * @param x x coordinate of data matrix cells. Must be in ascending order.
    * @param y y coordinate of data matrix cells. Must be in ascending order.
    * @param z a data matrix to be shown in pseudo heat map.
@@ -448,7 +448,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the pseudo heat map plot of given data.
+   * Create a pseudo heat map plot.
    * @param x x coordinate of data matrix cells. Must be in ascending order.
    * @param y y coordinate of data matrix cells. Must be in ascending order.
    * @param z a data matrix to be shown in pseudo heat map.
@@ -464,7 +464,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the pseudo heat map plot of given data.
+   * Create a pseudo heat map plot.
    * @param z a data matrix to be shown in pseudo heat map.
    * @param rowLabels the labels for rows of data matrix.
    * @param columnLabels the labels for columns of data matrix.
@@ -479,7 +479,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the pseudo heat map plot of given data.
+   * Create a pseudo heat map plot.
    * @param z a data matrix to be shown in pseudo heat map.
    * @param rowLabels the labels for rows of data matrix.
    * @param columnLabels the labels for columns of data matrix.
@@ -495,7 +495,7 @@ package object plot {
   }
 
   /**
-   * Create a sparse matrix plot canvas.
+   * Create a sparse matrix plot.
    * @param matrix a sparse matrix.
    */
   def heatmap(matrix: SparseMatrix): (JFrame, PlotCanvas) = {
@@ -508,7 +508,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the pseudo heat map plot of given data.
+   * Create a pseudo hex map plot.
    * @param z a data matrix to be shown in pseudo heat map.
    */
   def hexmap(z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
@@ -521,7 +521,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the pseudo hex map plot of given data.
+   * Create a pseudo hex map plot.
    * @param z a data matrix to be shown in pseudo heat map.
    * @param palette the color palette.
    */
@@ -535,7 +535,7 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the pseudo hex map plot of given data.
+   * Create a pseudo hex map plot.
    * @param labels the descriptions of each cell in the data matrix.
    * @param z a data matrix to be shown in pseudo heat map.
    */
@@ -549,13 +549,97 @@ package object plot {
   }
 
   /**
-   * Create a plot canvas with the pseudo hex map plot of given data.
+   * Create a pseudo hex map plot.
    * @param labels the descriptions of each cell in the data matrix.
    * @param z a data matrix to be shown in pseudo heat map.
    * @param palette the color palette.
    */
   def hexmap(labels: Array[Array[String]], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
     val canvas = Hexmap.plot(labels, z, palette)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a histogram plot.
+   * @param data a sample set.
+   */
+  def histogram(data: Array[Double]): (JFrame, PlotCanvas) = {
+    val canvas = Histogram.plot(data)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a histogram plot.
+   * @param data a sample set.
+   * @param k the number of bins.
+   */
+  def histogram(data: Array[Double], k: Int): (JFrame, PlotCanvas) = {
+    val canvas = Histogram.plot(data, k)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a histogram plot.
+   * @param data a sample set.
+   * @param breaks an array of size k+1 giving the breakpoints between
+   *               histogram cells. Must be in ascending order.
+   */
+  def histogram(data: Array[Double], breaks: Array[Double]): (JFrame, PlotCanvas) = {
+    val canvas = Histogram.plot(data, breaks)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a 3D histogram plot.
+   * @param data a sample set.
+   */
+  def histogram(data: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+    val canvas = Histogram3D.plot(data)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a 3D histogram plot.
+   * @param data a sample set.
+   * @param k the number of bins.
+   */
+  def histogram(data: Array[Array[Double]], k: Int): (JFrame, PlotCanvas) = {
+    val canvas = Histogram3D.plot(data, k)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a 3D histogram plot.
+   * @param data a sample set.
+   * @param xbins the number of bins on x-axis.
+   * @param ybins the number of bins on y-axis.
+   */
+  def histogram(data: Array[Array[Double]], xbins: Int, ybins: Int): (JFrame, PlotCanvas) = {
+    val canvas = Histogram3D.plot(data, xbins, ybins)
 
     val win = window()
     win.add(canvas)
