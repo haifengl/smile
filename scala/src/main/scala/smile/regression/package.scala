@@ -460,4 +460,95 @@ package object regression {
       new GradientTreeBoost(attr, x, y, loss, T, J, eta, f)
     }
   }
+
+  /**
+   * Gaussian Process for Regression. A Gaussian process is a stochastic process
+   * whose realizations consist of random values associated with every point in
+   * a range of times (or of space) such that each such random variable has
+   * a normal distribution. Moreover, every finite collection of those random
+   * variables has a multivariate normal distribution.
+   * <p>
+   * A Gaussian process can be used as a prior probability distribution over
+   * functions in Bayesian inference. Given any set of N points in the desired
+   * domain of your functions, take a multivariate Gaussian whose covariance
+   * matrix parameter is the Gram matrix of N points with some desired kernel,
+   * and sample from that Gaussian. Inference of continuous values with a
+   * Gaussian process prior is known as Gaussian process regression.
+   * <p>
+   * The fitting is performed in the reproducing kernel Hilbert space with
+   * the "kernel trick". The loss function is squared-error. This also arises
+   * as the kriging estimate of a Gaussian random field in spatial statistics.
+   * <p>
+   * A significant problem with Gaussian process prediction is that it typically
+   * scales as O(n<sup>3</sup>). For large problems (e.g. n &gt; 10,000) both
+   * storing the Gram matrix and solving the associated linear systems are
+   * prohibitive on modern workstations. An extensive range of proposals have
+   * been suggested to deal with this problem. A popular approach is the
+   * reduced-rank Approximations of the Gram Matrix, known as Nystrom approximation.
+   * Greedy approximation is another popular approach that uses an active set of
+   * training points of size m selected from the training set of size n &gt; m.
+   * We assume that it is impossible to search for the optimal subset of size m
+   * due to combinatorics. The points in the active set could be selected
+   * randomly, but in general we might expect better performance if the points
+   * are selected greedily w.r.t. some criterion. Recently, researchers had
+   * proposed relaxing the constraint that the inducing variables must be a
+   * subset of training/test cases, turning the discrete selection problem
+   * into one of continuous optimization.
+   *
+   * <h2>References</h2>
+   * <ol>
+   * <li> Carl Edward Rasmussen and Chris Williams. Gaussian Processes for Machine Learning, 2006.</li>
+   * <li> Joaquin Quinonero-candela,  Carl Edward Ramussen,  Christopher K. I. Williams. Approximation Methods for Gaussian Process Regression. 2007. </li>
+   * <li> T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990. </li>
+   * <li> Kai Zhang and James T. Kwok. Clustered Nystrom Method for Large Scale Manifold Learning and Dimension Reduction. IEEE Transactions on Neural Networks, 2010. </li>
+   * <li> </li>
+   * </ol>
+   *
+   * This method fits a regular Gaussian process model.
+   *
+   * @param x the training dataset.
+   * @param y the response variable.
+   * @param kernel the Mercer kernel.
+   * @param lambda the shrinkage/regularization parameter.
+   */
+  def gaussianProcess[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T] = {
+    time {
+      new GaussianProcessRegression[T](x, y, kernel, lambda)
+    }
+  }
+
+  /**
+   * This method fits an approximate Gaussian process model by the method
+   * of subset of regressors.
+   *
+   * @param x the training dataset.
+   * @param y the response variable.
+   * @param t the inducing input, which are pre-selected or inducing samples
+   *          acting as active set of regressors. In simple case, these can be chosen
+   *          randomly from the training set or as the centers of k-means clustering.
+   * @param kernel the Mercer kernel.
+   * @param lambda the shrinkage/regularization parameter.
+   */
+  def gaussianProcess[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T] = {
+    time {
+      new GaussianProcessRegression[T](x, y, t, kernel, lambda)
+    }
+  }
+
+  /**
+   * This method fits an approximate Gaussian process model with
+   * Nystrom approximation of kernel matrix.
+   *
+   * @param x the training dataset.
+   * @param y the response variable.
+   * @param t the inducing input for Nystrom approximation. Commonly, these
+   *          can be chosen as the centers of k-means clustering.
+   * @param kernel the Mercer kernel.
+   * @param lambda the shrinkage/regularization parameter.
+   */
+  def gaussianProcessNystrom[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T] = {
+    time {
+      new GaussianProcessRegression[T](x, y, t, kernel, lambda, true)
+    }
+  }
 }
