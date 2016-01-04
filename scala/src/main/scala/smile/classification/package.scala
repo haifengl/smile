@@ -32,11 +32,11 @@ package object classification {
   /**
    * Apply a classification model on a data sample.
    *
-   * @param classifier classification model
-   * @param x data sample
+   * @param classifier classification model.
+   * @param x data sample.
    * @param posteriori optional double array of posertiori probability output. Note not all models support it.
-   * @tparam T the data type
-   * @return the predicted class label
+   * @tparam T the data type.
+   * @return the predicted class label.
    */
   def predict[T <: AnyRef](classifier: Classifier[T], x: T, posteriori: Array[Double] = null): Int = {
     if (posteriori == null)
@@ -351,11 +351,11 @@ package object classification {
    * @return Decision tree model.
    */
   def cart(x: Array[Array[Double]], y: Array[Int], J: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
-    val k = Math.max(y: _*) + 1
+    val p = x(0).length
 
     val attr = if (attributes == null) {
-      val attr = new Array[Attribute](k)
-      for (i <- 0 until k) attr(i) = new NumericAttribute(s"V$i")
+      val attr = new Array[Attribute](p)
+      for (i <- 0 until p) attr(i) = new NumericAttribute(s"V$i")
       attr
     } else attributes
 
@@ -417,18 +417,19 @@ package object classification {
    * @return Random forest classification model.
    */
   def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, J: Int = -1, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
-    val k = Math.max(y: _*) + 1
+    val p = x(0).length
 
     val attr = if (attributes == null) {
-      val attr = new Array[Attribute](k)
-      for (i <- 0 until k) attr(i) = new NumericAttribute(s"V$i")
+      val attr = new Array[Attribute](p)
+      for (i <- 0 until p) attr(i) = new NumericAttribute(s"V$i")
       attr
     } else attributes
 
-    val m = if (mtry <= 0) Math.floor(Math.sqrt(k)).toInt else mtry
+    val m = if (mtry <= 0) Math.floor(Math.sqrt(p)).toInt else mtry
 
     val j = if (J <= 1) Math.min(500, x.length / 50) else J
 
+    val k = Math.max(y: _*) + 1
     val weight = if (classWeight == null) Array.fill[Int](k)(1) else classWeight
 
     time {
@@ -518,11 +519,11 @@ package object classification {
    * @return Gradient boosted trees.
    */
   def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 6, eta: Double = 0.05, f: Double = 0.7): GradientTreeBoost = {
-    val k = Math.max(y: _*) + 1
+    val p = x(0).length
 
     val attr = if (attributes == null) {
-      val attr = new Array[Attribute](k)
-      for (i <- 0 until k) attr(i) = new NumericAttribute(s"V$i")
+      val attr = new Array[Attribute](p)
+      for (i <- 0 until p) attr(i) = new NumericAttribute(s"V$i")
       attr
     } else attributes
 
@@ -569,11 +570,11 @@ package object classification {
    * @return AdaBoost model.
    */
   def adaboost(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 2): AdaBoost = {
-    val k = Math.max(y: _*) + 1
+    val p = x(0).length
 
     val attr = if (attributes == null) {
-      val attr = new Array[Attribute](k)
-      for (i <- 0 until k) attr(i) = new NumericAttribute(s"V$i")
+      val attr = new Array[Attribute](p)
+      for (i <- 0 until p) attr(i) = new NumericAttribute(s"V$i")
       attr
     } else attributes
 
