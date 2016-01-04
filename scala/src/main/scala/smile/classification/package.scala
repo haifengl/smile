@@ -32,17 +32,17 @@ package object classification {
   /**
    * Apply a classification model on a data sample.
    *
-   * @param classifier classification model.
+   * @param model classification model.
    * @param x data sample.
    * @param posteriori optional double array of posertiori probability output. Note not all models support it.
    * @tparam T the data type.
    * @return the predicted class label.
    */
-  def predict[T <: AnyRef](classifier: Classifier[T], x: T, posteriori: Array[Double] = null): Int = {
+  def predict[T <: AnyRef](model: Classifier[T], x: T, posteriori: Array[Double] = null): Int = {
     if (posteriori == null)
-      classifier.predict(x)
+      model.predict(x)
     else
-      classifier.predict(x, posteriori)
+      model.predict(x, posteriori)
   }
 
   /**
