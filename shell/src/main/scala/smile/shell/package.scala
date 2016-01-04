@@ -1007,6 +1007,17 @@ package object shell {
         |   qda -- Quadratic discriminant analysis.
         |   rda -- Regularized discriminant analysis.
         |
+        | Regression:
+        |   ols -- Ordinary least square.
+        |   ridge -- Ridge regression.
+        |   lasso -- Least absolute shrinkage and selection operator.
+        |   svr -- Support vector regression.
+        |   cart -- Regression tree.
+        |   randomForest -- Random forest for regression.
+        |   gbm -- Gradient boosting for regression.
+        |   gaussianProcess -- Gaussian process for regression.
+        |   rbfnet -- Radial basis function network
+        |
         | Graphics:
         |   window -- Create a plot window.
         |   plot -- Scatter plot.
