@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.haifengl</groupId>
-    <artifactId>smile-all</artifactId>
-    <version>1.0.3</version>
+    <artifactId>smile</artifactId>
+    <version>1.1.0</version>
     <packaging>pom</packaging>
 
-    <name>Smile Aggregate POM</name>
-    <description>Statistical Machine Intelligence and Learning Engine -- Aggregate</description>
+    <name>Smile Root Project</name>
+    <description>Statistical Machine Intelligence and Learning Engine</description>
     <url>http://github.com/haifengl/smile</url>
 
     <licenses>
@@ -44,13 +44,14 @@
     </scm>
 
     <modules>
-        <module>SmileMath</module>
-        <module>SmileData</module>
-        <module>SmileGraph</module>
-        <module>SmileInterpolation</module>
-        <module>Smile</module>
-        <module>SmileNLP</module>
-        <module>SmilePlot</module>
+        <module>math</module>
+        <module>data</module>
+        <module>graph</module>
+        <module>interpolation</module>
+        <module>core</module>
+        <module>nlp</module>
+        <module>plot</module>
+        <module>scala</module>
     </modules>
     
     <properties>
@@ -81,6 +82,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>2.10.3</version>
                         <configuration>
                             <additionalparam>-Xdoclint:none</additionalparam>
                         </configuration>
@@ -97,8 +99,8 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <configuration>
-                        <source>1.6</source>
-                        <target>1.6</target>
+                        <source>1.7</source>
+                        <target>1.7</target>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -112,9 +114,6 @@
                         <autoReleaseAfterClose>true</autoReleaseAfterClose>
                     </configuration>
                 </plugin>
-                
-                
-                
             </plugins>
         </pluginManagement>
     </build>
