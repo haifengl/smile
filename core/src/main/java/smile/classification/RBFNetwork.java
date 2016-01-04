@@ -90,7 +90,6 @@ import smile.util.SmileUtils;
  * 
  * @author Haifeng Li
  */
-
 public class RBFNetwork<T> implements Classifier<T> {
 
     /**
