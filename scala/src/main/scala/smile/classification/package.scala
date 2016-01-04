@@ -18,7 +18,7 @@ package smile
 
 import smile.classification._
 import smile.data._
-import smile.math._, distance._, kernel._
+import smile.math._, distance._, kernel._, rbf._
 import smile.neighbor._
 import smile.util._
 
@@ -212,6 +212,150 @@ package object classification {
   def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent = {
     time {
       new Maxent(p, x, y, lambda, tol, maxIter)
+    }
+  }
+
+  /**
+   * Radial basis function networks. A radial basis function network is an
+   * artificial neural network that uses radial basis functions as activation
+   * functions. It is a linear combination of radial basis functions. They are
+   * used in function approximation, time series prediction, and control.
+   * <p>
+   * In its basic form, radial basis function network is in the form
+   * <p>
+   * y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
+   * <p>
+   * where the approximating function y(x) is represented as a sum of N radial
+   * basis functions &phi;, each associated with a different center c<sub>i</sub>,
+   * and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
+   * one usually chooses Euclidean distance. The weights w<sub>i</sub> can
+   * be estimated using the matrix methods of linear least squares, because
+   * the approximating function is linear in the weights.
+   * <p>
+   * The centers c<sub>i</sub> can be randomly selected from training data,
+   * or learned by some clustering method (e.g. k-means), or learned together
+   * with weight parameters undergo a supervised learning processing
+   * (e.g. error-correction learning).
+   * <p>
+   * The popular choices for &phi; comprise the Gaussian function and the so
+   * called thin plate splines. The advantage of the thin plate splines is that
+   * their conditioning is invariant under scalings. Gaussian, multi-quadric
+   * and inverse multi-quadric are infinitely smooth and and involve a scale
+   * or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
+   * r<sub><small>0</small></sub> tends to flatten the basis function. For a
+   * given function, the quality of approximation may strongly depend on this
+   * parameter. In particular, increasing r<sub><small>0</small></sub> has the
+   * effect of better conditioning (the separation distance of the scaled points
+   * increases).
+   * <p>
+   * A variant on RBF networks is normalized radial basis function (NRBF)
+   * networks, in which we require the sum of the basis functions to be unity.
+   * NRBF arises more naturally from a Bayesian statistical perspective. However,
+   * there is no evidence that either the NRBF method is consistently superior
+   * to the RBF method, or vice versa.
+   * <p>
+   * SVMs with Gaussian kernel have similar structure as RBF networks with
+   * Gaussian radial basis functions. However, the SVM approach "automatically"
+   * solves the network complexity problem since the size of the hidden layer
+   * is obtained as the result of the QP procedure. Hidden neurons and
+   * support vectors correspond to each other, so the center problems of
+   * the RBF network is also solved, as the support vectors serve as the
+   * basis function centers. It was reported that with similar number of support
+   * vectors/centers, SVM shows better generalization performance than RBF
+   * network when the training data size is relatively small. On the other hand,
+   * RBF network gives better generalization performance than SVM on large
+   * training data.
+   * <p>
+   *
+   * <h2>References</h2>
+   * <ol>
+   * <li> Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999. </li>
+   * <li> T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990. </li>
+   * <li> Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.</li>
+   * </ol>
+   *
+   * @param x training samples.
+   * @param y training labels in [0, k), where k is the number of classes.
+   * @param distance the distance metric functor.
+   * @param rbf the radial basis functions.
+   * @param centers the centers of RBF functions.
+   * @param normalized true for the normalized RBF network.
+   */
+  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T], normalized: Boolean): RBFNetwork[T] = {
+    time {
+      new RBFNetwork[T](x, y, distance, rbf, centers, normalized)
+    }
+  }
+
+  /**
+   * Radial basis function networks. A radial basis function network is an
+   * artificial neural network that uses radial basis functions as activation
+   * functions. It is a linear combination of radial basis functions. They are
+   * used in function approximation, time series prediction, and control.
+   * <p>
+   * In its basic form, radial basis function network is in the form
+   * <p>
+   * y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
+   * <p>
+   * where the approximating function y(x) is represented as a sum of N radial
+   * basis functions &phi;, each associated with a different center c<sub>i</sub>,
+   * and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
+   * one usually chooses Euclidean distance. The weights w<sub>i</sub> can
+   * be estimated using the matrix methods of linear least squares, because
+   * the approximating function is linear in the weights.
+   * <p>
+   * The centers c<sub>i</sub> can be randomly selected from training data,
+   * or learned by some clustering method (e.g. k-means), or learned together
+   * with weight parameters undergo a supervised learning processing
+   * (e.g. error-correction learning).
+   * <p>
+   * The popular choices for &phi; comprise the Gaussian function and the so
+   * called thin plate splines. The advantage of the thin plate splines is that
+   * their conditioning is invariant under scalings. Gaussian, multi-quadric
+   * and inverse multi-quadric are infinitely smooth and and involve a scale
+   * or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
+   * r<sub><small>0</small></sub> tends to flatten the basis function. For a
+   * given function, the quality of approximation may strongly depend on this
+   * parameter. In particular, increasing r<sub><small>0</small></sub> has the
+   * effect of better conditioning (the separation distance of the scaled points
+   * increases).
+   * <p>
+   * A variant on RBF networks is normalized radial basis function (NRBF)
+   * networks, in which we require the sum of the basis functions to be unity.
+   * NRBF arises more naturally from a Bayesian statistical perspective. However,
+   * there is no evidence that either the NRBF method is consistently superior
+   * to the RBF method, or vice versa.
+   * <p>
+   * SVMs with Gaussian kernel have similar structure as RBF networks with
+   * Gaussian radial basis functions. However, the SVM approach "automatically"
+   * solves the network complexity problem since the size of the hidden layer
+   * is obtained as the result of the QP procedure. Hidden neurons and
+   * support vectors correspond to each other, so the center problems of
+   * the RBF network is also solved, as the support vectors serve as the
+   * basis function centers. It was reported that with similar number of support
+   * vectors/centers, SVM shows better generalization performance than RBF
+   * network when the training data size is relatively small. On the other hand,
+   * RBF network gives better generalization performance than SVM on large
+   * training data.
+   * <p>
+   *
+   * <h2>References</h2>
+   * <ol>
+   * <li> Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999. </li>
+   * <li> T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990. </li>
+   * <li> Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.</li>
+   * </ol>
+   *
+   * @param x training samples.
+   * @param y training labels in [0, k), where k is the number of classes.
+   * @param distance the distance metric functor.
+   * @param rbf the radial basis functions.
+   * @param centers the centers of RBF functions.
+   * @param normalized true for the normalized RBF network.
+   */
+  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T], normalized: Boolean): RBFNetwork[T] = {
+    time {
+      new RBFNetwork[T](x, y, distance, rbf, centers, normalized)
     }
   }
 
