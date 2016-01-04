@@ -245,6 +245,48 @@ package object shell {
         |  @param data a data matrix of which each row will create a box plot.
         |  @param labels the labels for each box plot.
       """.stripMargin)
+    case "heatmap" => println(
+      """
+        |  def heatmap(z: Array[Array[Double]]): (JFrame, PlotCanvas)
+        |  def heatmap(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+        |  def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas)
+        |  def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+        |  def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): (JFrame, PlotCanvas)
+        |  def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+        |  def heatmap(matrix: SparseMatrix): (JFrame, PlotCanvas)
+        |
+        |  A heat map is a graphical representation of data where the values taken by
+        |  a variable in a two-dimensional map are represented as colors.
+        |
+        |  @param x x coordinate of data matrix cells. Must be in ascending order.
+        |  @param y y coordinate of data matrix cells. Must be in ascending order.
+        |  @param z a data matrix to be shown in pseudo heat map.
+        |  @param rowLabels the labels for rows of data matrix.
+        |  @param columnLabels the labels for columns of data matrix.
+        |  @param palette the color palette.
+        |  @param matrix a sparse matrix.
+      """.stripMargin)
+    case "hexmap" => println(
+      """
+        |  def hexmap(z: Array[Array[Double]]): (JFrame, PlotCanvas)
+        |  def hexmap(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+        |  def hexmap(labels: Array[Array[String]], z: Array[Array[Double]]): (JFrame, PlotCanvas)
+        |  def hexmap(labels: Array[Array[String]], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+        |
+        |  Hexmap is a variant of heat map by replacing rectangle cells with hexagon cells.
+        |
+        |  @param labels the descriptions of each cell in the data matrix.
+        |  @param z a data matrix to be shown in pseudo heat map.
+        |  @param palette the color palette.
+      """.stripMargin)
+    case "histogram" => println(
+      """
+        |
+      """.stripMargin)
+    case "histogram3d" => println(
+      """
+        |
+      """.stripMargin)
     case "contour" => println(
       """
         |  def contour(z: Array[Array[Double]]): (JFrame, PlotCanvas)
@@ -286,6 +328,14 @@ package object shell {
         |  @param edges an m-by-2 array of which each row is the vertex indices of two
         |               end points of each edge.
       """.stripMargin)
+    case "grid" => println(
+      """
+        |  def grid(data: Array[Array[Array[Double]]]): (JFrame, PlotCanvas)
+        |
+        |  2D grid plot.
+        |
+        |  @param data an m x n x 2 array which are coordinates of m x n grid.
+      """.stripMargin)
     case "qqplot" => println(
       """
         |  def qqplot(x: Array[Double]): (JFrame, PlotCanvas)
@@ -303,6 +353,21 @@ package object shell {
         |  @param x a sample set.
         |  @param y a sample set.
         |  @param d a distribution.
+      """.stripMargin)
+    case "dendrogram" => println(
+      """
+        |  def dendrogram(merge: Array[Array[Int]], height: Array[Double]): (JFrame, PlotCanvas)
+        |
+        |  A dendrogram is a tree diagram frequently used to illustrate the arrangement
+        |  of the clusters produced by hierarchical clustering.
+        |
+        |  @param merge an n-1 by 2 matrix of which row i describes the merging of clusters at
+        |               step i of the clustering. If an element j in the row is less than n, then
+        |               observation j was merged at this stage. If j &ge; n then the merge
+        |               was with the cluster formed at the (earlier) stage j-n of the algorithm.
+        |  @param height a set of n-1 non-decreasing real values, which are the clustering height,
+        |                i.e., the value of the criterion associated with the clustering method
+        |                for the particular agglomeration.
       """.stripMargin)
     case "predict" => println(
       """
@@ -932,6 +997,10 @@ package object shell {
         |   plot -- Scatter plot.
         |   line -- Scatter plot which connects points by straight lines.
         |   boxplot -- Boxplots can be useful to display differences between populations.
+        |   heatmap -- Two-dimensional map represented as colors.
+        |   hexmap -- A variant of heat map by replacing rectangle cells with hexagon cells.
+        |   histogram -- Histogram of tabulated frequencies.
+        |   histogram3d -- 3D histogram of tabulated frequencies.
         |   contour -- Contour plot of a 3-dimensional surface.
         |   surface -- 3D surface plot.
         |   wireframe -- 3D presentation of physical object.

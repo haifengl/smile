@@ -406,6 +406,164 @@ package object plot {
   }
 
   /**
+   * Create a plot canvas with the pseudo heat map plot of given data.
+   * @param z a data matrix to be shown in pseudo heat map.
+   */
+  def heatmap(z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+    val canvas = Heatmap.plot(z)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the pseudo heat map plot of given data.
+   * @param z a data matrix to be shown in pseudo heat map.
+   * @param palette the color palette.
+   */
+  def heatmap(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+    val canvas = Heatmap.plot(z, palette)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the pseudo heat map plot of given data.
+   * @param x x coordinate of data matrix cells. Must be in ascending order.
+   * @param y y coordinate of data matrix cells. Must be in ascending order.
+   * @param z a data matrix to be shown in pseudo heat map.
+   */
+  def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+    val canvas = Heatmap.plot(x, y, z)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the pseudo heat map plot of given data.
+   * @param x x coordinate of data matrix cells. Must be in ascending order.
+   * @param y y coordinate of data matrix cells. Must be in ascending order.
+   * @param z a data matrix to be shown in pseudo heat map.
+   * @param palette the color palette.
+   */
+  def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+    val canvas = Heatmap.plot(x, y, z, palette)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the pseudo heat map plot of given data.
+   * @param z a data matrix to be shown in pseudo heat map.
+   * @param rowLabels the labels for rows of data matrix.
+   * @param columnLabels the labels for columns of data matrix.
+   */
+  def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+    val canvas = Heatmap.plot(rowLabels, columnLabels, z)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the pseudo heat map plot of given data.
+   * @param z a data matrix to be shown in pseudo heat map.
+   * @param rowLabels the labels for rows of data matrix.
+   * @param columnLabels the labels for columns of data matrix.
+   * @param palette the color palette.
+   */
+  def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+    val canvas = Heatmap.plot(rowLabels, columnLabels, z, palette)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a sparse matrix plot canvas.
+   * @param matrix a sparse matrix.
+   */
+  def heatmap(matrix: SparseMatrix): (JFrame, PlotCanvas) = {
+    val canvas = SparseMatrixPlot.plot(matrix)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the pseudo heat map plot of given data.
+   * @param z a data matrix to be shown in pseudo heat map.
+   */
+  def hexmap(z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+    val canvas = Heatmap.plot(z)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the pseudo hex map plot of given data.
+   * @param z a data matrix to be shown in pseudo heat map.
+   * @param palette the color palette.
+   */
+  def hexmap(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+    val canvas = Hexmap.plot(z, palette)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the pseudo hex map plot of given data.
+   * @param labels the descriptions of each cell in the data matrix.
+   * @param z a data matrix to be shown in pseudo heat map.
+   */
+  def hexmap(labels: Array[Array[String]], z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+    val canvas = Hexmap.plot(labels, z)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
+   * Create a plot canvas with the pseudo hex map plot of given data.
+   * @param labels the descriptions of each cell in the data matrix.
+   * @param z a data matrix to be shown in pseudo heat map.
+   * @param palette the color palette.
+   */
+  def hexmap(labels: Array[Array[String]], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+    val canvas = Hexmap.plot(labels, z, palette)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /**
    * Create a plot canvas with the one sample Q-Q plot to standard normal
    * distribution. The x-axis is the quantiles of x and the y-axis is the
    * quantiles of normal distribution.
@@ -475,19 +633,6 @@ package object plot {
    */
   def qqplot(x: Array[Int], y: Array[Int]): (JFrame, PlotCanvas) = {
     val canvas = QQPlot.plot(x, y)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
-  }
-
-  /**
-   * Create a sparse matrix plot canvas.
-   * @param matrix a sparse matrix.
-   */
-  def plot(matrix: SparseMatrix): (JFrame, PlotCanvas) = {
-    val canvas = SparseMatrixPlot.plot(matrix)
 
     val win = window()
     win.add(canvas)
