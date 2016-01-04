@@ -281,11 +281,26 @@ package object shell {
       """.stripMargin)
     case "histogram" => println(
       """
+        |  def histogram(data: Array[Double]): (JFrame, PlotCanvas)
+        |  def histogram(data: Array[Double], k: Int): (JFrame, PlotCanvas)
+        |  def histogram(data: Array[Double], breaks: Array[Double]): (JFrame, PlotCanvas)
+        |  def histogram(data: Array[Array[Double]]): (JFrame, PlotCanvas)
+        |  def histogram(data: Array[Array[Double]], k: Int): (JFrame, PlotCanvas)
+        |  def histogram(data: Array[Array[Double]], xbins: Int, ybins: Int): (JFrame, PlotCanvas)
         |
-      """.stripMargin)
-    case "histogram3d" => println(
-      """
+        |  A histogram is a graphical display of tabulated frequencies, shown as bars.
+        |  It shows what proportion of cases fall into each of several categories:
+        |  it is a form of data binning. The categories are usually specified as
+        |  non-overlapping intervals of some variable. The categories (bars) must
+        |  be adjacent. The intervals (or bands, or bins) are generally of the same
+        |  size, and are most easily interpreted if they are.
         |
+        |  @param data a sample set.
+        |  @param breaks an array of size k+1 giving the breakpoints between
+        |                histogram cells. Must be in ascending order.
+        |  @param k the number of bins.
+        |  @param xbins the number of bins on x-axis.
+        |  @param ybins the number of bins on y-axis.
       """.stripMargin)
     case "contour" => println(
       """
@@ -1000,7 +1015,6 @@ package object shell {
         |   heatmap -- Two-dimensional map represented as colors.
         |   hexmap -- A variant of heat map by replacing rectangle cells with hexagon cells.
         |   histogram -- Histogram of tabulated frequencies.
-        |   histogram3d -- 3D histogram of tabulated frequencies.
         |   contour -- Contour plot of a 3-dimensional surface.
         |   surface -- 3D surface plot.
         |   wireframe -- 3D presentation of physical object.
