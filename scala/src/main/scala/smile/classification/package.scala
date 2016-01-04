@@ -19,6 +19,7 @@ package smile
 import smile.classification._
 import smile.data._
 import smile.math._, distance._, kernel._, rbf._
+import smile.stat.distribution.Distribution
 import smile.neighbor._
 import smile.util._
 
@@ -865,6 +866,40 @@ package object classification {
   def rda(x: Array[Array[Double]], y: Array[Int], alpha: Double, priori: Array[Double] = null, tol: Double = 1E-4): RDA = {
     time {
       new RDA(x, y, priori, alpha, tol)
+    }
+  }
+
+  /**
+   * Creates a naive Bayes classifier for document classification.
+   * Add-k smoothing.
+   *
+   * @param x training samples.
+   * @param y training labels in [0, k), where k is the number of classes.
+   * @param model the generation model of naive Bayes classifier.
+   * @param priori the priori probability of each class. If null, equal probability is assume for each class.
+   * @param sigma the prior count of add-k smoothing of evidence.
+   */
+  def naiveBayes(x: Array[Array[Double]], y: Array[Int], model: NaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): NaiveBayes = {
+    time {
+      val p = x(0).length
+      val k = Math.max(y: _*) + 1
+      val naive = if (priori == null) new NaiveBayes(model, k, p, sigma) else new NaiveBayes(model, priori, p, sigma)
+      naive.learn(x, y)
+      naive
+    }
+  }
+
+  /**
+   * Creates a general naive Bayes classifier.
+   *
+   * @param priori the priori probability of each class.
+   * @param condprob the conditional distribution of each variable in
+   *                 each class. In particular, condprob[i][j] is the conditional
+   *                 distribution P(x<sub>j</sub> | class i).
+   */
+  def naiveBayes(priori: Array[Double], condprob: Array[Array[Distribution]]): NaiveBayes = {
+    time {
+      new NaiveBayes(priori, condprob)
     }
   }
 }

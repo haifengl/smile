@@ -1151,6 +1151,65 @@ package object shell {
         |  @param centers the centers of RBF functions.
         |  @param normalized true for the normalized RBF network.
       """.stripMargin)
+    case "naiveBayes" => println(
+      """
+        |  def naiveBayes(x: Array[Array[Double]], y: Array[Int], model: NaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): NaiveBayes
+        |  def naiveBayes(priori: Array[Double], condprob: Array[Array[Distribution]]): NaiveBayes
+        |
+        |  Naive Bayes classifier. A naive Bayes classifier is a simple probabilistic
+        |  classifier based on applying Bayes' theorem with strong (naive) independence
+        |  assumptions. Depending on the precise nature of the probability model, naive
+        |  Bayes classifiers can be trained very efficiently in a supervised learning
+        |  setting.
+        |
+        |  In spite of their naive design and apparently over-simplified assumptions,
+        |  naive Bayes classifiers have worked quite well in many complex real-world
+        |  situations and are very popular in Natural Language Processing (NLP).
+        |
+        |  For a general purpose naive Bayes classifier without any assumptions
+        |  about the underlying distribution of each variable, we don't provide
+        |  a learning method to infer the variable distributions from the training data.
+        |  Instead, the users can fit any appropriate distributions on the data by
+        |  themselves with various {@link Distribution} classes. Although the predict
+        |  method takes an array of double values as a general form of independent variables,
+        |  the users are free to use any discrete distributions to model categorical or
+        |  ordinal random variables.
+        |
+        |  For document classification in NLP, there are two different ways we can set
+        |  up an naive Bayes classifier: multinomial model and Bernoulli model. The
+        |  multinomial model generates one term from the vocabulary in each position
+        |  of the document. The multivariate Bernoulli model or Bernoulli model
+        |  generates an indicator for each term of the vocabulary, either indicating
+        |  presence of the term in the document or indicating absence.
+        |  Of the two models, the Bernoulli model is particularly sensitive to noise
+        |  features. A Bernoulli naive Bayes classifier requires some form of feature selection or else its accuracy will be low.
+        |
+        |  The different generation models imply different estimation strategies and
+        |  different classification rules. The Bernoulli model estimates as the
+        |  fraction of documents of class that contain term. In contrast, the
+        |  multinomial model estimates as the fraction of tokens or fraction of
+        |  positions in documents of class that contain term. When classifying a
+        |  test document, the Bernoulli model uses binary occurrence information,
+        |  ignoring the number of occurrences, whereas the multinomial model keeps
+        |  track of multiple occurrences. As a result, the Bernoulli model typically
+        |  makes many mistakes when classifying long documents. However, it was reported
+        |  that the Bernoulli model works better in sentiment analysis.
+        |
+        |  The models also differ in how non-occurring terms are used in classification.
+        |  They do not affect the classification decision in the multinomial model;
+        |  but in the Bernoulli model the probability of nonoccurrence is factored
+        |  in when computing. This is because only the Bernoulli model models
+        |  absence of terms explicitly.
+        |
+        |  @param x training samples.
+        |  @param y training labels in [0, k), where k is the number of classes.
+        |  @param model the generation model of naive Bayes classifier.
+        |  @param priori the priori probability of each class.
+        |  @param sigma the prior count of add-k smoothing of evidence.
+        |  @param condprob the conditional distribution of each variable in
+        |                  each class. In particular, condprob[i][j] is the conditional
+        |                  distribution P(x_j | class i).
+      """.stripMargin)
     case "svr" => println(
       """
         |  def svr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): SVR[T]
