@@ -225,6 +225,8 @@ public class GaussianProcessRegression <T> implements Regression<T> {
      * can be chosen as the centers of k-means clustering.
      * @param kernel the Mercer kernel.
      * @param lambda the shrinkage/regularization parameter.
+     * @param nystrom THe value of this parameter doesn't really matter. The purpose is to be different from
+     *                the constructor of regressor approximation.
      */
     GaussianProcessRegression(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double lambda, boolean nystrom) {
         if (x.length != y.length) {
