@@ -113,7 +113,7 @@ public class NeuralNetwork implements OnlineClassifier<double[]> {
         /**
          * Cross entropy error function for output as probabilities.
          */
-        CROSS_ENTROPY;
+        CROSS_ENTROPY
     }
 
     /**
@@ -139,7 +139,7 @@ public class NeuralNetwork implements OnlineClassifier<double[]> {
          * The values of units in output layer can be regarded as posteriori
          * probabilities of each class.
          */
-        SOFTMAX;
+        SOFTMAX
     }
 
 

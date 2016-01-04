@@ -217,6 +217,108 @@ package object classification {
   }
 
   /**
+   * Multilayer perceptron neural network.
+   * An MLP consists of several layers of nodes, interconnected through weighted
+   * acyclic arcs from each preceding layer to the following, without lateral or
+   * feedback connections. Each node calculates a transformed weighted linear
+   * combination of its inputs (output activations from the preceding layer), with
+   * one of the weights acting as a trainable bias connected to a constant input.
+   * The transformation, called activation function, is a bounded non-decreasing
+   * (non-linear) function, such as the sigmoid functions (ranges from 0 to 1).
+   * Another popular activation function is hyperbolic tangent which is actually
+   * equivalent to the sigmoid function in shape but ranges from -1 to 1.
+   * More specialized activation functions include radial basis functions which
+   * are used in RBF networks.
+   * <p>
+   * The representational capabilities of a MLP are determined by the range of
+   * mappings it may implement through weight variation. Single layer perceptrons
+   * are capable of solving only linearly separable problems. With the sigmoid
+   * function as activation function, the single-layer network is identical
+   * to the logistic regression model.
+   * <p>
+   * The universal approximation theorem for neural networks states that every
+   * continuous function that maps intervals of real numbers to some output
+   * interval of real numbers can be approximated arbitrarily closely by a
+   * multi-layer perceptron with just one hidden layer. This result holds only
+   * for restricted classes of activation functions, which are extremely complex
+   * and NOT smooth for subtle mathematical reasons. On the other hand, smoothness
+   * is important for gradient descent learning. Besides, the proof is not
+   * constructive regarding the number of neurons required or the settings of
+   * the weights. Therefore, complex systems will have more layers of neurons
+   * with some having increased layers of input neurons and output neurons
+   * in practice.
+   * <p>
+   * The most popular algorithm to train MLPs is back-propagation, which is a
+   * gradient descent method. Based on chain rule, the algorithm propagates the
+   * error back through the network and adjusts the weights of each connection in
+   * order to reduce the value of the error function by some small amount.
+   * For this reason, back-propagation can only be applied on networks with
+   * differentiable activation functions.
+   * <p>
+   * During error back propagation, we usually times the gradient with a small
+   * number &eta;, called learning rate, which is carefully selected to ensure
+   * that the network converges to a local minimum of the error function
+   * fast enough, without producing oscillations. One way to avoid oscillation
+   * at large &eta;, is to make the change in weight dependent on the past weight
+   * change by adding a momentum term.
+   * <p>
+   * Although the back-propagation algorithm may performs gradient
+   * descent on the total error of all instances in a batch way,
+   * the learning rule is often applied to each instance separately in an online
+   * way or stochastic way. There exists empirical indication that the stochastic
+   * way results in faster convergence.
+   * <p>
+   * In practice, the problem of over-fitting has emerged. This arises in
+   * convoluted or over-specified systems when the capacity of the network
+   * significantly exceeds the needed free parameters. There are two general
+   * approaches for avoiding this problem: The first is to use cross-validation
+   * and similar techniques to check for the presence of over-fitting and
+   * optimally select hyper-parameters such as to minimize the generalization
+   * error. The second is to use some form of regularization, which emerges
+   * naturally in a Bayesian framework, where the regularization can be
+   * performed by selecting a larger prior probability over simpler models;
+   * but also in statistical learning theory, where the goal is to minimize over
+   * the "empirical risk" and the "structural risk".
+   * <p>
+   * For neural networks, the input patterns usually should be scaled/standardized.
+   * Commonly, each input variable is scaled into interval [0, 1] or to have
+   * mean 0 and standard deviation 1.
+   * <p>
+   * For penalty functions and output units, the following natural pairings are
+   * recommended:
+   * <ul>
+   * <li> linear output units and a least squares penalty function.
+   * <li> a two-class cross-entropy penalty function and a logistic
+   * activation function.
+   * <li> a multi-class cross-entropy penalty function and a softmax
+   * activation function.
+   * </ul>
+   * By assigning a softmax activation function on the output layer of
+   * the neural network for categorical target variables, the outputs
+   * can be interpreted as posterior probabilities, which are very useful.
+   *
+   * @param x training samples.
+   * @param y training labels in [0, k), where k is the number of classes.
+   * @param numUnits the number of units in each layer.
+   * @param error the error function.
+   * @param activation the activation function of output layer.
+   * @param epochs the number of epochs of stochastic learning.
+   * @param eta the learning rate.
+   * @param alpha the momentum factor.
+   * @param lambda the weight decay for regularization.
+   */
+  def neuralnet(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, epochs: Int = 25, activation: NeuralNetwork.ActivationFunction, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork = {
+    time {
+      val nnet = new NeuralNetwork(error, activation, numUnits: _*)
+      nnet.setLearningRate(eta)
+      nnet.setMomentum(alpha)
+      nnet.setWeightDecay(lambda)
+      (0 until epochs).foreach { _ => nnet.learn(x, y) }
+      nnet
+    }
+  }
+
+  /**
    * Radial basis function networks. A radial basis function network is an
    * artificial neural network that uses radial basis functions as activation
    * functions. It is a linear combination of radial basis functions. They are
