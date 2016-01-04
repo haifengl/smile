@@ -48,14 +48,14 @@ package object regression {
    * dependent variable predicted by the model, and the true value of the
    * dependent variable. Ordinary least squares obtains parameter estimates
    * that minimize the sum of squared residuals, SSE (also denoted RSS).
-   *
+   * <p>
    * The OLS estimator is consistent when the independent variables are
    * exogenous and there is no multicollinearity, and optimal in the class
    * of linear unbiased estimators when the errors are homoscedastic and
    * serially uncorrelated. Under these conditions, the method of OLS provides
    * minimum-variance mean-unbiased estimation when the errors have finite
    * variances.
-   *
+   * <p>
    * There are several different frameworks in which the linear regression
    * model can be cast in order to make the OLS technique applicable. Each
    * of these settings produces the same formulas and same results, the only
@@ -63,18 +63,18 @@ package object regression {
    * imposed in order for the method to give meaningful results. The choice
    * of the applicable framework depends mostly on the nature of data at hand,
    * and on the inference task which has to be performed.
-   *
+   * <p>
    * Least squares corresponds to the maximum likelihood criterion if the
    * experimental errors have a normal distribution and can also be derived
    * as a method of moments estimator.
-   *
+   * <p>
    * Once a regression model has been constructed, it may be important to
    * confirm the goodness of fit of the model and the statistical significance
    * of the estimated parameters. Commonly used checks of goodness of fit
    * include the R-squared, analysis of the pattern of residuals and hypothesis
    * testing. Statistical significance can be checked by an F-test of the overall
    * fit, followed by t-tests of individual parameters.
-   *
+   * <p>
    * Interpretations of these diagnostic tests rest heavily on the model
    * assumptions. Although examination of the residuals can be used to
    * invalidate a model, the results of a t-test or F-test are sometimes more
@@ -106,7 +106,7 @@ package object regression {
    * originally developed to overcome the singularity of the X'X matrix.
    * This matrix is perturbed so as to make its determinant appreciably
    * different from 0.
-   *
+   * <p>
    * Ridge regression is a kind of Tikhonov regularization, which is the most
    * commonly used method of regularization of ill-posed problems. Another
    * interpretation of ridge regression is available through Bayesian estimation.

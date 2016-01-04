@@ -386,14 +386,14 @@ package object shell {
       """.stripMargin)
     case "predict" => println(
       """
-        |  def predict[T <: AnyRef](classifier: Classifier[T], x: T, posteriori: Array[Double] = null): Int
+        |  def predict[T <: AnyRef](model: Classifier[T], x: T, posteriori: Array[Double] = null): Int
+        |  def predict[T <: AnyRef](model: Regression[T], x: T): Double
         |
-        |  Apply a classification model on a data sample.
+        |  Apply a classification/regression model on a data sample.
         |
-        |  @param classifier classification model
+        |  @param model classification/regression model
         |  @param x data sample
         |  @param posteriori optional double array of posertiori probability output. Note not all models support it.
-        |  @tparam T the data type
         |
         |  @return the predicted class label
       """.stripMargin)
@@ -583,13 +583,13 @@ package object shell {
         |  @param C Regularization parameter
         |  @param strategy multi-class classification strategy, one vs all or one vs one.
         |  @param epoch the number of training epochs
-        |  @tparam T the data type
         |
         |  @return SVM model.
       """.stripMargin)
     case "cart" => println(
       """
         |  def cart(x: Array[Array[Double]], y: Array[Int], J: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree
+        |  def cart(x: Array[Array[Double]], y: Array[Double], J: Int, attributes: Array[Attribute] = null): RegressionTree
         |
         |  Decision tree for classification. A decision tree can be learned by
         |  splitting the training set into subsets based on an attribute value
@@ -666,6 +666,7 @@ package object shell {
     case "randomForest" => println(
       """
         |  def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, J: Int = -1, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
+        |  def randomForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, S: Int = 5): RandomForest
         |
         |  Random forest for classification. Random forest is an ensemble classifier
         |  that consists of many decision trees and outputs the majority vote of
@@ -721,6 +722,7 @@ package object shell {
     case "gbm" => println(
       """
         |  def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 6, eta: Double = 0.05, f: Double = 0.7): GradientTreeBoost
+        |  def gbm(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, T: Int = 500, J: Int = 6, eta: Double = 0.05, f: Double = 0.7): GradientTreeBoost
         |
         |  Gradient boosting for classification. Gradient boosting is typically used
         |  with decision trees (especially CART regression trees) of a fixed size as
@@ -969,6 +971,253 @@ package object shell {
         |
         |  @return Regularized discriminant analysis model.
       """.stripMargin)
+    case "ols" => println(
+      """
+        |  def ols(x: Array[Array[Double]], y: Array[Double]): OLS
+        |
+        |  Ordinary least squares. In linear regression,
+        |  the model specification is that the dependent variable is a linear
+        |  combination of the parameters (but need not be linear in the independent
+        |  variables). The residual is the difference between the value of the
+        |  dependent variable predicted by the model, and the true value of the
+        |  dependent variable. Ordinary least squares obtains parameter estimates
+        |  that minimize the sum of squared residuals, SSE (also denoted RSS).
+        |
+        |  The OLS estimator is consistent when the independent variables are
+        |  exogenous and there is no multicollinearity, and optimal in the class
+        |  of linear unbiased estimators when the errors are homoscedastic and
+        |  serially uncorrelated. Under these conditions, the method of OLS provides
+        |  minimum-variance mean-unbiased estimation when the errors have finite
+        |  variances.
+        |
+        |  There are several different frameworks in which the linear regression
+        |  model can be cast in order to make the OLS technique applicable. Each
+        |  of these settings produces the same formulas and same results, the only
+        |  difference is the interpretation and the assumptions which have to be
+        |  imposed in order for the method to give meaningful results. The choice
+        |  of the applicable framework depends mostly on the nature of data at hand,
+        |  and on the inference task which has to be performed.
+        |
+        |  Least squares corresponds to the maximum likelihood criterion if the
+        |  experimental errors have a normal distribution and can also be derived
+        |  as a method of moments estimator.
+        |
+        |  Once a regression model has been constructed, it may be important to
+        |  confirm the goodness of fit of the model and the statistical significance
+        |  of the estimated parameters. Commonly used checks of goodness of fit
+        |  include the R-squared, analysis of the pattern of residuals and hypothesis
+        |  testing. Statistical significance can be checked by an F-test of the overall
+        |  fit, followed by t-tests of individual parameters.
+        |
+        |  Interpretations of these diagnostic tests rest heavily on the model
+        |  assumptions. Although examination of the residuals can be used to
+        |  invalidate a model, the results of a t-test or F-test are sometimes more
+        |  difficult to interpret if the model's assumptions are violated.
+        |  For example, if the error term does not have a normal distribution,
+        |  in small samples the estimated parameters will not follow normal
+        |  distributions and complicate inference. With relatively large samples,
+        |  however, a central limit theorem can be invoked such that hypothesis
+        |  testing may proceed using asymptotic approximations.
+        |
+        |  @param x a matrix containing the explanatory variables.
+        |  @param y the response values.
+      """.stripMargin)
+    case "ridge" => println(
+      """
+        |  def ridge(x: Array[Array[Double]], y: Array[Double], lambda: Double): RidgeRegression
+        |
+        |  Ridge Regression. When the predictor variables are highly correlated amongst
+        |  themselves, the coefficients of the resulting least squares fit may be very
+        |  imprecise. By allowing a small amount of bias in the estimates, more
+        |  reasonable coefficients may often be obtained. Ridge regression is one
+        |  method to address these issues. Often, small amounts of bias lead to
+        |  dramatic reductions in the variance of the estimated model coefficients.
+        |  Ridge regression is such a technique which shrinks the regression
+        |  coefficients by imposing a penalty on their size. Ridge regression was
+        |  originally developed to overcome the singularity of the X'X matrix.
+        |  This matrix is perturbed so as to make its determinant appreciably
+        |  different from 0.
+        |
+        |  Ridge regression is a kind of Tikhonov regularization, which is the most
+        |  commonly used method of regularization of ill-posed problems. Another
+        |  interpretation of ridge regression is available through Bayesian estimation.
+        |  In this setting the belief that weight should be small is coded into a prior
+        |  distribution.
+        |
+        |  @param x a matrix containing the explanatory variables.
+        |  @param y the response values.
+        |  @param lambda the shrinkage/regularization parameter.
+      """.stripMargin)
+    case "lasso" => println(
+      """
+        |  def lasso(x: Array[Array[Double]], y: Array[Double], lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LASSO
+        |
+        |  Least absolute shrinkage and selection operator.
+        |  The Lasso is a shrinkage and selection method for linear regression.
+        |  It minimizes the usual sum of squared errors, with a bound on the sum
+        |  of the absolute values of the coefficients (i.e. L<sub>1</sub>-regularized).
+        |  It has connections to soft-thresholding of wavelet coefficients, forward
+        |  stage-wise regression, and boosting methods.
+        |
+        |  The Lasso typically yields a sparse solution, of which the parameter
+        |  vector &beta; has relatively few nonzero coefficients. In contrast, the
+        |  solution of L2-regularized least squares (i.e. ridge regression)
+        |  typically has all coefficients nonzero. Because it effectively
+        |  reduces the number of variables, the Lasso is useful in some contexts.
+        |
+        |  For over-determined systems (more instances than variables, commonly in
+        |  machine learning), we normalize variables with mean 0 and standard deviation
+        |  1. For under-determined systems (less instances than variables, e.g.
+        |  compressed sensing), we assume white noise (i.e. no intercept in the linear
+        |  model) and do not perform normalization. Note that the solution
+        |  is not unique in this case.
+        |
+        |  There is no analytic formula or expression for the optimal solution to the
+        |  L1-regularized least squares problems. Therefore, its solution
+        |  must be computed numerically. The objective function in the
+        |  L1-regularized least squares is convex but not differentiable,
+        |  so solving it is more of a computational challenge than solving the
+        |  L2-regularized least squares. The Lasso may be solved using
+        |  quadratic programming or more general convex optimization methods, as well
+        |  as by specific algorithms such as the least angle regression algorithm.
+        |
+        |  @param x a matrix containing the explanatory variables.
+        |  @param y the response values.
+        |  @param lambda the shrinkage/regularization parameter.
+        |  @param tol the tolerance for stopping iterations (relative target duality gap).
+        |  @param maxIter the maximum number of iterations.
+      """.stripMargin)
+    case "rbfnet" => println(
+      """
+        |  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T], normalized: Boolean): RBFNetwork[T]
+        |  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T], normalized: Boolean): RBFNetwork[T]
+        |  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T], normalized: Boolean): RBFNetwork[T]
+        |  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T], normalized: Boolean): RBFNetwork[T]
+        |
+        |  Radial basis function networks. A radial basis function network is an
+        |  artificial neural network that uses radial basis functions as activation
+        |  functions. It is a linear combination of radial basis functions. They are
+        |  used in function approximation, time series prediction, and control.
+        |
+        |  In its basic form, radial basis function network is in the form
+        |
+        |    y(x) = Sigma * w_i * phi(||x-c_i||)
+        |
+        |  where the approximating function y(x) is represented as a sum of N radial
+        |  basis functions phi, each associated with a different center c_i,
+        |  and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
+        |  one usually chooses Euclidean distance. The weights w<sub>i</sub> can
+        |  be estimated using the matrix methods of linear least squares, because
+        |  the approximating function is linear in the weights.
+        |
+        |  The centers c_i can be randomly selected from training data,
+        |  or learned by some clustering method (e.g. k-means), or learned together
+        |  with weight parameters undergo a supervised learning processing
+        |  (e.g. error-correction learning).
+        |
+        |  The popular choices for phi comprise the Gaussian function and the so
+        |  called thin plate splines. The advantage of the thin plate splines is that
+        |  their conditioning is invariant under scalings. Gaussian, multi-quadric
+        |  and inverse multi-quadric are infinitely smooth and and involve a scale
+        |  or shape parameter, r_0 > 0. Decreasing
+        |  r_0 tends to flatten the basis function. For a
+        |  given function, the quality of approximation may strongly depend on this
+        |  parameter. In particular, increasing r_0 has the
+        |  effect of better conditioning (the separation distance of the scaled points
+        |  increases).
+        |
+        |  A variant on RBF networks is normalized radial basis function (NRBF)
+        |  networks, in which we require the sum of the basis functions to be unity.
+        |  NRBF arises more naturally from a Bayesian statistical perspective. However,
+        |  there is no evidence that either the NRBF method is consistently superior
+        |  to the RBF method, or vice versa.
+        |
+        |  SVMs with Gaussian kernel have similar structure as RBF networks with
+        |  Gaussian radial basis functions. However, the SVM approach "automatically"
+        |  solves the network complexity problem since the size of the hidden layer
+        |  is obtained as the result of the QP procedure. Hidden neurons and
+        |  support vectors correspond to each other, so the center problems of
+        |  the RBF network is also solved, as the support vectors serve as the
+        |  basis function centers. It was reported that with similar number of support
+        |  vectors/centers, SVM shows better generalization performance than RBF
+        |  network when the training data size is relatively small. On the other hand,
+        |  RBF network gives better generalization performance than SVM on large
+        |  training data.
+        |
+        |  @param x training samples.
+        |  @param y training labels in [0, k), where k is the number of classes.
+        |  @param distance the distance metric functor.
+        |  @param rbf the radial basis functions.
+        |  @param centers the centers of RBF functions.
+        |  @param normalized true for the normalized RBF network.
+      """.stripMargin)
+    case "svr" => println(
+      """
+        |  def svr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): SVR[T]
+        |  def svr[T <: AnyRef](x: Array[T], y: Array[Double], weight: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double): SVR[T]
+        |
+        |  Support vector regression. Like SVMs for classification, the model produced
+        |  by SVR depends only on a subset of the training data, because the cost
+        |  function ignores any training data close to the model prediction (within
+        |  a threshold).
+        |
+        |  @param x training data
+        |  @param y training labels
+        |  @param kernel the kernel function.
+        |  @param eps the loss function error threshold.
+        |  @param C the soft margin penalty parameter.
+        |  @param tol the tolerance of convergence test.
+      """.stripMargin)
+    case "gaussianProcess" => println(
+      """
+        |  def gaussianProcess[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T]
+        |  def gaussianProcess[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T]
+        |  def gaussianProcessNystrom[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T] = {
+        |
+        |  Gaussian Process for Regression. A Gaussian process is a stochastic process
+        |  whose realizations consist of random values associated with every point in
+        |  a range of times (or of space) such that each such random variable has
+        |  a normal distribution. Moreover, every finite collection of those random
+        |  variables has a multivariate normal distribution.
+        |
+        |  A Gaussian process can be used as a prior probability distribution over
+        |  functions in Bayesian inference. Given any set of N points in the desired
+        |  domain of your functions, take a multivariate Gaussian whose covariance
+        |  matrix parameter is the Gram matrix of N points with some desired kernel,
+        |  and sample from that Gaussian. Inference of continuous values with a
+        |  Gaussian process prior is known as Gaussian process regression.
+        |
+        |  The fitting is performed in the reproducing kernel Hilbert space with
+        |  the "kernel trick". The loss function is squared-error. This also arises
+        |  as the kriging estimate of a Gaussian random field in spatial statistics.
+        |
+        |  A significant problem with Gaussian process prediction is that it typically
+        |  scales as O(n^3). For large problems (e.g. n > 10,000) both
+        |  storing the Gram matrix and solving the associated linear systems are
+        |  prohibitive on modern workstations. An extensive range of proposals have
+        |  been suggested to deal with this problem. A popular approach is the
+        |  reduced-rank Approximations of the Gram Matrix, known as Nystrom approximation.
+        |  Greedy approximation is another popular approach that uses an active set of
+        |  training points of size m selected from the training set of size n > m.
+        |  We assume that it is impossible to search for the optimal subset of size m
+        |  due to combinatorics. The points in the active set could be selected
+        |  randomly, but in general we might expect better performance if the points
+        |  are selected greedily w.r.t. some criterion. Recently, researchers had
+        |  proposed relaxing the constraint that the inducing variables must be a
+        |  subset of training/test cases, turning the discrete selection problem
+        |  into one of continuous optimization.
+        |
+        |  @param x the training dataset.
+        |  @param y the response variable.
+        |  @param t the inducing input. In case of regressor approximation, they are
+        |           pre-selected or inducing samples acting as active set of regressors.
+        |           In simple case, these can be chosen randomly from the training set or
+        |           as the centers of k-means clustering.
+        |           In case of Nystrom approximation, these can be chosen as the centers of
+        |            k-means clustering.
+        |  @param kernel the Mercer kernel.
+        |  @param lambda the shrinkage/regularization parameter.
+      """.stripMargin)
     case "" => println(
       """
         | General:
@@ -997,6 +1246,7 @@ package object shell {
         |   knn -- K-nearest neighbor classifier.
         |   logit -- Logistic regression.
         |   maxent -- Maximum entropy classifier.
+        |   rbfnet -- Radial basis function network
         |   svm -- Support vector machine for classification.
         |   cart -- Decision tree for classification.
         |   randomForest -- Random forest for classification.
@@ -1008,15 +1258,16 @@ package object shell {
         |   rda -- Regularized discriminant analysis.
         |
         | Regression:
+        |   predict -- Apply a classification model on a data sample.
         |   ols -- Ordinary least square.
         |   ridge -- Ridge regression.
         |   lasso -- Least absolute shrinkage and selection operator.
+        |   rbfnet -- Radial basis function network
         |   svr -- Support vector regression.
         |   cart -- Regression tree.
         |   randomForest -- Random forest for regression.
         |   gbm -- Gradient boosting for regression.
         |   gaussianProcess -- Gaussian process for regression.
-        |   rbfnet -- Radial basis function network
         |
         | Graphics:
         |   window -- Create a plot window.
