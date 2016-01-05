@@ -70,7 +70,7 @@ object Airline {
     // Random Forest
     println("Training Random Forest of 500 trees...")
     val forest = time {
-      new RandomForest(attributes, x, y, 500, 2, 400, DecisionTree.SplitRule.ENTROPY, classWeight)
+      new RandomForest(attributes, x, y, 500, 2, 300, DecisionTree.SplitRule.ENTROPY, classWeight)
     }
 
     val pred = new Array[Int](testy.length)
@@ -97,7 +97,7 @@ object Airline {
     // Gradient Tree Boost
     println("Training Gradient Boosted Trees of 300 trees...")
     val gbt = time {
-      new GradientTreeBoost(attributes, x, y, 300, 512, 0.01, 0.5)
+      new GradientTreeBoost(attributes, x, y, 300, 6, 0.1, 0.5)
     }
 
     val (gbtpred, gbtprob) = (0 until testx.length).map { i =>
@@ -108,7 +108,7 @@ object Airline {
     gbtpred.copyToArray(pred, 0, testy.length)
     gbtprob.copyToArray(prob, 0, testy.length)
     println("Gradient Tree Boost accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
-    println("Gradient Tree Boostt sensitivity = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
+    println("Gradient Tree Boost sensitivity = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
     println("Gradient Tree Boost specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
     println("Gradient Tree Boost AUC = %.2f%%" format (100.0 * AUC.measure(testy, prob)))
   }

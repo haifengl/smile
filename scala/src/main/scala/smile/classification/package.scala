@@ -31,6 +31,13 @@ import smile.util._
 package object classification {
 
   /**
+   * Scaladoc fails to generate documents for a package object with only value members.
+   * This is a work around before the bug is fixed. The user should not use this class at all.
+   * TODO: remove this when the issue (https://issues.scala-lang.org/browse/SI-9608) be fixed.
+   */
+  class scaladocHacking
+
+  /**
    * Apply a classification model on a data sample.
    *
    * @param model classification model.

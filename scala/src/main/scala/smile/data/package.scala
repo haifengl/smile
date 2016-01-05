@@ -25,6 +25,13 @@ import smile.data._
  * @author Haifeng Li
  */
 package object data {
+  /**
+   * Scaladoc fails to generate documents for a package object with only value members.
+   * This is a work around before the bug is fixed. The user should not use this class at all.
+   * TODO: remove this when the issue (https://issues.scala-lang.org/browse/SI-9608) be fixed.
+   */
+  class scaladocHacking
+
   implicit def pimpDataset(data: Dataset[Array[Double]]) = new PimpedDataset(data)
   implicit def pimpArray(data: Array[Double]) = new PimpedArray(data)
   implicit def pimpArray2D(data: Array[Array[Double]]) = new PimpedArray2D(data)

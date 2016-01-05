@@ -27,8 +27,14 @@ import smile.math.matrix.SparseMatrix
  * @author Haifeng Li
  */
 package object plot {
+  /**
+   * Scaladoc fails to generate documents for a package object with only value members.
+   * This is a work around before the bug is fixed. The user should not use this class at all.
+   * TODO: remove this when the issue (https://issues.scala-lang.org/browse/SI-9608) be fixed.
+   */
+  class scaladocHacking
 
-  val windowCount = new java.util.concurrent.atomic.AtomicInteger
+  private val windowCount = new java.util.concurrent.atomic.AtomicInteger
 
   /** Create a plot window. */
   def window(title: String = ""): JFrame = {
