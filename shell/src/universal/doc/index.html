@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>
+     SMILE - Statistical Machine Intelligence and Learning Engine
+  </title>
+  
+  <meta name="description" content="SMILE is a fast and general machine learning engine for big data processing, with built-in modules for classification, regression, clustering, association rule mining, feature selection, manifold learning, genetic algorithm, missing value imputation, efficient nearest neighbor search, MDS, NLP, linear algebra, hypothesis tests, random number generators, interpolation, wavelet, plot, etc.">
+
+  <!-- Bootstrap core CSS -->
+  <link href="css/cerulean.min.css" rel="stylesheet">
+  <link href="css/custom.css" rel="stylesheet">
+
+  <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!--[if lt IE 9]>
+  <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+  <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+<body>
+
+<script src="https://code.jquery.com/jquery.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script async="" defer="" id="github-bjs" src="https://buttons.github.io/buttons.js"></script>
+
+<div class="container" style="max-width: 1200px;">
+<header>
+<div class="masthead">
+  
+  <p class="lead">
+    <a href="/">
+    <img src="images/smile.jpg"
+        style="height:100px; width:auto; vertical-align: bottom; margin-top: 20px;"></a><span class="tagline">
+          SMILE - Statistical Machine Intelligence and Learning Engine
+    </span>
+  </p>
+</div>
+
+<nav class="navbar navbar-default" role="navigation">
+  <!-- Brand and toggle get grouped for better mobile display -->
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse"
+            data-target="#navbar-collapse-1">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+  </div>
+
+  <!-- Collect the nav links, forms, and other content for toggling -->
+  <div class="collapse navbar-collapse" id="navbar-collapse-1">
+    <ul class="nav navbar-nav">
+      <li><a href="quickstart.html">Quick Start</a></li>
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+          Libraries <b class="caret"></b>
+        </a>
+        <ul class="dropdown-menu">
+          <li><a href="/classification/">Classification</a></li>
+          <li><a href="/regression/">Regression</a></li>
+          <li><a href="/math/">Math</a></li>
+          <li><a href="/graph/">Graph</a></li>
+          <li><a href="/interpolation/">Interpolation</a></li>
+          <li><a href="/plot/">Plot</a></li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+          Documentation <b class="caret"></b>
+        </a>
+        <ul class="dropdown-menu">
+          <li><a href="api/java/">Java API</a></li>
+          <li><a href="api/scala/">Scala API</a></li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <a href="/community.html" class="dropdown-toggle" data-toggle="dropdown">
+          Community <b class="caret"></b>
+        </a>
+        <ul class="dropdown-menu">
+          <li><a href="https://github.com/haifengl/smile/graphs/contributors">Project Contributors</a></li>
+          <li><a href="https://github.com/haifengl/smile/issues">Issue Tracker</a></li>
+        </ul>
+      </li>
+      <li><a href="faq.html">FAQ</a></li>
+    </ul>
+  </div>
+  <!-- /.navbar-collapse -->
+</nav>
+</header>
+
+<div class="row">
+  <div class="col-md-3 col-md-push-9">
+    <div class="news" style="margin-bottom: 20px;">
+      <h5>Latest News</h5>
+      <ul class="list-unstyled">        
+          <li><a href="https://haifengl.wordpress.com/2015/03/03/smile-is-the-most-exciting-project-on-github-today/">SMILE is the most exciting project on Github today!</a>
+          <span class="small">(Mar 03, 2015)</span></li>
+        
+          <li><a href="https://haifengl.wordpress.com/2014/11/20/smile-is-available-on-github/">SMILE is available on GitHub!</a>
+          <span class="small">(Nov 15, 2014)</span></li>
+      </ul>
+      <p class="small" style="text-align: right;"><a href="/news/index.html">Archive</a></p>
+    </div>
+    <div class="hidden-xs hidden-sm">
+      <a href="https://github.com/haifengl/smile/releases" class="btn btn-primary btn-lg btn-block" style="margin-bottom: 30px;">
+        Download SMILE
+      </a>
+      <p style="font-size: 16px; font-weight: 500; color: #555;">
+        Built-in Algorithms:
+      </p>
+      <dl>
+        <dt>Classification</dt>
+        <dd>
+          Support Vector Machines, Decision Trees, AdaBoost, Gradient Boosting, Random Forest,
+          Logistic Regression, Neural Networks, RBF Networks, Maximum Entropy Classifier, KNN,
+          Naïve Bayesian, Fisher/Linear/Quadratic/Regularized Discriminant Analysis.
+        </dd>
+
+        <dt>Regression</dt>
+        <dd>
+          Support Vector Regression, Gaussian Process, Regression Trees, Gradient Boosting,
+          Random Forest, RBF Networks, OLS, LASSO, Ridge Regression.
+        </dd>
+
+        <dt>Feature Selection</dt>
+        <dd>
+          Genetic Algorithm based Feature Selection, Ensemble Learning based Feature Selection,
+          Signal Noise ratio, Sum Squares ratio.
+        </dd>
+
+        <dt>Clustering</dt>
+        <dd>
+          BIRCH, CLARANS, DBScan, DENCLUE, Deterministic Annealing, K-Means, X-Means,
+          G-Means, Neural Gas, Growing Neural Gas, Hierarchical Clustering,
+          Sequential Information Bottleneck, Self-Organizing Maps, Spectral Clustering,
+          Minimum Entropy Clustering.
+        </dd>
+
+        <dt>Association Rule &amp; Frequent Itemset Mining</dt>
+        <dd>FP-growth mining algorithm</dd>
+
+        <dt>Manifold learning</dt>
+        <dd>
+          IsoMap, LLE, Laplacian Eigenmap, PCA, Kernel PCA, Probabilistic PCA, GHA, Random Projection
+        </dd>
+
+        <dt>Multi-Dimensional Scaling</dt>
+        <dd>
+          Classical MDS, Isotonic MDS, Sammon Mapping
+        </dd>
+
+        <dt>Nearest Neighbor Search</dt>
+        <dd>
+          BK-Tree, Cover Tree, KD-Tree, LSH
+        </dd>
+
+        <dt>Sequence Learning</dt>
+        <dd>
+          Hidden Markov Model, Conditional Random Field.
+        </dd>
+
+        <dt>Natural Language Processing</dt>
+        <dd>
+          Sentence Splitter and Tokenizer, Bigram Statistical Test, Phrase Extractor,
+          Keyword Extractor, Stemmer, POS Tagging, Relevance Ranking
+        </dd>
+      </dl>
+
+    </div>
+  </div>
+
+  <div class="col-md-9 col-md-pull-3">
+    <div class="jumbotron">
+      <b>SMILE</b> is a fast and general machine learning engine.
+      <p><a href="https://github.com/haifengl/smile">Open source</a>, of course.</p>
+      <div id="github-buttons-wrapper" style="margin-top: 30px;">
+        <a class="github-button" href="https://github.com/haifengl/smile" data-style="mega" data-count-href="/haifengl/smile/stargazers" data-count-api="/repos/haifengl/smile#stargazers_count" data-count-aria-label="# stargazers on GitHub" aria-label="Star haifengl/smile on GitHub">Star</a>
+        <a class="github-button" href="https://github.com/haifengl/smile/fork" data-icon="octicon-git-branch" data-style="mega" data-count-href="/haifengl/smile/network" data-count-api="/repos/haifengl/smile#forks_count" data-count-aria-label="# forks on GitHub" aria-label="Fork haifengl/smile on GitHub">Fork</a>
+      </div>
+    </div>
+
+
+    <div class="row row-padded">
+      <div class="col-md-7 col-sm-7">
+        <h2>Speed</h2>
+
+        <p class="lead">
+          With advanced data structures and algorithms, SMILE delivers state-of-art performance.
+        </p>
+
+        <p>
+          According to this third-party <a href="https://github.com/szilard/benchm-ml">benchmark</a>, SMILE outperforms R, Python, Spark, H2O, xgboost significantly.
+        </p>
+      </div>
+      <div class="col-md-5 col-sm-5 col-padded-top col-center">
+        <div style="width: 100%; max-width: 272px; display: inline-block; text-align: center;">
+          <img src="/images/benchm-ml.png" style="width: 100%; max-width: 250px;" />
+          <div class="caption" style="min-width: 272px;">Random Forest and Gradient Tree Boosting</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row row-padded">
+      <div class="col-md-7 col-sm-7">
+        <h2>Ease of Use</h2>
+
+        <p class="lead">
+          Write applications quickly in Java, Scala, or any JVM languages.
+        </p>
+
+        <p>
+          SMILE provides hundreds advanced algorithm with clean interface. Scala API also offers high-level operators that make it easy to build machine learning apps.
+          And you can use it interactively from the shell, embedded in Scala.
+        </p>
+      </div>
+      <div class="col-md-5 col-sm-5 col-padded-top col-center">
+        <div style="text-align: left; display: inline-block;">
+          <div class="code">
+            <br/><br/>
+            val data = readArff("iris.arff", 4)<br/>
+            val attr = data.attributes<br/>
+            val (x, y) = data.unzip<br/>
+            <br/>
+            val rf = randomForest(x, y, attr)<br/>
+            rf.predict(x(0))
+          </div>
+          <div class="caption">Random Forest in SMILE's Scala API</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row row-padded">
+      <div class="col-md-7 col-sm-7">
+        <h2>Comprehensive</h2>
+
+        <p class="lead">
+          Classification, regression, clustering, association rule mining, feature selection, manifold learning, multidimensional scaling, genetic algorithm, missing value imputation, efficient nearest neighbor search, natural language processing, linear algebra, hypothesis tests, random number generators, interpolation, wavelet, plot, etc.
+        </p>
+      </div>
+      <div class="col-md-5 col-sm-5 col-padded-top col-center">
+
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</body>
+</html>

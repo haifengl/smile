@@ -48,7 +48,7 @@ private[data] class PimpedDataset(data: Dataset[Array[Double]]) {
     }
 
     /** Split the data into x and y of Double */
-    def unzip2: (Array[Array[Double]], Array[Double]) = {
+    def unzipReal: (Array[Array[Double]], Array[Double]) = {
       val x = data.toArray(new Array[Array[Double]](data.size))
       val y = data.toArray(new Array[Double](data.size))
       (x, y)

@@ -107,8 +107,9 @@ public class ArffParser {
     /**
      * Sets the column index (starting at 0) of dependent/response variable.
      */
-    public void setResponseIndex(int index) {
+    public ArffParser setResponseIndex(int index) {
         this.responseIndex = index;
+        return this;
     }
     
     /**
