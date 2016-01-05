@@ -43,7 +43,7 @@ public class MulticoreExecutor {
     static {
         int n = -1;
         try {
-            String env = System.getenv("SMILE_NUM_THREADS");
+            String env = System.getProperty("smile.threads");
             if (env != null) {
                 n = Integer.parseInt(env);
             }
