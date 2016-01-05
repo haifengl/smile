@@ -100,7 +100,7 @@ public class Math {
      */
     private static ThreadLocal<smile.math.Random> random = new ThreadLocal() {
         protected synchronized Object initialValue() {
-            if (Thread.currentThread().getId() == 1) {
+            if (Thread.currentThread().getName().equals("run-main-0")) {
                 // For main thread, we use the default seed so that we can
                 // get repeatable results for random algorithms.
                 return new smile.math.Random();
@@ -108,7 +108,16 @@ public class Math {
                 // Make sure other threads not to use the same seed.
                 // This is very important for some algorithms such as random forest.
                 // Otherwise, all trees of random forest are same except the main thread one.
-                return new smile.math.Random(Thread.currentThread().getId() * System.currentTimeMillis());
+
+                java.security.SecureRandom sr = new java.security.SecureRandom();
+                byte[] bytes = sr.generateSeed(Long.BYTES);
+                long seed = 0;
+                for (int i = 0; i < Long.BYTES; i++) {
+                    seed <<= 8;
+                    seed |= (bytes[i] & 0xFF);
+                }
+                
+                return new smile.math.Random(seed);
             }
         }
     };
