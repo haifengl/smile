@@ -27,6 +27,12 @@ import smile.util._
  * @author Haifeng Li
  */
 package object regression {
+  /**
+   * Scaladoc fails to generate documents for a package object with only value members.
+   * This is a work around before the bug is fixed. The user should not use this class at all.
+   * TODO: remove this when the issue (https://issues.scala-lang.org/browse/SI-9608) be fixed.
+   */
+  class scaladocHacking
 
   /**
    * Apply a regression model on a data sample.

@@ -27,6 +27,13 @@ import smile.math.matrix.SparseMatrix
  * @author Haifeng Li
  */
 package object io {
+  /**
+   * Scaladoc fails to generate documents for a package object with only value members.
+   * This is a work around before the bug is fixed. The user should not use this class at all.
+   * TODO: remove this when the issue (https://issues.scala-lang.org/browse/SI-9608) be fixed.
+   */
+  class scaladocHacking
+
   /** Writes an object/model to a file. */
   def write[T <: Object](x: T, file: String): Unit = {
     val xstream = new XStream

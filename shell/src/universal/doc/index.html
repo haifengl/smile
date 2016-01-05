@@ -106,7 +106,9 @@
           <li><a href="https://haifengl.wordpress.com/2014/11/20/smile-is-available-on-github/">SMILE is available on GitHub!</a>
           <span class="small">(Nov 15, 2014)</span></li>
       </ul>
+      <!--
       <p class="small" style="text-align: right;"><a href="/news/index.html">Archive</a></p>
+      -->
     </div>
     <div class="hidden-xs hidden-sm">
       <a href="https://github.com/haifengl/smile/releases" class="btn btn-primary btn-lg btn-block" style="margin-bottom: 30px;">
@@ -115,7 +117,7 @@
       <p style="font-size: 16px; font-weight: 500; color: #555;">
         Built-in Algorithms:
       </p>
-      <dl>
+      <dl style="font-size: 13px;">
         <dt>Classification</dt>
         <dd>
           Support Vector Machines, Decision Trees, AdaBoost, Gradient Boosting, Random Forest,
@@ -201,8 +203,8 @@
       </div>
       <div class="col-md-5 col-sm-5 col-padded-top col-center">
         <div style="width: 100%; max-width: 272px; display: inline-block; text-align: center;">
-          <img src="/images/benchm-ml.png" style="width: 100%; max-width: 250px;" />
-          <div class="caption" style="min-width: 272px;">Random Forest and Gradient Tree Boosting</div>
+          <img src="images/benchm-ml.png" style="width: 100%; max-width: 250px;" />
+          <div class="caption" style="min-width: 272px;">Random Forest and Gradient Tree Boosting Running Time (s)</div>
         </div>
       </div>
     </div>
@@ -212,7 +214,8 @@
         <h2>Ease of Use</h2>
 
         <p class="lead">
-          Write applications quickly in Java, Scala, or any JVM languages.
+          Write applications quickly in Java, Scala, or any JVM languages. Build and deploy the models in one place.
+          Data scientists and developers can speak the same language now!
         </p>
 
         <p>
@@ -225,10 +228,10 @@
           <div class="code">
             <br/><br/>
             val data = readArff("iris.arff", 4)<br/>
-            val attr = data.attributes<br/>
             val (x, y) = data.unzip<br/>
             <br/>
-            val rf = randomForest(x, y, attr)<br/>
+            val rf = randomForest(x, y)<br/>
+            println(s"OOB error = ${rf.error}")<br/>
             rf.predict(x(0))
           </div>
           <div class="caption">Random Forest in SMILE's Scala API</div>

@@ -668,16 +668,14 @@ public class DecisionTree implements Classifier<double[]> {
             double[] falseChildPosteriori = new double[k];
             for (int i = 0; i < n; i++) {
                 int yi = y[i];
-                if (trueSamples[i] > 0) {
-                    trueChildPosteriori[yi] += trueSamples[i];
-                }
-                if (falseSamples[i] > 0) {
-                    falseChildPosteriori[yi] += falseSamples[i];
-                }
+                trueChildPosteriori[yi] += trueSamples[i];
+                falseChildPosteriori[yi] += falseSamples[i];
             }
+
+            // add-k smoothing of posteriori probability
             for (int i = 0; i < k; i++) {
-                trueChildPosteriori[i] /= tc;
-                falseChildPosteriori[i] /= fc;
+                trueChildPosteriori[i] = (trueChildPosteriori[i] + 1) / (tc + k);
+                falseChildPosteriori[i] = (falseChildPosteriori[i] + 1) / (fc + k);
             }
 
             node.trueChild = new Node(node.trueChildOutput, trueChildPosteriori);
