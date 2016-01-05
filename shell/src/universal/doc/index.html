@@ -20,13 +20,26 @@
   <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
   <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
   <![endif]-->
+
+  <script src="https://code.jquery.com/jquery.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <script async="" defer="" id="github-bjs" src="https://buttons.github.io/buttons.js"></script>
+
+  <!-- Load static page by jQuery AJAX -->
+  <script type="text/javascript">
+    $(document).ready(function(){
+      $("#faq").click(function(){
+        $('#content').load('faq.html');
+      });
+
+      $("#quickstart").click(function(){
+        $('#content').load('quickstart.html');
+      });
+    });
+  </script>
 </head>
 
 <body>
-
-<script src="https://code.jquery.com/jquery.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-<script async="" defer="" id="github-bjs" src="https://buttons.github.io/buttons.js"></script>
 
 <div class="container" style="max-width: 1200px;">
 <header>
@@ -56,7 +69,8 @@
   <!-- Collect the nav links, forms, and other content for toggling -->
   <div class="collapse navbar-collapse" id="navbar-collapse-1">
     <ul class="nav navbar-nav">
-      <li><a href="quickstart.html">Quick Start</a></li>
+      <li><a id="quickstart" href="#">Quick Start</a></li>
+      <!--
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
           Libraries <b class="caret"></b>
@@ -70,17 +84,18 @@
           <li><a href="/plot/">Plot</a></li>
         </ul>
       </li>
+      -->
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
           Documentation <b class="caret"></b>
         </a>
         <ul class="dropdown-menu">
-          <li><a href="api/java/">Java API</a></li>
-          <li><a href="api/scala/">Scala API</a></li>
+          <li><a href="api/java/index.html">Java API</a></li>
+          <li><a href="api/scala/index.html">Scala API</a></li>
         </ul>
       </li>
       <li class="dropdown">
-        <a href="/community.html" class="dropdown-toggle" data-toggle="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
           Community <b class="caret"></b>
         </a>
         <ul class="dropdown-menu">
@@ -88,7 +103,7 @@
           <li><a href="https://github.com/haifengl/smile/issues">Issue Tracker</a></li>
         </ul>
       </li>
-      <li><a href="faq.html">FAQ</a></li>
+      <li><a id="faq" href="#">FAQ</a></li>
     </ul>
   </div>
   <!-- /.navbar-collapse -->
@@ -178,7 +193,7 @@
     </div>
   </div>
 
-  <div class="col-md-9 col-md-pull-3">
+  <div id="content" class="col-md-9 col-md-pull-3">
     <div class="jumbotron">
       <b>SMILE</b> is a fast and general machine learning engine.
       <p><a href="https://github.com/haifengl/smile">Open source</a>, of course.</p>
