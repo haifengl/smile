@@ -116,7 +116,7 @@ public class Math {
                     seed <<= 8;
                     seed |= (bytes[i] & 0xFF);
                 }
-                
+
                 return new smile.math.Random(seed);
             }
         }

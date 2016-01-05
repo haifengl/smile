@@ -23,29 +23,26 @@ import smile.stat.distribution.Distribution
 import smile.neighbor._
 import smile.util._
 
-/**
- * Classification shell commands.
- *
- * @author Haifeng Li
- */
+/** Classification shell commands.
+  *
+  * @author Haifeng Li
+  */
 package object classification {
 
-  /**
-   * Scaladoc fails to generate documents for a package object with only value members.
-   * This is a work around before the bug is fixed. The user should not use this class at all.
-   * TODO: remove this when the issue (https://issues.scala-lang.org/browse/SI-9608) be fixed.
-   */
+  /** Scaladoc fails to generate documents for a package object with only value members.
+    * This is a work around before the bug is fixed. The user should not use this class at all.
+    * TODO: remove this when the issue (https://issues.scala-lang.org/browse/SI-9608) be fixed.
+    */
   class scaladocHacking
 
-  /**
-   * Apply a classification model on a data sample.
-   *
-   * @param model classification model.
-   * @param x data sample.
-   * @param posteriori optional double array of posertiori probability output. Note not all models support it.
-   * @tparam T the data type.
-   * @return the predicted class label.
-   */
+  /** Apply a classification model on a data sample.
+    *
+    * @param model classification model.
+    * @param x data sample.
+    * @param posteriori optional double array of posertiori probability output. Note not all models support it.
+    * @tparam T the data type.
+    * @return the predicted class label.
+    */
   def predict[T <: AnyRef](model: Classifier[T], x: T, posteriori: Array[Double] = null): Int = {
     if (posteriori == null)
       model.predict(x)
@@ -53,267 +50,265 @@ package object classification {
       model.predict(x, posteriori)
   }
 
-  /**
-   * K-nearest neighbor classifier. The k-nearest neighbor algorithm (k-NN) is
-   * a method for classifying objects by a majority vote of its neighbors,
-   * with the object being assigned to the class most common amongst its k
-   * nearest neighbors (k is a positive integer, typically small).
-   * k-NN is a type of instance-based learning, or lazy learning where the
-   * function is only approximated locally and all computation
-   * is deferred until classification.
-   * <p>
-   * The best choice of k depends upon the data; generally, larger values of
-   * k reduce the effect of noise on the classification, but make boundaries
-   * between classes less distinct. A good k can be selected by various
-   * heuristic techniques, e.g. cross-validation. In binary problems, it is
-   * helpful to choose k to be an odd number as this avoids tied votes.
-   * <p>
-   * A drawback to the basic majority voting classification is that the classes
-   * with the more frequent instances tend to dominate the prediction of the
-   * new object, as they tend to come up in the k nearest neighbors when
-   * the neighbors are computed due to their large number. One way to overcome
-   * this problem is to weight the classification taking into account the
-   * distance from the test point to each of its k nearest neighbors.
-   * <p>
-   * Often, the classification accuracy of k-NN can be improved significantly
-   * if the distance metric is learned with specialized algorithms such as
-   * Large Margin Nearest Neighbor or Neighborhood Components Analysis.
-   * <p>
-   * Nearest neighbor rules in effect compute the decision boundary in an
-   * implicit manner. It is also possible to compute the decision boundary
-   * itself explicitly, and to do so in an efficient manner so that the
-   * computational complexity is a function of the boundary complexity.
-   * <p>
-   * The nearest neighbor algorithm has some strong consistency results. As
-   * the amount of data approaches infinity, the algorithm is guaranteed to
-   * yield an error rate no worse than twice the Bayes error rate (the minimum
-   * achievable error rate given the distribution of the data). k-NN is
-   * guaranteed to approach the Bayes error rate, for some value of k (where k
-   * increases as a function of the number of data points).
-   *
-   * @param x k-nearest neighbor search data structure of training instances.
-   * @param y training labels in [0, c), where c is the number of classes.
-   * @param k the number of neighbors for classification.
-   */
+  /** K-nearest neighbor classifier.
+    * The k-nearest neighbor algorithm (k-NN) is
+    * a method for classifying objects by a majority vote of its neighbors,
+    * with the object being assigned to the class most common amongst its k
+    * nearest neighbors (k is a positive integer, typically small).
+    * k-NN is a type of instance-based learning, or lazy learning where the
+    * function is only approximated locally and all computation
+    * is deferred until classification.
+    *
+    * The best choice of k depends upon the data; generally, larger values of
+    * k reduce the effect of noise on the classification, but make boundaries
+    * between classes less distinct. A good k can be selected by various
+    * heuristic techniques, e.g. cross-validation. In binary problems, it is
+    * helpful to choose k to be an odd number as this avoids tied votes.
+    *
+    * A drawback to the basic majority voting classification is that the classes
+    * with the more frequent instances tend to dominate the prediction of the
+    * new object, as they tend to come up in the k nearest neighbors when
+    * the neighbors are computed due to their large number. One way to overcome
+    * this problem is to weight the classification taking into account the
+    * distance from the test point to each of its k nearest neighbors.
+    *
+    * Often, the classification accuracy of k-NN can be improved significantly
+    * if the distance metric is learned with specialized algorithms such as
+    * Large Margin Nearest Neighbor or Neighborhood Components Analysis.
+    *
+    * Nearest neighbor rules in effect compute the decision boundary in an
+    * implicit manner. It is also possible to compute the decision boundary
+    * itself explicitly, and to do so in an efficient manner so that the
+    * computational complexity is a function of the boundary complexity.
+    *
+    * The nearest neighbor algorithm has some strong consistency results. As
+    * the amount of data approaches infinity, the algorithm is guaranteed to
+    * yield an error rate no worse than twice the Bayes error rate (the minimum
+    * achievable error rate given the distribution of the data). k-NN is
+    * guaranteed to approach the Bayes error rate, for some value of k (where k
+    * increases as a function of the number of data points).
+    *
+    * @param x k-nearest neighbor search data structure of training instances.
+    * @param y training labels in [0, c), where c is the number of classes.
+    * @param k the number of neighbors for classification.
+    */
   def knn[T <: AnyRef](x: KNNSearch[T, T], y: Array[Int], k: Int): KNN[T] = {
     time {
       new KNN(x, y, k)
     }
   }
 
-  /**
-   * K-nearest neighbor classifier.
-   *
-   * @param x training samples.
-   * @param y training labels in [0, c), where c is the number of classes.
-   * @param distance the distance measure for finding nearest neighbors.
-   * @param k the number of neighbors for classification.
-   */
+  /** K-nearest neighbor classifier.
+    *
+    * @param x training samples.
+    * @param y training labels in [0, c), where c is the number of classes.
+    * @param distance the distance measure for finding nearest neighbors.
+    * @param k the number of neighbors for classification.
+    */
   def knn[T <: AnyRef](x: Array[T], y: Array[Int], distance: Distance[T], k: Int): KNN[T] = {
     time {
       new KNN(x, y, distance, k)
     }
   }
 
-  /**
-   * K-nearest neighbor classifier.
-   *
-   * @param x training samples.
-   * @param y training labels in [0, c), where c is the number of classes.
-   * @param k the number of neighbors for classification.
-   */
+  /** K-nearest neighbor classifier.
+    *
+    * @param x training samples.
+    * @param y training labels in [0, c), where c is the number of classes.
+    * @param k the number of neighbors for classification.
+    */
   def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]] = {
     time {
       KNN.learn(x, y, k)
     }
   }
 
-  /**
-   * Logistic regression. Logistic regression (logit model) is a generalized
-   * linear model used for binomial regression. Logistic regression applies
-   * maximum likelihood estimation after transforming the dependent into
-   * a logit variable. A logit is the natural log of the odds of the dependent
-   * equaling a certain value or not (usually 1 in binary logistic models,
-   * the highest value in multinomial models). In this way, logistic regression
-   * estimates the odds of a certain event (value) occurring.
-   * <p>
-   * Goodness-of-fit tests such as the likelihood ratio test are available
-   * as indicators of model appropriateness, as is the Wald statistic to test
-   * the significance of individual independent variables.
-   * <p>
-   * Logistic regression has many analogies to ordinary least squares (OLS)
-   * regression. Unlike OLS regression, however, logistic regression does not
-   * assume linearity of relationship between the raw values of the independent
-   * variables and the dependent, does not require normally distributed variables,
-   * does not assume homoscedasticity, and in general has less stringent
-   * requirements.
-   * <p>
-   * Compared with linear discriminant analysis, logistic regression has several
-   * advantages:
-   * <ul>
-   * <li> It is more robust: the independent variables don't have to be normally
-   * distributed, or have equal variance in each group
-   * <li> It does not assume a linear relationship between the independent
-   * variables and dependent variable.
-   * <li> It may handle nonlinear effects since one can add explicit interaction
-   * and power terms.
-   * </ul>
-   * However, it requires much more data to achieve stable, meaningful results.
-   * <p>
-   * Logistic regression also has strong connections with neural network and
-   * maximum entropy modeling. For example, binary logistic regression is
-   * equivalent to a one-layer, single-output neural network with a logistic
-   * activation function trained under log loss. Similarly, multinomial logistic
-   * regression is equivalent to a one-layer, softmax-output neural network.
-   * <p>
-   * Logistic regression estimation also obeys the maximum entropy principle, and
-   * thus logistic regression is sometimes called "maximum entropy modeling",
-   * and the resulting classifier the "maximum entropy classifier".
-   *
-   * @param x training samples.
-   * @param y training labels in [0, k), where k is the number of classes.
-   * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-   *               weights which often has superior generalization performance, especially
-   *               when the dimensionality is high.
-   * @param tol the tolerance for stopping iterations.
-   * @param maxIter the maximum number of iterations.
-   *
-   * @return Logistic regression model.
-   */
+  /** Logistic regression.
+    * Logistic regression (logit model) is a generalized
+    * linear model used for binomial regression. Logistic regression applies
+    * maximum likelihood estimation after transforming the dependent into
+    * a logit variable. A logit is the natural log of the odds of the dependent
+    * equaling a certain value or not (usually 1 in binary logistic models,
+    * the highest value in multinomial models). In this way, logistic regression
+    * estimates the odds of a certain event (value) occurring.
+    *
+    * Goodness-of-fit tests such as the likelihood ratio test are available
+    * as indicators of model appropriateness, as is the Wald statistic to test
+    * the significance of individual independent variables.
+    *
+    * Logistic regression has many analogies to ordinary least squares (OLS)
+    * regression. Unlike OLS regression, however, logistic regression does not
+    * assume linearity of relationship between the raw values of the independent
+    * variables and the dependent, does not require normally distributed variables,
+    * does not assume homoscedasticity, and in general has less stringent
+    * requirements.
+    *
+    * Compared with linear discriminant analysis, logistic regression has several
+    * advantages:
+    *
+    * - It is more robust: the independent variables don't have to be normally
+    * distributed, or have equal variance in each group
+    *
+    * - It does not assume a linear relationship between the independent
+    * variables and dependent variable.
+    *
+    * - It may handle nonlinear effects since one can add explicit interaction
+    * and power terms.
+    *
+    * However, it requires much more data to achieve stable, meaningful results.
+    *
+    * Logistic regression also has strong connections with neural network and
+    * maximum entropy modeling. For example, binary logistic regression is
+    * equivalent to a one-layer, single-output neural network with a logistic
+    * activation function trained under log loss. Similarly, multinomial logistic
+    * regression is equivalent to a one-layer, softmax-output neural network.
+    *
+    * Logistic regression estimation also obeys the maximum entropy principle, and
+    * thus logistic regression is sometimes called "maximum entropy modeling",
+    * and the resulting classifier the "maximum entropy classifier".
+    *
+    * @param x training samples.
+    * @param y training labels in [0, k), where k is the number of classes.
+    * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+    *               weights which often has superior generalization performance, especially
+    *               when the dimensionality is high.
+    * @param tol the tolerance for stopping iterations.
+    * @param maxIter the maximum number of iterations.
+    *
+    * @return Logistic regression model.
+    */
   def logit(x: Array[Array[Double]], y: Array[Int], lambda: Double = 0.0, tol: Double = 1E-5, maxIter: Int = 500): LogisticRegression = {
     time {
       new LogisticRegression(x, y, lambda, tol, maxIter)
     }
   }
 
-  /**
-   * Maximum Entropy Classifier. Maximum entropy is a technique for learning
-   * probability distributions from data. In maximum entropy models, the
-   * observed data itself is assumed to be the testable information. Maximum
-   * entropy models don't assume anything about the probability distribution
-   * other than what have been observed and always choose the most uniform
-   * distribution subject to the observed constraints.
-   * <p>
-   * Basically, maximum entropy classifier is another name of multinomial logistic
-   * regression applied to categorical independent variables, which are
-   * converted to binary dummy variables. Maximum entropy models are widely
-   * used in natural language processing.  Here, we provide an implementation
-   * which assumes that binary features are stored in a sparse array, of which
-   * entries are the indices of nonzero features.
-   *
-   * <ol>
-   * <li> A. L. Berger, S. D. Pietra, and V. J. D. Pietra. A maximum entropy approach to natural language processing. Computational Linguistics 22(1):39-71, 1996.</li>
-   * </ol>
-   *
-   * @param x training samples. Each sample is represented by a set of sparse
-   *          binary features. The features are stored in an integer array, of which
-   *          are the indices of nonzero features.
-   * @param y training labels in [0, k), where k is the number of classes.
-   * @param p the dimension of feature space.
-   * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-   *               weights which often has superior generalization performance, especially
-   *               when the dimensionality is high.
-   * @param tol tolerance for stopping iterations.
-   * @param maxIter maximum number of iterations.
-   * @return Maximum entropy model.
-   */
+  /** Maximum Entropy Classifier.
+    * Maximum entropy is a technique for learning
+    * probability distributions from data. In maximum entropy models, the
+    * observed data itself is assumed to be the testable information. Maximum
+    * entropy models don't assume anything about the probability distribution
+    * other than what have been observed and always choose the most uniform
+    * distribution subject to the observed constraints.
+    *
+    * Basically, maximum entropy classifier is another name of multinomial logistic
+    * regression applied to categorical independent variables, which are
+    * converted to binary dummy variables. Maximum entropy models are widely
+    * used in natural language processing.  Here, we provide an implementation
+    * which assumes that binary features are stored in a sparse array, of which
+    * entries are the indices of nonzero features.
+    *
+    * ====References:====
+    *   - A. L. Berger, S. D. Pietra, and V. J. D. Pietra. A maximum entropy approach to natural language processing. Computational Linguistics 22(1):39-71, 1996.
+    *
+    * @param x training samples. Each sample is represented by a set of sparse
+    *          binary features. The features are stored in an integer array, of which
+    *          are the indices of nonzero features.
+    * @param y training labels in [0, k), where k is the number of classes.
+    * @param p the dimension of feature space.
+    * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+    *               weights which often has superior generalization performance, especially
+    *               when the dimensionality is high.
+    * @param tol tolerance for stopping iterations.
+    * @param maxIter maximum number of iterations.
+    * @return Maximum entropy model.
+    */
   def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent = {
     time {
       new Maxent(p, x, y, lambda, tol, maxIter)
     }
   }
 
-  /**
-   * Multilayer perceptron neural network.
-   * An MLP consists of several layers of nodes, interconnected through weighted
-   * acyclic arcs from each preceding layer to the following, without lateral or
-   * feedback connections. Each node calculates a transformed weighted linear
-   * combination of its inputs (output activations from the preceding layer), with
-   * one of the weights acting as a trainable bias connected to a constant input.
-   * The transformation, called activation function, is a bounded non-decreasing
-   * (non-linear) function, such as the sigmoid functions (ranges from 0 to 1).
-   * Another popular activation function is hyperbolic tangent which is actually
-   * equivalent to the sigmoid function in shape but ranges from -1 to 1.
-   * More specialized activation functions include radial basis functions which
-   * are used in RBF networks.
-   * <p>
-   * The representational capabilities of a MLP are determined by the range of
-   * mappings it may implement through weight variation. Single layer perceptrons
-   * are capable of solving only linearly separable problems. With the sigmoid
-   * function as activation function, the single-layer network is identical
-   * to the logistic regression model.
-   * <p>
-   * The universal approximation theorem for neural networks states that every
-   * continuous function that maps intervals of real numbers to some output
-   * interval of real numbers can be approximated arbitrarily closely by a
-   * multi-layer perceptron with just one hidden layer. This result holds only
-   * for restricted classes of activation functions, which are extremely complex
-   * and NOT smooth for subtle mathematical reasons. On the other hand, smoothness
-   * is important for gradient descent learning. Besides, the proof is not
-   * constructive regarding the number of neurons required or the settings of
-   * the weights. Therefore, complex systems will have more layers of neurons
-   * with some having increased layers of input neurons and output neurons
-   * in practice.
-   * <p>
-   * The most popular algorithm to train MLPs is back-propagation, which is a
-   * gradient descent method. Based on chain rule, the algorithm propagates the
-   * error back through the network and adjusts the weights of each connection in
-   * order to reduce the value of the error function by some small amount.
-   * For this reason, back-propagation can only be applied on networks with
-   * differentiable activation functions.
-   * <p>
-   * During error back propagation, we usually times the gradient with a small
-   * number &eta;, called learning rate, which is carefully selected to ensure
-   * that the network converges to a local minimum of the error function
-   * fast enough, without producing oscillations. One way to avoid oscillation
-   * at large &eta;, is to make the change in weight dependent on the past weight
-   * change by adding a momentum term.
-   * <p>
-   * Although the back-propagation algorithm may performs gradient
-   * descent on the total error of all instances in a batch way,
-   * the learning rule is often applied to each instance separately in an online
-   * way or stochastic way. There exists empirical indication that the stochastic
-   * way results in faster convergence.
-   * <p>
-   * In practice, the problem of over-fitting has emerged. This arises in
-   * convoluted or over-specified systems when the capacity of the network
-   * significantly exceeds the needed free parameters. There are two general
-   * approaches for avoiding this problem: The first is to use cross-validation
-   * and similar techniques to check for the presence of over-fitting and
-   * optimally select hyper-parameters such as to minimize the generalization
-   * error. The second is to use some form of regularization, which emerges
-   * naturally in a Bayesian framework, where the regularization can be
-   * performed by selecting a larger prior probability over simpler models;
-   * but also in statistical learning theory, where the goal is to minimize over
-   * the "empirical risk" and the "structural risk".
-   * <p>
-   * For neural networks, the input patterns usually should be scaled/standardized.
-   * Commonly, each input variable is scaled into interval [0, 1] or to have
-   * mean 0 and standard deviation 1.
-   * <p>
-   * For penalty functions and output units, the following natural pairings are
-   * recommended:
-   * <ul>
-   * <li> linear output units and a least squares penalty function.
-   * <li> a two-class cross-entropy penalty function and a logistic
-   * activation function.
-   * <li> a multi-class cross-entropy penalty function and a softmax
-   * activation function.
-   * </ul>
-   * By assigning a softmax activation function on the output layer of
-   * the neural network for categorical target variables, the outputs
-   * can be interpreted as posterior probabilities, which are very useful.
-   *
-   * @param x training samples.
-   * @param y training labels in [0, k), where k is the number of classes.
-   * @param numUnits the number of units in each layer.
-   * @param error the error function.
-   * @param activation the activation function of output layer.
-   * @param epochs the number of epochs of stochastic learning.
-   * @param eta the learning rate.
-   * @param alpha the momentum factor.
-   * @param lambda the weight decay for regularization.
-   */
+  /** Multilayer perceptron neural network.
+    * An MLP consists of several layers of nodes, interconnected through weighted
+    * acyclic arcs from each preceding layer to the following, without lateral or
+    * feedback connections. Each node calculates a transformed weighted linear
+    * combination of its inputs (output activations from the preceding layer), with
+    * one of the weights acting as a trainable bias connected to a constant input.
+    * The transformation, called activation function, is a bounded non-decreasing
+    * (non-linear) function, such as the sigmoid functions (ranges from 0 to 1).
+    * Another popular activation function is hyperbolic tangent which is actually
+    * equivalent to the sigmoid function in shape but ranges from -1 to 1.
+    * More specialized activation functions include radial basis functions which
+    * are used in RBF networks.
+    *
+    * The representational capabilities of a MLP are determined by the range of
+    * mappings it may implement through weight variation. Single layer perceptrons
+    * are capable of solving only linearly separable problems. With the sigmoid
+    * function as activation function, the single-layer network is identical
+    * to the logistic regression model.
+    *
+    * The universal approximation theorem for neural networks states that every
+    * continuous function that maps intervals of real numbers to some output
+    * interval of real numbers can be approximated arbitrarily closely by a
+    * multi-layer perceptron with just one hidden layer. This result holds only
+    * for restricted classes of activation functions, which are extremely complex
+    * and NOT smooth for subtle mathematical reasons. On the other hand, smoothness
+    * is important for gradient descent learning. Besides, the proof is not
+    * constructive regarding the number of neurons required or the settings of
+    * the weights. Therefore, complex systems will have more layers of neurons
+    * with some having increased layers of input neurons and output neurons
+    * in practice.
+    *
+    * The most popular algorithm to train MLPs is back-propagation, which is a
+    * gradient descent method. Based on chain rule, the algorithm propagates the
+    * error back through the network and adjusts the weights of each connection in
+    * order to reduce the value of the error function by some small amount.
+    * For this reason, back-propagation can only be applied on networks with
+    * differentiable activation functions.
+    *
+    * During error back propagation, we usually times the gradient with a small
+    * number &eta;, called learning rate, which is carefully selected to ensure
+    * that the network converges to a local minimum of the error function
+    * fast enough, without producing oscillations. One way to avoid oscillation
+    * at large &eta;, is to make the change in weight dependent on the past weight
+    * change by adding a momentum term.
+    *
+    * Although the back-propagation algorithm may performs gradient
+    * descent on the total error of all instances in a batch way,
+    * the learning rule is often applied to each instance separately in an online
+    * way or stochastic way. There exists empirical indication that the stochastic
+    * way results in faster convergence.
+    *
+    * In practice, the problem of over-fitting has emerged. This arises in
+    * convoluted or over-specified systems when the capacity of the network
+    * significantly exceeds the needed free parameters. There are two general
+    * approaches for avoiding this problem: The first is to use cross-validation
+    * and similar techniques to check for the presence of over-fitting and
+    * optimally select hyper-parameters such as to minimize the generalization
+    * error. The second is to use some form of regularization, which emerges
+    * naturally in a Bayesian framework, where the regularization can be
+    * performed by selecting a larger prior probability over simpler models;
+    * but also in statistical learning theory, where the goal is to minimize over
+    * the "empirical risk" and the "structural risk".
+    *
+    * For neural networks, the input patterns usually should be scaled/standardized.
+    * Commonly, each input variable is scaled into interval [0, 1] or to have
+    * mean 0 and standard deviation 1.
+    *
+    * For penalty functions and output units, the following natural pairings are
+    * recommended:
+    *
+    *   - linear output units and a least squares penalty function.
+    *   - a two-class cross-entropy penalty function and a logistic
+    *     activation function.
+    *   - a multi-class cross-entropy penalty function and a softmax
+    *      activation function.
+    *
+    * By assigning a softmax activation function on the output layer of
+    * the neural network for categorical target variables, the outputs
+    * can be interpreted as posterior probabilities, which are very useful.
+    *
+    * @param x training samples.
+    * @param y training labels in [0, k), where k is the number of classes.
+    * @param numUnits the number of units in each layer.
+    * @param error the error function.
+    * @param activation the activation function of output layer.
+    * @param epochs the number of epochs of stochastic learning.
+    * @param eta the learning rate.
+    * @param alpha the momentum factor.
+    * @param lambda the weight decay for regularization.
+    */
   def neuralnet(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, epochs: Int = 25, activation: NeuralNetwork.ActivationFunction, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork = {
     time {
       val nnet = new NeuralNetwork(error, activation, numUnits: _*)
@@ -325,72 +320,69 @@ package object classification {
     }
   }
 
-  /**
-   * Radial basis function networks. A radial basis function network is an
-   * artificial neural network that uses radial basis functions as activation
-   * functions. It is a linear combination of radial basis functions. They are
-   * used in function approximation, time series prediction, and control.
-   * <p>
-   * In its basic form, radial basis function network is in the form
-   * <p>
-   * y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
-   * <p>
-   * where the approximating function y(x) is represented as a sum of N radial
-   * basis functions &phi;, each associated with a different center c<sub>i</sub>,
-   * and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
-   * one usually chooses Euclidean distance. The weights w<sub>i</sub> can
-   * be estimated using the matrix methods of linear least squares, because
-   * the approximating function is linear in the weights.
-   * <p>
-   * The centers c<sub>i</sub> can be randomly selected from training data,
-   * or learned by some clustering method (e.g. k-means), or learned together
-   * with weight parameters undergo a supervised learning processing
-   * (e.g. error-correction learning).
-   * <p>
-   * The popular choices for &phi; comprise the Gaussian function and the so
-   * called thin plate splines. The advantage of the thin plate splines is that
-   * their conditioning is invariant under scalings. Gaussian, multi-quadric
-   * and inverse multi-quadric are infinitely smooth and and involve a scale
-   * or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
-   * r<sub><small>0</small></sub> tends to flatten the basis function. For a
-   * given function, the quality of approximation may strongly depend on this
-   * parameter. In particular, increasing r<sub><small>0</small></sub> has the
-   * effect of better conditioning (the separation distance of the scaled points
-   * increases).
-   * <p>
-   * A variant on RBF networks is normalized radial basis function (NRBF)
-   * networks, in which we require the sum of the basis functions to be unity.
-   * NRBF arises more naturally from a Bayesian statistical perspective. However,
-   * there is no evidence that either the NRBF method is consistently superior
-   * to the RBF method, or vice versa.
-   * <p>
-   * SVMs with Gaussian kernel have similar structure as RBF networks with
-   * Gaussian radial basis functions. However, the SVM approach "automatically"
-   * solves the network complexity problem since the size of the hidden layer
-   * is obtained as the result of the QP procedure. Hidden neurons and
-   * support vectors correspond to each other, so the center problems of
-   * the RBF network is also solved, as the support vectors serve as the
-   * basis function centers. It was reported that with similar number of support
-   * vectors/centers, SVM shows better generalization performance than RBF
-   * network when the training data size is relatively small. On the other hand,
-   * RBF network gives better generalization performance than SVM on large
-   * training data.
-   * <p>
-   *
-   * <h2>References</h2>
-   * <ol>
-   * <li> Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999. </li>
-   * <li> T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990. </li>
-   * <li> Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.</li>
-   * </ol>
-   *
-   * @param x training samples.
-   * @param y training labels in [0, k), where k is the number of classes.
-   * @param distance the distance metric functor.
-   * @param rbf the radial basis functions.
-   * @param centers the centers of RBF functions.
-   * @param normalized true for the normalized RBF network.
-   */
+  /** Radial basis function networks.
+    * A radial basis function network is an
+    * artificial neural network that uses radial basis functions as activation
+    * functions. It is a linear combination of radial basis functions. They are
+    * used in function approximation, time series prediction, and control.
+    *
+    * In its basic form, radial basis function network is in the form
+    *
+    *   y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
+    *
+    * where the approximating function y(x) is represented as a sum of N radial
+    * basis functions &phi;, each associated with a different center c<sub>i</sub>,
+    * and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
+    * one usually chooses Euclidean distance. The weights w<sub>i</sub> can
+    * be estimated using the matrix methods of linear least squares, because
+    * the approximating function is linear in the weights.
+    *
+    * The centers c<sub>i</sub> can be randomly selected from training data,
+    * or learned by some clustering method (e.g. k-means), or learned together
+    * with weight parameters undergo a supervised learning processing
+    * (e.g. error-correction learning).
+    *
+    * The popular choices for &phi; comprise the Gaussian function and the so
+    * called thin plate splines. The advantage of the thin plate splines is that
+    * their conditioning is invariant under scalings. Gaussian, multi-quadric
+    * and inverse multi-quadric are infinitely smooth and and involve a scale
+    * or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
+    * r<sub><small>0</small></sub> tends to flatten the basis function. For a
+    * given function, the quality of approximation may strongly depend on this
+    * parameter. In particular, increasing r<sub><small>0</small></sub> has the
+    * effect of better conditioning (the separation distance of the scaled points
+    * increases).
+    *
+    * A variant on RBF networks is normalized radial basis function (NRBF)
+    * networks, in which we require the sum of the basis functions to be unity.
+    * NRBF arises more naturally from a Bayesian statistical perspective. However,
+    * there is no evidence that either the NRBF method is consistently superior
+    * to the RBF method, or vice versa.
+    *
+    * SVMs with Gaussian kernel have similar structure as RBF networks with
+    * Gaussian radial basis functions. However, the SVM approach "automatically"
+    * solves the network complexity problem since the size of the hidden layer
+    * is obtained as the result of the QP procedure. Hidden neurons and
+    * support vectors correspond to each other, so the center problems of
+    * the RBF network is also solved, as the support vectors serve as the
+    * basis function centers. It was reported that with similar number of support
+    * vectors/centers, SVM shows better generalization performance than RBF
+    * network when the training data size is relatively small. On the other hand,
+    * RBF network gives better generalization performance than SVM on large
+    * training data.
+    *
+    * ====References:====
+    *   - Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.
+    *   - T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.
+    *   - Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
+    *
+    * @param x training samples.
+    * @param y training labels in [0, k), where k is the number of classes.
+    * @param distance the distance metric functor.
+    * @param rbf the radial basis functions.
+    * @param centers the centers of RBF functions.
+    * @param normalized true for the normalized RBF network.
+    */
   def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T], normalized: Boolean): RBFNetwork[T] = {
     time {
       new RBFNetwork[T](x, y, distance, rbf, centers, normalized)
