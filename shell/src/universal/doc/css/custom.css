@@ -1,0 +1,277 @@
+.tagline {
+  display: inline-block;
+  color: rgb(47, 164, 231);
+  padding-bottom: 5px;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.tagline {
+  font-size: 32px;
+}
+
+@media (min-width: 768px) {
+  .tagline {
+    font-size: 33px;
+  }
+}
+
+.row-padded {
+  margin-top: 30px;
+}
+
+.col-padded-top {
+  margin-top: 30px;
+  margin-bottom: 18px;
+}
+
+.code {
+  font-family: "Menlo", "Lucida Console", Consolas, monospace;
+  font-size: 11px;
+}
+
+@media (min-width: 1200px) {
+  .code {
+    font-size: 13px;
+  }
+}
+
+.code.code-big {
+  font-size: 14px;
+}
+
+@media (min-width: 992px) {
+  .code.code-big {
+    font-size: 16px;
+  }
+}
+
+.code .string {
+  color: #2b8eeb;
+}
+
+.code .sparkop {
+  color: #1663a8;
+}
+
+.code .closure {
+  color: #c1130e;
+}
+
+.code .comment {
+  color: #272;
+}
+
+.code .tgf {
+  color: #f28424;
+}
+
+.code .keyword {
+  font-weight: 600;
+}
+
+.caption {
+  width: 100%;
+  margin-top: 20px;
+  text-align: center;
+  color: #8f8f8f;
+}
+
+ul.nav li.dropdown:hover > ul.dropdown-menu {
+  display: block;
+}
+
+footer {
+  text-align: center;
+  color: #8f8f8f;
+  padding-bottom: 18px;
+}
+
+footer a {
+  color: rgb(41, 132, 181);
+}
+
+.jumbotron {
+  padding: 20px 20px;
+  margin-bottom: 20px;
+  color: rgb(85,85,85);
+  background: #eef6fd;
+  text-align: center;
+  line-height: inherit;
+}
+
+.jumbotron {
+  font-size: 18px;
+}
+
+@media (min-width: 768px) {
+  .jumbotron {
+    font-size: 19px;
+  }
+}
+
+@media (min-width: 992px) {
+  .jumbotron {
+    font-size: 21px;
+  }
+}
+
+.navbar {
+  background: #2fa4e7;
+  border: none;
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Lower height of navbar */
+
+.navbar-nav > li > a {
+  padding-top:12px !important;
+  padding-bottom:12px !important;
+}
+
+.navbar {
+  min-height:44px !important
+}
+
+.news {
+  background: #fef4e9;
+  border-radius: 6px;
+  padding: 4px 12px 1px 12px;
+}
+
+.news h1, .news h2, .news h3, .news h4, .news h5 {
+  color: rgb(85, 85, 85);
+}
+
+.news ul li {
+  margin-bottom: 6px;
+}
+
+.news li a, .news li a:hover, .news li a:visited {
+  color: rgb(85, 85, 85);
+}
+
+.news li .small {
+  /*display: inline-block;*/
+  color: #888;
+  font-size: 12px;
+}
+
+.news h5 {
+  font-size: 16px;
+}
+
+.col-right {
+  text-align: center;
+}
+
+.col-left {
+  text-align: center;
+}
+
+@media (min-width: 992px) {
+  .col-right {
+    text-align: right;
+  }
+}
+
+@media (min-width: 992px) {
+  .col-left {
+    text-align: left;
+  }
+}
+
+.col-center {
+  text-align: center;
+}
+
+.list-narrow {
+  padding-left: 1.5em;
+}
+
+.list-none {
+  list-style: none;
+  padding: 0;
+}
+
+.col-padded {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.subproject {
+  display: inline-block;
+  font-weight: 200;
+  color: #333;
+}
+
+.subproject {
+  font-size: 30px;
+}
+
+@media (min-width: 768px) {
+  .subproject {
+    font-size: 45px;
+  }
+}
+
+.btn-lg .small {
+  font-size: 14px;
+}
+
+.navbar-collapse.in {
+  overflow-y: visible;
+  max-height: none;
+}
+
+.question {
+  font-size: 16px;
+  margin-top: 20px;
+  color: #555;
+  font-weight: 500;
+}
+
+.entry-date {
+  color: #888;
+  font-size: 14px;
+}
+
+.entry-header {
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+code {
+  font-family: "Menlo", "Lucida Console", Consolas, monospace;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+/* Designed to be shown under some tabs */
+.code-tab {
+  margin-bottom: 10px;
+  padding: 10px 0px;
+  border-bottom: 1px solid #ddd;
+}
+
+.btn-multiline {
+  width: 280px;
+  padding-top: 11px;
+  padding-bottom: 11px;
+  line-height: 1.25;
+}
+
+.nav.nav-tabs>li>a {
+  padding: 6px 11px;
+  font-size: 14px;
+  border-radius: 0;
+}
+
+.tabs-below > .nav-tabs,
+.tabs-right > .nav-tabs,
+.tabs-left > .nav-tabs {
+  border-bottom: 0;
+}

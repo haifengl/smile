@@ -45,8 +45,8 @@ package object io {
   }
 
   /** Reads an ARFF file. */
-  def readArff(file: String): AttributeDataset = {
-    new ArffParser().parse(file)
+  def readArff(file: String, responseIndex: Int = -1 ): AttributeDataset = {
+    new ArffParser().setResponseIndex(responseIndex).parse(file)
   }
 
   /** Reads a LivSVM file. */
