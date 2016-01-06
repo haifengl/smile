@@ -31,7 +31,7 @@ object Airline {
 
   def main(args: Array[String]): Unit = {
     benchmark("0.1m")
-    benchmark("1m")
+    //benchmark("1m")
   }
 
   def benchmark: Unit = {
@@ -68,13 +68,13 @@ object Airline {
     println("train data positive : negative = " + Math.sum(y) + " : " + (y.length - Math.sum(y)))
     println("test data positive : negative = " + Math.sum(testy) + " : " + (testy.length - Math.sum(testy)))
 
-    // The data is highly unbalanced. Large positive class weight of should improve sensitivity.
-    val classWeight = Array(1, 3)
+    // The data is unbalanced. Large positive class weight of should improve sensitivity.
+    val classWeight = Array(1, 1)
 
     // Random Forest
     println("Training Random Forest of 500 trees...")
     val forest = time {
-      new RandomForest(attributes, x, y, 500, 500, 5, 2, DecisionTree.SplitRule.ENTROPY, classWeight)
+      new RandomForest(attributes, x, y, 500, 650, 3, 2, DecisionTree.SplitRule.ENTROPY, classWeight)
     }
 
     val pred = new Array[Int](testy.length)

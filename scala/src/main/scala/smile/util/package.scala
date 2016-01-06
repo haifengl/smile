@@ -16,11 +16,10 @@
 
 package smile
 
-/**
- * Utility functions.
- *
- * @author Haifeng Li
- */
+/** Utility functions.
+  *
+  * @author Haifeng Li
+  */
 package object util {
 
   /** Measure running time of a function/block */
