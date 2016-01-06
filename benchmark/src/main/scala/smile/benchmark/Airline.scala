@@ -30,10 +30,15 @@ import smile.util._
 object Airline {
 
   def main(args: Array[String]): Unit = {
-    benchmark
+    benchmark("0.1m")
+    benchmark("1m")
   }
 
-  def benchmark() {
+  def benchmark: Unit = {
+    benchmark("0.1m")
+  }
+
+  def benchmark(data: String): Unit = {
     println("Airline")
     val parser = new DelimitedTextParser()
     parser.setDelimiter(",")
@@ -49,7 +54,7 @@ object Airline {
     attributes(6) = new NominalAttribute("V6")
     attributes(7) = new NumericAttribute("V7")
 
-    val train = parser.parse(attributes, smile.data.parser.IOUtils.getDataFile("airline/train-0.1m.csv"))
+    val train = parser.parse(attributes, smile.data.parser.IOUtils.getDataFile(s"airline/train-${data}.csv"))
     val test  = parser.parse(attributes, smile.data.parser.IOUtils.getDataFile("airline/test.csv"))
     attributes.foreach { attr =>
       if (attr.isInstanceOf[NominalAttribute])
@@ -63,14 +68,13 @@ object Airline {
     println("train data positive : negative = " + Math.sum(y) + " : " + (y.length - Math.sum(y)))
     println("test data positive : negative = " + Math.sum(testy) + " : " + (testy.length - Math.sum(testy)))
 
-    // The data is highly unbalanced. class weight 1 : 4 should improve sensitivity.
-    // To match other tests, we keep it 1 : 1 here though.
+    // The data is highly unbalanced. Large positive class weight of should improve sensitivity.
     val classWeight = Array(1, 1)
 
     // Random Forest
     println("Training Random Forest of 500 trees...")
     val forest = time {
-      new RandomForest(attributes, x, y, 500, 2, 300, DecisionTree.SplitRule.ENTROPY, classWeight)
+      new RandomForest(attributes, x, y, 500, 400, 5, 2, DecisionTree.SplitRule.ENTROPY, classWeight)
     }
 
     val pred = new Array[Int](testy.length)
@@ -111,5 +115,23 @@ object Airline {
     println("Gradient Tree Boost sensitivity = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
     println("Gradient Tree Boost specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
     println("Gradient Tree Boost AUC = %.2f%%" format (100.0 * AUC.measure(testy, prob)))
+
+    // AdaBoost
+    println("Training AdaBoost of 300 trees...")
+    val adaboost = time {
+      new AdaBoost(attributes, x, y, 300, 6)
+    }
+
+    val (adapred, adaprob) = (0 until testx.length).map { i =>
+      val yi = adaboost.predict(testx(i), posteriori)
+      (yi, posteriori(1))
+    }.unzip
+
+    adapred.copyToArray(pred, 0, testy.length)
+    adaprob.copyToArray(prob, 0, testy.length)
+    println("AdaBoost accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
+    println("AdaBoost sensitivity = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
+    println("AdaBoost specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
+    println("AdaBoost AUC = %.2f%%" format (100.0 * AUC.measure(testy, prob)))
   }
 }

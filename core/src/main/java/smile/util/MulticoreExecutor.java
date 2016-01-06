@@ -34,31 +34,34 @@ public class MulticoreExecutor {
     /**
      * The number of processors.
      */
-    private static final int nprocs;
+    private static int nprocs = -1;
     /**
      * Thread pool.
      */
     private static ThreadPoolExecutor threads = null;
 
-    static {
-        int n = -1;
-        try {
-            String env = System.getProperty("smile.threads");
-            if (env != null) {
-                n = Integer.parseInt(env);
+    /** Creates the worker thread pool. */
+    private static void createThreadPool() {
+        if (nprocs == -1) {
+            int n = -1;
+            try {
+                String env = System.getProperty("smile.threads");
+                if (env != null) {
+                    n = Integer.parseInt(env);
+                }
+            } catch (Exception ex) {
+                System.err.println(ex);
             }
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
 
-        if (n == -1) {
-            nprocs = Runtime.getRuntime().availableProcessors();
-        } else {
-            nprocs = n;
-        }
-        
-        if (nprocs > 1) {
-            threads = (ThreadPoolExecutor) Executors.newFixedThreadPool(nprocs, new SimpleDeamonThreadFactory());
+            if (n < 1) {
+                nprocs = Runtime.getRuntime().availableProcessors();
+            } else {
+                nprocs = n;
+            }
+
+            if (nprocs > 1) {
+                threads = (ThreadPoolExecutor) Executors.newFixedThreadPool(nprocs, new SimpleDeamonThreadFactory());
+            }
         }
     }
 
@@ -67,9 +70,10 @@ public class MulticoreExecutor {
      * @return the number of threads in the thread pool
      */
     public static int getThreadPoolSize() {
+        createThreadPool();
         return nprocs;
     }
-    
+
     /**
      * Executes the given tasks serially or parallel depending on the number
      * of cores of the system. Returns a list of result objects of each task.
@@ -81,6 +85,8 @@ public class MulticoreExecutor {
      * @throws Exception if unable to compute a result.
      */
     public static <T> List<T> run(Collection<? extends Callable<T>> tasks) throws Exception {
+        createThreadPool();
+
         List<T> results = new ArrayList<T>();
         if (threads == null) {
             for (Callable<T> task : tasks) {

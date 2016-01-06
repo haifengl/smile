@@ -354,7 +354,7 @@ package object regression {
    *
    * @return Random forest classification model.
    */
-  def randomForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, S: Int = 5): RandomForest = {
+  def randomForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, S: Int = 5, J: Int = -1): RandomForest = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -365,8 +365,10 @@ package object regression {
 
     val m = if (mtry <= 0) p / 3 else mtry
 
+    val j = if (J <= 1) x.length / S else J
+
     time {
-      new RandomForest(attr, x, y, T, m, S)
+      new RandomForest(attr, x, y, T, m, S, j)
     }
   }
 

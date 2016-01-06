@@ -656,13 +656,14 @@ package object classification {
    * @param mtry the number of random selected features to be used to determine
    *             the decision at a node of the tree. floor(sqrt(dim)) seems to give
    *             generally good performance, where dim is the number of variables.
+   * @param S number of instances in a node below which the tree will not split.
    * @param J maximum number of leaf nodes.
    * @param splitRule Decision tree node split rule.
    * @param classWeight Priors of the classes.
    *
    * @return Random forest classification model.
    */
-  def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, J: Int = -1, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
+  def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, S: Int = 1, J: Int = -1, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -673,13 +674,13 @@ package object classification {
 
     val m = if (mtry <= 0) Math.floor(Math.sqrt(p)).toInt else mtry
 
-    val j = if (J <= 1) Math.min(500, x.length / 50) else J
+    val j = if (J <= 1) x.length / S else J
 
     val k = Math.max(y: _*) + 1
     val weight = if (classWeight == null) Array.fill[Int](k)(1) else classWeight
 
     time {
-      new RandomForest(attr, x, y, T, m, j, splitRule, weight)
+      new RandomForest(attr, x, y, T, m, S, j, splitRule, weight)
     }
   }
 

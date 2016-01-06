@@ -28,6 +28,8 @@ import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.Validation;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  *
  * @author Haifeng Li
@@ -57,8 +59,8 @@ public class RegressionTreeTest {
      * Test of predict method, of class RegressionTree.
      */
     @Test
-    public void testPredict() {
-        System.out.println("predict");
+    public void testLongley() {
+        System.out.println("longley");
         
         double[][] longley = {
             {234.289,      235.6,        159.0,    107.608, 1947,   60.323},
@@ -90,13 +92,14 @@ public class RegressionTreeTest {
         for (int i = 0; i < n; i++) {
             double[][] trainx = Math.slice(longley, loocv.train[i]);
             double[] trainy = Math.slice(y, loocv.train[i]);
-            RegressionTree tree = new RegressionTree(trainx, trainy, 2);
+            RegressionTree tree = new RegressionTree(trainx, trainy, 3);
 
             double r = y[loocv.test[i]] - tree.predict(longley[loocv.test[i]]);
             rss += r * r;
         }
 
         System.out.println("MSE = " + rss/n);
+        assertEquals(41.933087445771115, rss/n, 1E-4);
     }
     
     public void test(String dataset, String url, int response) {
