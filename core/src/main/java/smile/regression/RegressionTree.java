@@ -1060,6 +1060,7 @@ public class RegressionTree implements Regression<double[]> {
         this.maxNodes = maxNodes;
         this.nodeSize = nodeSize;
         this.numFeatures = numFeatures;
+        this.mtry = numFeatures;
         importance = new double[numFeatures];
         
         // Priority queue for best-first tree growing.

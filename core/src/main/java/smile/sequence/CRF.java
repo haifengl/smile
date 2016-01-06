@@ -740,10 +740,10 @@ public class CRF implements SequenceLabeler<double[]> {
                 
                 // Perform training.
                 if (x != null) {
-                    RegressionTree tree = new RegressionTree(attributes, x, y, maxLeaves, order, samples, null);
+                    RegressionTree tree = new RegressionTree(attributes, x, y, maxLeaves, 5, attributes.length, order, samples, null);
                     potential.add(tree);
                 } else {
-                    RegressionTree tree = new RegressionTree(numFeatures + numClasses + 1, sparseX, y, maxLeaves, samples, null);
+                    RegressionTree tree = new RegressionTree(numFeatures + numClasses + 1, sparseX, y, maxLeaves, 5, samples, null);
                     potential.add(tree);
                 }
                 
