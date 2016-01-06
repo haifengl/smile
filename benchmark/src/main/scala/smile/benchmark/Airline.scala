@@ -69,12 +69,12 @@ object Airline {
     println("test data positive : negative = " + Math.sum(testy) + " : " + (testy.length - Math.sum(testy)))
 
     // The data is highly unbalanced. Large positive class weight of should improve sensitivity.
-    val classWeight = Array(1, 1)
+    val classWeight = Array(1, 3)
 
     // Random Forest
     println("Training Random Forest of 500 trees...")
     val forest = time {
-      new RandomForest(attributes, x, y, 500, 400, 5, 2, DecisionTree.SplitRule.ENTROPY, classWeight)
+      new RandomForest(attributes, x, y, 500, 500, 5, 2, DecisionTree.SplitRule.ENTROPY, classWeight)
     }
 
     val pred = new Array[Int](testy.length)
