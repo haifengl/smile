@@ -90,11 +90,11 @@ public class AdaBoost implements Classifier<double[]> {
         /**
          * The number of trees.
          */
-        private int T = 500;
+        private int ntrees = 500;
         /**
          * The maximum number of leaf nodes in the tree.
          */
-        private int J = 2;
+        private int maxNodes = 2;
 
         /**
          * Default constructor of 500 trees and maximal 2 leaf nodes in the tree.
@@ -106,61 +106,61 @@ public class AdaBoost implements Classifier<double[]> {
         /**
          * Constructor.
          * 
-         * @param T the number of trees.
+         * @param ntrees the number of trees.
          */
-        public Trainer(int T) {
-            if (T < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + T);
+        public Trainer(int ntrees) {
+            if (ntrees < 1) {
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
             }
 
-            this.T = T;
+            this.ntrees = ntrees;
         }
 
         /**
          * Constructor.
          * 
          * @param attributes the attributes of independent variable.
-         * @param T the number of trees.
+         * @param ntrees the number of trees.
          */
-        public Trainer(Attribute[] attributes, int T) {
+        public Trainer(Attribute[] attributes, int ntrees) {
             super(attributes);
 
-            if (T < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + T);
+            if (ntrees < 1) {
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
             }
 
-            this.T = T;
+            this.ntrees = ntrees;
         }
         
         /**
          * Sets the number of trees in the random forest.
-         * @param T the number of trees.
+         * @param ntrees the number of trees.
          */
-        public Trainer setNumTrees(int T) {
-            if (T < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + T);
+        public Trainer setNumTrees(int ntrees) {
+            if (ntrees < 1) {
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
             }
 
-            this.T = T;
+            this.ntrees = ntrees;
             return this;
         }
         
         /**
          * Sets the maximum number of leaf nodes in the tree.
-         * @param J the maximum number of leaf nodes in the tree.
+         * @param maxNodes the maximum number of leaf nodes in the tree.
          */
-        public Trainer setMaximumLeafNodes(int J) {
-            if (J < 2) {
-                throw new IllegalArgumentException("Invalid number of leaf nodes: " + J);
+        public Trainer setMaxNodes(int maxNodes) {
+            if (maxNodes < 2) {
+                throw new IllegalArgumentException("Invalid maximum number of leaf nodes: " + maxNodes);
             }
             
-            this.J = J;
+            this.maxNodes = maxNodes;
             return this;
         }
         
         @Override
         public AdaBoost train(double[][] x, int[] y) {
-            return new AdaBoost(attributes, x, y, T, J);
+            return new AdaBoost(attributes, x, y, ntrees, maxNodes);
         }
     }
     
@@ -169,10 +169,10 @@ public class AdaBoost implements Classifier<double[]> {
      *
      * @param x the training instances. 
      * @param y the response variable.
-     * @param T the number of trees.
+     * @param ntrees the number of trees.
      */
-    public AdaBoost(double[][] x, int[] y, int T) {
-        this(null, x, y, T);
+    public AdaBoost(double[][] x, int[] y, int ntrees) {
+        this(null, x, y, ntrees);
     }
 
     /**
@@ -180,11 +180,11 @@ public class AdaBoost implements Classifier<double[]> {
      *
      * @param x the training instances. 
      * @param y the response variable.
-     * @param T the number of trees.
-     * @param J the maximum number of leaf nodes in the trees.
+     * @param ntrees the number of trees.
+     * @param maxNodes the maximum number of leaf nodes in the trees.
      */
-    public AdaBoost(double[][] x, int[] y, int T, int J) {
-        this(null, x, y, T, J);
+    public AdaBoost(double[][] x, int[] y, int ntrees, int maxNodes) {
+        this(null, x, y, ntrees, maxNodes);
     }
 
     /**
@@ -193,10 +193,10 @@ public class AdaBoost implements Classifier<double[]> {
      * @param attributes the attribute properties.
      * @param x the training instances. 
      * @param y the response variable.
-     * @param T the number of trees.
+     * @param ntrees the number of trees.
      */
-    public AdaBoost(Attribute[] attributes, double[][] x, int[] y, int T) {
-        this(attributes, x, y, T, 2);
+    public AdaBoost(Attribute[] attributes, double[][] x, int[] y, int ntrees) {
+        this(attributes, x, y, ntrees, 2);
     }
     /**
      * Constructor.
@@ -204,20 +204,20 @@ public class AdaBoost implements Classifier<double[]> {
      * @param attributes the attribute properties.
      * @param x the training instances. 
      * @param y the response variable.
-     * @param T the number of trees.
-     * @param J the maximum number of leaf nodes in the trees.
+     * @param ntrees the number of trees.
+     * @param maxNodes the maximum number of leaf nodes in the trees.
      */
-    public AdaBoost(Attribute[] attributes, double[][] x, int[] y, int T, int J) {
+    public AdaBoost(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        if (T < 1) {
-            throw new IllegalArgumentException("Invlaid number of trees: " + T);
+        if (maxNodes < 1) {
+            throw new IllegalArgumentException("Invalid number of trees: " + maxNodes);
         }
         
-        if (J < 2) {
-            throw new IllegalArgumentException("Invalid maximum leaves: " + J);
+        if (maxNodes < 2) {
+            throw new IllegalArgumentException("Invalid maximum leaves: " + maxNodes);
         }
         
         // class label set.
@@ -258,12 +258,12 @@ public class AdaBoost implements Classifier<double[]> {
         }
         
         double guess = 1.0 / k; // accuracy of random guess.
-        double b = Math.log(k - 1); // the baise to tree weight in case of multi-class.
+        double b = Math.log(k - 1); // the bias to tree weight in case of multi-class.
         
-        trees = new DecisionTree[T];
-        alpha = new double[T];
-        error = new double[T];
-        for (int t = 0; t < T; t++) {
+        trees = new DecisionTree[ntrees];
+        alpha = new double[ntrees];
+        error = new double[ntrees];
+        for (int t = 0; t < ntrees; t++) {
             double W = Math.sum(w);
             for (int i = 0; i < n; i++) {
                 w[i] /= W;
@@ -275,7 +275,7 @@ public class AdaBoost implements Classifier<double[]> {
                 samples[s]++;
             }
             
-            trees[t] = new DecisionTree(attributes, x, y, J, DecisionTree.SplitRule.GINI, samples, order);
+            trees[t] = new DecisionTree(attributes, x, y, maxNodes, 1, x[0].length, DecisionTree.SplitRule.GINI, samples, order);
             
             for (int i = 0; i < n; i++) {
                 err[i] = trees[t].predict(x[i]) != y[i];
@@ -343,41 +343,33 @@ public class AdaBoost implements Classifier<double[]> {
      * we may remove them to reduce the model size and also improve the speed of
      * prediction.
      * 
-     * @param T the new (smaller) size of tree model set.
+     * @param ntrees the new (smaller) size of tree model set.
      */
-    public void trim(int T) {
-        if (T > trees.length) {
+    public void trim(int ntrees) {
+        if (ntrees > trees.length) {
             throw new IllegalArgumentException("The new model size is larger than the current size.");
         }
         
-        if (T <= 0) {
-            throw new IllegalArgumentException("Invalid new model size: " + T);            
+        if (ntrees <= 0) {
+            throw new IllegalArgumentException("Invalid new model size: " + ntrees);
         }
         
-        if (T < trees.length) {
-            trees = Arrays.copyOf(trees, T);
-            alpha = Arrays.copyOf(alpha, T);
-            error = Arrays.copyOf(error, T);
+        if (ntrees < trees.length) {
+            trees = Arrays.copyOf(trees, ntrees);
+            alpha = Arrays.copyOf(alpha, ntrees);
+            error = Arrays.copyOf(error, ntrees);
         }
     }
     
     @Override
     public int predict(double[] x) {
-        if (k == 2) {
-            double y = 0.0;
-            for (int i = 0; i < trees.length; i++) {
-                y += alpha[i] * trees[i].predict(x);
-            }
+        double[] y = new double[k];
 
-            return y > 0 ? 1 : 0;
-        } else {
-            double[] y = new double[k];
-            for (int i = 0; i < trees.length; i++) {
-                y[trees[i].predict(x)] += alpha[i];
-            }
-            
-            return Math.whichMax(y);
+        for (int i = 0; i < trees.length; i++) {
+            y[trees[i].predict(x)] += alpha[i];
         }
+            
+        return Math.whichMax(y);
     }
     
     /**
@@ -386,26 +378,19 @@ public class AdaBoost implements Classifier<double[]> {
      */
     @Override
     public int predict(double[] x, double[] posteriori) {
-        if (k == 2) {
-            double y = 0.0;
-            for (int i = 0; i < trees.length; i++) {
-                double yi = alpha[i] * trees[i].predict(x);
-                if (yi > 0.0) posteriori[1] += yi; else posteriori[0] += yi;
-                y += yi;
-            }
+        Arrays.fill(posteriori, 0.0);
 
-            double sum = Math.abs(posteriori[0]) + posteriori[1];
-            for (int i = 0; i < k; i++) posteriori[i] /= sum;
-            return y > 0 ? 1 : 0;
-        } else {
-            for (int i = 0; i < trees.length; i++) {
-                posteriori[trees[i].predict(x)] += alpha[i];
-            }
-
-            for (int i = 0; i < k; i++) posteriori[i] /= Math.sum(posteriori);
-            return Math.whichMax(posteriori);
+        for (int i = 0; i < trees.length; i++) {
+            posteriori[trees[i].predict(x)] += alpha[i];
         }
-    }    
+
+        double sum = Math.sum(posteriori);
+        for (int i = 0; i < k; i++) {
+            posteriori[i] /= sum;
+        }
+
+        return Math.whichMax(posteriori);
+    }
     
     /**
      * Test the model on a validation dataset.

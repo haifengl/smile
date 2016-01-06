@@ -129,6 +129,7 @@ public class OLSTest {
         }
 
         System.out.println("MSE = " + rss/n);
+        assertEquals(2.2148948268123756, rss/n, 1E-4);
     }
 
     /**
@@ -165,7 +166,7 @@ public class OLSTest {
             }
 
             System.out.println("MSE = " + rss / n);
-         } catch (Exception ex) {
+        } catch (Exception ex) {
              System.err.println(ex);
         }
     }

@@ -19,6 +19,7 @@ import smile.sort.QuickSort;
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
 import smile.data.parser.DelimitedTextParser;
+import smile.util.MulticoreExecutor;
 import smile.validation.LOOCV;
 import smile.data.AttributeDataset;
 import smile.data.parser.ArffParser;
@@ -191,7 +192,7 @@ public class DecisionTreeTest {
                 attributes[i] = new NominalAttribute("V"+i, values);
             }
             
-            DecisionTree tree = new DecisionTree(attributes, x, y, 350, DecisionTree.SplitRule.ENTROPY);
+            DecisionTree tree = new DecisionTree(attributes, x, y, 350, 2, DecisionTree.SplitRule.ENTROPY);
             
             int error = 0;
             for (int i = 0; i < testx.length; i++) {
@@ -208,7 +209,7 @@ public class DecisionTreeTest {
                 System.out.format("%s importance is %.4f\n", train.attributes()[index[i]], importance[i]);
             }
             
-            assertEquals(337, error);
+            assertEquals(329, error);
         } catch (Exception ex) {
             System.err.println(ex);
         }

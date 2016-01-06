@@ -159,6 +159,7 @@ public class LASSOTest {
         }
 
         System.out.println("LOOCV MSE = " + rss / n);
+        assertEquals(2.004387308497487, rss/n, 1E-4);
     }
 
     /**

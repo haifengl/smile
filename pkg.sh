@@ -12,8 +12,11 @@ check_error "javadoc"
 
 sbt clean
 
+sbt universal:packageZipTarball
+check_error "Packaging .tgz"
+
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    sbt universal:packageZipTarball
+    sbt docker:publishLocal 
     check_error "Packaging .tgz"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     sbt universal:package-osx-dmg
@@ -25,8 +28,7 @@ elif [[ "$OSTYPE" == "msys" ]]; then
     sbt windows:packageBin
     check_error "Packaging .msi"
 else
-    sbt universal:packageZipTarball
-    check_error "Packaging .tgz"
+    echo "Unsupported OS: $OSTYPE"
 fi
 
 #sbt publishSigned

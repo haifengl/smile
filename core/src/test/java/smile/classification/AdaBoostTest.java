@@ -17,6 +17,7 @@ package smile.classification;
 
 import smile.data.Attribute;
 import smile.math.Math;
+import smile.util.MulticoreExecutor;
 import smile.validation.LOOCV;
 import smile.data.parser.ArffParser;
 import smile.data.NominalAttribute;
@@ -79,8 +80,9 @@ public class AdaBoostTest {
                 if (y[loocv.test[i]] != forest.predict(x[loocv.test[i]]))
                     error++;
             }
-            
+
             System.out.println("AdaBoost error = " + error);
+            assertEquals(3, error);
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -113,8 +115,9 @@ public class AdaBoostTest {
                 if (y[loocv.test[i]] != forest.predict(x[loocv.test[i]]))
                     error++;
             }
-            
-            System.out.println("Decision Tree error = " + error);
+
+            System.out.println("AdaBoost error = " + error);
+            assertEquals(0, error);
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -153,8 +156,9 @@ public class AdaBoostTest {
                 }
             }
 
+            System.out.println("AdaBoost error = " + error);
             System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
-            assertTrue(error < 175);
+            assertTrue(error <= 25);
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -216,8 +220,9 @@ public class AdaBoostTest {
                 }
             }
 
+            System.out.println("AdaBoost error = " + error);
             System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
-            assertTrue(error < 175);
+            assertTrue(error <= 25);
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -249,8 +254,9 @@ public class AdaBoostTest {
                 }
             }
 
+            System.out.println("AdaBoost error = " + error);
             System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
-            
+
             double[] accuracy = forest.test(testx, testy);
             for (int i = 1; i <= accuracy.length; i++) {
                 System.out.format("%d trees accuracy = %.2f%%\n", i, 100.0 * accuracy[i-1]);
@@ -261,6 +267,8 @@ public class AdaBoostTest {
             for (int i = importance.length; i-- > 0; ) {
                 System.out.format("%s importance is %.4f\n", train.attributes()[index[i]], importance[i]);
             }
+
+            assertTrue(error <= 170);
         } catch (Exception ex) {
             System.err.println(ex);
         }

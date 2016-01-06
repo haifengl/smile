@@ -129,11 +129,11 @@ public class GradientTreeBoost implements Classifier<double[]> {
     /**
      * The number of leaves in each tree.
      */
-    private int J = 6;
+    private int maxNodes = 6;
     /**
      * The number of trees.
      */
-    private int T = 500;
+    private int ntrees = 500;
     /**
      * The sampling rate for stochastic tree boosting.
      */
@@ -146,7 +146,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
         /**
          * The number of trees.
          */
-        private int T = 500;
+        private int ntrees = 500;
         /**
          * The shrinkage parameter in (0, 1] controls the learning rate of procedure.
          */
@@ -154,7 +154,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
         /**
          * The number of leaves in each tree.
          */
-        private int J = 6;
+        private int maxNodes = 6;
         /**
          * The sampling rate for stochastic tree boosting.
          */
@@ -170,55 +170,55 @@ public class GradientTreeBoost implements Classifier<double[]> {
         /**
          * Constructor.
          * 
-         * @param T the number of trees.
+         * @param ntrees the number of trees.
          */
-        public Trainer(int T) {
-            if (T < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + T);
+        public Trainer(int ntrees) {
+            if (ntrees < 1) {
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
             }
 
-            this.T = T;
+            this.ntrees = ntrees;
         }
 
         /**
          * Constructor.
          * 
          * @param attributes the attributes of independent variable.
-         * @param T the number of trees.
+         * @param ntrees the number of trees.
          */
-        public Trainer(Attribute[] attributes, int T) {
+        public Trainer(Attribute[] attributes, int ntrees) {
             super(attributes);
 
-            if (T < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + T);
+            if (ntrees < 1) {
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
             }
 
-            this.T = T;
+            this.ntrees = ntrees;
         }
         
         /**
          * Sets the number of trees in the random forest.
-         * @param T the number of trees.
+         * @param ntrees the number of trees.
          */
-        public Trainer setNumTrees(int T) {
-            if (T < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + T);
+        public Trainer setNumTrees(int ntrees) {
+            if (ntrees < 1) {
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
             }
 
-            this.T = T;
+            this.ntrees = ntrees;
             return this;
         }
         
         /**
          * Sets the maximum number of leaf nodes in the tree.
-         * @param J the maximum number of leaf nodes in the tree.
+         * @param maxNodes the maximum number of leaf nodes in the tree.
          */
-        public Trainer setMaximumLeafNodes(int J) {
-            if (J < 2) {
-                throw new IllegalArgumentException("Invalid number of leaf nodes: " + J);
+        public Trainer setMaxNodes(int maxNodes) {
+            if (maxNodes < 2) {
+                throw new IllegalArgumentException("Invalid maximum number of leaf nodes: " + maxNodes);
             }
             
-            this.J = J;
+            this.maxNodes = maxNodes;
             return this;
         }
         
@@ -250,7 +250,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
         
         @Override
         public GradientTreeBoost train(double[][] x, int[] y) {
-            return new GradientTreeBoost(attributes, x, y, T, J, shrinkage, f);
+            return new GradientTreeBoost(attributes, x, y, ntrees, maxNodes, shrinkage, f);
         }
     }
     
@@ -258,10 +258,10 @@ public class GradientTreeBoost implements Classifier<double[]> {
      * Constructor. Learns a gradient tree boosting for classification.
      * @param x the training instances. 
      * @param y the class labels.
-     * @param T the number of iterations (trees).
+     * @param ntrees the number of iterations (trees).
      */
-    public GradientTreeBoost(double[][] x, int[] y, int T) {
-        this(null, x, y, T);
+    public GradientTreeBoost(double[][] x, int[] y, int ntrees) {
+        this(null, x, y, ntrees);
     }
     
     /**
@@ -269,13 +269,13 @@ public class GradientTreeBoost implements Classifier<double[]> {
      *
      * @param x the training instances. 
      * @param y the class labels.
-     * @param T the number of iterations (trees).
-     * @param J the number of leaves in each tree.
+     * @param ntrees the number of iterations (trees).
+     * @param maxNodes the number of leaves in each tree.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param f the sampling rate for stochastic tree boosting.
      */
-    public GradientTreeBoost(double[][] x, int[] y, int T, int J, double shrinkage, double f) {
-        this(null, x, y, T, J, shrinkage, f);
+    public GradientTreeBoost(double[][] x, int[] y, int ntrees, int maxNodes, double shrinkage, double f) {
+        this(null, x, y, ntrees, maxNodes, shrinkage, f);
     }
 
     /**
@@ -284,10 +284,10 @@ public class GradientTreeBoost implements Classifier<double[]> {
      * @param attributes the attribute properties.
      * @param x the training instances. 
      * @param y the class labels.
-     * @param T the number of iterations (trees).
+     * @param ntrees the number of iterations (trees).
      */
-    public GradientTreeBoost(Attribute[] attributes, double[][] x, int[] y, int T) {
-        this(attributes, x, y, T, 6, x.length < 2000 ? 0.005 : 0.05, 0.7);
+    public GradientTreeBoost(Attribute[] attributes, double[][] x, int[] y, int ntrees) {
+        this(attributes, x, y, ntrees, 6, x.length < 2000 ? 0.005 : 0.05, 0.7);
     }
     
     /**
@@ -296,16 +296,24 @@ public class GradientTreeBoost implements Classifier<double[]> {
      * @param attributes the attribute properties.
      * @param x the training instances. 
      * @param y the class labels.
-     * @param T the number of iterations (trees).
-     * @param J the number of leaves in each tree.
+     * @param ntrees the number of iterations (trees).
+     * @param maxNodes the number of leaves in each tree.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param f the sampling fraction for stochastic tree boosting.
      */
-    public GradientTreeBoost(Attribute[] attributes, double[][] x, int[] y, int T, int J, double shrinkage, double f) {
+    public GradientTreeBoost(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, double shrinkage, double f) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
-        
+
+        if (ntrees < 1) {
+            throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
+        }
+
+        if (maxNodes < 2) {
+            throw new IllegalArgumentException("Invalid maximum leaves: " + maxNodes);
+        }
+
         if (shrinkage <= 0 || shrinkage > 1) {
             throw new IllegalArgumentException("Invalid shrinkage: " + shrinkage);            
         }
@@ -322,8 +330,8 @@ public class GradientTreeBoost implements Classifier<double[]> {
             }
         }
         
-        this.T = T;
-        this.J = J;
+        this.ntrees = ntrees;
+        this.maxNodes = maxNodes;
         this.shrinkage = shrinkage;
         this.f = f;
         this.k = Math.max(y) + 1;
@@ -397,7 +405,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
 
         int[][] order = SmileUtils.sort(attributes, x);
         RegressionTree.NodeOutput output = new L2NodeOutput(response);
-        trees = new RegressionTree[T];
+        trees = new RegressionTree[ntrees];
 
         int[] perm = new int[n];
         int[] samples = new int[n];
@@ -405,7 +413,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
             perm[i] = i;
         }
 
-        for (int m = 0; m < T; m++) {
+        for (int m = 0; m < ntrees; m++) {
             Arrays.fill(samples, 0);
 
             Math.permutate(perm);
@@ -417,7 +425,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
                 response[i] = 2.0 * y[i] / (1 + Math.exp(2 * y[i] * h[i]));
             }
 
-            trees[m] = new RegressionTree(attributes, x, response, J, order, samples, output);
+            trees[m] = new RegressionTree(attributes, x, response, maxNodes, 5, x[0].length, order, samples, output);
 
             for (int i = 0; i < n; i++) {
                 h[i] += shrinkage * trees[m].predict(x[i]);
@@ -437,7 +445,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
         double[][] response = new double[k][n]; // pseudo response.
         
         int[][] order = SmileUtils.sort(attributes, x);        
-        forest = new RegressionTree[k][T];
+        forest = new RegressionTree[k][ntrees];
 
         RegressionTree.NodeOutput[] output = new LKNodeOutput[k];
         for (int i = 0; i < k; i++) {
@@ -450,7 +458,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
             perm[i] = i;
         }        
         
-        for (int m = 0; m < T; m++) {
+        for (int m = 0; m < ntrees; m++) {
             for (int i = 0; i < n; i++) {
                 double max = Double.NEGATIVE_INFINITY;
                 for (int j = 0; j < k; j++) {
@@ -486,7 +494,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
                     samples[perm[i]] = 1;
                 }
 
-                forest[j][m] = new RegressionTree(attributes, x, response[j], J, order, samples, output[j]);
+                forest[j][m] = new RegressionTree(attributes, x, response[j], maxNodes, 5, x[0].length, order, samples, output[j]);
 
                 for (int i = 0; i < n; i++) {
                     h[j][i] += shrinkage * forest[j][m].predict(x[i]);
@@ -583,34 +591,32 @@ public class GradientTreeBoost implements Classifier<double[]> {
      * we may remove them to reduce the model size and also improve the speed of
      * prediction.
      * 
-     * @param T the new (smaller) size of tree model set.
+     * @param ntrees the new (smaller) size of tree model set.
      */
-    public void trim(int T) {
+    public void trim(int ntrees) {
+        if (ntrees < 1) {
+            throw new IllegalArgumentException("Invalid new model size: " + ntrees);
+        }
+
         if (k == 2) {
-            if (T > trees.length) {
+            if (ntrees > trees.length) {
                 throw new IllegalArgumentException("The new model size is larger than the current size.");
             }
 
-            if (T <= 0) {
-                throw new IllegalArgumentException("Invalid new model size: " + T);
-            }
-
-            if (T < trees.length) {
-                trees = Arrays.copyOf(trees, T);
+            if (ntrees < trees.length) {
+                trees = Arrays.copyOf(trees, ntrees);
+                this.ntrees = ntrees;
             }
         } else {
-            if (T > forest[0].length) {
+            if (ntrees > forest[0].length) {
                 throw new IllegalArgumentException("The new model size is larger than the current one.");
             }
 
-            if (T <= 0) {
-                throw new IllegalArgumentException("Invalid new model size: " + T);
-            }
-
-            if (T < forest[0].length) {
+            if (ntrees < forest[0].length) {
                 for (int i = 0; i < forest.length; i++) {
-                    forest[i] = Arrays.copyOf(forest[i], T);
+                    forest[i] = Arrays.copyOf(forest[i], ntrees);
                 }
+                this.ntrees = ntrees;
             }
         }
     }
@@ -619,7 +625,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
     public int predict(double[] x) {
         if (k == 2) {
             double y = b;
-            for (int i = 0; i < T; i++) {
+            for (int i = 0; i < ntrees; i++) {
                 y += shrinkage * trees[i].predict(x);
             }
             
@@ -629,7 +635,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
             int y = -1;
             for (int j = 0; j < k; j++) {
                 double yj = 0.0;
-                for (int i = 0; i < T; i++) {
+                for (int i = 0; i < ntrees; i++) {
                     yj += shrinkage * forest[j][i].predict(x);
                 }
                 
@@ -651,7 +657,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
 
         if (k == 2) {
             double y = b;
-            for (int i = 0; i < T; i++) {
+            for (int i = 0; i < ntrees; i++) {
                 y += shrinkage * trees[i].predict(x);
             }
 
@@ -669,7 +675,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
             for (int j = 0; j < k; j++) {
                 posteriori[j] = 0.0;
                 
-                for (int i = 0; i < T; i++) {
+                for (int i = 0; i < ntrees; i++) {
                     posteriori[j] += shrinkage * forest[j][i].predict(x);
                 }
                 
@@ -701,7 +707,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
      * @return accuracies with first 1, 2, ..., decision trees.
      */
     public double[] test(double[][] x, int[] y) {
-        double[] accuracy = new double[T];
+        double[] accuracy = new double[ntrees];
 
         int n = x.length;
         int[] label = new int[n];
@@ -711,7 +717,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
         if (k == 2) {
             double[] prediction = new double[n];
             Arrays.fill(prediction, b);
-            for (int i = 0; i < T; i++) {
+            for (int i = 0; i < ntrees; i++) {
                 for (int j = 0; j < n; j++) {
                     prediction[j] += shrinkage * trees[i].predict(x[j]);
                     label[j] = prediction[j] > 0 ? 1 : 0;
@@ -720,7 +726,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
             }
         } else {
             double[][] prediction = new double[n][k];
-            for (int i = 0; i < T; i++) {
+            for (int i = 0; i < ntrees; i++) {
                 for (int j = 0; j < n; j++) {
                     for (int l = 0; l < k; l++) {
                         prediction[j][l] += shrinkage * forest[l][i].predict(x[j]);
@@ -745,7 +751,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
      */
     public double[][] test(double[][] x, int[] y, ClassificationMeasure[] measures) {
         int m = measures.length;
-        double[][] results = new double[T][m];
+        double[][] results = new double[ntrees][m];
 
         int n = x.length;
         int[] label = new int[n];
@@ -753,7 +759,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
         if (k == 2) {
             double[] prediction = new double[n];
             Arrays.fill(prediction, b);
-            for (int i = 0; i < T; i++) {
+            for (int i = 0; i < ntrees; i++) {
                 for (int j = 0; j < n; j++) {
                     prediction[j] += shrinkage * trees[i].predict(x[j]);
                     label[j] = prediction[j] > 0 ? 1 : 0;
@@ -765,7 +771,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
             }
         } else {
             double[][] prediction = new double[n][k];
-            for (int i = 0; i < T; i++) {
+            for (int i = 0; i < ntrees; i++) {
                 for (int j = 0; j < n; j++) {
                     for (int l = 0; l < k; l++) {
                         prediction[j][l] += shrinkage * forest[l][i].predict(x[j]);
