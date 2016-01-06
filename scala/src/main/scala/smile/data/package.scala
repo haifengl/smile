@@ -19,18 +19,11 @@ package smile
 import scala.language.implicitConversions
 import smile.data._
 
-/**
- * Data manipulation commands.
- *
- * @author Haifeng Li
- */
+/** Data manipulation functions.
+  *
+  * @author Haifeng Li
+  */
 package object data {
-  /**
-   * Scaladoc fails to generate documents for a package object with only value members.
-   * This is a work around before the bug is fixed. The user should not use this class at all.
-   * TODO: remove this when the issue (https://issues.scala-lang.org/browse/SI-9608) be fixed.
-   */
-  class scaladocHacking
 
   implicit def pimpDataset(data: Dataset[Array[Double]]) = new PimpedDataset(data)
   implicit def pimpArray(data: Array[Double]) = new PimpedArray(data)
@@ -42,20 +35,20 @@ package data {
 import smile.math.Math
 
 private[data] class PimpedDataset(data: Dataset[Array[Double]]) {
-    /** Copy the data. If the data contains a response variable, it won't be copied. */
-    def copy: Array[Array[Double]] = {
+    /** Unzip the data. If the data contains a response variable, it won't be copied. */
+    def unzip: Array[Array[Double]] = {
       data.toArray(new Array[Array[Double]](data.size))
     }
 
     /** Split the data into x and y of Int */
-    def unzip: (Array[Array[Double]], Array[Int]) = {
+    def unzipInt: (Array[Array[Double]], Array[Int]) = {
       val x = data.toArray(new Array[Array[Double]](data.size))
       val y = data.toArray(new Array[Int](data.size))
       (x, y)
     }
 
     /** Split the data into x and y of Double */
-    def unzipReal: (Array[Array[Double]], Array[Double]) = {
+    def unzipDouble: (Array[Array[Double]], Array[Double]) = {
       val x = data.toArray(new Array[Array[Double]](data.size))
       val y = data.toArray(new Array[Double](data.size))
       (x, y)
