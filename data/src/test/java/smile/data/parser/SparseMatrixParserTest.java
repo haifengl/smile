@@ -56,7 +56,7 @@ public class SparseMatrixParserTest {
         System.out.println("parse");
         try {
             SparseMatrixParser parser = new SparseMatrixParser();
-            SparseMatrix data = parser.parse(smile.data.parser.IOUtils.getDataFile("matrix/08blocks.txt"));
+            SparseMatrix data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("matrix/08blocks.txt"));
             assertEquals(592, data.size());
             assertEquals(300, data.nrows());
             assertEquals(300, data.ncols());
@@ -77,7 +77,7 @@ public class SparseMatrixParserTest {
         System.out.println("HB exchange format");
         try {
             SparseMatrixParser parser = new SparseMatrixParser();
-            SparseMatrix data = parser.parse(smile.data.parser.IOUtils.getDataFile("matrix/5by5_rua.hb"));
+            SparseMatrix data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("matrix/5by5_rua.hb"));
             assertEquals(13, data.size());
             assertEquals(5, data.nrows());
             assertEquals(5, data.ncols());

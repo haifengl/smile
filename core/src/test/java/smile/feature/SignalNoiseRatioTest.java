@@ -58,7 +58,7 @@ public class SignalNoiseRatioTest {
         try {
             ArffParser arffParser = new ArffParser();
             arffParser.setResponseIndex(4);
-            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/iris.arff"));
+            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
             double[][] x = iris.toArray(new double[iris.size()][]);
             int[] y = iris.toArray(new int[iris.size()]);
             
