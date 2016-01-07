@@ -259,6 +259,7 @@ public class AdaBoost implements Classifier<double[]> {
         
         double guess = 1.0 / k; // accuracy of random guess.
         double b = Math.log(k - 1); // the bias to tree weight in case of multi-class.
+        int failures = 0; // the number of weak classifiers less accurate than guess.
         
         trees = new DecisionTree[ntrees];
         alpha = new double[ntrees];
@@ -289,12 +290,17 @@ public class AdaBoost implements Classifier<double[]> {
             }
             
             if (1 - e <= guess) {
-                System.err.format("Weak classifier %d makes %.2f%% weighted error\n", t, 100*e);
-                trees = Arrays.copyOf(trees, t);
-                alpha = Arrays.copyOf(alpha, t);
-                error = Arrays.copyOf(error, t);
-                break;
-            }
+                System.err.format("Skip the weak classifier %d makes %.2f%% weighted error\n", t, 100*e);
+                if (++failures > 3) {
+                    trees = Arrays.copyOf(trees, t);
+                    alpha = Arrays.copyOf(alpha, t);
+                    error = Arrays.copyOf(error, t);
+                    break;
+                } else {
+                    t--;
+                    continue;
+                }
+            } else failures = 0;
             
             error[t] = e;
             alpha[t] = Math.log((1-e)/Math.max(1E-10,e)) + b;
