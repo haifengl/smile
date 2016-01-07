@@ -57,7 +57,7 @@ public class RESParserTest {
         System.out.println("parse");
         RESParser parser = new RESParser();
         try {
-            AttributeDataset data = parser.parse("RES", smile.data.parser.IOUtils.getDataFile("microarray/all_aml_test.res"));
+            AttributeDataset data = parser.parse("RES", smile.data.parser.IOUtils.getTestDataFile("microarray/all_aml_test.res"));
             
             double[][] x = data.toArray(new double[data.size()][]);
             String[] id = data.toArray(new String[data.size()]);

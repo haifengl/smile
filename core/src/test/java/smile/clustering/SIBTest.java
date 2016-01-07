@@ -59,8 +59,8 @@ public class SIBTest {
         System.out.println("NG20");
         LibsvmParser parser = new LibsvmParser();
         try {
-            SparseDataset train = parser.parse("NG20 Train", smile.data.parser.IOUtils.getDataFile("libsvm/news20.dat"));
-            SparseDataset test = parser.parse("NG20 Test", smile.data.parser.IOUtils.getDataFile("libsvm/news20.t.dat"));
+            SparseDataset train = parser.parse("NG20 Train", smile.data.parser.IOUtils.getTestDataFile("libsvm/news20.dat"));
+            SparseDataset test = parser.parse("NG20 Test", smile.data.parser.IOUtils.getTestDataFile("libsvm/news20.t.dat"));
             int[] y = train.toArray(new int[train.size()]);
             int[] testy = test.toArray(new int[test.size()]);
             

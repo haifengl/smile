@@ -37,12 +37,12 @@ public class SparseMatrixPlotDemo extends JPanel {
 
         SparseMatrixParser parser = new SparseMatrixParser();
         try {
-            SparseMatrix m1 = parser.parse(smile.data.parser.IOUtils.getDataFile("matrix/08blocks.txt"));
+            SparseMatrix m1 = parser.parse(smile.data.parser.IOUtils.getTestDataFile("matrix/08blocks.txt"));
             PlotCanvas canvas = SparseMatrixPlot.plot(m1);
             canvas.setTitle("08blocks");
             add(canvas);
 
-            SparseMatrix m2 = parser.parse(smile.data.parser.IOUtils.getDataFile("matrix/mesh2em5.txt"));
+            SparseMatrix m2 = parser.parse(smile.data.parser.IOUtils.getTestDataFile("matrix/mesh2em5.txt"));
             canvas = SparseMatrixPlot.plot(m2, Palette.jet(256));
             canvas.setTitle("mesh2em5");
             add(canvas);

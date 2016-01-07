@@ -40,7 +40,7 @@ public class BKTreeTest {
 
     public BKTreeTest() {
         try {
-            BufferedReader input = smile.data.parser.IOUtils.getDataReader("neighbor/index.noun");
+            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("neighbor/index.noun");
             String line = input.readLine();
             while (line != null) {
                 if (!line.startsWith(" ")) {

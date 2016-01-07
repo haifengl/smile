@@ -57,8 +57,8 @@ object Airline {
     attributes(6) = new NominalAttribute("V6")
     attributes(7) = new NumericAttribute("V7")
 
-    val train = parser.parse(attributes, smile.data.parser.IOUtils.getDataFile(s"airline/train-${data}.csv"))
-    val test  = parser.parse(attributes, smile.data.parser.IOUtils.getDataFile("airline/test.csv"))
+    val train = parser.parse(attributes, smile.data.parser.IOUtils.getTestDataFile(s"airline/train-${data}.csv"))
+    val test  = parser.parse(attributes, smile.data.parser.IOUtils.getTestDataFile("airline/test.csv"))
 
     attributes.foreach { attr =>
       if (attr.isInstanceOf[NominalAttribute])

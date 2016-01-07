@@ -42,8 +42,8 @@ object USPS {
     val parser = new DelimitedTextParser
     parser.setResponseIndex(new NominalAttribute("class"), 0)
 
-    val train = parser.parse(smile.data.parser.IOUtils.getDataFile("usps/zip.train"))
-    val test = parser.parse(smile.data.parser.IOUtils.getDataFile("usps/zip.test"))
+    val train = parser.parse(smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"))
+    val test = parser.parse(smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"))
     val (x, y) = train.unzipInt
     val (testx, testy) = test.unzipInt
     val k = Math.max(y: _*) + 1

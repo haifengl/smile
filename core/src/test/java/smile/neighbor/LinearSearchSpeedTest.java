@@ -68,7 +68,7 @@ public class LinearSearchSpeedTest {
         List<String> words = new ArrayList<String>();
         long start = System.currentTimeMillis();
         try {
-            BufferedReader input = smile.data.parser.IOUtils.getDataReader("neighbor/index.noun");
+            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("neighbor/index.noun");
             String line = input.readLine();
             while (line != null) {
                 if (!line.startsWith(" ")) {
@@ -178,8 +178,8 @@ public class LinearSearchSpeedTest {
         DelimitedTextParser parser = new DelimitedTextParser();
         parser.setResponseIndex(new NominalAttribute("class"), 0);
         try {
-            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getDataFile("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getDataFile("usps/zip.test"));
+            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
+            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
 
             x = train.toArray(new double[train.size()][]);
             testx = test.toArray(new double[test.size()][]);

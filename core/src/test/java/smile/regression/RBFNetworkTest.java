@@ -18,7 +18,6 @@ package smile.regression;
 
 import smile.math.distance.EuclideanDistance;
 import smile.math.rbf.RadialBasisFunction;
-import smile.regression.RBFNetwork;
 import smile.data.AttributeDataset;
 import smile.data.parser.ArffParser;
 
@@ -116,7 +115,7 @@ public class RBFNetworkTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(6);
         try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getDataFile("weka/cpu.arff"));
+            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
             Math.normalize(datax);
@@ -157,7 +156,7 @@ public class RBFNetworkTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(10);
         try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getDataFile("weka/regression/2dplanes.arff"));
+            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/regression/2dplanes.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
             //Math.normalize(datax);
@@ -198,7 +197,7 @@ public class RBFNetworkTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(40);
         try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getDataFile("weka/regression/ailerons.arff"));
+            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/regression/ailerons.arff"));
             double[][] datax = data.toArray(new double[data.size()][]);
             Math.normalize(datax);
 
@@ -243,7 +242,7 @@ public class RBFNetworkTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(31);
         try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getDataFile("weka/regression/bank32nh.arff"));
+            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/regression/bank32nh.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
             Math.normalize(datax);

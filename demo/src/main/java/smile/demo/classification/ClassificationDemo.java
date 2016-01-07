@@ -69,7 +69,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
             parser.setDelimiter("[\t ]+");
             parser.setResponseIndex(new NominalAttribute("class"), 0);
             try {
-                dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getDataFile(datasource[datasetIndex]));
+                dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                 System.err.println(e);
@@ -210,7 +210,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
                 parser.setDelimiter("[\t ]+");
                 parser.setResponseIndex(new NominalAttribute("class"), 0);
                 try {
-                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getDataFile(datasource[datasetIndex]));
+                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.err.println(ex);

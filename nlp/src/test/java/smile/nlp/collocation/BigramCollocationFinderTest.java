@@ -59,7 +59,7 @@ public class BigramCollocationFinderTest {
         System.out.println("find");
         SimpleCorpus corpus = new SimpleCorpus();
 
-        try (BufferedReader input = smile.data.parser.IOUtils.getDataReader("text/quote.tok.gt9.5000")) {
+        try (BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("text/quote.tok.gt9.5000")) {
             String line = null;
             int id = 0;
             while ((line = input.readLine()) != null) {
@@ -89,7 +89,7 @@ public class BigramCollocationFinderTest {
         System.out.println("find");
         SimpleCorpus corpus = new SimpleCorpus();
 
-        try (BufferedReader input = smile.data.parser.IOUtils.getDataReader("text/quote.tok.gt9.5000")) {
+        try (BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("text/quote.tok.gt9.5000")) {
             String line = null;
             int id = 0;
             while ((line = input.readLine()) != null) {

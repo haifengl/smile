@@ -95,7 +95,7 @@ public class SNLSHTest {
 
     private List<Sentence> loadData(String path) throws IOException {
         List<Sentence> data = new ArrayList<Sentence>();
-        List<String> lines = IOUtils.readLines(IOUtils.getDataReader(path));
+        List<String> lines = IOUtils.readLines(IOUtils.getTestDataReader(path));
         for (String line : lines) {
             List<String> s = tokenize(line, "\t");
             data.add(new Sentence(s.get(s.size() - 1)));

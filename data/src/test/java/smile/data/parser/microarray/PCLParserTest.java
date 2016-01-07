@@ -57,7 +57,7 @@ public class PCLParserTest {
         System.out.println("parse");
         PCLParser parser = new PCLParser();
         try {
-            AttributeDataset data = parser.parse("PCL", smile.data.parser.IOUtils.getDataFile("microarray/Dunham2002.pcl"));
+            AttributeDataset data = parser.parse("PCL", smile.data.parser.IOUtils.getTestDataFile("microarray/Dunham2002.pcl"));
             
             double[][] x = data.toArray(new double[data.size()][]);
             String[] id = data.toArray(new String[data.size()]);

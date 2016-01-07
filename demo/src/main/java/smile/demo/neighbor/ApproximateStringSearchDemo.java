@@ -96,7 +96,7 @@ public class ApproximateStringSearchDemo extends JPanel implements Runnable, Act
             List<String> words = new ArrayList<String>();
 
             try {
-                FileInputStream stream = new FileInputStream(smile.data.parser.IOUtils.getDataFile("index.noun"));
+                FileInputStream stream = new FileInputStream(smile.data.parser.IOUtils.getTestDataFile("index.noun"));
                 BufferedReader input = new BufferedReader(new InputStreamReader(stream));
                 String line = input.readLine();
                 while (line != null) {

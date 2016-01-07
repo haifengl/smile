@@ -81,7 +81,7 @@ public class BagTest {
         System.out.println("feature");
         String[][] text = new String[2000][];
 
-        try(BufferedReader input = smile.data.parser.IOUtils.getDataReader("text/movie.txt")) {
+        try(BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("text/movie.txt")) {
             for (int i = 0; i < text.length; i++) {
                 String[] words = input.readLine().trim().split("\\s+");
                 text[i] = words;
