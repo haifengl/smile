@@ -70,9 +70,24 @@ import smile.validation.ClassificationMeasure;
  */
 public class RandomForest implements Classifier<double[]> {
     /**
-     * Forest of decision trees.
+     * Decision tree wrapper with a weight. Currently, the weight is the accuracy of
+     * tree on the OOB samples, which can be used when aggregating
+     * tree votes.
      */
-    private List<DecisionTree> trees;
+    static class Tree {
+        DecisionTree tree;
+        double weight;
+        Tree(DecisionTree tree, double weight) {
+            this.tree = tree;
+            this.weight = weight;
+        }
+    }
+    /**
+     * Forest of decision trees. The second value is the accuracy of
+     * tree on the OOB samples, which can be used a weight when aggregating
+     * tree votes.
+     */
+    private List<Tree> trees;
     /**
      * The number of classes.
      */
@@ -228,7 +243,7 @@ public class RandomForest implements Classifier<double[]> {
     /**
      * Trains a regression tree.
      */
-    static class TrainingTask implements Callable<DecisionTree> {
+    static class TrainingTask implements Callable<Tree> {
         /**
          * Attribute properties.
          */
@@ -288,7 +303,7 @@ public class RandomForest implements Classifier<double[]> {
         }
 
         @Override
-        public DecisionTree call() {            
+        public Tree call() {
             int n = x.length;
             int[] samples = new int[n]; // Training samples draw with replacement.
             for (int i = 0; i < n; i++) {
@@ -299,16 +314,28 @@ public class RandomForest implements Classifier<double[]> {
             DecisionTree tree = new DecisionTree(attributes, x, y, maxNodes, nodeSize, mtry, rule, samples, order);
 
             // estimate OOB error
+            int oob = 0;
+            int correct = 0;
             for (int i = 0; i < n; i++) {
                 if (samples[i] == 0) {
+                    oob++;
                     int p = tree.predict(x[i]);
+                    if (p == y[i]) correct++;
                     synchronized (prediction[i]) {
                         prediction[i][p]++;
                     }
                 }
             }
-            
-            return tree;
+
+            double accuracy = 1.0;
+            if (oob != 0) {
+                accuracy = (double) correct / oob;
+                //System.out.println("Random forest tree OOB accuracy: " + accuracy);
+            } else {
+                System.err.println("Random forest has a tree trained without OOB samples.");
+            }
+
+            return new Tree(tree, accuracy);
         }
     }
 
@@ -444,7 +471,7 @@ public class RandomForest implements Classifier<double[]> {
         } catch (Exception ex) {
             System.err.println(ex);
 
-            trees = new ArrayList<DecisionTree>(ntrees);
+            trees = new ArrayList<Tree>(ntrees);
             for (int i = 0; i < ntrees; i++) {
                 trees.add(tasks.get(i).call());
             }
@@ -466,8 +493,8 @@ public class RandomForest implements Classifier<double[]> {
         }
         
         importance = new double[attributes.length];
-        for (DecisionTree tree : trees) {
-            double[] imp = tree.importance();
+        for (Tree tree : trees) {
+            double[] imp = tree.tree.importance();
             for (int i = 0; i < imp.length; i++) {
                 importance[i] += imp[i];
             }
@@ -525,7 +552,7 @@ public class RandomForest implements Classifier<double[]> {
             throw new IllegalArgumentException("Invalid new model size: " + ntrees);
         }
 
-        List<DecisionTree> model = new ArrayList<DecisionTree>(ntrees);
+        List<Tree> model = new ArrayList<Tree>(ntrees);
         for (int i = 0; i < ntrees; i++) {
             model.add(trees.get(i));
         }
@@ -535,10 +562,10 @@ public class RandomForest implements Classifier<double[]> {
     
     @Override
     public int predict(double[] x) {
-        int[] y = new int[k];
+        double[] y = new double[k];
         
-        for (DecisionTree tree : trees) {
-            y[tree.predict(x)]++;
+        for (Tree tree : trees) {
+            y[tree.tree.predict(x)] += tree.weight;
         }
         
         return Math.whichMax(y);
@@ -552,12 +579,12 @@ public class RandomForest implements Classifier<double[]> {
 
         Arrays.fill(posteriori, 0.0);
 
-        int[] y = new int[k];
+        double[] y = new double[k];
         double[] pos = new double[k];
-        for (DecisionTree tree : trees) {
-            y[tree.predict(x, pos)]++;
+        for (Tree tree : trees) {
+            y[tree.tree.predict(x, pos)] += tree.weight;
             for (int i = 0; i < k; i++) {
-                posteriori[i] += pos[i];
+                posteriori[i] += tree.weight * pos[i];
             }
         }
 
@@ -584,7 +611,7 @@ public class RandomForest implements Classifier<double[]> {
         
         for (int i = 0; i < T; i++) {
             for (int j = 0; j < n; j++) {
-                prediction[j][trees.get(i).predict(x[j])]++;
+                prediction[j][trees.get(i).tree.predict(x[j])]++;
                 label[j] = Math.whichMax(prediction[j]);
             }
 
@@ -613,7 +640,7 @@ public class RandomForest implements Classifier<double[]> {
 
         for (int i = 0; i < T; i++) {
             for (int j = 0; j < n; j++) {
-                prediction[j][trees.get(i).predict(x[j])]++;
+                prediction[j][trees.get(i).tree.predict(x[j])]++;
                 label[j] = Math.whichMax(prediction[j]);
             }
 

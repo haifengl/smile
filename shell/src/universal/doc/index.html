@@ -249,14 +249,14 @@
           With advanced data structures and algorithms, SMILE delivers state-of-art performance.
         </p>
 
-        <p>
-          According to this third-party <a href="https://github.com/szilard/benchm-ml">benchmark</a>, SMILE outperforms R, Python, Spark, H2O, xgboost significantly.
+        <p>Compared to this third-party <a href="https://github.com/szilard/benchm-ml">benchmark</a>,
+          SMILE outperforms R, Python, Spark, H2O, xgboost significantly.
         </p>
       </div>
       <div class="col-md-5 col-sm-5 col-padded-top col-center">
         <div style="width: 100%; max-width: 272px; display: inline-block; text-align: center;">
           <img src="images/benchm-ml.png" style="width: 100%; max-width: 250px;" />
-          <div class="caption" style="min-width: 272px;">Random Forest and Gradient Tree Boosting Running Time (s)</div>
+          <div class="caption" style="min-width: 272px;">Running Time (s)</div>
         </div>
       </div>
     </div>
@@ -266,12 +266,12 @@
         <h2>Ease of Use</h2>
 
         <p class="lead">
-          Write applications quickly in Java, Scala, or any JVM languages. Build and deploy the models in one place.
+          Write applications quickly in Java, Scala, or any JVM languages.
           Data scientists and developers can speak the same language now!
         </p>
 
-        <p>
-          SMILE provides hundreds advanced algorithm with clean interface. Scala API also offers high-level operators that make it easy to build machine learning apps.
+        <p>SMILE provides hundreds advanced algorithm with clean interface. Scala API also offers
+          high-level operators that make it easy to build machine learning apps.
           And you can use it interactively from the shell, embedded in Scala.
         </p>
       </div>
@@ -280,7 +280,7 @@
           <div class="code">
             <br/><br/>
             val data = readArff("iris.arff", 4)<br/>
-            val (x, y) = data.unzip<br/>
+            val (x, y) = data.unzipInt<br/>
             <br/>
             val rf = randomForest(x, y)<br/>
             println(s"OOB error = ${rf.error}")<br/>
@@ -296,11 +296,18 @@
         <h2>Comprehensive</h2>
 
         <p class="lead">
-          Classification, regression, clustering, association rule mining, feature selection, manifold learning, multidimensional scaling, genetic algorithm, missing value imputation, efficient nearest neighbor search, natural language processing, linear algebra, hypothesis tests, random number generators, interpolation, wavelet, plot, etc.
+          The most complete machine learning engine.
+        </p>
+        <p>Classification, regression, clustering, association rule mining, feature selection,
+          manifold learning, multidimensional scaling, genetic algorithm, missing value imputation,
+          efficient nearest neighbor search, natural language processing, linear algebra, hypothesis
+          tests, random number generators, interpolation, wavelet, plot, etc.
         </p>
       </div>
       <div class="col-md-5 col-sm-5 col-padded-top col-center">
-
+        <div style="width: 100%; max-width: 272px; display: inline-block; text-align: center;">
+          <img src="images/ml-word-cloud.jpg" style="width: 100%; max-width: 250px;" />
+        </div>
       </div>
     </div>
   </div>

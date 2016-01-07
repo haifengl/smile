@@ -67,10 +67,10 @@ private[data] class PimpedDataset(data: Dataset[Array[Double]]) {
     }
 
     /**
-     * Sampling the data.
-     * @param n the number of samples.
-     * @return samples
-     */
+      * Sampling the data.
+      * @param n the number of samples.
+      * @return samples
+      */
     def sample(n: Int): Array[Double] = {
       val perm = (0 to n).toArray
       Math.permutate(perm)
@@ -78,10 +78,10 @@ private[data] class PimpedDataset(data: Dataset[Array[Double]]) {
     }
 
     /**
-     * Sampling the data.
-     * @param f the fraction of samples.
-     * @return samples
-     */
+      * Sampling the data.
+      * @param f the fraction of samples.
+      * @return samples
+      */
     def sample(f: Double): Array[Double] = {
       val n = Math.round(data.length * f).toInt
       val perm = (0 to n).toArray
@@ -134,10 +134,10 @@ private[data] class PimpedDataset(data: Dataset[Array[Double]]) {
     }
 
     /**
-     * Retuns a sample of rows
-     * @param n the number of samples.
-     * @return samples
-     */
+      * Retuns a sample of rows
+      * @param n the number of samples.
+      * @return samples
+      */
     def sample(n: Int): Array[Array[Double]] = {
       val perm = (0 to n).toArray
       Math.permutate(perm)
@@ -145,10 +145,10 @@ private[data] class PimpedDataset(data: Dataset[Array[Double]]) {
     }
 
     /**
-     * Retuns a sample of rows
-     * @param f the fraction of samples.
-     * @return samples
-     */
+      * Retuns a sample of rows
+      * @param f the fraction of samples.
+      * @return samples
+      */
     def sample(f: Double): Array[Array[Double]] = {
       val n = Math.round(nrows * f).toInt
       val perm = (0 to n).toArray
