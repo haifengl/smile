@@ -33,14 +33,14 @@
         $('#content').load('faq.html');
       });
 
-      $("#overview").click(function(event){
-        event.preventDefault();
-        $('#content').load('overview.html');
-      });
-
       $("#quickstart").click(function(event){
         event.preventDefault();
         $('#content').load('quickstart.html');
+      });
+
+      $("#overview").click(function(event){
+        event.preventDefault();
+        $('#content').load('overview.html');
       });
 
       $("#classification").click(function(event){
@@ -105,13 +105,13 @@
   <!-- Collect the nav links, forms, and other content for toggling -->
   <div class="collapse navbar-collapse" id="navbar-collapse-1">
     <ul class="nav navbar-nav">
-      <li><a id="overview" href="#">Overview</a></li>
+      <li><a id="quickstart" href="#">Quick Start</a></li>
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
           Programming Guide <b class="caret"></b>
         </a>
         <ul class="dropdown-menu">
-          <li><a id="quickstart" href="#">Quick Start</a></li>
+          <li><a id="overview" href="#">Overview</a></li>
           <!--
               <li><a id="classification" href="#">Classification</a></li>
               <li><a id="regression" href="#">Regression</a></li>
