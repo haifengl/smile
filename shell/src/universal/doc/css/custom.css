@@ -275,3 +275,34 @@ code {
 .tabs-left > .nav-tabs {
   border-bottom: 0;
 }
+
+.nav#sidebar {
+  float: left;
+  position: relative;
+  width: 220px;
+  padding-left: 20px;
+  margin-left: 10px;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.index-h1 {
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 150%;
+}
+
+.index-h2 {
+  font-weight: bolder;
+  display: block;
+  font-size: 14px;
+  margin-left: 15px;
+  line-height: 150%;
+}
+
+.index-h3 {
+  line-height: 150%;
+  display: block;
+  font-size: 12px;
+  margin-left: 26px;
+}

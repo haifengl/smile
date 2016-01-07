@@ -1,3 +1,13 @@
+<div class="col-md-3 col-md-push-9">
+    <nav id="sidebar">
+        <ul class="list-unstyled">
+            <li><a class="index-h1" href="#download">Download</a></li>
+            <li><a class="index-h1" href="#shell">Shell</a></li>
+        </ul>
+    </nav>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
 <h1 class="title">SMILE Overview</h1>
 
 
@@ -14,13 +24,10 @@
 
 <h1 id="download">Download</h1>
 
-<p>
-    Get SMILE from the <a href="https://github.com/haifengl/smile/releases">releases page</a> of the project
-    website. Downloads are pre-packaged for Mac, Windows, and universal tarball.
-</p>
+<p>Get SMILE from the <a href="https://github.com/haifengl/smile/releases">releases page</a> of the project
+    website. Downloads are pre-packaged for Mac, Windows, and universal tarball.</p>
 
-<p>
-    If you would like to build SMILE from source, please first install Java, Scala and SBT.
+<p>If you would like to build SMILE from source, please first install Java, Scala and SBT.
     Then clone the repo and build the package:
     <pre><code>
         git clone https://github.com/haifengl/smile.git
@@ -32,23 +39,18 @@
         git pull
         ./smile.sh
     </code></pre>
-    which will build the system and enter the shell.
-</p>
+    which will build the system and enter the shell.</p>
 
-<p>
-    SMILE runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS).
+<p>SMILE runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS).
     All you need is to have <code>java</code> installed on your system <code>PATH</code>,
     or the <code>JAVA_HOME</code> environment variable pointing to a Java installation.</p>
 
-<p>
-    The download packages of SMILE are built on Java 8. But Java 7 is sufficient to build it
-    if needed. For the Scala API, we uses Scala 2.11.
-</p>
+<p>The download packages of SMILE are built on Java 8. But Java 7 is sufficient to build it
+    if needed. For the Scala API, we uses Scala 2.11.</p>
 
 <h1 id="shell">Shell</h1>
 
-<p>
-    SMILE comes with an interactive shell. In the home directory of SMILE, type
+<p>SMILE comes with an interactive shell. In the home directory of SMILE, type
     <pre><code>
         ./bin/smile
     </code></pre>
@@ -61,34 +63,25 @@
         ./bin/smile -J-Xmx8192M
     </code></pre>
     You can also modify the configuration file <code>./conf/application.ini</code>
-    for the memory and other JVM settings.
-</p>
+    for the memory and other JVM settings.</p>
 
-<p>
-    In the shell, type <code>:help</code> to print Scala interpreter help
+<p>In the shell, type <code>:help</code> to print Scala interpreter help
     information. To get help information of SMILE high-level operators,
     thpe <code>help()</code>. You can also get detailed information on
     each operator by typing <code>help("operator name")</code>, e.g.
-    <code>help("svm")</code>. To exit the shell, type <code>:quit</code>.
-</p>
+    <code>help("svm")</code>. To exit the shell, type <code>:quit</code>.</p>
 
-<p>
-    In the shell, type <code>demo</code> to bring up the demo window,
-    which shows off various SMILE's machine learning capabilities.
-</p>
+<p>In the shell, type <code>demo</code> to bring up the demo window,
+    which shows off various SMILE's machine learning capabilities.</p>
 
-<p>
-    You can also type <code>benchmark()</code> to see SMILE's performance
+<p>You can also type <code>benchmark()</code> to see SMILE's performance
     on a couple of test data. You can run a particular benchmark by
     <code>bencharm("test name")</code>, where test name could be "airline",
-    "usps", etc.
-</p>
+    "usps", etc.</p>
 
-<p>
-    In the <code>data</code> directory, we also include many open datasets,
+<p>In the <code>data</code> directory, we also include many open datasets,
     which are frequently used in research and benchmark. Now let&#8217;s build
-    a classification model with SMILE. It is as easy as
-</p>
+    a classification model with SMILE. It is as easy as</p>
 <pre><code>
     val data = readArff("data/weka/iris.arff", 4)<br/>
     val (x, y) = data.unzipInt<br/>
@@ -98,8 +91,7 @@
     rf.predict(x(0)) // or predict(rf, x(0))
 </code></pre>
 
-<p>
-    In this example, we use the famous Iris data from R.A. Fisher. The data
+<p>In this example, we use the famous Iris data from R.A. Fisher. The data
     is in Weka's ARFF format. The second parameter of readArff is the column index
     of response variable. With our parsers, the column index starts with 0. The
     function readArff returns an object of <code>AttributeDataset</code>.
@@ -108,5 +100,5 @@
     data and labels. For regression, you may use <code>unzipDouble</code> as
     the response variable is real value. Finally, we train a random forest
     with default parameters and print out its OOB (out of bag) error. We can apply
-    the model on new data samples with the method <code>predict</code>.
-</p>
+    the model on new data samples with the method <code>predict</code>.</p>
+</div>

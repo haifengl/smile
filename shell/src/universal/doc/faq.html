@@ -1,5 +1,17 @@
+<div class="col-md-3 col-md-push-9">
+    <nav id="sidebar">
+        <ul class="list-unstyled">
+            <li><a class="index-h1" href="#link-with-smile">Link with SMILE</a></li>
+            <li><a class="index-h1" href="#model-serialization">Model serialization</a></li>
+            <li><a class="index-h1" href="#data-format">Data Format</a></li>
+        </ul>
+    </nav>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+
 <h1 class="title">SMILE FAQ</h1>
-<p class="question">Link with SMILE</p>
+<p class="question" id="link-with-smile">Link with SMILE</p>
 <p class="answer">
     SMILE artifacts are hosted in <a href="https://oss.sonatype.org/#nexus-search;quick~smile-core">Sonatgype Nexus</a>.
     You can add the following dependency into your pom.xml:
@@ -16,7 +28,7 @@
     </code></pre>
 </p>
 
-<p class="question">Model serialization</p>
+<p class="question" id="model-serialization">Model serialization</p>
 <p class="answer">
     You may notice that none of models supports Java Serializable interface. It is because the exact format is hard
     to keep stable, class changes can easily make your serialized data unreadable, reading/writing the data in
@@ -34,7 +46,7 @@
     an XML-based file format developed by the Data Mining Group.
 </p>
 
-<p class="question">Data Format</p>
+<p class="question" id="data-format">Data Format</p>
 <p class="answer">
     Most SMILE algorithms take simple <code>double[]</code> as input. So you can use your favorite methods
     or library to import the data as long as the samples are in double arrays. Meanwhile, SMILE provides
@@ -44,3 +56,4 @@
     <code>smile.data.parser.microarray</code> also provides several parsers for microarray gene expression datasets,
     including GCT, PCL, RES, and TXT files.
 </p>
+</div>
