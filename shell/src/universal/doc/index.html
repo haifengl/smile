@@ -28,12 +28,49 @@
   <!-- Load static page by jQuery AJAX -->
   <script type="text/javascript">
     $(document).ready(function(){
-      $("#faq").click(function(){
+      $("#faq").click(function(event){
+        event.preventDefault();
         $('#content').load('faq.html');
       });
 
-      $("#quickstart").click(function(){
+      $("#overview").click(function(event){
+        event.preventDefault();
+        $('#content').load('overview.html');
+      });
+
+      $("#quickstart").click(function(event){
+        event.preventDefault();
         $('#content').load('quickstart.html');
+      });
+
+      $("#classification").click(function(event){
+        event.preventDefault();
+        $('#content').load('classification.html');
+      });
+
+      $("#regression").click(function(event){
+        event.preventDefault();
+        $('#content').load('regression.html');
+      });
+
+      $("#math").click(function(event){
+        event.preventDefault();
+        $('#content').load('math.html');
+      });
+
+      $("#graph").click(function(event){
+        event.preventDefault();
+        $('#content').load('graph.html');
+      });
+
+      $("#interpolation").click(function(event){
+        event.preventDefault();
+        $('#content').load('interpolation.html');
+      });
+
+      $("#plot").click(function(event){
+        event.preventDefault();
+        $('#content').load('plot.html');
       });
     });
   </script>
@@ -44,12 +81,11 @@
 <div class="container" style="max-width: 1200px;">
 <header>
 <div class="masthead">
-  
   <p class="lead">
     <a href="index.html">
-    <img src="images/smile.jpg"
-        style="height:100px; width:auto; vertical-align: bottom; margin-top: 20px;"></a><span class="tagline">
-          SMILE - Statistical Machine Intelligence and Learning Engine
+    <img src="images/smile.jpg" style="height:100px; width:auto; vertical-align: bottom; margin-top: 20px;"></a>
+    <span class="tagline">
+      SMILE - Statistical Machine Intelligence and Learning Engine
     </span>
   </p>
 </div>
@@ -69,29 +105,30 @@
   <!-- Collect the nav links, forms, and other content for toggling -->
   <div class="collapse navbar-collapse" id="navbar-collapse-1">
     <ul class="nav navbar-nav">
-      <li><a id="quickstart" href="#">Quick Start</a></li>
-      <!--
+      <li><a id="overview" href="#">Overview</a></li>
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-          Libraries <b class="caret"></b>
+          Programming Guide <b class="caret"></b>
         </a>
         <ul class="dropdown-menu">
-          <li><a href="/classification/">Classification</a></li>
-          <li><a href="/regression/">Regression</a></li>
-          <li><a href="/math/">Math</a></li>
-          <li><a href="/graph/">Graph</a></li>
-          <li><a href="/interpolation/">Interpolation</a></li>
-          <li><a href="/plot/">Plot</a></li>
+          <li><a id="quickstart" href="#">Quick Start</a></li>
+          <!--
+              <li><a id="classification" href="#">Classification</a></li>
+              <li><a id="regression" href="#">Regression</a></li>
+              <li><a id="math" href="#">Math</a></li>
+              <li><a id="graph" href="#">Graph</a></li>
+              <li><a id="interpolation" href="#">Interpolation</a></li>
+              <li><a id="plot" href="#">Plot</a></li>
+          -->
         </ul>
       </li>
-      -->
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-          Documentation <b class="caret"></b>
+          API Docs <b class="caret"></b>
         </a>
         <ul class="dropdown-menu">
-          <li><a href="api/java/index.html">Java API</a></li>
-          <li><a href="api/scala/index.html">Scala API</a></li>
+          <li><a href="api/java/index.html">Java</a></li>
+          <li><a href="api/scala/index.html">Scala</a></li>
         </ul>
       </li>
       <li class="dropdown">
@@ -195,7 +232,7 @@
 
   <div id="content" class="col-md-9 col-md-pull-3">
     <div class="jumbotron">
-      <b>SMILE</b> is a fast and general machine learning engine.
+      <b>SMILE</b> is a fast and comprehensive machine learning system.
       <p><a href="https://github.com/haifengl/smile">Open source</a>, of course.</p>
       <div id="github-buttons-wrapper" style="margin-top: 30px;">
         <a class="github-button" href="https://github.com/haifengl/smile" data-style="mega" data-count-href="/haifengl/smile/stargazers" data-count-api="/repos/haifengl/smile#stargazers_count" data-count-aria-label="# stargazers on GitHub" aria-label="Star haifengl/smile on GitHub">Star</a>
