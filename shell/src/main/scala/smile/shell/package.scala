@@ -21,7 +21,7 @@ package smile
  *
  * @author Haifeng Li
  */
-package object shell extends smile.classification.Operators with smile.regression.Operators {
+package object shell extends smile.classification.Operators {
 
   /** Built in benchmarks */
   def benchmark(tests: String*) = {
