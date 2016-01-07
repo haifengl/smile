@@ -25,7 +25,17 @@ import smile.validation.{AUC, Specificity, Sensitivity, Accuracy}
   */
 package object util {
 
-  /** Test a classifier. */
+  /** Test a generic classifier.
+    * The accuracy will be measured and printed out on standard output.
+    *
+    * @param x training data.
+    * @param y training labels.
+    * @param testx test data.
+    * @param testy test data labels.
+    * @param trainer a code block to return a classifier trained on the given data.
+    * @tparam T the type of training and test data.
+    * @return the trained classifier.
+    */
   def test[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T] = {
     val classifier = time {
       trainer(x, y)
@@ -38,7 +48,18 @@ package object util {
     classifier
   }
 
-  /** Test a binary classifier. */
+  /** Test a binary classifier.
+    * The accuracy, sensitivity, specificity, and AUC will be measured
+    * and printed out on standard output.
+    *
+    * @param x training data.
+    * @param y training labels.
+    * @param testx test data.
+    * @param testy test data labels.
+    * @param trainer a code block to return a binary classifier trained on the given data.
+    * @tparam T the type of training and test data.
+    * @return the trained classifier.
+    */
   def test2[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], auc: Boolean = true)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T] = {
     val classifier = time {
       trainer(x, y)
@@ -68,16 +89,25 @@ package object util {
 
   /** Measure running time of a function/block */
   object time {
+    /** Print out switch. */
     var echo = true
 
+    /** Turn on printing out running time. */
     def on = {
       echo = true
     }
 
+    /** Turn on printing out running time. */
     def off = {
       echo = false
     }
 
+    /**
+     * Executes a code block and measure the running time.
+     * @param f a code block to measure the running time.
+     * @tparam A The output type of code block.
+     * @return the code block expression result.
+     */
     def apply[A](f: => A) = {
       val s = System.nanoTime
       val ret = f
