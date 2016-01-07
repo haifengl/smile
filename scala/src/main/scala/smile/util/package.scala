@@ -16,11 +16,55 @@
 
 package smile
 
+import smile.classification.Classifier
+import smile.validation.{AUC, Specificity, Sensitivity, Accuracy}
+
 /** Utility functions.
   *
   * @author Haifeng Li
   */
 package object util {
+
+  /** Test a classifier. */
+  def test[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T] = {
+    val classifier = time {
+      trainer(x, y)
+    }
+
+    val pred = testx.map(classifier.predict(_))
+
+    println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
+
+    classifier
+  }
+
+  /** Test a binary classifier. */
+  def test2[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], auc: Boolean = true)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T] = {
+    val classifier = time {
+      trainer(x, y)
+    }
+
+    if (auc) {
+      val posteriori = Array(0.0, 0.0)
+      val (pred, prob) = testx.map { xi =>
+        val yi = classifier.predict(xi, posteriori)
+        (yi, posteriori(1))
+      }.unzip
+
+      println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
+      println("Sensitivity = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
+      println("Specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
+      println("AUC = %.2f%%" format (100.0 * AUC.measure(testy, prob)))
+    } else {
+      val pred = testx.map(classifier.predict(_))
+
+      println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
+      println("Sensitivity = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
+      println("Specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
+    }
+
+    classifier
+  }
 
   /** Measure running time of a function/block */
   object time {
