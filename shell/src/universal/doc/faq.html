@@ -10,7 +10,7 @@
       &lt;version&gt;1.1.0&lt;/version&gt;
     &lt;/dependency&gt;
     </code></pre>
-    If you're using SBT, add the folliwing line into your build file:
+    If you're using SBT, add the following line into your build file:
     <pre><code>
     libraryDependencies += "com.github.haifengl" % "smile-core" % "1.1.0"
     </code></pre>
@@ -32,4 +32,15 @@
     <p/>
     For some predicitive models, we look forward to supporting PMML (Predictive Model Markup Language),
     an XML-based file format developed by the Data Mining Group.
+</p>
+
+<p class="question">Data Format</p>
+<p class="answer">
+    Most SMILE algorithms take simple <code>double[]</code> as input. So you can use your favorite methods
+    or library to import the data as long as the samples are in double arrays. Meanwhile, SMILE provides
+    a couple of parsers for popular data formats, such as Weka's ARFF files, LibSVM's file format,
+    delimited text files, and binary sparse data. These classes are in the package <code>smile.data.parser</code>
+    and <code>smile.io</code> provides high level operators on top of these parsers. The package
+    <code>smile.data.parser.microarray</code> also provides several parsers for microarray gene expression datasets,
+    including GCT, PCL, RES, and TXT files.
 </p>
