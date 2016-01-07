@@ -36,6 +36,7 @@ object Airline {
 
   def benchmark: Unit = {
     benchmark("0.1m")
+    benchmark("1m")
   }
 
   def benchmark(data: String): Unit = {
@@ -80,7 +81,7 @@ object Airline {
     val forest = test2(x, y, testx, testy) { (x, y) =>
       println("Training Random Forest of 500 trees...")
       if (x.length <= 100000)
-        new RandomForest(attributes, x, y, 500, 650, 3, 2, DecisionTree.SplitRule.GINI, classWeight)
+        new RandomForest(attributes, x, y, 500, 650, 3, 2, DecisionTree.SplitRule.ENTROPY, classWeight)
       else
         new RandomForest(attributes, x, y, 500, 1000, 5, 2, DecisionTree.SplitRule.ENTROPY, classWeight)
     }.asInstanceOf[RandomForest]
