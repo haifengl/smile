@@ -36,9 +36,13 @@ package object shell extends smile.classification.Operators with smile.regressio
       }
     })
   }
-
   /** Print help summary */
-  def help(command: String = "") = command match {
+  def help: Unit = {
+    help("")
+  }
+
+  /** Print the information of a command. */
+  def help(command: String) = command match {
     case "help" => println("print the command summary")
     case "read" => println(
       """
