@@ -66,8 +66,7 @@ private[data] class PimpedDataset(data: Dataset[Array[Double]]) {
       rows.map { row => data(row) }.toArray
     }
 
-    /**
-      * Sampling the data.
+    /** Sampling the data.
       * @param n the number of samples.
       * @return samples
       */
@@ -77,8 +76,7 @@ private[data] class PimpedDataset(data: Dataset[Array[Double]]) {
       (0 until n).map{ i => data(perm(i)) }.toArray
     }
 
-    /**
-      * Sampling the data.
+    /** Sampling the data.
       * @param f the fraction of samples.
       * @return samples
       */
@@ -133,8 +131,7 @@ private[data] class PimpedDataset(data: Dataset[Array[Double]]) {
       }.toArray
     }
 
-    /**
-      * Retuns a sample of rows
+    /** Sampling the data.
       * @param n the number of samples.
       * @return samples
       */
@@ -144,8 +141,7 @@ private[data] class PimpedDataset(data: Dataset[Array[Double]]) {
       (0 until n).map{ i => data(perm(i)) }.toArray
     }
 
-    /**
-      * Retuns a sample of rows
+    /** Sampling the data.
       * @param f the fraction of samples.
       * @return samples
       */

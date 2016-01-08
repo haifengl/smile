@@ -309,3 +309,13 @@ figure {
   text-align: center;
   margin: 10px auto; /* not needed unless you want centered */
 }
+
+.download-btn {
+  min-width: 300px;
+  background-color: #5bb75b;
+  color: #ffffff;
+  text-align: center;
+  line-height: 82px;
+  font-size: 1.4em;
+  cursor: pointer;
+}

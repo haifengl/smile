@@ -20,11 +20,10 @@ import scala.sys.SystemProperties
 import scala.tools.nsc.interpreter.ILoop
 import scala.tools.nsc.Settings
 
-/**
- * SMILE shell.
- * 
- * @author Haifeng Li
- */
+/** SMILE shell.
+  *
+  * @author Haifeng Li
+  */
 object Shell extends App {
   val settings = new Settings
   settings.usejavacp.value = true

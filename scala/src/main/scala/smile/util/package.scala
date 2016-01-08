@@ -103,11 +103,11 @@ package object util {
     }
 
     /**
-     * Executes a code block and measure the running time.
-     * @param f a code block to measure the running time.
-     * @tparam A The output type of code block.
-     * @return the code block expression result.
-     */
+      * Executes a code block and measure the running time.
+      * @param f a code block to measure the running time.
+      * @tparam A The output type of code block.
+      * @return the code block expression result.
+      */
     def apply[A](f: => A) = {
       val s = System.nanoTime
       val ret = f
