@@ -287,13 +287,11 @@ code {
 }
 
 .index-h1 {
-  font-weight: bold;
   font-size: 16px;
   line-height: 150%;
 }
 
 .index-h2 {
-  font-weight: bolder;
   display: block;
   font-size: 14px;
   margin-left: 15px;
