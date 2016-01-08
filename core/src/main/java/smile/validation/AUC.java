@@ -68,19 +68,19 @@ public class AUC {
         }
 
         int[] label = truth.clone();
-        double[] predicition = probability.clone();
+        double[] prediction = probability.clone();
 
-        QuickSort.sort(predicition, label);
+        QuickSort.sort(prediction, label);
 
         double[] rank = new double[label.length];
-        for (int i = 0; i < predicition.length; i++) {
-            if (i == predicition.length - 1 || predicition[i] != predicition[i+1]) {
+        for (int i = 0; i < prediction.length; i++) {
+            if (i == prediction.length - 1 || prediction[i] != prediction[i+1]) {
                 rank[i] = i + 1;
             } else {
                 int j = i + 1;
-                for (; j < predicition.length && predicition[j] == predicition[i]; j++);
+                for (; j < prediction.length && prediction[j] == prediction[i]; j++);
                 double r = (i + 1 + j) / 2.0;
-                for (int k = i; k < j && k < predicition.length; k++) rank[k] = r;
+                for (int k = i; k < j; k++) rank[k] = r;
                 i = j - 1;
             }
         }
@@ -91,7 +91,7 @@ public class AUC {
                 auc += rank[i];
         }
 
-        auc = (auc - (pos * (pos+1) / 2)) / (pos * neg);
+        auc = (auc - (pos * (pos+1) / 2.0)) / (pos * neg);
         return auc;
     }
 }

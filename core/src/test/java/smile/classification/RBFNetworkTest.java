@@ -70,7 +70,7 @@ public class RBFNetworkTest {
         ArffParser arffParser = new ArffParser();
         arffParser.setResponseIndex(4);
         try {
-            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/iris.arff"));
+            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
             double[][] x = iris.toArray(new double[iris.size()][]);
             int[] y = iris.toArray(new int[iris.size()]);
 
@@ -105,8 +105,8 @@ public class RBFNetworkTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(19);
         try {
-            AttributeDataset train = parser.parse(smile.data.parser.IOUtils.getDataFile("weka/segment-challenge.arff"));
-            AttributeDataset test = parser.parse(smile.data.parser.IOUtils.getDataFile("weka/segment-test.arff"));
+            AttributeDataset train = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-challenge.arff"));
+            AttributeDataset test = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-test.arff"));
 
             double[][] x = train.toArray(new double[0][]);
             int[] y = train.toArray(new int[0]);
@@ -140,8 +140,8 @@ public class RBFNetworkTest {
         DelimitedTextParser parser = new DelimitedTextParser();
         parser.setResponseIndex(new NominalAttribute("class"), 0);
         try {
-            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getDataFile("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getDataFile("usps/zip.test"));
+            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
+            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
 
             double[][] x = train.toArray(new double[train.size()][]);
             int[] y = train.toArray(new int[train.size()]);

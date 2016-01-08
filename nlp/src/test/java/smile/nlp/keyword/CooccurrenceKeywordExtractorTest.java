@@ -60,7 +60,7 @@ public class CooccurrenceKeywordExtractorTest {
     @Test
     public void testExtract() throws FileNotFoundException {
         System.out.println("extract");
-        Scanner scanner = new Scanner(smile.data.parser.IOUtils.getDataReader("text/turing.txt"));
+        Scanner scanner = new Scanner(smile.data.parser.IOUtils.getTestDataReader("text/turing.txt"));
         String text = scanner.useDelimiter("\\Z").next();
         scanner.close();
 

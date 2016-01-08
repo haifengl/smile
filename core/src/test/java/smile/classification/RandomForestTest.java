@@ -64,7 +64,7 @@ public class RandomForestTest {
         ArffParser arffParser = new ArffParser();
         arffParser.setResponseIndex(4);
         try {
-            AttributeDataset weather = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/weather.nominal.arff"));
+            AttributeDataset weather = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.nominal.arff"));
             double[][] x = weather.toArray(new double[weather.size()][]);
             int[] y = weather.toArray(new int[weather.size()]);
 
@@ -81,6 +81,7 @@ public class RandomForestTest {
             }
             
             System.out.println("Random Forest error = " + error);
+            assertTrue(error <= 7);
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -95,7 +96,7 @@ public class RandomForestTest {
         ArffParser arffParser = new ArffParser();
         arffParser.setResponseIndex(4);
         try {
-            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/iris.arff"));
+            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
             double[][] x = iris.toArray(new double[iris.size()][]);
             int[] y = iris.toArray(new int[iris.size()]);
 
@@ -112,6 +113,7 @@ public class RandomForestTest {
             }
             
             System.out.println("Random Forest error = " + error);
+            assertTrue(error <= 9);
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -126,8 +128,8 @@ public class RandomForestTest {
         DelimitedTextParser parser = new DelimitedTextParser();
         parser.setResponseIndex(new NominalAttribute("class"), 0);
         try {
-            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getDataFile("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getDataFile("usps/zip.test"));
+            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
+            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
 
             double[][] x = train.toArray(new double[train.size()][]);
             int[] y = train.toArray(new int[train.size()]);
@@ -146,7 +148,7 @@ public class RandomForestTest {
             System.out.println(error);
             System.out.format("USPS OOB error rate = %.2f%%\n", 100.0 * forest.error());
             System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
-            assertTrue(error < 130);
+            assertTrue(error <= 130);
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -161,8 +163,8 @@ public class RandomForestTest {
         DelimitedTextParser parser = new DelimitedTextParser();
         parser.setResponseIndex(new NominalAttribute("class"), 0);
         try {
-            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getDataFile("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getDataFile("usps/zip.test"));
+            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
+            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
 
             double[][] x = train.toArray(new double[train.size()][]);
             int[] y = train.toArray(new int[train.size()]);
@@ -214,6 +216,7 @@ public class RandomForestTest {
             for (int i = importance.length; i-- > 0; ) {
                 System.out.format("%s importance is %.4f\n", train.attributes()[index[i]], importance[i]);
             }
+            assertTrue(error <= 150);
         } catch (Exception ex) {
             System.err.println(ex);
         }

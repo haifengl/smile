@@ -58,7 +58,7 @@ public class DateFeatureTest {
         System.out.println("attributes");
         try {
             ArffParser parser = new ArffParser();
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getDataFile("weka/date.arff"));
+            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/date.arff"));
             
             DateFeature.Type[] features = {DateFeature.Type.YEAR, DateFeature.Type.MONTH, DateFeature.Type.DAY_OF_MONTH, DateFeature.Type.DAY_OF_WEEK, DateFeature.Type.HOURS, DateFeature.Type.MINUTES, DateFeature.Type.SECONDS};
             DateFeature df = new DateFeature(data.attributes(), features);
@@ -86,7 +86,7 @@ public class DateFeatureTest {
 
         try {
             ArffParser parser = new ArffParser();
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getDataFile("weka/date.arff"));
+            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/date.arff"));
             double[][] x = data.toArray(new double[data.size()][]);
             
             DateFeature.Type[] features = {DateFeature.Type.YEAR, DateFeature.Type.MONTH, DateFeature.Type.DAY_OF_MONTH, DateFeature.Type.DAY_OF_WEEK, DateFeature.Type.HOURS, DateFeature.Type.MINUTES, DateFeature.Type.SECONDS};

@@ -160,7 +160,7 @@ public class MDSDemo extends JPanel implements Runnable, ActionListener {
                 }
 
                 try {
-                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getDataFile(datasource[datasetIndex]));
+                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.err.println(ex);

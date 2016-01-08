@@ -22,15 +22,17 @@ package smile.benchmark
 object Benchmark {
 
   def main(args: Array[String]): Unit = {
-    val tests = if (args.isEmpty) Array("airline", "usps") else args
+    val tests = if (args.isEmpty) Array("airline-100k", "usps") else args
 
     tests foreach ( _ match {
       case "airline" => Airline.benchmark
+      case "airline-100k" => Airline.benchmark("0.1m")
+      case "airline-1m" => Airline.benchmark("1m")
       case "usps" => USPS.benchmark
       case test => println(
         s"""
            |Unknown benchmark $test
-           |Available benchmarks: airline, usps
+           |Available benchmarks: airline-100k, airline-1m, airline, usps
          """.stripMargin
       )
     })

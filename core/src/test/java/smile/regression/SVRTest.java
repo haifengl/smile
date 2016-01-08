@@ -61,7 +61,7 @@ public class SVRTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(6);
         try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getDataFile("weka/cpu.arff"));
+            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
             Math.normalize(datax);

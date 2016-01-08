@@ -53,7 +53,7 @@ public class NaiveBayesTest {
         String[][] x = new String[2000][];
         int[] y = new int[2000];
 
-        try(BufferedReader input = smile.data.parser.IOUtils.getDataReader("text/movie.txt")) {
+        try(BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("text/movie.txt")) {
             for (int i = 0; i < x.length; i++) {
                 String[] words = input.readLine().trim().split(" ");
 
@@ -105,7 +105,7 @@ public class NaiveBayesTest {
         ArffParser arffParser = new ArffParser();
         arffParser.setResponseIndex(4);
         try {
-            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getDataFile("weka/iris.arff"));
+            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
             double[][] x = iris.toArray(new double[iris.size()][]);
             int[] y = iris.toArray(new int[iris.size()]);
 

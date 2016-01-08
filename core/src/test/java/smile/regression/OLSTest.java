@@ -129,6 +129,7 @@ public class OLSTest {
         }
 
         System.out.println("MSE = " + rss/n);
+        assertEquals(2.2148948268123756, rss/n, 1E-4);
     }
 
     /**
@@ -140,7 +141,7 @@ public class OLSTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(6);
         try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getDataFile("weka/cpu.arff"));
+            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
 
             double[][] datax = data.toArray(new double[data.size()][]);
             double[] datay = data.toArray(new double[data.size()]);
@@ -165,7 +166,7 @@ public class OLSTest {
             }
 
             System.out.println("MSE = " + rss / n);
-         } catch (Exception ex) {
+        } catch (Exception ex) {
              System.err.println(ex);
         }
     }
