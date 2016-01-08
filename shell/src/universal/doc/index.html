@@ -72,6 +72,11 @@
         event.preventDefault();
         $('#content').load('plot.html');
       });
+
+      $("#gallery").click(function(event){
+        event.preventDefault();
+        $('#content').load('gallery.html');
+      });
     });
   </script>
 </head>
@@ -140,6 +145,7 @@
           <li><a href="https://github.com/haifengl/smile/issues">Issue Tracker</a></li>
         </ul>
       </li>
+      <li><a id="gallery" href="#">Gallery</a></li>
       <li><a id="faq" href="#">FAQ</a></li>
     </ul>
   </div>
