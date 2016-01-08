@@ -59,8 +59,7 @@ trait Operators {
     new SparseMatrixParser().parse(file)
   }
 
-  /**
-    * Reads spare dataset in coordinate triple tuple list format.
+  /** Reads spare dataset in coordinate triple tuple list format.
     * Coordinate file stores a list of (row, column, value) tuples:
     * {{{
     * instanceID attributeID value
@@ -89,6 +88,7 @@ trait Operators {
     * }}}
     * These header lines will be ignored.
     *
+    * @param file the file path.
     * @param arrayIndexStartBase the starting index of array. By default, it is
     * 0 as in C/C++ and Java. But it could be 1 to parse data produced
     * by other programming language such as Fortran.
@@ -97,23 +97,21 @@ trait Operators {
     new SparseDatasetParser(arrayIndexStartBase).parse(file)
   }
 
-  /**
-    * Reads binary sparse dataset. Each item is stored as an integer array, which
+  /** Reads binary sparse dataset. Each item is stored as an integer array, which
     * are the indices of nonzero elements in ascending order
     */
   def readBinarySparseData(file: String): BinarySparseDataset = {
     new BinarySparseDatasetParser().parse(file)
   }
 
-  /**
-    * Reads a delimited text file. By default, the parser expects a
+  /** Reads a delimited text file. By default, the parser expects a
     * white-space-separated-values file. Each line in the file corresponds
     * to a row in the table. Within a line, fields are separated by white spaces,
     * each field belonging to one table column. This class can also be
     * used to read other text tabular files by setting delimiter character
     * such ash ','. The file may contain comment lines (starting with '%')
     * and missing values (indicated by placeholder '?').
-   *
+    *
     * @param file the file path
     * @param delimiter delimiter string
     * @param comment the start of comment lines
@@ -132,15 +130,14 @@ trait Operators {
       .parse(file)
   }
 
-  /**
-    * Reads a delimited text file with response variable. By default, the parser expects a
+  /** Reads a delimited text file with response variable. By default, the parser expects a
     * white-space-separated-values file. Each line in the file corresponds
     * to a row in the table. Within a line, fields are separated by white spaces,
     * each field belonging to one table column. This class can also be
     * used to read other text tabular files by setting delimiter character
     * such ash ','. The file may contain comment lines (starting with '%')
     * and missing values (indicated by placeholder '?').
-   *
+    *
     * @param file the file path
     * @param response the attribute type of response variable
     * @param responseIndex the column index of response variable. The column index starts at 0.
@@ -187,15 +184,14 @@ trait Operators {
     new RESParser().parse(file)
   }
 
-  /**
-    * Reads TXT microarray gene expression file.
+  /** Reads TXT microarray gene expression file.
     * The TXT format is a tab delimited file
     * format that describes an expression dataset. It is organized as follows:
     *
     * The first line contains the labels Name and Description followed by the
     * identifiers for each sample in the dataset. The Description is optional.
     *
-   * Line format:
+    * Line format:
     * {{{
     * Name(tab)Description(tab)(sample 1 name)(tab)(sample 2 name) (tab) ... (sample N name)
     * }}}
@@ -210,8 +206,8 @@ trait Operators {
     * does not contain the Description label, do not include descriptions for
     * any gene. Gene names and descriptions can contain spaces since fields are
     * separated by tabs.
-   *
-   * Line format:
+    *
+    * Line format:
     * {{{
     * (gene name) (tab) (gene description) (tab) (col 1 data) (tab) (col 2 data) (tab) ... (col N data)
     * }}}
