@@ -1,150 +1,89 @@
-<html>
-<head>
-<title>SMILE - Statistical Machine Intelligence and Learning Engine</title>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<style type="text/css">
-	h1, h2 {
-		border: rgb(102, 0, 0) 2px solid;
-		border-left: 1px none;
-		border-right: 1px none;
-		border-top: 1px none;
-		margin-bottom: 1em;
-		margin-left: -10px;
-		margin-right: 0px;
-		padding: 20px;
-		width: 98%;
-		display: block;
-		color:  rgb(102, 0, 0);
-		font-size: 18px;
-		font-weight: bold;
-		letter-spacing: 4px;
-		text-align: right;
-		height: 21px;
-		position: relative;
-	}
-	h2:first-letter {
-		color: rgb(102, 0, 0);
-		font-weight: bold;
-		font-size: 24pt;
-	}
-	body {
-		font-family: Trebuchet MS, sans-serif; font-size: larger;
-		margin-bottom: 20px;
-		margin-top: 0px;
-		color: rgb(102, 0, 0);
-	}
-	td {
-		text-align: center;
-	}
-	img {
-		border-style: solid;
-		border-color: rgb(0,0,0);
-		border-width: 0px;
-	}
-	table.center {margin-left:auto; margin-right:auto;}
-	#httphotos {
-		position: absolute;
-		right: 0px;
-		bottom: 20px;
-		margin: 0px;
-		padding: 0px;
-	}
-
-	#httphotos img {
-		border: 0px;
-	}
-</style>
-</head>
-<body>
-<h2>SMILE</h2>
-<h3>SMILE (Statistical Machine Intelligence and Learning Engine) is a pure Java library of various state-of-art machine learning algorithms.
-For details, please browse the <a href="https://haifengl.github.io/smile/doc/index.html">javadoc</a>.</h3>
-<h2>Demo Gallery</h2>
-<table class="center">
-  <tr>
-    <td>
-      <figure>
-        <a href="gallery/smile-demo-kpca.png"><img src="gallery/smile-demo-kpca.png" alt="Kernel PCA" width="100%"></a>
-        <figcaption>Kernel PCA</figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="gallery/smile-demo-isomap.png"><img src="gallery/smile-demo-isomap.png" alt="IsoMap" width="100%"></a>
-        <figcaption>IsoMap</figcaption>
-      </figure>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <figure>
-        <a href="gallery/smile-demo-mds.png"><img src="gallery/smile-demo-mds.png" alt="MDS" width="100%"></a>
-        <figcaption>Multi-Dimensional Scaling</figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="gallery/smile-demo-som.png"><img src="gallery/smile-demo-som.png" alt="SOM" width="100%"></a>
-        <figcaption>SOM</figcaption>
-      </figure>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <figure>
-        <a href="gallery/smile-demo-ann.png"><img src="gallery/smile-demo-ann.png" alt="Neural Network" width="100%"></a>
-        <figcaption>Neural Network</figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="gallery/smile-demo-svm.png"><img src="gallery/smile-demo-svm.png" alt="SVM" width="100%"></a>
-        <figcaption>SVM</figcaption>
-      </figure>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <figure>
-        <a href="gallery/smile-demo-agglomerative-clustering.png"><img src="gallery/smile-demo-agglomerative-clustering.png" alt="Agglomerative Clustering" width="100%"></a>
-        <figcaption>Agglomerative Clustering</figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="gallery/smile-demo-xmeans.png"><img src="gallery/smile-demo-xmeans.png" alt="X-Means" width="100%"></a>
-        <figcaption>X-Means</figcaption>
-      </figure>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <figure>
-        <a href="gallery/smile-demo-dbscan.png"><img src="gallery/smile-demo-dbscan.png" alt="DBScan" width="100%"></a>
-        <figcaption>DBScan</figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="gallery/smile-demo-neural-gas.png"><img src="gallery/smile-demo-neural-gas.png" alt="Neural Gas" width="100%"></a>
-        <figcaption>Neural Gas</figcaption>
-      </figure>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <figure>
-        <a href="gallery/smile-demo-wavelet.png"><img src="gallery/smile-demo-wavelet.png" alt="Wavelet" width="100%"></a>
-        <figcaption>Wavelet</figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="gallery/smile-demo-mixture.png"><img src="gallery/smile-demo-mixture.png" alt="Mixture" width="100%"></a>
-        <figcaption>Exponential Family Mixture</figcaption>
-      </figure>
-    </td>
-  </tr>
-</table>
-</body>
-</html>
+<div class="col-md-12">
+    <h1 class="title">SMILE Demo Gallery</h1>
+    <table class="center">
+        <tr>
+            <td>
+                <figure>
+                    <a href="gallery/smile-demo-kpca.png"><img src="gallery/smile-demo-kpca-small.png" alt="Kernel PCA" width="100%"></a>
+                    <figcaption><h2>Kernel PCA</h2></figcaption>
+                </figure>
+            </td>
+            <td>
+                <figure>
+                    <a href="gallery/smile-demo-isomap.png"><img src="gallery/smile-demo-isomap-small.png" alt="IsoMap" width="100%"></a>
+                    <figcaption><h2>IsoMap</h2></figcaption>
+                </figure>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <figure>
+                    <a href="gallery/smile-demo-mds.png"><img src="gallery/smile-demo-mds-small.png" alt="MDS" width="100%"></a>
+                    <figcaption><h2>Multi-Dimensional Scaling</h2></figcaption>
+                </figure>
+            </td>
+            <td>
+                <figure>
+                    <a href="gallery/smile-demo-som.png"><img src="gallery/smile-demo-som-small.png" alt="SOM" width="100%"></a>
+                    <figcaption><h2>SOM</h2></figcaption>
+                </figure>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <figure>
+                    <a href="gallery/smile-demo-ann.png"><img src="gallery/smile-demo-ann-small.png" alt="Neural Network" width="100%"></a>
+                    <figcaption><h2>Neural Network</h2></figcaption>
+                </figure>
+            </td>
+            <td>
+                <figure>
+                    <a href="gallery/smile-demo-svm.png"><img src="gallery/smile-demo-svm-small.png" alt="SVM" width="100%"></a>
+                    <figcaption><h2>SVM</h2></figcaption>
+                </figure>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <figure>
+                    <a href="gallery/smile-demo-agglomerative-clustering.png"><img src="gallery/smile-demo-agglomerative-clustering-small.png" alt="Agglomerative Clustering" width="100%"></a>
+                    <figcaption><h2>Agglomerative Clustering</h2></figcaption>
+                </figure>
+            </td>
+            <td>
+                <figure>
+                    <a href="gallery/smile-demo-xmeans.png"><img src="gallery/smile-demo-xmeans-small.png" alt="X-Means" width="100%"></a>
+                    <figcaption><h2>X-Means</h2></figcaption>
+                </figure>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <figure>
+                    <a href="gallery/smile-demo-dbscan.png"><img src="gallery/smile-demo-dbscan-small.png" alt="DBScan" width="100%"></a>
+                    <figcaption><h2>DBScan</h2></figcaption>
+                </figure>
+            </td>
+            <td>
+                <figure>
+                    <a href="gallery/smile-demo-neural-gas.png"><img src="gallery/smile-demo-neural-gas-small.png" alt="Neural Gas" width="100%"></a>
+                    <figcaption><h2>Neural Gas</h2></figcaption>
+                </figure>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <figure>
+                    <a href="gallery/smile-demo-wavelet.png"><img src="gallery/smile-demo-wavelet-small.png" alt="Wavelet" width="100%"></a>
+                    <figcaption><h2>Wavelet</h2></figcaption>
+                </figure>
+            </td>
+            <td>
+                <figure>
+                    <a href="gallery/smile-demo-mixture.png"><img src="gallery/smile-demo-mixture-small.png" alt="Mixture" width="100%"></a>
+                    <figcaption><h2>Exponential Family Mixture</h2></figcaption>
+                </figure>
+            </td>
+        </tr>
+    </table>
+</div>
