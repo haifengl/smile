@@ -232,7 +232,8 @@ classified example are decreased), so that the new classifier focuses more
 on those examples.</p><p>The basic AdaBoost algorithm is only for binary classification problem.
 For multi-class classification, a common approach is reducing the
 multi-class classification problem to multiple two-class problems.
-This implementation is a multi-class AdaBoost without such reductions.</p><ul><li> Yoav Freund, Robert E. Schapire. A Decision-Theoretic Generalization of on-Line Learning and an Application to Boosting, 1995.</li><li> Ji Zhu, Hui Zhou, Saharon Rosset and Trevor Hastie. Multi-class Adaboost, 2009.</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
+This implementation is a multi-class AdaBoost without such reductions.</p><h6>References:</h6><ul><li>Yoav Freund, Robert E. Schapire. A Decision-Theoretic Generalization of on-Line Learning and an Application to Boosting, 1995.</li><li>Ji Zhu, Hui Zhou, Saharon Rosset and Trevor Hastie. Multi-class Adaboost, 2009.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
                   are treated as numeric values.</p></dd><dt class="param">T</dt><dd class="cmt"><p>the number of trees.</p></dd><dt class="param">J</dt><dd class="cmt"><p>the maximum number of leaf nodes in the trees.</p></dd><dt>returns</dt><dd class="cmt"><p>AdaBoost model.</p></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
@@ -251,78 +252,6 @@ This implementation is a multi-class AdaBoost without such reductions.</p><ul><l
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="smile.classification.Operators#cart" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="cart(x:Array[Array[Double]],y:Array[Int],J:Int,attributes:Array[smile.data.Attribute],splitRule:smile.classification.DecisionTree.SplitRule):smile.classification.DecisionTree"></a>
-      <a id="cart(Array[Array[Double]],Array[Int],Int,Array[Attribute],SplitRule):DecisionTree"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">cart</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span></span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="splitRule">splitRule: <span class="extype" name="smile.classification.DecisionTree.SplitRule">SplitRule</span> = <span class="symbol">DecisionTree.SplitRule.GINI</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.DecisionTree">DecisionTree</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@cart(x:Array[Array[Double]],y:Array[Int],J:Int,attributes:Array[smile.data.Attribute],splitRule:smile.classification.DecisionTree.SplitRule):smile.classification.DecisionTree" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Decision tree for classification.</p><div class="fullcomment"><div class="comment cmt"><p>Decision tree for classification. A decision tree can be learned by
-splitting the training set into subsets based on an attribute value
-test. This process is repeated on each derived subset in a recursive
-manner called recursive partitioning. The recursion is completed when
-the subset at a node all has the same value of the target variable,
-or when splitting no longer adds value to the predictions.</p><p>The algorithms that are used for constructing decision trees usually
-work top-down by choosing a variable at each step that is the next best
-variable to use in splitting the set of items. &quot;Best&quot; is defined by how
-well the variable splits the set into homogeneous subsets that have
-the same value of the target variable. Different algorithms use different
-formulae for measuring &quot;best&quot;. Used by the CART algorithm, Gini impurity
-is a measure of how often a randomly chosen element from the set would
-be incorrectly labeled if it were randomly labeled according to the
-distribution of labels in the subset. Gini impurity can be computed by
-summing the probability of each item being chosen times the probability
-of a mistake in categorizing that item. It reaches its minimum (zero) when
-all cases in the node fall into a single target category. Information gain
-is another popular measure, used by the ID3, C4.5 and C5.0 algorithms.
-Information gain is based on the concept of entropy used in information
-theory. For categorical variables with different number of levels, however,
-information gain are biased in favor of those attributes with more levels.
-Instead, one may employ the information gain ratio, which solves the drawback
-of information gain.</p><p>Classification and Regression Tree techniques have a number of advantages
-over many of those alternative techniques.
-&lt;dl&gt;
-&lt;dt&gt;Simple to understand and interpret.&lt;/dt&gt;
-<dd>In most cases, the interpretation of results summarized in a tree is
-very simple. This simplicity is useful not only for purposes of rapid
-classification of new observations, but can also often yield a much simpler
-"model" for explaining why observations are classified or predicted in a
-particular manner.</dd>
-&lt;dt&gt;Able to handle both numerical and categorical data.&lt;/dt&gt;
-<dd>Other techniques are usually specialized in analyzing datasets that
-have only one type of variable. </dd>
-&lt;dt&gt;Tree methods are nonparametric and nonlinear.&lt;/dt&gt;
-<dd>The final results of using tree methods for classification or regression
-can be summarized in a series of (usually few) logical if-then conditions
-(tree nodes). Therefore, there is no implicit assumption that the underlying
-relationships between the predictor variables and the dependent variable
-are linear, follow some specific non-linear link function, or that they
-are even monotonic in nature. Thus, tree methods are particularly well
-suited for data mining tasks, where there is often little a priori
-knowledge nor any coherent set of theories or predictions regarding which
-variables are related and how. In those types of data analytics, tree
-methods can often reveal simple relationships between just a few variables
-that could have easily gone unnoticed using other analytic techniques.</dd>
-&lt;/dl&gt;
-One major problem with classification and regression trees is their high
-variance. Often a small change in the data can result in a very different
-series of splits, making interpretation somewhat precarious. Besides,
-decision-tree learners can create over-complex trees that cause over-fitting.
-Mechanisms such as pruning are necessary to avoid this problem.
-Another limitation of trees is the lack of smoothness of the prediction
-surface.</p><p>Some techniques such as bagging, boosting, and random forest use more than
-one decision tree for their analysis.
-</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">J</dt><dd class="cmt"><p>the maximum number of leaf nodes in the tree.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties.</p></dd><dt class="param">splitRule</dt><dd class="cmt"><p>the splitting rule.</p></dd><dt>returns</dt><dd class="cmt"><p>Decision tree model.</p></dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -346,6 +275,72 @@ one decision tree for their analysis.
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="smile.classification.Operators#decisionTree" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="decisionTree(x:Array[Array[Double]],y:Array[Int],J:Int,attributes:Array[smile.data.Attribute],splitRule:smile.classification.DecisionTree.SplitRule):smile.classification.DecisionTree"></a>
+      <a id="decisionTree(Array[Array[Double]],Array[Int],Int,Array[Attribute],SplitRule):DecisionTree"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">decisionTree</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span></span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="splitRule">splitRule: <span class="extype" name="smile.classification.DecisionTree.SplitRule">SplitRule</span> = <span class="symbol">DecisionTree.SplitRule.GINI</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.DecisionTree">DecisionTree</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.classification.Operators@decisionTree(x:Array[Array[Double]],y:Array[Int],J:Int,attributes:Array[smile.data.Attribute],splitRule:smile.classification.DecisionTree.SplitRule):smile.classification.DecisionTree" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Decision tree.</p><div class="fullcomment"><div class="comment cmt"><p>Decision tree. A decision tree can be learned by
+splitting the training set into subsets based on an attribute value
+test. This process is repeated on each derived subset in a recursive
+manner called recursive partitioning. The recursion is completed when
+the subset at a node all has the same value of the target variable,
+or when splitting no longer adds value to the predictions.</p><p>The algorithms that are used for constructing decision trees usually
+work top-down by choosing a variable at each step that is the next best
+variable to use in splitting the set of items. &quot;Best&quot; is defined by how
+well the variable splits the set into homogeneous subsets that have
+the same value of the target variable. Different algorithms use different
+formulae for measuring &quot;best&quot;. Used by the CART algorithm, Gini impurity
+is a measure of how often a randomly chosen element from the set would
+be incorrectly labeled if it were randomly labeled according to the
+distribution of labels in the subset. Gini impurity can be computed by
+summing the probability of each item being chosen times the probability
+of a mistake in categorizing that item. It reaches its minimum (zero) when
+all cases in the node fall into a single target category. Information gain
+is another popular measure, used by the ID3, C4.5 and C5.0 algorithms.
+Information gain is based on the concept of entropy used in information
+theory. For categorical variables with different number of levels, however,
+information gain are biased in favor of those attributes with more levels.
+Instead, one may employ the information gain ratio, which solves the drawback
+of information gain.</p><p>Classification and Regression Tree techniques have a number of advantages
+over many of those alternative techniques.</p><ul><li><b>Simple to understand and interpret:</b>
+In most cases, the interpretation of results summarized in a tree is
+very simple. This simplicity is useful not only for purposes of rapid
+classification of new observations, but can also often yield a much simpler
+&quot;model&quot; for explaining why observations are classified or predicted in a
+particular manner.</li><li><b>Able to handle both numerical and categorical data:</b>
+Other techniques are usually specialized in analyzing datasets that
+have only one type of variable.</li><li><b>Nonparametric and nonlinear:</b>
+The final results of using tree methods for classification or regression
+can be summarized in a series of (usually few) logical if-then conditions
+(tree nodes). Therefore, there is no implicit assumption that the underlying
+relationships between the predictor variables and the dependent variable
+are linear, follow some specific non-linear link function, or that they
+are even monotonic in nature. Thus, tree methods are particularly well
+suited for data mining tasks, where there is often little a priori
+knowledge nor any coherent set of theories or predictions regarding which
+variables are related and how. In those types of data analytics, tree
+methods can often reveal simple relationships between just a few variables
+that could have easily gone unnoticed using other analytic techniques.</li></ul><p>One major problem with classification and regression trees is their high
+variance. Often a small change in the data can result in a very different
+series of splits, making interpretation somewhat precarious. Besides,
+decision-tree learners can create over-complex trees that cause over-fitting.
+Mechanisms such as pruning are necessary to avoid this problem.
+Another limitation of trees is the lack of smoothness of the prediction
+surface.</p><p>Some techniques such as bagging, boosting, and random forest use more than
+one decision tree for their analysis.
+</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">J</dt><dd class="cmt"><p>the maximum number of leaf nodes in the tree.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties.</p></dd><dt class="param">splitRule</dt><dd class="cmt"><p>the splitting rule.</p></dd><dt>returns</dt><dd class="cmt"><p>Decision tree model.</p></dd></dl></div>
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a>
       <a id="ensuring((Operators)⇒Boolean,⇒Any):Operators"></a>
@@ -548,19 +543,19 @@ problem.
                 <span class="name">@inline</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="smile.classification.Operators#gbm" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="gbm(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,J:Int,eta:Double,f:Double):smile.classification.GradientTreeBoost"></a>
-      <a id="gbm(Array[Array[Double]],Array[Int],Array[Attribute],Int,Int,Double,Double):GradientTreeBoost"></a>
+    </li><li name="smile.classification.Operators#gbc" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="gbc(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,J:Int,eta:Double,f:Double):smile.classification.GradientTreeBoost"></a>
+      <a id="gbc(Array[Array[Double]],Array[Int],Array[Attribute],Int,Int,Double,Double):GradientTreeBoost"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">gbm</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="T">T: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">6</span></span>, <span name="eta">eta: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.05</span></span>, <span name="f">f: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.7</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.GradientTreeBoost">GradientTreeBoost</span></span>
+        <span class="name">gbc</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="T">T: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">6</span></span>, <span name="eta">eta: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.05</span></span>, <span name="f">f: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.7</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.GradientTreeBoost">GradientTreeBoost</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@gbm(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,J:Int,eta:Double,f:Double):smile.classification.GradientTreeBoost" title="Permalink" target="_top">
+      <a href="../../index.html#smile.classification.Operators@gbc(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,J:Int,eta:Double,f:Double):smile.classification.GradientTreeBoost" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -612,7 +607,8 @@ and the optimal number of iterations.</p><p>Gradient tree boosting implementatio
 limiting the minimum number of observations in trees' terminal nodes.
 It's used in the tree building process by ignoring any splits that lead
 to nodes containing fewer than this number of training set instances.
-Imposing this limit helps to reduce variance in predictions at leaves.</p><ul><li> J. H. Friedman. Greedy Function Approximation: A Gradient Boosting Machine, 1999.</li><li> J. H. Friedman. Stochastic Gradient Boosting, 1999.</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the class labels.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
+Imposing this limit helps to reduce variance in predictions at leaves.</p><h6>References:</h6><ul><li>J. H. Friedman. Greedy Function Approximation: A Gradient Boosting Machine, 1999.</li><li>J. H. Friedman. Stochastic Gradient Boosting, 1999.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the class labels.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
                   are treated as numeric values.</p></dd><dt class="param">T</dt><dd class="cmt"><p>the number of iterations (trees).</p></dd><dt class="param">J</dt><dd class="cmt"><p>the number of leaves in each tree.</p></dd><dt class="param">eta</dt><dd class="cmt"><p>the shrinkage parameter in (0, 1] controls the learning rate of procedure.</p></dd><dt class="param">f</dt><dd class="cmt"><p>the sampling fraction for stochastic tree boosting.</p></dd><dt>returns</dt><dd class="cmt"><p>Gradient boosted trees.</p></dd></dl></div>
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
@@ -815,10 +811,10 @@ assume linearity of relationship between the raw values of the independent
 variables and the dependent, does not require normally distributed variables,
 does not assume homoscedasticity, and in general has less stringent
 requirements.</p><p>Compared with linear discriminant analysis, logistic regression has several
-advantages:</p><p>- It is more robust: the independent variables don't have to be normally
-distributed, or have equal variance in each group</p><p>- It does not assume a linear relationship between the independent
-variables and dependent variable.</p><p>- It may handle nonlinear effects since one can add explicit interaction
-and power terms.</p><p>However, it requires much more data to achieve stable, meaningful results.</p><p>Logistic regression also has strong connections with neural network and
+advantages:</p><ul><li>It is more robust: the independent variables don't have to be normally
+   distributed, or have equal variance in each group</li><li>It does not assume a linear relationship between the independent
+   variables and dependent variable.</li><li>It may handle nonlinear effects since one can add explicit interaction
+   and power terms.</li></ul><p>However, it requires much more data to achieve stable, meaningful results.</p><p>Logistic regression also has strong connections with neural network and
 maximum entropy modeling. For example, binary logistic regression is
 equivalent to a one-layer, single-output neural network with a logistic
 activation function trained under log loss. Similarly, multinomial logistic
@@ -855,8 +851,8 @@ regression applied to categorical independent variables, which are
 converted to binary dummy variables. Maximum entropy models are widely
 used in natural language processing.  Here, we provide an implementation
 which assumes that binary features are stored in a sparse array, of which
-entries are the indices of nonzero features.</p><h6>References:</h6><p>- A. L. Berger, S. D. Pietra, and V. J. D. Pietra. A maximum entropy approach to natural language processing. Computational Linguistics 22(1):39-71, 1996.
-</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples. Each sample is represented by a set of sparse
+entries are the indices of nonzero features.</p><h6>References:</h6><ul><li>A. L. Berger, S. D. Pietra, and V. J. D. Pietra. A maximum entropy approach to natural language processing. Computational Linguistics 22(1):39-71, 1996.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples. Each sample is represented by a set of sparse
          binary features. The features are stored in an integer array, of which
          are the indices of nonzero features.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">p</dt><dd class="cmt"><p>the dimension of feature space.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>&lambda; &gt; 0 gives a &quot;regularized&quot; estimate of linear
               weights which often has superior generalization performance, especially
@@ -985,11 +981,9 @@ but also in statistical learning theory, where the goal is to minimize over
 the &quot;empirical risk&quot; and the &quot;structural risk&quot;.</p><p>For neural networks, the input patterns usually should be scaled/standardized.
 Commonly, each input variable is scaled into interval [0, 1] or to have
 mean 0 and standard deviation 1.</p><p>For penalty functions and output units, the following natural pairings are
-recommended:</p><p>- linear output units and a least squares penalty function.
-- a two-class cross-entropy penalty function and a logistic
-activation function.
-- a multi-class cross-entropy penalty function and a softmax
-activation function.</p><p>By assigning a softmax activation function on the output layer of
+recommended:</p><ul><li>linear output units and a least squares penalty function.</li><li>a two-class cross-entropy penalty function and a logistic
+   activation function.</li><li>a multi-class cross-entropy penalty function and a softmax
+   activation function.</li></ul><p>By assigning a softmax activation function on the output layer of
 the neural network for categorical target variables, the outputs
 can be interpreted as posterior probabilities, which are very useful.
 </p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">numUnits</dt><dd class="cmt"><p>the number of units in each layer.</p></dd><dt class="param">error</dt><dd class="cmt"><p>the error function.</p></dd><dt class="param">epochs</dt><dd class="cmt"><p>the number of epochs of stochastic learning.</p></dd><dt class="param">activation</dt><dd class="cmt"><p>the activation function of output layer.</p></dd><dt class="param">eta</dt><dd class="cmt"><p>the learning rate.</p></dd><dt class="param">alpha</dt><dd class="cmt"><p>the momentum factor.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>the weight decay for regularization.</p></dd></dl></div>
@@ -1076,40 +1070,6 @@ One of these regularization methods is <code><a href="#rda(x:Array[Array[Double]
 </p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">priori</dt><dd class="cmt"><p>the priori probability of each class. If null, it will be
               estimated from the training data.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>a tolerance to decide if a covariance matrix is singular; it
            will reject variables whose variance is less than tol<sup>2</sup>.</p></dd><dt>returns</dt><dd class="cmt"><p>Quadratic discriminant analysis model.</p></dd></dl></div>
-    </li><li name="smile.classification.Operators#randomForest" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="randomForest(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,mtry:Int,S:Int,J:Int,splitRule:smile.classification.DecisionTree.SplitRule,classWeight:Array[Int]):smile.classification.RandomForest"></a>
-      <a id="randomForest(Array[Array[Double]],Array[Int],Array[Attribute],Int,Int,Int,Int,SplitRule,Array[Int]):RandomForest"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">randomForest</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="T">T: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="mtry">mtry: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="S">S: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="splitRule">splitRule: <span class="extype" name="smile.classification.DecisionTree.SplitRule">SplitRule</span> = <span class="symbol">DecisionTree.SplitRule.GINI</span></span>, <span name="classWeight">classWeight: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>] = <span class="symbol">null</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.RandomForest">RandomForest</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@randomForest(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,mtry:Int,S:Int,J:Int,splitRule:smile.classification.DecisionTree.SplitRule,classWeight:Array[Int]):smile.classification.RandomForest" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Random forest for classification.</p><div class="fullcomment"><div class="comment cmt"><p>Random forest for classification. Random forest is an ensemble classifier
-that consists of many decision trees and outputs the majority vote of
-individual trees. The method combines bagging idea and the random
-selection of features.</p><p>Each tree is constructed using the following algorithm:</p><ul><li> If the number of cases in the training set is N, randomly sample N cases
-with replacement from the original data. This sample will
-be the training set for growing the tree.</li><li> If there are M input variables, a number m &lt;&lt; M is specified such
-that at each node, m variables are selected at random out of the M and
-the best split on these m is used to split the node. The value of m is
-held constant during the forest growing.</li><li> Each tree is grown to the largest extent possible. There is no pruning.</li></ul><p>The advantages of random forest are:</p><ul><li> For many data sets, it produces a highly accurate classifier.</li><li> It runs efficiently on large data sets.</li><li> It can handle thousands of input variables without variable deletion.</li><li> It gives estimates of what variables are important in the classification.</li><li> It generates an internal unbiased estimate of the generalization error
-as the forest building progresses.</li><li> It has an effective method for estimating missing data and maintains
-accuracy when a large proportion of the data are missing.</li></ul><p>The disadvantages are</p><ul><li> Random forests are prone to over-fitting for some datasets. This is
-even more pronounced on noisy data.</li><li> For data including categorical variables with different number of
-levels, random forests are biased in favor of those attributes with more
-levels. Therefore, the variable importance scores from random forest are
-not reliable for this type of data.</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
-                  are treated as numeric values.</p></dd><dt class="param">T</dt><dd class="cmt"><p>the number of trees.</p></dd><dt class="param">mtry</dt><dd class="cmt"><p>the number of random selected features to be used to determine
-            the decision at a node of the tree. floor(sqrt(dim)) seems to give
-            generally good performance, where dim is the number of variables.</p></dd><dt class="param">S</dt><dd class="cmt"><p>number of instances in a node below which the tree will not split.</p></dd><dt class="param">J</dt><dd class="cmt"><p>maximum number of leaf nodes.</p></dd><dt class="param">splitRule</dt><dd class="cmt"><p>Decision tree node split rule.</p></dd><dt class="param">classWeight</dt><dd class="cmt"><p>Priors of the classes.</p></dd><dt>returns</dt><dd class="cmt"><p>Random forest classification model.</p></dd></dl></div>
     </li><li name="smile.classification.Operators#rbfnet" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="rbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:Array[smile.math.rbf.RadialBasisFunction],centers:Array[T],normalized:Boolean):smile.classification.RBFNetwork[T]"></a>
       <a id="rbfnet[T&lt;:AnyRef](Array[T],Array[Int],Metric[T],Array[RadialBasisFunction],Array[T],Boolean):RBFNetwork[T]"></a>
@@ -1160,7 +1120,8 @@ basis function centers. It was reported that with similar number of support
 vectors/centers, SVM shows better generalization performance than RBF
 network when the training data size is relatively small. On the other hand,
 RBF network gives better generalization performance than SVM on large
-training data.</p><h4> References </h4><ul><li> Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.</li><li> T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li> Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl></div>
+training data.</p><h6>References:</h6><ul><li>Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.</li><li>T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li>Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl></div>
     </li><li name="smile.classification.Operators#rbfnet" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="rbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:smile.math.rbf.RadialBasisFunction,centers:Array[T],normalized:Boolean):smile.classification.RBFNetwork[T]"></a>
       <a id="rbfnet[T&lt;:AnyRef](Array[T],Array[Int],Metric[T],RadialBasisFunction,Array[T],Boolean):RBFNetwork[T]"></a>
@@ -1212,10 +1173,8 @@ basis function centers. It was reported that with similar number of support
 vectors/centers, SVM shows better generalization performance than RBF
 network when the training data size is relatively small. On the other hand,
 RBF network gives better generalization performance than SVM on large
-training data.</p><h6>References:</h6><p>- Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.
-- T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.
-- Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
-</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl></div>
+training data.</p><h6>References:</h6><ul><li>Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.</li><li>T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li>Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl></div>
     </li><li name="smile.classification.Operators#rda" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="rda(x:Array[Array[Double]],y:Array[Int],alpha:Double,priori:Array[Double],tol:Double):smile.classification.RDA"></a>
       <a id="rda(Array[Array[Double]],Array[Int],Double,Array[Double],Double):RDA"></a>
@@ -1245,6 +1204,41 @@ regularization factor &alpha; allows a continuum of models between LDA and QDA.
 </p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">alpha</dt><dd class="cmt"><p>regularization factor in [0, 1] allows a continuum of models
              between LDA and QDA.</p></dd><dt class="param">priori</dt><dd class="cmt"><p>the priori probability of each class.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>tolerance to decide if a covariance matrix is singular; it
            will reject variables whose variance is less than tol<sup>2</sup>.</p></dd><dt>returns</dt><dd class="cmt"><p>Regularized discriminant analysis model.</p></dd></dl></div>
+    </li><li name="smile.classification.Operators#rfc" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="rfc(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,mtry:Int,S:Int,J:Int,splitRule:smile.classification.DecisionTree.SplitRule,classWeight:Array[Int]):smile.classification.RandomForest"></a>
+      <a id="rfc(Array[Array[Double]],Array[Int],Array[Attribute],Int,Int,Int,Int,SplitRule,Array[Int]):RandomForest"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rfc</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="T">T: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="mtry">mtry: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="S">S: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="splitRule">splitRule: <span class="extype" name="smile.classification.DecisionTree.SplitRule">SplitRule</span> = <span class="symbol">DecisionTree.SplitRule.GINI</span></span>, <span name="classWeight">classWeight: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>] = <span class="symbol">null</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.RandomForest">RandomForest</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.classification.Operators@rfc(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,mtry:Int,S:Int,J:Int,splitRule:smile.classification.DecisionTree.SplitRule,classWeight:Array[Int]):smile.classification.RandomForest" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Random forest for classification.</p><div class="fullcomment"><div class="comment cmt"><p>Random forest for classification. Random forest is an ensemble classifier
+that consists of many decision trees and outputs the majority vote of
+individual trees. The method combines bagging idea and the random
+selection of features.</p><p>Each tree is constructed using the following algorithm:</p><ol class="lowerRoman"><li>If the number of cases in the training set is N, randomly sample N cases
+with replacement from the original data. This sample will
+be the training set for growing the tree.</li><li>If there are M input variables, a number m &lt;&lt; M is specified such
+that at each node, m variables are selected at random out of the M and
+the best split on these m is used to split the node. The value of m is
+held constant during the forest growing.</li><li>Each tree is grown to the largest extent possible. There is no pruning.</li></ol><p>The advantages of random forest are:</p><ul><li>For many data sets, it produces a highly accurate classifier.</li><li>It runs efficiently on large data sets.</li><li>It can handle thousands of input variables without variable deletion.</li><li>It gives estimates of what variables are important in the classification.</li><li>It generates an internal unbiased estimate of the generalization error
+as the forest building progresses.</li><li>It has an effective method for estimating missing data and maintains
+accuracy when a large proportion of the data are missing.</li></ul><p>The disadvantages are</p><ul><li>Random forests are prone to over-fitting for some datasets. This is
+even more pronounced on noisy data.</li><li>For data including categorical variables with different number of
+levels, random forests are biased in favor of those attributes with more
+levels. Therefore, the variable importance scores from random forest are
+not reliable for this type of data.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
+                  are treated as numeric values.</p></dd><dt class="param">T</dt><dd class="cmt"><p>the number of trees.</p></dd><dt class="param">mtry</dt><dd class="cmt"><p>the number of random selected features to be used to determine
+            the decision at a node of the tree. floor(sqrt(dim)) seems to give
+            generally good performance, where dim is the number of variables.</p></dd><dt class="param">S</dt><dd class="cmt"><p>number of instances in a node below which the tree will not split.</p></dd><dt class="param">J</dt><dd class="cmt"><p>maximum number of leaf nodes.</p></dd><dt class="param">splitRule</dt><dd class="cmt"><p>Decision tree node split rule.</p></dd><dt class="param">classWeight</dt><dd class="cmt"><p>Priors of the classes.</p></dd><dt>returns</dt><dd class="cmt"><p>Random forest classification model.</p></dd></dl></div>
     </li><li name="smile.classification.Operators#svm" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="svm[T&lt;:AnyRef](x:Array[T],y:Array[Int],kernel:smile.math.kernel.MercerKernel[T],C:Double,strategy:smile.classification.SVM.Multiclass,epoch:Int):smile.classification.SVM[T]"></a>
       <a id="svm[T&lt;:AnyRef](Array[T],Array[Int],MercerKernel[T],Double,Multiclass,Int):SVM[T]"></a>

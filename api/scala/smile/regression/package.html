@@ -47,7 +47,14 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Regression functions.
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Regression analysis. Regression analysis includes any
+techniques for modeling and analyzing several variables, when the focus
+is on the relationship between a dependent variable and one or more
+independent variables. Most commonly, regression analysis estimates the
+conditional expectation of the dependent variable given the independent
+variables. Therefore, the estimation target is a function of the independent
+variables called the regression function. Regression analysis is widely
+used for prediction and forecasting.
 </p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
@@ -113,91 +120,19 @@
 
         <div id="values" class="values members">
               <h3>Value Members</h3>
-              <ol><li name="smile.regression.Operators#cart" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="cart(x:Array[Array[Double]],y:Array[Double],J:Int,attributes:Array[smile.data.Attribute]):smile.regression.RegressionTree"></a>
-      <a id="cart(Array[Array[Double]],Array[Double],Int,Array[Attribute]):RegressionTree"></a>
+              <ol><li name="smile.regression.Operators#gaussianProcess" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="gaussianProcess[T&lt;:AnyRef](x:Array[T],y:Array[Double],t:Array[T],kernel:smile.math.kernel.MercerKernel[T],lambda:Double,nystrom:Boolean):smile.regression.GaussianProcessRegression[T]"></a>
+      <a id="gaussianProcess[T&lt;:AnyRef](Array[T],Array[Double],Array[T],MercerKernel[T],Double,Boolean):GaussianProcessRegression[T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">cart</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span></span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.RegressionTree">RegressionTree</span></span>
+        <span class="name">gaussianProcess</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.regression.Operators.gaussianProcess.T">T</span>]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="t">t: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.regression.Operators.gaussianProcess.T">T</span>]</span>, <span name="kernel">kernel: <span class="extype" name="smile.math.kernel.MercerKernel">MercerKernel</span>[<span class="extype" name="smile.regression.Operators.gaussianProcess.T">T</span>]</span>, <span name="lambda">lambda: <span class="extype" name="scala.Double">Double</span></span>, <span name="nystrom">nystrom: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.GaussianProcessRegression">GaussianProcessRegression</span>[<span class="extype" name="smile.regression.Operators.gaussianProcess.T">T</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.regression.package@cart(x:Array[Array[Double]],y:Array[Double],J:Int,attributes:Array[smile.data.Attribute]):smile.regression.RegressionTree" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Decision tree for classification.</p><div class="fullcomment"><div class="comment cmt"><p>Decision tree for classification. A decision tree can be learned by
-splitting the training set into subsets based on an attribute value
-test. This process is repeated on each derived subset in a recursive
-manner called recursive partitioning. The recursion is completed when
-the subset at a node all has the same value of the target variable,
-or when splitting no longer adds value to the predictions.</p><p>The algorithms that are used for constructing decision trees usually
-work top-down by choosing a variable at each step that is the next best
-variable to use in splitting the set of items. &quot;Best&quot; is defined by how
-well the variable splits the set into homogeneous subsets that have
-the same value of the target variable. Different algorithms use different
-formulae for measuring &quot;best&quot;. Used by the CART algorithm, Gini impurity
-is a measure of how often a randomly chosen element from the set would
-be incorrectly labeled if it were randomly labeled according to the
-distribution of labels in the subset. Gini impurity can be computed by
-summing the probability of each item being chosen times the probability
-of a mistake in categorizing that item. It reaches its minimum (zero) when
-all cases in the node fall into a single target category. Information gain
-is another popular measure, used by the ID3, C4.5 and C5.0 algorithms.
-Information gain is based on the concept of entropy used in information
-theory. For categorical variables with different number of levels, however,
-information gain are biased in favor of those attributes with more levels.
-Instead, one may employ the information gain ratio, which solves the drawback
-of information gain.</p><p>Classification and Regression Tree techniques have a number of advantages
-over many of those alternative techniques.
-&lt;dl&gt;
-&lt;dt&gt;Simple to understand and interpret.&lt;/dt&gt;
-<dd>In most cases, the interpretation of results summarized in a tree is
-very simple. This simplicity is useful not only for purposes of rapid
-classification of new observations, but can also often yield a much simpler
-"model" for explaining why observations are classified or predicted in a
-particular manner.</dd>
-&lt;dt&gt;Able to handle both numerical and categorical data.&lt;/dt&gt;
-<dd>Other techniques are usually specialized in analyzing datasets that
-have only one type of variable. </dd>
-&lt;dt&gt;Tree methods are nonparametric and nonlinear.&lt;/dt&gt;
-<dd>The final results of using tree methods for classification or regression
-can be summarized in a series of (usually few) logical if-then conditions
-(tree nodes). Therefore, there is no implicit assumption that the underlying
-relationships between the predictor variables and the dependent variable
-are linear, follow some specific non-linear link function, or that they
-are even monotonic in nature. Thus, tree methods are particularly well
-suited for data mining tasks, where there is often little a priori
-knowledge nor any coherent set of theories or predictions regarding which
-variables are related and how. In those types of data analytics, tree
-methods can often reveal simple relationships between just a few variables
-that could have easily gone unnoticed using other analytic techniques.</dd>
-&lt;/dl&gt;
-One major problem with classification and regression trees is their high
-variance. Often a small change in the data can result in a very different
-series of splits, making interpretation somewhat precarious. Besides,
-decision-tree learners can create over-complex trees that cause over-fitting.
-Mechanisms such as pruning are necessary to avoid this problem.
-Another limitation of trees is the lack of smoothness of the prediction
-surface.</p><p>Some techniques such as bagging, boosting, and random forest use more than
-one decision tree for their analysis.
-</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">J</dt><dd class="cmt"><p>the maximum number of leaf nodes in the tree.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties.</p></dd><dt>returns</dt><dd class="cmt"><p>Regression tree model.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
-    </li><li name="smile.regression.Operators#gaussianProcess" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="gaussianProcess[T&lt;:AnyRef](x:Array[T],y:Array[Double],t:Array[T],kernel:smile.math.kernel.MercerKernel[T],lambda:Double):smile.regression.GaussianProcessRegression[T]"></a>
-      <a id="gaussianProcess[T&lt;:AnyRef](Array[T],Array[Double],Array[T],MercerKernel[T],Double):GaussianProcessRegression[T]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">gaussianProcess</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.regression.Operators.gaussianProcess.T">T</span>]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="t">t: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.regression.Operators.gaussianProcess.T">T</span>]</span>, <span name="kernel">kernel: <span class="extype" name="smile.math.kernel.MercerKernel">MercerKernel</span>[<span class="extype" name="smile.regression.Operators.gaussianProcess.T">T</span>]</span>, <span name="lambda">lambda: <span class="extype" name="scala.Double">Double</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.GaussianProcessRegression">GaussianProcessRegression</span>[<span class="extype" name="smile.regression.Operators.gaussianProcess.T">T</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.regression.package@gaussianProcess[T&lt;:AnyRef](x:Array[T],y:Array[Double],t:Array[T],kernel:smile.math.kernel.MercerKernel[T],lambda:Double):smile.regression.GaussianProcessRegression[T]" title="Permalink" target="_top">
+      <a href="../../index.html#smile.regression.package@gaussianProcess[T&lt;:AnyRef](x:Array[T],y:Array[Double],t:Array[T],kernel:smile.math.kernel.MercerKernel[T],lambda:Double,nystrom:Boolean):smile.regression.GaussianProcessRegression[T]" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -206,7 +141,7 @@ of subset of regressors.</p><div class="fullcomment"><div class="comment cmt"><p
 of subset of regressors.
 </p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training dataset.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">t</dt><dd class="cmt"><p>the inducing input, which are pre-selected or inducing samples
          acting as active set of regressors. In simple case, these can be chosen
-         randomly from the training set or as the centers of k-means clustering.</p></dd><dt class="param">kernel</dt><dd class="cmt"><p>the Mercer kernel.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>the shrinkage/regularization parameter.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
+         randomly from the training set or as the centers of k-means clustering.</p></dd><dt class="param">kernel</dt><dd class="cmt"><p>the Mercer kernel.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>the shrinkage/regularization parameter.</p></dd><dt class="param">nystrom</dt><dd class="cmt"><p>set it true for Nystrom approximation of kernel matrix.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.regression.Operators#gaussianProcess" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="gaussianProcess[T&lt;:AnyRef](x:Array[T],y:Array[Double],kernel:smile.math.kernel.MercerKernel[T],lambda:Double):smile.regression.GaussianProcessRegression[T]"></a>
       <a id="gaussianProcess[T&lt;:AnyRef](Array[T],Array[Double],MercerKernel[T],Double):GaussianProcessRegression[T]"></a>
@@ -248,42 +183,21 @@ randomly, but in general we might expect better performance if the points
 are selected greedily w.r.t. some criterion. Recently, researchers had
 proposed relaxing the constraint that the inducing variables must be a
 subset of training/test cases, turning the discrete selection problem
-into one of continuous optimization.</p><h4> References </h4><ul><li> Carl Edward Rasmussen and Chris Williams. Gaussian Processes for Machine Learning, 2006.</li><li> Joaquin Quinonero-candela,  Carl Edward Ramussen,  Christopher K. I. Williams. Approximation Methods for Gaussian Process Regression. 2007.</li><li> T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li> Kai Zhang and James T. Kwok. Clustered Nystrom Method for Large Scale Manifold Learning and Dimension Reduction. IEEE Transactions on Neural Networks, 2010.</li></ul><p> -</p><p>This method fits a regular Gaussian process model.
-</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training dataset.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">kernel</dt><dd class="cmt"><p>the Mercer kernel.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>the shrinkage/regularization parameter.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
-    </li><li name="smile.regression.Operators#gaussianProcessNystrom" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="gaussianProcessNystrom[T&lt;:AnyRef](x:Array[T],y:Array[Double],t:Array[T],kernel:smile.math.kernel.MercerKernel[T],lambda:Double):smile.regression.GaussianProcessRegression[T]"></a>
-      <a id="gaussianProcessNystrom[T&lt;:AnyRef](Array[T],Array[Double],Array[T],MercerKernel[T],Double):GaussianProcessRegression[T]"></a>
+into one of continuous optimization.</p><p>This method fits a regular Gaussian process model.</p><h6>References:</h6><ul><li>Carl Edward Rasmussen and Chris Williams. Gaussian Processes for Machine Learning, 2006.</li><li>Joaquin Quinonero-candela,  Carl Edward Ramussen,  Christopher K. I. Williams. Approximation Methods for Gaussian Process Regression. 2007.</li><li>T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li>Kai Zhang and James T. Kwok. Clustered Nystrom Method for Large Scale Manifold Learning and Dimension Reduction. IEEE Transactions on Neural Networks, 2010.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training dataset.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">kernel</dt><dd class="cmt"><p>the Mercer kernel.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>the shrinkage/regularization parameter.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
+    </li><li name="smile.regression.Operators#gbr" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="gbr(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],loss:smile.regression.GradientTreeBoost.Loss,T:Int,J:Int,eta:Double,f:Double):smile.regression.GradientTreeBoost"></a>
+      <a id="gbr(Array[Array[Double]],Array[Double],Array[Attribute],Loss,Int,Int,Double,Double):GradientTreeBoost"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">gaussianProcessNystrom</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.regression.Operators.gaussianProcessNystrom.T">T</span>]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="t">t: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.regression.Operators.gaussianProcessNystrom.T">T</span>]</span>, <span name="kernel">kernel: <span class="extype" name="smile.math.kernel.MercerKernel">MercerKernel</span>[<span class="extype" name="smile.regression.Operators.gaussianProcessNystrom.T">T</span>]</span>, <span name="lambda">lambda: <span class="extype" name="scala.Double">Double</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.GaussianProcessRegression">GaussianProcessRegression</span>[<span class="extype" name="smile.regression.Operators.gaussianProcessNystrom.T">T</span>]</span>
+        <span class="name">gbr</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="loss">loss: <span class="extype" name="smile.regression.GradientTreeBoost.Loss">Loss</span> = <span class="defval" name="GradientTreeBoost.Loss.LeastAbsoluteDeviation">...</span></span>, <span name="T">T: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">6</span></span>, <span name="eta">eta: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.05</span></span>, <span name="f">f: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.7</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.GradientTreeBoost">GradientTreeBoost</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.regression.package@gaussianProcessNystrom[T&lt;:AnyRef](x:Array[T],y:Array[Double],t:Array[T],kernel:smile.math.kernel.MercerKernel[T],lambda:Double):smile.regression.GaussianProcessRegression[T]" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">This method fits an approximate Gaussian process model with
-Nystrom approximation of kernel matrix.</p><div class="fullcomment"><div class="comment cmt"><p>This method fits an approximate Gaussian process model with
-Nystrom approximation of kernel matrix.
-</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training dataset.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">t</dt><dd class="cmt"><p>the inducing input for Nystrom approximation. Commonly, these
-         can be chosen as the centers of k-means clustering.</p></dd><dt class="param">kernel</dt><dd class="cmt"><p>the Mercer kernel.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>the shrinkage/regularization parameter.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
-    </li><li name="smile.regression.Operators#gbm" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="gbm(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],loss:smile.regression.GradientTreeBoost.Loss,T:Int,J:Int,eta:Double,f:Double):smile.regression.GradientTreeBoost"></a>
-      <a id="gbm(Array[Array[Double]],Array[Double],Array[Attribute],Loss,Int,Int,Double,Double):GradientTreeBoost"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">gbm</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="loss">loss: <span class="extype" name="smile.regression.GradientTreeBoost.Loss">Loss</span> = <span class="defval" name="GradientTreeBoost.Loss.LeastAbsoluteDeviation">...</span></span>, <span name="T">T: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">6</span></span>, <span name="eta">eta: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.05</span></span>, <span name="f">f: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.7</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.GradientTreeBoost">GradientTreeBoost</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.regression.package@gbm(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],loss:smile.regression.GradientTreeBoost.Loss,T:Int,J:Int,eta:Double,f:Double):smile.regression.GradientTreeBoost" title="Permalink" target="_top">
+      <a href="../../index.html#smile.regression.package@gbr(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],loss:smile.regression.GradientTreeBoost.Loss,T:Int,J:Int,eta:Double,f:Double):smile.regression.GradientTreeBoost" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -335,7 +249,8 @@ and the optimal number of iterations.</p><p>Gradient tree boosting implementatio
 limiting the minimum number of observations in trees' terminal nodes.
 It's used in the tree building process by ignoring any splits that lead
 to nodes containing fewer than this number of training set instances.
-Imposing this limit helps to reduce variance in predictions at leaves.</p><ul><li> J. H. Friedman. Greedy Function Approximation: A Gradient Boosting Machine, 1999.</li><li> J. H. Friedman. Stochastic Gradient Boosting, 1999.</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the class labels.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
+Imposing this limit helps to reduce variance in predictions at leaves.</p><h6>References:</h6><ul><li>J. H. Friedman. Greedy Function Approximation: A Gradient Boosting Machine, 1999.</li><li>J. H. Friedman. Stochastic Gradient Boosting, 1999.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the class labels.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
                   are treated as numeric values.</p></dd><dt class="param">loss</dt><dd class="cmt"><p>loss function for regression. By default, least absolute
             deviation is employed for robust regression.</p></dd><dt class="param">T</dt><dd class="cmt"><p>the number of iterations (trees).</p></dd><dt class="param">J</dt><dd class="cmt"><p>the number of leaves in each tree.</p></dd><dt class="param">eta</dt><dd class="cmt"><p>the shrinkage parameter in (0, 1] controls the learning rate of procedure.</p></dd><dt class="param">f</dt><dd class="cmt"><p>the sampling fraction for stochastic tree boosting.</p></dd><dt>returns</dt><dd class="cmt"><p>Gradient boosted trees.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.regression.Operators#lasso" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -375,7 +290,8 @@ L<sub>1</sub>-regularized least squares is convex but not differentiable,
 so solving it is more of a computational challenge than solving the
 L<sub>2</sub>-regularized least squares. The Lasso may be solved using
 quadratic programming or more general convex optimization methods, as well
-as by specific algorithms such as the least angle regression algorithm.</p><h4> References </h4><ul><li> R. Tibshirani. Regression shrinkage and selection via the lasso. J. Royal. Statist. Soc B., 58(1):267-288, 1996.</li><li> B. Efron, I. Johnstone, T. Hastie, and R. Tibshirani. Least angle regression. Annals of Statistics, 2003</li><li> Seung-Jean Kim, K. Koh, M. Lustig, Stephen Boyd, and Dimitry Gorinevsky. An Interior-Point Method for Large-Scale L1-Regularized Least Squares. IEEE JOURNAL OF SELECTED TOPICS IN SIGNAL PROCESSING, VOL. 1, NO. 4, 2007.</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>a matrix containing the explanatory variables.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response values.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>the shrinkage/regularization parameter.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>the tolerance for stopping iterations (relative target duality gap).</p></dd><dt class="param">maxIter</dt><dd class="cmt"><p>the maximum number of iterations.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
+as by specific algorithms such as the least angle regression algorithm.</p><h6>References:</h6><ul><li>R. Tibshirani. Regression shrinkage and selection via the lasso. J. Royal. Statist. Soc B., 58(1):267-288, 1996.</li><li>B. Efron, I. Johnstone, T. Hastie, and R. Tibshirani. Least angle regression. Annals of Statistics, 2003</li><li>Seung-Jean Kim, K. Koh, M. Lustig, Stephen Boyd, and Dimitry Gorinevsky. An Interior-Point Method for Large-Scale L1-Regularized Least Squares. IEEE JOURNAL OF SELECTED TOPICS IN SIGNAL PROCESSING, VOL. 1, NO. 4, 2007.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>a matrix containing the explanatory variables.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response values.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>the shrinkage/regularization parameter.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>the tolerance for stopping iterations (relative target duality gap).</p></dd><dt class="param">maxIter</dt><dd class="cmt"><p>the maximum number of iterations.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.regression.Operators#ols" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ols(x:Array[Array[Double]],y:Array[Double]):smile.regression.OLS"></a>
       <a id="ols(Array[Array[Double]],Array[Double]):OLS"></a>
@@ -444,41 +360,6 @@ testing may proceed using asymptotic approximations.
     </span>
       <p class="shortcomment cmt">Apply a regression model on a data sample.</p><div class="fullcomment"><div class="comment cmt"><p>Apply a regression model on a data sample.
 </p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the data type</p></dd><dt class="param">model</dt><dd class="cmt"><p>regression model</p></dd><dt class="param">x</dt><dd class="cmt"><p>data sample</p></dd><dt>returns</dt><dd class="cmt"><p>predicted value of dependent variable.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
-    </li><li name="smile.regression.Operators#randomForest" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="randomForest(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],T:Int,mtry:Int,S:Int,J:Int):smile.regression.RandomForest"></a>
-      <a id="randomForest(Array[Array[Double]],Array[Double],Array[Attribute],Int,Int,Int,Int):RandomForest"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">randomForest</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="T">T: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="mtry">mtry: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="S">S: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">5</span></span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.RandomForest">RandomForest</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.regression.package@randomForest(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],T:Int,mtry:Int,S:Int,J:Int):smile.regression.RandomForest" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Random forest for classification.</p><div class="fullcomment"><div class="comment cmt"><p>Random forest for classification. Random forest is an ensemble classifier
-that consists of many decision trees and outputs the majority vote of
-individual trees. The method combines bagging idea and the random
-selection of features.</p><p>Each tree is constructed using the following algorithm:</p><ul><li> If the number of cases in the training set is N, randomly sample N cases
-with replacement from the original data. This sample will
-be the training set for growing the tree.</li><li> If there are M input variables, a number m &lt;&lt; M is specified such
-that at each node, m variables are selected at random out of the M and
-the best split on these m is used to split the node. The value of m is
-held constant during the forest growing.</li><li> Each tree is grown to the largest extent possible. There is no pruning.</li></ul><p>The advantages of random forest are:</p><ul><li> For many data sets, it produces a highly accurate classifier.</li><li> It runs efficiently on large data sets.</li><li> It can handle thousands of input variables without variable deletion.</li><li> It gives estimates of what variables are important in the classification.</li><li> It generates an internal unbiased estimate of the generalization error
-as the forest building progresses.</li><li> It has an effective method for estimating missing data and maintains
-accuracy when a large proportion of the data are missing.</li></ul><p>The disadvantages are</p><ul><li> Random forests are prone to over-fitting for some datasets. This is
-even more pronounced on noisy data.</li><li> For data including categorical variables with different number of
-levels, random forests are biased in favor of those attributes with more
-levels. Therefore, the variable importance scores from random forest are
-not reliable for this type of data.</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
-                  are treated as numeric values.</p></dd><dt class="param">T</dt><dd class="cmt"><p>the number of trees.</p></dd><dt class="param">mtry</dt><dd class="cmt"><p>the number of input variables to be used to determine the decision
-            at a node of the tree. dim/3 seems to give generally good performance,
-            where dim is the number of variables.</p></dd><dt class="param">S</dt><dd class="cmt"><p>the number of instances in a node below which the tree will
-         not split, setting S = 5 generally gives good results.</p></dd><dt>returns</dt><dd class="cmt"><p>Random forest classification model.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.regression.Operators#rbfnet" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="rbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Double],distance:smile.math.distance.Metric[T],rbf:Array[smile.math.rbf.RadialBasisFunction],centers:Array[T],normalized:Boolean):smile.regression.RBFNetwork[T]"></a>
       <a id="rbfnet[T&lt;:AnyRef](Array[T],Array[Double],Metric[T],Array[RadialBasisFunction],Array[T],Boolean):RBFNetwork[T]"></a>
@@ -529,7 +410,8 @@ basis function centers. It was reported that with similar number of support
 vectors/centers, SVM shows better generalization performance than RBF
 network when the training data size is relatively small. On the other hand,
 RBF network gives better generalization performance than SVM on large
-training data.</p><h4> References </h4><ul><li> Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.</li><li> T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li> Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
+training data.</p><h6>References:</h6><ul><li>Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.</li><li>T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li>Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.regression.Operators#rbfnet" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="rbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Double],distance:smile.math.distance.Metric[T],rbf:smile.math.rbf.RadialBasisFunction,centers:Array[T],normalized:Boolean):smile.regression.RBFNetwork[T]"></a>
       <a id="rbfnet[T&lt;:AnyRef](Array[T],Array[Double],Metric[T],RadialBasisFunction,Array[T],Boolean):RBFNetwork[T]"></a>
@@ -580,7 +462,110 @@ basis function centers. It was reported that with similar number of support
 vectors/centers, SVM shows better generalization performance than RBF
 network when the training data size is relatively small. On the other hand,
 RBF network gives better generalization performance than SVM on large
-training data.</p><h4> References </h4><ul><li> Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.</li><li> T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li> Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
+training data.</p><h6>References:</h6><ul><li>Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.</li><li>T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li>Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
+    </li><li name="smile.regression.Operators#regressionTree" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="regressionTree(x:Array[Array[Double]],y:Array[Double],J:Int,attributes:Array[smile.data.Attribute]):smile.regression.RegressionTree"></a>
+      <a id="regressionTree(Array[Array[Double]],Array[Double],Int,Array[Attribute]):RegressionTree"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">regressionTree</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span></span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.RegressionTree">RegressionTree</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.regression.package@regressionTree(x:Array[Array[Double]],y:Array[Double],J:Int,attributes:Array[smile.data.Attribute]):smile.regression.RegressionTree" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Regression tree.</p><div class="fullcomment"><div class="comment cmt"><p>Regression tree. A decision tree can be learned by
+splitting the training set into subsets based on an attribute value
+test. This process is repeated on each derived subset in a recursive
+manner called recursive partitioning. The recursion is completed when
+the subset at a node all has the same value of the target variable,
+or when splitting no longer adds value to the predictions.</p><p>The algorithms that are used for constructing decision trees usually
+work top-down by choosing a variable at each step that is the next best
+variable to use in splitting the set of items. &quot;Best&quot; is defined by how
+well the variable splits the set into homogeneous subsets that have
+the same value of the target variable. Different algorithms use different
+formulae for measuring &quot;best&quot;. Used by the CART algorithm, Gini impurity
+is a measure of how often a randomly chosen element from the set would
+be incorrectly labeled if it were randomly labeled according to the
+distribution of labels in the subset. Gini impurity can be computed by
+summing the probability of each item being chosen times the probability
+of a mistake in categorizing that item. It reaches its minimum (zero) when
+all cases in the node fall into a single target category. Information gain
+is another popular measure, used by the ID3, C4.5 and C5.0 algorithms.
+Information gain is based on the concept of entropy used in information
+theory. For categorical variables with different number of levels, however,
+information gain are biased in favor of those attributes with more levels.
+Instead, one may employ the information gain ratio, which solves the drawback
+of information gain.</p><p>Classification and Regression Tree techniques have a number of advantages
+over many of those alternative techniques.</p><ul><li><b>Simple to understand and interpret:</b>
+In most cases, the interpretation of results summarized in a tree is
+very simple. This simplicity is useful not only for purposes of rapid
+classification of new observations, but can also often yield a much simpler
+&quot;model&quot; for explaining why observations are classified or predicted in a
+particular manner.</li><li><b>Able to handle both numerical and categorical data:</b>
+Other techniques are usually specialized in analyzing datasets that
+have only one type of variable.</li><li><b>Nonparametric and nonlinear:</b>
+The final results of using tree methods for classification or regression
+can be summarized in a series of (usually few) logical if-then conditions
+(tree nodes). Therefore, there is no implicit assumption that the underlying
+relationships between the predictor variables and the dependent variable
+are linear, follow some specific non-linear link function, or that they
+are even monotonic in nature. Thus, tree methods are particularly well
+suited for data mining tasks, where there is often little a priori
+knowledge nor any coherent set of theories or predictions regarding which
+variables are related and how. In those types of data analytics, tree
+methods can often reveal simple relationships between just a few variables
+that could have easily gone unnoticed using other analytic techniques.</li></ul><p>One major problem with classification and regression trees is their high
+variance. Often a small change in the data can result in a very different
+series of splits, making interpretation somewhat precarious. Besides,
+decision-tree learners can create over-complex trees that cause over-fitting.
+Mechanisms such as pruning are necessary to avoid this problem.
+Another limitation of trees is the lack of smoothness of the prediction
+surface.</p><p>Some techniques such as bagging, boosting, and random forest use more than
+one decision tree for their analysis.
+</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">J</dt><dd class="cmt"><p>the maximum number of leaf nodes in the tree.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties.</p></dd><dt>returns</dt><dd class="cmt"><p>Regression tree model.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
+    </li><li name="smile.regression.Operators#rfr" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="rfr(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],T:Int,mtry:Int,S:Int,J:Int):smile.regression.RandomForest"></a>
+      <a id="rfr(Array[Array[Double]],Array[Double],Array[Attribute],Int,Int,Int,Int):RandomForest"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rfr</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="T">T: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="mtry">mtry: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="S">S: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">5</span></span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.RandomForest">RandomForest</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.regression.package@rfr(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],T:Int,mtry:Int,S:Int,J:Int):smile.regression.RandomForest" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Random forest for regression.</p><div class="fullcomment"><div class="comment cmt"><p>Random forest for regression. Random forest is an ensemble classifier
+that consists of many decision trees and outputs the majority vote of
+individual trees. The method combines bagging idea and the random
+selection of features.</p><p>Each tree is constructed using the following algorithm:</p><ol class="lowerRoman"><li>If the number of cases in the training set is N, randomly sample N cases
+with replacement from the original data. This sample will
+be the training set for growing the tree.</li><li>If there are M input variables, a number m &lt;&lt; M is specified such
+that at each node, m variables are selected at random out of the M and
+the best split on these m is used to split the node. The value of m is
+held constant during the forest growing.</li><li>Each tree is grown to the largest extent possible. There is no pruning.</li></ol><p>The advantages of random forest are:</p><ul><li>For many data sets, it produces a highly accurate classifier.</li><li>It runs efficiently on large data sets.</li><li>It can handle thousands of input variables without variable deletion.</li><li>It gives estimates of what variables are important in the classification.</li><li>It generates an internal unbiased estimate of the generalization error
+as the forest building progresses.</li><li>It has an effective method for estimating missing data and maintains
+accuracy when a large proportion of the data are missing.</li></ul><p>The disadvantages are</p><ul><li>Random forests are prone to over-fitting for some datasets. This is
+even more pronounced on noisy data.</li><li>For data including categorical variables with different number of
+levels, random forests are biased in favor of those attributes with more
+levels. Therefore, the variable importance scores from random forest are
+not reliable for this type of data.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
+                  are treated as numeric values.</p></dd><dt class="param">T</dt><dd class="cmt"><p>the number of trees.</p></dd><dt class="param">mtry</dt><dd class="cmt"><p>the number of input variables to be used to determine the decision
+            at a node of the tree. dim/3 seems to give generally good performance,
+            where dim is the number of variables.</p></dd><dt class="param">S</dt><dd class="cmt"><p>the number of instances in a node below which the tree will
+         not split, setting S = 5 generally gives good results.</p></dd><dt>returns</dt><dd class="cmt"><p>Random forest classification model.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.regression.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.regression.Operators#ridge" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ridge(x:Array[Array[Double]],y:Array[Double],lambda:Double):smile.regression.RidgeRegression"></a>
       <a id="ridge(Array[Array[Double]],Array[Double],Double):RidgeRegression"></a>
