@@ -273,7 +273,7 @@ trait Operators {
     * @param attributes the attribute properties.
     * @return Regression tree model.
     */
-  def cart(x: Array[Array[Double]], y: Array[Double], J: Int, attributes: Array[Attribute] = null): RegressionTree = {
+  def regressionTree(x: Array[Array[Double]], y: Array[Double], J: Int, attributes: Array[Attribute] = null): RegressionTree = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -336,7 +336,7 @@ trait Operators {
     *
     * @return Random forest classification model.
     */
-  def randomForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, S: Int = 5, J: Int = -1): RandomForest = {
+  def rfr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, S: Int = 5, J: Int = -1): RandomForest = {
     val p = x(0).length
 
     val attr = if (attributes == null) {

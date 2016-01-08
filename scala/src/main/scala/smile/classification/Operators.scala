@@ -515,7 +515,7 @@ trait Operators {
     svm
   }
 
-  /** Decision tree for classification. A decision tree can be learned by
+  /** Decision tree. A decision tree can be learned by
     * splitting the training set into subsets based on an attribute value
     * test. This process is repeated on each derived subset in a recursive
     * manner called recursive partitioning. The recursion is completed when
@@ -583,7 +583,7 @@ trait Operators {
     * @param splitRule the splitting rule.
     * @return Decision tree model.
     */
-  def cart(x: Array[Array[Double]], y: Array[Int], J: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
+  def decisionTree(x: Array[Array[Double]], y: Array[Int], J: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -648,7 +648,7 @@ trait Operators {
     *
     * @return Random forest classification model.
     */
-  def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, S: Int = 1, J: Int = -1, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
+  def rfc(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, S: Int = 1, J: Int = -1, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
