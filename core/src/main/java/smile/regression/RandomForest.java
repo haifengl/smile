@@ -302,7 +302,6 @@ public class RandomForest implements Regression<double[]> {
                 }
             }
 
-
             RegressionTree tree = new RegressionTree(attributes, x, y, maxNodes, nodeSize, mtry, order, samples, null);
 
             for (int i = 0; i < n; i++) {

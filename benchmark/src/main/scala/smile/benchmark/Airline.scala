@@ -84,7 +84,7 @@ object Airline {
       if (x.length <= 100000)
         new RandomForest(attributes, x, y, 500, 650, 5, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
       else
-        new RandomForest(attributes, x, y, 500, 1200, 5, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
+        new RandomForest(attributes, x, y, 500, 800, 5, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
     }.asInstanceOf[RandomForest]
 
     println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
