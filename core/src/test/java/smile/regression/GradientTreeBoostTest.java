@@ -57,7 +57,7 @@ public class GradientTreeBoostTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(response);
         try {
-            AttributeDataset data = parser.parse(this.getClass().getResourceAsStream(url));
+            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile(url));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
             
@@ -93,15 +93,15 @@ public class GradientTreeBoostTest {
      */
     @Test
     public void testLS() {
-        test(GradientTreeBoost.Loss.LeastSquares, "CPU", "/smile/data/weka/cpu.arff", 6);
-        //test(GradientTreeBoost.Loss.LeastSquares, "2dplanes", "/smile/data/weka/regression/2dplanes.arff", 6);
-        //test(GradientTreeBoost.Loss.LeastSquares, "abalone", "/smile/data/weka/regression/abalone.arff", 8);
-        //test(GradientTreeBoost.Loss.LeastSquares, "ailerons", "/smile/data/weka/regression/ailerons.arff", 40);
-        //test(GradientTreeBoost.Loss.LeastSquares, "bank32nh", "/smile/data/weka/regression/bank32nh.arff", 32);
-        test(GradientTreeBoost.Loss.LeastSquares, "autoMPG", "/smile/data/weka/regression/autoMpg.arff", 7);
-        test(GradientTreeBoost.Loss.LeastSquares, "cal_housing", "/smile/data/weka/regression/cal_housing.arff", 8);
-        //test(GradientTreeBoost.Loss.LeastSquares, "puma8nh", "/smile/data/weka/regression/puma8nh.arff", 8);
-        //test(GradientTreeBoost.Loss.LeastSquares, "kin8nm", "/smile/data/weka/regression/kin8nm.arff", 8);
+        test(GradientTreeBoost.Loss.LeastSquares, "CPU", "weka/cpu.arff", 6);
+        //test(GradientTreeBoost.Loss.LeastSquares, "2dplanes", "weka/regression/2dplanes.arff", 6);
+        //test(GradientTreeBoost.Loss.LeastSquares, "abalone", "weka/regression/abalone.arff", 8);
+        //test(GradientTreeBoost.Loss.LeastSquares, "ailerons", "weka/regression/ailerons.arff", 40);
+        //test(GradientTreeBoost.Loss.LeastSquares, "bank32nh", "weka/regression/bank32nh.arff", 32);
+        test(GradientTreeBoost.Loss.LeastSquares, "autoMPG", "weka/regression/autoMpg.arff", 7);
+        test(GradientTreeBoost.Loss.LeastSquares, "cal_housing", "weka/regression/cal_housing.arff", 8);
+        //test(GradientTreeBoost.Loss.LeastSquares, "puma8nh", "weka/regression/puma8nh.arff", 8);
+        //test(GradientTreeBoost.Loss.LeastSquares, "kin8nm", "weka/regression/kin8nm.arff", 8);
     }
     
     /**
@@ -109,15 +109,15 @@ public class GradientTreeBoostTest {
      */
     @Test
     public void testLAD() {
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "CPU", "/smile/data/weka/cpu.arff", 6);
-        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "2dplanes", "/smile/data/weka/regression/2dplanes.arff", 6);
-        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "abalone", "/smile/data/weka/regression/abalone.arff", 8);
-        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "ailerons", "/smile/data/weka/regression/ailerons.arff", 40);
-        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "bank32nh", "/smile/data/weka/regression/bank32nh.arff", 32);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "autoMPG", "/smile/data/weka/regression/autoMpg.arff", 7);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "cal_housing", "/smile/data/weka/regression/cal_housing.arff", 8);
-        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "puma8nh", "/smile/data/weka/regression/puma8nh.arff", 8);
-        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "kin8nm", "/smile/data/weka/regression/kin8nm.arff", 8);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "CPU", "weka/cpu.arff", 6);
+        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "2dplanes", "weka/regression/2dplanes.arff", 6);
+        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "abalone", "weka/regression/abalone.arff", 8);
+        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "ailerons", "weka/regression/ailerons.arff", 40);
+        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "bank32nh", "weka/regression/bank32nh.arff", 32);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "autoMPG", "weka/regression/autoMpg.arff", 7);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "cal_housing", "weka/regression/cal_housing.arff", 8);
+        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "puma8nh", "weka/regression/puma8nh.arff", 8);
+        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "kin8nm", "weka/regression/kin8nm.arff", 8);
     }
     
     /**
@@ -125,15 +125,15 @@ public class GradientTreeBoostTest {
      */
     @Test
     public void testHuber() {
-        test(GradientTreeBoost.Loss.Huber, "CPU", "/smile/data/weka/cpu.arff", 6);
-        //test(GradientTreeBoost.Loss.Huber, "2dplanes", "/smile/data/weka/regression/2dplanes.arff", 6);
-        //test(GradientTreeBoost.Loss.Huber, "abalone", "/smile/data/weka/regression/abalone.arff", 8);
-        //test(GradientTreeBoost.Loss.Huber, "ailerons", "/smile/data/weka/regression/ailerons.arff", 40);
-        //test(GradientTreeBoost.Loss.Huber, "bank32nh", "/smile/data/weka/regression/bank32nh.arff", 32);
-        test(GradientTreeBoost.Loss.Huber, "autoMPG", "/smile/data/weka/regression/autoMpg.arff", 7);
-        test(GradientTreeBoost.Loss.Huber, "cal_housing", "/smile/data/weka/regression/cal_housing.arff", 8);
-        //test(GradientTreeBoost.Loss.Huber, "puma8nh", "/smile/data/weka/regression/puma8nh.arff", 8);
-        //test(GradientTreeBoost.Loss.Huber, "kin8nm", "/smile/data/weka/regression/kin8nm.arff", 8);
+        test(GradientTreeBoost.Loss.Huber, "CPU", "weka/cpu.arff", 6);
+        //test(GradientTreeBoost.Loss.Huber, "2dplanes", "weka/regression/2dplanes.arff", 6);
+        //test(GradientTreeBoost.Loss.Huber, "abalone", "weka/regression/abalone.arff", 8);
+        //test(GradientTreeBoost.Loss.Huber, "ailerons", "weka/regression/ailerons.arff", 40);
+        //test(GradientTreeBoost.Loss.Huber, "bank32nh", "weka/regression/bank32nh.arff", 32);
+        test(GradientTreeBoost.Loss.Huber, "autoMPG", "weka/regression/autoMpg.arff", 7);
+        test(GradientTreeBoost.Loss.Huber, "cal_housing", "weka/regression/cal_housing.arff", 8);
+        //test(GradientTreeBoost.Loss.Huber, "puma8nh", "weka/regression/puma8nh.arff", 8);
+        //test(GradientTreeBoost.Loss.Huber, "kin8nm", "weka/regression/kin8nm.arff", 8);
     }
     
     /**
