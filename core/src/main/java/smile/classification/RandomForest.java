@@ -244,7 +244,7 @@ public class RandomForest implements Classifier<double[]> {
          */
         public Trainer setSamplingRates(double subsample) {
             if (subsample <= 0 || subsample > 1) {
-                throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
+                throw new IllegalArgumentException("Invalid sampling rating: " + subsample);
             }
 
             this.subsample = subsample;
@@ -443,7 +443,7 @@ public class RandomForest implements Classifier<double[]> {
      * @param nodeSize the minimum size of leaf nodes.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
-     *                  samplign without replacement.
+     *                  sampling without replacement.
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample) {
         this(attributes, x, y, ntrees, x.length, 1, mtry, subsample, DecisionTree.SplitRule.GINI);
@@ -462,7 +462,7 @@ public class RandomForest implements Classifier<double[]> {
      * @param nodeSize the minimum size of leaf nodes.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
-     *                  samplign without replacement.
+     *                  sampling without replacement.
      * @param rule Decision tree split rule.
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample, DecisionTree.SplitRule rule) {
@@ -482,7 +482,7 @@ public class RandomForest implements Classifier<double[]> {
      * @param nodeSize the minimum size of leaf nodes.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
-     *                  samplign without replacement.
+     *                  sampling without replacement.
      * @param rule Decision tree split rule.
      * @param classWeight Priors of the classes.
      */
@@ -505,6 +505,10 @@ public class RandomForest implements Classifier<double[]> {
 
         if (maxNodes < 2) {
             throw new IllegalArgumentException("Invalid maximum number of leaves: " + maxNodes);
+        }
+
+        if (subsample <= 0 || subsample > 1) {
+            throw new IllegalArgumentException("Invalid sampling rating: " + subsample);
         }
 
         // class label set.

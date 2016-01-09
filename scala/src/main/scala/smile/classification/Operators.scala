@@ -643,12 +643,14 @@ trait Operators {
     *             generally good performance, where dim is the number of variables.
     * @param nodeSize number of instances in a node below which the tree will not split.
     * @param maxNodes maximum number of leaf nodes.
+    * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+    *                  sampling without replacement.
     * @param splitRule Decision tree node split rule.
     * @param classWeight Priors of the classes.
     *
     * @return Random forest classification model.
     */
-  def rfc(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, mtry: Int = -1, nodeSize: Int = 1, maxNodes: Int = -1, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
+  def rfc(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 1, mtry: Int = -1, subsample: Double = 1.0, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -665,7 +667,7 @@ trait Operators {
     val weight = if (classWeight == null) Array.fill[Int](k)(1) else classWeight
 
     time {
-      new RandomForest(attr, x, y, ntrees, m, nodeSize, j, splitRule, weight)
+      new RandomForest(attr, x, y, ntrees, j, nodeSize, m, subsample, splitRule, weight)
     }
   }
 

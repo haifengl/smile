@@ -334,10 +334,12 @@ trait Operators {
     * @param nodeSize the number of instances in a node below which the tree will
     *          not split, setting nodeSize = 5 generally gives good results.
     * @param maxNodes maximum number of leaf nodes.
+    * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+    *                  sampling without replacement.
     *
-    * @return Random forest classification model.
+    * @return Random forest regression model.
     */
-  def rfr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, ntrees: Int = 500, mtry: Int = -1, nodeSize: Int = 5, maxNodes: Int = -1): RandomForest = {
+  def rfr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 5, mtry: Int = -1, subsample: Double = 1.0): RandomForest = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -351,11 +353,11 @@ trait Operators {
     val j = if (maxNodes <= 1) x.length / nodeSize else maxNodes
 
     time {
-      new RandomForest(attr, x, y, ntrees, m, nodeSize, j)
+      new RandomForest(attr, x, y, ntrees, j, nodeSize, m, subsample)
     }
   }
 
-  /** Gradient boosting for classification. Gradient boosting is typically used
+  /** Gradient boosting for regression. Gradient boosting is typically used
     * with decision trees (especially CART regression trees) of a fixed size as
     * base learners. For this special case Friedman proposes a modification to
     * gradient boosting method which improves the quality of fit of each base

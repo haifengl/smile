@@ -85,7 +85,7 @@ public class RandomForest implements Regression<double[]> {
      * very consistent with the permutation importance measure.
      */
     private double[] importance;
-    
+
     /**
      * Trainer for random forest.
      */
@@ -97,7 +97,7 @@ public class RandomForest implements Regression<double[]> {
         /**
          * The number of random selected features to be used to determine the decision
          * at a node of the tree. floor(sqrt(dim)) seems to give generally good performance,
-         * where dim is the number of variables.        
+         * where dim is the number of variables.
          */
         private int mtry = -1;
         /**
@@ -108,10 +108,14 @@ public class RandomForest implements Regression<double[]> {
          * The maximum number of leaf nodes in the tree.
          */
         private int maxNodes = 100;
+        /**
+         * The sampling rate.
+         */
+        private double subsample = 1.0;
 
         /**
          * Constructor.
-         * 
+         *
          * @param ntrees the number of trees.
          */
         public Trainer(int ntrees) {
@@ -124,7 +128,7 @@ public class RandomForest implements Regression<double[]> {
 
         /**
          * Constructor.
-         * 
+         *
          * @param attributes the attributes of independent variable.
          * @param ntrees the number of trees.
          */
@@ -137,7 +141,7 @@ public class RandomForest implements Regression<double[]> {
 
             this.ntrees = ntrees;
         }
-        
+
         /**
          * Sets the number of trees in the random forest.
          * @param ntrees the number of trees.
@@ -150,7 +154,7 @@ public class RandomForest implements Regression<double[]> {
             this.ntrees = ntrees;
             return this;
         }
-        
+
         /**
          * Sets the number of random selected features for splitting.
          * @param mtry the number of random selected features to be used to determine
@@ -191,13 +195,26 @@ public class RandomForest implements Regression<double[]> {
             this.nodeSize = nodeSize;
             return this;
         }
-        
+
+        /**
+         * Sets the sampling rate.
+         * @param subsample the sampling rate.
+         */
+        public Trainer setSamplingRates(double subsample) {
+            if (subsample <= 0 || subsample > 1) {
+                throw new IllegalArgumentException("Invalid sampling rate: " + subsample);
+            }
+
+            this.subsample = subsample;
+            return this;
+        }
+
         @Override
         public RandomForest train(double[][] x, double[] y) {
-            return new RandomForest(attributes, x, y, ntrees, maxNodes, nodeSize, mtry);
+            return new RandomForest(attributes, x, y, ntrees, maxNodes, nodeSize, mtry, subsample);
         }
     }
-    
+
     /**
      * Trains a regression tree.
      */
@@ -232,6 +249,10 @@ public class RandomForest implements Regression<double[]> {
          */
         int maxNodes = 100;
         /**
+         * The sampling rate.
+         */
+        double subsample = 1.0;
+        /**
          * Predictions of of out-of-bag samples.
          */
         double[] prediction;
@@ -243,7 +264,7 @@ public class RandomForest implements Regression<double[]> {
         /**
          * Constructor.
          */
-        TrainingTask(Attribute[] attributes, double[][] x, double[] y, int maxNodes, int nodeSize, int mtry, int[][] order, double[] prediction, int[] oob) {
+        TrainingTask(Attribute[] attributes, double[][] x, double[] y, int maxNodes, int nodeSize, int mtry, double subsample, int[][] order, double[] prediction, int[] oob) {
             this.attributes = attributes;
             this.x = x;
             this.y = y;
@@ -251,6 +272,7 @@ public class RandomForest implements Regression<double[]> {
             this.mtry = mtry;
             this.nodeSize = nodeSize;
             this.maxNodes = maxNodes;
+            this.subsample = subsample;
             this.prediction = prediction;
             this.oob = oob;
         }
@@ -258,13 +280,31 @@ public class RandomForest implements Regression<double[]> {
         @Override
         public RegressionTree call() {
             int n = x.length;
-            int[] samples = new int[n]; // Training samples draw with replacement.
-            for (int i = 0; i < n; i++) {
-                samples[Math.randomInt(n)]++;
+            int[] samples = new int[n];
+
+            if (subsample == 1.0) {
+                // Training samples draw with replacement.
+                for (int i = 0; i < n; i++) {
+                    int xi = Math.randomInt(n);
+                    samples[xi]++;
+                }
+            } else {
+                // Training samples draw without replacement.
+                int[] perm = new int[n];
+                for (int i = 0; i < n; i++) {
+                    perm[i] = i;
+                }
+
+                Math.permutate(perm);
+                int m = (int) (n * 0.632);
+                for (int i = 0; i < m; i++) {
+                    samples[perm[i]]++;
+                }
             }
-            
+
+
             RegressionTree tree = new RegressionTree(attributes, x, y, maxNodes, nodeSize, mtry, order, samples, null);
-            
+
             for (int i = 0; i < n; i++) {
                 if (samples[i] == 0) {
                     double pred = tree.predict(x[i]);
@@ -274,7 +314,7 @@ public class RandomForest implements Regression<double[]> {
                     }
                 }
             }
-            
+
             return tree;
         }
     }
@@ -282,7 +322,7 @@ public class RandomForest implements Regression<double[]> {
     /**
      * Constructor. Learns a random forest for regression.
      *
-     * @param x the training instances. 
+     * @param x the training instances.
      * @param y the response variable.
      * @param ntrees the number of trees.
      */
@@ -293,7 +333,7 @@ public class RandomForest implements Regression<double[]> {
     /**
      * Constructor. Learns a random forest for regression.
      *
-     * @param x the training instances. 
+     * @param x the training instances.
      * @param y the response variable.
      * @param ntrees the number of trees.
      * @param mtry the number of input variables to be used to determine the decision
@@ -311,14 +351,60 @@ public class RandomForest implements Regression<double[]> {
      * Constructor. Learns a random forest for regression.
      *
      * @param attributes the attribute properties.
-     * @param x the training instances. 
+     * @param x the training instances.
      * @param y the response variable.
      * @param ntrees the number of trees.
      */
     public RandomForest(Attribute[] attributes, double[][] x, double[] y, int ntrees) {
-        this(attributes, x, y, ntrees, x.length, 5, Math.max(1, x[0].length / 3));
+        this(attributes, x, y, ntrees, x.length);
     }
-    
+
+    /**
+     * Constructor. Learns a random forest for regression.
+     *
+     * @param attributes the attribute properties.
+     * @param x the training instances.
+     * @param y the response variable.
+     * @param ntrees the number of trees.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     */
+    public RandomForest(Attribute[] attributes, double[][] x, double[] y, int ntrees, int maxNodes) {
+        this(attributes, x, y, ntrees, maxNodes, 5);
+    }
+
+    /**
+     * Constructor. Learns a random forest for regression.
+     *
+     * @param attributes the attribute properties.
+     * @param x the training instances.
+     * @param y the response variable.
+     * @param ntrees the number of trees.
+     * @param nodeSize the number of instances in a node below which the tree will
+     * not split, setting nodeSize = 5 generally gives good results.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     */
+    public RandomForest(Attribute[] attributes, double[][] x, double[] y, int ntrees, int maxNodes, int nodeSize) {
+        this(attributes, x, y, ntrees, maxNodes, nodeSize, x[0].length / 3);
+    }
+
+    /**
+     * Constructor. Learns a random forest for regression.
+     *
+     * @param attributes the attribute properties.
+     * @param x the training instances.
+     * @param y the response variable.
+     * @param ntrees the number of trees.
+     * @param mtry the number of input variables to be used to determine the decision
+     * at a node of the tree. p/3 seems to give generally good performance,
+     * where dim is the number of variables.
+     * @param nodeSize the number of instances in a node below which the tree will
+     * not split, setting nodeSize = 5 generally gives good results.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     */
+    public RandomForest(Attribute[] attributes, double[][] x, double[] y, int ntrees, int maxNodes, int nodeSize, int mtry) {
+        this(attributes, x, y, ntrees, maxNodes, nodeSize, mtry, 1.0);
+    }
+
     /**
      * Constructor. Learns a random forest for regression.
      *
@@ -332,8 +418,10 @@ public class RandomForest implements Regression<double[]> {
      * @param nodeSize the number of instances in a node below which the tree will
      * not split, setting nodeSize = 5 generally gives good results.
      * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+     *                  sampling without replacement.
      */
-    public RandomForest(Attribute[] attributes, double[][] x, double[] y, int ntrees, int maxNodes, int nodeSize, int mtry) {
+    public RandomForest(Attribute[] attributes, double[][] x, double[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -354,6 +442,10 @@ public class RandomForest implements Regression<double[]> {
             throw new IllegalArgumentException("Invalid maximum number of leaves: " + maxNodes);
         }
 
+        if (subsample <= 0 || subsample > 1) {
+            throw new IllegalArgumentException("Invalid sampling rate: " + subsample);
+        }
+
         if (attributes == null) {
             int p = x[0].length;
             attributes = new Attribute[p];
@@ -369,7 +461,7 @@ public class RandomForest implements Regression<double[]> {
         int[][] order = SmileUtils.sort(attributes, x);
         List<TrainingTask> tasks = new ArrayList<TrainingTask>();
         for (int i = 0; i < ntrees; i++) {
-            tasks.add(new TrainingTask(attributes, x, y, maxNodes, nodeSize, mtry, order, prediction, oob));
+            tasks.add(new TrainingTask(attributes, x, y, maxNodes, nodeSize, mtry, subsample, order, prediction, oob));
         }
         
         try {
