@@ -637,18 +637,18 @@ trait Operators {
     * @param y the response variable.
     * @param attributes the attribute properties. If not provided, all attributes
     *                   are treated as numeric values.
-    * @param T the number of trees.
+    * @param ntrees the number of trees.
     * @param mtry the number of random selected features to be used to determine
     *             the decision at a node of the tree. floor(sqrt(dim)) seems to give
     *             generally good performance, where dim is the number of variables.
-    * @param S number of instances in a node below which the tree will not split.
-    * @param J maximum number of leaf nodes.
+    * @param nodeSize number of instances in a node below which the tree will not split.
+    * @param maxNodes maximum number of leaf nodes.
     * @param splitRule Decision tree node split rule.
     * @param classWeight Priors of the classes.
     *
     * @return Random forest classification model.
     */
-  def rfc(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, S: Int = 1, J: Int = -1, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
+  def rfc(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, mtry: Int = -1, nodeSize: Int = 1, maxNodes: Int = -1, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -659,13 +659,13 @@ trait Operators {
 
     val m = if (mtry <= 0) Math.floor(Math.sqrt(p)).toInt else mtry
 
-    val j = if (J <= 1) x.length / S else J
+    val j = if (maxNodes <= 1) x.length / nodeSize else maxNodes
 
     val k = Math.max(y: _*) + 1
     val weight = if (classWeight == null) Array.fill[Int](k)(1) else classWeight
 
     time {
-      new RandomForest(attr, x, y, T, m, S, j, splitRule, weight)
+      new RandomForest(attr, x, y, ntrees, m, nodeSize, j, splitRule, weight)
     }
   }
 
@@ -741,14 +741,14 @@ trait Operators {
     * @param y the class labels.
     * @param attributes the attribute properties. If not provided, all attributes
     *                   are treated as numeric values.
-    * @param T the number of iterations (trees).
-    * @param J the number of leaves in each tree.
-    * @param eta the shrinkage parameter in (0, 1] controls the learning rate of procedure.
-    * @param f the sampling fraction for stochastic tree boosting.
+    * @param ntrees the number of iterations (trees).
+    * @param maxNodes the number of leaves in each tree.
+    * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+    * @param subsample the sampling fraction for stochastic tree boosting.
     *
     * @return Gradient boosted trees.
     */
-  def gbc(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 6, eta: Double = 0.05, f: Double = 0.7): GradientTreeBoost = {
+  def gbc(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -758,7 +758,7 @@ trait Operators {
     } else attributes
 
     time {
-      new GradientTreeBoost(attr, x, y, T, J, eta, f)
+      new GradientTreeBoost(attr, x, y, ntrees, maxNodes, shrinkage, subsample)
     }
   }
 
@@ -792,12 +792,12 @@ trait Operators {
     * @param y the response variable.
     * @param attributes the attribute properties. If not provided, all attributes
     *                   are treated as numeric values.
-    * @param T the number of trees.
-    * @param J the maximum number of leaf nodes in the trees.
+    * @param ntrees the number of trees.
+    * @param maxNodes the maximum number of leaf nodes in the trees.
     *
     * @return AdaBoost model.
     */
-  def adaboost(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 2): AdaBoost = {
+  def adaboost(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 2): AdaBoost = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -807,7 +807,7 @@ trait Operators {
     } else attributes
 
     time {
-      new AdaBoost(attr, x, y, T, J)
+      new AdaBoost(attr, x, y, ntrees, maxNodes)
     }
   }
 

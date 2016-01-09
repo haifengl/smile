@@ -327,16 +327,17 @@ trait Operators {
     * @param y the response variable.
     * @param attributes the attribute properties. If not provided, all attributes
     *                   are treated as numeric values.
-    * @param T the number of trees.
+    * @param ntrees the number of trees.
     * @param mtry the number of input variables to be used to determine the decision
     *             at a node of the tree. dim/3 seems to give generally good performance,
     *             where dim is the number of variables.
-    * @param S the number of instances in a node below which the tree will
-    *          not split, setting S = 5 generally gives good results.
+    * @param nodeSize the number of instances in a node below which the tree will
+    *          not split, setting nodeSize = 5 generally gives good results.
+    * @param maxNodes maximum number of leaf nodes.
     *
     * @return Random forest classification model.
     */
-  def rfr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, S: Int = 5, J: Int = -1): RandomForest = {
+  def rfr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, ntrees: Int = 500, mtry: Int = -1, nodeSize: Int = 5, maxNodes: Int = -1): RandomForest = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -347,10 +348,10 @@ trait Operators {
 
     val m = if (mtry <= 0) p / 3 else mtry
 
-    val j = if (J <= 1) x.length / S else J
+    val j = if (maxNodes <= 1) x.length / nodeSize else maxNodes
 
     time {
-      new RandomForest(attr, x, y, T, m, S, j)
+      new RandomForest(attr, x, y, ntrees, m, nodeSize, j)
     }
   }
 
@@ -428,14 +429,14 @@ trait Operators {
     *                   are treated as numeric values.
     * @param loss loss function for regression. By default, least absolute
     *             deviation is employed for robust regression.
-    * @param T the number of iterations (trees).
-    * @param J the number of leaves in each tree.
-    * @param eta the shrinkage parameter in (0, 1] controls the learning rate of procedure.
-    * @param f the sampling fraction for stochastic tree boosting.
+    * @param ntrees the number of iterations (trees).
+    * @param maxNodes the number of leaves in each tree.
+    * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+    * @param subsample the sampling fraction for stochastic tree boosting.
     *
     * @return Gradient boosted trees.
     */
-  def gbr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, T: Int = 500, J: Int = 6, eta: Double = 0.05, f: Double = 0.7): GradientTreeBoost = {
+  def gbr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -445,7 +446,7 @@ trait Operators {
     } else attributes
 
     time {
-      new GradientTreeBoost(attr, x, y, loss, T, J, eta, f)
+      new GradientTreeBoost(attr, x, y, loss, ntrees, maxNodes, shrinkage, subsample)
     }
   }
 
