@@ -327,18 +327,18 @@ public class RandomForest implements Classifier<double[]> {
         @Override
         public Tree call() {
             int n = x.length;
-            int k = smile.math.Math.max(y);
+            int k = smile.math.Math.max(y) + 1;
             int[] samples = new int[n];
 
             // Stratified sampling in case class is unbalanced.
             // That is, we sample each class separately.
             if (subsample == 1.0) {
                 // Training samples draw with replacement.
-                for (int j = 0; j <= k; j++) {
+                for (int l = 0; l < k; l++) {
                     int nj = 0;
                     ArrayList<Integer> cj = new ArrayList<Integer>();
                     for (int i = 0; i < n; i++) {
-                        if (y[i] == j) {
+                        if (y[i] == l) {
                             cj.add(i);
                             nj++;
                         }
@@ -346,7 +346,7 @@ public class RandomForest implements Classifier<double[]> {
 
                     for (int i = 0; i < nj; i++) {
                         int xi = Math.randomInt(nj);
-                        samples[cj.get(xi)] += classWeight[j];
+                        samples[cj.get(xi)] += classWeight[l];
                     }
                 }
             } else {
@@ -358,18 +358,18 @@ public class RandomForest implements Classifier<double[]> {
 
                 Math.permutate(perm);
 
-                for (int j = 0; j <= k; j++) {
-                    int nj = 0;
-                    for (int i = 0; i < n; i++) {
-                        if (y[i] == j) nj++;
-                    }
+                int[] nc = new int[k];
+                for (int i = 0; i < n; i++) {
+                    nc[y[i]]++;
+                }
 
-                    int m = (int) Math.round(nj * subsample);
+                for (int l = 0; l < k; l++) {
+                    int subj = (int) Math.round(nc[l] * subsample);
                     int count = 0;
-                    for (int i = 0; i < n && count < m; i++) {
+                    for (int i = 0; i < n && count < subj; i++) {
                         int xi = perm[i];
-                        if (y[xi] == j) {
-                            samples[xi] += classWeight[j];
+                        if (y[xi] == l) {
+                            samples[xi] += classWeight[l];
                             count++;
                         }
                     }
