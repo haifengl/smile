@@ -1,7 +1,7 @@
-SMILE
+Smile
 =====
 
-SMILE (Statistical Machine Intelligence and Learning Engine) is a set of pure Java libraries of various state-of-art machine learning algorithms. SMILE is self contained and requires only Java standard library. The major components include
+Smile (Statistical Machine Intelligence and Learning Engine) is a set of pure Java libraries of various state-of-art machine learning algorithms. Smile is self contained and requires only Java standard library. The major components include
 
 * **Core**
 The core machine learning library
@@ -18,9 +18,9 @@ Natural language processing.
 * **Plot**
 Swing-based data visualization library.
 
-SMILE is well documented and please check out the [project website](http://haifengl.github.io/smile/) for more information. Tutorials are available on the project [wiki](http://github.com/haifengl/smile/wiki). A basic tutorial is also included at the bottom of this file.
+Smile is well documented and please check out the [project website](http://haifengl.github.io/smile/) for more information. Tutorials are available on the project [wiki](http://github.com/haifengl/smile/wiki). A basic tutorial is also included at the bottom of this file.
 
-To see SMILE in action, please download the [demo](http://haifengl.github.io/smile/smile-demo.jar) jar file and then run <tt>java -jar smile-demo.jar</tt>.
+To see Smile in action, please download the [demo](http://haifengl.github.io/smile/smile-demo.jar) jar file and then run <tt>java -jar smile-demo.jar</tt>.
 
 You can use the libraries through Maven central repository by adding the following to your project pom.xml file.
 ```
@@ -32,7 +32,7 @@ You can use the libraries through Maven central repository by adding the followi
 ```
 You can similarly replace artifactId smile-core with smile-math, smile-data, smile-graph, smile-interpolation, smile-nlp, or smile-plot for other modules.
 
-SMILE implements the following major machine learning algorithms
+Smile implements the following major machine learning algorithms
 
 * **Classification**
 Support Vector Machines, Decision Trees, AdaBoost, Gradient Boosting, Random Forest, Logistic Regression, Neural Networks, RBF Networks, Maximum Entropy Classifier, KNN, Naïve Bayesian, Fisher/Linear/Quadratic/Regularized Discriminant Analysis.
@@ -71,7 +71,7 @@ You may notice that none of models supports Java Serializable interface. It is b
 SmilePlot
 =========
 
-SMILE also has a Swing-based data visualization library SmilePlot, which provides scatter plot, line plot, staircase plot, bar plot, box plot, histogram, 3D histogram, dendrogram, heatmap, hexmap, QQ plot, contour plot, surface, and wireframe. The class PlotCanvas provides builtin functions such as zoom in/out, export, print, customization, etc.
+Smile also has a Swing-based data visualization library SmilePlot, which provides scatter plot, line plot, staircase plot, bar plot, box plot, histogram, 3D histogram, dendrogram, heatmap, hexmap, QQ plot, contour plot, surface, and wireframe. The class PlotCanvas provides builtin functions such as zoom in/out, export, print, customization, etc.
 
 SmilePlot requires SwingX library for JXTable. But if your environment cannot use SwingX, it is easy to remove this dependency by using JTable.
 
@@ -175,10 +175,10 @@ Demo Gallery
 
 Tutorial
 ========
-This tutorial shows how to use SMILE for predictive modeling (classification and regression) from Java code. It includes loading data, training and testing the model, and applying the model.
+This tutorial shows how to use Smile for predictive modeling (classification and regression) from Java code. It includes loading data, training and testing the model, and applying the model.
 
 ## Load Data
-Most SMILE algorithms take simple double[] as input. So you can use your favorite methods or library to import the data as long as the samples are in double arrays. To make the life easier, SMILE does provide a couple of parsers for popular data formats, such as Weka's ARFF files, LibSVM's file format, delimited text files, and binary sparse data. These classes are in the package smile.data.parser. The package smile.data.parser.microarray also provides several parsers for microarray gene expression datasets, including GCT, PCL, RES, and TXT files. In the following example, we use the ARFF parser to load the weather dataset:
+Most Smile algorithms take simple double[] as input. So you can use your favorite methods or library to import the data as long as the samples are in double arrays. To make the life easier, Smile does provide a couple of parsers for popular data formats, such as Weka's ARFF files, LibSVM's file format, delimited text files, and binary sparse data. These classes are in the package smile.data.parser. The package smile.data.parser.microarray also provides several parsers for microarray gene expression datasets, including GCT, PCL, RES, and TXT files. In the following example, we use the ARFF parser to load the weather dataset:
 ```java
 ArffParser arffParser = new ArffParser();
 arffParser.setResponseIndex(4);
@@ -203,7 +203,7 @@ where the setResponseIndex also take an extra parameter about the attribute of r
 If your input data contains different types of attributes (e.g. NumericAttribute, NominalAttribute, StringAttribute, DateAttribute, etc), you should pass an array of Attribute[] to the constructor of DelimitedTextParser to indicate the data types of each column. By default, DelimitedTextParser assumes all columns as NumericAttribute.
 
 ## Train The Model
-SMILE implements a variety of classification and regression algorithms. In what follows, we train a support vector machine (SVM) on the USPS zip code handwriting dataset. The SVM employs a Gaussian kernel and one-to-one strategy as this is a multi-class problem. Different from LibSVM or other popular SVM library, SMILE implements an online learning algorithm for training SVM. The method learn trains the SVM with the given dataset for one epoch. The caller may call this method multiple times to obtain better accuracy although one epoch is usually sufficient. Note that after calling learn, we need to call the finish method, which processes support vectors until converge. As it is an online algorithm, the user may update the model anytime by calling learn even after calling the finish method. In the example, we show another way of learning by working on single sample. As shown in the example, we simply call the predict method on a testing sample. Both learn and predict methods are generic for all classification and regression algorithms. 
+Smile implements a variety of classification and regression algorithms. In what follows, we train a support vector machine (SVM) on the USPS zip code handwriting dataset. The SVM employs a Gaussian kernel and one-to-one strategy as this is a multi-class problem. Different from LibSVM or other popular SVM library, Smile implements an online learning algorithm for training SVM. The method learn trains the SVM with the given dataset for one epoch. The caller may call this method multiple times to obtain better accuracy although one epoch is usually sufficient. Note that after calling learn, we need to call the finish method, which processes support vectors until converge. As it is an online algorithm, the user may update the model anytime by calling learn even after calling the finish method. In the example, we show another way of learning by working on single sample. As shown in the example, we simply call the predict method on a testing sample. Both learn and predict methods are generic for all classification and regression algorithms.
 ```java
 DelimitedTextParser parser = new DelimitedTextParser();
 parser.setResponseIndex(new NominalAttribute("class"), 0);
@@ -261,7 +261,7 @@ AdaBoost forest = new AdaBoost(weather.attributes(), x, y, 200, 4);
 In the example, we set the number of trees as 200 and the maximum number of leaf nodes in the trees as 4, which works as a regularization control.
 
 ## Model Validation
-In the example of USPS, we have both train and test datasets. However, we frequently have only a single dataset for building model. For model validation, SMILE provide LOOCV (leave-one-out cross validation), cross validation, and bootstrap in the package smile.validation. Besides, the package also has various measures to evaluate classification, regression, and clustering. For example, we have accuracy, fallout, FDR, F-measure (F1 score or F-score), precision, recall, sensitivity, specificity for classification; absolute deviation, MSE, RMSE, RSS for regression; rand index, adjust rand index for clustering. The following is an example how to use LOOCV.
+In the example of USPS, we have both train and test datasets. However, we frequently have only a single dataset for building model. For model validation, Smile provide LOOCV (leave-one-out cross validation), cross validation, and bootstrap in the package smile.validation. Besides, the package also has various measures to evaluate classification, regression, and clustering. For example, we have accuracy, fallout, FDR, F-measure (F1 score or F-score), precision, recall, sensitivity, specificity for classification; absolute deviation, MSE, RMSE, RSS for regression; rand index, adjust rand index for clustering. The following is an example how to use LOOCV.
 ```java
 double[][] x = weather.toArray(new double[weather.size()][]);
 int[] y = weather.toArray(new int[weather.size()]);
@@ -282,7 +282,7 @@ System.out.println("Decision Tree error = " + error);
 ```
 
 ## Use The Trained Model
-All classifiers in SMILE implements the following interface.
+All classifiers in Smile implements the following interface.
 ```java
 public interface Classifier<T> {
     public int predict(T x);

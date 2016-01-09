@@ -31,7 +31,7 @@ trait Operators {
 
   /** Create a plot window. */
   def window(title: String = ""): JFrame = {
-    val t = if (title.isEmpty) { "SMILE Plot " + windowCount.addAndGet(1) } else title
+    val t = if (title.isEmpty) { "Smile Plot " + windowCount.addAndGet(1) } else title
     val frame = new JFrame(t)
     frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
     frame.setSize(new Dimension(1000, 1000))

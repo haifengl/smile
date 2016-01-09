@@ -8,7 +8,7 @@ autoScalaLibrary := true
 
 scalacOptions in (Compile,doc) ++= Seq("-diagrams", "-groups", "-implicits")
 
-scalacOptions in (Compile, doc) ++= Opts.doc.title("SMILE - Statistical Machine Intelligence and Learning Engine")
+scalacOptions in (Compile, doc) ++= Opts.doc.title("Smile - Statistical Machine Intelligence and Learning Engine")
 
 target in Compile in doc := baseDirectory.value / "../shell/src/universal/doc/api/scala"
 

@@ -15,7 +15,7 @@ maintainer := "Haifeng Li <haifeng.hli@gmail.com>"
 
 packageName := "smile"
 
-packageSummary := "SMILE"
+packageSummary := "Smile"
 
 packageDescription := "Statistical Machine Intelligence and Learning Engine"
 
