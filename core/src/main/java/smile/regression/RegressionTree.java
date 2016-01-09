@@ -490,14 +490,13 @@ public class RegressionTree implements Regression<double[]> {
          * @param j the attribute to split on.
          */
         public Node findBestSplit(int n, double sum, int j) {
-            int N = x.length;
             Node split = new Node(0.0);
             if (attributes[j].getType() == Attribute.Type.NOMINAL) {
                 int m = ((NominalAttribute) attributes[j]).size();
                 double[] trueSum = new double[m];
                 int[] trueCount = new int[m];
 
-                for (int i = 0; i < N; i++) {
+                for (int i = 0; i < x.length; i++) {
                     if (samples[i] > 0) {
                         double target = samples[i] * y[i];
 
