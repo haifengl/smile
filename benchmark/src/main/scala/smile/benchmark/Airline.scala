@@ -75,38 +75,8 @@ object Airline {
     println(s"train data positive : negative =  $pos : ${y.length - pos}")
     println(s"test  data positive : negative =  $testpos : ${testy.length - testpos}")
 
-    /*
-    // manual discretize numeric attribute to match other systems.
-    // SMILE doesn't need this actually.
-    val x3 = x.map(_(3))
-    val x7 = x.map(_(7))
-    val testx3 = testx.map(_(3))
-    val testx7 = testx.map(_(3))
-    val min3 = Math.min(Math.min(x3: _*), Math.min(testx3: _*))
-    val max3 = Math.max(Math.max(x3: _*), Math.max(testx3: _*))
-    val min7 = Math.min(Math.min(x7: _*), Math.min(testx7: _*))
-    val max7 = Math.max(Math.max(x7: _*), Math.max(testx7: _*))
-    val x3i = 15//(max3 - min3 + 0.1) / 50
-    val x7i = (max7 - min7 + 0.1) / 50
-    x.foreach { xi =>
-      xi(3) = Math.floor(xi(3) / 25 + (xi(3) % 100) / 15).toInt //Math.floor((xi(3) - min3) / x3i).toInt
-      xi(7) = Math.floor(xi(7) / 50).toInt //Math.floor((xi(7) - min7) / x7i).toInt
-    }
-    testx.foreach { xi =>
-      xi(3) = Math.floor(xi(3) / 25 + (xi(3) % 100) / 15).toInt //Math.floor((xi(3) - min3) / x3i).toInt
-      xi(7) = Math.floor(xi(7) / 50).toInt //Math.floor((xi(7) - min7) / x7i).toInt
-    }
-    println(min3, max3, min7, max7)
-    println(Math.min(x.map(_(3)): _*), Math.min(testx.map(_(3)): _*))
-    println(Math.max(x.map(_(3)): _*), Math.max(testx.map(_(3)): _*))
-    println(Math.min(x.map(_(7)): _*), Math.min(testx.map(_(7)): _*))
-    println(Math.max(x.map(_(7)): _*), Math.max(testx.map(_(7)): _*))
-
-    attributes(3) = new NominalAttribute("V3", (0 until 107).map(_.toString).toArray)
-    attributes(7) = new NominalAttribute("V7", (0 until 100).map(_.toString).toArray)
-*/
     // The data is unbalanced. Large positive class weight of should improve sensitivity.
-    val classWeight = Array(1, 3)
+    val classWeight = Array(1, 1)
 
     // Random Forest
     val forest = test2(x, y, testx, testy) { (x, y) =>
