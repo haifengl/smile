@@ -448,10 +448,9 @@ public class DecisionTree implements Classifier<double[]> {
          * true if a split exists to reduce squared error, false otherwise.
          */
         public boolean findBestSplit() {
-            int N = x.length;
             int label = -1;
             boolean pure = true;
-            for (int i = 0; i < N; i++) {
+            for (int i = 0; i < x.length; i++) {
                 if (samples[i] > 0) {
                     if (label == -1) {
                         label = y[i];
@@ -479,7 +478,7 @@ public class DecisionTree implements Classifier<double[]> {
             // Sample count in each class.
             int[] count = new int[k];
             int[] falseCount = new int[k];
-            for (int i = 0; i < N; i++) {
+            for (int i = 0; i < x.length; i++) {
                 if (samples[i] > 0) {
                     count[y[i]] += samples[i];
                 }
@@ -550,14 +549,13 @@ public class DecisionTree implements Classifier<double[]> {
          * @param j the attribute to split on.
          */
         public Node findBestSplit(int n, int[] count, int[] falseCount, double impurity, int j) {
-            int N = x.length;
             Node splitNode = new Node();
 
             if (attributes[j].getType() == Attribute.Type.NOMINAL) {
                 int m = ((NominalAttribute) attributes[j]).size();
                 int[][] trueCount = new int[m][k];
 
-                for (int i = 0; i < N; i++) {
+                for (int i = 0; i < x.length; i++) {
                     if (samples[i] > 0) {
                         trueCount[(int) x[i][j]][y[i]] += samples[i];
                     }
