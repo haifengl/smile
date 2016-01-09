@@ -17,7 +17,7 @@
 package smile
 
 import smile.classification.Classifier
-import smile.validation.{AUC, Specificity, Sensitivity, Accuracy}
+import smile.validation._
 
 /** Utility functions.
   *
@@ -75,6 +75,9 @@ package object util {
       println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
       println("Sensitivity = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
       println("Specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
+      println("F1-Score = %.2f%%" format (100.0 * new FScore().measure(testy, pred)))
+      println("F2-Score = %.2f%%" format (100.0 * new FScore(2).measure(testy, pred)))
+      println("F0.5-Score = %.2f%%" format (100.0 * new FScore(0.5).measure(testy, pred)))
       println("AUC = %.2f%%" format (100.0 * AUC.measure(testy, prob)))
     } else {
       val pred = testx.map(classifier.predict(_))
@@ -82,6 +85,9 @@ package object util {
       println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
       println("Sensitivity = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
       println("Specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
+      println("F1-Score = %.2f%%" format (100.0 * new FScore().measure(testy, pred)))
+      println("F2-Score = %.2f%%" format (100.0 * new FScore(2).measure(testy, pred)))
+      println("F0.5-Score = %.2f%%" format (100.0 * new FScore(0.5).measure(testy, pred)))
     }
 
     classifier
