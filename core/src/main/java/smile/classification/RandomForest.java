@@ -134,6 +134,10 @@ public class RandomForest implements Classifier<double[]> {
          * The maximum number of leaf nodes.
          */
         private int maxNodes = 100;
+        /**
+         * The sampling rate.
+         */
+        private double subsample = 1.0;
 
         /**
          * Default constructor of 500 trees.
@@ -234,9 +238,22 @@ public class RandomForest implements Classifier<double[]> {
             return this;
         }
 
+        /**
+         * Sets the sampling rate.
+         * @param subsample the sampling rate.
+         */
+        public Trainer setSamplingRates(double subsample) {
+            if (subsample <= 0 || subsample > 1) {
+                throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
+            }
+
+            this.subsample = subsample;
+            return this;
+        }
+
         @Override
         public RandomForest train(double[][] x, int[] y) {
-            return new RandomForest(attributes, x, y, ntrees, maxNodes, nodeSize, mtry, rule, null);
+            return new RandomForest(attributes, x, y, ntrees, maxNodes, nodeSize, mtry, subsample, rule, null);
         }
     }
     
@@ -263,11 +280,15 @@ public class RandomForest implements Classifier<double[]> {
         /**
          * The minimum size of leaf nodes.
          */
-        private int nodeSize;
+        int nodeSize;
         /**
          * The maximum number of leaf nodes in the tree.
          */
         int maxNodes;
+        /**
+         * The sampling rate.
+         */
+        double subsample = 1.0;
         /**
          * The splitting rule.
          */
@@ -289,13 +310,14 @@ public class RandomForest implements Classifier<double[]> {
         /**
          * Constructor.
          */
-        TrainingTask(Attribute[] attributes, double[][] x, int[] y, int maxNodes, int nodeSize, int mtry, DecisionTree.SplitRule rule, int[] classWeight, int[][] order, int[][] prediction) {
+        TrainingTask(Attribute[] attributes, double[][] x, int[] y, int maxNodes, int nodeSize, int mtry, double subsample, DecisionTree.SplitRule rule, int[] classWeight, int[][] order, int[][] prediction) {
             this.attributes = attributes;
             this.x = x;
             this.y = y;
             this.mtry = mtry;
             this.nodeSize = nodeSize;
             this.maxNodes = maxNodes;
+            this.subsample = subsample;
             this.rule = rule;
             this.classWeight = classWeight;
             this.order = order;
@@ -305,10 +327,26 @@ public class RandomForest implements Classifier<double[]> {
         @Override
         public Tree call() {
             int n = x.length;
-            int[] samples = new int[n]; // Training samples draw with replacement.
-            for (int i = 0; i < n; i++) {
-                int xi = Math.randomInt(n);
-                samples[xi] += classWeight[y[xi]];
+            int[] samples = new int[n];
+
+            if (subsample == 1.0) {
+                // Training samples draw with replacement.
+                for (int i = 0; i < n; i++) {
+                    int xi = Math.randomInt(n);
+                    samples[xi] += classWeight[y[xi]];
+                }
+            } else {
+                // Training samples draw without replacement.
+                int[] perm = new int[n];
+                for (int i = 0; i < n; i++) {
+                    perm[i] = i;
+                }
+
+                Math.permutate(perm);
+                int m = (int) (n * 0.632);
+                for (int i = 0; i < m; i++) {
+                    samples[perm[i]] += classWeight[y[perm[i]]];
+                }
             }
             
             DecisionTree tree = new DecisionTree(attributes, x, y, maxNodes, nodeSize, mtry, rule, samples, order);
@@ -388,14 +426,15 @@ public class RandomForest implements Classifier<double[]> {
      * generally good performance, where dim is the number of variables.
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int mtry) {
-        this(attributes, x, y, ntrees, x.length, 1, mtry, DecisionTree.SplitRule.GINI, null);
+        this(attributes, x, y, ntrees, x.length, 1, mtry, 1.0);
 
     }
+
     /**
      * Constructor. Learns a random forest for classification.
      *
      * @param attributes the attribute properties.
-     * @param x the training instances. 
+     * @param x the training instances.
      * @param y the response variable.
      * @param ntrees the number of trees.
      * @param mtry the number of random selected features to be used to determine
@@ -403,9 +442,51 @@ public class RandomForest implements Classifier<double[]> {
      * generally good performance, where dim is the number of variables.
      * @param nodeSize the minimum size of leaf nodes.
      * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+     *                  samplign without replacement.
+     */
+    public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample) {
+        this(attributes, x, y, ntrees, x.length, 1, mtry, subsample, DecisionTree.SplitRule.GINI);
+    }
+
+    /**
+     * Constructor. Learns a random forest for classification.
+     *
+     * @param attributes the attribute properties.
+     * @param x the training instances.
+     * @param y the response variable.
+     * @param ntrees the number of trees.
+     * @param mtry the number of random selected features to be used to determine
+     * the decision at a node of the tree. floor(sqrt(dim)) seems to give
+     * generally good performance, where dim is the number of variables.
+     * @param nodeSize the minimum size of leaf nodes.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+     *                  samplign without replacement.
+     * @param rule Decision tree split rule.
+     */
+    public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample, DecisionTree.SplitRule rule) {
+        this(attributes, x, y, ntrees, x.length, 1, mtry, subsample, rule, null);
+    }
+
+    /**
+     * Constructor. Learns a random forest for classification.
+     *
+     * @param attributes the attribute properties.
+     * @param x the training instances.
+     * @param y the response variable.
+     * @param ntrees the number of trees.
+     * @param mtry the number of random selected features to be used to determine
+     * the decision at a node of the tree. floor(sqrt(dim)) seems to give
+     * generally good performance, where dim is the number of variables.
+     * @param nodeSize the minimum size of leaf nodes.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+     *                  samplign without replacement.
+     * @param rule Decision tree split rule.
      * @param classWeight Priors of the classes.
      */
-    public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, int nodeSize, int mtry, DecisionTree.SplitRule rule, int[] classWeight) {
+    public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample, DecisionTree.SplitRule rule, int[] classWeight) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -463,7 +544,7 @@ public class RandomForest implements Classifier<double[]> {
         int[][] order = SmileUtils.sort(attributes, x);
         List<TrainingTask> tasks = new ArrayList<TrainingTask>();
         for (int i = 0; i < ntrees; i++) {
-            tasks.add(new TrainingTask(attributes, x, y, maxNodes, nodeSize, mtry, rule, classWeight, order, prediction));
+            tasks.add(new TrainingTask(attributes, x, y, maxNodes, nodeSize, mtry, subsample, rule, classWeight, order, prediction));
         }
         
         try {
