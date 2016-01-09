@@ -20,7 +20,7 @@ import scala.sys.SystemProperties
 import scala.tools.nsc.interpreter.ILoop
 import scala.tools.nsc.Settings
 
-/** SMILE shell.
+/** Smile shell.
   *
   * @author Haifeng Li
   */
@@ -45,8 +45,8 @@ object Shell extends App {
          |  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
          |                                                       ``::,,,,::''
          |
-         |  Welcome to SMILE Shell; enter 'help<RETURN>' for list of supported commands.
-         |  Type ":quit<RETURN>" to leave the SMILE Shell
+         |  Welcome to Smile Shell; enter 'help<RETURN>' for list of supported commands.
+         |  Type ":quit<RETURN>" to leave the Smile Shell
          |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion}, Built at ${BuildInfo.builtAtString}
          |===============================================================================
        """.stripMargin
