@@ -296,7 +296,7 @@ public class RandomForest implements Regression<double[]> {
                 }
 
                 Math.permutate(perm);
-                int m = (int) (n * 0.632);
+                int m = (int) Math.round(n * subsample);
                 for (int i = 0; i < m; i++) {
                     samples[perm[i]]++;
                 }

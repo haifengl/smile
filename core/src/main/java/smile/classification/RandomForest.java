@@ -343,9 +343,26 @@ public class RandomForest implements Classifier<double[]> {
                 }
 
                 Math.permutate(perm);
-                int m = (int) (n * 0.632);
-                for (int i = 0; i < m; i++) {
-                    samples[perm[i]] += classWeight[y[perm[i]]];
+
+                // If the data is unbalanced, small class will unlikely be sampled
+                // with a simple sampling strategy. Here we use strata sampling
+                // that samples each class separately.
+                int k = smile.math.Math.max(y);
+                for (int j = 0; j <= k; j++) {
+                    int nj = 0;
+                    for (int i = 0; i < n; i++) {
+                        if (y[i] == j) nj++;
+                    }
+
+                    int m = (int) Math.round(nj * subsample);
+                    int count = 0;
+                    for (int i = 0; i < n && count < m; i++) {
+                        int xi = perm[i];
+                        if (y[xi] == j) {
+                            samples[xi] += classWeight[j];
+                            count++;
+                        }
+                    }
                 }
             }
             
