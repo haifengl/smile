@@ -148,7 +148,7 @@ public class RandomForestTest {
             System.out.println(error);
             System.out.format("USPS OOB error rate = %.2f%%\n", 100.0 * forest.error());
             System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
-            assertTrue(error <= 130);
+            assertTrue(error <= 140);
         } catch (Exception ex) {
             System.err.println(ex);
         }
