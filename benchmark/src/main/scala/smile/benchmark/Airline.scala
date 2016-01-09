@@ -82,7 +82,7 @@ object Airline {
     val forest = test2(x, y, testx, testy) { (x, y) =>
       println("Training Random Forest of 500 trees...")
       if (x.length <= 100000)
-        new RandomForest(attributes, x, y, 500, 400, 5, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
+        new RandomForest(attributes, x, y, 500, 650, 5, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
       else
         new RandomForest(attributes, x, y, 500, 650, 5, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
     }.asInstanceOf[RandomForest]
