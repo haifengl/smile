@@ -92,7 +92,7 @@ public class RandomForestTest {
             double[] trainy = Math.slice(y, loocv.train[i]);
             
             try {
-                RandomForest forest = new RandomForest(trainx, trainy, 300, 2, 3, n);
+                RandomForest forest = new RandomForest(trainx, trainy, 300, n, 3, 2);
 
                 double r = y[loocv.test[i]] - forest.predict(longley[loocv.test[i]]);
                 rss += r * r;
@@ -126,7 +126,7 @@ public class RandomForestTest {
                 double[][] testx = Math.slice(datax, cv.test[i]);
                 double[] testy = Math.slice(datay, cv.test[i]);
 
-                RandomForest forest = new RandomForest(data.attributes(), trainx, trainy, 200, trainx[0].length/3, 5, n);
+                RandomForest forest = new RandomForest(data.attributes(), trainx, trainy, 200, n, 5, trainx[0].length/3);
                 System.out.format("OOB error rate = %.4f\n", forest.error());
 
                 for (int j = 0; j < testx.length; j++) {
@@ -189,7 +189,7 @@ public class RandomForestTest {
                 testy[i-m] = datay[index[i]];                
             }
 
-            RandomForest forest = new RandomForest(data.attributes(), trainx, trainy, 100, trainx[0].length / 3, 5, n);
+            RandomForest forest = new RandomForest(data.attributes(), trainx, trainy, 100, n, 5, trainx[0].length / 3);
             System.out.format("RMSE = %.4f\n", Validation.test(forest, testx, testy));
             
             double[] rmse = forest.test(testx, testy);

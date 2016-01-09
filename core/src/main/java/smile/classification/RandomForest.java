@@ -327,13 +327,27 @@ public class RandomForest implements Classifier<double[]> {
         @Override
         public Tree call() {
             int n = x.length;
+            int k = smile.math.Math.max(y);
             int[] samples = new int[n];
 
+            // Stratified sampling in case class is unbalanced.
+            // That is, we sample each class separately.
             if (subsample == 1.0) {
                 // Training samples draw with replacement.
-                for (int i = 0; i < n; i++) {
-                    int xi = Math.randomInt(n);
-                    samples[xi] += classWeight[y[xi]];
+                for (int j = 0; j <= k; j++) {
+                    int nj = 0;
+                    ArrayList<Integer> cj = new ArrayList<Integer>();
+                    for (int i = 0; i < n; i++) {
+                        if (y[i] == j) {
+                            cj.add(i);
+                            nj++;
+                        }
+                    }
+
+                    for (int i = 0; i < nj; i++) {
+                        int xi = Math.randomInt(nj);
+                        samples[cj.get(xi)] += classWeight[j];
+                    }
                 }
             } else {
                 // Training samples draw without replacement.
@@ -344,10 +358,6 @@ public class RandomForest implements Classifier<double[]> {
 
                 Math.permutate(perm);
 
-                // If the data is unbalanced, small class will unlikely be sampled
-                // with a simple sampling strategy. Here we use strata sampling
-                // that samples each class separately.
-                int k = smile.math.Math.max(y);
                 for (int j = 0; j <= k; j++) {
                     int nj = 0;
                     for (int i = 0; i < n; i++) {
@@ -365,7 +375,7 @@ public class RandomForest implements Classifier<double[]> {
                     }
                 }
             }
-            
+
             DecisionTree tree = new DecisionTree(attributes, x, y, maxNodes, nodeSize, mtry, rule, samples, order);
 
             // estimate OOB error
