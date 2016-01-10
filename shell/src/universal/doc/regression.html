@@ -1,0 +1,165 @@
+<div class="col-md-3 col-md-push-9">
+    <nav id="sidebar">
+        <ul class="list-unstyled">
+            <li><a class="index-h1" href="#ols">Ordinary Least Squares</a></li>
+            <li><a class="index-h1" href="#ridge">Ridge Regression</a></li>
+            <li><a class="index-h1" href="#lasso">LASSO</a></li>
+        </ul>
+    </nav>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 class="title">Regression</h1>
+
+    <p>Regression analysis includes any
+        techniques for modeling and analyzing several variables, when the focus
+        is on the relationship between a dependent variable and one or more
+        independent variables. Most commonly, regression analysis estimates the
+        conditional expectation of the dependent variable given the independent
+        variables. Therefore, the estimation target is a function of the independent
+        variables called the regression function. Regression analysis is widely
+        used for prediction and forecasting.</p>
+
+    <p>Smile's regression algorithms are in the package
+        <a href="api/java/smile/regression/package-summary.html"><code>smile.regression</code></a>
+        and all algorithms implement the interface
+        <a href="api/java/smile/regression/Regression.html"><code>Regression</code></a>
+        that has a single method <code>predict</code> to apply the model
+        to an instance. For all algorithms, the model can be trained through
+        the constructor. Meanwhile, each algorithm has a <code>Trainer</code> companion
+        class that can hold model hyper-parameters and be applied to multiple training
+        datasets.</p>
+
+    <p>The high-level operators are defined in Scala trait
+        <a href="api/scala/index.html#smile.regression.Operators"><code>smile.regression.Operators</code></a>
+        and also in the package object of <a href="api/scala/index.html#smile.regression.package"><code>smile.regression</code></a>.</p>
+
+    <p>In what follows, we will discuss each algorithm, their high-level
+       Scala API, and examples.</p>
+
+    <h2 id="ols">Ordinary Least Squares</h2>
+
+    <p>In linear regression, the model specification is that the dependent variable is a linear
+        combination of the parameters (but need not be linear in the independent
+        variables). The residual is the difference between the value of the
+        dependent variable predicted by the model, and the true value of the
+        dependent variable. Ordinary least squares obtains parameter estimates
+        that minimize the sum of squared residuals, SSE (also denoted RSS).</p>
+        
+    <p>The OLS estimator is consistent when the independent variables are
+        exogenous and there is no multicollinearity, and optimal in the class
+        of linear unbiased estimators when the errors are homoscedastic and
+        serially uncorrelated. Under these conditions, the method of OLS provides
+        minimum-variance mean-unbiased estimation when the errors have finite
+        variances.</p>
+        
+    <p>There are several different frameworks in which the linear regression
+        model can be cast in order to make the OLS technique applicable. Each
+        of these settings produces the same formulas and same results, the only
+        difference is the interpretation and the assumptions which have to be
+        imposed in order for the method to give meaningful results. The choice
+        of the applicable framework depends mostly on the nature of data at hand,
+        and on the inference task which has to be performed.</p>
+        
+    <p>Least squares corresponds to the maximum likelihood criterion if the
+        experimental errors have a normal distribution and can also be derived
+        as a method of moments estimator.</p>
+        
+    <p>Once a regression model has been constructed, it may be important to
+        confirm the goodness of fit of the model and the statistical significance
+        of the estimated parameters. Commonly used checks of goodness of fit
+        include the R-squared, analysis of the pattern of residuals and hypothesis
+        testing. Statistical significance can be checked by an F-test of the overall
+        fit, followed by t-tests of individual parameters.</p>
+        
+    <p>Interpretations of these diagnostic tests rest heavily on the model
+        assumptions. Although examination of the residuals can be used to
+        invalidate a model, the results of a t-test or F-test are sometimes more
+        difficult to interpret if the model's assumptions are violated.
+        For example, if the error term does not have a normal distribution,
+        in small samples the estimated parameters will not follow normal
+        distributions and complicate inference. With relatively large samples,
+        however, a central limit theorem can be invoked such that hypothesis
+        testing may proceed using asymptotic approximations.</p>
+
+    <div style="text-align: left; display: inline-block;">
+        <div class="code">
+            def ols(x: Array[Array[Double]], y: Array[Double]): OLS
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
+        and <code>y</code> is the response values.</p>
+
+    <h2 id="ridge">Ridge Regression</h2>
+
+    <p>Ridge Regression. When the predictor variables are highly correlated amongst
+        themselves, the coefficients of the resulting least squares fit may be very
+        imprecise. By allowing a small amount of bias in the estimates, more
+        reasonable coefficients may often be obtained. Ridge regression is one
+        method to address these issues. Often, small amounts of bias lead to
+        dramatic reductions in the variance of the estimated model coefficients.
+        Ridge regression is such a technique which shrinks the regression
+        coefficients by imposing a penalty on their size. Ridge regression was
+        originally developed to overcome the singularity of the X'X matrix.
+        This matrix is perturbed so as to make its determinant appreciably
+        different from 0.</p>
+
+    <p>Ridge regression is a kind of Tikhonov regularization, which is the most
+        commonly used method of regularization of ill-posed problems. Another
+        interpretation of ridge regression is available through Bayesian estimation.
+        In this setting the belief that weight should be small is coded into a prior
+        distribution.</p>
+
+    <div style="text-align: left; display: inline-block;">
+        <div class="code">
+            def ridge(x: Array[Array[Double]], y: Array[Double], lambda: Double): RidgeRegression
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
+        <code>y</code> is the response values,
+        and <code>lambda</code> is the shrinkage/regularization parameter.</p>
+
+    <h2 id="lasso">LASSO</h2>
+
+    <p>LASSO (least absolute shrinkage and selection operator) is a shrinkage and selection method for linear regression.
+        It minimizes the usual sum of squared errors, with a bound on the sum
+        of the absolute values of the coefficients (i.e. L<sub>1</sub>-regularized).
+        It has connections to soft-thresholding of wavelet coefficients, forward
+        stage-wise regression, and boosting methods.</p>
+        
+    <p>The Lasso typically yields a sparse solution, of which the parameter
+        vector &beta; has relatively few nonzero coefficients. In contrast, the
+        solution of L<sub>2</sub>-regularized least squares (i.e. ridge regression)
+        typically has all coefficients nonzero. Because it effectively
+        reduces the number of variables, the Lasso is useful in some contexts.</p>
+        
+    <p>For over-determined systems (more instances than variables, commonly in
+        machine learning), we normalize variables with mean 0 and standard deviation
+        1. For under-determined systems (less instances than variables, e.g.
+        compressed sensing), we assume white noise (i.e. no intercept in the linear
+        model) and do not perform normalization. Note that the solution
+        is not unique in this case.</p>
+        
+    <p>There is no analytic formula or expression for the optimal solution to the
+        L<sub>1</sub>-regularized least squares problems. Therefore, its solution
+        must be computed numerically. The objective function in the
+        L<sub>1</sub>-regularized least squares is convex but not differentiable,
+        so solving it is more of a computational challenge than solving the
+        L<sub>2</sub>-regularized least squares. The Lasso may be solved using
+        quadratic programming or more general convex optimization methods, as well
+        as by specific algorithms such as the least angle regression algorithm.</p>
+
+    <div style="text-align: left; display: inline-block;">
+        <div class="code">
+            def lasso(x: Array[Array[Double]], y: Array[Double], lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LASSO
+        </div>
+    </div>
+
+    <p>where <code>x</code> is a matrix containing the explanatory variables,
+        <code>y</code> is the response values,
+        <code>lambda</code> is the shrinkage/regularization parameter,
+        <code>tol</code> is the tolerance for stopping iterations (relative target duality gap),
+        and <code>maxIter</code> is the maximum number of iterations.</p>
+</div>
