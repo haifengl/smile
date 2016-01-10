@@ -165,44 +165,28 @@ trait Operators {
     }
   }
 
-  /** Support vector regression. Like SVMs for classification, the model produced
+  /** Support vector regression. Like SVM for classification, the model produced
     * by SVR depends only on a subset of the training data, because the cost
     * function ignores any training data close to the model prediction (within
     * a threshold).
     *
-    * @param x training data
-    * @param y training labels
+    * @param x training data.
+    * @param y response variable.
     * @param kernel the kernel function.
     * @param eps the loss function error threshold.
     * @param C the soft margin penalty parameter.
-    * @param tol the tolerance of convergence test.
-    * @tparam T the data type
-    *
-    * @return SVR model.
-    */
-  def svr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): SVR[T] = {
-    new SVR[T](x, y, kernel, eps, C, tol)
-  }
-
-  /** Support vector regression. Like SVMs for classification, the model produced
-    * by SVR depends only on a subset of the training data, because the cost
-    * function ignores any training data close to the model prediction (within
-    * a threshold).
-    *
-    * @param x training data
-    * @param y training labels
     * @param weight positive instance weight. The soft margin penalty
     *               parameter for instance i will be weight[i] * C.
-    * @param kernel the kernel function.
-    * @param eps the loss function error threshold.
-    * @param C the soft margin penalty parameter.
     * @param tol the tolerance of convergence test.
     * @tparam T the data type
     *
     * @return SVR model.
     */
-  def svr[T <: AnyRef](x: Array[T], y: Array[Double], weight: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double): SVR[T] = {
-    new SVR[T](x, y, weight, kernel, eps, C, tol)
+  def svr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, weight: Array[Double] = null, tol: Double = 1E-3): SVR[T] = {
+    if (weight == null)
+      new SVR[T](x, y, kernel, eps, C, tol)
+    else
+      new SVR[T](x, y, weight, kernel, eps, C, tol)
   }
 
   /** Regression tree. A decision tree can be learned by
@@ -269,11 +253,11 @@ trait Operators {
     *
     * @param x the training instances.
     * @param y the response variable.
-    * @param J the maximum number of leaf nodes in the tree.
+    * @param maxNodes the maximum number of leaf nodes in the tree.
     * @param attributes the attribute properties.
     * @return Regression tree model.
     */
-  def regressionTree(x: Array[Array[Double]], y: Array[Double], J: Int, attributes: Array[Attribute] = null): RegressionTree = {
+  def regressionTree(x: Array[Array[Double]], y: Array[Double], maxNodes: Int, attributes: Array[Attribute] = null): RegressionTree = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -283,7 +267,7 @@ trait Operators {
     } else attributes
 
     time {
-      new RegressionTree(attr, x, y, J)
+      new RegressionTree(attr, x, y, maxNodes)
     }
   }
 
@@ -426,7 +410,7 @@ trait Operators {
     *  - J. H. Friedman. Stochastic Gradient Boosting, 1999.
     *
     * @param x the training instances.
-    * @param y the class labels.
+    * @param y the response variable.
     * @param attributes the attribute properties. If not provided, all attributes
     *                   are treated as numeric values.
     * @param loss loss function for regression. By default, least absolute
@@ -581,7 +565,7 @@ trait Operators {
     *  - Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
     *
     * @param x training samples.
-    * @param y training labels in [0, k), where k is the number of classes.
+    * @param y response variable.
     * @param distance the distance metric functor.
     * @param rbf the radial basis functions.
     * @param centers the centers of RBF functions.
@@ -649,7 +633,7 @@ trait Operators {
     *  - Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
     *
     * @param x training samples.
-    * @param y training labels in [0, k), where k is the number of classes.
+    * @param y response variable.
     * @param distance the distance metric functor.
     * @param rbf the radial basis functions.
     * @param centers the centers of RBF functions.
