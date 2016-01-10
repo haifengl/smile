@@ -344,9 +344,12 @@ public class RandomForest implements Classifier<double[]> {
                         }
                     }
 
+                    // We used to do up sampling.
+                    // But we switch to down sampling, which seems has better performance.
+                    nj /= classWeight[l];
                     for (int i = 0; i < nj; i++) {
                         int xi = Math.randomInt(nj);
-                        samples[cj.get(xi)] += classWeight[l];
+                        samples[cj.get(xi)] += 1; //classWeight[l];
                     }
                 }
             } else {
@@ -364,12 +367,12 @@ public class RandomForest implements Classifier<double[]> {
                 }
 
                 for (int l = 0; l < k; l++) {
-                    int subj = (int) Math.round(nc[l] * subsample);
+                    int subj = (int) Math.round(nc[l] * subsample / classWeight[l]);
                     int count = 0;
                     for (int i = 0; i < n && count < subj; i++) {
                         int xi = perm[i];
                         if (y[xi] == l) {
-                            samples[xi] += classWeight[l];
+                            samples[xi] += 1; //classWeight[l];
                             count++;
                         }
                     }
