@@ -182,8 +182,8 @@ public class RBFNetwork<T> implements Regression<T> {
         /**
          * Learns a RBF network with given centers.
          * 
-         * @param x training samples.
-         * @param y training labels in [0, k), where k is the number of classes.
+         * @param x the training data.
+         * @param y the response variable.
          * @param centers the centers of RBF functions.
          * @return a trained RBF network
          */
@@ -194,7 +194,7 @@ public class RBFNetwork<T> implements Regression<T> {
     
     /**
      * Constructor. Learn a regular RBF network without normalization.
-     * @param x the training dataset.
+     * @param x the training data.
      * @param y the response variable.
      * @param distance the distance functor.
      * @param rbf the radial basis function.
@@ -206,7 +206,7 @@ public class RBFNetwork<T> implements Regression<T> {
 
     /**
      * Constructor. Learn a regular RBF network without normalization.
-     * @param x the training dataset.
+     * @param x the training data.
      * @param y the response variable.
      * @param distance the distance functor.
      * @param rbf the radial basis functions.
@@ -218,7 +218,7 @@ public class RBFNetwork<T> implements Regression<T> {
 
     /**
      * Constructor.
-     * @param x the training dataset.
+     * @param x the training data.
      * @param y the response variable.
      * @param distance the distance functor.
      * @param rbf the radial basis function.

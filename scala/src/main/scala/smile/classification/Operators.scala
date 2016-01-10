@@ -578,12 +578,12 @@ trait Operators {
     *
     * @param x the training instances.
     * @param y the response variable.
-    * @param J the maximum number of leaf nodes in the tree.
+    * @param maxNodes the maximum number of leaf nodes in the tree.
     * @param attributes the attribute properties.
     * @param splitRule the splitting rule.
     * @return Decision tree model.
     */
-  def decisionTree(x: Array[Array[Double]], y: Array[Int], J: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
+  def decisionTree(x: Array[Array[Double]], y: Array[Int], maxNodes: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -593,7 +593,7 @@ trait Operators {
     } else attributes
 
     time {
-      new DecisionTree(attr, x, y, J, splitRule)
+      new DecisionTree(attr, x, y, maxNodes, splitRule)
     }
   }
 
