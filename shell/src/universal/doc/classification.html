@@ -1,0 +1,198 @@
+<div class="col-md-3 col-md-push-9">
+    <nav id="sidebar">
+        <ul class="list-unstyled">
+            <li><a class="index-h1" href="#features">Features</a></li>
+            <li><a class="index-h1" href="#supervised-learning">Supervised Learning</a></li>
+            <li><a class="index-h2" href="#overfitting">Overfitting</a></li>
+            <li><a class="index-h2" href="#model-validation">Model Validation</a></li>
+            <li><a class="index-h2" href="#regularization">Regularization</a></li>
+            <li><a class="index-h1" href="#unsupervised-learning">Unsupervised Learning</a></li>
+            <li><a class="index-h2" href="#clustering">Clustering</a></li>
+            <li><a class="index-h2" href="#latent-variable-models ">Latent Variable Models</a></li>
+            <li><a class="index-h2" href="#association-rule">Association Rules</a></li>
+            <li><a class="index-h1" href="#semi-supervised-learning">Semi-supervised Learning</a></li>
+        </ul>
+    </nav>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 class="title">Classification</h1>
+
+    <p>In machine learning and pattern recognition,
+        classification refers to an algorithmic procedure for assigning a given
+        input object into one of a given number of categories. The input
+        object is formally termed an instance, and the categories are termed classes.</p>
+        
+    <p>The instance is usually described by a vector of features, which together
+        constitute a description of all known characteristics of the instance.
+        Typically, features are either categorical (also known as nominal, i.e.
+        consisting of one of a set of unordered items, such as a gender of "male"
+        or "female", or a blood type of "A", "B", "AB" or "O"), ordinal (consisting
+        of one of a set of ordered items, e.g. "large", "medium" or "small"),
+        integer-valued (e.g. a count of the number of occurrences of a particular
+        word in an email) or real-valued (e.g. a measurement of blood pressure).</p>
+        
+    <p>Classification normally refers to a supervised procedure, i.e. a procedure
+        that produces an inferred function to predict the output value of new
+        instances based on a training set of pairs consisting of an input object
+        and a desired output value. The inferred function is called a classifier
+        if the output is discrete or a regression function if the output is
+        continuous.</p>
+        
+    <p>The inferred function should predict the correct output value for any valid
+        input object. This requires the learning algorithm to generalize from the
+        training data to unseen situations in a "reasonable" way.</p>
+        
+    <p>A wide range of supervised learning algorithms is available, each with
+        its strengths and weaknesses. There is no single learning algorithm that
+        works best on all supervised learning problems. The most widely used
+        learning algorithms are AdaBoost and gradient boosting, support vector
+        machines, linear regression, linear discriminant analysis, logistic
+        regression, naive Bayes, decision trees, k-nearest neighbor algorithm,
+        and neural networks (multilayer perceptron).</p>
+        
+    <p>If the feature vectors include features of many different kinds (discrete,
+        discrete ordered, counts, continuous values), some algorithms cannot be
+        easily applied. Many algorithms, including linear regression, logistic
+        regression, neural networks, and nearest neighbor methods, require that
+        the input features be numerical and scaled to similar ranges (e.g., to
+        the [-1,1] interval). Methods that employ a distance function, such as
+        nearest neighbor methods and support vector machines with Gaussian kernels,
+        are particularly sensitive to this. An advantage of decision trees (and
+        boosting algorithms based on decision trees) is that they easily handle
+        heterogeneous data.</p>
+        
+    <p>If the input features contain redundant information (e.g., highly correlated
+        features), some learning algorithms (e.g., linear regression, logistic
+        regression, and distance based methods) will perform poorly because of
+        numerical instabilities. These problems can often be solved by imposing
+        some form of regularization.</p>
+        
+    <p>If each of the features makes an independent contribution to the output,
+        then algorithms based on linear functions (e.g., linear regression,
+        logistic regression, linear support vector machines, naive Bayes) generally
+        perform well. However, if there are complex interactions among features,
+        then algorithms such as nonlinear support vector machines, decision trees
+        and neural networks work better. Linear methods can also be applied, but
+        the engineer must manually specify the interactions when using them.</p>
+        
+    <p>There are several major issues to consider in supervised learning:</p>
+    <dl>
+        <dt>Features</dt>
+        <dd><p>The accuracy of the inferred function depends strongly on how the input
+            object is represented. Typically, the input object is transformed into
+            a feature vector, which contains a number of features that are descriptive
+            of the object. The number of features should not be too large, because of
+            the curse of dimensionality; but should contain enough information to
+            accurately predict the output.</p>
+
+            <p>There are many algorithms for feature selection that seek to identify
+            the relevant features and discard the irrelevant ones. More generally,
+            dimensionality reduction may seek to map the input data into a lower
+            dimensional space prior to running the supervised learning algorithm.</p>
+        </dd>
+        <dt>Overfitting</dt>
+        <dd><p>Overfitting occurs when a statistical model describes random error
+            or noise instead of the underlying relationship. Overfitting generally
+            occurs when a model is excessively complex, such as having too many
+            parameters relative to the number of observations. A model which has
+            been overfit will generally have poor predictive performance, as it can
+            exaggerate minor fluctuations in the data.</p>
+
+            <p>The potential for overfitting depends not only on the number of parameters
+            and data but also the conformability of the model structure with the data
+            shape, and the magnitude of model error compared to the expected level
+            of noise or error in the data.</p>
+
+            <p>In order to avoid overfitting, it is necessary to use additional techniques
+            (e.g. cross-validation, regularization, early stopping, pruning, Bayesian
+            priors on parameters or model comparison), that can indicate when further
+            training is not resulting in better generalization. The basis of some
+            techniques is either (1) to explicitly penalize overly complex models,
+            or (2) to test the model's ability to generalize by evaluating its
+            performance on a set of data not used for training, which is assumed to
+            approximate the typical unseen data that a model will encounter.</p>
+        </dd>
+        <dt>Regularization</dt>
+        <dd><p>Regularization involves introducing additional information in order
+            to solve an ill-posed problem or to prevent over-fitting. This information
+            is usually of the form of a penalty for complexity, such as restrictions
+            for smoothness or bounds on the vector space norm.
+            A theoretical justification for regularization is that it attempts to impose
+            Occam's razor on the solution. From a Bayesian point of view, many
+            regularization techniques correspond to imposing certain prior distributions
+            on model parameters.</p>
+        </dd>
+        <dt>Bias-variance tradeoff</dt>
+        <dd><p>Mean squared error (MSE) can be broken down into two components:
+            variance and squared bias, known as the bias-variance decomposition.
+            Thus in order to minimize the MSE, we need to minimize both the bias and
+            the variance. However, this is not trivial. Therefore, there is a tradeoff
+            between bias and variance.</p>
+        </dd>
+    </dl>
+
+    <p>Smile's classification algorithms are in the package
+        <a href="api/java/smile/classification/package-summary.html"><code>smile.classification</code></a>
+        and all algorithms implement the interface
+        <a href="api/java/smile/classification/Classifier.html"><code>Classifier</code></a>
+        that has a method <code>predict</code> to predict the class label of an instance.
+        An overloaded version can also calculate the <i>a posteriori</i>
+        probabilities besides the class label.
+        For all algorithms, the model can be trained through
+        the constructor. Meanwhile, each algorithm has a <code>Trainer</code> companion
+        class that can hold model hyper-parameters and be applied to multiple training
+        datasets.</p>
+
+    <p>Some algorithms with online learning capability also implement the interface
+        <a href="api/java/smile/classification/OnlineClassifier.html"><code>OnlineClassifier</code></a>
+        Online learning is a model of induction that learns one instance at a time.
+        The method <code>learn</code> updates the model with a new instance.</p>
+
+    <p>The high-level operators are defined in Scala trait
+        <a href="api/scala/index.html#smile.classification.Operators"><code>smile.classification.Operators</code></a>
+        and also in the package object of <a href="api/scala/index.html#smile.classification.package"><code>smile.classification</code></a>.</p>
+
+    <p>In what follows, we will discuss each algorithm, their high-level
+        Scala API, and examples.</p>
+
+    <h2 id="knn">K-Nearest Neighbor</h2>
+
+    <p>The k-nearest neighbor algorithm (k-NN) is
+        a method for classifying objects by a majority vote of its neighbors,
+        with the object being assigned to the class most common amongst its k
+        nearest neighbors (k is a positive integer, typically small).
+        k-NN is a type of instance-based learning, or lazy learning where the
+        function is only approximated locally and all computation
+        is deferred until classification.</p>
+        
+    <p>The best choice of k depends upon the data; generally, larger values of
+        k reduce the effect of noise on the classification, but make boundaries
+        between classes less distinct. A good k can be selected by various
+        heuristic techniques, e.g. cross-validation. In binary problems, it is
+        helpful to choose k to be an odd number as this avoids tied votes.</p>
+        
+    <p>A drawback to the basic majority voting classification is that the classes
+        with the more frequent instances tend to dominate the prediction of the
+        new object, as they tend to come up in the k nearest neighbors when
+        the neighbors are computed due to their large number. One way to overcome
+        this problem is to weight the classification taking into account the
+        distance from the test point to each of its k nearest neighbors.</p>
+        
+    <p>Often, the classification accuracy of k-NN can be improved significantly
+        if the distance metric is learned with specialized algorithms such as
+        Large Margin Nearest Neighbor or Neighborhood Components Analysis.</p>
+        
+    <p>Nearest neighbor rules in effect compute the decision boundary in an
+        implicit manner. It is also possible to compute the decision boundary
+        itself explicitly, and to do so in an efficient manner so that the
+        computational complexity is a function of the boundary complexity.</p>
+        
+    <p>The nearest neighbor algorithm has some strong consistency results. As
+        the amount of data approaches infinity, the algorithm is guaranteed to
+        yield an error rate no worse than twice the Bayes error rate (the minimum
+        achievable error rate given the distribution of the data). k-NN is
+        guaranteed to approach the Bayes error rate, for some value of k (where k
+        increases as a function of the number of data points).</p>
+
+</div>
