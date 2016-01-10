@@ -43,6 +43,11 @@
         $('#content').load('overview.html');
       });
 
+      $("#data").click(function(event){
+        event.preventDefault();
+        $('#content').load('data.html');
+      });
+
       $("#classification").click(function(event){
         event.preventDefault();
         $('#content').load('classification.html');
@@ -117,6 +122,7 @@
         </a>
         <ul class="dropdown-menu">
           <li><a id="overview" href="#">Overview</a></li>
+          <li><a id="data" href="#">Data & Visualization</a></li>
           <li><a id="classification" href="#">Classification</a></li>
           <li><a id="regression" href="#">Regression</a></li>
           <!--
@@ -252,16 +258,18 @@
         <h2>Speed</h2>
 
         <p class="lead">
-          With advanced data structures and algorithms, Smile delivers state-of-art performance.
+          With advanced data structures and algorithms, Smile delivers the state-of-art performance.
         </p>
 
         <p>Compared to this third-party <a href="https://github.com/szilard/benchm-ml">benchmark</a>,
-          Smile outperforms R, Python, Spark, H2O, xgboost significantly.
+          Smile outperforms R, Python, Spark, H2O, xgboost significantly. Smile is a couple of times
+          faster than the closest competitor. The memory usage is also very efficient. If we can train
+          advanced machine learning models on a PC, why buy a cluster?
         </p>
       </div>
       <div class="col-md-5 col-sm-5 col-padded-top col-center">
-        <div style="width: 100%; max-width: 272px; display: inline-block; text-align: center;">
-          <img src="images/benchm-ml.png" style="width: 100%; max-width: 250px;" />
+        <div style="width: 100%; display: inline-block; text-align: center;">
+          <img src="images/benchm-ml.png" style="width: 100%;" />
           <div class="caption" style="min-width: 272px;">Running Time (s)</div>
         </div>
       </div>
@@ -311,8 +319,8 @@
         </p>
       </div>
       <div class="col-md-5 col-sm-5 col-padded-top col-center">
-        <div style="width: 100%; max-width: 272px; display: inline-block; text-align: center;">
-          <img src="images/ml-word-cloud.jpg" style="width: 100%; max-width: 250px;" />
+        <div style="width: 100%; display: inline-block; text-align: center;">
+          <img src="images/ml-word-cloud.jpg" style="width: 100%;" />
         </div>
       </div>
     </div>
