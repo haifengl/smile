@@ -4,6 +4,12 @@
             <li><a class="index-h1" href="#ols">Ordinary Least Squares</a></li>
             <li><a class="index-h1" href="#ridge">Ridge Regression</a></li>
             <li><a class="index-h1" href="#lasso">LASSO</a></li>
+            <li><a class="index-h1" href="#svm">SVM</a></li>
+            <li><a class="index-h1" href="#tree">Regression Tree</a></li>
+            <li><a class="index-h1" href="#forest">Random Forest</a></li>
+            <li><a class="index-h1" href="#gbm">Gradient Boosting</a></li>
+            <li><a class="index-h1" href="#gp">Gaussian Process</a></li>
+            <li><a class="index-h1" href="#rbf">RBF Network</a></li>
         </ul>
     </nav>
 </div>
@@ -157,9 +163,388 @@
         </div>
     </div>
 
-    <p>where <code>x</code> is a matrix containing the explanatory variables,
+    <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
         <code>y</code> is the response values,
         <code>lambda</code> is the shrinkage/regularization parameter,
         <code>tol</code> is the tolerance for stopping iterations (relative target duality gap),
         and <code>maxIter</code> is the maximum number of iterations.</p>
+
+    <h2 id="svr">Support Vector Regression</h2>
+
+    <p>Like SVM for classification, the model produced
+        by SVR depends only on a subset of the training data, because the cost
+        function ignores any training data close to the model prediction (within
+        a threshold).</p>
+
+    <div style="text-align: left; display: inline-block;">
+        <div class="code">
+            def svr[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, weight: Array[Double] = null, tol: Double = 1E-3): SVR[T]
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is the training data,
+        <code>y</code> is the response variable,
+        <code>kernel</code> is the kernel function,
+        <code>eps</code> is the loss function error threshold,
+        <code>C</code> is the soft margin penalty parameter,
+        <code>weight</code> is the optional positive instance weight so that the soft margin penalty
+        parameter for instance <i>i</i> will be <code>weight[i] * C</code>,
+        and <code>tol</code> the tolerance of convergence test.</p>
+
+    <h2 id="tree">Regression Tree</h2>
+
+    <p>Decision and regression tree can be learned by
+        splitting the training set into subsets based on an attribute value
+        test. This process is repeated on each derived subset in a recursive
+        manner called recursive partitioning. The recursion is completed when
+        the subset at a node all has the same value of the target variable,
+        or when splitting no longer adds value to the predictions.</p>
+        
+    <p>The algorithms that are used for constructing decision trees usually
+        work top-down by choosing a variable at each step that is the next best
+        variable to use in splitting the set of items. "Best" is defined by how
+        well the variable splits the set into homogeneous subsets that have
+        the same value of the target variable. Different algorithms use different
+        formulae for measuring "best". Used by the CART algorithm, Gini impurity
+        is a measure of how often a randomly chosen element from the set would
+        be incorrectly labeled if it were randomly labeled according to the
+        distribution of labels in the subset. Gini impurity can be computed by
+        summing the probability of each item being chosen times the probability
+        of a mistake in categorizing that item. It reaches its minimum (zero) when
+        all cases in the node fall into a single target category. Information gain
+        is another popular measure, used by the ID3, C4.5 and C5.0 algorithms.
+        Information gain is based on the concept of entropy used in information
+        theory. For categorical variables with different number of levels, however,
+        information gain are biased in favor of those attributes with more levels.
+        Instead, one may employ the information gain ratio, which solves the drawback
+        of information gain.</p>
+        
+    <p>Classification and Regression Tree techniques have a number of advantages
+        over many of those alternative techniques.</p>
+
+    <dl>
+        <dt>Simple to understand and interpret</dt>
+        <dd>In most cases, the interpretation of results summarized in a tree is
+        very simple. This simplicity is useful not only for purposes of rapid
+        classification of new observations, but can also often yield a much simpler
+        "model" for explaining why observations are classified or predicted in a
+        particular manner.</dd>
+
+        <dt>Able to handle both numerical and categorical data</dt>
+        <dd>Other techniques are usually specialized in analyzing datasets that
+        have only one type of variable.</dd>
+
+        <dt>Nonparametric and nonlinear</dt>
+        <dd>The final results of using tree methods for classification or regression
+        can be summarized in a series of (usually few) logical if-then conditions
+        (tree nodes). Therefore, there is no implicit assumption that the underlying
+        relationships between the predictor variables and the dependent variable
+        are linear, follow some specific non-linear link function, or that they
+        are even monotonic in nature. Thus, tree methods are particularly well
+        suited for data mining tasks, where there is often little a priori
+        knowledge nor any coherent set of theories or predictions regarding which
+        variables are related and how. In those types of data analytics, tree
+        methods can often reveal simple relationships between just a few variables
+        that could have easily gone unnoticed using other analytic techniques.</dd>
+    </dl>
+
+    <p>One major problem with classification and regression trees is their high
+        variance. Often a small change in the data can result in a very different
+        series of splits, making interpretation somewhat precarious. Besides,
+        decision-tree learners can create over-complex trees that cause over-fitting.
+        Mechanisms such as pruning are necessary to avoid this problem.
+        Another limitation of trees is the lack of smoothness of the prediction
+        surface.</p>
+        
+    <p>Some techniques such as bagging, boosting, and random forest use more than
+        one decision tree for their analysis.</p>
+
+    <div style="text-align: left; display: inline-block;">
+        <div class="code">
+            def regressionTree(x: Array[Array[Double]], y: Array[Double], J: Int, attributes: Array[Attribute] = null): RegressionTree
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is the training data,
+        <code>y</code> is the response variable,
+        <code>maxNodes</code> is the maximum number of leaf nodes in the tree as a regularization,
+        and The optional <code>attributes</code> is the attribute properties. If not provided, all attributes
+        are treated as numeric values.</p>
+
+    <h2 id="forest">Random Forest</h2>
+
+    <p>Random forest is an ensemble classifier
+        that consists of many decision trees and outputs the majority vote of
+        individual trees. The method combines bagging idea and the random
+        selection of features.</p>
+        
+    <p>Each tree is constructed using the following algorithm:</p>
+        
+    <ol>
+        <li>If the number of cases in the training set is N, randomly sample N cases
+        with replacement from the original data. This sample will
+        be the training set for growing the tree.</li>
+
+        <li> If there are M input variables, a number m &lt;&lt; M is specified such
+        that at each node, m variables are selected at random out of the M and
+        the best split on these m is used to split the node. The value of m is
+        held constant during the forest growing.</li>
+
+        <li>Each tree is grown to the largest extent possible. There is no pruning.</li>
+    </ol>
+        
+    <p>The advantages of random forest are:</p>
+        
+    <ul>
+        <li>For many data sets, it produces a highly accurate classifier.</li>
+        <li>It runs efficiently on large data sets.</li>
+        <li>It can handle thousands of input variables without variable deletion.</li>
+        <li>It gives estimates of what variables are important in the classification.</li>
+        <li>It generates an internal unbiased estimate of the generalization error
+        as the forest building progresses.</li>
+        <li>It has an effective method for estimating missing data and maintains
+        accuracy when a large proportion of the data are missing.</li>
+    </ul>
+        
+    <p>The disadvantages are</p>
+        
+    <ul>
+        <li>Random forests are prone to over-fitting for some datasets. This is
+        even more pronounced on noisy data.</li>
+
+        <li>For data including categorical variables with different number of
+        levels, random forests are biased in favor of those attributes with more
+        levels. Therefore, the variable importance scores from random forest are
+        not reliable for this type of data.</li>
+    </ul>
+
+    <div style="text-align: left; display: inline-block;">
+        <div class="code">
+            def randomRegressionForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 5, mtry: Int = -1, subsample: Double = 1.0): RandomForest
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is the training data,
+        <code>y</code> is the response variable,
+        <code>ntrees</code> is the number of trees,
+        <code>nodeSize</code> is the number of instances in a node below which the tree will
+        not split, setting nodeSize = 5 generally gives good results,
+        and <code>maxNodes</code> is the maximum number of leaf nodes.
+        The parameter <code>mtry</code> is the number of input variables to be used to determine the decision
+        at a node of the tree. The default value p/3 seems to give generally good performance,
+        where p is the number of variables.
+        Besides, <code>subsample</code> is the sampling rate for training tree. The default value
+        1.0 means sampling with replacement. Otherwise, the value &lt; 1.0 means
+        sampling without replacement.
+        The optional <code>attributes</code> is the attribute properties. If not provided, all attributes
+        are treated as numeric values.</p>
+
+    <h2 id="gbm">Gradient Boosting</h2>
+
+    <p>Gradient boosting is typically used
+        with decision trees (especially CART regression trees) of a fixed size as
+        base learners. For this special case Friedman proposes a modification to
+        gradient boosting method which improves the quality of fit of each base
+        learner.</p>
+        
+    <p>Generic gradient boosting at the <i>t</i>-th step would fit a regression tree to
+        pseudo-residuals. Let J be the number of its leaves. The tree partitions
+        the input space into J disjoint regions and predicts a constant value in
+        each region. The parameter J controls the maximum allowed
+        level of interaction between variables in the model. With J = 2 (decision
+        stumps), no interaction between variables is allowed. With J = 3 the model
+        may include effects of the interaction between up to two variables, and
+        so on. Hastie et al. comment that typically 4 &le; J &le; 8 work well
+        for boosting and results are fairly insensitive to the choice of in
+        this range, J = 2 is insufficient for many applications, and J &gt; 10 is
+        unlikely to be required.</p>
+        
+    <p>Fitting the training set too closely can lead to degradation of the model's
+        generalization ability. Several so-called regularization techniques reduce
+        this over-fitting effect by constraining the fitting procedure.
+        One natural regularization parameter is the number of gradient boosting
+        iterations T (i.e. the number of trees in the model when the base learner
+        is a decision tree). Increasing T reduces the error on training set,
+        but setting it too high may lead to over-fitting. An optimal value of T
+        is often selected by monitoring prediction error on a separate validation
+        data set.</p>
+        
+    <p>Another regularization approach is the shrinkage which times a parameter
+        &eta; (called the "learning rate") to update term.
+        Empirically it has been found that using small learning rates (such as
+        &eta; &lt; 0.1) yields dramatic improvements in model's generalization ability
+        over gradient boosting without shrinking (&eta; = 1). However, it comes at
+        the price of increasing computational time both during training and
+        prediction: lower learning rate requires more iterations.</p>
+        
+    <p>Soon after the introduction of gradient boosting Friedman proposed a
+        minor modification to the algorithm, motivated by Breiman's bagging method.
+        Specifically, he proposed that at each iteration of the algorithm, a base
+        learner should be fit on a subsample of the training set drawn at random
+        without replacement. Friedman observed a substantial improvement in
+        gradient boosting's accuracy with this modification.</p>
+        
+    <p>Subsample size is some constant fraction f of the size of the training set.
+        When f = 1, the algorithm is deterministic and identical to the one
+        described above. Smaller values of f introduce randomness into the
+        algorithm and help prevent over-fitting, acting as a kind of regularization.
+        The algorithm also becomes faster, because regression trees have to be fit
+        to smaller datasets at each iteration. Typically, f is set to 0.5, meaning
+        that one half of the training set is used to build each base learner.</p>
+        
+    <p>Also, like in bagging, sub-sampling allows one to define an out-of-bag
+        estimate of the prediction performance improvement by evaluating predictions
+        on those observations which were not used in the building of the next
+        base learner. Out-of-bag estimates help avoid the need for an independent
+        validation dataset, but often underestimate actual performance improvement
+        and the optimal number of iterations.</p>
+        
+    <p>Gradient tree boosting implementations often also use regularization by
+        limiting the minimum number of observations in trees' terminal nodes.
+        It's used in the tree building process by ignoring any splits that lead
+        to nodes containing fewer than this number of training set instances.
+        Imposing this limit helps to reduce variance in predictions at leaves.</p>
+
+    <div style="text-align: left; display: inline-block;">
+        <div class="code">
+            def gbr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is the training data,
+        <code>y</code> is the response variable,
+        <code>ntrees</code> is the number of trees,
+        and <code>maxNodes</code> is the maximum number of leaf nodes.
+        The parameter <code>loss</code> is the loss function for regression. By default, least absolute
+        deviation is employed for robust regression.
+        The parameter <code>shrinkage</code> is the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+        Besides, <code>subsample</code> is the sampling rate for training tree. The default value
+        1.0 means sampling with replacement. Otherwise, the value &lt; 1.0 means
+        sampling without replacement.
+        The optional <code>attributes</code> is the attribute properties. If not provided, all attributes
+        are treated as numeric values.</p>
+
+    <h2 id="gp">Gaussian Process</h2>
+
+    <p>A Gaussian process is a stochastic process
+        whose realizations consist of random values associated with every point in
+        a range of times (or of space) such that each such random variable has
+        a normal distribution. Moreover, every finite collection of those random
+        variables has a multivariate normal distribution.</p>
+        
+    <p>A Gaussian process can be used as a prior probability distribution over
+        functions in Bayesian inference. Given any set of N points in the desired
+        domain of your functions, take a multivariate Gaussian whose covariance
+        matrix parameter is the Gram matrix of N points with some desired kernel,
+        and sample from that Gaussian. Inference of continuous values with a
+        Gaussian process prior is known as Gaussian process regression.</p>
+        
+    <p>The fitting is performed in the reproducing kernel Hilbert space with
+        the "kernel trick". The loss function is squared-error. This also arises
+        as the kriging estimate of a Gaussian random field in spatial statistics.</p>
+        
+    <p>A significant problem with Gaussian process prediction is that it typically
+        scales as O(n<sup>3</sup>). For large problems (e.g. n &gt; 10,000) both
+        storing the Gram matrix and solving the associated linear systems are
+        prohibitive on modern workstations. An extensive range of proposals have
+        been suggested to deal with this problem. A popular approach is the
+        reduced-rank Approximations of the Gram Matrix, known as Nystrom approximation.
+        Greedy approximation is another popular approach that uses an active set of
+        training points of size m selected from the training set of size n &gt; m.
+        We assume that it is impossible to search for the optimal subset of size m
+        due to combinatorics. The points in the active set could be selected
+        randomly, but in general we might expect better performance if the points
+        are selected greedily w.r.t. some criterion. Recently, researchers had
+        proposed relaxing the constraint that the inducing variables must be a
+        subset of training/test cases, turning the discrete selection problem
+        into one of continuous optimization.</p>
+        
+    <p>This method fits a regular Gaussian process model.</p>
+        
+    <div style="text-align: left; display: inline-block;">
+        <div class="code">
+            def gaussianProcess[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T]
+        </div>
+    </div>
+
+    <p>while the below function fit an approximate model</p>
+
+    <div style="text-align: left; display: inline-block;">
+        <div class="code">
+            def gaussianProcess[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double, nystrom: Boolean = false): GaussianProcessRegression[T]
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is the training data,
+        <code>y</code> is the response variable,
+        <code>kernel</code> is the Mercer kernel function,
+        and <code>lambda</code> is the shrinkage/regularization parameter.</p>
+
+    <h2 id="rbf">Radial Basis Function Networks</h2>
+
+    <p>A radial basis function network is an
+        artificial neural network that uses radial basis functions as activation
+        functions. It is a linear combination of radial basis functions. They are
+        used in function approximation, time series prediction, and control.</p>
+        
+    <p>In its basic form, radial basis function network is in the form</p>
+    <div>
+        y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
+    </div>
+        
+    <p>where the approximating function y(x) is represented as a sum of N radial
+        basis functions &phi;, each associated with a different center c<sub>i</sub>,
+        and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
+        one usually chooses Euclidean distance. The weights w<sub>i</sub> can
+        be estimated using the matrix methods of linear least squares, because
+        the approximating function is linear in the weights.</p>
+        
+    <p>The centers c<sub>i</sub> can be randomly selected from training data,
+        or learned by some clustering method (e.g. k-means), or learned together
+        with weight parameters undergo a supervised learning processing
+        (e.g. error-correction learning).</p>
+        
+    <p>The popular choices for &phi; comprise the Gaussian function and the so
+        called thin plate splines. The advantage of the thin plate splines is that
+        their conditioning is invariant under scalings. Gaussian, multi-quadric
+        and inverse multi-quadric are infinitely smooth and and involve a scale
+        or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
+        r<sub><small>0</small></sub> tends to flatten the basis function. For a
+        given function, the quality of approximation may strongly depend on this
+        parameter. In particular, increasing r<sub><small>0</small></sub> has the
+        effect of better conditioning (the separation distance of the scaled points
+        increases).</p>
+        
+    <p>A variant on RBF networks is normalized radial basis function (NRBF)
+        networks, in which we require the sum of the basis functions to be unity.
+        NRBF arises more naturally from a Bayesian statistical perspective. However,
+        there is no evidence that either the NRBF method is consistently superior
+        to the RBF method, or vice versa.</p>
+        
+    <p>SVMs with Gaussian kernel have similar structure as RBF networks with
+        Gaussian radial basis functions. However, the SVM approach "automatically"
+        solves the network complexity problem since the size of the hidden layer
+        is obtained as the result of the QP procedure. Hidden neurons and
+        support vectors correspond to each other, so the center problems of
+        the RBF network is also solved, as the support vectors serve as the
+        basis function centers. It was reported that with similar number of support
+        vectors/centers, SVM shows better generalization performance than RBF
+        network when the training data size is relatively small. On the other hand,
+        RBF network gives better generalization performance than SVM on large
+        training data.</p>
+
+    <div style="text-align: left; display: inline-block;">
+        <div class="code">
+            def rbfnet[T](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T], normalized: Boolean): RBFNetwork[T]
+            def rbfnet[T](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T], normalized: Boolean): RBFNetwork[T]
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is the training data,
+        <code>y</code> is the response variable,
+        <code>distance</code> is the distance metric function,
+        <code>rbf</code> is the radial basis functions,
+        <code>centers</code> are the centers of RBF functions,
+        and set <code>normalized</code> true to train the normalized RBF network.
+    </p>
 </div>
