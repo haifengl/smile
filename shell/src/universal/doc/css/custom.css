@@ -319,3 +319,32 @@ figure {
   font-size: 1.4em;
   cursor: pointer;
 }
+
+.two-sided-pill {
+  border-radius: 3em;
+}
+
+.centered {
+  text-align: center;
+}
+
+.center-block {
+  display: block;
+  margin-right: auto;
+  margin-left: auto
+}
+
+#tag-line-pill-button {
+  height: 54px;
+  line-height: 54px;
+  width: 319px;
+  color: white;
+  font-size: 18px;
+  background-color: #72D6FF;
+  margin-top: 40px;
+  letter-spacing: 3px;
+  transition:All 0.3s ease;
+  -webkit-transition:All 0.3s ease;
+  -moz-transition:All 0.3s ease;
+  -o-transition:All 0.3s ease;
+}
