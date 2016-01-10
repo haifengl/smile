@@ -76,7 +76,7 @@ object Airline {
     println(s"test  data positive : negative =  $testpos : ${testy.length - testpos}")
 
     // The data is unbalanced. Large positive class weight of should improve sensitivity.
-    val classWeight = Array(1, 1)
+    val classWeight = Array(4, 1)
 
     // Random Forest
     val forest = test2(x, y, testx, testy) { (x, y) =>
@@ -84,7 +84,7 @@ object Airline {
       if (x.length <= 100000)
         new RandomForest(attributes, x, y, 500, 650, 5, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
       else
-        new RandomForest(attributes, x, y, 500, 800, 5, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
+        new RandomForest(attributes, x, y, 500, 1000, 25, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
     }.asInstanceOf[RandomForest]
 
     println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
@@ -95,13 +95,19 @@ object Airline {
     // Gradient Tree Boost
     test2(x, y, testx, testy) { (x, y) =>
       println("Training Gradient Boosted Trees of 300 trees...")
-      new GradientTreeBoost(attributes, x, y, 300, 6, 0.1, 0.5)
+      if (x.length <= 100000)
+        new GradientTreeBoost(attributes, x, y, 300, 6, 0.1, 0.5)
+      else
+        new GradientTreeBoost(attributes, x, y, 300, 50, 0.1, 0.5)
     }
 
     // AdaBoost
     test2(x, y, testx, testy) { (x, y) =>
       println("Training AdaBoost of 300 trees...")
-      new AdaBoost(attributes, x, y, 300, 6)
+      if (x.length <= 100000)
+        new AdaBoost(attributes, x, y, 300, 6)
+      else
+        new AdaBoost(attributes, x, y, 300, 50)
     }
   }
 }
