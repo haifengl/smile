@@ -16,7 +16,7 @@
 
 package smile
 
-/** Graphics & plotting functions.
+/** Data visualization.
   *
   * @author Haifeng Li
   */
