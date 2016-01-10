@@ -90,10 +90,10 @@ package smile
   *
   *  - '''Overfitting:'''
   * Overfitting occurs when a statistical model describes random error
-  * or noise instead of the underlying relationship. Over-fitting generally
+  * or noise instead of the underlying relationship. Overfitting generally
   * occurs when a model is excessively complex, such as having too many
   * parameters relative to the number of observations. A model which has
-  * been over-fit will generally have poor predictive performance, as it can
+  * been overfit will generally have poor predictive performance, as it can
   * exaggerate minor fluctuations in the data.
   * The potential for overfitting depends not only on the number of parameters
   * and data but also the conformability of the model structure with the data

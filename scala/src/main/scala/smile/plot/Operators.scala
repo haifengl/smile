@@ -21,7 +21,7 @@ import javax.swing.{JFrame, WindowConstants}
 import smile.stat.distribution.{Distribution, DiscreteDistribution}
 import smile.math.matrix.SparseMatrix
 
-/** Graphics & plotting operators.
+/** Data visualization operators.
   *
   * @author Haifeng Li
   */
