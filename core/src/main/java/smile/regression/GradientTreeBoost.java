@@ -649,7 +649,7 @@ public class GradientTreeBoost implements Regression<double[]> {
      * Test the model on a validation dataset.
      * 
      * @param x the test data set.
-     * @param y the test data labels.
+     * @param y the test data output values.
      * @param measures the performance measures of regression.
      * @return performance measures with first 1, 2, ..., regression trees.
      */
