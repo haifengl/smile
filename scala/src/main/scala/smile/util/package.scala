@@ -32,16 +32,24 @@ package object util {
     * @param y training labels.
     * @param testx test data.
     * @param testy test data labels.
+    * @param parTest Parallel test if true.
     * @param trainer a code block to return a classifier trained on the given data.
     * @tparam T the type of training and test data.
     * @return the trained classifier.
     */
-  def test[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T] = {
+  def test[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T] = {
     val classifier = time {
+      println("training...")
       trainer(x, y)
     }
 
-    val pred = testx.map(classifier.predict(_))
+    val pred = time {
+      println("testing...")
+      if (parTest)
+        testx.par.map(classifier.predict(_)).toArray
+      else
+        testx.map(classifier.predict(_))
+    }
 
     println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
 
@@ -56,21 +64,36 @@ package object util {
     * @param y training labels.
     * @param testx test data.
     * @param testy test data labels.
+    * @param parTest Parallel test if true.
     * @param trainer a code block to return a binary classifier trained on the given data.
     * @tparam T the type of training and test data.
     * @return the trained classifier.
     */
-  def test2[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], auc: Boolean = true)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T] = {
+  def test2[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], auc: Boolean = true, parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T] = {
     val classifier = time {
+      println("training...")
       trainer(x, y)
     }
 
     if (auc) {
-      val posteriori = Array(0.0, 0.0)
-      val (pred, prob) = testx.map { xi =>
-        val yi = classifier.predict(xi, posteriori)
-        (yi, posteriori(1))
-      }.unzip
+      val results = time {
+        println("testing...")
+        if (parTest)
+          testx.par.map { xi =>
+            val posteriori = Array(0.0, 0.0)
+            val yi = classifier.predict(xi, posteriori)
+            (yi, posteriori(1))
+          }.toArray
+        else {
+          val posteriori = Array(0.0, 0.0)
+          testx.map { xi =>
+            val yi = classifier.predict(xi, posteriori)
+            (yi, posteriori(1))
+          }
+        }
+      }
+
+      val (pred, prob) = results.unzip
 
       println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
       println("Sensitivity/Recall = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
@@ -81,7 +104,13 @@ package object util {
       println("F0.5-Score = %.2f%%" format (100.0 * new FScore(0.5).measure(testy, pred)))
       println("AUC = %.2f%%" format (100.0 * AUC.measure(testy, prob)))
     } else {
-      val pred = testx.map(classifier.predict(_))
+      val pred = time {
+        println("testing...")
+        if (parTest)
+          testx.par.map(classifier.predict(_)).toArray
+        else
+          testx.map(classifier.predict(_))
+      }
 
       println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
       println("Sensitivity/Recall = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
