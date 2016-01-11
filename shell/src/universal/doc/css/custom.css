@@ -276,35 +276,6 @@ code {
   border-bottom: 0;
 }
 
-.nav#sidebar {
-  float: left;
-  position: relative;
-  width: 220px;
-  padding-left: 20px;
-  margin-left: 10px;
-  font-size: 12px;
-  line-height: 1.3;
-}
-
-.index-h1 {
-  font-size: 16px;
-  line-height: 150%;
-}
-
-.index-h2 {
-  display: block;
-  font-size: 14px;
-  margin-left: 15px;
-  line-height: 150%;
-}
-
-.index-h3 {
-  line-height: 150%;
-  display: block;
-  font-size: 12px;
-  margin-left: 26px;
-}
-
 figure {
   text-align: center;
   margin: 10px auto; /* not needed unless you want centered */
@@ -348,3 +319,33 @@ figure {
   -moz-transition:All 0.3s ease;
   -o-transition:All 0.3s ease;
 }
+
+.sidebar-toc {
+  background: #fef4e9;
+  border-radius: 6px;
+  padding: 4px 12px 1px 12px;
+}
+
+.sidebar-toc ul li {
+  margin-bottom: 6px;
+}
+
+.index-h1 {
+  font-size: 16px;
+  line-height: 150%;
+}
+
+.index-h2 {
+  display: block;
+  font-size: 14px;
+  margin-left: 15px;
+  line-height: 150%;
+}
+
+.index-h3 {
+  line-height: 150%;
+  display: block;
+  font-size: 12px;
+  margin-left: 26px;
+}
+
