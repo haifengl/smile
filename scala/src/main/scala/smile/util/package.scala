@@ -108,7 +108,7 @@ package object util {
     * @tparam T the type of training and test data.
     * @return the trained classifier.
     */
-  def test3[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => SoftClassifier[T]): SoftClassifier[T] = {
+  def test2soft[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => SoftClassifier[T]): SoftClassifier[T] = {
     val classifier = time {
       println("training...")
       trainer(x, y)
