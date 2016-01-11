@@ -76,7 +76,7 @@ import smile.stat.distribution.Distribution;
  * 
  * @author Haifeng Li
  */
-public class NaiveBayes implements OnlineClassifier<double[]> {
+public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<double[]> {
     /**
      * The generation models of naive Bayes classifier.
      * For document classification in NLP, there are two different ways we can set

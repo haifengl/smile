@@ -27,7 +27,7 @@ import smile.util._
   */
 trait Operators {
 
-  /** Apply a regression model on a data sample.
+  /** Apply a regression model on an instance.
     *
     * @param model regression model
     * @param x data sample

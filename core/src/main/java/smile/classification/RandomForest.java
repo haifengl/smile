@@ -68,7 +68,7 @@ import smile.validation.ClassificationMeasure;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements Classifier<double[]> {
+public class RandomForest implements SoftClassifier<double[]> {
     /**
      * Decision tree wrapper with a weight. Currently, the weight is the accuracy of
      * tree on the OOB samples, which can be used when aggregating
