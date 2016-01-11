@@ -1,7 +1,7 @@
 <div class="col-md-3 col-md-push-9">
     <div class="sidebar-toc" style="margin-bottom: 20px;">
         <ul class="list-unstyled">
-            <li><a class="index-h1" href="#quickstart">Quick Start</a></li>
+            <li><a class="index-h1" href="#quickstart-top">Quick Start</a></li>
             <li><a class="index-h2" href="#download">Download</a></li>
             <li><a class="index-h2" href="#shell">Shell</a></li>
         </ul>
@@ -9,96 +9,96 @@
 </div>
 
 <div class="col-md-9 col-md-pull-3">
-<h1 id="quickstart" class="title">Smile Quick Start</h1>
 
+    <h1 id="quickstart-top" class="title">Smile Quick Start</h1>
 
-<p>Smile is a fast and comprehensive machine learning system.
-    With advanced data structures and algorithms, Smile delivers the state-of-art performance.
-    Smile is self contained and requires only Java standard library.
-    It also provides high-level operators in Scala and an interactive shell.
-    In practice, data scientists usually build models with high-level tools such as R, Matlab,
-    SAS, etc. However, developers have to spend a lot of time and energy to incorporate these
-    models in the production system that are often implemented in general purpose programming
-    languages such as Java and Scala. With Smile, data scientists and developers can work
-    in the same environment to build machine learning applications quickly!</p>
+    <p>Smile is a fast and comprehensive machine learning system.
+        With advanced data structures and algorithms, Smile delivers the state-of-art performance.
+        Smile is self contained and requires only Java standard library.
+        It also provides high-level operators in Scala and an interactive shell.
+        In practice, data scientists usually build models with high-level tools such as R, Matlab,
+        SAS, etc. However, developers have to spend a lot of time and energy to incorporate these
+        models in the production system that are often implemented in general purpose programming
+        languages such as Java and Scala. With Smile, data scientists and developers can work
+        in the same environment to build machine learning applications quickly!</p>
 
-<h1 id="download">Download</h1>
+    <h2 id="download">Download</h2>
 
-<p>Get Smile from the <a href="https://github.com/haifengl/smile/releases">releases page</a> of the project
-    website. Downloads are pre-packaged for Mac, Windows, and universal tarball.</p>
+    <p>Get Smile from the <a href="https://github.com/haifengl/smile/releases">releases page</a> of
+        the project website. Downloads are pre-packaged for Mac, Windows, and universal tarball.</p>
 
-<p>If you would like to build Smile from source, please first install Java, Scala and SBT.
-    Then clone the repo and build the package:
+    <p>If you would like to build Smile from source, please first install Java, Scala and SBT.
+        Then clone the repo and build the package:</p>
     <pre><code>
-        git clone https://github.com/haifengl/smile.git
-        cd smile
-        ./pkg.sh
+    git clone https://github.com/haifengl/smile.git
+    cd smile
+    ./pkg.sh
     </code></pre>
-    To test the latest code, run the following
+    <p>To test the latest code, run the following</p>
     <pre><code>
-        git pull
-        ./smile.sh
+    git pull
+    ./smile.sh
     </code></pre>
-    which will build the system and enter the shell.</p>
+    <p>which will build the system and enter the shell.</p>
 
-<p>Smile runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS).
-    All you need is to have <code>Java</code> installed on your system <code>PATH</code>,
-    or the <code>JAVA_HOME</code> environment variable pointing to a Java installation.</p>
+    <p>Smile runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS).
+        All you need is to have <code>Java</code> installed on your system <code>PATH</code>,
+        or the <code>JAVA_HOME</code> environment variable pointing to a Java installation.</p>
 
-<p>The download packages of Smile are built on Java 8. But Java 7 is sufficient to build it
-    if needed. For the Scala API, we uses Scala 2.11.</p>
+    <p>The download packages of Smile are built on Java 8. But Java 7 is sufficient to build it
+        if needed. For the Scala API, we uses Scala 2.11.</p>
 
-<h1 id="shell">Shell</h1>
+    <h2 id="shell">Shell</h2>
 
-<p>Smile comes with an interactive shell. In the home directory of Smile, type
+    <p>Smile comes with an interactive shell. In the home directory of Smile, type</p>
     <pre><code>
-        ./bin/smile
+    ./bin/smile
     </code></pre>
-    to enter the shell, which is based on Scala interpreter. So you can run any valid Scala
-    expressions in the shell. In the simplest case, you can use it as a calculator.
-    Besides, all high-level Smile operators are predefined
-    in the shell. Be default, the shell uses up to 4GB memory. If you need more memory
-    to handle large data, use the option <code>-J-Xmx4096M</code>. For example,
+    <p>to enter the shell, which is based on Scala interpreter. So you can run any valid Scala
+        expressions in the shell. In the simplest case, you can use it as a calculator.
+        Besides, all high-level Smile operators are predefined
+        in the shell. Be default, the shell uses up to 4GB memory. If you need more memory
+        to handle large data, use the option <code>-J-Xmx4096M</code>. For example,</p>
     <pre><code>
-        ./bin/smile -J-Xmx8192M
+    ./bin/smile -J-Xmx8192M
     </code></pre>
-    You can also modify the configuration file <code>./conf/application.ini</code>
-    for the memory and other JVM settings.</p>
+    <p>You can also modify the configuration file <code>./conf/application.ini</code>
+        for the memory and other JVM settings.</p>
 
-<p>In the shell, type <code>:help</code> to print Scala interpreter help
-    information. To get help information of Smile high-level operators,
-    thpe <code>help</code>. You can also get detailed information on
-    each operator by typing <code>help("command")</code>, e.g.
-    <code>help("svm")</code>. To exit the shell, type <code>:quit</code>.</p>
+    <p>In the shell, type <code>:help</code> to print Scala interpreter help
+        information. To get help information of Smile high-level operators,
+        thpe <code>help</code>. You can also get detailed information on
+        each operator by typing <code>help("command")</code>, e.g.
+        <code>help("svm")</code>. To exit the shell, type <code>:quit</code>.</p>
 
-<p>In the shell, type <code>demo</code> to bring up the demo window,
-    which shows off various Smile's machine learning capabilities.</p>
+    <p>In the shell, type <code>demo</code> to bring up the demo window,
+        which shows off various Smile's machine learning capabilities.</p>
 
-<p>You can also type <code>benchmark()</code> to see Smile's performance
-    on a couple of test data. You can run a particular benchmark by
-    <code>bencharm("test name")</code>, where test name could be "airline",
-    "usps", etc.</p>
+    <p>You can also type <code>benchmark()</code> to see Smile's performance
+        on a couple of test data. You can run a particular benchmark by
+        <code>bencharm("test name")</code>, where test name could be "airline",
+        "usps", etc.</p>
 
-<p>In the <code>data</code> directory, we also include many open datasets,
-    which are frequently used in research and benchmark. Now let&#8217;s build
-    a classification model with Smile. It is as easy as</p>
-<pre><code>
+    <p>In the <code>data</code> directory, we also include many open datasets,
+        which are frequently used in research and benchmark. Now let&#8217;s build
+        a classification model with Smile. It is as easy as</p>
+    <pre><code>
     val data = readArff("data/weka/iris.arff", 4)<br/>
     val (x, y) = data.unzipInt<br/>
     <br/>
-    val rf = randomForest(x, y)<br/>
+    val rf = randomDecisionForest(x, y)<br/>
     println(s"OOB error = ${rf.error}")<br/>
     rf.predict(x(0)) // or predict(rf, x(0))
-</code></pre>
+    </code></pre>
 
-<p>In this example, we use the famous Iris data from R.A. Fisher. The data
-    is in Weka's ARFF format. The second parameter of readArff is the column index
-    of response variable. With our parsers, the column index starts with 0. The
-    function readArff returns an object of <code>AttributeDataset</code>.
-    Besides the data itself, an <code>AttributeDataset</code> object also contains many meta data.
-    Then we use the help function <code>unzipInt</code> to get the training
-    data and labels. For regression, you may use <code>unzipDouble</code> as
-    the response variable is real value. Finally, we train a random forest
-    with default parameters and print out its OOB (out of bag) error. We can apply
-    the model on new data samples with the method <code>predict</code>.</p>
+    <p>In this example, we use the famous Iris data from R.A. Fisher. The data
+        is in Weka's ARFF format. The second parameter of readArff is the column index
+        of response variable. With our parsers, the column index starts with 0. The
+        function readArff returns an object of <code>AttributeDataset</code>.
+        Besides the data itself, an <code>AttributeDataset</code> object also contains many meta data.
+        Then we use the help function <code>unzipInt</code> to get the training
+        data and labels. For regression, you may use <code>unzipDouble</code> as
+        the response variable is real value. Finally, we train a random forest
+        with default parameters and print out its OOB (out of bag) error. We can apply
+        the model on new data samples with the method <code>predict</code>.</p>
 </div>
