@@ -18,9 +18,7 @@ package smile.benchmark
 import smile.data._
 import smile.data.parser.DelimitedTextParser
 import smile.classification._
-import smile.io._
 import smile.math.Math
-import smile.validation._
 import smile.util._
 
 /**
@@ -82,9 +80,9 @@ object Airline {
     val forest = test2(x, y, testx, testy) { (x, y) =>
       println("Training Random Forest of 500 trees...")
       if (x.length <= 100000)
-        new RandomForest(attributes, x, y, 500, 650, 5, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
+        randomDecisionForest(x, y, attributes, 500, 650, 5, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
       else
-        new RandomForest(attributes, x, y, 500, 1000, 25, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
+        randomDecisionForest(x, y, attributes, 500, 850, 25, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
     }.asInstanceOf[RandomForest]
 
     println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
@@ -96,18 +94,18 @@ object Airline {
     test2(x, y, testx, testy) { (x, y) =>
       println("Training Gradient Boosted Trees of 300 trees...")
       if (x.length <= 100000)
-        new GradientTreeBoost(attributes, x, y, 300, 6, 0.1, 0.5)
+        gbc(x, y, attributes, 300, 6, 0.1, 0.5)
       else
-        new GradientTreeBoost(attributes, x, y, 300, 50, 0.1, 0.5)
+        gbc(x, y, attributes, 300, 50, 0.1, 0.5)
     }
 
     // AdaBoost
     test2(x, y, testx, testy) { (x, y) =>
       println("Training AdaBoost of 300 trees...")
       if (x.length <= 100000)
-        new AdaBoost(attributes, x, y, 300, 6)
+        adaboost(x, y, attributes, 300, 6)
       else
-        new AdaBoost(attributes, x, y, 300, 50)
+        adaboost(x, y, attributes, 300, 50)
     }
   }
 }
