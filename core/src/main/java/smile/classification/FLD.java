@@ -323,15 +323,6 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         return y;
     }
 
-    /**
-     * Predicts the class label of an instance and also calculate a posteriori
-     * probabilities. Not supported.
-     */
-    @Override
-    public int predict(double[] x, double[] posteriori) {
-        throw new UnsupportedOperationException("Not supported.");
-    }
-
     @Override
     public double[] project(double[] x) {
         if (x.length != p) {

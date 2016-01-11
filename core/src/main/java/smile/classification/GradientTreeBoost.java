@@ -98,7 +98,7 @@ import smile.validation.ClassificationMeasure;
  * 
  * @author Haifeng Li
  */
-public class GradientTreeBoost implements Classifier<double[]> {
+public class GradientTreeBoost implements SoftClassifier<double[]> {
     /**
      * The number of classes.
      */

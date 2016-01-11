@@ -100,7 +100,7 @@ import smile.math.Math;
  * 
  * @author Haifeng Li
  */
-public class NeuralNetwork implements OnlineClassifier<double[]> {
+public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier<double[]> {
     /**
      * The types of error functions.
      */

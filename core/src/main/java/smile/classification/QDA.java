@@ -42,7 +42,7 @@ import smile.math.matrix.EigenValueDecomposition;
  * 
  * @author Haifeng Li
  */
-public class QDA implements Classifier<double[]> {
+public class QDA implements SoftClassifier<double[]> {
 
     /**
      * The dimensionality of data.

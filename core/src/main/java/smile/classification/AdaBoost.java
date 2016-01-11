@@ -56,7 +56,7 @@ import smile.validation.ClassificationMeasure;
  * 
  * @author Haifeng Li
  */
-public class AdaBoost implements Classifier<double[]> {
+public class AdaBoost implements SoftClassifier<double[]> {
     /**
      * The number of classes.
      */

@@ -67,7 +67,7 @@ import smile.neighbor.Neighbor;
  * 
  * @author Haifeng Li
  */
-public class KNN<T> implements Classifier<T> {
+public class KNN<T> implements SoftClassifier<T> {
     /**
      * The data structure for nearest neighbor search.
      */

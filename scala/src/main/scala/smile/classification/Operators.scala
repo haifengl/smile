@@ -29,7 +29,18 @@ import smile.util._
   */
 trait Operators {
 
-  /** Apply a classification model on a data sample.
+  /** Apply a classifier on an instance.
+    *
+    * @param model classification model.
+    * @param x data sample.
+    * @tparam T the data type.
+    * @return the predicted class label.
+    */
+  def predict[T <: AnyRef](model: Classifier[T], x: T): Int = {
+    model.predict(x)
+  }
+
+  /** Apply a soft classifier on an instance.
     *
     * @param model classification model.
     * @param x data sample.
@@ -37,11 +48,8 @@ trait Operators {
     * @tparam T the data type.
     * @return the predicted class label.
     */
-  def predict[T <: AnyRef](model: Classifier[T], x: T, posteriori: Array[Double] = null): Int = {
-    if (posteriori == null)
-      model.predict(x)
-    else
-      model.predict(x, posteriori)
+  def predict[T <: AnyRef](model: SoftClassifier[T], x: T, posteriori: Array[Double]): Int = {
+    model.predict(x, posteriori)
   }
 
   /** K-nearest neighbor classifier.

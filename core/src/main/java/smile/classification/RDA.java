@@ -37,7 +37,7 @@ import smile.math.matrix.EigenValueDecomposition;
  * 
  * @author Haifeng Li
  */
-public class RDA implements Classifier<double[]> {
+public class RDA implements SoftClassifier<double[]> {
 
     /**
      * The dimensionality of data.

@@ -1344,13 +1344,4 @@ public class SVM <T> implements OnlineClassifier<T> {
             return label;
         }
     }
-
-    /**
-     * Predicts the class label of an instance and also calculate a posteriori
-     * probabilities. Not supported.
-     */
-    @Override
-    public int predict(T x, double[] posteriori) {
-        throw new UnsupportedOperationException();
-    }
 }

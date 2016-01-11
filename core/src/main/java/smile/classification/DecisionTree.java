@@ -97,7 +97,7 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class DecisionTree implements Classifier<double[]> {
+public class DecisionTree implements SoftClassifier<double[]> {
     /**
      * The attributes of independent variable.
      */

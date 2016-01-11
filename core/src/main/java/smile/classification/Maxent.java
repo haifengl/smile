@@ -49,7 +49,7 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class Maxent implements Classifier<int[]> {
+public class Maxent implements SoftClassifier<int[]> {
 
     /**
      * The dimension of input space.
