@@ -80,9 +80,9 @@ object Airline {
     val forest = test2soft(x, y, testx, testy) { (x, y) =>
       println("Training Random Forest of 500 trees...")
       if (x.length <= 100000)
-        randomDecisionForest(x, y, attributes, 500, 650, 5, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
+        randomDecisionForest(x, y, attributes, 500, 500, 5, 2, 0.5, DecisionTree.SplitRule.ENTROPY, classWeight)
       else
-        randomDecisionForest(x, y, attributes, 500, 850, 25, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
+        randomDecisionForest(x, y, attributes, 500, 800, 25, 2, 0.5, DecisionTree.SplitRule.ENTROPY, classWeight)
     }.asInstanceOf[RandomForest]
 
     println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
