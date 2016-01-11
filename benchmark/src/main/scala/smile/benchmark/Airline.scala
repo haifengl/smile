@@ -77,7 +77,7 @@ object Airline {
     val classWeight = Array(4, 1)
 
     // Random Forest
-    val forest = test2(x, y, testx, testy) { (x, y) =>
+    val forest = test2soft(x, y, testx, testy) { (x, y) =>
       println("Training Random Forest of 500 trees...")
       if (x.length <= 100000)
         randomDecisionForest(x, y, attributes, 500, 650, 5, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
@@ -91,7 +91,7 @@ object Airline {
     }
 
     // Gradient Tree Boost
-    test2(x, y, testx, testy) { (x, y) =>
+    test2soft(x, y, testx, testy) { (x, y) =>
       println("Training Gradient Boosted Trees of 300 trees...")
       if (x.length <= 100000)
         gbc(x, y, attributes, 300, 6, 0.1, 0.5)
@@ -100,7 +100,7 @@ object Airline {
     }
 
     // AdaBoost
-    test2(x, y, testx, testy) { (x, y) =>
+    test2soft(x, y, testx, testy) { (x, y) =>
       println("Training AdaBoost of 300 trees...")
       if (x.length <= 100000)
         adaboost(x, y, attributes, 300, 6)
