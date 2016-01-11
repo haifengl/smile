@@ -16,12 +16,11 @@
 
 package smile
 
-/**
- * Common shell commands.
- *
- * @author Haifeng Li
- */
-package object shell extends smile.classification.Operators with smile.regression.Operators {
+/** Common shell commands.
+  *
+  * @author Haifeng Li
+  */
+package object shell {
 
   /** Built in benchmarks */
   def benchmark(tests: String*) = {
