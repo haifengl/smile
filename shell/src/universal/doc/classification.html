@@ -18,6 +18,32 @@
 <div class="col-md-9 col-md-pull-3">
     <h1 class="title">Classification</h1>
 
+    <p>Smile's classification algorithms are in the package
+        <a href="api/java/smile/classification/package-summary.html"><code>smile.classification</code></a>
+        and all algorithms implement the interface
+        <a href="api/java/smile/classification/Classifier.html"><code>Classifier</code></a>
+        that has a method <code>predict</code> to predict the class label of an instance.
+        An overloaded version can also calculate the <i>a posteriori</i>
+        probabilities besides the class label.
+        For all algorithms, the model can be trained through
+        the constructor. Meanwhile, each algorithm has a <code>Trainer</code> companion
+        class that can hold model hyper-parameters and be applied to multiple training
+        datasets.</p>
+
+    <p>Some algorithms with online learning capability also implement the interface
+        <a href="api/java/smile/classification/OnlineClassifier.html"><code>OnlineClassifier</code></a>
+        Online learning is a model of induction that learns one instance at a time.
+        The method <code>learn</code> updates the model with a new instance.</p>
+
+    <p>The high-level operators are defined in Scala trait
+        <a href="api/scala/index.html#smile.classification.Operators"><code>smile.classification.Operators</code></a>
+        and also in the package object of <a href="api/scala/index.html#smile.classification.package"><code>smile.classification</code></a>.</p>
+
+    <p>In what follows, we will discuss each algorithm, their high-level
+        Scala API, and examples.</p>
+
+    <h2 class="title">Introduction</h2>
+
     <p>In machine learning and pattern recognition,
         classification refers to an algorithmic procedure for assigning a given
         input object into one of a given number of categories. The input
@@ -131,30 +157,6 @@
             between bias and variance.</p>
         </dd>
     </dl>
-
-    <p>Smile's classification algorithms are in the package
-        <a href="api/java/smile/classification/package-summary.html"><code>smile.classification</code></a>
-        and all algorithms implement the interface
-        <a href="api/java/smile/classification/Classifier.html"><code>Classifier</code></a>
-        that has a method <code>predict</code> to predict the class label of an instance.
-        An overloaded version can also calculate the <i>a posteriori</i>
-        probabilities besides the class label.
-        For all algorithms, the model can be trained through
-        the constructor. Meanwhile, each algorithm has a <code>Trainer</code> companion
-        class that can hold model hyper-parameters and be applied to multiple training
-        datasets.</p>
-
-    <p>Some algorithms with online learning capability also implement the interface
-        <a href="api/java/smile/classification/OnlineClassifier.html"><code>OnlineClassifier</code></a>
-        Online learning is a model of induction that learns one instance at a time.
-        The method <code>learn</code> updates the model with a new instance.</p>
-
-    <p>The high-level operators are defined in Scala trait
-        <a href="api/scala/index.html#smile.classification.Operators"><code>smile.classification.Operators</code></a>
-        and also in the package object of <a href="api/scala/index.html#smile.classification.package"><code>smile.classification</code></a>.</p>
-
-    <p>In what follows, we will discuss each algorithm, their high-level
-        Scala API, and examples.</p>
 
     <h2 id="knn">K-Nearest Neighbor</h2>
 
