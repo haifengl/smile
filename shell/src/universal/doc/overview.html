@@ -11,6 +11,7 @@
             <li><a class="index-h2" href="#latent-variable-models ">Latent Variable Models</a></li>
             <li><a class="index-h2" href="#association-rule">Association Rules</a></li>
             <li><a class="index-h1" href="#semi-supervised-learning">Semi-supervised Learning</a></li>
+            <li><a class="index-h1" href="#reinforcement-learning">Reinforcement Learning</a></li>
         </ul>
     </nav>
 </div>
@@ -35,18 +36,18 @@
 
       <dl>
         <dt>Supervised learning</dt>
-        <dd>The computer is presented with example inputs and their desired outputs,
-            given by a &quot;teacher&quot;, and the goal is to learn a general rule that maps inputs to outputs.
+        <dd><p>The computer is presented with example inputs and their desired outputs,
+            given by a &quot;teacher&quot;, and the goal is to learn a general rule that maps inputs to outputs.</p>
         </dd>
         <dt>Unsupervised learning</dt>
-        <dd>No labels are given to the learning algorithm, leaving it on its own to find structure in
+        <dd><p>No labels are given to the learning algorithm, leaving it on its own to find structure in
             its input. Unsupervised learning can be a goal in itself (discovering hidden patterns in data)
-            or a means towards an end (feature learning).
+            or a means towards an end (feature learning).</p>
         </dd>
         <dt>Reinforcement learning</dt>
-        <dd>A computer program interacts with a dynamic environment in which it must perform a certain goal,
+        <dd><p>A computer program interacts with a dynamic environment in which it must perform a certain goal,
             without a teacher explicitly telling it whether it has come close to
-            its goal.
+            its goal.</p>
         </dd>
       </dl>
 
@@ -174,5 +175,17 @@
         can produce considerable improvement in model accuracy.
         Semi-supervised learning is a class of supervised learning tasks and techniques that make use of
         both a large amount of unlabeled data and a small amount of labeled data.</p>
+
+    <h2 id="reinforcement-learning">Reinforcement Learning</h2>
+
+    <p>Reinforcement learning is about a learning agent interacting with its environment
+        to achieve a goal. The learning agent has to map situations to actions to maximize
+        a numerical reward signal. Different from supervised learning, the learner is not told which actions
+        to take but instead must discover which actions yield the most reward by trying them. Moreover,
+        actions may affect not only the immediate reward but also all subsequent rewards.
+        Trial-and-error search and delayed reward are the most important features of reinforcement learning.</p>
+
+    <p>Markov decision processes (MDPs) provide a mathematical framework for modeling decision making
+        in situations where outcomes are partly random and partly under the control of a decision maker.</p>
 
 </div>
