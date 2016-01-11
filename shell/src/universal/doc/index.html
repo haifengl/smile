@@ -43,9 +43,19 @@
         $('#content').load('overview.html');
       });
 
+      $("#shell").click(function(event){
+        event.preventDefault();
+        $('#content').load('shell.html');
+      });
+
       $("#data").click(function(event){
         event.preventDefault();
         $('#content').load('data.html');
+      });
+
+      $("#visualization").click(function(event){
+        event.preventDefault();
+        $('#content').load('visualization.html');
       });
 
       $("#classification").click(function(event){
@@ -122,9 +132,15 @@
         </a>
         <ul class="dropdown-menu">
           <li><a id="overview" href="#">Overview</a></li>
-          <li><a id="data" href="#">Data & Visualization</a></li>
+          <li class="divider"></li>
+          <li><a id="shell" href="#">Shell</a></li>
+          <li><a id="data" href="#">Data</a></li>
+          <li><a id="visualization" href="#">Visualization</a></li>
+          <li class="divider"></li>
           <li><a id="classification" href="#">Classification</a></li>
           <li><a id="regression" href="#">Regression</a></li>
+          <li class="divider"></li>
+          <li><a href="http://xyclade.github.io/MachineLearning/">Third-Party Tutorials</a></li>
           <!--
               <li><a id="math" href="#">Math</a></li>
               <li><a id="graph" href="#">Graph</a></li>
@@ -296,7 +312,7 @@
             val data = readArff("iris.arff", 4)<br/>
             val (x, y) = data.unzipInt<br/>
             <br/>
-            val rf = randomForest(x, y)<br/>
+            val rf = randomDecisionForest(x, y)<br/>
             println(s"OOB error = ${rf.error}")<br/>
             rf.predict(x(0))
           </div>
