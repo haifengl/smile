@@ -1,11 +1,11 @@
 <div class="col-md-3 col-md-push-9">
     <div class="sidebar-toc" style="margin-bottom: 20px;">
         <ul class="list-unstyled">
-            <li><a class="index-h2" href="#regression">Regression</a></li>
+            <li><a class="index-h1" href="#regression-top">Regression</a></li>
             <li><a class="index-h2" href="#ols">Ordinary Least Squares</a></li>
             <li><a class="index-h2" href="#ridge">Ridge Regression</a></li>
             <li><a class="index-h2" href="#lasso">LASSO</a></li>
-            <li><a class="index-h2" href="#svm">SVM</a></li>
+            <li><a class="index-h2" href="#svr">SVR</a></li>
             <li><a class="index-h2" href="#tree">Regression Tree</a></li>
             <li><a class="index-h2" href="#forest">Random Forest</a></li>
             <li><a class="index-h2" href="#gbm">Gradient Boosting</a></li>
@@ -16,7 +16,7 @@
 </div>
 
 <div class="col-md-9 col-md-pull-3">
-    <h1 id="regression" class="title">Regression</h1>
+    <h1 id="regression-top" class="title">Regression</h1>
 
     <p>Smile's regression algorithms are in the package
         <a href="api/java/smile/regression/package-summary.html"><code>smile.regression</code></a>
@@ -91,11 +91,9 @@
         however, a central limit theorem can be invoked such that hypothesis
         testing may proceed using asymptotic approximations.</p>
 
-    <div style="text-align: left; display: inline-block;">
-        <div class="code">
-            def ols(x: Array[Array[Double]], y: Array[Double]): OLS
-        </div>
-    </div>
+    <pre><code>
+    def ols(x: Array[Array[Double]], y: Array[Double]): OLS
+    </code></pre>
 
     <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
         and <code>y</code> is the response values.</p>
@@ -120,11 +118,9 @@
         In this setting the belief that weight should be small is coded into a prior
         distribution.</p>
 
-    <div style="text-align: left; display: inline-block;">
-        <div class="code">
-            def ridge(x: Array[Array[Double]], y: Array[Double], lambda: Double): RidgeRegression
-        </div>
-    </div>
+    <pre><code>
+    def ridge(x: Array[Array[Double]], y: Array[Double], lambda: Double): RidgeRegression
+    </code></pre>
 
     <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
         <code>y</code> is the response values,
@@ -160,11 +156,9 @@
         quadratic programming or more general convex optimization methods, as well
         as by specific algorithms such as the least angle regression algorithm.</p>
 
-    <div style="text-align: left; display: inline-block;">
-        <div class="code">
-            def lasso(x: Array[Array[Double]], y: Array[Double], lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LASSO
-        </div>
-    </div>
+    <pre><code>
+    def lasso(x: Array[Array[Double]], y: Array[Double], lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LASSO
+    </code></pre>
 
     <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
         <code>y</code> is the response values,
@@ -179,11 +173,9 @@
         function ignores any training data close to the model prediction (within
         a threshold).</p>
 
-    <div style="text-align: left; display: inline-block;">
-        <div class="code">
-            def svr[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, weight: Array[Double] = null, tol: Double = 1E-3): SVR[T]
-        </div>
-    </div>
+    <pre><code>
+    def svr[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, weight: Array[Double] = null, tol: Double = 1E-3): SVR[T]
+    </code></pre>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
@@ -262,11 +254,9 @@
     <p>Some techniques such as bagging, boosting, and random forest use more than
         one decision tree for their analysis.</p>
 
-    <div style="text-align: left; display: inline-block;">
-        <div class="code">
-            def regressionTree(x: Array[Array[Double]], y: Array[Double], J: Int, attributes: Array[Attribute] = null): RegressionTree
-        </div>
-    </div>
+    <pre><code>
+    def regressionTree(x: Array[Array[Double]], y: Array[Double], J: Int, attributes: Array[Attribute] = null): RegressionTree
+    </code></pre>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
@@ -321,11 +311,9 @@
         not reliable for this type of data.</li>
     </ul>
 
-    <div style="text-align: left; display: inline-block;">
-        <div class="code">
-            def randomRegressionForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 5, mtry: Int = -1, subsample: Double = 1.0): RandomForest
-        </div>
-    </div>
+    <pre><code>
+    def randomRegressionForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 5, mtry: Int = -1, subsample: Double = 1.0): RandomForest
+    </code></pre>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
@@ -408,11 +396,9 @@
         to nodes containing fewer than this number of training set instances.
         Imposing this limit helps to reduce variance in predictions at leaves.</p>
 
-    <div style="text-align: left; display: inline-block;">
-        <div class="code">
-            def gbr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost
-        </div>
-    </div>
+    <pre><code>
+    def gbr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost
+    </code></pre>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
@@ -464,19 +450,15 @@
         
     <p>This method fits a regular Gaussian process model.</p>
         
-    <div style="text-align: left; display: inline-block;">
-        <div class="code">
-            def gaussianProcess[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T]
-        </div>
-    </div>
+    <pre><code>
+    def gaussianProcess[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T]
+    </code></pre>
 
     <p>while the below function fit an approximate model</p>
 
-    <div style="text-align: left; display: inline-block;">
-        <div class="code">
-            def gaussianProcess[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double, nystrom: Boolean = false): GaussianProcessRegression[T]
-        </div>
-    </div>
+    <pre><code>
+    def gaussianProcess[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double, nystrom: Boolean = false): GaussianProcessRegression[T]
+    </code></pre>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
@@ -536,12 +518,10 @@
         RBF network gives better generalization performance than SVM on large
         training data.</p>
 
-    <div style="text-align: left; display: inline-block;">
-        <div class="code">
-            def rbfnet[T](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T], normalized: Boolean): RBFNetwork[T]
-            def rbfnet[T](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T], normalized: Boolean): RBFNetwork[T]
-        </div>
-    </div>
+    <pre><code>
+    def rbfnet[T](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T], normalized: Boolean): RBFNetwork[T]
+    def rbfnet[T](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T], normalized: Boolean): RBFNetwork[T]
+    </code></pre>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
