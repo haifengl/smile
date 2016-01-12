@@ -1,10 +1,7 @@
 <div class="col-md-3 col-md-push-9">
     <div class="sidebar-toc" style="margin-bottom: 20px;">
-        <ul class="list-unstyled">
-            <li><a class="index-h1" href="#quickstart-top">Quick Start</a></li>
-            <li><a class="index-h2" href="#download">Download</a></li>
-            <li><a class="index-h2" href="#shell">Shell</a></li>
-        </ul>
+        <p class="toc-header">Contents</p>
+        <div id="toc"></div>
     </div>
 </div>
 
@@ -29,16 +26,20 @@
 
     <p>If you would like to build Smile from source, please first install Java, Scala and SBT.
         Then clone the repo and build the package:</p>
-    <pre><code>
-    git clone https://github.com/haifengl/smile.git
-    cd smile
-    ./pkg.sh
+
+    <pre class="prettyprint lang-bash"><code>
+        git clone https://github.com/haifengl/smile.git
+        cd smile
+        ./pkg.sh
     </code></pre>
+
     <p>To test the latest code, run the following</p>
-    <pre><code>
-    git pull
-    ./smile.sh
+
+    <pre class="prettyprint lang-bash"><code>
+          git pull
+          ./smile.sh
     </code></pre>
+
     <p>which will build the system and enter the shell.</p>
 
     <p>Smile runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS).
@@ -51,17 +52,21 @@
     <h2 id="shell">Shell</h2>
 
     <p>Smile comes with an interactive shell. In the home directory of Smile, type</p>
-    <pre><code>
-    ./bin/smile
+
+    <pre class="prettyprint lang-bash"><code>
+        ./bin/smile
     </code></pre>
+
     <p>to enter the shell, which is based on Scala interpreter. So you can run any valid Scala
         expressions in the shell. In the simplest case, you can use it as a calculator.
         Besides, all high-level Smile operators are predefined
         in the shell. Be default, the shell uses up to 4GB memory. If you need more memory
         to handle large data, use the option <code>-J-Xmx4096M</code>. For example,</p>
-    <pre><code>
-    ./bin/smile -J-Xmx8192M
+
+    <pre class="prettyprint lang-bash"><code>
+        ./bin/smile -J-Xmx8192M
     </code></pre>
+
     <p>You can also modify the configuration file <code>./conf/application.ini</code>
         for the memory and other JVM settings.</p>
 
@@ -82,13 +87,14 @@
     <p>In the <code>data</code> directory, we also include many open datasets,
         which are frequently used in research and benchmark. Now let&#8217;s build
         a classification model with Smile. It is as easy as</p>
-    <pre><code>
-    val data = readArff("data/weka/iris.arff", 4)<br/>
-    val (x, y) = data.unzipInt<br/>
-    <br/>
-    val rf = randomDecisionForest(x, y)<br/>
-    println(s"OOB error = ${rf.error}")<br/>
-    rf.predict(x(0)) // or predict(rf, x(0))
+
+    <pre class="prettyprint lang-scala"><code>
+        val data = readArff("data/weka/iris.arff", 4)
+        val (x, y) = data.unzipInt
+
+        val rf = randomDecisionForest(x, y)
+        println(s"OOB error = ${rf.error}")
+        rf.predict(x(0)) // or predict(rf, x(0))
     </code></pre>
 
     <p>In this example, we use the famous Iris data from R.A. Fisher. The data
@@ -102,3 +108,7 @@
         with default parameters and print out its OOB (out of bag) error. We can apply
         the model on new data samples with the method <code>predict</code>.</p>
 </div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

@@ -11,6 +11,9 @@
   
   <meta name="description" content="Smile is a fast and general machine learning engine for big data processing, with built-in modules for classification, regression, clustering, association rule mining, feature selection, manifold learning, genetic algorithm, missing value imputation, efficient nearest neighbor search, MDS, NLP, linear algebra, hypothesis tests, random number generators, interpolation, wavelet, plot, etc.">
 
+  <!-- prettify js and CSS -->
+  <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=scala"></script>
+
   <!-- Bootstrap core CSS -->
   <link href="css/cerulean.min.css" rel="stylesheet">
   <link href="css/custom.css" rel="stylesheet">
@@ -24,6 +27,13 @@
   <script src="https://code.jquery.com/jquery.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
   <script async="" defer="" id="github-bjs" src="https://buttons.github.io/buttons.js"></script>
+
+  <!-- table of contents js -->
+  <script src="js/toc.js" type="text/javascript"></script>
+
+  <!-- styles for pager and table of contents -->
+  <link rel="stylesheet" href="css/pager.css" type="text/css" />
+  <link rel="stylesheet" href="css/toc.css" type="text/css" />
 
   <!-- Load static page by jQuery AJAX -->
   <script type="text/javascript">
@@ -286,7 +296,7 @@
       <div class="col-md-5 col-sm-5 col-padded-top col-center">
         <div style="width: 100%; display: inline-block; text-align: center;">
           <img src="images/benchm-ml.png" style="width: 100%;" />
-          <div class="caption" style="min-width: 272px;">Running Time (s)</div>
+          <!--<div class="caption" style="min-width: 272px;">Running Time (s)</div>-->
         </div>
       </div>
     </div>
@@ -306,18 +316,18 @@
         </p>
       </div>
       <div class="col-md-5 col-sm-5 col-padded-top col-center">
-        <div style="text-align: left; display: inline-block;">
-          <div class="code">
-            <br/><br/>
-            val data = readArff("iris.arff", 4)<br/>
-            val (x, y) = data.unzipInt<br/>
-            <br/>
-            val rf = randomDecisionForest(x, y)<br/>
-            println(s"OOB error = ${rf.error}")<br/>
-            rf.predict(x(0))
-          </div>
-          <div class="caption">Random Forest in Smile's Scala API</div>
+        <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+  val data = readArff("iris.arff", 4)
+  val (x, y) = data.unzipInt
+
+  val rf = randomDecisionForest(x, y)
+
+  println(s"OOB error = ${rf.error}")
+  rf.predict(x(0))
+          </code></pre>
         </div>
+        <div class="caption">Random Forest in Smile's Scala API</div>
       </div>
     </div>
 

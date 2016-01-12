@@ -1,11 +1,7 @@
 <div class="col-md-3 col-md-push-9">
     <div class="sidebar-toc" style="margin-bottom: 20px;">
-        <ul class="list-unstyled">
-            <li><a class="index-h1" href="#faq">FAQ</a></li>
-            <li><a class="index-h1" href="#link-with-smile">Link with Smile</a></li>
-            <li><a class="index-h1" href="#model-serialization">Model serialization</a></li>
-            <li><a class="index-h1" href="#data-format">Data Format</a></li>
-        </ul>
+        <p class="toc-header">Contents</p>
+        <div id="toc"></div>
     </div>
 </div>
 
@@ -58,3 +54,7 @@
     including GCT, PCL, RES, and TXT files.
 </p>
 </div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

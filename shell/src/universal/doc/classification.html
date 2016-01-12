@@ -1,18 +1,7 @@
 <div class="col-md-3 col-md-push-9">
     <div class="sidebar-toc" style="margin-bottom: 20px;">
-        <ul class="list-unstyled">
-            <li><a class="index-h1" href="#classification-top">Classification</a></li>
-            <li><a class="index-h2" href="#features">Features</a></li>
-            <li><a class="index-h2" href="#supervised-learning">Supervised Learning</a></li>
-            <li><a class="index-h3" href="#overfitting">Overfitting</a></li>
-            <li><a class="index-h3" href="#model-validation">Model Validation</a></li>
-            <li><a class="index-h3" href="#regularization">Regularization</a></li>
-            <li><a class="index-h2" href="#unsupervised-learning">Unsupervised Learning</a></li>
-            <li><a class="index-h3" href="#clustering">Clustering</a></li>
-            <li><a class="index-h3" href="#latent-variable-models ">Latent Variable Models</a></li>
-            <li><a class="index-h3" href="#association-rule">Association Rules</a></li>
-            <li><a class="index-h2" href="#semi-supervised-learning">Semi-supervised Learning</a></li>
-        </ul>
+        <p class="toc-header">Contents</p>
+        <div id="toc"></div>
     </div>
 </div>
 
@@ -43,7 +32,7 @@
     <p>In what follows, we will discuss each algorithm, their high-level
         Scala API, and examples.</p>
 
-    <h2 class="title">Introduction</h2>
+    <h2 id="introduction">Introduction</h2>
 
     <p>In machine learning and pattern recognition,
         classification refers to an algorithmic procedure for assigning a given
@@ -199,3 +188,7 @@
         increases as a function of the number of data points).</p>
 
 </div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

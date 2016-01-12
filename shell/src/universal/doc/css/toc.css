@@ -1,0 +1,4 @@
+li.current-page {
+    list-style: circle;
+    font-weight: bold;
+}
