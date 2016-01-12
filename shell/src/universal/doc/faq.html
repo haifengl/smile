@@ -1,17 +1,22 @@
+<!-- scroll/follow sidebar -->
+<script src="js/follow-sidebar.js" type="text/javascript"></script>
+
 <div class="col-md-3 col-md-push-9">
-    <div class="sidebar-toc" style="margin-bottom: 20px;">
-        <p class="toc-header">Contents</p>
-        <div id="toc"></div>
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
     </div>
 </div>
 
 <div class="col-md-9 col-md-pull-3">
+    <h1 id="top" class="title">Smile FAQ</h1>
+    <h2 class="question" id="link-with-smile">Link with Smile</h2>
+    <p class="answer">
+        Smile artifacts are hosted in <a href="https://oss.sonatype.org/#nexus-search;quick~smile-core">Sonatgype Nexus</a>.
+        You can add the following dependency into your pom.xml:</p>
 
-<h1 id="faq" class="title">Smile FAQ</h1>
-<p class="question" id="link-with-smile">Link with Smile</p>
-<p class="answer">
-    Smile artifacts are hosted in <a href="https://oss.sonatype.org/#nexus-search;quick~smile-core">Sonatgype Nexus</a>.
-    You can add the following dependency into your pom.xml:
     <pre><code>
     &lt;dependency&gt;
       &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
@@ -19,40 +24,39 @@
       &lt;version&gt;1.1.0&lt;/version&gt;
     &lt;/dependency&gt;
     </code></pre>
-    If you're using SBT, add the following line into your build file:
+
+    <p>If you're using SBT, add the following line into your build file:</p>
+
     <pre><code>
     libraryDependencies += "com.github.haifengl" % "smile-core" % "1.1.0"
     </code></pre>
-</p>
 
-<p class="question" id="model-serialization">Model serialization</p>
-<p class="answer">
-    You may notice that none of models supports Java Serializable interface. It is because the exact format is hard
-    to keep stable, class changes can easily make your serialized data unreadable, reading/writing the data in
-    non-Java code is almost impossible. Currently, we suggest XStream to serialize the trained models.
-    XStream is a simple library to serialize objects to XML and back again. XStream is easy to use and
-    doesn't require mappings (actually requires no modifications to objects). In Scala API, we also provide
-    the helper functions <a href="api/scala/index.html#smile.io.package"><code>read</code></a> and
-    <a href="api/scala/index.html#smile.io.package"><code>write</code></a> to serialize and deserialize a model (or any
-    object).
-    <p/>
-    A nice alternative is Protostuff, which supports forward-backward compatibility (schema evolution) and
-    validation. Beyond XML, Protostuff supports many other formats such as JSON, YAML, protobuf, etc.
-    <p/>
-    For some predicitive models, we look forward to supporting PMML (Predictive Model Markup Language),
-    an XML-based file format developed by the Data Mining Group.
-</p>
+    <h2 class="question" id="model-serialization">Model serialization</h2>
+    <p class="answer">
+        You may notice that none of models supports Java Serializable interface. It is because the exact format is hard
+        to keep stable, class changes can easily make your serialized data unreadable, reading/writing the data in
+        non-Java code is almost impossible. Currently, we suggest XStream to serialize the trained models.
+        XStream is a simple library to serialize objects to XML and back again. XStream is easy to use and
+        doesn't require mappings (actually requires no modifications to objects). In Scala API, we also provide
+        the helper functions <a href="api/scala/index.html#smile.io.package"><code>read</code></a> and
+        <a href="api/scala/index.html#smile.io.package"><code>write</code></a> to serialize and deserialize a model (or any
+        object).<p/>
 
-<p class="question" id="data-format">Data Format</p>
-<p class="answer">
-    Most Smile algorithms take simple <code>double[]</code> as input. So you can use your favorite methods
-    or library to import the data as long as the samples are in double arrays. Meanwhile, Smile provides
-    a couple of parsers for popular data formats, such as Weka's ARFF files, LibSVM's file format,
-    delimited text files, and binary sparse data. These classes are in the package <code>smile.data.parser</code>
-    and <code>smile.io</code> provides high level operators on top of these parsers. The package
-    <code>smile.data.parser.microarray</code> also provides several parsers for microarray gene expression datasets,
-    including GCT, PCL, RES, and TXT files.
-</p>
+    <p>A nice alternative is Protostuff, which supports forward-backward compatibility (schema evolution) and
+        validation. Beyond XML, Protostuff supports many other formats such as JSON, YAML, protobuf, etc.</p>
+
+    <p>For some predicitive models, we look forward to supporting PMML (Predictive Model Markup Language),
+        an XML-based file format developed by the Data Mining Group.</p>
+
+    <h2 class="question" id="data-format">Data Format</h2>
+    <p class="answer">
+        Most Smile algorithms take simple <code>double[]</code> as input. So you can use your favorite methods
+        or library to import the data as long as the samples are in double arrays. Meanwhile, Smile provides
+        a couple of parsers for popular data formats, such as Weka's ARFF files, LibSVM's file format,
+        delimited text files, and binary sparse data. These classes are in the package <code>smile.data.parser</code>
+        and <code>smile.io</code> provides high level operators on top of these parsers. The package
+        <code>smile.data.parser.microarray</code> also provides several parsers for microarray gene expression datasets,
+        including GCT, PCL, RES, and TXT files.</p>
 </div>
 
 <script type="text/javascript">
