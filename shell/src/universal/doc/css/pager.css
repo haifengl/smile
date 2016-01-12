@@ -1,0 +1,34 @@
+/* Inspired by Bootstrap */
+.pager {
+    padding-left: 0;
+    margin: 20px 0;
+    list-style: none;
+}
+.pager li {
+    display: inline;
+}
+.pager li > a,
+.pager li > span {
+    display: inline-block;
+    padding: 10px;
+    margin-bottom: 10px;
+    /*border-radius: 10px;*/
+}
+.pager li > a:hover,
+.pager li > a:focus {
+    text-decoration: none;
+}
+
+.pager .previous > a,
+.pager .previous > span {
+    padding-left: 0;
+}
+
+.pager .disabled > a,
+.pager .disabled > a:hover,
+.pager .disabled > a:focus,
+.pager .disabled > span {
+    color: #777;
+    cursor: not-allowed;
+    background-color: #fff;
+}

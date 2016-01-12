@@ -349,3 +349,9 @@ figure {
   margin-left: 26px;
 }
 
+p.toc-header {
+  margin-left: 15px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
