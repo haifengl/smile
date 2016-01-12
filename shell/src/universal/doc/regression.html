@@ -1,3 +1,9 @@
+<!-- Google Analytics -->
+<script src="js/google-analytics.js" type="text/javascript"></script>
+
+<!-- prettify js and CSS -->
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=scala"></script>
+
 <!-- scroll/follow sidebar -->
 <script src="js/follow-sidebar.js" type="text/javascript"></script>
 
@@ -86,7 +92,7 @@
         however, a central limit theorem can be invoked such that hypothesis
         testing may proceed using asymptotic approximations.</p>
 
-    <pre><code>
+    <pre class="prettyprint lang-scala"><code>
     def ols(x: Array[Array[Double]], y: Array[Double]): OLS
     </code></pre>
 
@@ -113,7 +119,7 @@
         In this setting the belief that weight should be small is coded into a prior
         distribution.</p>
 
-    <pre><code>
+    <pre class="prettyprint lang-scala"><code>
     def ridge(x: Array[Array[Double]], y: Array[Double], lambda: Double): RidgeRegression
     </code></pre>
 
@@ -151,7 +157,7 @@
         quadratic programming or more general convex optimization methods, as well
         as by specific algorithms such as the least angle regression algorithm.</p>
 
-    <pre><code>
+    <pre class="prettyprint lang-scala"><code>
     def lasso(x: Array[Array[Double]], y: Array[Double], lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LASSO
     </code></pre>
 
@@ -168,7 +174,7 @@
         function ignores any training data close to the model prediction (within
         a threshold).</p>
 
-    <pre><code>
+    <pre class="prettyprint lang-scala"><code>
     def svr[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, weight: Array[Double] = null, tol: Double = 1E-3): SVR[T]
     </code></pre>
 
@@ -249,7 +255,7 @@
     <p>Some techniques such as bagging, boosting, and random forest use more than
         one decision tree for their analysis.</p>
 
-    <pre><code>
+    <pre class="prettyprint lang-scala"><code>
     def regressionTree(x: Array[Array[Double]], y: Array[Double], J: Int, attributes: Array[Attribute] = null): RegressionTree
     </code></pre>
 
@@ -306,7 +312,7 @@
         not reliable for this type of data.</li>
     </ul>
 
-    <pre><code>
+    <pre class="prettyprint lang-scala"><code>
     def randomRegressionForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 5, mtry: Int = -1, subsample: Double = 1.0): RandomForest
     </code></pre>
 
@@ -391,7 +397,7 @@
         to nodes containing fewer than this number of training set instances.
         Imposing this limit helps to reduce variance in predictions at leaves.</p>
 
-    <pre><code>
+    <pre class="prettyprint lang-scala"><code>
     def gbr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost
     </code></pre>
 
@@ -445,13 +451,13 @@
         
     <p>This method fits a regular Gaussian process model.</p>
         
-    <pre><code>
+    <pre class="prettyprint lang-scala"><code>
     def gaussianProcess[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T]
     </code></pre>
 
     <p>while the below function fit an approximate model</p>
 
-    <pre><code>
+    <pre class="prettyprint lang-scala"><code>
     def gaussianProcess[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double, nystrom: Boolean = false): GaussianProcessRegression[T]
     </code></pre>
 
@@ -513,7 +519,7 @@
         RBF network gives better generalization performance than SVM on large
         training data.</p>
 
-    <pre><code>
+    <pre class="prettyprint lang-scala"><code>
     def rbfnet[T](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T], normalized: Boolean): RBFNetwork[T]
     def rbfnet[T](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T], normalized: Boolean): RBFNetwork[T]
     </code></pre>
