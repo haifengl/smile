@@ -1,0 +1,149 @@
+<!-- Google Analytics -->
+<script src="js/google-analytics.js" type="text/javascript"></script>
+
+<!-- prettify js and CSS -->
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=scala"></script>
+
+<!-- scroll/follow sidebar -->
+<script src="js/follow-sidebar.js" type="text/javascript"></script>
+
+<div class="col-md-3 col-md-push-9">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+
+    <h1 id="shell" class="title">Smile Shell</h1>
+
+    <p>In this section, we will learn how to use Smile Shell. In this programming guide,
+        we will demonstrate most algorithms through the shell with the high level
+        <a href="api/scala/index.html">Scala API</a> as it is concise and is easy to use.
+        Note that all algorithms are implemented in Java and not all features
+        are exposed in Scala API. If you need more controls on the algorithm behaviors,
+        please refer to the <a href="api/java/index.html">Java API</a>.</p>
+
+    <h2 id="settings">Settings</h2>
+
+    <p>Smile runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS).
+        All you need is to have <code>Java</code> installed on your system <code>PATH</code>,
+        or the <code>JAVA_HOME</code> environment variable pointing to a Java installation.</p>
+
+    <p>In the home directory of Smile, type</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    ./bin/smile
+    </code></pre>
+    <p>to start the shell. Be default, the shell uses up to 4GB memory. If you need more memory
+        to handle large data, use the option <code>-J-Xmx</code>. For example,</p>
+    <pre class="prettyprint lang-scala"><code>
+    ./bin/smile -J-Xmx8192M
+    </code></pre>
+    <p>You can also modify the configuration file <code>./conf/application.ini</code>
+        for the memory and other JVM settings.</p>
+
+    <h2 id="basics">Basics</h2>
+
+    <p>When the shell starts, we should see something like the following:</p>
+    <pre class="prettyprint lang-scala"><code>
+                                                       ..::''''::..
+                                                     .;''        ``;.
+     ....                                           ::    ::  ::    ::
+   ,;' .;:                ()  ..:                  ::     ::  ::     ::
+   ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
+    '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
+  ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
+  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
+                                                       ``::,,,,::''
+
+  Welcome to Smile Shell; enter 'help&lt;RETURN&gt;' for list of supported commands.
+  Type ":quit&lt;RETURN&gt;" to leave the Smile Shell
+  Version 1.1.0, Scala 2.11.7, SBT 0.13.9, Built at 2016-01-14 04:47:10.516
+===============================================================================
+smile&gt;
+    </code></pre>
+    <p>The <strong>smile&gt;</strong> line is the prompt that the shell is waiting for you to enter expressions.
+        type <code>:help</code> to print system command help
+        information. To get help information of Smile high-level operators,
+        the <code>help</code>. You can also get detailed information on
+        each operator by typing <code>help("command")</code>, e.g.
+        <code>help("svm")</code>. To exit the shell, type <code>:quit</code>.</p>
+
+    <h2 id="calculator">Calculator</h2>
+
+    <p>Smile Shell is based on <a href="http://www.scala-lang.org">Scala</a> interpreter. So you can run any valid Scala
+        expressions in the shell. In the simplest case, you can use it as a calculator.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smlie&gt; "Hello world"
+    res0: String = Hello world
+
+    smile&gt; 2
+    res1: Int = 2
+
+    smile&gt; 2+3
+    res2: Int = 5
+    </code></pre>
+
+    <p>We can also define variables and reuse them.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val x = 2 + 3
+    x: Int = 5
+
+    smile&gt; print(x)
+    5
+
+    smile&gt; val y = 2 * (x + 1)
+    z: Int = 12
+    </code></pre>
+
+    <p>Functions can be defined too. As Scala is a functional language, functions are
+    first class citizen, just like other values.</p>
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; def sq(x: Double) = x * x
+    sq: (x: Double)Double
+
+    smile&gt; sq(y)
+    res4: Double = 441.0
+    </code></pre>
+    <p>Scala is a powerful and complicated language that fuses object-oriented programming and functional programming.
+        Although you don't need to know all the bell and whistles of Scala to use Smile, we strongly recommend you to
+        learn some <a href="http://www.scala-lang.org/documentation/">basics</a>.</p>
+
+    <h2 id="script">Script</h2>
+
+    <p>We may also run Smile code as a shell script or batch command.
+        The <a href="http://www.gnu.org/software/bash/">bash</a> shell script
+        <code>iris.sh</code> containing the following Smile code</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    #!/bin/bash
+    exec smile "$0" "$@"
+    !#
+    val data = readArff("data/weka/iris.arff", 4)
+    val (x, y) = data.unzipInt
+
+    val rf = randomDecisionForest(x, y)
+    println(s"OOB error = ${rf.error}")
+    </code></pre>
+
+    <p>can be run directly from the command shell:</p>
+
+    <pre class="prettyprint lang-bash"><code>
+    $ ./iris.sh
+    </code></pre>
+
+    <p>Please make sure that the file <code>iris.sh</code> has execute access
+        and the search path for the <code>smile</code> command is specified
+        in the <code>PATH</code> environment variable.</p>
+
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>
