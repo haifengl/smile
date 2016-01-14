@@ -87,9 +87,9 @@ package object util {
     println("Sensitivity/Recall = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
     println("Specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
     println("Precision = %.2f%%" format (100.0 * new Precision().measure(testy, pred)))
-    println("F1-Score = %.2f%%" format (100.0 * new FScore().measure(testy, pred)))
-    println("F2-Score = %.2f%%" format (100.0 * new FScore(2).measure(testy, pred)))
-    println("F0.5-Score = %.2f%%" format (100.0 * new FScore(0.5).measure(testy, pred)))
+    println("F1-Score = %.2f%%" format (100.0 * new FMeasure().measure(testy, pred)))
+    println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, pred)))
+    println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, pred)))
 
     classifier
   }
@@ -137,9 +137,9 @@ package object util {
     println("Sensitivity/Recall = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
     println("Specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
     println("Precision = %.2f%%" format (100.0 * new Precision().measure(testy, pred)))
-    println("F1-Score = %.2f%%" format (100.0 * new FScore().measure(testy, pred)))
-    println("F2-Score = %.2f%%" format (100.0 * new FScore(2).measure(testy, pred)))
-    println("F0.5-Score = %.2f%%" format (100.0 * new FScore(0.5).measure(testy, pred)))
+    println("F1-Score = %.2f%%" format (100.0 * new FMeasure().measure(testy, pred)))
+    println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, pred)))
+    println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, pred)))
     println("AUC = %.2f%%" format (100.0 * AUC.measure(testy, prob)))
 
     classifier
