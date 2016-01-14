@@ -1,0 +1,85 @@
+<!-- Google Analytics -->
+<script src="js/google-analytics.js" type="text/javascript"></script>
+
+<!-- prettify js and CSS -->
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=scala"></script>
+
+<!-- scroll/follow sidebar -->
+<script src="js/follow-sidebar.js" type="text/javascript"></script>
+
+<div class="col-md-3 col-md-push-9">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="Data" class="title">Data</h1>
+
+    <p>In this section, we will learn how to use Smile Shell, load data and save models,
+    and visualize data in various ways. In the programming guide, we will mostly use
+    the high level <a href="api/scala/index.html">Scala API</a> as it is concise and is easy to use. Note that all algorithms
+    are implemented in Java and not all features and controls are exposed in Scala API.
+    If you need more controls on the algorithm behaviors, please refer to the <a href="api/java/index.html">Java API</a>.</p>
+
+<h1 id="shell">Shell</h1>
+
+<p>Smile comes with an interactive shell. In the home directory of Smile, type
+    <pre><code>
+        ./bin/smile
+    </code></pre>
+    to enter the shell, which is based on Scala interpreter. So you can run any valid Scala
+    expressions in the shell. In the simplest case, you can use it as a calculator.
+    Besides, all high-level Smile operators are predefined
+    in the shell. Be default, the shell uses up to 4GB memory. If you need more memory
+    to handle large data, use the option <code>-J-Xmx4096M</code>. For example,
+    <pre><code>
+        ./bin/smile -J-Xmx8192M
+    </code></pre>
+    You can also modify the configuration file <code>./conf/application.ini</code>
+    for the memory and other JVM settings.</p>
+
+<p>In the shell, type <code>:help</code> to print Scala interpreter help
+    information. To get help information of Smile high-level operators,
+    thpe <code>help</code>. You can also get detailed information on
+    each operator by typing <code>help("command")</code>, e.g.
+    <code>help("svm")</code>. To exit the shell, type <code>:quit</code>.</p>
+
+<p>In the shell, type <code>demo</code> to bring up the demo window,
+    which shows off various Smile's machine learning capabilities.</p>
+
+<p>You can also type <code>benchmark()</code> to see Smile's performance
+    on a couple of test data. You can run a particular benchmark by
+    <code>bencharm("test name")</code>, where test name could be "airline",
+    "usps", etc.</p>
+
+<p>In the <code>data</code> directory, we also include many open datasets,
+    which are frequently used in research and benchmark. Now let&#8217;s build
+    a classification model with Smile. It is as easy as</p>
+<pre><code>
+    val data = readArff("data/weka/iris.arff", 4)<br/>
+    val (x, y) = data.unzipInt<br/>
+    <br/>
+    val rf = randomForest(x, y)<br/>
+    println(s"OOB error = ${rf.error}")<br/>
+    rf.predict(x(0)) // or predict(rf, x(0))
+</code></pre>
+
+<p>In this example, we use the famous Iris data from R.A. Fisher. The data
+    is in Weka's ARFF format. The second parameter of readArff is the column index
+    of response variable. With our parsers, the column index starts with 0. The
+    function readArff returns an object of <code>AttributeDataset</code>.
+    Besides the data itself, an <code>AttributeDataset</code> object also contains many meta data.
+    Then we use the help function <code>unzipInt</code> to get the training
+    data and labels. For regression, you may use <code>unzipDouble</code> as
+    the response variable is real value. Finally, we train a random forest
+    with default parameters and print out its OOB (out of bag) error. We can apply
+    the model on new data samples with the method <code>predict</code>.</p>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>
