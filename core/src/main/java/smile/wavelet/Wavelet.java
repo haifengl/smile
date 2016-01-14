@@ -21,7 +21,7 @@ import smile.math.Math;
 /**
  * A wavelet is a wave-like oscillation with an amplitude that starts out at
  * zero, increases, and then decreases back to zero. Like the fast Fourier
- * transform (FFT), the discrete wavelet trainsform (DWT) is a fast, linear
+ * transform (FFT), the discrete wavelet transform (DWT) is a fast, linear
  * operation that operates on a data vector whose length is an integer power
  * of 2, transforming it into a numerically different vector of the same length.
  * The wavelet transform is invertible and in fact orthogonal. Both FFT and DWT
