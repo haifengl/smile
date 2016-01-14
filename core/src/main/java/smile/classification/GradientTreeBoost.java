@@ -98,7 +98,7 @@ import smile.validation.ClassificationMeasure;
  * 
  * @author Haifeng Li
  */
-public class GradientTreeBoost implements Classifier<double[]> {
+public class GradientTreeBoost implements SoftClassifier<double[]> {
     /**
      * The number of classes.
      */
@@ -137,7 +137,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
     /**
      * The sampling rate for stochastic tree boosting.
      */
-    private double f = 0.7;
+    private double subsample = 0.7;
     
     /**
      * Trainer for GradientTreeBoost classifiers.
@@ -158,7 +158,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
         /**
          * The sampling rate for stochastic tree boosting.
          */
-        private double f = 0.7;
+        private double subsample = 0.7;
 
         /**
          * Default constructor of 500 trees.
@@ -237,20 +237,20 @@ public class GradientTreeBoost implements Classifier<double[]> {
 
         /**
          * Sets the sampling rate for stochastic tree boosting.
-         * @param f the sampling rate for stochastic tree boosting.
+         * @param subsample the sampling rate for stochastic tree boosting.
          */
-        public Trainer setSamplingRates(double f) {
-            if (f <= 0 || f > 1) {
-                throw new IllegalArgumentException("Invalid sampling fraction: " + f);
+        public Trainer setSamplingRates(double subsample) {
+            if (subsample <= 0 || subsample > 1) {
+                throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
             }
 
-            this.f = f;
+            this.subsample = subsample;
             return this;
         }
         
         @Override
         public GradientTreeBoost train(double[][] x, int[] y) {
-            return new GradientTreeBoost(attributes, x, y, ntrees, maxNodes, shrinkage, f);
+            return new GradientTreeBoost(attributes, x, y, ntrees, maxNodes, shrinkage, subsample);
         }
     }
     
@@ -299,9 +299,9 @@ public class GradientTreeBoost implements Classifier<double[]> {
      * @param ntrees the number of iterations (trees).
      * @param maxNodes the number of leaves in each tree.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
-     * @param f the sampling fraction for stochastic tree boosting.
+     * @param subsample the sampling fraction for stochastic tree boosting.
      */
-    public GradientTreeBoost(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, double shrinkage, double f) {
+    public GradientTreeBoost(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, double shrinkage, double subsample) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -318,8 +318,8 @@ public class GradientTreeBoost implements Classifier<double[]> {
             throw new IllegalArgumentException("Invalid shrinkage: " + shrinkage);            
         }
 
-        if (f <= 0 || f > 1) {
-            throw new IllegalArgumentException("Invalid sampling fraction: " + f);            
+        if (subsample <= 0 || subsample > 1) {
+            throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
         }
         
         if (attributes == null) {
@@ -333,7 +333,7 @@ public class GradientTreeBoost implements Classifier<double[]> {
         this.ntrees = ntrees;
         this.maxNodes = maxNodes;
         this.shrinkage = shrinkage;
-        this.f = f;
+        this.subsample = subsample;
         this.k = Math.max(y) + 1;
 
         if (k < 2) {
@@ -380,7 +380,11 @@ public class GradientTreeBoost implements Classifier<double[]> {
      */
     private void train2(Attribute[] attributes, double[][] x, int[] y) {        
         int n = x.length;
-        int N = (int) Math.round(n * f);
+
+        int[] nc = new int[k];
+        for (int i = 0; i < n; i++) {
+            nc[y[i]]++;
+        }
 
         int[] y2 = new int[n];
         for (int i = 0; i < n; i++) {
@@ -390,13 +394,11 @@ public class GradientTreeBoost implements Classifier<double[]> {
                 y2[i] = -1;
             }
         }
-
-        y = y2;
         
         double[] h = new double[n]; // current F(x_i)
         double[] response = new double[n]; // response variable for regression tree.
 
-        double mu = Math.mean(y);
+        double mu = Math.mean(y2);
         b = 0.5 * Math.log((1 + mu) / (1 - mu));
 
         for (int i = 0; i < n; i++) {
@@ -415,14 +417,21 @@ public class GradientTreeBoost implements Classifier<double[]> {
 
         for (int m = 0; m < ntrees; m++) {
             Arrays.fill(samples, 0);
-
             Math.permutate(perm);
-            for (int i = 0; i < N; i++) {
-                samples[perm[i]] = 1;
+            for (int l = 0; l < k; l++) {
+                int subj = (int) Math.round(nc[l] * subsample);
+                int count = 0;
+                for (int i = 0; i < n && count < subj; i++) {
+                    int xi = perm[i];
+                    if (y[xi] == l) {
+                        samples[xi] = 1;
+                        count++;
+                    }
+                }
             }
 
             for (int i = 0; i < n; i++) {
-                response[i] = 2.0 * y[i] / (1 + Math.exp(2 * y[i] * h[i]));
+                response[i] = 2.0 * y2[i] / (1 + Math.exp(2 * y2[i] * h[i]));
             }
 
             trees[m] = new RegressionTree(attributes, x, response, maxNodes, 5, x[0].length, order, samples, output);
@@ -438,8 +447,12 @@ public class GradientTreeBoost implements Classifier<double[]> {
      */
     private void traink(Attribute[] attributes, double[][] x, int[] y) {        
         int n = x.length;
-        int N = (int) Math.round(n * f);
-        
+
+        int[] nc = new int[k];
+        for (int i = 0; i < n; i++) {
+            nc[y[i]]++;
+        }
+
         double[][] h = new double[k][n]; // boost tree output.
         double[][] p = new double[k][n]; // posteriori probabilities.
         double[][] response = new double[k][n]; // pseudo response.
@@ -490,8 +503,16 @@ public class GradientTreeBoost implements Classifier<double[]> {
 
                 Arrays.fill(samples, 0);
                 Math.permutate(perm);
-                for (int i = 0; i < N; i++) {
-                    samples[perm[i]] = 1;
+                for (int l = 0; l < k; l++) {
+                    int subj = (int) Math.round(nc[l] * subsample);
+                    int count = 0;
+                    for (int i = 0; i < n && count < subj; i++) {
+                        int xi = perm[i];
+                        if (y[xi] == l) {
+                            samples[xi] = 1;
+                            count++;
+                        }
+                    }
                 }
 
                 forest[j][m] = new RegressionTree(attributes, x, response[j], maxNodes, 5, x[0].length, order, samples, output[j]);

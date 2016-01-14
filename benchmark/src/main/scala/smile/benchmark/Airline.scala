@@ -18,9 +18,7 @@ package smile.benchmark
 import smile.data._
 import smile.data.parser.DelimitedTextParser
 import smile.classification._
-import smile.io._
 import smile.math.Math
-import smile.validation._
 import smile.util._
 
 /**
@@ -69,21 +67,22 @@ object Airline {
 
     val (x, y) = train.unzipInt
     val (testx, testy) = test.unzipInt
+
     val pos = Math.sum(y)
     val testpos = Math.sum(testy)
     println(s"train data positive : negative =  $pos : ${y.length - pos}")
     println(s"test  data positive : negative =  $testpos : ${testy.length - testpos}")
 
     // The data is unbalanced. Large positive class weight of should improve sensitivity.
-    val classWeight = Array(1, 1)
+    val classWeight = Array(4, 1)
 
     // Random Forest
-    val forest = test2(x, y, testx, testy) { (x, y) =>
+    val forest = test2soft(x, y, testx, testy) { (x, y) =>
       println("Training Random Forest of 500 trees...")
       if (x.length <= 100000)
-        new RandomForest(attributes, x, y, 500, 400, 5, 2, DecisionTree.SplitRule.ENTROPY, classWeight)
+        randomDecisionForest(x, y, attributes, 500, 500, 5, 2, 0.5, DecisionTree.SplitRule.ENTROPY, classWeight)
       else
-        new RandomForest(attributes, x, y, 500, 650, 5, 2, DecisionTree.SplitRule.ENTROPY, classWeight)
+        randomDecisionForest(x, y, attributes, 500, 800, 25, 2, 0.5, DecisionTree.SplitRule.ENTROPY, classWeight)
     }.asInstanceOf[RandomForest]
 
     println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
@@ -92,15 +91,21 @@ object Airline {
     }
 
     // Gradient Tree Boost
-    test2(x, y, testx, testy) { (x, y) =>
+    test2soft(x, y, testx, testy) { (x, y) =>
       println("Training Gradient Boosted Trees of 300 trees...")
-      new GradientTreeBoost(attributes, x, y, 300, 6, 0.1, 0.5)
+      if (x.length <= 100000)
+        gbc(x, y, attributes, 300, 6, 0.1, 0.5)
+      else
+        gbc(x, y, attributes, 300, 50, 0.1, 0.5)
     }
 
     // AdaBoost
-    test2(x, y, testx, testy) { (x, y) =>
+    test2soft(x, y, testx, testy) { (x, y) =>
       println("Training AdaBoost of 300 trees...")
-      new AdaBoost(attributes, x, y, 300, 6)
+      if (x.length <= 100000)
+        adaboost(x, y, attributes, 300, 6)
+      else
+        adaboost(x, y, attributes, 300, 50)
     }
   }
 }

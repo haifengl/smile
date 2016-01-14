@@ -73,7 +73,7 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class LogisticRegression implements Classifier<double[]> {
+public class LogisticRegression implements SoftClassifier<double[]> {
 
     /**
      * The dimension of input space.

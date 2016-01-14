@@ -29,7 +29,18 @@ import smile.util._
   */
 trait Operators {
 
-  /** Apply a classification model on a data sample.
+  /** Apply a classifier on an instance.
+    *
+    * @param model classification model.
+    * @param x data sample.
+    * @tparam T the data type.
+    * @return the predicted class label.
+    */
+  def predict[T <: AnyRef](model: Classifier[T], x: T): Int = {
+    model.predict(x)
+  }
+
+  /** Apply a soft classifier on an instance.
     *
     * @param model classification model.
     * @param x data sample.
@@ -37,11 +48,8 @@ trait Operators {
     * @tparam T the data type.
     * @return the predicted class label.
     */
-  def predict[T <: AnyRef](model: Classifier[T], x: T, posteriori: Array[Double] = null): Int = {
-    if (posteriori == null)
-      model.predict(x)
-    else
-      model.predict(x, posteriori)
+  def predict[T <: AnyRef](model: SoftClassifier[T], x: T, posteriori: Array[Double]): Int = {
+    model.predict(x, posteriori)
   }
 
   /** K-nearest neighbor classifier.
@@ -578,12 +586,12 @@ trait Operators {
     *
     * @param x the training instances.
     * @param y the response variable.
-    * @param J the maximum number of leaf nodes in the tree.
+    * @param maxNodes the maximum number of leaf nodes in the tree.
     * @param attributes the attribute properties.
     * @param splitRule the splitting rule.
     * @return Decision tree model.
     */
-  def decisionTree(x: Array[Array[Double]], y: Array[Int], J: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
+  def decisionTree(x: Array[Array[Double]], y: Array[Int], maxNodes: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -593,7 +601,7 @@ trait Operators {
     } else attributes
 
     time {
-      new DecisionTree(attr, x, y, J, splitRule)
+      new DecisionTree(attr, x, y, maxNodes, splitRule)
     }
   }
 
@@ -637,18 +645,20 @@ trait Operators {
     * @param y the response variable.
     * @param attributes the attribute properties. If not provided, all attributes
     *                   are treated as numeric values.
-    * @param T the number of trees.
+    * @param ntrees the number of trees.
     * @param mtry the number of random selected features to be used to determine
     *             the decision at a node of the tree. floor(sqrt(dim)) seems to give
     *             generally good performance, where dim is the number of variables.
-    * @param S number of instances in a node below which the tree will not split.
-    * @param J maximum number of leaf nodes.
+    * @param nodeSize number of instances in a node below which the tree will not split.
+    * @param maxNodes maximum number of leaf nodes.
+    * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+    *                  sampling without replacement.
     * @param splitRule Decision tree node split rule.
     * @param classWeight Priors of the classes.
     *
     * @return Random forest classification model.
     */
-  def rfc(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, S: Int = 1, J: Int = -1, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
+  def randomDecisionForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 1, mtry: Int = -1, subsample: Double = 1.0, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -659,13 +669,13 @@ trait Operators {
 
     val m = if (mtry <= 0) Math.floor(Math.sqrt(p)).toInt else mtry
 
-    val j = if (J <= 1) x.length / S else J
+    val j = if (maxNodes <= 1) x.length / nodeSize else maxNodes
 
     val k = Math.max(y: _*) + 1
     val weight = if (classWeight == null) Array.fill[Int](k)(1) else classWeight
 
     time {
-      new RandomForest(attr, x, y, T, m, S, j, splitRule, weight)
+      new RandomForest(attr, x, y, ntrees, j, nodeSize, m, subsample, splitRule, weight)
     }
   }
 
@@ -741,14 +751,14 @@ trait Operators {
     * @param y the class labels.
     * @param attributes the attribute properties. If not provided, all attributes
     *                   are treated as numeric values.
-    * @param T the number of iterations (trees).
-    * @param J the number of leaves in each tree.
-    * @param eta the shrinkage parameter in (0, 1] controls the learning rate of procedure.
-    * @param f the sampling fraction for stochastic tree boosting.
+    * @param ntrees the number of iterations (trees).
+    * @param maxNodes the number of leaves in each tree.
+    * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+    * @param subsample the sampling fraction for stochastic tree boosting.
     *
     * @return Gradient boosted trees.
     */
-  def gbc(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 6, eta: Double = 0.05, f: Double = 0.7): GradientTreeBoost = {
+  def gbc(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -758,7 +768,7 @@ trait Operators {
     } else attributes
 
     time {
-      new GradientTreeBoost(attr, x, y, T, J, eta, f)
+      new GradientTreeBoost(attr, x, y, ntrees, maxNodes, shrinkage, subsample)
     }
   }
 
@@ -792,12 +802,12 @@ trait Operators {
     * @param y the response variable.
     * @param attributes the attribute properties. If not provided, all attributes
     *                   are treated as numeric values.
-    * @param T the number of trees.
-    * @param J the maximum number of leaf nodes in the trees.
+    * @param ntrees the number of trees.
+    * @param maxNodes the maximum number of leaf nodes in the trees.
     *
     * @return AdaBoost model.
     */
-  def adaboost(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, T: Int = 500, J: Int = 2): AdaBoost = {
+  def adaboost(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 2): AdaBoost = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -807,7 +817,7 @@ trait Operators {
     } else attributes
 
     time {
-      new AdaBoost(attr, x, y, T, J)
+      new AdaBoost(attr, x, y, ntrees, maxNodes)
     }
   }
 

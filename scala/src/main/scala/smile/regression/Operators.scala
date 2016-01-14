@@ -27,7 +27,7 @@ import smile.util._
   */
 trait Operators {
 
-  /** Apply a regression model on a data sample.
+  /** Apply a regression model on an instance.
     *
     * @param model regression model
     * @param x data sample
@@ -165,44 +165,28 @@ trait Operators {
     }
   }
 
-  /** Support vector regression. Like SVMs for classification, the model produced
+  /** Support vector regression. Like SVM for classification, the model produced
     * by SVR depends only on a subset of the training data, because the cost
     * function ignores any training data close to the model prediction (within
     * a threshold).
     *
-    * @param x training data
-    * @param y training labels
+    * @param x training data.
+    * @param y response variable.
     * @param kernel the kernel function.
     * @param eps the loss function error threshold.
     * @param C the soft margin penalty parameter.
-    * @param tol the tolerance of convergence test.
-    * @tparam T the data type
-    *
-    * @return SVR model.
-    */
-  def svr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): SVR[T] = {
-    new SVR[T](x, y, kernel, eps, C, tol)
-  }
-
-  /** Support vector regression. Like SVMs for classification, the model produced
-    * by SVR depends only on a subset of the training data, because the cost
-    * function ignores any training data close to the model prediction (within
-    * a threshold).
-    *
-    * @param x training data
-    * @param y training labels
     * @param weight positive instance weight. The soft margin penalty
     *               parameter for instance i will be weight[i] * C.
-    * @param kernel the kernel function.
-    * @param eps the loss function error threshold.
-    * @param C the soft margin penalty parameter.
     * @param tol the tolerance of convergence test.
     * @tparam T the data type
     *
     * @return SVR model.
     */
-  def svr[T <: AnyRef](x: Array[T], y: Array[Double], weight: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double): SVR[T] = {
-    new SVR[T](x, y, weight, kernel, eps, C, tol)
+  def svr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, weight: Array[Double] = null, tol: Double = 1E-3): SVR[T] = {
+    if (weight == null)
+      new SVR[T](x, y, kernel, eps, C, tol)
+    else
+      new SVR[T](x, y, weight, kernel, eps, C, tol)
   }
 
   /** Regression tree. A decision tree can be learned by
@@ -269,11 +253,11 @@ trait Operators {
     *
     * @param x the training instances.
     * @param y the response variable.
-    * @param J the maximum number of leaf nodes in the tree.
+    * @param maxNodes the maximum number of leaf nodes in the tree.
     * @param attributes the attribute properties.
     * @return Regression tree model.
     */
-  def regressionTree(x: Array[Array[Double]], y: Array[Double], J: Int, attributes: Array[Attribute] = null): RegressionTree = {
+  def regressionTree(x: Array[Array[Double]], y: Array[Double], maxNodes: Int, attributes: Array[Attribute] = null): RegressionTree = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -283,7 +267,7 @@ trait Operators {
     } else attributes
 
     time {
-      new RegressionTree(attr, x, y, J)
+      new RegressionTree(attr, x, y, maxNodes)
     }
   }
 
@@ -327,16 +311,19 @@ trait Operators {
     * @param y the response variable.
     * @param attributes the attribute properties. If not provided, all attributes
     *                   are treated as numeric values.
-    * @param T the number of trees.
+    * @param ntrees the number of trees.
     * @param mtry the number of input variables to be used to determine the decision
     *             at a node of the tree. dim/3 seems to give generally good performance,
     *             where dim is the number of variables.
-    * @param S the number of instances in a node below which the tree will
-    *          not split, setting S = 5 generally gives good results.
+    * @param nodeSize the number of instances in a node below which the tree will
+    *          not split, setting nodeSize = 5 generally gives good results.
+    * @param maxNodes maximum number of leaf nodes.
+    * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+    *                  sampling without replacement.
     *
-    * @return Random forest classification model.
+    * @return Random forest regression model.
     */
-  def rfr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, T: Int = 500, mtry: Int = -1, S: Int = 5, J: Int = -1): RandomForest = {
+  def randomRegressionForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 5, mtry: Int = -1, subsample: Double = 1.0): RandomForest = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -347,14 +334,14 @@ trait Operators {
 
     val m = if (mtry <= 0) p / 3 else mtry
 
-    val j = if (J <= 1) x.length / S else J
+    val j = if (maxNodes <= 1) x.length / nodeSize else maxNodes
 
     time {
-      new RandomForest(attr, x, y, T, m, S, j)
+      new RandomForest(attr, x, y, ntrees, j, nodeSize, m, subsample)
     }
   }
 
-  /** Gradient boosting for classification. Gradient boosting is typically used
+  /** Gradient boosting for regression. Gradient boosting is typically used
     * with decision trees (especially CART regression trees) of a fixed size as
     * base learners. For this special case Friedman proposes a modification to
     * gradient boosting method which improves the quality of fit of each base
@@ -423,19 +410,19 @@ trait Operators {
     *  - J. H. Friedman. Stochastic Gradient Boosting, 1999.
     *
     * @param x the training instances.
-    * @param y the class labels.
+    * @param y the response variable.
     * @param attributes the attribute properties. If not provided, all attributes
     *                   are treated as numeric values.
     * @param loss loss function for regression. By default, least absolute
     *             deviation is employed for robust regression.
-    * @param T the number of iterations (trees).
-    * @param J the number of leaves in each tree.
-    * @param eta the shrinkage parameter in (0, 1] controls the learning rate of procedure.
-    * @param f the sampling fraction for stochastic tree boosting.
+    * @param ntrees the number of iterations (trees).
+    * @param maxNodes the number of leaves in each tree.
+    * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+    * @param subsample the sampling fraction for stochastic tree boosting.
     *
     * @return Gradient boosted trees.
     */
-  def gbr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, T: Int = 500, J: Int = 6, eta: Double = 0.05, f: Double = 0.7): GradientTreeBoost = {
+  def gbr(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -445,7 +432,7 @@ trait Operators {
     } else attributes
 
     time {
-      new GradientTreeBoost(attr, x, y, loss, T, J, eta, f)
+      new GradientTreeBoost(attr, x, y, loss, ntrees, maxNodes, shrinkage, subsample)
     }
   }
 
@@ -578,7 +565,7 @@ trait Operators {
     *  - Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
     *
     * @param x training samples.
-    * @param y training labels in [0, k), where k is the number of classes.
+    * @param y response variable.
     * @param distance the distance metric functor.
     * @param rbf the radial basis functions.
     * @param centers the centers of RBF functions.
@@ -646,7 +633,7 @@ trait Operators {
     *  - Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
     *
     * @param x training samples.
-    * @param y training labels in [0, k), where k is the number of classes.
+    * @param y response variable.
     * @param distance the distance metric functor.
     * @param rbf the radial basis functions.
     * @param centers the centers of RBF functions.

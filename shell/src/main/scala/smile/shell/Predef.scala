@@ -14,12 +14,12 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile
+package smile.shell
 
-/** Data visualization.
+/** The Predef object provides definitions that are accessible in the shell without explicit qualification.
   *
   * @author Haifeng Li
   */
-package object plot extends Operators {
+object Predef extends smile.classification.Operators with smile.regression.Operators {
 
 }
