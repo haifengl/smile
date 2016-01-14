@@ -47,8 +47,8 @@
     <p>To test the latest code, run the following</p>
 
     <pre class="prettyprint lang-bash"><code>
-          git pull
-          ./smile.sh
+        git pull
+        ./smile.sh
     </code></pre>
 
     <p>which will build the system and enter the shell.</p>
@@ -68,11 +68,12 @@
         ./bin/smile
     </code></pre>
 
-    <p>to enter the shell, which is based on Scala interpreter. So you can run any valid Scala
+    <p>to enter the shell, which is based on <a href="http://www.scala-lang.org">Scala</a>
+        interpreter. So you can run any valid Scala
         expressions in the shell. In the simplest case, you can use it as a calculator.
         Besides, all high-level Smile operators are predefined
         in the shell. Be default, the shell uses up to 4GB memory. If you need more memory
-        to handle large data, use the option <code>-J-Xmx4096M</code>. For example,</p>
+        to handle large data, use the option <code>-J-Xmx</code>. For example,</p>
 
     <pre class="prettyprint lang-bash"><code>
         ./bin/smile -J-Xmx8192M
@@ -83,7 +84,7 @@
 
     <p>In the shell, type <code>:help</code> to print Scala interpreter help
         information. To get help information of Smile high-level operators,
-        thpe <code>help</code>. You can also get detailed information on
+        the <code>help</code>. You can also get detailed information on
         each operator by typing <code>help("command")</code>, e.g.
         <code>help("svm")</code>. To exit the shell, type <code>:quit</code>.</p>
 
