@@ -20,6 +20,8 @@ package smile.shell
   *
   * @author Haifeng Li
   */
-trait Operators extends smile.classification.Operators with smile.regression.Operators {
+trait Operators extends smile.classification.Operators
+  with smile.regression.Operators
+  with smile.io.Operators {
 
 }
