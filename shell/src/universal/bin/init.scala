@@ -22,4 +22,4 @@
 import smile.math.Math._, smile.util._
 import smile.data._, smile.io._
 import java.awt.Color, smile.plot._
-import smile.shell._, smile.shell.Operators._
+import smile.shell._
