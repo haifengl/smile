@@ -75,7 +75,8 @@ smile&gt;
 
     <h2 id="calculator">Calculator</h2>
 
-    <p>Smile Shell is based on <a href="http://www.scala-lang.org">Scala</a> interpreter. So you can run any valid Scala
+    <p>Smile Shell is based on <a href="http://www.scala-lang.org">Scala</a> interpreter.
+        (Scala installation is not required to run Smile.) So you can run any valid Scala
         expressions in the shell. In the simplest case, you can use it as a calculator.</p>
 
     <pre class="prettyprint lang-scala"><code>
@@ -112,7 +113,7 @@ smile&gt;
     res4: Double = 441.0
     </code></pre>
     <p>Scala is a powerful and complicated language that fuses object-oriented programming and functional programming.
-        Although you don't need to know all the bell and whistles of Scala to use Smile, we strongly recommend you to
+        Although you don't need to know all the bells and whistles of Scala to use Smile, we strongly recommend you to
         learn some <a href="http://www.scala-lang.org/documentation/">basics</a>.</p>
 
     <h2 id="script">Script</h2>
@@ -123,8 +124,11 @@ smile&gt;
 
     <pre class="prettyprint lang-scala"><code>
     #!/bin/bash
-    exec smile "$0" "$@"
+    exec smile -nc "$0" "$@"
     !#
+    import smile.data._
+    import smile.shell._
+
     val data = readArff("data/weka/iris.arff", 4)
     val (x, y) = data.unzipInt
 
