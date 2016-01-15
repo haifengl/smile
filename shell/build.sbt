@@ -6,7 +6,7 @@ crossPaths := true
 
 autoScalaLibrary := true
 
-mainClass in Compile := Some("smile.shell.Shell")
+mainClass in Compile := Some("smile.shell.Main")
 
 // SBT native packager
 enablePlugins(JavaAppPackaging)

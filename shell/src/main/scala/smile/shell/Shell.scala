@@ -16,40 +16,30 @@
 
 package smile.shell
 
-import scala.sys.SystemProperties
 import scala.tools.nsc.interpreter.ILoop
-import scala.tools.nsc.Settings
 
 /** Smile shell.
   *
   * @author Haifeng Li
   */
-object Shell extends App {
-  val settings = new Settings
-  settings.usejavacp.value = true
-  settings.deprecation.value = true
-
-  new SmileILoop().process(settings)
-
-  class SmileILoop extends ILoop  {
-    override def prompt = "smile> "
-    override def printWelcome = echo(
-      s"""
-         |                                                       ..::''''::..
-         |                                                     .;''        ``;.
-         |     ....                                           ::    ::  ::    ::
-         |   ,;' .;:                ()  ..:                  ::     ::  ::     ::
-         |   ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
-         |    '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
-         |  ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
-         |  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
-         |                                                       ``::,,,,::''
-         |
-         |  Welcome to Smile Shell; enter 'help<RETURN>' for list of supported commands.
-         |  Type ":quit<RETURN>" to leave the Smile Shell
-         |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion}, Built at ${BuildInfo.builtAtString}
-         |===============================================================================
-       """.stripMargin
+class SmileILoop extends ILoop  {
+  override def prompt = "smile> "
+  override def printWelcome = echo(
+    s"""
+       |                                                       ..::''''::..
+       |                                                     .;''        ``;.
+       |     ....                                           ::    ::  ::    ::
+       |   ,;' .;:                ()  ..:                  ::     ::  ::     ::
+       |   ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
+       |    '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
+       |  ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
+       |  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
+       |                                                       ``::,,,,::''
+       |
+       |  Welcome to Smile Shell; enter 'help<RETURN>' for list of supported commands.
+       |  Type ":quit<RETURN>" to leave the Smile Shell
+       |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion}, Built at ${BuildInfo.builtAtString}
+       |===============================================================================
+      """.stripMargin
     )
-  }
 }
