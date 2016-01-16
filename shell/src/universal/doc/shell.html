@@ -73,10 +73,20 @@ smile&gt;
         each operator by typing <code>help("command")</code>, e.g.
         <code>help("svm")</code>. To exit the shell, type <code>:quit</code>.</p>
 
+    <p>On startup, the shell analyzes the classpath and creates a database of every visible package and path.
+        This is available via tab-completion analogous to the path-completion available in most shells.
+        If you type a partial path, tab will complete as far as it can and show you your options
+        if there is more than one.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; smile.classification.r
+    randomDecisionForest   rbfnet   rda
+    </code></pre>
+
     <h2 id="calculator">Calculator</h2>
 
-    <p>Smile Shell is based on <a href="http://www.scala-lang.org">Scala</a> interpreter.
-        (Scala installation is not required to run Smile.) So you can run any valid Scala
+    <p>Smile Shell is built on top of <a href="http://www.scala-lang.org">Scala</a> interpreter
+        (Scala installation is not required to run Smile). So you can run any valid Scala
         expressions in the shell. In the simplest case, you can use it as a calculator.</p>
 
     <pre class="prettyprint lang-scala"><code>
