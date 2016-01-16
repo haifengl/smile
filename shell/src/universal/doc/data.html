@@ -1,0 +1,131 @@
+<!-- Google Analytics -->
+<script src="js/google-analytics.js" type="text/javascript"></script>
+
+<!-- prettify js and CSS -->
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=scala"></script>
+
+<!-- scroll/follow sidebar -->
+<script src="js/follow-sidebar.js" type="text/javascript"></script>
+
+<div class="col-md-3 col-md-push-9">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="Data" class="title">Data</h1>
+
+    <p>Machine learning is all about building models from data. However, data scientists
+        frequently talk about models and algorithms first, which very likely generates
+        suboptimal results. The other approach is to play with the data first. Even simple
+        statistics and plots can help us get feelings of data and problems, which more likely
+        lead us to better modelling.</p>
+
+    <h2 id="features">Features</h2>
+
+    <p>A feature is an individual measurable property of a phenomenon being observed.
+        Features are also called explanatory variables, independent variables, predictors, regressors, etc.
+        Any attribute could be a feature, but choosing informative, discriminating and
+        independent features is a crucial step for effective algorithms in machine learning.
+        Features are usually numeric and a set of numeric features can be conveniently
+        described by a feature vector. Structural features such as strings, sequences and
+        graphs are also used in areas such as natural language processing, computational biology, etc.</p>
+
+    <p>Feature engineering is the process of using domain knowledge of the data to create features that make
+        machine learning algorithms work. Feature engineering is fundamental to the application of machine
+        learning, and is both difficult and expensive. It requires the experimentation of multiple
+        possibilities and the combination of automated
+        techniques with the intuition and knowledge of the domain expert.</p>
+
+    <h2 title="data-type">Data Type</h2>
+    <p>Generally speaking, there are two major types of attributes:</p>
+        <dl>
+            <dt>Qualitative variables:</dt>
+            <dd><p>The data values are non-numeric categories. Examples: Blood type, Gender.</p></dd>
+            <dt>Quantitative variables:</dt>
+            <dd><p>The data values are counts or numerical measurements. A quantitative
+                variable can be either discrete such as the number of students receiving
+                an 'A' in a class, or continuous such as GPA, salary and so on.</p></dd>
+        </dl>
+
+    <p>Another way of classifying data is by the measurement scales. In statistics,
+        there are four generally used measurement scales:</p>
+
+        <dl>
+            <dt>Nominal data:</dt>
+            <dd><p>Data values are non-numeric group labels. For example, Gender variable
+                can be defined as male = 0 and female =1.</p></dd>
+            <dt>Ordinal data:</dt>
+            <dd><p>Data values are categorical and may be ranked in some numerically
+                meaningful way. For example, strongly disagree to strong agree may be
+                defined as 1 to 5.</p></dd>
+            <dt>Continuous data:</dt>
+            <dd><ul>
+                <li><strong>Interval data:</strong>
+                Data values are ranged in a real interval, which can be as large as
+                from negative infinity to positive infinity. The difference between two
+                values are meaningful, however, the ratio of two interval data is not
+                meaningful. For example temperature, IQ. </li>
+                <li><strong>Ratio data:</strong>
+                Both difference and ratio of two values are meaningful. For example,
+                salary, weight.</li>
+            </ul></dd>
+        </dl>
+
+    <p>Smile has four attribute types:
+        <a href="api/java/smile/data/NominalAttribute.html">NominalAttribute</a>,
+        <a href="api/java/smile/data/NumericAttribute.html">NumericAttribute</a>,
+        <a href="api/java/smile/data/DateAttribute.html">DateAttribute</a>,
+        and <a href="api/java/smile/data/StringAttribute.html">StringAttribute</a>. Many
+        machine learning algorithms can only handle numeric attributes while a few
+        such as decision trees can process nominal attribute directly. Date attribute
+        is useful in plotting. With some feature engineering, values like day of week
+        can be used as nominal attribute. String attribute could be used in text mining
+        and natural language processing.</p>
+
+    <h2 id="AttributeDataset">AttributeDataset</h2>
+
+    <p>Most Smile algorithms take simple <code>double[]</code> as input. But we often use
+        the encapsulation class <a href="api/java/smile/data/AttributeDataset.html">AttributeDataset</a>.
+        In fact, the output of most Smile data parsers is an AttributeDataset object.
+        AttributeDataset contains a fixed number of attributes. All attribute values are stored as double even
+        if the attribute may be nominal, ordinal, string, or date. The dataset is stored row-wise
+        internally, which is fast for frequently accessing instances of dataset.</p>
+
+    <p>A data object may have an associated class label (for classification) or real-valued
+        response value (for regression). Optionally, a data object or attribute
+        may have a (positive) weight value, whose meaning depends on applications.
+        However, most machine learning methods are not able to utilize this extra
+        weight information.</p>
+
+    <p>AttributeDataset may also contains meta data such as data name and descriptions.</p>
+
+    <h2 id="sparse">Sparse Dataset</h2>
+
+    <p>The feature vectors could be very sparse. To save space, <a href="api/java/smile/data/SparseDataset.html">SparseDataset</a>
+        stores data in a list of lists (LIL) sparse matrix format. SparseDataset stores one list
+        per row, where each entry stores a column index and value. Typically, these entries
+        are kept sorted by column index for faster lookup.</p>
+
+    <p>SparseDataset is often used to construct the data matrix. Once the matrix is constructed,
+        it is typically converted to a format, such as <a href="api/java/smile/math/matrix/SparseMatrix.html">Harwell-Boeing</a>
+        column-compressed sparse matrix format, which is more efficient for matrix operations.</p>
+
+    <p>The class <a href="api/java/smile/data/BinarySparseDataset.html">BinarySparseDataset</a> is more efficient for
+        binary sparse data. In BinarySparseDataset, each item is stored as an integer array, which are
+        the indices of nonzero elements in ascending order.</p>
+
+    <h2 id="samples">Sample Data</h2>
+
+    <p>In the <code>data</code> directory, we include many open datasets,
+        which are frequently used in research and benchmark. In the next section, we will learn how to
+        load data in a variety of formats.</p>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>
