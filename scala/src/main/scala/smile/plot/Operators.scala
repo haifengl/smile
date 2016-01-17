@@ -16,8 +16,9 @@
 
 package smile.plot
 
-import java.awt.{Dimension, Color}
-import javax.swing.{JFrame, WindowConstants}
+import java.awt.{GridLayout, Dimension, Color}
+import javax.swing.{JFrame, JPanel, WindowConstants}
+import smile.data.AttributeDataset
 import smile.stat.distribution.{Distribution, DiscreteDistribution}
 import smile.math.matrix.SparseMatrix
 
@@ -93,7 +94,7 @@ trait Operators {
     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
     * @param label the class labels of data.
     * @param legend the legend for all classes.
-    * @param palette the colors for each class.
+    * @param palette the color for each class.
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
@@ -111,7 +112,7 @@ trait Operators {
     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
     * @param label the class labels of data.
     * @param legend the legend for each class.
-    * @param palette the colors for each class.
+    * @param palette the color for each class.
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
@@ -122,6 +123,94 @@ trait Operators {
     win.add(canvas)
 
     (win, canvas)
+  }
+
+  /** Plot a grid of scatter plots of for all attribute pairs in the attribute data.
+    *
+    * @param data an attribute frame.
+    * @param legend the legend for all classes.
+    * @return the window frame.
+    */
+  def plot(data: AttributeDataset, legend: Char): JFrame = {
+    val x = data.unzip
+    val p = data.attributes.length
+    val names = data.attributes.map(_.getName)
+
+    val panel = new JPanel(new GridLayout(p, p))
+    panel.setBackground(Color.white)
+
+    for (i <- 0 until p) {
+      for (j <- 0 until p) {
+        val x2 = x.map { row => Array(row(i), row(j)) }
+        val canvas = ScatterPlot.plot(x2, legend)
+        canvas.setAxisLabels(names(i), names(j))
+        panel.add(canvas)
+      }
+    }
+
+    val win = window()
+    win.add(panel)
+    win
+  }
+
+  /** Plot a grid of scatter plots of for all attribute pairs in the attribute data of which the response variable is
+    * integer.
+    *
+    * @param data an attribute frame.
+    * @param legend the legend for all classes.
+    * @param palette the color for each class.
+    * @return the window frame.
+    */
+  def plot(data: AttributeDataset, legend: Char, palette: Array[Color]): JFrame = {
+    val (x, y) = data.unzipInt
+    val p = data.attributes.length
+    val names = data.attributes.map(_.getName)
+
+    val panel = new JPanel(new GridLayout(p, p))
+    panel.setBackground(Color.white)
+
+    for (i <- 0 until p) {
+      for (j <- 0 until p) {
+        val x2 = x.map { row => Array(row(i), row(j)) }
+        val canvas = ScatterPlot.plot(x2, y, legend, palette)
+        canvas.setAxisLabels(names(i), names(j))
+        panel.add(canvas)
+      }
+    }
+
+    val win = window()
+    win.add(panel)
+    win
+  }
+
+  /** Plot a grid of scatter plots of for all attribute pairs in the attribute data of which the response variable is
+    * integer.
+    *
+    * @param data an attribute frame.
+    * @param legend the legend for each class.
+    * @param palette the color for each class.
+    * @return the window frame.
+    */
+  def plot(data: AttributeDataset, legend: Array[Char], palette: Array[Color]): JFrame = {
+    val (x, y) = data.unzipInt
+    val p = data.attributes.length
+    val names = data.attributes.map(_.getName)
+
+    val panel = new JPanel(new GridLayout(p, p))
+    panel.setBackground(Color.white)
+
+    for (i <- 0 until p) {
+      for (j <- 0 until p) {
+        val x2 = x.map { row => Array(row(i), row(j)) }
+        val canvas = ScatterPlot.plot(x2, y, legend, palette)
+        canvas.setAxisLabels(names(i), names(j))
+        panel.add(canvas)
+      }
+    }
+
+    val win = window()
+    win.add(panel)
+    win
   }
 
   /** Line plot.
