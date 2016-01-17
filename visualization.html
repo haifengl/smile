@@ -17,68 +17,101 @@
 </div>
 
 <div class="col-md-9 col-md-pull-3">
-<h1 id="visualization" class="title">Visualization</h1>
 
+    <h1 id="visualization" class="title">Visualization</h1>
 
-<p>In this section, we will learn how to use Smile Shell, load data and save models,
-    and visualize data in various ways. In the programming guide, we will mostly use
-    the high level <a href="api/scala/index.html">Scala API</a> as it is concise and is easy to use. Note that all algorithms
-    are implemented in Java and not all features and controls are exposed in Scala API.
-    If you need more controls on the algorithm behaviors, please refer to the <a href="api/java/index.html">Java API</a>.</p>
+    <p>A picture is worth a thousand words. In machine learning, we usually handle
+        high-dimensional data, which is impossible to draw on display directly. But
+        a variety of statistical plots are tremendously valuable for us to grasp
+        the characteristics of many data points. Smile provides data visualization tools
+        such as plots and maps for researchers to understand information more easily and quickly.</p>
 
-<h1 id="shell">Shell</h1>
+    <h2 id="scatter" class="title">Scatter Plot</h2>
 
-<p>Smile comes with an interactive shell. In the home directory of Smile, type
-    <pre><code>
-        ./bin/smile
+    <p>A scatter plot displays data as a collection of points. The points can be color-coded,
+        which is very useful for classification tasks.
+        The user can use <code>plot</code> functions to draw scatter plot easily.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def plot(data: Array[Array[Double]], legend: Char = '*', color: Color = Color.BLACK): (JFrame, PlotCanvas)
+
+    def plot(data: Array[Array[Double]], labels: Array[String]): (JFrame, PlotCanvas)
+
+    def plot(data: Array[Array[Double]], label: Array[Int], legend: Char, palette: Array[Color]): (JFrame, PlotCanvas)
+
+    def plot(data: Array[Array[Double]], label: Array[Int], legend: Array[Char], palette: Array[Color]): (JFrame, PlotCanvas)
     </code></pre>
-    to enter the shell, which is based on Scala interpreter. So you can run any valid Scala
-    expressions in the shell. In the simplest case, you can use it as a calculator.
-    Besides, all high-level Smile operators are predefined
-    in the shell. Be default, the shell uses up to 4GB memory. If you need more memory
-    to handle large data, use the option <code>-J-Xmx4096M</code>. For example,
-    <pre><code>
-        ./bin/smile -J-Xmx8192M
+
+    <p>The legends are as follows.</p>
+    <ul>
+        <li> <code>.</code> : dot
+        <li> <code>+</code> : +
+        <li> <code>-</code> : -
+        <li> <code>|</code> : |
+        <li> <code>*</code> : star
+        <li> <code>x</code> : x
+        <li> <code>o</code> : circle
+        <li> <code>O</code> : large circle
+        <li> <code>@</code> : solid circle
+        <li> <code>#</code> : large solid circle
+        <li> <code>s</code> : square
+        <li> <code>S</code> : large square
+        <li> <code>q</code> : solid square
+        <li> <code>Q</code> : large solid square
+    </ul>
+    <p>For any other char, the data point will be drawn as a dot.</p>
+
+    <p>The functions return a tuple of
+        JFrame and PlotCanvas. The PlotCanvas object can be used to control the plot programmatically.
+        The user can also use the popup context menu by right mouse click to print, change the title, axis labels,
+        and font, etc.</p>
+
+    <p>For both 2D and 3D plot, the user can zoom in/out by mouse wheel. For 2D plot,
+        the user can shift the coordinates by moving mouse after double click. The
+        user can also select an area by mouse for detailed view. For 3D plot, the user
+        can rotate the view by dragging mouse.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val iris = readArff("data/weka/iris.arff", 4)
+    val (x, y) = iris.unzipInt
+    val x2 = x.map(_.slice(0,2)) // take first two columns
+    val (frame, canvas) = plot(x2, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
+    canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,2): _*)
     </code></pre>
-    You can also modify the configuration file <code>./conf/application.ini</code>
-    for the memory and other JVM settings.</p>
 
-<p>In the shell, type <code>:help</code> to print Scala interpreter help
-    information. To get help information of Smile high-level operators,
-    thpe <code>help</code>. You can also get detailed information on
-    each operator by typing <code>help("command")</code>, e.g.
-    <code>help("svm")</code>. To exit the shell, type <code>:quit</code>.</p>
+    <p>In this example, we plot the first two columns of Iris data. We use the class
+        label for legend and color coding.</p>
 
-<p>In the shell, type <code>demo</code> to bring up the demo window,
-    which shows off various Smile's machine learning capabilities.</p>
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris2d.png" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Iris 2D Scatter Plot</div>
+    </div>
 
-<p>You can also type <code>benchmark()</code> to see Smile's performance
-    on a couple of test data. You can run a particular benchmark by
-    <code>bencharm("test name")</code>, where test name could be "airline",
-    "usps", etc.</p>
+    <p>It is also easy to draw a 3D plot.</p>
 
-<p>In the <code>data</code> directory, we also include many open datasets,
-    which are frequently used in research and benchmark. Now let&#8217;s build
-    a classification model with Smile. It is as easy as</p>
-<pre><code>
-    val data = readArff("data/weka/iris.arff", 4)<br/>
-    val (x, y) = data.unzipInt<br/>
-    <br/>
-    val rf = randomForest(x, y)<br/>
-    println(s"OOB error = ${rf.error}")<br/>
-    rf.predict(x(0)) // or predict(rf, x(0))
-</code></pre>
+    <pre class="prettyprint lang-scala"><code>
+    val x3 = x.map(_.slice(0,3)) // take first three columns
+    val (frame, canvas) = plot(x3, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
+    canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,3): _*)
+    </code></pre>
 
-<p>In this example, we use the famous Iris data from R.A. Fisher. The data
-    is in Weka's ARFF format. The second parameter of readArff is the column index
-    of response variable. With our parsers, the column index starts with 0. The
-    function readArff returns an object of <code>AttributeDataset</code>.
-    Besides the data itself, an <code>AttributeDataset</code> object also contains many meta data.
-    Then we use the help function <code>unzipInt</code> to get the training
-    data and labels. For regression, you may use <code>unzipDouble</code> as
-    the response variable is real value. Finally, we train a random forest
-    with default parameters and print out its OOB (out of bag) error. We can apply
-    the model on new data samples with the method <code>predict</code>.</p>
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris3d.png" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Iris 3D Scatter Plot</div>
+    </div>
+
+    <p>However, the Iris data has four attributes. So even 3D plot is not sufficient to see the
+        whole picture. A general practice is plot all the attribute pairs. For example,</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    plot(iris, '*', Array(Color.RED, Color.BLUE, Color.CYAN))
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris.png" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Iris Plot of All Attribute Pairs</div>
+    </div>
+
 </div>
 
 <script type="text/javascript">
