@@ -92,6 +92,24 @@ trait Operators {
     *
     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
     * @param label the class labels of data.
+    * @param legend the legend for all classes.
+    * @param palette the colors for each class.
+    *
+    * @return a tuple of window frame and plot canvas which can be added other shapes.
+    */
+  def plot(data: Array[Array[Double]], label: Array[Int], legend: Char, palette: Array[Color]): (JFrame, PlotCanvas) = {
+    val canvas = ScatterPlot.plot(data, label, legend, palette)
+
+    val win = window()
+    win.add(canvas)
+
+    (win, canvas)
+  }
+
+  /** Scatter plot.
+    *
+    * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
+    * @param label the class labels of data.
     * @param legend the legend for each class.
     * @param palette the colors for each class.
     *
