@@ -29,7 +29,28 @@
     <h2 id="scatter" class="title">Scatter Plot</h2>
 
     <p>A scatter plot displays data as a collection of points. The points can be color-coded,
-        which is very useful for classification tasks.</p>
+        which is very useful for classification tasks.
+        The user can use <code>plot</code> functions to draw scatter plot easily.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def plot(data: Array[Array[Double]], legend: Char = '*', color: Color = Color.BLACK): (JFrame, PlotCanvas)
+
+    def plot(data: Array[Array[Double]], labels: Array[String]): (JFrame, PlotCanvas)
+
+    def plot(data: Array[Array[Double]], label: Array[Int], legend: Char, palette: Array[Color]): (JFrame, PlotCanvas)
+
+    def plot(data: Array[Array[Double]], label: Array[Int], legend: Array[Char], palette: Array[Color]): (JFrame, PlotCanvas)
+    </code></pre>
+
+    <p>The functions return a tuple of
+        JFrame and PlotCanvas. The PlotCanvas object can be used to control the plot programmatically.
+        The user can also use the popup context menu by right mouse click to print, change the title, axis labels,
+        and font, etc.</p>
+
+    <p>For both 2D and 3D plot, the user can zoom in/out by mouse wheel. For 2D plot,
+        the user can shift the coordinates by moving mouse after double click. The
+        user can also select an area by mouse for detailed view. For 3D plot, the user
+        can rotate the view by dragging mouse.</p>
 
     <pre class="prettyprint lang-scala"><code>
     val iris = readArff("shell/src/universal/data/weka/iris.arff", 4)
@@ -39,13 +60,27 @@
     canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,2): _*)
     </code></pre>
 
-    <p>The above code plots the first two columns of Iris data. We use the class
+    <p>In this example, we plot the first two columns of Iris data. We use the class
         label for legend and color coding.</p>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/iris2d.png" style="width: 480px;" />
         <div class="caption" style="min-width: 480px;">Iris 2D Scatter Plot</div>
     </div>
+
+    <p>It is also easy to draw a 3D plot.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val x3 = x.map(_.slice(0,3)) // take first three columns
+    val (frame, canvas) = plot(x3, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
+    canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,3): _*)
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris3d.png" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Iris 3D Scatter Plot</div>
+    </div>
+
 </div>
 
 <script type="text/javascript">
