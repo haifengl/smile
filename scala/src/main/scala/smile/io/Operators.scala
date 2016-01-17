@@ -45,7 +45,7 @@ trait Operators {
   }
 
   /** Reads an ARFF file. */
-  def readArff(file: String, responseIndex: Int = -1 ): AttributeDataset = {
+  def readArff(file: String, responseIndex: Int = -1): AttributeDataset = {
     new ArffParser().setResponseIndex(responseIndex).parse(file)
   }
 
@@ -89,12 +89,12 @@ trait Operators {
     * These header lines will be ignored.
     *
     * @param file the file path.
-    * @param arrayIndexStartBase the starting index of array. By default, it is
+    * @param arrayIndexOrigin the starting index of array. By default, it is
     * 0 as in C/C++ and Java. But it could be 1 to parse data produced
     * by other programming language such as Fortran.
     */
-  def readSparseData(file: String, arrayIndexStartBase: Int = 0): SparseDataset = {
-    new SparseDatasetParser(arrayIndexStartBase).parse(file)
+  def readSparseData(file: String, arrayIndexOrigin: Int = 0): SparseDataset = {
+    new SparseDatasetParser(arrayIndexOrigin).parse(file)
   }
 
   /** Reads binary sparse dataset. Each item is stored as an integer array, which
