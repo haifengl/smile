@@ -92,8 +92,8 @@
     <p>Most Smile algorithms take simple <code>double[]</code> as input. But we often use
         the encapsulation class <a href="api/java/smile/data/AttributeDataset.html">AttributeDataset</a>.
         In fact, the output of most Smile data parsers is an AttributeDataset object.
-        AttributeDataset contains a fixed number of attributes. All attribute values are stored as double even
-        if the attribute may be nominal, ordinal, string, or date. The dataset is stored row-wise
+        AttributeDataset contains a fixed number of attributes. All attribute values are stored as <code>double</code>
+        even if the attribute may be nominal, ordinal, string, or date. The dataset is stored row-wise
         internally, which is fast for frequently accessing instances of dataset.</p>
 
     <p>A data object may have an associated class label (for classification) or real-valued
@@ -103,6 +103,13 @@
         weight information.</p>
 
     <p>AttributeDataset may also contains meta data such as data name and descriptions.</p>
+
+    <p>Suppose we have an AttributeDataset object, which may be created by a parser. To feed
+       the data to a learning algorithm, we need to unwrap the data by the function
+       <code>unzip</code> function. If the data also have labels, the function <code>unzipInt</code>
+       can be used to return a tuple <code>(x, y)</code>, of which <code>x</code> is an array of
+       feature vectors and <code>y</code> is an array of labels. If the response variable is
+       real valued in case of regression, <code>unzipDouble</code> can be used.</p>
 
     <h2 id="sparse">Sparse Dataset</h2>
 
@@ -119,11 +126,221 @@
         binary sparse data. In BinarySparseDataset, each item is stored as an integer array, which are
         the indices of nonzero elements in ascending order.</p>
 
-    <h2 id="samples">Sample Data</h2>
+    <h2 id="parser">Parsers</h2>
 
-    <p>In the <code>data</code> directory, we include many open datasets,
-        which are frequently used in research and benchmark. In the next section, we will learn how to
-        load data in a variety of formats.</p>
+    <p>Smile provides a couple of parsers for popular data formats, such as Weka's ARFF files,
+        LibSVM's file format, delimited text files, and binary sparse data. We will demonstrate
+        these parsers with the sample data in the <code>data</code> directory.</p>
+
+    <h3 id="arff">Weka ARFF</h3>
+    <p><a href="http://www.cs.waikato.ac.nz/ml/weka/arff.html">Weka ARFF (attribute relation file format)</a>
+        is an ASCII text file format that is essentially a CSV file with a header that describes the meta data.
+        ARFF was developed for use in the <a href="http://www.cs.waikato.ac.nz/ml/weka/">Weka</a> machine learning software.</p>
+
+    <p>A dataset is firstly described, beginning with the name of the dataset (or the relation in ARFF terminology).
+        Each of the variables (or attribute in ARFF terminology) used to describe the observations is then identified,
+        together with their data type, each definition on a single line. The actual observations are then listed,
+        each on a single line, with fields separated by commas, much like a CSV file.</p>
+
+    <p>Missing values in an ARFF dataset are identified using the question mark '?'.
+        Comments can be included in the file, introduced at the beginning of a line with a '%',
+        whereby the remainder of the line is ignored.</p>
+
+    <p>A significant advantage of the ARFF data file over the CSV data file is the meta data information.
+        Also, the ability to include comments ensure we can record extra information about the data set,
+        including how it was derived, where it came from, and how it might be cited.</p>
+
+    <p>To read an ARFF file, <code>smile.io</code> has the function</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def readArff(file: String, responseIndex: Int = -1): AttributeDataset
+    </code></pre>
+
+    <p>where <code>responseIndex</code> is the column index (starting at 0) of response variable.
+        The default value -1 means no response variable. In the directory <code>data/weka</code>,
+        we have many sample ARFF files. Try the following code to load a dataset:</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val data = readArff("data/weka/iris.arff", 4)
+    </code></pre>
+
+    <h3 id="libsvm">LibSVM</h3>
+    <p>LibSVM is a very fast and popular library for support vector machines.
+        LibSVM uses a sparse format where zero values do not need to be stored.
+        Each line of a libsvm file is in the format:</p>
+    <pre><code>
+    &lt;label&gt; &lt;index1&gt;:&lt;value1&gt; &lt;index2&gt;:&lt;value2&gt; ...
+    </code></pre>
+    <p>where &lt;label&gt; is the target value of the training data.
+        For classification, it should be an integer which identifies a class
+        (multi-class classification is supported). For regression, it's any real
+        number. For one-class SVM, it's not used so can be any number.
+        &lt;index&gt; is an integer starting from 1, and &lt;value&gt;
+        is a real number. The indices must be in an ascending order. The labels in
+        the testing data file are only used to calculate accuracy or error. If they
+        are unknown, just fill this column with a number.</p>
+
+    <p>To read a libsvm file, <code>smile.io</code> has the function</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def readLibsvm(file: String): SparseDataset
+    </code></pre>
+
+    <p>Although libsvm employs a sparse format, most libsvm files contain dense data.
+        Therefore, Smile also provides helper functions to convert
+        it to dense arrays.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val data = readLibsvm("data/libsvm/glass.txt")
+    val (x, y) = data.unzipInt
+    </code></pre>
+
+    <p>In case of truly sparse libsvm data, we can convert it to <code>SparseMatrix</code>
+        for more efficient matrix computation.</p>
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val sparse = data.toSparseMatrix
+    sparse: smile.math.matrix.SparseMatrix = smile.math.matrix.SparseMatrix@73ad7e90
+    </code></pre>
+
+    <h3 id="csv">Delimited Text and CSV</h3>
+    <p>The delimited text files are widely used in machine learning research community.
+        The comma-separated values (CSV) file is a special case. Smile provides flexible
+        parser for them.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def readTable(file: String, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
+
+    def readCsv(file: String, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
+
+    def readTable2(file: String, response: Attribute, responseIndex: Int, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
+
+    def readCsv2(file: String, response: Attribute, responseIndex: Int, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
+    </code></pre>
+
+    <p>By default, the parser <code>readTable</code> expects a white-space-separated-values file.
+        Each line in the file corresponds to a row in the table. Within a line,
+        fields are separated by white spaces, each field belonging to one table column.
+        The function <code>readCsv</code> is a shortcut to <code>readTable</code> with comma ',' as the delimiter
+        character. The file may contain comment lines (starting with '%') and missing values
+        (indicated by placeholder '?'), which both can be parameterized. Optionally, the file may also have
+        a header (e.g. the first row is column names) and the first column may be row id/names.</p>
+
+    <p>The variety <code>readTable2</code> and <code>readCsv2</code> also take the parameters of response
+        variable type and index. We have to attach a suffix '2' to the function name here
+        because Scala disallows overloaded methods with default arguments. We may remove it in
+        the future when Scala remove this restriction.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val label = new NominalAttribute("class")
+    val data = readTable2("data/usps/zip.train", label, 0)
+    </code></pre>
+
+    <h3 id="microarray">Microarray</h3>
+    <p>Smile can parser several popular microarray data format. A DNA microarray is a
+        collection of microscopic DNA spots attached to a solid surface. Scientists
+        use DNA microarrays to measure the expression levels of large numbers of
+        genes simultaneously or to genotype multiple regions of a genome.</p>
+
+    <p>In particular, we support <a href="api/java/smile/data/parser/microarray/GCTParser.html">GCT</a>,
+        <a href="api/java/smile/data/parser/microarray/PCLParser.html">PCL</a>,
+        <a href="api/java/smile/data/parser/microarray/RESParser.html">RES</a>,
+        and <a href="api/java/smile/data/parser/microarray/TXTParser.html">TXT</a> file formats.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def readGct(file: String): AttributeDataset
+
+    def readPcl(file: String): AttributeDataset
+
+    def readRes(file: String): AttributeDataset
+
+    def readTxt(file: String): AttributeDataset
+    </code></pre>
+
+    <h3 id="sparse-format">Coordinate Triple Tuple List</h3>
+
+    <p>The function <code>readSparseData</code> can read sparse data in coordinate triple tuple list format.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def readSparseData(file: String, arrayIndexOrigin: Int = 0): SparseDataset
+    </code></pre>
+
+    <p>where <code>arrayIndexOrigin</code> is the starting index of array. By default, it is
+        0 as in C/C++ and Java. But it could be 1 to parse data produced
+        by other programming language such as Fortran.</p>
+
+    <p>The coordinate file stores a list of (row, column, value) tuples:</p>
+    <pre>
+    instanceID attributeID value
+    instanceID attributeID value
+    instanceID attributeID value
+    instanceID attributeID value
+    ...
+    instanceID attributeID value
+    instanceID attributeID value
+    instanceID attributeID value
+    </pre>
+
+    <p>Ideally, the entries are sorted (by row index, then column index) to improve
+        random access times. This format is good for incremental matrix
+        construction.</p>
+
+    <p>Optionally, there may be 2 header lines</p>
+
+    <pre>
+    D    // The number of instances
+    W    // The number of attributes
+    </pre>
+
+    <p>or 3 header lines</p>
+
+    <pre>
+    D    // The number of instances
+    W    // The number of attributes
+    N    // The total number of nonzero items in the dataset.
+    </pre>
+    <p>These header lines will be ignored.</p>
+
+    <p>The sample data <code>data/text/kos.txt</code> is in the coordinate format.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val data = readSparseData("data/text/kos.txt")
+    </code></pre>
+
+    <h3 id="Harwell-Boeing">Harwell-Boeing Column-Compressed Sparse Matrix</h3>
+
+    <p>The function <code>readSparseMatrix</code> can read sparse matrix in Harwell-Boeing column-compressed format.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def readSparseMatrix(file: String): SparseMatrix
+    </code></pre>
+
+    <p>In the directory <code>data/matrix</code>, there are several sample files in
+       the Harwell-Boeing format.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val data = readSparseMatrix("data/matrix/08blocks.txt")
+    </code></pre>
+
+    <p>In Harwell-Boeing column-compressed sparse matrix file, nonzero values are stored in an array
+        (top-to-bottom, then left-to-right-bottom). The row indices corresponding to
+        the values are also stored. Besides, a list of pointers are indexes where
+        each column starts. This class supports two formats for Harwell-Boeing files.
+        The simple one is organized as follows:</p>
+
+    <p>The first line contains three integers, which are the number of rows,
+        the number of columns, and the number of nonzero entries in the matrix.</p>
+
+    <p>Following the first line, there are m + 1 integers that are the indices of
+        columns, where m is the number of columns. Then there are n integers that
+        are the row indices of nonzero entries, where n is the number of nonzero
+        entries. Finally, there are n float numbers that are the values of nonzero
+        entries.</p>
+
+    <p>The second format is more complicated and powerful, called Harwell-Boeing Exchange Format.
+        For details, see <a href="http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html">http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html</a>.
+        Note that our implementation supports only real-valued matrix and we ignore
+        the optional right hand side vectors.</p>
+
 </div>
 
 <script type="text/javascript">
