@@ -16,10 +16,12 @@
 
 package smile.shell
 
-/** The Predef object provides definitions that are accessible in the shell without explicit qualification.
+/** High level operators that are accessible in the shell without explicit qualification.
   *
   * @author Haifeng Li
   */
-object Predef extends smile.classification.Operators with smile.regression.Operators {
+trait Operators extends smile.classification.Operators
+  with smile.regression.Operators
+  with smile.io.Operators {
 
 }

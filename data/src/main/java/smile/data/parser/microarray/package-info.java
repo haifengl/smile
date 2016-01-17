@@ -19,7 +19,7 @@
  * collection of microscopic DNA spots attached to a solid surface. Scientists
  * use DNA microarrays to measure the expression levels of large numbers of
  * genes simultaneously or to genotype multiple regions of a genome. Each DNA
- * spot contains picomoles (10?12 moles) of a specific DNA sequence, known as
+ * spot contains picomoles (10 - 12 moles) of a specific DNA sequence, known as
  * probes (or reporters). These can be a short section of a gene or other DNA
  * element that are used to hybridize a cDNA or cRNA sample (called target)
  * under high-stringency conditions. Probe-target hybridization is usually

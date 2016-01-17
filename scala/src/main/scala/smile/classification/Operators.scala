@@ -679,7 +679,7 @@ trait Operators {
     }
   }
 
-  /** Gradient boosting for classification. Gradient boosting is typically used
+  /** Gradient boosted classification trees. Gradient boosting is typically used
     * with decision trees (especially CART regression trees) of a fixed size as
     * base learners. For this special case Friedman proposes a modification to
     * gradient boosting method which improves the quality of fit of each base
@@ -758,7 +758,7 @@ trait Operators {
     *
     * @return Gradient boosted trees.
     */
-  def gbc(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
+  def gbct(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
     val p = x(0).length
 
     val attr = if (attributes == null) {

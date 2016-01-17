@@ -20,7 +20,7 @@ package smile
   *
   * @author Haifeng Li
   */
-package object shell {
+package object shell extends Operators {
 
   /** Built in benchmarks */
   def benchmark(tests: String*) = {
