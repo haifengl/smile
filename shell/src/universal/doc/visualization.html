@@ -72,7 +72,7 @@
         can rotate the view by dragging mouse.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val iris = readArff("shell/src/universal/data/weka/iris.arff", 4)
+    val iris = readArff("data/weka/iris.arff", 4)
     val (x, y) = iris.unzipInt
     val x2 = x.map(_.slice(0,2)) // take first two columns
     val (frame, canvas) = plot(x2, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
