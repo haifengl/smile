@@ -63,7 +63,7 @@ public class SparseDatasetParser {
     /**
      * The starting index of array in the data.
      */
-    private int arrayIndexStartBase = 0;
+    private int arrayIndexOrigin = 0;
     
     /**
      * Constructor.
@@ -73,12 +73,12 @@ public class SparseDatasetParser {
 
     /**
      * Constructor.
-     * @param arrayIndexStartBase the starting index of array. By default, it is
+     * @param arrayIndexOrigin the starting index of array. By default, it is
      * 0 as in C/C++ and Java. But it could be 1 to parse data produced
      * by other programming language such as Fortran.
      */
-    public SparseDatasetParser(int arrayIndexStartBase) {
-        this.arrayIndexStartBase = arrayIndexStartBase;
+    public SparseDatasetParser(int arrayIndexOrigin) {
+        this.arrayIndexOrigin = arrayIndexOrigin;
     }
 
     /**
@@ -173,8 +173,8 @@ public class SparseDatasetParser {
                     throw new ParseException("Invalid number of tokens.", nrow);
                 }
 
-                int d = Integer.valueOf(tokens[0]) - arrayIndexStartBase;
-                int w = Integer.valueOf(tokens[1]) - arrayIndexStartBase;
+                int d = Integer.valueOf(tokens[0]) - arrayIndexOrigin;
+                int w = Integer.valueOf(tokens[1]) - arrayIndexOrigin;
                 double c = Double.valueOf(tokens[2]);
                 sparse.set(d, w, c);
 
