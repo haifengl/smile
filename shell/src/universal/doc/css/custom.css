@@ -355,3 +355,7 @@ p.toc-header {
   font-size: 16px;
 }
 
+.enlarge:hover {
+  transform: scale(2,2);
+  transform-origin: 50% 50%;;
+}
