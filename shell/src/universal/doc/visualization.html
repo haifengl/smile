@@ -1,0 +1,53 @@
+<!-- Google Analytics -->
+<script src="js/google-analytics.js" type="text/javascript"></script>
+
+<!-- prettify js and CSS -->
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=scala"></script>
+
+<!-- scroll/follow sidebar -->
+<script src="js/follow-sidebar.js" type="text/javascript"></script>
+
+<div class="col-md-3 col-md-push-9">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+
+    <h1 id="visualization" class="title">Visualization</h1>
+
+    <p>A picture is worth a thousand words. In machine learning, we usually handle
+        high-dimensional data, which is impossible to draw on display directly. But
+        a variety of statistical plots are tremendously valuable for us to grasp
+        the characteristics of many data points. Smile provides data visualization tools
+        such as plots and maps for researchers to understand information more easily and quickly.</p>
+
+    <h2 id="scatter" class="title">Scatter Plot</h2>
+
+    <p>A scatter plot displays data as a collection of points. The points can be color-coded,
+        which is very useful for classification tasks.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val iris = readArff("shell/src/universal/data/weka/iris.arff", 4)
+    val (x, y) = iris.unzipInt
+    val x2 = x.map(_.slice(0,2)) // take first two columns
+    val (frame, canvas) = plot(x2, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
+    canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,2): _*)
+    </code></pre>
+
+    <p>The above code plots the first two columns of Iris data. We use the class
+        label for legend and color coding.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris2d.png" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Iris 2D Scatter Plot</div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>
