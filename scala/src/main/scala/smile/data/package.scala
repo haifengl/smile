@@ -26,6 +26,7 @@ import smile.data._
 package object data {
 
   implicit def pimpDataset(data: Dataset[Array[Double]]) = new PimpedDataset(data)
+  implicit def pimpSparseDataset(data: SparseDataset) = new PimpedSparseDataset(data)
   implicit def pimpArray(data: Array[Double]) = new PimpedArray(data)
   implicit def pimpArray2D(data: Array[Array[Double]]) = new PimpedArray2D(data)
 }
@@ -55,7 +56,28 @@ private[data] class PimpedDataset(data: Dataset[Array[Double]]) {
     }
   }
 
-  private[data] class PimpedArray(data: Array[Double]) {
+private[data] class PimpedSparseDataset(data: SparseDataset) {
+  /** Unzip the data. If the data contains a response variable, it won't be copied. */
+  def unzip: Array[Array[Double]] = {
+    data.toArray
+  }
+
+  /** Split the data into x and y of Int */
+  def unzipInt: (Array[Array[Double]], Array[Int]) = {
+    val x = data.toArray
+    val y = data.toArray(new Array[Int](data.size))
+    (x, y)
+  }
+
+  /** Split the data into x and y of Double */
+  def unzipDouble: (Array[Array[Double]], Array[Double]) = {
+    val x = data.toArray
+    val y = data.toArray(new Array[Double](data.size))
+    (x, y)
+  }
+}
+
+private[data] class PimpedArray(data: Array[Double]) {
     /** Get an element */
     def apply(rows: Int*): Array[Double] = {
       rows.map { row => data(row) }.toArray
