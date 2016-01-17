@@ -86,91 +86,91 @@ To use SmilePlot, add the following to dependencies
 
 Demo Gallery
 ============
-<table class="center">
-  <tr>
-    <td>
-      <figure>
-        <a href="http://haifengl.github.io/smile/gallery/smile-demo-kpca.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-kpca-small.png" alt="Kernel PCA" width="100%"></a>
-        <figcaption>Kernel PCA</figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="http://haifengl.github.io/smile/gallery/smile-demo-isomap.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-isomap-small.png" alt="IsoMap" width="100%"></a>
-        <figcaption>IsoMap</figcaption>
-      </figure>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <figure>
-        <a href="http://haifengl.github.io/smile/gallery/smile-demo-mds.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-mds-small.png" alt="MDS" width="100%"></a>
-        <figcaption>Multi-Dimensional Scaling</figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="http://haifengl.github.io/smile/gallery/smile-demo-som.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-som-small.png" alt="SOM" width="100%"></a>
-        <figcaption>SOM</figcaption>
-      </figure>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <figure>
-        <a href="http://haifengl.github.io/smile/gallery/smile-demo-ann.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-ann-small.png" alt="Neural Network" width="100%"></a>
-        <figcaption>Neural Network</figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="http://haifengl.github.io/smile/gallery/smile-demo-svm.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-svm-small.png" alt="SVM" width="100%"></a>
-        <figcaption>SVM</figcaption>
-      </figure>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <figure>
-        <a href="http://haifengl.github.io/smile/gallery/smile-demo-agglomerative-clustering.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-agglomerative-clustering-small.png" alt="Agglomerative Clustering" width="100%"></a>
-        <figcaption>Agglomerative Clustering</figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="http://haifengl.github.io/smile/gallery/smile-demo-xmeans.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-xmeans-small.png" alt="X-Means" width="100%"></a>
-        <figcaption>X-Means</figcaption>
-      </figure>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <figure>
-        <a href="http://haifengl.github.io/smile/gallery/smile-demo-dbscan.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-dbscan-small.png" alt="DBScan" width="100%"></a>
-        <figcaption>DBScan</figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="http://haifengl.github.io/smile/gallery/smile-demo-neural-gas.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-neural-gas-small.png" alt="Neural Gas" width="100%"></a>
-        <figcaption>Neural Gas</figcaption>
-      </figure>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <figure>
-        <a href="http://haifengl.github.io/smile/gallery/smile-demo-wavelet.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-wavelet-small.png" alt="Wavelet" width="100%"></a>
-        <figcaption>Wavelet</figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="http://haifengl.github.io/smile/gallery/smile-demo-mixture.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-mixture-small.png" alt="Mixture" width="100%"></a>
-        <figcaption>Exponential Family Mixture</figcaption>
-      </figure>
-    </td>
-  </tr>
+<table class="center" width="100%">
+    <tr>
+        <td width="50%">
+            <figure>
+                <a href="gallery/smile-demo-kpca.png"><img src="gallery/smile-demo-kpca-small.png" alt="Kernel PCA"></a>
+                <figcaption><h2>Kernel PCA</h2></figcaption>
+            </figure>
+        </td>
+        <td width="50%">
+            <figure>
+                <a href="gallery/smile-demo-isomap.png"><img src="gallery/smile-demo-isomap-small.png" alt="IsoMap"></a>
+                <figcaption><h2>IsoMap</h2></figcaption>
+            </figure>
+        </td>
+    </tr>
+    <tr>
+        <td width="50%">
+            <figure>
+                <a href="gallery/smile-demo-mds.png"><img src="gallery/smile-demo-mds-small.png" alt="MDS"></a>
+                <figcaption><h2>Multi-Dimensional Scaling</h2></figcaption>
+            </figure>
+        </td>
+        <td width="50%">
+            <figure>
+                <a href="gallery/smile-demo-som.png"><img src="gallery/smile-demo-som-small.png" alt="SOM"></a>
+                <figcaption><h2>SOM</h2></figcaption>
+            </figure>
+        </td>
+    </tr>
+    <tr>
+        <td width="50%">
+            <figure>
+                <a href="gallery/smile-demo-ann.png"><img src="gallery/smile-demo-ann-small.png" alt="Neural Network"></a>
+                <figcaption><h2>Neural Network</h2></figcaption>
+            </figure>
+        </td>
+        <td width="50%">
+            <figure>
+                <a href="gallery/smile-demo-svm.png"><img src="gallery/smile-demo-svm-small.png" alt="SVM"></a>
+                <figcaption><h2>SVM</h2></figcaption>
+            </figure>
+        </td>
+    </tr>
+    <tr>
+        <td width="50%">
+            <figure>
+                <a href="gallery/smile-demo-agglomerative-clustering.png"><img src="gallery/smile-demo-agglomerative-clustering-small.png" alt="Agglomerative Clustering"></a>
+                <figcaption><h2>Agglomerative Clustering</h2></figcaption>
+            </figure>
+        </td>
+        <td width="50%">
+            <figure>
+                <a href="gallery/smile-demo-xmeans.png"><img src="gallery/smile-demo-xmeans-small.png" alt="X-Means"></a>
+                <figcaption><h2>X-Means</h2></figcaption>
+            </figure>
+        </td>
+    </tr>
+    <tr>
+        <td width="50%">
+            <figure>
+                <a href="gallery/smile-demo-dbscan.png"><img src="gallery/smile-demo-dbscan-small.png" alt="DBScan"></a>
+                <figcaption><h2>DBScan</h2></figcaption>
+            </figure>
+        </td>
+        <td width="50%">
+            <figure>
+                <a href="gallery/smile-demo-neural-gas.png"><img src="gallery/smile-demo-neural-gas-small.png" alt="Neural Gas"></a>
+                <figcaption><h2>Neural Gas</h2></figcaption>
+            </figure>
+        </td>
+    </tr>
+    <tr>
+        <td width="50%">
+            <figure>
+                <a href="gallery/smile-demo-wavelet.png"><img src="gallery/smile-demo-wavelet-small.png" alt="Wavelet"></a>
+                <figcaption><h2>Wavelet</h2></figcaption>
+            </figure>
+        </td>
+        <td width="50%">
+            <figure>
+                <a href="gallery/smile-demo-mixture.png"><img src="gallery/smile-demo-mixture-small.png" alt="Mixture"></a>
+                <figcaption><h2>Exponential Family Mixture</h2></figcaption>
+            </figure>
+        </td>
+    </tr>
 </table>
 
 Tutorial
