@@ -42,6 +42,25 @@
     def plot(data: Array[Array[Double]], label: Array[Int], legend: Array[Char], palette: Array[Color]): (JFrame, PlotCanvas)
     </code></pre>
 
+    <p>The legends are as follows.</p>
+    <ul>
+        <li> <code>.</code> : dot
+        <li> <code>+</code> : +
+        <li> <code>-</code> : -
+        <li> <code>|</code> : |
+        <li> <code>*</code> : star
+        <li> <code>x</code> : x
+        <li> <code>o</code> : circle
+        <li> <code>O</code> : large circle
+        <li> <code>@</code> : solid circle
+        <li> <code>#</code> : large solid circle
+        <li> <code>s</code> : square
+        <li> <code>S</code> : large square
+        <li> <code>q</code> : solid square
+        <li> <code>Q</code> : large solid square
+    </ul>
+    <p>For any other char, the data point will be drawn as a dot.</p>
+
     <p>The functions return a tuple of
         JFrame and PlotCanvas. The PlotCanvas object can be used to control the plot programmatically.
         The user can also use the popup context menu by right mouse click to print, change the title, axis labels,
@@ -79,6 +98,18 @@
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/iris3d.png" style="width: 480px;" />
         <div class="caption" style="min-width: 480px;">Iris 3D Scatter Plot</div>
+    </div>
+
+    <p>However, the Iris data has four attributes. So even 3D plot is not sufficient to see the
+        whole picture. A general practice is plot all the attribute pairs. For example,</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    plot(iris, '*', Array(Color.RED, Color.BLUE, Color.CYAN))
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris.png" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Iris Plot of All Attribute Pairs</div>
     </div>
 
 </div>
