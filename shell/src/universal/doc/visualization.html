@@ -120,7 +120,59 @@
     def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, legend: Char = ' '): (JFrame, PlotCanvas)
     </code></pre>
 
+    <p>Let's draw a heart with it!</p>
+    <pre class="prettyprint lang-scala"><code>
+    val heart = -PI to PI by 0.1 map { t =>
+      val x = 16 * pow(sin(t), 3)
+      val y = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t)
+      Array(x, y)
+    }
+    line(heart.toArray, color = Color.RED)
+    </code></pre>
 
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/heart.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="box" class="title">Box Plot</h2>
+
+    <p>The box plot is a standardized way of displaying the distribution of data
+        based on the five number summary: minimum, first quartile, median,
+        third quartile, and maximum.</p>
+
+    <p>Box plots can be useful to display differences between populations without
+        making any assumptions of the underlying statistical distribution: they are
+        non-parametric. The spacings between the different parts of the box help
+        indicate the degree of dispersion (spread) and skewness in the data, and
+        identify outliers.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def boxplot(data: Array[Double]*): (JFrame, PlotCanvas)
+    def boxplot(data: Array[Array[Double]], labels: Array[String]): (JFrame, PlotCanvas)
+    </code></pre>
+
+    <p>Note that the parameter <code>data</code> is a matrix of which each row to
+        create a box plot.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val iris = readArff("data/weka/iris.arff", 4)
+    val (x, y) = iris.unzipInt
+    val groups = (x.map(_(0)) zip y.map("class %d" format _)).groupBy(_._2)
+    val labels = groups.keys.toArray
+    val data = groups.values.map { a => a.map(_._1) }.toArray
+    val (_, canvas) = boxplot(data, labels)
+    canvas.setAxisLabels("", iris.attributes()(0).getName)
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris-boxplot.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="historgram" class="title">Histogram</h2>
+    <h2 id="qq" class="title">Q-Q Plot</h2>
+    <h2 id="heatmap" class="title">Heatmap</h2>
+    <h2 id="surface" class="title">Surface</h2>
+    
 </div>
 
 <script type="text/javascript">
