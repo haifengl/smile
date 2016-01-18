@@ -67,7 +67,7 @@ object Main extends App {
         case Error =>
           Right(false)
         case _  =>
-          Right(new SmileILoop process settings)
+          Right(new Shell process settings)
       }
 
       /** If -e and -i were both given, we want to execute the -e code after the
