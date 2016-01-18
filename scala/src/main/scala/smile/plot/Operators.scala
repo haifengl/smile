@@ -250,13 +250,13 @@ trait Operators {
     (win, canvas)
   }
 
-  /** A boxplot is a convenient way of graphically depicting groups of numerical
+  /** A box plot is a convenient way of graphically depicting groups of numerical
     * data through their five-number summaries (the smallest observation
     * (sample minimum), lower quartile (Q1), median (Q2), upper quartile (Q3),
-    * and largest observation (sample maximum). A boxplot may also indicate
+    * and largest observation (sample maximum). A box plot may also indicate
     * which observations, if any, might be considered outliers.
     *
-    * Boxplots can be useful to display differences between populations without
+    * Box plots can be useful to display differences between populations without
     * making any assumptions of the underlying statistical distribution: they are
     * non-parametric. The spacings between the different parts of the box help
     * indicate the degree of dispersion (spread) and skewness in the data, and
