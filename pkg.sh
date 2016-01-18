@@ -7,7 +7,7 @@ check_error() {
 }
 
 rm -rf shell/src/universal/doc/api/
-javadoc -source "1.7" -Xdoclint:none -doctitle "Smile &mdash; Statistical Machine Intelligence and Learning Engine" -classpath ~/.ivy2/cache/org.swinglabs/swingx/jars/* -d shell/src/universal/doc/api/java  -subpackages smile -sourcepath math/src/main/java:data/src/main/java:core/src/main/java:graph/src/main/java:interpolation/src/main/java:nlp/src/main/java:plot/src/main/java
+javadoc -source "1.7" -bottom '<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>' -Xdoclint:none -doctitle "Smile &mdash; Statistical Machine Intelligence and Learning Engine" -classpath ~/.ivy2/cache/org.swinglabs/swingx/jars/* -d shell/src/universal/doc/api/java  -subpackages smile -sourcepath math/src/main/java:data/src/main/java:core/src/main/java:graph/src/main/java:interpolation/src/main/java:nlp/src/main/java:plot/src/main/java
 check_error "javadoc"
 
 sbt clean
