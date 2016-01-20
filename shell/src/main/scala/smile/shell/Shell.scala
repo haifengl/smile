@@ -41,5 +41,5 @@ class Shell extends ILoop  {
        |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion}, Built at ${BuildInfo.builtAtString}
        |===============================================================================
      """.stripMargin
-    )
+  )
 }
