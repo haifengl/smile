@@ -72,7 +72,7 @@ public class HexmapDemo extends JPanel {
         canvas.setTitle("redgreen");
         add(canvas);
         canvas = Hexmap.plot(z, Palette.heat(256));
-        canvas.setTitle("Hex");
+        canvas.setTitle("heat");
         add(canvas);
         canvas = Hexmap.plot(z, Palette.terrain(256));
         canvas.setTitle("terrain");
