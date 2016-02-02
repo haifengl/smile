@@ -36,7 +36,7 @@ class Shell extends ILoop  {
        |  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
        |                                                       ``::,,,,::''
        |
-       |  Welcome to Smile Shell; enter 'help<RETURN>' for list of supported commands.
+       |  Welcome to Smile Shell; enter 'help<RETURN>' for the list of commands.
        |  Type ":quit<RETURN>" to leave the Smile Shell
        |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion}, Built at ${BuildInfo.builtAtString}
        |===============================================================================

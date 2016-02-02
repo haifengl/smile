@@ -36,25 +36,25 @@ package data {
 import smile.math.Math
 
 private[data] class PimpedDataset(data: Dataset[Array[Double]]) {
-    /** Unzip the data. If the data contains a response variable, it won't be copied. */
-    def unzip: Array[Array[Double]] = {
-      data.toArray(new Array[Array[Double]](data.size))
-    }
-
-    /** Split the data into x and y of Int */
-    def unzipInt: (Array[Array[Double]], Array[Int]) = {
-      val x = data.toArray(new Array[Array[Double]](data.size))
-      val y = data.toArray(new Array[Int](data.size))
-      (x, y)
-    }
-
-    /** Split the data into x and y of Double */
-    def unzipDouble: (Array[Array[Double]], Array[Double]) = {
-      val x = data.toArray(new Array[Array[Double]](data.size))
-      val y = data.toArray(new Array[Double](data.size))
-      (x, y)
-    }
+  /** Unzip the data. If the data contains a response variable, it won't be copied. */
+  def unzip: Array[Array[Double]] = {
+    data.toArray(new Array[Array[Double]](data.size))
   }
+
+  /** Split the data into x and y of Int */
+  def unzipInt: (Array[Array[Double]], Array[Int]) = {
+    val x = data.toArray(new Array[Array[Double]](data.size))
+    val y = data.toArray(new Array[Int](data.size))
+    (x, y)
+  }
+
+  /** Split the data into x and y of Double */
+  def unzipDouble: (Array[Array[Double]], Array[Double]) = {
+    val x = data.toArray(new Array[Array[Double]](data.size))
+    val y = data.toArray(new Array[Double](data.size))
+    (x, y)
+  }
+}
 
 private[data] class PimpedSparseDataset(data: SparseDataset) {
   /** Unzip the data. If the data contains a response variable, it won't be copied. */
