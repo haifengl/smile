@@ -574,10 +574,10 @@ trait Operators {
     (win, canvas)
   }
 
-  /** Heat map of sparse matrix.
+  /** Visualize sparsity pattern.
     * @param matrix a sparse matrix.
     */
-  def heatmap(matrix: SparseMatrix): (JFrame, PlotCanvas) = {
+  def spy(matrix: SparseMatrix): (JFrame, PlotCanvas) = {
     val canvas = SparseMatrixPlot.plot(matrix)
 
     val win = window()
