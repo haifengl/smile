@@ -231,13 +231,111 @@
     </code></pre>
 
     <p>The corresponding histogram looks like</p>
-    
+
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/histogram3d.png" class="enlarge" style="width: 480px;" />
     </div>
 
     <h2 id="qq" class="title">Q-Q Plot</h2>
+
+    <p>A Q–Q plot ("Q" stands for quantile) is a probability plot for comparing two probability distributions
+        by plotting their quantiles against each other. A point (x, y) on the plot corresponds to one of
+        the quantiles of the second distribution (y-coordinate) plotted against the same quantile of
+        the first distribution (x-coordinate).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def qqplot(x: Array[Double], d: Distribution): (JFrame, PlotCanvas)
+    def qqplot(x: Array[Double], y: Array[Double]): (JFrame, PlotCanvas)
+
+    def qqplot(x: Array[Int], d: DiscreteDistribution): (JFrame, PlotCanvas)
+    def qqplot(x: Array[Int], y: Array[Int]): (JFrame, PlotCanvas)
+    </code></pre>
+
+    <p>Smile supports the Q-Q plot of samples to a given distribution and also of two sample sets.
+        The second distribution/samples is optional. If missing, we assume it the standard Gaussian distribution.</p>
+
+    <p>In what follows, we generate a random sample set from standard Gaussian distribution and draw its Q-Q plot.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val gauss = GaussianDistribution.getInstance
+    val data = (0 until 1000) map { i: Int => gauss.rand }
+    val (_, canvas) = qqplot(data.toArray)
+    </code></pre>
+
+    <p>In fact, this is also a good visual way to verify the quality of our random number generator.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/qqplot.png" class="enlarge" style="width: 480px;" />
+    </div>
+
     <h2 id="heatmap" class="title">Heatmap</h2>
+
+    <p>A heat map is a graphical representation of data where the values in a matrix are represented as colors.
+        In cluster analysis, researchers often employs the heat map by permuting the rows and the columns
+        of a matrix to place similar values near each other according to the clustering.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+        def heatmap(z: Array[Array[Double]]): (JFrame, PlotCanvas)
+        def heatmap(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+        def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas)
+        def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+
+        def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): (JFrame, PlotCanvas)
+        def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+    </code></pre>
+
+    <p>where <code>z</code> is the matrix to display and the optional parameters <code>x</code> and <code>y</code>
+        are the coordinates of data matrix cells, which must be in ascending order. Alternatively, one can also
+        provide labels as the coordinates, which is a common practice in cluster analysis.</p>
+
+    <p>In what follows, we display the heat map of a matrix. We starts with a small <code>4 x 4</code> matrix and
+        enlarge it with bicubic interpolation. We also use the helper class <code>Palette</code> to generate the color
+        scheme. This class provides many other color schemes.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    // the matrix to display
+    val z = Array(
+      Array(1.0, 2.0, 4.0, 1.0),
+      Array(6.0, 3.0, 5.0, 2.0),
+      Array(4.0, 2.0, 1.0, 5.0),
+      Array(5.0, 4.0, 2.0, 3.0)
+    )
+
+    // make the matrix larger with bicubic interpolation
+    val x = Array(0.0, 1.0, 2.0, 3.0)
+    val y = Array(0.0, 1.0, 2.0, 3.0)
+    val bicubic = new BicubicInterpolation(x, y, z)
+    val Z = Array.ofDim[Double](101, 101)
+    for (i <- 0 to 100) {
+      for (j <- 0 to 100)
+        Z(i)(j) = bicubic.interpolate(i * 0.03, j * 0.03)
+    }
+
+    heatmap(Z, Palette.jet(256))
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/heatmap.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>A special case is to draw the sparsity pattern of a matrix.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+        def spy(matrix: SparseMatrix): (JFrame, PlotCanvas)
+    </code></pre>
+
+    <p>The structure of sparse matrix is critical in solving linear systems.</p>
+    
+    <pre class="prettyprint lang-scala"><code>
+        val sparse = readSparseMatrix("data/matrix/mesh2em5.txt")
+        val (_, canvas) = spy(sparse)
+        canvas.setTitle("mesh2em5")
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/mesh2em5.png" class="enlarge" style="width: 480px;" />
+    </div>
+
     <h2 id="surface" class="title">Surface</h2>
 
 </div>
