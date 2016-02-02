@@ -1199,6 +1199,7 @@ public class PlotCanvas extends JPanel {
      */
     public PlotCanvas setTitle(String title) {
         this.title = title;
+        repaint();
         return this;
     }
 
@@ -1221,6 +1222,7 @@ public class PlotCanvas extends JPanel {
      */
     public PlotCanvas setTitleFont(Font font) {
         this.titleFont = font;
+        repaint();
         return this;
     }
 
@@ -1229,6 +1231,7 @@ public class PlotCanvas extends JPanel {
      */
     public PlotCanvas setTitleColor(Color color) {
         this.titleColor = color;
+        repaint();
         return this;
     }
 
