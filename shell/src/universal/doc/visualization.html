@@ -275,13 +275,13 @@
         of a matrix to place similar values near each other according to the clustering.</p>
 
     <pre class="prettyprint lang-scala"><code>
-        def heatmap(z: Array[Array[Double]]): (JFrame, PlotCanvas)
-        def heatmap(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
-        def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas)
-        def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+    def heatmap(z: Array[Array[Double]]): (JFrame, PlotCanvas)
+    def heatmap(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas)
+    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
 
-        def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): (JFrame, PlotCanvas)
-        def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): (JFrame, PlotCanvas)
+    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
     </code></pre>
 
     <p>where <code>z</code> is the matrix to display and the optional parameters <code>x</code> and <code>y</code>
@@ -318,22 +318,58 @@
         <img src="images/heatmap.png" class="enlarge" style="width: 480px;" />
     </div>
 
-    <p>A special case is to draw the sparsity pattern of a matrix.</p>
+    <p>A special case of heat map is to draw the sparsity pattern of a matrix.</p>
 
     <pre class="prettyprint lang-scala"><code>
         def spy(matrix: SparseMatrix): (JFrame, PlotCanvas)
     </code></pre>
 
     <p>The structure of sparse matrix is critical in solving linear systems.</p>
-    
+
     <pre class="prettyprint lang-scala"><code>
-        val sparse = readSparseMatrix("data/matrix/mesh2em5.txt")
-        val (_, canvas) = spy(sparse)
-        canvas.setTitle("mesh2em5")
+    val sparse = readSparseMatrix("data/matrix/mesh2em5.txt")
+    val (_, canvas) = spy(sparse)
+    canvas.setTitle("mesh2em5")
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/mesh2em5.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>Another variant is the hex map where hexagon cells replace rectangle cells.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def hexmap(z: Array[Array[Double]]): (JFrame, PlotCanvas)
+    def hexmap(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]]): (JFrame, PlotCanvas)
+    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+    </code></pre>
+
+    <p>In machine learning, the hex map is often used to visualize self-organized map (SOM).
+        An SOM is a type of artificial neural network that is trained using unsupervised learning to
+        produce a low-dimensional (typically two-dimensional), discretized representation of
+        the input space of the training samples. An SOM consists of components called nodes or neurons.
+        Associated with each node are a weight vector of the same dimension as the input data vectors,
+        and a position in the map space. The U-Matrix value of a particular node is the average distance
+        between the node's weight vector and that of its closest neighbors. In practice, researchers
+        often use the hex map to visualize the U-Matrix.</p>
+
+    <p>In the following example, we train and visualize a SOM on the USPS training data set with <code>30 x 30</code>
+        nodes.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val label = new NominalAttribute("class")
+    val usps = readTable2("data/usps/zip.train", label, 0)
+    val umatrix = som(usps.unzip, 30, 30).umatrix
+    hexmap(umatrix, Palette.heat(256))
+    </code></pre>
+
+    <p>In the hex map, areas of low neighbour distance indicate groups of nodes that are similar.
+        Areas with large distances indicate the nodes are much more dissimilar, and indicate
+        natural boundaries between node clusters.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/hexmap.png" class="enlarge" style="width: 480px;" />
     </div>
 
     <h2 id="surface" class="title">Surface</h2>
