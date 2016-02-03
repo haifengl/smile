@@ -17,6 +17,8 @@
 package smile.io
 
 import java.io.PrintWriter
+import scala.io.Source
+import scala.collection.mutable.ArrayBuffer
 import com.thoughtworks.xstream.XStream
 import smile.data._, parser._, parser.microarray._
 import smile.math.matrix.SparseMatrix
@@ -39,7 +41,7 @@ trait Operators {
 
   /** Reads an object/model back from a file created by write command. */
   def read(file: String): AnyRef = {
-    val xml = scala.io.Source.fromFile(file).mkString
+    val xml = Source.fromFile(file).mkString
     val xstream = new XStream
     xstream.fromXML(xml)
   }
@@ -219,5 +221,41 @@ trait Operators {
     */
   def readTxt(file: String): AttributeDataset = {
     new TXTParser().parse(file)
+  }
+
+  /** Reads a Wavefront OBJ file. The OBJ file format is a simple format of 3D geometry including
+    * the position of each vertex, the UV position of each texture coordinate vertex,
+    * vertex normals, and the faces that make each polygon defined as a list of vertices,
+    * and texture vertices. Vertices are stored in a counter-clockwise order by default,
+    * making explicit declaration of face normals unnecessary. OBJ coordinates have no units,
+    * but OBJ files can contain scale information in a human readable comment line.
+    *
+    * Note that we parse only vertex and face elements. All other information ignored.
+    *
+    * @param file the file path
+    * @return a tuple of vertex array and edge array.
+    */
+  def readWavefrontObj(file: String): (Array[Array[Double]], Array[Array[Int]]) = {
+    val vertices = new ArrayBuffer[Array[Double]]
+    val edges = new ArrayBuffer[Array[Int]]
+
+    Source.fromFile(file).getLines foreach { line =>
+      val tokens = line.split("\\s+")
+      println(tokens.size,tokens.mkString(","))
+      if (tokens.size > 1) {
+        tokens(0) match {
+          case "v" =>
+            require(tokens.size == 4 || tokens.size == 5, s"Invalid vertex element: $line")
+            vertices += Array(tokens(1).toDouble, tokens(2).toDouble, tokens(3).toDouble)
+          case "f" =>
+            require(tokens.size >= 3, s"Invalid face element: $line")
+            val face = tokens.drop(1).map(_.toInt - 1)
+            for (i <- 1 until face.size) edges += Array(face(i-1), face(i))
+            edges += Array(face(0), face.last)
+          case _ => // ignore all other elements
+        }
+      }
+    }
+    (vertices.toArray, edges.toArray)
   }
 }
