@@ -465,7 +465,7 @@ trait Operators {
     * mathematically continuous smooth surfaces meet, or by connecting an
     * object's constituent vertices using straight lines or curves.
     *
-    * @param vertices an m x n x 2 or m x n x 3 array which are coordinates of m x n grid.
+    * @param vertices a n-by-2 or n-by-3 array which are coordinates of n vertices.
     * @param edges an m-by-2 array of which each row is the vertex indices of two
     *              end points of each edge.
     */
