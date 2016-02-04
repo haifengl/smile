@@ -160,8 +160,7 @@ public class ARMTest {
         List<int[]> dataList = new ArrayList<int[]>(1000);
 
         try {
-            InputStream stream = smile.data.parser.IOUtils.getTestDataReader("transaction/kosarak.dat");
-            BufferedReader input = new BufferedReader(new InputStreamReader(stream));
+            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("transaction/kosarak.dat");
 
             String line;
             for (int nrow = 0; (line = input.readLine()) != null; nrow++) {
