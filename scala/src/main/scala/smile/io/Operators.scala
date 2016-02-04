@@ -241,7 +241,7 @@ trait Operators {
 
     Source.fromFile(file).getLines foreach { line =>
       val tokens = line.split("\\s+")
-      println(tokens.size,tokens.mkString(","))
+
       if (tokens.size > 1) {
         tokens(0) match {
           case "v" =>
