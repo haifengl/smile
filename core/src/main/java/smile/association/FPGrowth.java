@@ -118,7 +118,7 @@ public class FPGrowth {
     }
 
     /**
-     * Add an item set into the object.
+     * Add an item set into the database.
      * @param itemset an item set, which should NOT contain duplicated items.
      * Note that it is reordered after the call.
      */
@@ -243,7 +243,6 @@ public class FPGrowth {
      * <LI> If new local FP tree is not empty repeat mining operation.
      * </OL>
      * Otherwise end.
-     * @param header the header table item to start.
      * @param itemset the current item sets as generated so far (null at start).
      */
     private long grow(PrintStream out, List<ItemSet> list, TotalSupportTree ttree, FPTree fptree, int[] itemset) {
@@ -271,7 +270,6 @@ public class FPGrowth {
      * <LI> If new local FP tree is not empty repeat mining operation.
      * </OL>
      * Otherwise end.
-     * @param header the header table item to start.
      * @param itemset the current item sets as generated so far (null at start).
      */
     private long grow(PrintStream out, List<ItemSet> list, TotalSupportTree ttree, FPTree fptree, int[] itemset, int[] localItemSupport, int[] prefixItemset) {
