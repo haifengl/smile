@@ -35,7 +35,7 @@ package smile.clustering.linkage;
 public class SingleLinkage extends Linkage {
     /**
      * Constructor.
-     * @param proximity  The proximity matrix to store the distance measure of
+     * @param proximity The proximity matrix to store the distance measure of
      * dissimilarity. To save space, we only need the lower half of matrix.
      */
     public SingleLinkage(double[][] proximity) {

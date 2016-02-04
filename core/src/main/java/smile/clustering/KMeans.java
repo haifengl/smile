@@ -24,7 +24,7 @@ import smile.math.Math;
 import smile.util.MulticoreExecutor;
 
 /**
- * K-Means learn aims to partition n observations into k clusters in which
+ * K-Means clustering. The algorithm partitions n observations into k clusters in which
  * each observation belongs to the cluster with the nearest mean.
  * Although finding an exact solution to the k-means problem for arbitrary
  * input is NP-hard, the standard approach to finding an approximate solution

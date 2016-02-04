@@ -85,10 +85,10 @@ package smile
   *
   * ====References:====
   * <ol>
-  *  - R. Agrawal, T. Imielinski and A. Swami. Mining Association Rules Between Sets of Items in Large Databases, SIGMOD, 207-216, 1993.</li>
-  *  - Rakesh Agrawal and Ramakrishnan Srikant. Fast algorithms for mining association rules in large databases. VLDB, 487-499, 1994.</li>
-  *  - Mohammed J. Zaki. Scalable algorithms for association mining. IEEE Transactions on Knowledge and Data Engineering, 12(3):372-390, 2000.</li>
-  *  - Jiawei Han, Jian Pei, Yiwen Yin, and Runying Mao. Mining frequent patterns without candidate generation. Data Mining and Knowledge Discovery 8:53-87, 2004.</li>
+  *  - R. Agrawal, T. Imielinski and A. Swami. Mining Association Rules Between Sets of Items in Large Databases, SIGMOD, 207-216, 1993.
+  *  - Rakesh Agrawal and Ramakrishnan Srikant. Fast algorithms for mining association rules in large databases. VLDB, 487-499, 1994.
+  *  - Mohammed J. Zaki. Scalable algorithms for association mining. IEEE Transactions on Knowledge and Data Engineering, 12(3):372-390, 2000.
+  *  - Jiawei Han, Jian Pei, Yiwen Yin, and Runying Mao. Mining frequent patterns without candidate generation. Data Mining and Knowledge Discovery 8:53-87, 2004.
   *
   * @author Haifeng Li
   */
