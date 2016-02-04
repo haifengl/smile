@@ -117,8 +117,7 @@ public class ARMTest {
         List<int[]> dataList = new ArrayList<int[]>(1000);
 
         try {
-            InputStream stream = getClass().getResourceAsStream("/smile/data/transaction/pima.D38.N768.C2");
-            BufferedReader input = new BufferedReader(new InputStreamReader(stream));
+            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("transaction/pima.D38.N768.C2");
 
             String line;
             for (int nrow = 0; (line = input.readLine()) != null; nrow++) {
@@ -161,7 +160,7 @@ public class ARMTest {
         List<int[]> dataList = new ArrayList<int[]>(1000);
 
         try {
-            InputStream stream = getClass().getResourceAsStream("/smile/data/transaction/kosarak.dat");
+            InputStream stream = smile.data.parser.IOUtils.getTestDataReader("transaction/kosarak.dat");
             BufferedReader input = new BufferedReader(new InputStreamReader(stream));
 
             String line;
