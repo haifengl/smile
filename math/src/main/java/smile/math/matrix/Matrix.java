@@ -403,7 +403,7 @@ public class Matrix implements IMatrix {
             }
         } else {
             if (lu == null) {
-                LU();
+                lu();
             }
         }
 
@@ -509,7 +509,7 @@ public class Matrix implements IMatrix {
     /**
      * Returns the LU decomposition.
      */
-    public LUDecomposition LU() {
+    public LUDecomposition lu() {
         if (nrows() != ncols()) {
             throw new UnsupportedOperationException("The matrix is not square.");
         }
@@ -544,7 +544,7 @@ public class Matrix implements IMatrix {
     /**
      * Returns the QR decomposition.
      */
-    public QRDecomposition QR() {
+    public QRDecomposition qr() {
         if (qr == null) {
             qr = new QRDecomposition(A);
         }
@@ -561,10 +561,10 @@ public class Matrix implements IMatrix {
             if (symmetric && positive) {
                 cholesky().solve(b);
             } else {
-                LU().solve(b);
+                lu().solve(b);
             }
         } else {
-            QR().solve(b);
+            qr().solve(b);
         }
         return b;
     }
@@ -579,10 +579,10 @@ public class Matrix implements IMatrix {
             if (symmetric && positive) {
                 cholesky().solve(B);
             } else {
-                LU().solve(B);
+                lu().solve(B);
             }
         } else {
-            QR().solve(B);
+            qr().solve(B);
         }
         return B;
     }
