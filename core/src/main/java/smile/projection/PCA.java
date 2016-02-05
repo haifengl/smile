@@ -105,7 +105,7 @@ public class PCA implements Projection<double[]> {
 
     /**
      * Constructor. Learn principal component analysis.
-     * @param data  training data of which each row is a sample. If the sample size
+     * @param data training data of which each row is a sample. If the sample size
      * is larger than the data dimension and cor = false, SVD is employed for
      * efficiency. Otherwise, eigen decomposition on covariance or correlation
      * matrix is performed.
