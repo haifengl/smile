@@ -855,7 +855,7 @@ trait Operators {
     *
     * @return fisher discriminant analysis model.
     */
-  def fisher(x: Array[Array[Double]], y: Array[Int], L: Int = -1, tol: Double = 1E-4): FLD = {
+  def fisher(x: Array[Array[Double]], y: Array[Int], L: Int = -1, tol: Double = 0.0001): FLD = {
     time {
       new FLD(x, y, L, tol)
     }
@@ -895,7 +895,7 @@ trait Operators {
     *
     * @return linear discriminant analysis model.
     */
-  def lda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 1E-4): LDA = {
+  def lda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): LDA = {
     time {
       new LDA(x, y, priori, tol)
     }
@@ -925,7 +925,7 @@ trait Operators {
     *
     * @return Quadratic discriminant analysis model.
     */
-  def qda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 1E-4): QDA = {
+  def qda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): QDA = {
     time {
       new QDA(x, y, priori, tol)
     }
@@ -952,7 +952,7 @@ trait Operators {
     *
     * @return Regularized discriminant analysis model.
     */
-  def rda(x: Array[Array[Double]], y: Array[Int], alpha: Double, priori: Array[Double] = null, tol: Double = 1E-4): RDA = {
+  def rda(x: Array[Array[Double]], y: Array[Int], alpha: Double, priori: Array[Double] = null, tol: Double = 0.0001): RDA = {
     time {
       new RDA(x, y, priori, alpha, tol)
     }

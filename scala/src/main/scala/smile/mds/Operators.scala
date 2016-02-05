@@ -64,7 +64,7 @@ trait Operators {
     * @param tol tolerance for stopping iterations.
     * @param maxIter maximum number of iterations.
    */
-  def isomds(proximity: Array[Array[Double]], init: Array[Array[Double]], tol: Double = 1E-4, maxIter: Int = 200): IsotonicMDS = {
+  def isomds(proximity: Array[Array[Double]], init: Array[Array[Double]], tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS = {
     new IsotonicMDS(proximity, init, tol, maxIter)
   }
 
@@ -104,7 +104,7 @@ trait Operators {
     * @param tol tolerance for stopping iterations.
     * @param maxIter maximum number of iterations.
    */
-  def sammon(proximity: Array[Array[Double]], init: Array[Array[Double]], lambda: Double = 0.2, tol: Double = 1E-4, maxIter: Int = 100): SammonMapping = {
+  def sammon(proximity: Array[Array[Double]], init: Array[Array[Double]], lambda: Double = 0.2, tol: Double = 0.0001, maxIter: Int = 100): SammonMapping = {
     new SammonMapping(proximity, init, lambda, tol, maxIter)
   }
 }

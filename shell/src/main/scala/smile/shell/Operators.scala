@@ -26,6 +26,7 @@ trait Operators extends smile.association.Operators
   with smile.clustering.Operators
   with smile.manifold.Operators
   with smile.mds.Operators
+  with smile.projection.Operators
   with smile.wavelet.Operators
   with smile.io.Operators {
 

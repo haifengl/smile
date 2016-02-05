@@ -18,7 +18,7 @@
  * Feature extraction. Feature extraction transforms the data in the
  * high-dimensional space to a space of fewer dimensions. The data
  * transformation may be linear, as in principal component analysis (PCA),
- * but many nonlinear dimensionality reduction techniques also exist.\
+ * but many nonlinear dimensionality reduction techniques also exist.
  * <p>
  * The main linear technique for dimensionality reduction, principal component
  * analysis, performs a linear mapping of the data to a lower dimensional
