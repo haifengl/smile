@@ -28,3 +28,4 @@ import smile.data._, smile.io._
 import java.awt.Color, smile.plot._
 import smile.interpolation._
 import smile.shell._
+import smile.validation._

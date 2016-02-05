@@ -19,7 +19,7 @@ import smile.data._
 import smile.data.parser.DelimitedTextParser
 import smile.classification._
 import smile.math.Math
-import smile.util._
+import smile.validation._
 
 /**
  *

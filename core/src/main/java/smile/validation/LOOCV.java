@@ -17,7 +17,7 @@
 package smile.validation;
 
 /**
- * Leave-one-out cross validation. LOOCV involves using a single observation
+ * Leave-one-out cross validation. LOOCV uses a single observation
  * from the original sample as the validation data, and the remaining
  * observations as the training data. This is repeated such that each
  * observation in the sample is used once as the validation data. This is

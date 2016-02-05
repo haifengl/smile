@@ -22,7 +22,7 @@ import smile.math.Math
 import smile.math.distance.EuclideanDistance
 import smile.math.kernel.GaussianKernel
 import smile.math.rbf.GaussianRadialBasis
-import smile.validation.Accuracy
+import smile.validation._
 import smile.io._
 import smile.util._
 
