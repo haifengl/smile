@@ -71,7 +71,6 @@ public class NeuralGas extends KMeans {
 
         /**
          * Constructor.
-         * @param d the dimensionality of reference vector.
          */
         Neuron(double[] w) {
             this.w = w;

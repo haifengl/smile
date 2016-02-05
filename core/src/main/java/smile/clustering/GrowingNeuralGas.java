@@ -126,7 +126,6 @@ public class GrowingNeuralGas implements Clustering<double[]> {
 
         /**
          * Constructor.
-         * @param d the dimensionality of reference vector.
          */
         Node(double[] w) {
             this.w = w;
@@ -205,7 +204,7 @@ public class GrowingNeuralGas implements Clustering<double[]> {
      * of lambda, insert a new neuron.
      * @param alpha decrease error variables by multiplying them with alpha
      * during inserting a new neuron.
-     * @param beta decrease all error variables by multiply them with de.
+     * @param beta decrease all error variables by multiply them with beta.
      */
     public GrowingNeuralGas(int d, double epsBest, double epsNeighbor, int maxEdgeAge, int lambda, double alpha, double beta) {
         this.d = d;
