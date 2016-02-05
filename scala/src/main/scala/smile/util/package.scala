@@ -16,9 +16,6 @@
 
 package smile
 
-import smile.classification.{Classifier, SoftClassifier}
-import smile.validation._
-
 /** Utility functions.
   *
   * @author Haifeng Li
