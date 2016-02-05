@@ -14,18 +14,12 @@
  * limitations under the License.
  *******************************************************************************/
 
-/** Shell initialization script.
+package smile
+
+/** Model validation.
   *
   * @author Haifeng Li
   */
+package object validation extends Operators {
 
-import smile.util._
-import smile.math._, Math._
-import smile.math.distance._
-import smile.math.kernel._
-import smile.stat.distribution._
-import smile.data._, smile.io._
-import java.awt.Color, smile.plot._
-import smile.interpolation._
-import smile.shell._
-import smile.validation._
+}
