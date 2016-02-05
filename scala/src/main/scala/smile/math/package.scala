@@ -14,23 +14,12 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.shell
+package smile
 
-/** High level operators that are accessible in the shell without explicit qualification.
+/** Mathematical and statistical functions.
   *
   * @author Haifeng Li
   */
-trait Operators extends smile.math.Operators
-  with smile.association.Operators
-  with smile.classification.Operators
-  with smile.regression.Operators
-  with smile.clustering.Operators
-  with smile.manifold.Operators
-  with smile.mds.Operators
-  with smile.sequence.Operators
-  with smile.projection.Operators
-  with smile.nlp.Operators
-  with smile.wavelet.Operators
-  with smile.io.Operators {
+package object math extends Operators {
 
 }
