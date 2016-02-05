@@ -297,7 +297,6 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
      *
      * @param q    the query key.
      * @param node the root of subtree.
-     * @param k    the number of neighbors to find.
      * @param heap the heap object to store/update the kNNs found during the search.
      */
     private void search(double[] q, Node node, HeapSelect<Neighbor<double[], E>> heap) {
