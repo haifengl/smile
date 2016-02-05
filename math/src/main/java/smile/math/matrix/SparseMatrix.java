@@ -65,7 +65,7 @@ public class SparseMatrix implements IMatrix {
      * Constructor.
      * @param nrows the number of rows in the matrix.
      * @param ncols the number of columns in the matrix.
-     * @param size the number of nonzero entries in the matrix.
+     * @param nvals the number of nonzero entries in the matrix.
      */
     private SparseMatrix(int nrows, int ncols, int nvals) {
         this.nrows = nrows;
