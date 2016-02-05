@@ -56,7 +56,7 @@ public class ChiSqTest {
      * One-sample chisq test. Given the array bins containing the observed numbers of events,
      * and an array prob containing the expected probabilities of events, and given
      * one constraint, a small value of p-value indicates a significant
-     * differenece between the distributions bins and ebins.
+     * difference between the distributions.
      */
     public static ChiSqTest test(int[] bins, double[] prob) {
         return test(bins, prob, 1);
@@ -66,8 +66,7 @@ public class ChiSqTest {
      * One-sample chisq test. Given the array bins containing the observed numbers of events,
      * and an array prob containing the expected probabilities of events, and given
      * the number of constraints (normally one), a small value of p-value
-     * indicates a significant differenece between the distributions bins
-     * and ebins.
+     * indicates a significant difference between the distributions.
      */
     public static ChiSqTest test(int[] bins, double[] prob, int constraints) {
         int nbins = bins.length;
@@ -100,8 +99,7 @@ public class ChiSqTest {
     /**
      * Two-sample chisq test. Given the arrays bins1 and bins2, containing two
      * sets of binned data, and given one constraint, a small value of
-     * p-value indicates a significant differenece between the distributions
-     * bins1 and bins2.
+     * p-value indicates a significant difference between the distributions.
      */
     public static ChiSqTest test(int[] bins1, int[] bins2) {
         return test(bins1, bins2, 1);
@@ -110,8 +108,8 @@ public class ChiSqTest {
     /**
      * Two-sample chisq test. Given the arrays bins1 and bins2, containing two
      * sets of binned data, and given the number of constraints (normally one),
-     * a small value of p-value indicates a significant differenece between
-     * the distributions bins1 and bins2.
+     * a small value of p-value indicates a significant difference between
+     * the distributions.
      */
     public static ChiSqTest test(int[] bins1, int[] bins2, int constraints) {
         if (bins1.length != bins2.length) {
