@@ -106,7 +106,7 @@ public class SimpleTokenizer implements Tokenizer {
 
     /**
      * Constructor.
-     * @param splitContraction if true, most punctuation is from adjoining words.
+     * @param splitContraction if true, split adjoining words.
      */
     public SimpleTokenizer(boolean splitContraction) {
         this.splitContraction = splitContraction;
