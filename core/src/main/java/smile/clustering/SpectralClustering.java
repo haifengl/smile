@@ -202,7 +202,7 @@ public class SpectralClustering {
      * one may pick the value that gives the tightest clusters (smallest
      * distortion, see {@link #distortion()}) in feature space.
      */
-    public SpectralClustering(double[][] data, int l, int k, double sigma) {
+    public SpectralClustering(double[][] data, int k, int l, double sigma) {
         if (l < k || l >= data.length) {
             throw new IllegalArgumentException("Invalid number of random samples: " + l);
         }
