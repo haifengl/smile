@@ -97,6 +97,12 @@ trait Operators {
     */
   def ttest(x: Array[Double], mean: Double): TTest = TTest.test(x, mean)
 
+  /** Given the paired arrays x and y, test if they have significantly
+    * different means. Small values of p-value indicate that the two arrays
+    * have significantly different means.
+    */
+  def ttest(x: Array[Double], y: Array[Double]): TTest = TTest.pairedTest(x, y)
+
   /** Test if the arrays x and y have significantly different means.  Small
     * values of p-value indicate that the two arrays have significantly
     * different means.
@@ -104,13 +110,7 @@ trait Operators {
     *                      drawn from populations with the same true variance. Otherwise, The data
     *                      arrays are allowed to be drawn from populations with unequal variances.
     */
-  def ttest(x: Array[Double], y: Array[Double], equalVariance: Boolean = false): TTest = TTest.test(x, y, equalVariance)
-
-  /** Given the paired arrays x and y, test if they have significantly
-    * different means. Small values of p-value indicate that the two arrays
-    * have significantly different means.
-    */
-  def pttest(x: Array[Double], y: Array[Double]): TTest = TTest.pairedTest(x, y)
+  def ttest2(x: Array[Double], y: Array[Double], equalVariance: Boolean = false): TTest = TTest.test(x, y, equalVariance)
 
   /** The one-sample KS test for the null hypothesis that the data set x
     * is drawn from the given distribution. Small values of p-value show that
@@ -149,7 +149,7 @@ trait Operators {
     * It is used with non-parametric data. The p-value is calculated by
     * approximation, which is good for n &gt; 10.
     */
-  def kendallTest(x: Array[Double], y: Array[Double]): CorTest = CorTest.kendall(x, y)
+  def kendalltest(x: Array[Double], y: Array[Double]): CorTest = CorTest.kendall(x, y)
 
   /** Given a two-dimensional contingency table in the form of an array of
     * integers, returns Chi-square test for independence. The rows of contingency table
