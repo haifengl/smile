@@ -90,11 +90,11 @@ public class Nominal2Binary implements Feature<double[]> {
     @Override
     public double f(double[] object, int id) {
         if (object.length != attributes.length) {
-            throw new IllegalArgumentException(String.format("Invalide object size %d, expected %d", object.length, attributes.length));            
+            throw new IllegalArgumentException(String.format("Invalid object size %d, expected %d", object.length, attributes.length));
         }
         
         if (id < 0 || id >= features.length) {
-            throw new IllegalArgumentException("Invalide feature id: " + id);
+            throw new IllegalArgumentException("Invalid feature id: " + id);
         }
         
         if (object[map[id]] == value[id]) {
