@@ -22,7 +22,7 @@ import scala.tools.nsc.interpreter.ILoop
   *
   * @author Haifeng Li
   */
-class SmileILoop extends ILoop  {
+class Shell extends ILoop  {
   override def prompt = "smile> "
   override def printWelcome = echo(
     s"""
@@ -36,10 +36,10 @@ class SmileILoop extends ILoop  {
        |  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
        |                                                       ``::,,,,::''
        |
-       |  Welcome to Smile Shell; enter 'help<RETURN>' for list of supported commands.
+       |  Welcome to Smile Shell; enter 'help<RETURN>' for the list of commands.
        |  Type ":quit<RETURN>" to leave the Smile Shell
        |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion}, Built at ${BuildInfo.builtAtString}
        |===============================================================================
-      """.stripMargin
-    )
+     """.stripMargin
+  )
 }

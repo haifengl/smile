@@ -1,9 +1,9 @@
 <!DOCTYPE html >
 <html>
         <head>
-          <title>plot - SMILE - Statistical Machine Intelligence and Learning Engine - smile.plot</title>
-          <meta name="description" content="plot - SMILE - Statistical Machine Intelligence and Learning Engine - smile.plot" />
-          <meta name="keywords" content="plot SMILE Statistical Machine Intelligence and Learning Engine smile.plot" />
+          <title>plot - Smile - Statistical Machine Intelligence and Learning Engine - smile.plot</title>
+          <meta name="description" content="plot - Smile - Statistical Machine Intelligence and Learning Engine - smile.plot" />
+          <meta name="keywords" content="plot Smile Statistical Machine Intelligence and Learning Engine smile.plot" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
@@ -47,7 +47,7 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Graphics &amp; plotting functions.
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Data visualization.
 </p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="Operators.html" class="extype" name="smile.plot.Operators">Operators</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
@@ -105,7 +105,7 @@
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Graphics &amp; plotting operators.</p>
+      <p class="shortcomment cmt">Data visualization operators.</p>
     </li></ol>
             </div>
 
@@ -147,14 +147,14 @@
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">A boxplot is a convenient way of graphically depicting groups of numerical
+      <p class="shortcomment cmt">A box plot is a convenient way of graphically depicting groups of numerical
 data through their five-number summaries (the smallest observation
 (sample minimum), lower quartile (Q1), median (Q2), upper quartile (Q3),
-and largest observation (sample maximum).</p><div class="fullcomment"><div class="comment cmt"><p>A boxplot is a convenient way of graphically depicting groups of numerical
+and largest observation (sample maximum).</p><div class="fullcomment"><div class="comment cmt"><p>A box plot is a convenient way of graphically depicting groups of numerical
 data through their five-number summaries (the smallest observation
 (sample minimum), lower quartile (Q1), median (Q2), upper quartile (Q3),
-and largest observation (sample maximum). A boxplot may also indicate
-which observations, if any, might be considered outliers.</p><p>Boxplots can be useful to display differences between populations without
+and largest observation (sample maximum). A box plot may also indicate
+which observations, if any, might be considered outliers.</p><p>Box plots can be useful to display differences between populations without
 making any assumptions of the underlying statistical distribution: they are
 non-parametric. The spacings between the different parts of the box help
 indicate the degree of dispersion (spread) and skewness in the data, and
@@ -300,23 +300,6 @@ alternative to a 3-D surface plot.
     </span>
       <p class="shortcomment cmt">2D grid plot.</p><div class="fullcomment"><div class="comment cmt"><p>2D grid plot.
 </p></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>an m x n x 2 array which are coordinates of m x n grid.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.plot.Operators">Operators</a></dd></dl></div>
-    </li><li name="smile.plot.Operators#heatmap" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="heatmap(matrix:smile.math.matrix.SparseMatrix):(javax.swing.JFrame,smile.plot.PlotCanvas)"></a>
-      <a id="heatmap(SparseMatrix):(JFrame,PlotCanvas)"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">heatmap</span><span class="params">(<span name="matrix">matrix: <span class="extype" name="smile.math.matrix.SparseMatrix">SparseMatrix</span></span>)</span><span class="result">: (<span class="extype" name="javax.swing.JFrame">JFrame</span>, <span class="extype" name="smile.plot.PlotCanvas">PlotCanvas</span>)</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.plot.package@heatmap(matrix:smile.math.matrix.SparseMatrix):(javax.swing.JFrame,smile.plot.PlotCanvas)" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Heat map of sparse matrix.</p><div class="fullcomment"><div class="comment cmt"><p>Heat map of sparse matrix.</p></div><dl class="paramcmts block"><dt class="param">matrix</dt><dd class="cmt"><p>a sparse matrix.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.plot.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.plot.Operators#heatmap" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="heatmap(rowLabels:Array[String],columnLabels:Array[String],z:Array[Array[Double]],palette:Array[java.awt.Color]):(javax.swing.JFrame,smile.plot.PlotCanvas)"></a>
       <a id="heatmap(Array[String],Array[String],Array[Array[Double]],Array[Color]):(JFrame,PlotCanvas)"></a>
@@ -610,6 +593,64 @@ alternative to a 3-D surface plot.
 </p></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>a n-by-2 or n-by-3 matrix that describes coordinates of points.</p></dd><dt class="param">style</dt><dd class="cmt"><p>the stroke style of line.</p></dd><dt class="param">color</dt><dd class="cmt"><p>the color of line.</p></dd><dt class="param">legend</dt><dd class="cmt"><p>the legend used to draw data points. The default value ' ' makes the point indistinguishable
               from the line on purpose.</p></dd><dt>returns</dt><dd class="cmt"><p>a tuple of window frame and plot canvas which can be added other shapes.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.plot.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.plot.Operators#plot" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="plot(data:smile.data.AttributeDataset,legend:Array[Char],palette:Array[java.awt.Color]):javax.swing.JFrame"></a>
+      <a id="plot(AttributeDataset,Array[Char],Array[Color]):JFrame"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">plot</span><span class="params">(<span name="data">data: <span class="extype" name="smile.data.AttributeDataset">AttributeDataset</span></span>, <span name="legend">legend: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Char">Char</span>]</span>, <span name="palette">palette: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="java.awt.Color">Color</span>]</span>)</span><span class="result">: <span class="extype" name="javax.swing.JFrame">JFrame</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.plot.package@plot(data:smile.data.AttributeDataset,legend:Array[Char],palette:Array[java.awt.Color]):javax.swing.JFrame" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Plot a grid of scatter plots of for all attribute pairs in the attribute data of which the response variable is
+integer.</p><div class="fullcomment"><div class="comment cmt"><p>Plot a grid of scatter plots of for all attribute pairs in the attribute data of which the response variable is
+integer.
+</p></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>an attribute frame.</p></dd><dt class="param">legend</dt><dd class="cmt"><p>the legend for each class.</p></dd><dt class="param">palette</dt><dd class="cmt"><p>the color for each class.</p></dd><dt>returns</dt><dd class="cmt"><p>the window frame.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.plot.Operators">Operators</a></dd></dl></div>
+    </li><li name="smile.plot.Operators#plot" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="plot(data:smile.data.AttributeDataset,legend:Char,palette:Array[java.awt.Color]):javax.swing.JFrame"></a>
+      <a id="plot(AttributeDataset,Char,Array[Color]):JFrame"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">plot</span><span class="params">(<span name="data">data: <span class="extype" name="smile.data.AttributeDataset">AttributeDataset</span></span>, <span name="legend">legend: <span class="extype" name="scala.Char">Char</span></span>, <span name="palette">palette: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="java.awt.Color">Color</span>]</span>)</span><span class="result">: <span class="extype" name="javax.swing.JFrame">JFrame</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.plot.package@plot(data:smile.data.AttributeDataset,legend:Char,palette:Array[java.awt.Color]):javax.swing.JFrame" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Plot a grid of scatter plots of for all attribute pairs in the attribute data of which the response variable is
+integer.</p><div class="fullcomment"><div class="comment cmt"><p>Plot a grid of scatter plots of for all attribute pairs in the attribute data of which the response variable is
+integer.
+</p></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>an attribute frame.</p></dd><dt class="param">legend</dt><dd class="cmt"><p>the legend for all classes.</p></dd><dt class="param">palette</dt><dd class="cmt"><p>the color for each class.</p></dd><dt>returns</dt><dd class="cmt"><p>the window frame.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.plot.Operators">Operators</a></dd></dl></div>
+    </li><li name="smile.plot.Operators#plot" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="plot(data:smile.data.AttributeDataset,legend:Char):javax.swing.JFrame"></a>
+      <a id="plot(AttributeDataset,Char):JFrame"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">plot</span><span class="params">(<span name="data">data: <span class="extype" name="smile.data.AttributeDataset">AttributeDataset</span></span>, <span name="legend">legend: <span class="extype" name="scala.Char">Char</span></span>)</span><span class="result">: <span class="extype" name="javax.swing.JFrame">JFrame</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.plot.package@plot(data:smile.data.AttributeDataset,legend:Char):javax.swing.JFrame" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Plot a grid of scatter plots of for all attribute pairs in the attribute data.</p><div class="fullcomment"><div class="comment cmt"><p>Plot a grid of scatter plots of for all attribute pairs in the attribute data.
+</p></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>an attribute frame.</p></dd><dt class="param">legend</dt><dd class="cmt"><p>the legend for all classes.</p></dd><dt>returns</dt><dd class="cmt"><p>the window frame.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.plot.Operators">Operators</a></dd></dl></div>
+    </li><li name="smile.plot.Operators#plot" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="plot(data:Array[Array[Double]],label:Array[Int],legend:Array[Char],palette:Array[java.awt.Color]):(javax.swing.JFrame,smile.plot.PlotCanvas)"></a>
       <a id="plot(Array[Array[Double]],Array[Int],Array[Char],Array[Color]):(JFrame,PlotCanvas)"></a>
       <h4 class="signature">
@@ -626,7 +667,25 @@ alternative to a 3-D surface plot.
       </a>
     </span>
       <p class="shortcomment cmt">Scatter plot.</p><div class="fullcomment"><div class="comment cmt"><p>Scatter plot.
-</p></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>a n-by-2 or n-by-3 matrix that describes coordinates of points.</p></dd><dt class="param">label</dt><dd class="cmt"><p>the class labels of data.</p></dd><dt class="param">legend</dt><dd class="cmt"><p>the legend for each class.</p></dd><dt class="param">palette</dt><dd class="cmt"><p>the colors for each class.</p></dd><dt>returns</dt><dd class="cmt"><p>a tuple of window frame and plot canvas which can be added other shapes.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.plot.Operators">Operators</a></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>a n-by-2 or n-by-3 matrix that describes coordinates of points.</p></dd><dt class="param">label</dt><dd class="cmt"><p>the class labels of data.</p></dd><dt class="param">legend</dt><dd class="cmt"><p>the legend for each class.</p></dd><dt class="param">palette</dt><dd class="cmt"><p>the color for each class.</p></dd><dt>returns</dt><dd class="cmt"><p>a tuple of window frame and plot canvas which can be added other shapes.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.plot.Operators">Operators</a></dd></dl></div>
+    </li><li name="smile.plot.Operators#plot" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="plot(data:Array[Array[Double]],label:Array[Int],legend:Char,palette:Array[java.awt.Color]):(javax.swing.JFrame,smile.plot.PlotCanvas)"></a>
+      <a id="plot(Array[Array[Double]],Array[Int],Char,Array[Color]):(JFrame,PlotCanvas)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">plot</span><span class="params">(<span name="data">data: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="label">label: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="legend">legend: <span class="extype" name="scala.Char">Char</span></span>, <span name="palette">palette: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="java.awt.Color">Color</span>]</span>)</span><span class="result">: (<span class="extype" name="javax.swing.JFrame">JFrame</span>, <span class="extype" name="smile.plot.PlotCanvas">PlotCanvas</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.plot.package@plot(data:Array[Array[Double]],label:Array[Int],legend:Char,palette:Array[java.awt.Color]):(javax.swing.JFrame,smile.plot.PlotCanvas)" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Scatter plot.</p><div class="fullcomment"><div class="comment cmt"><p>Scatter plot.
+</p></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>a n-by-2 or n-by-3 matrix that describes coordinates of points.</p></dd><dt class="param">label</dt><dd class="cmt"><p>the class labels of data.</p></dd><dt class="param">legend</dt><dd class="cmt"><p>the legend for all classes.</p></dd><dt class="param">palette</dt><dd class="cmt"><p>the color for each class.</p></dd><dt>returns</dt><dd class="cmt"><p>a tuple of window frame and plot canvas which can be added other shapes.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.plot.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.plot.Operators#plot" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="plot(data:Array[Array[Double]],labels:Array[String]):(javax.swing.JFrame,smile.plot.PlotCanvas)"></a>
       <a id="plot(Array[Array[Double]],Array[String]):(JFrame,PlotCanvas)"></a>
@@ -756,6 +815,23 @@ given distribution.</p></div><dl class="paramcmts block"><dt class="param">x</dt
       <p class="shortcomment cmt">QQ plot of samples to standard normal distribution.</p><div class="fullcomment"><div class="comment cmt"><p>QQ plot of samples to standard normal distribution.
 The x-axis is the quantiles of x and the y-axis is the
 quantiles of normal distribution.</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>a sample set.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.plot.Operators">Operators</a></dd></dl></div>
+    </li><li name="smile.plot.Operators#spy" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="spy(matrix:smile.math.matrix.SparseMatrix):(javax.swing.JFrame,smile.plot.PlotCanvas)"></a>
+      <a id="spy(SparseMatrix):(JFrame,PlotCanvas)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">spy</span><span class="params">(<span name="matrix">matrix: <span class="extype" name="smile.math.matrix.SparseMatrix">SparseMatrix</span></span>)</span><span class="result">: (<span class="extype" name="javax.swing.JFrame">JFrame</span>, <span class="extype" name="smile.plot.PlotCanvas">PlotCanvas</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.plot.package@spy(matrix:smile.math.matrix.SparseMatrix):(javax.swing.JFrame,smile.plot.PlotCanvas)" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Visualize sparsity pattern.</p><div class="fullcomment"><div class="comment cmt"><p>Visualize sparsity pattern.</p></div><dl class="paramcmts block"><dt class="param">matrix</dt><dd class="cmt"><p>a sparse matrix.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.plot.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.plot.Operators#staircase" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="staircase(data:Array[Double]*):(javax.swing.JFrame,smile.plot.PlotCanvas)"></a>
       <a id="staircase(Array[Double]*):(JFrame,PlotCanvas)"></a>
@@ -882,7 +958,7 @@ quantiles of normal distribution.</p></div><dl class="paramcmts block"><dt class
 A wire frame model specifies each edge of the physical object where two
 mathematically continuous smooth surfaces meet, or by connecting an
 object's constituent vertices using straight lines or curves.
-</p></div><dl class="paramcmts block"><dt class="param">vertices</dt><dd class="cmt"><p>an m x n x 2 or m x n x 3 array which are coordinates of m x n grid.</p></dd><dt class="param">edges</dt><dd class="cmt"><p>an m-by-2 array of which each row is the vertex indices of two
+</p></div><dl class="paramcmts block"><dt class="param">vertices</dt><dd class="cmt"><p>a n-by-2 or n-by-3 array which are coordinates of n vertices.</p></dd><dt class="param">edges</dt><dd class="cmt"><p>an m-by-2 array of which each row is the vertex indices of two
              end points of each edge.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.plot.Operators">Operators</a></dd></dl></div>
     </li></ol>
             </div>

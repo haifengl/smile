@@ -170,7 +170,6 @@ public class XMeans extends KMeans {
 
     /**
      * Calculates the BIC for single cluster.
-     * @param k the number of clusters.
      * @param n the total number of samples.
      * @param d the dimensionality of data.
      * @param distortion the distortion of clusters.

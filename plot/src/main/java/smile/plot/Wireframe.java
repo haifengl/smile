@@ -73,7 +73,7 @@ public class Wireframe extends Plot {
     
     /**
      * Create a wire frame plot canvas.
-     * @param vertices an m x n x 2 or m x n x 3 array which are coordinates of m x n grid.
+     * @param vertices a n-by-2 or n-by-3 array which are coordinates of n vertices.
      */
     public static PlotCanvas plot(double[][] vertices, int[][] edges) {
         double[] lowerBound = Math.colMin(vertices);
@@ -90,7 +90,7 @@ public class Wireframe extends Plot {
     /**
      * Create a 2D grid plot canvas.
      * @param id the id of the plot.
-     * @param vertices an m x n x 2 array which are coordinates of m x n grid.
+     * @param vertices a n-by-2 or n-by-3 array which are coordinates of n vertices.
      * @param edges an m-by-2 array of which each row is the vertex indices of two
      * end points of each edge.
      */

@@ -1,9 +1,9 @@
 <!DOCTYPE html >
 <html>
         <head>
-          <title>classification - SMILE - Statistical Machine Intelligence and Learning Engine - smile.classification</title>
-          <meta name="description" content="classification - SMILE - Statistical Machine Intelligence and Learning Engine - smile.classification" />
-          <meta name="keywords" content="classification SMILE Statistical Machine Intelligence and Learning Engine smile.classification" />
+          <title>classification - Smile - Statistical Machine Intelligence and Learning Engine - smile.classification</title>
+          <meta name="description" content="classification - Smile - Statistical Machine Intelligence and Learning Engine - smile.classification" />
+          <meta name="keywords" content="classification Smile Statistical Machine Intelligence and Learning Engine smile.classification" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
@@ -101,10 +101,10 @@ the relevant features and discard the irrelevant ones. More generally,
 dimensionality reduction may seek to map the input data into a lower
 dimensional space prior to running the supervised learning algorithm.</li><li><b>Overfitting:</b>
 Overfitting occurs when a statistical model describes random error
-or noise instead of the underlying relationship. Over-fitting generally
+or noise instead of the underlying relationship. Overfitting generally
 occurs when a model is excessively complex, such as having too many
 parameters relative to the number of observations. A model which has
-been over-fit will generally have poor predictive performance, as it can
+been overfit will generally have poor predictive performance, as it can
 exaggerate minor fluctuations in the data.
 The potential for overfitting depends not only on the number of parameters
 and data but also the conformability of the model structure with the data
@@ -197,7 +197,7 @@ between bias and variance.
         <div id="values" class="values members">
               <h3>Value Members</h3>
               <ol><li name="smile.classification.Operators#adaboost" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="adaboost(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,J:Int):smile.classification.AdaBoost"></a>
+      <a id="adaboost(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int):smile.classification.AdaBoost"></a>
       <a id="adaboost(Array[Array[Double]],Array[Int],Array[Attribute],Int,Int):AdaBoost"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -205,10 +205,10 @@ between bias and variance.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">adaboost</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="T">T: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">2</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.AdaBoost">AdaBoost</span></span>
+        <span class="name">adaboost</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="ntrees">ntrees: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="maxNodes">maxNodes: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">2</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.AdaBoost">AdaBoost</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.package@adaboost(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,J:Int):smile.classification.AdaBoost" title="Permalink" target="_top">
+      <a href="../../index.html#smile.classification.package@adaboost(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int):smile.classification.AdaBoost" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -230,9 +230,9 @@ For multi-class classification, a common approach is reducing the
 multi-class classification problem to multiple two-class problems.
 This implementation is a multi-class AdaBoost without such reductions.</p><h6>References:</h6><ul><li>Yoav Freund, Robert E. Schapire. A Decision-Theoretic Generalization of on-Line Learning and an Application to Boosting, 1995.</li><li>Ji Zhu, Hui Zhou, Saharon Rosset and Trevor Hastie. Multi-class Adaboost, 2009.
 </li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
-                  are treated as numeric values.</p></dd><dt class="param">T</dt><dd class="cmt"><p>the number of trees.</p></dd><dt class="param">J</dt><dd class="cmt"><p>the maximum number of leaf nodes in the trees.</p></dd><dt>returns</dt><dd class="cmt"><p>AdaBoost model.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
+                  are treated as numeric values.</p></dd><dt class="param">ntrees</dt><dd class="cmt"><p>the number of trees.</p></dd><dt class="param">maxNodes</dt><dd class="cmt"><p>the maximum number of leaf nodes in the trees.</p></dd><dt>returns</dt><dd class="cmt"><p>AdaBoost model.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.classification.Operators#decisionTree" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="decisionTree(x:Array[Array[Double]],y:Array[Int],J:Int,attributes:Array[smile.data.Attribute],splitRule:smile.classification.DecisionTree.SplitRule):smile.classification.DecisionTree"></a>
+      <a id="decisionTree(x:Array[Array[Double]],y:Array[Int],maxNodes:Int,attributes:Array[smile.data.Attribute],splitRule:smile.classification.DecisionTree.SplitRule):smile.classification.DecisionTree"></a>
       <a id="decisionTree(Array[Array[Double]],Array[Int],Int,Array[Attribute],SplitRule):DecisionTree"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -240,10 +240,10 @@ This implementation is a multi-class AdaBoost without such reductions.</p><h6>Re
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">decisionTree</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span></span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="splitRule">splitRule: <span class="extype" name="smile.classification.DecisionTree.SplitRule">SplitRule</span> = <span class="symbol">DecisionTree.SplitRule.GINI</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.DecisionTree">DecisionTree</span></span>
+        <span class="name">decisionTree</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="maxNodes">maxNodes: <span class="extype" name="scala.Int">Int</span></span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="splitRule">splitRule: <span class="extype" name="smile.classification.DecisionTree.SplitRule">SplitRule</span> = <span class="symbol">DecisionTree.SplitRule.GINI</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.DecisionTree">DecisionTree</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.package@decisionTree(x:Array[Array[Double]],y:Array[Int],J:Int,attributes:Array[smile.data.Attribute],splitRule:smile.classification.DecisionTree.SplitRule):smile.classification.DecisionTree" title="Permalink" target="_top">
+      <a href="../../index.html#smile.classification.package@decisionTree(x:Array[Array[Double]],y:Array[Int],maxNodes:Int,attributes:Array[smile.data.Attribute],splitRule:smile.classification.DecisionTree.SplitRule):smile.classification.DecisionTree" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -296,7 +296,7 @@ Mechanisms such as pruning are necessary to avoid this problem.
 Another limitation of trees is the lack of smoothness of the prediction
 surface.</p><p>Some techniques such as bagging, boosting, and random forest use more than
 one decision tree for their analysis.
-</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">J</dt><dd class="cmt"><p>the maximum number of leaf nodes in the tree.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties.</p></dd><dt class="param">splitRule</dt><dd class="cmt"><p>the splitting rule.</p></dd><dt>returns</dt><dd class="cmt"><p>Decision tree model.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">maxNodes</dt><dd class="cmt"><p>the maximum number of leaf nodes in the tree.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties.</p></dd><dt class="param">splitRule</dt><dd class="cmt"><p>the splitting rule.</p></dd><dt>returns</dt><dd class="cmt"><p>Decision tree model.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.classification.Operators#fisher" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="fisher(x:Array[Array[Double]],y:Array[Int],L:Int,tol:Double):smile.classification.FLD"></a>
       <a id="fisher(Array[Array[Double]],Array[Int],Int,Double):FLD"></a>
@@ -306,7 +306,7 @@ one decision tree for their analysis.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">fisher</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="L">L: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1E-4</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.FLD">FLD</span></span>
+        <span class="name">fisher</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="L">L: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.0001</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.FLD">FLD</span></span>
       </span>
       </h4><span class="permalink">
       <a href="../../index.html#smile.classification.package@fisher(x:Array[Array[Double]],y:Array[Int],L:Int,tol:Double):smile.classification.FLD" title="Permalink" target="_top">
@@ -334,23 +334,23 @@ full rank, and so cannot be inverted. This is known as small sample size
 problem.
 </p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">L</dt><dd class="cmt"><p>the dimensionality of mapped space. The default value is the number of classes - 1.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>a tolerance to decide if a covariance matrix is singular; it
            will reject variables whose variance is less than tol<sup>2</sup>.</p></dd><dt>returns</dt><dd class="cmt"><p>fisher discriminant analysis model.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
-    </li><li name="smile.classification.Operators#gbc" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="gbc(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,J:Int,eta:Double,f:Double):smile.classification.GradientTreeBoost"></a>
-      <a id="gbc(Array[Array[Double]],Array[Int],Array[Attribute],Int,Int,Double,Double):GradientTreeBoost"></a>
+    </li><li name="smile.classification.Operators#gbct" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="gbct(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,shrinkage:Double,subsample:Double):smile.classification.GradientTreeBoost"></a>
+      <a id="gbct(Array[Array[Double]],Array[Int],Array[Attribute],Int,Int,Double,Double):GradientTreeBoost"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">gbc</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="T">T: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">6</span></span>, <span name="eta">eta: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.05</span></span>, <span name="f">f: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.7</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.GradientTreeBoost">GradientTreeBoost</span></span>
+        <span class="name">gbct</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="ntrees">ntrees: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="maxNodes">maxNodes: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">6</span></span>, <span name="shrinkage">shrinkage: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.05</span></span>, <span name="subsample">subsample: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.7</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.GradientTreeBoost">GradientTreeBoost</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.package@gbc(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,J:Int,eta:Double,f:Double):smile.classification.GradientTreeBoost" title="Permalink" target="_top">
+      <a href="../../index.html#smile.classification.package@gbct(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,shrinkage:Double,subsample:Double):smile.classification.GradientTreeBoost" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Gradient boosting for classification.</p><div class="fullcomment"><div class="comment cmt"><p>Gradient boosting for classification. Gradient boosting is typically used
+      <p class="shortcomment cmt">Gradient boosted classification trees.</p><div class="fullcomment"><div class="comment cmt"><p>Gradient boosted classification trees. Gradient boosting is typically used
 with decision trees (especially CART regression trees) of a fixed size as
 base learners. For this special case Friedman proposes a modification to
 gradient boosting method which improves the quality of fit of each base
@@ -400,7 +400,7 @@ It's used in the tree building process by ignoring any splits that lead
 to nodes containing fewer than this number of training set instances.
 Imposing this limit helps to reduce variance in predictions at leaves.</p><h6>References:</h6><ul><li>J. H. Friedman. Greedy Function Approximation: A Gradient Boosting Machine, 1999.</li><li>J. H. Friedman. Stochastic Gradient Boosting, 1999.
 </li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the class labels.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
-                  are treated as numeric values.</p></dd><dt class="param">T</dt><dd class="cmt"><p>the number of iterations (trees).</p></dd><dt class="param">J</dt><dd class="cmt"><p>the number of leaves in each tree.</p></dd><dt class="param">eta</dt><dd class="cmt"><p>the shrinkage parameter in (0, 1] controls the learning rate of procedure.</p></dd><dt class="param">f</dt><dd class="cmt"><p>the sampling fraction for stochastic tree boosting.</p></dd><dt>returns</dt><dd class="cmt"><p>Gradient boosted trees.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
+                  are treated as numeric values.</p></dd><dt class="param">ntrees</dt><dd class="cmt"><p>the number of iterations (trees).</p></dd><dt class="param">maxNodes</dt><dd class="cmt"><p>the number of leaves in each tree.</p></dd><dt class="param">shrinkage</dt><dd class="cmt"><p>the shrinkage parameter in (0, 1] controls the learning rate of procedure.</p></dd><dt class="param">subsample</dt><dd class="cmt"><p>the sampling fraction for stochastic tree boosting.</p></dd><dt>returns</dt><dd class="cmt"><p>Gradient boosted trees.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.classification.Operators#knn" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="knn(x:Array[Array[Double]],y:Array[Int],k:Int):smile.classification.KNN[Array[Double]]"></a>
       <a id="knn(Array[Array[Double]],Array[Int],Int):KNN[Array[Double]]"></a>
@@ -490,7 +490,7 @@ increases as a function of the number of data points).
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">lda</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="priori">priori: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>] = <span class="symbol">null</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1E-4</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.LDA">LDA</span></span>
+        <span class="name">lda</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="priori">priori: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>] = <span class="symbol">null</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.0001</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.LDA">LDA</span></span>
       </span>
       </h4><span class="permalink">
       <a href="../../index.html#smile.classification.package@lda(x:Array[Array[Double]],y:Array[Int],priori:Array[Double],tol:Double):smile.classification.LDA" title="Permalink" target="_top">
@@ -711,23 +711,41 @@ the neural network for categorical target variables, the outputs
 can be interpreted as posterior probabilities, which are very useful.
 </p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">numUnits</dt><dd class="cmt"><p>the number of units in each layer.</p></dd><dt class="param">error</dt><dd class="cmt"><p>the error function.</p></dd><dt class="param">epochs</dt><dd class="cmt"><p>the number of epochs of stochastic learning.</p></dd><dt class="param">activation</dt><dd class="cmt"><p>the activation function of output layer.</p></dd><dt class="param">eta</dt><dd class="cmt"><p>the learning rate.</p></dd><dt class="param">alpha</dt><dd class="cmt"><p>the momentum factor.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>the weight decay for regularization.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.classification.Operators#predict" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="predict[T&lt;:AnyRef](model:smile.classification.Classifier[T],x:T,posteriori:Array[Double]):Int"></a>
-      <a id="predict[T&lt;:AnyRef](Classifier[T],T,Array[Double]):Int"></a>
+      <a id="predict[T&lt;:AnyRef](model:smile.classification.SoftClassifier[T],x:T,posteriori:Array[Double]):Int"></a>
+      <a id="predict[T&lt;:AnyRef](SoftClassifier[T],T,Array[Double]):Int"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">predict</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="model">model: <span class="extype" name="smile.classification.Classifier">Classifier</span>[<span class="extype" name="smile.classification.Operators.predict.T">T</span>]</span>, <span name="x">x: <span class="extype" name="smile.classification.Operators.predict.T">T</span></span>, <span name="posteriori">posteriori: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>] = <span class="symbol">null</span></span>)</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">predict</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="model">model: <span class="extype" name="smile.classification.SoftClassifier">SoftClassifier</span>[<span class="extype" name="smile.classification.Operators.predict.T">T</span>]</span>, <span name="x">x: <span class="extype" name="smile.classification.Operators.predict.T">T</span></span>, <span name="posteriori">posteriori: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.package@predict[T&lt;:AnyRef](model:smile.classification.Classifier[T],x:T,posteriori:Array[Double]):Int" title="Permalink" target="_top">
+      <a href="../../index.html#smile.classification.package@predict[T&lt;:AnyRef](model:smile.classification.SoftClassifier[T],x:T,posteriori:Array[Double]):Int" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Apply a classification model on a data sample.</p><div class="fullcomment"><div class="comment cmt"><p>Apply a classification model on a data sample.
+      <p class="shortcomment cmt">Apply a soft classifier on an instance.</p><div class="fullcomment"><div class="comment cmt"><p>Apply a soft classifier on an instance.
 </p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the data type.</p></dd><dt class="param">model</dt><dd class="cmt"><p>classification model.</p></dd><dt class="param">x</dt><dd class="cmt"><p>data sample.</p></dd><dt class="param">posteriori</dt><dd class="cmt"><p>optional double array of posertiori probability output. Note not all models support it.</p></dd><dt>returns</dt><dd class="cmt"><p>the predicted class label.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
+    </li><li name="smile.classification.Operators#predict" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="predict[T&lt;:AnyRef](model:smile.classification.Classifier[T],x:T):Int"></a>
+      <a id="predict[T&lt;:AnyRef](Classifier[T],T):Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">predict</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="model">model: <span class="extype" name="smile.classification.Classifier">Classifier</span>[<span class="extype" name="smile.classification.Operators.predict.T">T</span>]</span>, <span name="x">x: <span class="extype" name="smile.classification.Operators.predict.T">T</span></span>)</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.classification.package@predict[T&lt;:AnyRef](model:smile.classification.Classifier[T],x:T):Int" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Apply a classifier on an instance.</p><div class="fullcomment"><div class="comment cmt"><p>Apply a classifier on an instance.
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the data type.</p></dd><dt class="param">model</dt><dd class="cmt"><p>classification model.</p></dd><dt class="param">x</dt><dd class="cmt"><p>data sample.</p></dd><dt>returns</dt><dd class="cmt"><p>the predicted class label.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.classification.Operators#qda" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="qda(x:Array[Array[Double]],y:Array[Int],priori:Array[Double],tol:Double):smile.classification.QDA"></a>
       <a id="qda(Array[Array[Double]],Array[Int],Array[Double],Double):QDA"></a>
@@ -737,7 +755,7 @@ can be interpreted as posterior probabilities, which are very useful.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">qda</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="priori">priori: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>] = <span class="symbol">null</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1E-4</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.QDA">QDA</span></span>
+        <span class="name">qda</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="priori">priori: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>] = <span class="symbol">null</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.0001</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.QDA">QDA</span></span>
       </span>
       </h4><span class="permalink">
       <a href="../../index.html#smile.classification.package@qda(x:Array[Array[Double]],y:Array[Int],priori:Array[Double],tol:Double):smile.classification.QDA" title="Permalink" target="_top">
@@ -759,6 +777,42 @@ One of these regularization methods is <code><a href="Operators.html#rda(x:Array
 </p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">priori</dt><dd class="cmt"><p>the priori probability of each class. If null, it will be
               estimated from the training data.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>a tolerance to decide if a covariance matrix is singular; it
            will reject variables whose variance is less than tol<sup>2</sup>.</p></dd><dt>returns</dt><dd class="cmt"><p>Quadratic discriminant analysis model.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
+    </li><li name="smile.classification.Operators#randomDecisionForest" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="randomDecisionForest(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,nodeSize:Int,mtry:Int,subsample:Double,splitRule:smile.classification.DecisionTree.SplitRule,classWeight:Array[Int]):smile.classification.RandomForest"></a>
+      <a id="randomDecisionForest(Array[Array[Double]],Array[Int],Array[Attribute],Int,Int,Int,Int,Double,SplitRule,Array[Int]):RandomForest"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">randomDecisionForest</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="ntrees">ntrees: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="maxNodes">maxNodes: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="nodeSize">nodeSize: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="mtry">mtry: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="subsample">subsample: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1.0</span></span>, <span name="splitRule">splitRule: <span class="extype" name="smile.classification.DecisionTree.SplitRule">SplitRule</span> = <span class="symbol">DecisionTree.SplitRule.GINI</span></span>, <span name="classWeight">classWeight: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>] = <span class="symbol">null</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.RandomForest">RandomForest</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.classification.package@randomDecisionForest(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,nodeSize:Int,mtry:Int,subsample:Double,splitRule:smile.classification.DecisionTree.SplitRule,classWeight:Array[Int]):smile.classification.RandomForest" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Random forest for classification.</p><div class="fullcomment"><div class="comment cmt"><p>Random forest for classification. Random forest is an ensemble classifier
+that consists of many decision trees and outputs the majority vote of
+individual trees. The method combines bagging idea and the random
+selection of features.</p><p>Each tree is constructed using the following algorithm:</p><ol class="lowerRoman"><li>If the number of cases in the training set is N, randomly sample N cases
+with replacement from the original data. This sample will
+be the training set for growing the tree.</li><li>If there are M input variables, a number m &lt;&lt; M is specified such
+that at each node, m variables are selected at random out of the M and
+the best split on these m is used to split the node. The value of m is
+held constant during the forest growing.</li><li>Each tree is grown to the largest extent possible. There is no pruning.</li></ol><p>The advantages of random forest are:</p><ul><li>For many data sets, it produces a highly accurate classifier.</li><li>It runs efficiently on large data sets.</li><li>It can handle thousands of input variables without variable deletion.</li><li>It gives estimates of what variables are important in the classification.</li><li>It generates an internal unbiased estimate of the generalization error
+as the forest building progresses.</li><li>It has an effective method for estimating missing data and maintains
+accuracy when a large proportion of the data are missing.</li></ul><p>The disadvantages are</p><ul><li>Random forests are prone to over-fitting for some datasets. This is
+even more pronounced on noisy data.</li><li>For data including categorical variables with different number of
+levels, random forests are biased in favor of those attributes with more
+levels. Therefore, the variable importance scores from random forest are
+not reliable for this type of data.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
+                  are treated as numeric values.</p></dd><dt class="param">ntrees</dt><dd class="cmt"><p>the number of trees.</p></dd><dt class="param">maxNodes</dt><dd class="cmt"><p>maximum number of leaf nodes.</p></dd><dt class="param">nodeSize</dt><dd class="cmt"><p>number of instances in a node below which the tree will not split.</p></dd><dt class="param">mtry</dt><dd class="cmt"><p>the number of random selected features to be used to determine
+            the decision at a node of the tree. floor(sqrt(dim)) seems to give
+            generally good performance, where dim is the number of variables.</p></dd><dt class="param">subsample</dt><dd class="cmt"><p>the sampling rate for training tree. 1.0 means sampling with replacement. &lt; 1.0 means
+                 sampling without replacement.</p></dd><dt class="param">splitRule</dt><dd class="cmt"><p>Decision tree node split rule.</p></dd><dt class="param">classWeight</dt><dd class="cmt"><p>Priors of the classes.</p></dd><dt>returns</dt><dd class="cmt"><p>Random forest classification model.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.classification.Operators#rbfnet" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="rbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:Array[smile.math.rbf.RadialBasisFunction],centers:Array[T],normalized:Boolean):smile.classification.RBFNetwork[T]"></a>
       <a id="rbfnet[T&lt;:AnyRef](Array[T],Array[Int],Metric[T],Array[RadialBasisFunction],Array[T],Boolean):RBFNetwork[T]"></a>
@@ -873,7 +927,7 @@ training data.</p><h6>References:</h6><ul><li>Simon Haykin. Neural Networks: A C
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">rda</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="alpha">alpha: <span class="extype" name="scala.Double">Double</span></span>, <span name="priori">priori: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>] = <span class="symbol">null</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1E-4</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.RDA">RDA</span></span>
+        <span class="name">rda</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="alpha">alpha: <span class="extype" name="scala.Double">Double</span></span>, <span name="priori">priori: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>] = <span class="symbol">null</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.0001</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.RDA">RDA</span></span>
       </span>
       </h4><span class="permalink">
       <a href="../../index.html#smile.classification.package@rda(x:Array[Array[Double]],y:Array[Int],alpha:Double,priori:Array[Double],tol:Double):smile.classification.RDA" title="Permalink" target="_top">
@@ -893,41 +947,6 @@ regularization factor &alpha; allows a continuum of models between LDA and QDA.
 </p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">alpha</dt><dd class="cmt"><p>regularization factor in [0, 1] allows a continuum of models
              between LDA and QDA.</p></dd><dt class="param">priori</dt><dd class="cmt"><p>the priori probability of each class.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>tolerance to decide if a covariance matrix is singular; it
            will reject variables whose variance is less than tol<sup>2</sup>.</p></dd><dt>returns</dt><dd class="cmt"><p>Regularized discriminant analysis model.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
-    </li><li name="smile.classification.Operators#rfc" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="rfc(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,mtry:Int,S:Int,J:Int,splitRule:smile.classification.DecisionTree.SplitRule,classWeight:Array[Int]):smile.classification.RandomForest"></a>
-      <a id="rfc(Array[Array[Double]],Array[Int],Array[Attribute],Int,Int,Int,Int,SplitRule,Array[Int]):RandomForest"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">rfc</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="T">T: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="mtry">mtry: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="S">S: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="splitRule">splitRule: <span class="extype" name="smile.classification.DecisionTree.SplitRule">SplitRule</span> = <span class="symbol">DecisionTree.SplitRule.GINI</span></span>, <span name="classWeight">classWeight: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>] = <span class="symbol">null</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.RandomForest">RandomForest</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.package@rfc(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],T:Int,mtry:Int,S:Int,J:Int,splitRule:smile.classification.DecisionTree.SplitRule,classWeight:Array[Int]):smile.classification.RandomForest" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Random forest for classification.</p><div class="fullcomment"><div class="comment cmt"><p>Random forest for classification. Random forest is an ensemble classifier
-that consists of many decision trees and outputs the majority vote of
-individual trees. The method combines bagging idea and the random
-selection of features.</p><p>Each tree is constructed using the following algorithm:</p><ol class="lowerRoman"><li>If the number of cases in the training set is N, randomly sample N cases
-with replacement from the original data. This sample will
-be the training set for growing the tree.</li><li>If there are M input variables, a number m &lt;&lt; M is specified such
-that at each node, m variables are selected at random out of the M and
-the best split on these m is used to split the node. The value of m is
-held constant during the forest growing.</li><li>Each tree is grown to the largest extent possible. There is no pruning.</li></ol><p>The advantages of random forest are:</p><ul><li>For many data sets, it produces a highly accurate classifier.</li><li>It runs efficiently on large data sets.</li><li>It can handle thousands of input variables without variable deletion.</li><li>It gives estimates of what variables are important in the classification.</li><li>It generates an internal unbiased estimate of the generalization error
-as the forest building progresses.</li><li>It has an effective method for estimating missing data and maintains
-accuracy when a large proportion of the data are missing.</li></ul><p>The disadvantages are</p><ul><li>Random forests are prone to over-fitting for some datasets. This is
-even more pronounced on noisy data.</li><li>For data including categorical variables with different number of
-levels, random forests are biased in favor of those attributes with more
-levels. Therefore, the variable importance scores from random forest are
-not reliable for this type of data.
-</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
-                  are treated as numeric values.</p></dd><dt class="param">T</dt><dd class="cmt"><p>the number of trees.</p></dd><dt class="param">mtry</dt><dd class="cmt"><p>the number of random selected features to be used to determine
-            the decision at a node of the tree. floor(sqrt(dim)) seems to give
-            generally good performance, where dim is the number of variables.</p></dd><dt class="param">S</dt><dd class="cmt"><p>number of instances in a node below which the tree will not split.</p></dd><dt class="param">J</dt><dd class="cmt"><p>maximum number of leaf nodes.</p></dd><dt class="param">splitRule</dt><dd class="cmt"><p>Decision tree node split rule.</p></dd><dt class="param">classWeight</dt><dd class="cmt"><p>Priors of the classes.</p></dd><dt>returns</dt><dd class="cmt"><p>Random forest classification model.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.classification.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.classification.Operators#svm" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="svm[T&lt;:AnyRef](x:Array[T],y:Array[Int],kernel:smile.math.kernel.MercerKernel[T],C:Double,strategy:smile.classification.SVM.Multiclass,epoch:Int):smile.classification.SVM[T]"></a>
       <a id="svm[T&lt;:AnyRef](Array[T],Array[Int],MercerKernel[T],Double,Multiclass,Int):SVM[T]"></a>

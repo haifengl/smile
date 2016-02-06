@@ -121,7 +121,7 @@ public class PPCA implements Projection<double[]> {
 
     /**
      * Constructor. Learn probabilistic principal component analysis.
-     * @param data  training data of which each row is a sample.
+     * @param data training data of which each row is a sample.
      * @param k the number of principal component to learn.
      */
     public PPCA(double[][] data, int k) {

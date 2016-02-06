@@ -250,13 +250,13 @@ trait Operators {
     (win, canvas)
   }
 
-  /** A boxplot is a convenient way of graphically depicting groups of numerical
+  /** A box plot is a convenient way of graphically depicting groups of numerical
     * data through their five-number summaries (the smallest observation
     * (sample minimum), lower quartile (Q1), median (Q2), upper quartile (Q3),
-    * and largest observation (sample maximum). A boxplot may also indicate
+    * and largest observation (sample maximum). A box plot may also indicate
     * which observations, if any, might be considered outliers.
     *
-    * Boxplots can be useful to display differences between populations without
+    * Box plots can be useful to display differences between populations without
     * making any assumptions of the underlying statistical distribution: they are
     * non-parametric. The spacings between the different parts of the box help
     * indicate the degree of dispersion (spread) and skewness in the data, and
@@ -465,7 +465,7 @@ trait Operators {
     * mathematically continuous smooth surfaces meet, or by connecting an
     * object's constituent vertices using straight lines or curves.
     *
-    * @param vertices an m x n x 2 or m x n x 3 array which are coordinates of m x n grid.
+    * @param vertices a n-by-2 or n-by-3 array which are coordinates of n vertices.
     * @param edges an m-by-2 array of which each row is the vertex indices of two
     *              end points of each edge.
     */
@@ -574,10 +574,10 @@ trait Operators {
     (win, canvas)
   }
 
-  /** Heat map of sparse matrix.
+  /** Visualize sparsity pattern.
     * @param matrix a sparse matrix.
     */
-  def heatmap(matrix: SparseMatrix): (JFrame, PlotCanvas) = {
+  def spy(matrix: SparseMatrix): (JFrame, PlotCanvas) = {
     val canvas = SparseMatrixPlot.plot(matrix)
 
     val win = window()

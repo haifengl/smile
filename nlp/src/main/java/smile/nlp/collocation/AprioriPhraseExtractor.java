@@ -42,7 +42,7 @@ import smile.nlp.dictionary.EnglishStopWords;
  */
 public class AprioriPhraseExtractor {
 
-    /**
+    /** Extracts n-gram phrases.
      * 
      * @param sentences A collection of sentences (already split).
      * @param maxNGramSize The maximum length of n-gram

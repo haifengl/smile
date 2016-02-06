@@ -94,7 +94,7 @@ public class SpectralClusteringTest {
             double[][] x = train.toArray(new double[train.size()][]);
             int[] y = train.toArray(new int[train.size()]);
             
-            SpectralClustering spectral = new SpectralClustering(x, 100, 10, 8.0);
+            SpectralClustering spectral = new SpectralClustering(x, 10, 100, 8.0);
             
             AdjustedRandIndex ari = new AdjustedRandIndex();
             RandIndex rand = new RandIndex();

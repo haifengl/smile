@@ -19,7 +19,13 @@
   * @author Haifeng Li
   */
 
-import smile.math.Math._, smile.util._
+import smile.util._
+import smile.math._, Math._
+import smile.math.distance._
+import smile.math.kernel._
+import smile.stat.distribution._
 import smile.data._, smile.io._
 import java.awt.Color, smile.plot._
+import smile.interpolation._
+import smile.validation._
 import smile.shell._

@@ -1,9 +1,9 @@
 <!DOCTYPE html >
 <html>
         <head>
-          <title>Operators - SMILE - Statistical Machine Intelligence and Learning Engine - smile.regression.Operators</title>
-          <meta name="description" content="Operators - SMILE - Statistical Machine Intelligence and Learning Engine - smile.regression.Operators" />
-          <meta name="keywords" content="Operators SMILE Statistical Machine Intelligence and Learning Engine smile.regression.Operators" />
+          <title>Operators - Smile - Statistical Machine Intelligence and Learning Engine - smile.regression.Operators</title>
+          <meta name="description" content="Operators - Smile - Statistical Machine Intelligence and Learning Engine - smile.regression.Operators" />
+          <meta name="keywords" content="Operators Smile Statistical Machine Intelligence and Learning Engine smile.regression.Operators" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
@@ -470,23 +470,23 @@ proposed relaxing the constraint that the inducing variables must be a
 subset of training/test cases, turning the discrete selection problem
 into one of continuous optimization.</p><p>This method fits a regular Gaussian process model.</p><h6>References:</h6><ul><li>Carl Edward Rasmussen and Chris Williams. Gaussian Processes for Machine Learning, 2006.</li><li>Joaquin Quinonero-candela,  Carl Edward Ramussen,  Christopher K. I. Williams. Approximation Methods for Gaussian Process Regression. 2007.</li><li>T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li>Kai Zhang and James T. Kwok. Clustered Nystrom Method for Large Scale Manifold Learning and Dimension Reduction. IEEE Transactions on Neural Networks, 2010.
 </li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training dataset.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">kernel</dt><dd class="cmt"><p>the Mercer kernel.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>the shrinkage/regularization parameter.</p></dd></dl></div>
-    </li><li name="smile.regression.Operators#gbr" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="gbr(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],loss:smile.regression.GradientTreeBoost.Loss,T:Int,J:Int,eta:Double,f:Double):smile.regression.GradientTreeBoost"></a>
-      <a id="gbr(Array[Array[Double]],Array[Double],Array[Attribute],Loss,Int,Int,Double,Double):GradientTreeBoost"></a>
+    </li><li name="smile.regression.Operators#gbrt" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="gbrt(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],loss:smile.regression.GradientTreeBoost.Loss,ntrees:Int,maxNodes:Int,shrinkage:Double,subsample:Double):smile.regression.GradientTreeBoost"></a>
+      <a id="gbrt(Array[Array[Double]],Array[Double],Array[Attribute],Loss,Int,Int,Double,Double):GradientTreeBoost"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">gbr</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="loss">loss: <span class="extype" name="smile.regression.GradientTreeBoost.Loss">Loss</span> = <span class="defval" name="GradientTreeBoost.Loss.LeastAbsoluteDeviation">...</span></span>, <span name="T">T: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">6</span></span>, <span name="eta">eta: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.05</span></span>, <span name="f">f: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.7</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.GradientTreeBoost">GradientTreeBoost</span></span>
+        <span class="name">gbrt</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="loss">loss: <span class="extype" name="smile.regression.GradientTreeBoost.Loss">Loss</span> = <span class="defval" name="GradientTreeBoost.Loss.LeastAbsoluteDeviation">...</span></span>, <span name="ntrees">ntrees: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="maxNodes">maxNodes: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">6</span></span>, <span name="shrinkage">shrinkage: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.05</span></span>, <span name="subsample">subsample: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.7</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.GradientTreeBoost">GradientTreeBoost</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.regression.Operators@gbr(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],loss:smile.regression.GradientTreeBoost.Loss,T:Int,J:Int,eta:Double,f:Double):smile.regression.GradientTreeBoost" title="Permalink" target="_top">
+      <a href="../../index.html#smile.regression.Operators@gbrt(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],loss:smile.regression.GradientTreeBoost.Loss,ntrees:Int,maxNodes:Int,shrinkage:Double,subsample:Double):smile.regression.GradientTreeBoost" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Gradient boosting for classification.</p><div class="fullcomment"><div class="comment cmt"><p>Gradient boosting for classification. Gradient boosting is typically used
+      <p class="shortcomment cmt">Gradient boosted regression trees.</p><div class="fullcomment"><div class="comment cmt"><p>Gradient boosted regression trees. Gradient boosting is typically used
 with decision trees (especially CART regression trees) of a fixed size as
 base learners. For this special case Friedman proposes a modification to
 gradient boosting method which improves the quality of fit of each base
@@ -535,9 +535,9 @@ limiting the minimum number of observations in trees' terminal nodes.
 It's used in the tree building process by ignoring any splits that lead
 to nodes containing fewer than this number of training set instances.
 Imposing this limit helps to reduce variance in predictions at leaves.</p><h6>References:</h6><ul><li>J. H. Friedman. Greedy Function Approximation: A Gradient Boosting Machine, 1999.</li><li>J. H. Friedman. Stochastic Gradient Boosting, 1999.
-</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the class labels.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
                   are treated as numeric values.</p></dd><dt class="param">loss</dt><dd class="cmt"><p>loss function for regression. By default, least absolute
-            deviation is employed for robust regression.</p></dd><dt class="param">T</dt><dd class="cmt"><p>the number of iterations (trees).</p></dd><dt class="param">J</dt><dd class="cmt"><p>the number of leaves in each tree.</p></dd><dt class="param">eta</dt><dd class="cmt"><p>the shrinkage parameter in (0, 1] controls the learning rate of procedure.</p></dd><dt class="param">f</dt><dd class="cmt"><p>the sampling fraction for stochastic tree boosting.</p></dd><dt>returns</dt><dd class="cmt"><p>Gradient boosted trees.</p></dd></dl></div>
+            deviation is employed for robust regression.</p></dd><dt class="param">ntrees</dt><dd class="cmt"><p>the number of iterations (trees).</p></dd><dt class="param">maxNodes</dt><dd class="cmt"><p>the number of leaves in each tree.</p></dd><dt class="param">shrinkage</dt><dd class="cmt"><p>the shrinkage parameter in (0, 1] controls the learning rate of procedure.</p></dd><dt class="param">subsample</dt><dd class="cmt"><p>the sampling fraction for stochastic tree boosting.</p></dd><dt>returns</dt><dd class="cmt"><p>Gradient boosted trees.</p></dd></dl></div>
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <a id="getClass():Class[_]"></a>
@@ -745,8 +745,45 @@ testing may proceed using asymptotic approximations.
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Apply a regression model on a data sample.</p><div class="fullcomment"><div class="comment cmt"><p>Apply a regression model on a data sample.
+      <p class="shortcomment cmt">Apply a regression model on an instance.</p><div class="fullcomment"><div class="comment cmt"><p>Apply a regression model on an instance.
 </p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the data type</p></dd><dt class="param">model</dt><dd class="cmt"><p>regression model</p></dd><dt class="param">x</dt><dd class="cmt"><p>data sample</p></dd><dt>returns</dt><dd class="cmt"><p>predicted value of dependent variable.</p></dd></dl></div>
+    </li><li name="smile.regression.Operators#randomRegressionForest" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="randomRegressionForest(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,nodeSize:Int,mtry:Int,subsample:Double):smile.regression.RandomForest"></a>
+      <a id="randomRegressionForest(Array[Array[Double]],Array[Double],Array[Attribute],Int,Int,Int,Int,Double):RandomForest"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">randomRegressionForest</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="ntrees">ntrees: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="maxNodes">maxNodes: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="nodeSize">nodeSize: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">5</span></span>, <span name="mtry">mtry: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="subsample">subsample: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1.0</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.RandomForest">RandomForest</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.regression.Operators@randomRegressionForest(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,nodeSize:Int,mtry:Int,subsample:Double):smile.regression.RandomForest" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Random forest for regression.</p><div class="fullcomment"><div class="comment cmt"><p>Random forest for regression. Random forest is an ensemble classifier
+that consists of many decision trees and outputs the majority vote of
+individual trees. The method combines bagging idea and the random
+selection of features.</p><p>Each tree is constructed using the following algorithm:</p><ol class="lowerRoman"><li>If the number of cases in the training set is N, randomly sample N cases
+with replacement from the original data. This sample will
+be the training set for growing the tree.</li><li>If there are M input variables, a number m &lt;&lt; M is specified such
+that at each node, m variables are selected at random out of the M and
+the best split on these m is used to split the node. The value of m is
+held constant during the forest growing.</li><li>Each tree is grown to the largest extent possible. There is no pruning.</li></ol><p>The advantages of random forest are:</p><ul><li>For many data sets, it produces a highly accurate classifier.</li><li>It runs efficiently on large data sets.</li><li>It can handle thousands of input variables without variable deletion.</li><li>It gives estimates of what variables are important in the classification.</li><li>It generates an internal unbiased estimate of the generalization error
+as the forest building progresses.</li><li>It has an effective method for estimating missing data and maintains
+accuracy when a large proportion of the data are missing.</li></ul><p>The disadvantages are</p><ul><li>Random forests are prone to over-fitting for some datasets. This is
+even more pronounced on noisy data.</li><li>For data including categorical variables with different number of
+levels, random forests are biased in favor of those attributes with more
+levels. Therefore, the variable importance scores from random forest are
+not reliable for this type of data.
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
+                  are treated as numeric values.</p></dd><dt class="param">ntrees</dt><dd class="cmt"><p>the number of trees.</p></dd><dt class="param">maxNodes</dt><dd class="cmt"><p>maximum number of leaf nodes.</p></dd><dt class="param">nodeSize</dt><dd class="cmt"><p>the number of instances in a node below which the tree will
+         not split, setting nodeSize = 5 generally gives good results.</p></dd><dt class="param">mtry</dt><dd class="cmt"><p>the number of input variables to be used to determine the decision
+            at a node of the tree. dim/3 seems to give generally good performance,
+            where dim is the number of variables.</p></dd><dt class="param">subsample</dt><dd class="cmt"><p>the sampling rate for training tree. 1.0 means sampling with replacement. &lt; 1.0 means
+                 sampling without replacement.</p></dd><dt>returns</dt><dd class="cmt"><p>Random forest regression model.</p></dd></dl></div>
     </li><li name="smile.regression.Operators#rbfnet" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="rbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Double],distance:smile.math.distance.Metric[T],rbf:Array[smile.math.rbf.RadialBasisFunction],centers:Array[T],normalized:Boolean):smile.regression.RBFNetwork[T]"></a>
       <a id="rbfnet[T&lt;:AnyRef](Array[T],Array[Double],Metric[T],Array[RadialBasisFunction],Array[T],Boolean):RBFNetwork[T]"></a>
@@ -798,7 +835,7 @@ vectors/centers, SVM shows better generalization performance than RBF
 network when the training data size is relatively small. On the other hand,
 RBF network gives better generalization performance than SVM on large
 training data.</p><h6>References:</h6><ul><li>Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.</li><li>T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li>Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
-</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl></div>
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>response variable.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl></div>
     </li><li name="smile.regression.Operators#rbfnet" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="rbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Double],distance:smile.math.distance.Metric[T],rbf:smile.math.rbf.RadialBasisFunction,centers:Array[T],normalized:Boolean):smile.regression.RBFNetwork[T]"></a>
       <a id="rbfnet[T&lt;:AnyRef](Array[T],Array[Double],Metric[T],RadialBasisFunction,Array[T],Boolean):RBFNetwork[T]"></a>
@@ -850,9 +887,9 @@ vectors/centers, SVM shows better generalization performance than RBF
 network when the training data size is relatively small. On the other hand,
 RBF network gives better generalization performance than SVM on large
 training data.</p><h6>References:</h6><ul><li>Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.</li><li>T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li>Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
-</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl></div>
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>response variable.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl></div>
     </li><li name="smile.regression.Operators#regressionTree" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="regressionTree(x:Array[Array[Double]],y:Array[Double],J:Int,attributes:Array[smile.data.Attribute]):smile.regression.RegressionTree"></a>
+      <a id="regressionTree(x:Array[Array[Double]],y:Array[Double],maxNodes:Int,attributes:Array[smile.data.Attribute]):smile.regression.RegressionTree"></a>
       <a id="regressionTree(Array[Array[Double]],Array[Double],Int,Array[Attribute]):RegressionTree"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -860,10 +897,10 @@ training data.</p><h6>References:</h6><ul><li>Simon Haykin. Neural Networks: A C
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">regressionTree</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span></span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.RegressionTree">RegressionTree</span></span>
+        <span class="name">regressionTree</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="maxNodes">maxNodes: <span class="extype" name="scala.Int">Int</span></span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.RegressionTree">RegressionTree</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.regression.Operators@regressionTree(x:Array[Array[Double]],y:Array[Double],J:Int,attributes:Array[smile.data.Attribute]):smile.regression.RegressionTree" title="Permalink" target="_top">
+      <a href="../../index.html#smile.regression.Operators@regressionTree(x:Array[Array[Double]],y:Array[Double],maxNodes:Int,attributes:Array[smile.data.Attribute]):smile.regression.RegressionTree" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -916,43 +953,7 @@ Mechanisms such as pruning are necessary to avoid this problem.
 Another limitation of trees is the lack of smoothness of the prediction
 surface.</p><p>Some techniques such as bagging, boosting, and random forest use more than
 one decision tree for their analysis.
-</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">J</dt><dd class="cmt"><p>the maximum number of leaf nodes in the tree.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties.</p></dd><dt>returns</dt><dd class="cmt"><p>Regression tree model.</p></dd></dl></div>
-    </li><li name="smile.regression.Operators#rfr" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="rfr(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],T:Int,mtry:Int,S:Int,J:Int):smile.regression.RandomForest"></a>
-      <a id="rfr(Array[Array[Double]],Array[Double],Array[Attribute],Int,Int,Int,Int):RandomForest"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">rfr</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="T">T: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="mtry">mtry: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="S">S: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">5</span></span>, <span name="J">J: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.RandomForest">RandomForest</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.regression.Operators@rfr(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],T:Int,mtry:Int,S:Int,J:Int):smile.regression.RandomForest" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Random forest for regression.</p><div class="fullcomment"><div class="comment cmt"><p>Random forest for regression. Random forest is an ensemble classifier
-that consists of many decision trees and outputs the majority vote of
-individual trees. The method combines bagging idea and the random
-selection of features.</p><p>Each tree is constructed using the following algorithm:</p><ol class="lowerRoman"><li>If the number of cases in the training set is N, randomly sample N cases
-with replacement from the original data. This sample will
-be the training set for growing the tree.</li><li>If there are M input variables, a number m &lt;&lt; M is specified such
-that at each node, m variables are selected at random out of the M and
-the best split on these m is used to split the node. The value of m is
-held constant during the forest growing.</li><li>Each tree is grown to the largest extent possible. There is no pruning.</li></ol><p>The advantages of random forest are:</p><ul><li>For many data sets, it produces a highly accurate classifier.</li><li>It runs efficiently on large data sets.</li><li>It can handle thousands of input variables without variable deletion.</li><li>It gives estimates of what variables are important in the classification.</li><li>It generates an internal unbiased estimate of the generalization error
-as the forest building progresses.</li><li>It has an effective method for estimating missing data and maintains
-accuracy when a large proportion of the data are missing.</li></ul><p>The disadvantages are</p><ul><li>Random forests are prone to over-fitting for some datasets. This is
-even more pronounced on noisy data.</li><li>For data including categorical variables with different number of
-levels, random forests are biased in favor of those attributes with more
-levels. Therefore, the variable importance scores from random forest are
-not reliable for this type of data.
-</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties. If not provided, all attributes
-                  are treated as numeric values.</p></dd><dt class="param">T</dt><dd class="cmt"><p>the number of trees.</p></dd><dt class="param">mtry</dt><dd class="cmt"><p>the number of input variables to be used to determine the decision
-            at a node of the tree. dim/3 seems to give generally good performance,
-            where dim is the number of variables.</p></dd><dt class="param">S</dt><dd class="cmt"><p>the number of instances in a node below which the tree will
-         not split, setting S = 5 generally gives good results.</p></dd><dt>returns</dt><dd class="cmt"><p>Random forest classification model.</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">maxNodes</dt><dd class="cmt"><p>the maximum number of leaf nodes in the tree.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties.</p></dd><dt>returns</dt><dd class="cmt"><p>Regression tree model.</p></dd></dl></div>
     </li><li name="smile.regression.Operators#ridge" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ridge(x:Array[Array[Double]],y:Array[Double],lambda:Double):smile.regression.RidgeRegression"></a>
       <a id="ridge(Array[Array[Double]],Array[Double],Double):RidgeRegression"></a>
@@ -986,48 +987,27 @@ In this setting the belief that weight should be small is coded into a prior
 distribution.
 </p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>a matrix containing the explanatory variables.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response values.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>the shrinkage/regularization parameter.</p></dd></dl></div>
     </li><li name="smile.regression.Operators#svr" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="svr[T&lt;:AnyRef](x:Array[T],y:Array[Double],weight:Array[Double],kernel:smile.math.kernel.MercerKernel[T],eps:Double,C:Double,tol:Double):smile.regression.SVR[T]"></a>
-      <a id="svr[T&lt;:AnyRef](Array[T],Array[Double],Array[Double],MercerKernel[T],Double,Double,Double):SVR[T]"></a>
+      <a id="svr[T&lt;:AnyRef](x:Array[T],y:Array[Double],kernel:smile.math.kernel.MercerKernel[T],eps:Double,C:Double,weight:Array[Double],tol:Double):smile.regression.SVR[T]"></a>
+      <a id="svr[T&lt;:AnyRef](Array[T],Array[Double],MercerKernel[T],Double,Double,Array[Double],Double):SVR[T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">svr</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.regression.Operators.svr.T">T</span>]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="weight">weight: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="kernel">kernel: <span class="extype" name="smile.math.kernel.MercerKernel">MercerKernel</span>[<span class="extype" name="smile.regression.Operators.svr.T">T</span>]</span>, <span name="eps">eps: <span class="extype" name="scala.Double">Double</span></span>, <span name="C">C: <span class="extype" name="scala.Double">Double</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.SVR">SVR</span>[<span class="extype" name="smile.regression.Operators.svr.T">T</span>]</span>
+        <span class="name">svr</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.regression.Operators.svr.T">T</span>]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="kernel">kernel: <span class="extype" name="smile.math.kernel.MercerKernel">MercerKernel</span>[<span class="extype" name="smile.regression.Operators.svr.T">T</span>]</span>, <span name="eps">eps: <span class="extype" name="scala.Double">Double</span></span>, <span name="C">C: <span class="extype" name="scala.Double">Double</span></span>, <span name="weight">weight: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>] = <span class="symbol">null</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1E-3</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.SVR">SVR</span>[<span class="extype" name="smile.regression.Operators.svr.T">T</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.regression.Operators@svr[T&lt;:AnyRef](x:Array[T],y:Array[Double],weight:Array[Double],kernel:smile.math.kernel.MercerKernel[T],eps:Double,C:Double,tol:Double):smile.regression.SVR[T]" title="Permalink" target="_top">
+      <a href="../../index.html#smile.regression.Operators@svr[T&lt;:AnyRef](x:Array[T],y:Array[Double],kernel:smile.math.kernel.MercerKernel[T],eps:Double,C:Double,weight:Array[Double],tol:Double):smile.regression.SVR[T]" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Support vector regression.</p><div class="fullcomment"><div class="comment cmt"><p>Support vector regression. Like SVMs for classification, the model produced
+      <p class="shortcomment cmt">Support vector regression.</p><div class="fullcomment"><div class="comment cmt"><p>Support vector regression. Like SVM for classification, the model produced
 by SVR depends only on a subset of the training data, because the cost
 function ignores any training data close to the model prediction (within
 a threshold).
-</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the data type</p></dd><dt class="param">x</dt><dd class="cmt"><p>training data</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels</p></dd><dt class="param">weight</dt><dd class="cmt"><p>positive instance weight. The soft margin penalty
-              parameter for instance i will be weight[i] * C.</p></dd><dt class="param">kernel</dt><dd class="cmt"><p>the kernel function.</p></dd><dt class="param">eps</dt><dd class="cmt"><p>the loss function error threshold.</p></dd><dt class="param">C</dt><dd class="cmt"><p>the soft margin penalty parameter.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>the tolerance of convergence test.</p></dd><dt>returns</dt><dd class="cmt"><p>SVR model.</p></dd></dl></div>
-    </li><li name="smile.regression.Operators#svr" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="svr[T&lt;:AnyRef](x:Array[T],y:Array[Double],kernel:smile.math.kernel.MercerKernel[T],eps:Double,C:Double,tol:Double):smile.regression.SVR[T]"></a>
-      <a id="svr[T&lt;:AnyRef](Array[T],Array[Double],MercerKernel[T],Double,Double,Double):SVR[T]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">svr</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.regression.Operators.svr.T">T</span>]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="kernel">kernel: <span class="extype" name="smile.math.kernel.MercerKernel">MercerKernel</span>[<span class="extype" name="smile.regression.Operators.svr.T">T</span>]</span>, <span name="eps">eps: <span class="extype" name="scala.Double">Double</span></span>, <span name="C">C: <span class="extype" name="scala.Double">Double</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1E-3</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.SVR">SVR</span>[<span class="extype" name="smile.regression.Operators.svr.T">T</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.regression.Operators@svr[T&lt;:AnyRef](x:Array[T],y:Array[Double],kernel:smile.math.kernel.MercerKernel[T],eps:Double,C:Double,tol:Double):smile.regression.SVR[T]" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Support vector regression.</p><div class="fullcomment"><div class="comment cmt"><p>Support vector regression. Like SVMs for classification, the model produced
-by SVR depends only on a subset of the training data, because the cost
-function ignores any training data close to the model prediction (within
-a threshold).
-</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the data type</p></dd><dt class="param">x</dt><dd class="cmt"><p>training data</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels</p></dd><dt class="param">kernel</dt><dd class="cmt"><p>the kernel function.</p></dd><dt class="param">eps</dt><dd class="cmt"><p>the loss function error threshold.</p></dd><dt class="param">C</dt><dd class="cmt"><p>the soft margin penalty parameter.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>the tolerance of convergence test.</p></dd><dt>returns</dt><dd class="cmt"><p>SVR model.</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the data type</p></dd><dt class="param">x</dt><dd class="cmt"><p>training data.</p></dd><dt class="param">y</dt><dd class="cmt"><p>response variable.</p></dd><dt class="param">kernel</dt><dd class="cmt"><p>the kernel function.</p></dd><dt class="param">eps</dt><dd class="cmt"><p>the loss function error threshold.</p></dd><dt class="param">C</dt><dd class="cmt"><p>the soft margin penalty parameter.</p></dd><dt class="param">weight</dt><dd class="cmt"><p>positive instance weight. The soft margin penalty
+              parameter for instance i will be weight[i] * C.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>the tolerance of convergence test.</p></dd><dt>returns</dt><dd class="cmt"><p>SVR model.</p></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>

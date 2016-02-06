@@ -236,7 +236,7 @@
     </code></pre>
 
     <h3 id="microarray">Microarray</h3>
-    <p>Smile can parser several popular microarray data format. A DNA microarray is a
+    <p>Smile can parse several popular microarray data format. A DNA microarray is a
         collection of microscopic DNA spots attached to a solid surface. Scientists
         use DNA microarrays to measure the expression levels of large numbers of
         genes simultaneously or to genotype multiple regions of a genome.</p>
@@ -340,6 +340,21 @@
         For details, see <a href="http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html">http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html</a>.
         Note that our implementation supports only real-valued matrix and we ignore
         the optional right hand side vectors.</p>
+
+    <h3 id="wireframe">Wireframe</h3>
+    <p>Smile can parse 3D wireframe models in Wavefront OBJ files.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def readWavefrontObj(file: String): (Array[Array[Double]], Array[Array[Int]])
+    </code></pre>
+
+    <p>In the directory <code>data/wireframe</code>, there is a teapot wireframe model. In the
+        next section, we will learn how to visualize the 3D wireframe models.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val (vertices, edges) = readWavefrontObj("data/wireframe/teapot.obj")
+    </code></pre>
+
 
 </div>
 
