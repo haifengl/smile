@@ -20,7 +20,10 @@ import java.awt.{GridLayout, Dimension, Color}
 import javax.swing.{JFrame, JPanel, WindowConstants}
 import smile.data.AttributeDataset
 import smile.stat.distribution.{Distribution, DiscreteDistribution}
+import smile.math.Math
 import smile.math.matrix.SparseMatrix
+import smile.classification.Classifier
+import smile.util.time
 
 /** Data visualization operators.
   *
@@ -805,5 +808,44 @@ trait Operators {
     win.add(canvas)
 
     (win, canvas)
+  }
+
+  /** Plots the classification boundary.
+   *
+   * @param x training data.
+   * @param y training label.
+   * @param classifier trained classification model.
+   */
+  def plot(x: Array[Array[Double]], y: Array[Int], classifier: Classifier[Array[Double]]): (JFrame, PlotCanvas) = {
+    require(x(0).size == 2, "plot of classifier supports only 2-dimensional data")
+
+    val (frame, canvas) = plot(x, y, 'o', Palette.COLORS)
+
+    val lower = canvas.getLowerBounds
+    val upper = canvas.getUpperBounds
+
+    val steps = 50
+    val step1 = (upper(0) - lower(0)) / steps
+    val v1 = (0 to steps).map(lower(0) + step1 * _).toArray
+
+    val step2 = (upper(1) - lower(1)) / steps
+    val v2 = (0 to steps).map(lower(1) + step2 * _).toArray
+
+    val f = Array.ofDim[Double](steps, steps)
+    for (i <- 0 to steps) {
+      for (j <- 0 to steps) {
+        val p = Array(v1(i), v2(j))
+        val c = classifier.predict(p)
+        f(j)(i) = c
+        canvas.point('.', Palette.COLORS(c), p: _*)
+      }
+    }
+
+    val levels = (0 until Math.max(y: _*)).map(_ + 0.5).toArray
+    val contour = new Contour(v1, v2, f, levels)
+    contour.showLevelValue(false)
+    canvas.add(contour)
+
+    (frame, canvas)
   }
 }
