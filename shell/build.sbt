@@ -8,6 +8,9 @@ autoScalaLibrary := true
 
 mainClass in Compile := Some("smile.shell.Main")
 
+// Don't publish to central Maven repo
+publishArtifact := false
+
 // SBT native packager
 enablePlugins(JavaAppPackaging)
 
