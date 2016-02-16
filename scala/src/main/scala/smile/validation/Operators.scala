@@ -40,13 +40,13 @@ trait Operators {
     * @return the trained classifier.
     */
   def test[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T] = {
+    println("training...")
     val classifier = time {
-      println("training...")
       trainer(x, y)
     }
 
+    println("testing...")
     val pred = time {
-      println("testing...")
       if (parTest)
         testx.par.map(classifier.predict(_)).toArray
       else
@@ -72,13 +72,13 @@ trait Operators {
     * @return the trained classifier.
     */
   def test2[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T] = {
+    println("training...")
     val classifier = time {
-      println("training...")
       trainer(x, y)
     }
 
+    println("testing...")
     val pred = time {
-      println("testing...")
       if (parTest)
         testx.par.map(classifier.predict(_)).toArray
       else
@@ -111,13 +111,13 @@ trait Operators {
     * @return the trained classifier.
     */
   def test2soft[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => SoftClassifier[T]): SoftClassifier[T] = {
+    println("training...")
     val classifier = time {
-      println("training...")
       trainer(x, y)
     }
 
+    println("testing...")
     val results = time {
-      println("testing...")
       if (parTest)
         testx.par.map { xi =>
           val posteriori = Array(0.0, 0.0)
@@ -145,6 +145,14 @@ trait Operators {
     println("AUC = %.2f%%" format (100.0 * AUC.measure(testy, prob)))
 
     classifier
+  }
+
+  private def measuresOrAccuracy(measures: Seq[ClassificationMeasure]): Seq[ClassificationMeasure] = {
+    if (measures.isEmpty) Seq(new Accuracy) else measures
+  }
+
+  private def measuresOrRMSE(measures: Seq[RegressionMeasure]): Seq[RegressionMeasure] = {
+    if (measures.isEmpty) Seq(new RMSE) else measures
   }
 
   /** Leave-one-out cross validation on a generic classifier. LOOCV uses a single observation
@@ -175,7 +183,7 @@ trait Operators {
       predictions(split.test(i)) = model.predict(x(split.test(i)))
     }
 
-    measures.map { measure =>
+    measuresOrAccuracy(measures).map { measure =>
       val result = measure.measure(y, predictions)
       println(f"$measure%s: ${100*result}%.2f%%")
       result
@@ -203,7 +211,7 @@ trait Operators {
       predictions(split.test(i)) = model.predict(x(split.test(i)))
     }
 
-    measures.map { measure =>
+    measuresOrRMSE(measures).map { measure =>
       val result = measure.measure(y, predictions)
       println(f"$measure%s: $result%.4f")
       result
@@ -244,7 +252,7 @@ trait Operators {
       }
     }
 
-    measures.map { measure =>
+    measuresOrAccuracy(measures).map { measure =>
       val result = measure.measure(y, predictions)
       println(f"$measure%s: ${100*result}%.2f%%")
       result
@@ -275,7 +283,7 @@ trait Operators {
       }
     }
 
-    measures.map { measure =>
+    measuresOrRMSE(measures).map { measure =>
       val result = measure.measure(y, predictions)
       println(f"$measure%s: $result%.4f")
       result
@@ -315,7 +323,7 @@ trait Operators {
         predictions(j) = model.predict(x(l))
       }
 
-      measures.map { measure =>
+      measuresOrAccuracy(measures).map { measure =>
         val result = measure.measure(truth, predictions)
         println(f"$measure%s: ${100*result}%.2f%%")
         result
@@ -357,7 +365,7 @@ trait Operators {
         predictions(j) = model.predict(x(l))
       }
 
-      measures.map { measure =>
+      measuresOrRMSE(measures).map { measure =>
         val result = measure.measure(truth, predictions)
         println(f"$measure%s: $result%.4f")
         result
