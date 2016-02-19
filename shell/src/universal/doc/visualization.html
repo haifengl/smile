@@ -33,13 +33,13 @@
         The user can use <code>plot</code> functions to draw scatter plot easily.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def plot(data: Array[Array[Double]], legend: Char = '*', color: Color = Color.BLACK): (JFrame, PlotCanvas)
+    def plot(data: Array[Array[Double]], legend: Char = '*', color: Color = Color.BLACK): Window
 
-    def plot(data: Array[Array[Double]], labels: Array[String]): (JFrame, PlotCanvas)
+    def plot(data: Array[Array[Double]], labels: Array[String]): Window
 
-    def plot(data: Array[Array[Double]], label: Array[Int], legend: Char, palette: Array[Color]): (JFrame, PlotCanvas)
+    def plot(data: Array[Array[Double]], label: Array[Int], legend: Char, palette: Array[Color]): Window
 
-    def plot(data: Array[Array[Double]], label: Array[Int], legend: Array[Char], palette: Array[Color]): (JFrame, PlotCanvas)
+    def plot(data: Array[Array[Double]], label: Array[Int], legend: Array[Char], palette: Array[Color]): Window
     </code></pre>
 
     <p>The legends are as follows.</p>
@@ -61,8 +61,8 @@
     </ul>
     <p>For any other char, the data point will be drawn as a dot.</p>
 
-    <p>The functions return a tuple of
-        JFrame and PlotCanvas. The PlotCanvas object can be used to control the plot programmatically.
+    <p>The functions return a Window object consisting of
+        a JFrame and a PlotCanvas. The PlotCanvas object can be used to control the plot programmatically.
         The user can also use the popup context menu by right mouse click to print, change the title, axis labels,
         and font, etc.</p>
 
@@ -75,8 +75,8 @@
     val iris = readArff("data/weka/iris.arff", 4)
     val (x, y) = iris.unzipInt
     val x2 = x.map(_.slice(0,2)) // take first two columns
-    val (frame, canvas) = plot(x2, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
-    canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,2): _*)
+    val window = plot(x2, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
+    window.canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,2): _*)
     </code></pre>
 
     <p>In this example, we plot the first two columns of Iris data. We use the class
@@ -91,8 +91,8 @@
 
     <pre class="prettyprint lang-scala"><code>
     val x3 = x.map(_.slice(0,3)) // take first three columns
-    val (frame, canvas) = plot(x3, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
-    canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,3): _*)
+    val window = plot(x3, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
+    window.canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,3): _*)
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -117,7 +117,7 @@
     <p>A line chart connects points by straight lines.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, legend: Char = ' '): (JFrame, PlotCanvas)
+    def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, legend: Char = ' '): Window
     </code></pre>
 
     <p>Let's draw a heart with it!</p>
@@ -147,8 +147,8 @@
         identify outliers.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def boxplot(data: Array[Double]*): (JFrame, PlotCanvas)
-    def boxplot(data: Array[Array[Double]], labels: Array[String]): (JFrame, PlotCanvas)
+    def boxplot(data: Array[Double]*): Window
+    def boxplot(data: Array[Array[Double]], labels: Array[String]): Window
     </code></pre>
 
     <p>Note that the parameter <code>data</code> is a matrix of which each row to
@@ -160,8 +160,8 @@
     val groups = (x.map(_(0)) zip y.map("class %d" format _)).groupBy(_._2)
     val labels = groups.keys.toArray
     val data = groups.values.map { a => a.map(_._1) }.toArray
-    val (_, canvas) = boxplot(data, labels)
-    canvas.setAxisLabels("", iris.attributes()(0).getName)
+    val window = boxplot(data, labels)
+    window.canvas.setAxisLabels("", iris.attributes()(0).getName)
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -175,9 +175,9 @@
         The bins must be adjacent, and are usually equal size.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def histogram(data: Array[Double]): (JFrame, PlotCanvas)
-    def histogram(data: Array[Double], k: Int): (JFrame, PlotCanvas)
-    def histogram(data: Array[Double], breaks: Array[Double]): (JFrame, PlotCanvas)
+    def histogram(data: Array[Double]): Window
+    def histogram(data: Array[Double], k: Int): Window
+    def histogram(data: Array[Double], breaks: Array[Double]): Window
     </code></pre>
 
     <p>where <code>k</code> is the number of bins (10 by default), or you can
@@ -194,8 +194,8 @@
 
     <pre class="prettyprint lang-scala"><code>
     val cow = readTable("data/npr/cow.txt").unzip.map(_(0))
-    val (_, canvas) = histogram(cow, 50)
-    canvas.setAxisLabels("Weight", "Probability")
+    val window = histogram(cow, 50)
+    window.canvas.setAxisLabels("Weight", "Probability")
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -206,8 +206,8 @@
         Filter out the weights over 3500 pounds, the histogram shows more details.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val (_, canvas) = histogram(cow.filter(_ <= 3500), 50)
-    canvas.setAxisLabels("Weight", "Probability")
+    val window = histogram(cow.filter(_ <= 3500), 50)
+    window.canvas.setAxisLabels("Weight", "Probability")
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -217,9 +217,9 @@
     <p>Smile also supports histograms that display the distribution of 2-dimensional data.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def histogram(data: Array[Array[Double]]): (JFrame, PlotCanvas)
-    def histogram(data: Array[Array[Double]], k: Int): (JFrame, PlotCanvas)
-    def histogram(data: Array[Array[Double]], xbins: Int, ybins: Int): (JFrame, PlotCanvas)
+    def histogram(data: Array[Array[Double]]): Window
+    def histogram(data: Array[Array[Double]], k: Int): Window
+    def histogram(data: Array[Array[Double]], xbins: Int, ybins: Int): Window
     </code></pre>
 
     <p>Here we generate a data set from a 2-dimensional Gaussian distribution.</p>
@@ -227,7 +227,7 @@
     <pre class="prettyprint lang-scala"><code>
     val gauss = new MultivariateGaussianDistribution(Array(0.0, 0.0), Array(Array(1.0, 0.6), Array(0.6, 2.0)))
     val data = (0 until 10000) map { i: Int => gauss.rand }
-    val (_, canvas) = histogram(data.toArray, 50)
+    histogram(data.toArray, 50)
     </code></pre>
 
     <p>The corresponding histogram looks like</p>
@@ -244,11 +244,11 @@
         the first distribution (x-coordinate).</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def qqplot(x: Array[Double], d: Distribution): (JFrame, PlotCanvas)
-    def qqplot(x: Array[Double], y: Array[Double]): (JFrame, PlotCanvas)
+    def qqplot(x: Array[Double], d: Distribution): Window
+    def qqplot(x: Array[Double], y: Array[Double]): Window
 
-    def qqplot(x: Array[Int], d: DiscreteDistribution): (JFrame, PlotCanvas)
-    def qqplot(x: Array[Int], y: Array[Int]): (JFrame, PlotCanvas)
+    def qqplot(x: Array[Int], d: DiscreteDistribution): Window
+    def qqplot(x: Array[Int], y: Array[Int]): Window
     </code></pre>
 
     <p>Smile supports the Q-Q plot of samples to a given distribution and also of two sample sets.
@@ -259,7 +259,7 @@
     <pre class="prettyprint lang-scala"><code>
     val gauss = GaussianDistribution.getInstance
     val data = (0 until 1000) map { i: Int => gauss.rand }
-    val (_, canvas) = qqplot(data.toArray)
+    qqplot(data.toArray)
     </code></pre>
 
     <p>In fact, this is also a good visual way to verify the quality of our random number generator.</p>
@@ -275,13 +275,13 @@
         of a matrix to place similar values near each other according to the clustering.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def heatmap(z: Array[Array[Double]]): (JFrame, PlotCanvas)
-    def heatmap(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
-    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas)
-    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+    def heatmap(z: Array[Array[Double]]): Window
+    def heatmap(z: Array[Array[Double]], palette: Array[Color]): Window
+    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Window
+    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Window
 
-    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): (JFrame, PlotCanvas)
-    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): Window
+    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): Window
     </code></pre>
 
     <p>where <code>z</code> is the matrix to display and the optional parameters <code>x</code> and <code>y</code>
@@ -321,15 +321,15 @@
     <p>A special case of heat map is to draw the sparsity pattern of a matrix.</p>
 
     <pre class="prettyprint lang-scala"><code>
-        def spy(matrix: SparseMatrix): (JFrame, PlotCanvas)
+    def spy(matrix: SparseMatrix): Window
     </code></pre>
 
     <p>The structure of sparse matrix is critical in solving linear systems.</p>
 
     <pre class="prettyprint lang-scala"><code>
     val sparse = readSparseMatrix("data/matrix/mesh2em5.txt")
-    val (_, canvas) = spy(sparse)
-    canvas.setTitle("mesh2em5")
+    val window = spy(sparse)
+    window.canvas.setTitle("mesh2em5")
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -339,10 +339,10 @@
     <p>Another variant is the hex map where hexagon cells replace rectangle cells.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def hexmap(z: Array[Array[Double]]): (JFrame, PlotCanvas)
-    def hexmap(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
-    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]]): (JFrame, PlotCanvas)
-    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+    def hexmap(z: Array[Array[Double]]): Window
+    def hexmap(z: Array[Array[Double]], palette: Array[Color]): Window
+    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]]): Window
+    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]], palette: Array[Color]): Window
     </code></pre>
 
     <p>In machine learning, the hex map is often used to visualize self-organized map (SOM).
@@ -379,10 +379,10 @@
         <code>(x, y)</code> coordinates where that z value occurs.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def contour(z: Array[Array[Double]]): (JFrame, PlotCanvas)
-    def contour(z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): (JFrame, PlotCanvas)
-    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas)
-    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): (JFrame, PlotCanvas)
+    def contour(z: Array[Array[Double]]): Window
+    def contour(z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): Window
+    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Window
+    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): Window
     </code></pre>
 
     <p>Similar to <code>heatmap</code>, the parameters <code>x</code> and <code>y</code>
@@ -394,8 +394,8 @@
         the previous heat map exampl.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val (_, canvas) = heatmap(Z, Palette.jet(256))
-    canvas.add(new Contour(Z))
+    val window = heatmap(Z, Palette.jet(256))
+    window.canvas.add(new Contour(Z))
     </code></pre>
 
     <p>This example also shows how to mix multiple plots together. Besides using the plot functions directly,
@@ -410,10 +410,10 @@
     <p>Besides heat map and contour, we can also visualize a matrix with the three-dimensional shaded surface.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def surface(z: Array[Array[Double]]): (JFrame, PlotCanvas)
-    def surface(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
-    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas)
-    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas)
+    def surface(z: Array[Array[Double]]): Window
+    def surface(z: Array[Array[Double]], palette: Array[Color]): Window
+    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Window
+    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Window
     </code></pre>
 
     <p>The usage is similar with <code>heatmap</code> and <code>contour</code> functions.</p>
@@ -436,7 +436,7 @@
         while each entry of the edge table has two components giving the two incident vertices of that edge.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): (JFrame, PlotCanvas)
+    def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): Window
     </code></pre>
 
     <p>where <code>vertices</code> is an <code>n x 2</code> or <code>n x 3</code> array which are coordinates of
