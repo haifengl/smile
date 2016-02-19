@@ -208,13 +208,9 @@
         parser for them.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def readTable(file: String, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
+    def readTable(file: String, response: Option[(Attribute, Int)] = None, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
 
-    def readCsv(file: String, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
-
-    def readTable2(file: String, response: Attribute, responseIndex: Int, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
-
-    def readCsv2(file: String, response: Attribute, responseIndex: Int, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
+    def readCsv(file: String, response: Option[(Attribute, Int)] = None, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
     </code></pre>
 
     <p>By default, the parser <code>readTable</code> expects a white-space-separated-values file.
@@ -225,14 +221,9 @@
         (indicated by placeholder '?'), which both can be parameterized. Optionally, the file may also have
         a header (e.g. the first row is column names) and the first column may be row id/names.</p>
 
-    <p>The variety <code>readTable2</code> and <code>readCsv2</code> also take the parameters of response
-        variable type and index. We have to attach a suffix '2' to the function name here
-        because Scala disallows overloaded methods with default arguments. We may remove it in
-        the future when Scala remove this restriction.</p>
-
     <pre class="prettyprint lang-scala"><code>
     val label = new NominalAttribute("class")
-    val data = readTable2("data/usps/zip.train", label, 0)
+    val data = readTable("data/usps/zip.train", Some((label, 0)))
     </code></pre>
 
     <h3 id="microarray">Microarray</h3>

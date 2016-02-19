@@ -106,32 +106,6 @@ trait Operators {
     new BinarySparseDatasetParser().parse(file)
   }
 
-  /** Reads a delimited text file. By default, the parser expects a
-    * white-space-separated-values file. Each line in the file corresponds
-    * to a row in the table. Within a line, fields are separated by white spaces,
-    * each field belonging to one table column. This class can also be
-    * used to read other text tabular files by setting delimiter character
-    * such ash ','. The file may contain comment lines (starting with '%')
-    * and missing values (indicated by placeholder '?').
-    *
-    * @param file the file path
-    * @param delimiter delimiter string
-    * @param comment the start of comment lines
-    * @param missing the missing value placeholder
-    * @param header true if the first row is header/column names
-    * @param rowNames true if the first column is row id/names
-    * @return an attribute dataset
-    */
-  def readTable(file: String, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset = {
-    val parser = new DelimitedTextParser
-    parser.setDelimiter(delimiter)
-      .setCommentStartWith(comment)
-      .setMissingValuePlaceholder(missing)
-      .setColumnNames(header)
-      .setRowNames(rowNames)
-      .parse(file)
-  }
-
   /** Reads a delimited text file with response variable. By default, the parser expects a
     * white-space-separated-values file. Each line in the file corresponds
     * to a row in the table. Within a line, fields are separated by white spaces,
@@ -141,8 +115,7 @@ trait Operators {
     * and missing values (indicated by placeholder '?').
     *
     * @param file the file path
-    * @param response the attribute type of response variable
-    * @param responseIndex the column index of response variable. The column index starts at 0.
+    * @param response optional response variable attribute and the column index of response variable. The column index starts at 0.
     * @param delimiter delimiter string
     * @param comment the start of comment lines
     * @param missing the missing value placeholder
@@ -150,10 +123,15 @@ trait Operators {
     * @param rowNames true if the first column is row id/names
     * @return an attribute dataset
     */
-  def readTable2(file: String, response: Attribute, responseIndex: Int, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset = {
+  def readTable(file: String, response: Option[(Attribute, Int)] = None, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset = {
     val parser = new DelimitedTextParser
-    parser.setResponseIndex(response, responseIndex)
-      .setDelimiter(delimiter)
+
+    response match {
+      case Some((attr, index)) => parser.setResponseIndex(attr, index)
+      case None => ()
+    }
+
+    parser.setDelimiter(delimiter)
       .setCommentStartWith(comment)
       .setMissingValuePlaceholder(missing)
       .setColumnNames(header)
@@ -161,14 +139,9 @@ trait Operators {
       .parse(file)
   }
 
-  /** Reads a CSV file. */
-  def readCsv(file: String, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset = {
-    readTable(file, ",", comment, missing, header, rowNames)
-  }
-
   /** Reads a CSV file  with response variable. */
-  def readCsv2(file: String, response: Attribute, responseIndex: Int, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset = {
-    readTable2(file, response, responseIndex, ",", comment, missing, header, rowNames)
+  def readCsv(file: String, response: Option[(Attribute, Int)] = None, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset = {
+    readTable(file, response, ",", comment, missing, header, rowNames)
   }
 
   /** Reads GCT microarray gene expression file. */
