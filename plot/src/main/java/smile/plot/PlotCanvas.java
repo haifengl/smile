@@ -210,7 +210,10 @@ public class PlotCanvas extends JPanel {
             // draw plot
             graphics.clip();
             int k = 0;
-            for (Shape s : shapes) {
+            // with for-each loop, we will get a ConcurrentModificationException.
+            // Use for loop instead.
+            for (int i = 0; i < shapes.size(); i++) {
+                Shape s = shapes.get(i);
                 s.paint(graphics);
                 if (s instanceof Plot) {
                     Plot p = (Plot) s;
@@ -228,7 +231,8 @@ public class PlotCanvas extends JPanel {
                 int width = font.getSize();
                 int height = font.getSize();
 
-                for (Shape s : shapes) {
+                for (int i = 0; i < shapes.size(); i++) {
+                    Shape s = shapes.get(i);
                     if (s instanceof Plot) {
                         Plot p = (Plot) s;
                         if (p.getID() != null) {
