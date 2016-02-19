@@ -16,8 +16,8 @@
 
 package smile.plot
 
-import java.awt.{GridLayout, Dimension, Color}
-import javax.swing.{JFrame, JPanel, WindowConstants}
+import java.awt.{GridLayout, Color}
+import javax.swing.{JFrame, JPanel}
 import smile.data.AttributeDataset
 import smile.stat.distribution.{Distribution, DiscreteDistribution}
 import smile.math.Math
