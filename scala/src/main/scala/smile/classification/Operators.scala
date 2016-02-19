@@ -113,7 +113,7 @@ trait Operators {
     }
   }
 
-  /** K-nearest neighbor classifier.
+  /** K-nearest neighbor classifier with Euclidean distance as the similarity measure.
     *
     * @param x training samples.
     * @param y training labels in [0, c), where c is the number of classes.
@@ -311,7 +311,7 @@ trait Operators {
     * @param alpha the momentum factor.
     * @param lambda the weight decay for regularization.
     */
-  def neuralnet(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, epochs: Int = 25, activation: NeuralNetwork.ActivationFunction, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork = {
+  def neuralnet(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, activation: NeuralNetwork.ActivationFunction, epochs: Int = 25, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork = {
     time {
       val nnet = new NeuralNetwork(error, activation, numUnits: _*)
       nnet.setLearningRate(eta)
@@ -381,13 +381,19 @@ trait Operators {
     * @param x training samples.
     * @param y training labels in [0, k), where k is the number of classes.
     * @param distance the distance metric functor.
-    * @param rbf the radial basis functions.
+    * @param rbf the radial basis function.
     * @param centers the centers of RBF functions.
-    * @param normalized true for the normalized RBF network.
     */
-  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T], normalized: Boolean): RBFNetwork[T] = {
+  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
     time {
-      new RBFNetwork[T](x, y, distance, rbf, centers, normalized)
+      new RBFNetwork[T](x, y, distance, rbf, centers, false)
+    }
+  }
+
+  /** Normalized radial basis function networks. */
+  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
+    time {
+      new RBFNetwork[T](x, y, distance, rbf, centers, true)
     }
   }
 
@@ -449,13 +455,19 @@ trait Operators {
     * @param x training samples.
     * @param y training labels in [0, k), where k is the number of classes.
     * @param distance the distance metric functor.
-    * @param rbf the radial basis functions.
+    * @param rbf the radial basis functions at each center.
     * @param centers the centers of RBF functions.
-    * @param normalized true for the normalized RBF network.
     */
-  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T], normalized: Boolean): RBFNetwork[T] = {
+  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T] = {
     time {
-      new RBFNetwork[T](x, y, distance, rbf, centers, normalized)
+      new RBFNetwork[T](x, y, distance, rbf, centers, false)
+    }
+  }
+
+  /** Normalized radial basis function networks. */
+  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T] = {
+    time {
+      new RBFNetwork[T](x, y, distance, rbf, centers, true)
     }
   }
 
