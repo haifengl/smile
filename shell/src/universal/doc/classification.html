@@ -232,7 +232,7 @@
         <code>k</code>, the smoother the boundary.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val toy = readTable2("classification/toy/toy-train.txt", new NominalAttribute("class"), 0)
+    val toy = readTable("classification/toy/toy-train.txt", Some((new NominalAttribute("class"), 0)))
     val (x, y) = toy.unzipInt
     plot(x, y, knn(x, y, 3)
     </code></pre>
@@ -491,7 +491,7 @@
         mean 0 and standard deviation 1.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def neuralnet(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, activation: NeuralNetwork.ActivationFunction, epochs: Int = 25, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork
+    def mlp(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, activation: NeuralNetwork.ActivationFunction, epochs: Int = 25, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork
     </code></pre>
 
     <p>where <code>numUnits</code> is the number of units in each layer, <code>error</code>
@@ -630,8 +630,15 @@
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/rbf-network.png" class="enlarge" style="width: 480px;" />
+        <img src="images/rbf-network-classification.png" class="enlarge" style="width: 480px;" />
     </div>
+
+    <p>After running the above example, you may notice that the decision boundary
+        may be very different from the above picture. It is because the centers
+        learn from <code>gaussrbf</code>, employing K-Means in this example,
+        are different every time, a nature of stochastic algorithm like K-Means.
+        This also show that the decision boundary of RBF network is very sensistive
+        to the chosen centers.</p>
 
     <p>A variant on RBF networks is normalized radial basis function (NRBF)
         networks, in which we require the sum of the basis functions to be unity.

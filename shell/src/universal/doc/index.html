@@ -427,7 +427,7 @@
   val data = readArff("iris.arff", 4)
   val (x, y) = data.unzipInt
 
-  val rf = randomDecisionForest(x, y)
+  val rf = randomForest(x, y)
 
   println(s"OOB error = ${rf.error}")
   rf.predict(x(0))

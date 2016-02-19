@@ -29,29 +29,6 @@ import smile.util._
   */
 trait Operators {
 
-  /** Apply a classifier on an instance.
-    *
-    * @param model classification model.
-    * @param x data sample.
-    * @tparam T the data type.
-    * @return the predicted class label.
-    */
-  def predict[T <: AnyRef](model: Classifier[T], x: T): Int = {
-    model.predict(x)
-  }
-
-  /** Apply a soft classifier on an instance.
-    *
-    * @param model classification model.
-    * @param x data sample.
-    * @param posteriori optional double array of posertiori probability output. Note not all models support it.
-    * @tparam T the data type.
-    * @return the predicted class label.
-    */
-  def predict[T <: AnyRef](model: SoftClassifier[T], x: T, posteriori: Array[Double]): Int = {
-    model.predict(x, posteriori)
-  }
-
   /** K-nearest neighbor classifier.
     * The k-nearest neighbor algorithm (k-NN) is
     * a method for classifying objects by a majority vote of its neighbors,
@@ -311,7 +288,7 @@ trait Operators {
     * @param alpha the momentum factor.
     * @param lambda the weight decay for regularization.
     */
-  def neuralnet(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, activation: NeuralNetwork.ActivationFunction, epochs: Int = 25, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork = {
+  def mlp(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, activation: NeuralNetwork.ActivationFunction, epochs: Int = 25, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork = {
     time {
       val nnet = new NeuralNetwork(error, activation, numUnits: _*)
       nnet.setLearningRate(eta)
@@ -603,7 +580,7 @@ trait Operators {
     * @param splitRule the splitting rule.
     * @return Decision tree model.
     */
-  def decisionTree(x: Array[Array[Double]], y: Array[Int], maxNodes: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
+  def cart(x: Array[Array[Double]], y: Array[Int], maxNodes: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -670,7 +647,7 @@ trait Operators {
     *
     * @return Random forest classification model.
     */
-  def randomDecisionForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 1, mtry: Int = -1, subsample: Double = 1.0, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
+  def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 1, mtry: Int = -1, subsample: Double = 1.0, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -770,7 +747,7 @@ trait Operators {
     *
     * @return Gradient boosted trees.
     */
-  def gbct(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
+  def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
     val p = x(0).length
 
     val attr = if (attributes == null) {

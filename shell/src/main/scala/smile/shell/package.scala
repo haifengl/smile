@@ -20,7 +20,7 @@ package smile
   *
   * @author Haifeng Li
   */
-package object shell extends Operators {
+package object shell {
 
   /** Built in benchmarks */
   def benchmark(tests: String*) = {
@@ -117,12 +117,10 @@ package object shell extends Operators {
         |  Reads binary sparse dataset. Each item is stored as an integer array, which
         |  are the indices of nonzero elements in ascending order
       """.stripMargin)
-    case "readTable" | "readTable2" | "readCsv" | "readCsv2" => println(
+    case "readTable" | "readCsv" => println(
       """
-        |  def readTable(file: String, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
-        |  def readTable2(file: String, response: Attribute, responseIndex: Int, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
-        |  def readCsv(file: String, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
-        |  def readCsv2(file: String, response: Attribute, responseIndex: Int, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
+        |  def readTable(file: String, response: Option[(Attribute, Int)], delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
+        |  def readCsv(file: String, response: Option[(Attribute, Int)], comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
         |
         |  Reads a delimited text file with response variable. By default, the parser expects a
         |  white-space-separated-values file. Each line in the file corresponds
@@ -386,19 +384,6 @@ package object shell extends Operators {
         |  @param height a set of n-1 non-decreasing real values, which are the clustering height,
         |                i.e., the value of the criterion associated with the clustering method
         |                for the particular agglomeration.
-      """.stripMargin)
-    case "predict" => println(
-      """
-        |  def predict[T <: AnyRef](model: Classifier[T], x: T, posteriori: Array[Double] = null): Int
-        |  def predict[T <: AnyRef](model: Regression[T], x: T): Double
-        |
-        |  Apply a classification/regression model on a data sample.
-        |
-        |  @param model classification/regression model
-        |  @param x data sample
-        |  @param posteriori optional double array of posertiori probability output. Note not all models support it.
-        |
-        |  @return the predicted class label
       """.stripMargin)
     case "knn" => println(
       """
@@ -1090,9 +1075,9 @@ package object shell extends Operators {
         |  @param tol the tolerance for stopping iterations (relative target duality gap).
         |  @param maxIter the maximum number of iterations.
       """.stripMargin)
-    case "neuralnet" => println(
+    case "mlp" => println(
       """
-        |  def neuralnet(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, epochs: Int = 25, activation: NeuralNetwork.ActivationFunction, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork
+        |  def mlp(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, epochs: Int = 25, activation: NeuralNetwork.ActivationFunction, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork
         |
         |  Multilayer perceptron neural network.
         |  An MLP consists of several layers of nodes, interconnected through weighted
@@ -1184,12 +1169,17 @@ package object shell extends Operators {
         |  @param alpha the momentum factor.
         |  @param lambda the weight decay for regularization.
       """.stripMargin)
-    case "rbfnet" => println(
+    case "rbfnet" | "nrbfnet" => println(
       """
-        |  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T], normalized: Boolean): RBFNetwork[T]
-        |  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T], normalized: Boolean): RBFNetwork[T]
-        |  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T], normalized: Boolean): RBFNetwork[T]
-        |  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T], normalized: Boolean): RBFNetwork[T]
+        |  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T]
+        |  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T]
+        |  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T]
+        |  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T]
+        |
+        |  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T]
+        |  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T]
+        |  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T]
+        |  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T]
         |
         |  Radial basis function networks. A radial basis function network is an
         |  artificial neural network that uses radial basis functions as activation
@@ -1324,11 +1314,10 @@ package object shell extends Operators {
         |  @param C the soft margin penalty parameter.
         |  @param tol the tolerance of convergence test.
       """.stripMargin)
-    case "gaussianProcess" => println(
+    case "gpr" => println(
       """
-        |  def gaussianProcess[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T]
-        |  def gaussianProcess[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T]
-        |  def gaussianProcessNystrom[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T] = {
+        |  def gpr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T]
+        |  def gpr[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double, nystrom: Boolean = false): GaussianProcessRegression[T]
         |
         |  Gaussian Process for Regression. A Gaussian process is a stochastic process
         |  whose realizations consist of random values associated with every point in
@@ -1392,17 +1381,17 @@ package object shell extends Operators {
         |   readSparseData -- Reads spare dataset in coordinate triple tuple list format.
         |   readBinarySparseData -- Reads binary sparse dataset.
         |   readTable -- Reads a delimited text file.
+        |   readCsv -- Reads a CSV file.
         |   readGct -- Reads GCT microarray gene expression file.
         |   readPcl -- Reads PCL microarray gene expression file.
         |   readRes -- Reads RES microarray gene expression file.
         |   readTxt -- Reads TXT microarray gene expression file.
         |
         | Classification:
-        |   predict -- Apply a classification model on a data sample.
         |   knn -- K-nearest neighbor classifier.
         |   logit -- Logistic regression.
         |   maxent -- Maximum entropy classifier.
-        |   neuralnet -- Neural network.
+        |   mlp -- Multilayer perceptron neural network.
         |   rbfnet -- Radial basis function network.
         |   svm -- Support vector machine for classification.
         |   cart -- Decision tree for classification.
@@ -1413,9 +1402,9 @@ package object shell extends Operators {
         |   lda -- Linear discriminant analysis.
         |   qda -- Quadratic discriminant analysis.
         |   rda -- Regularized discriminant analysis.
+        |   naiveBayes -- Naive Bayes classifier.
         |
         | Regression:
-        |   predict -- Apply a classification model on a data sample.
         |   ols -- Ordinary least square.
         |   ridge -- Ridge regression.
         |   lasso -- Least absolute shrinkage and selection operator.
@@ -1424,10 +1413,9 @@ package object shell extends Operators {
         |   cart -- Regression tree.
         |   randomForest -- Random forest for regression.
         |   gbm -- Gradient boosting for regression.
-        |   gaussianProcess -- Gaussian process for regression.
+        |   gpr -- Gaussian process for regression.
         |
         | Graphics:
-        |   window -- Create a plot window.
         |   plot -- Scatter plot.
         |   line -- Scatter plot which connects points by straight lines.
         |   boxplot -- Boxplots can be useful to display differences between populations.

@@ -16,7 +16,6 @@
 
 package smile.regression
 
-import smile.regression._
 import smile.data._
 import smile.math._, distance._, kernel._, rbf._
 import smile.util._
@@ -26,17 +25,6 @@ import smile.util._
   * @author Haifeng Li
   */
 trait Operators {
-
-  /** Apply a regression model on an instance.
-    *
-    * @param model regression model
-    * @param x data sample
-    * @tparam T the data type
-    * @return predicted value of dependent variable.
-    */
-  def predict[T <: AnyRef](model: Regression[T], x: T): Double = {
-    model.predict(x)
-  }
 
   /** Ordinary least squares. In linear regression,
     * the model specification is that the dependent variable is a linear
@@ -257,7 +245,7 @@ trait Operators {
     * @param attributes the attribute properties.
     * @return Regression tree model.
     */
-  def regressionTree(x: Array[Array[Double]], y: Array[Double], maxNodes: Int, attributes: Array[Attribute] = null): RegressionTree = {
+  def cart(x: Array[Array[Double]], y: Array[Double], maxNodes: Int, attributes: Array[Attribute] = null): RegressionTree = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -323,7 +311,7 @@ trait Operators {
     *
     * @return Random forest regression model.
     */
-  def randomRegressionForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 5, mtry: Int = -1, subsample: Double = 1.0): RandomForest = {
+  def randomForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 5, mtry: Int = -1, subsample: Double = 1.0): RandomForest = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -422,7 +410,7 @@ trait Operators {
     *
     * @return Gradient boosted trees.
     */
-  def gbrt(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
+  def gbm(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -482,7 +470,7 @@ trait Operators {
     * @param kernel the Mercer kernel.
     * @param lambda the shrinkage/regularization parameter.
     */
-  def gaussianProcess[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T] = {
+  def gpr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T] = {
     time {
       new GaussianProcessRegression[T](x, y, kernel, lambda)
     }
@@ -500,7 +488,7 @@ trait Operators {
     * @param lambda the shrinkage/regularization parameter.
     * @param nystrom set it true for Nystrom approximation of kernel matrix.
     */
-  def gaussianProcess[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double, nystrom: Boolean = false): GaussianProcessRegression[T] = {
+  def gpr[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double, nystrom: Boolean = false): GaussianProcessRegression[T] = {
     time {
       if (nystrom)
         new GaussianProcessRegression[T](x, y, t, kernel, lambda, true)
