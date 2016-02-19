@@ -19,6 +19,7 @@ package smile.plot
 import java.awt.{GridLayout, Color}
 import javax.swing.{JFrame, JPanel}
 import smile.data.AttributeDataset
+import smile.regression.Regression
 import smile.stat.distribution.{Distribution, DiscreteDistribution}
 import smile.math.Math
 import smile.math.matrix.SparseMatrix
@@ -636,10 +637,10 @@ trait Operators {
    *
    * @param x training data.
    * @param y training label.
-   * @param classifier trained classification model.
+   * @param model classification model.
    */
-  def plot(x: Array[Array[Double]], y: Array[Int], classifier: Classifier[Array[Double]]): Window = {
-    require(x(0).size == 2, "plot of classifier supports only 2-dimensional data")
+  def plot(x: Array[Array[Double]], y: Array[Int], model: Classifier[Array[Double]]): Window = {
+    require(x(0).size == 2, "plot of classification model supports only 2-dimensional data")
 
     val win = plot(x, y, 'o', Palette.COLORS)
 
@@ -653,20 +654,56 @@ trait Operators {
     val step2 = (upper(1) - lower(1)) / steps
     val v2 = (0 to steps).map(lower(1) + step2 * _).toArray
 
-    val f = Array.ofDim[Double](v1.length, v2.length)
+    val z = Array.ofDim[Double](v1.length, v2.length)
     for (i <- 0 to steps) {
       for (j <- 0 to steps) {
         val p = Array(v1(i), v2(j))
-        val c = classifier.predict(p)
-        f(j)(i) = c
+        val c = model.predict(p)
+        z(j)(i) = c
         win.canvas.point('.', Palette.COLORS(c), p: _*)
       }
     }
 
     val levels = (0 until Math.max(y: _*)).map(_ + 0.5).toArray
-    val contour = new Contour(v1, v2, f, levels)
+    val contour = new Contour(v1, v2, z, levels)
     contour.showLevelValue(false)
     win.canvas.add(contour)
+
+    win
+  }
+
+  /** Plots the regression surface.
+    *
+    * @param x training data.
+    * @param y response variable.
+    * @param model regression model.
+    */
+  def plot(x: Array[Array[Double]], y: Array[Double], model: Regression[Array[Double]]): Window = {
+    require(x(0).size == 2, "plot of regression model supports only 2-dimensional data")
+
+    val points = x.zip(y).map { case (x, y) => Array(x(0), x(1), y) }.toArray
+    val win = plot(points, 'o')
+
+    val lower = win.canvas.getLowerBounds
+    val upper = win.canvas.getUpperBounds
+
+    val steps = 50
+    val step1 = (upper(0) - lower(0)) / steps
+    val v1 = (0 to steps).map(lower(0) + step1 * _).toArray
+
+    val step2 = (upper(1) - lower(1)) / steps
+    val v2 = (0 to steps).map(lower(1) + step2 * _).toArray
+
+    val z = Array.ofDim[Double](v1.length, v2.length)
+    for (i <- 0 to steps) {
+      for (j <- 0 to steps) {
+        val p = Array(v1(i), v2(j))
+        z(j)(i) = model.predict(p)
+      }
+    }
+
+    val surface = Surface.plot(v1, v2, z, Palette.jet(256))
+    win.canvas.add(surface)
 
     win
   }

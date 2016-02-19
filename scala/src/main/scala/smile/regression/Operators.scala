@@ -329,11 +329,7 @@ trait Operators {
     }
   }
 
-  /** Gradient boosted regression trees. Gradient boosting is typically used
-    * with decision trees (especially CART regression trees) of a fixed size as
-    * base learners. For this special case Friedman proposes a modification to
-    * gradient boosting method which improves the quality of fit of each base
-    * learner.
+  /** Gradient boosted regression trees.
     *
     * Generic gradient boosting at the t-th step would fit a regression tree to
     * pseudo-residuals. Let J be the number of its leaves. The tree partitions
