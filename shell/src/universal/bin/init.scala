@@ -39,4 +39,4 @@ import smile.sequence._
 import smile.projection._
 import smile.nlp._
 import smile.wavelet._
-
+import smile.shell._

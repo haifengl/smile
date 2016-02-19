@@ -493,7 +493,7 @@ trait Operators {
     * @param y training labels
     * @param kernel Mercer kernel
     * @param C Regularization parameter
-    * @param strategy multi-class classification strategy, one vs all or one vs one.
+    * @param strategy Multi-class classification strategy, one vs all or one vs one. Ignored for binary classification.
     * @param epoch the number of training epochs
     * @tparam T the data type
     *
@@ -501,11 +501,11 @@ trait Operators {
     */
   def svm[T <: AnyRef](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, strategy: SVM.Multiclass = SVM.Multiclass.ONE_VS_ONE, epoch: Int = 1): SVM[T] = {
     val k = Math.max(y: _*) + 1
-    val svm = new SVM[T](kernel, C, k, strategy)
+    val svm = if (k == 2) new SVM[T](kernel, C) else new SVM[T](kernel, C, k, strategy)
     time {
-      svm.learn(x, y)
       for (i <- 1 to epoch) {
         println(s"SVM training epoch $i...")
+        svm.learn(x, y)
         svm.finish
       }
     }
@@ -668,11 +668,7 @@ trait Operators {
     }
   }
 
-  /** Gradient boosted classification trees. Gradient boosting is typically used
-    * with decision trees (especially CART regression trees) of a fixed size as
-    * base learners. For this special case Friedman proposes a modification to
-    * gradient boosting method which improves the quality of fit of each base
-    * learner.
+  /** Gradient boosted classification trees.
     *
     * Generic gradient boosting at the t-th step would fit a regression tree to
     * pseudo-residuals. Let J be the number of its leaves. The tree partitions
