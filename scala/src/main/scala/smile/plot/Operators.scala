@@ -23,27 +23,12 @@ import smile.stat.distribution.{Distribution, DiscreteDistribution}
 import smile.math.Math
 import smile.math.matrix.SparseMatrix
 import smile.classification.Classifier
-import smile.util.time
 
 /** Data visualization operators.
   *
   * @author Haifeng Li
   */
 trait Operators {
-
-  private val windowCount = new java.util.concurrent.atomic.AtomicInteger
-
-  /** Create a plot window. */
-  def window(title: String = ""): JFrame = {
-    val t = if (title.isEmpty) { "Smile Plot " + windowCount.addAndGet(1) } else title
-    val frame = new JFrame(t)
-    frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
-    frame.setSize(new Dimension(1000, 1000))
-    frame.setLocationRelativeTo(null)
-    frame.setVisible(true)
-    frame
-  }
-
   /** Scatter plot.
     *
     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
@@ -67,13 +52,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def plot(data: Array[Array[Double]], legend: Char = '*', color: Color = Color.BLACK): (JFrame, PlotCanvas) = {
+  def plot(data: Array[Array[Double]], legend: Char = '*', color: Color = Color.BLACK): Window = {
     val canvas = ScatterPlot.plot(data, legend, color)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Scatter plot.
@@ -83,13 +64,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def plot(data: Array[Array[Double]], labels: Array[String]): (JFrame, PlotCanvas) = {
+  def plot(data: Array[Array[Double]], labels: Array[String]): Window = {
     val canvas = ScatterPlot.plot(data, labels)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Scatter plot.
@@ -101,13 +78,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def plot(data: Array[Array[Double]], label: Array[Int], legend: Char, palette: Array[Color]): (JFrame, PlotCanvas) = {
+  def plot(data: Array[Array[Double]], label: Array[Int], legend: Char, palette: Array[Color]): Window = {
     val canvas = ScatterPlot.plot(data, label, legend, palette)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Scatter plot.
@@ -119,13 +92,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def plot(data: Array[Array[Double]], label: Array[Int], legend: Array[Char], palette: Array[Color]): (JFrame, PlotCanvas) = {
+  def plot(data: Array[Array[Double]], label: Array[Int], legend: Array[Char], palette: Array[Color]): Window = {
     val canvas = ScatterPlot.plot(data, label, legend, palette)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Plot a grid of scatter plots of for all attribute pairs in the attribute data.
@@ -151,9 +120,9 @@ trait Operators {
       }
     }
 
-    val win = window()
-    win.add(panel)
-    win
+    val frame = Window.frame(data.getName)
+    frame.add(panel)
+    frame
   }
 
   /** Plot a grid of scatter plots of for all attribute pairs in the attribute data of which the response variable is
@@ -181,9 +150,9 @@ trait Operators {
       }
     }
 
-    val win = window()
-    win.add(panel)
-    win
+    val frame = Window.frame(data.getName)
+    frame.add(panel)
+    frame
   }
 
   /** Plot a grid of scatter plots of for all attribute pairs in the attribute data of which the response variable is
@@ -211,9 +180,9 @@ trait Operators {
       }
     }
 
-    val win = window()
-    win.add(panel)
-    win
+    val frame = Window.frame(data.getName)
+    frame.add(panel)
+    frame
   }
 
   /** Line plot.
@@ -226,7 +195,7 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, legend: Char = ' '): (JFrame, PlotCanvas) = {
+  def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, legend: Char = ' '): Window = {
     val canvas = LinePlot.plot(data, style, color)
 
     if (legend != ' ') {
@@ -235,22 +204,15 @@ trait Operators {
       canvas.add(scatter)
     }
 
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Create a plot canvas with the staircase line plot.
     * @param data a n x 2 or n x 3 matrix that describes coordinates of points.
     */
-  def staircase(data: Array[Double]*): (JFrame, PlotCanvas) = {
+  def staircase(data: Array[Double]*): Window = {
     val canvas = StaircasePlot.plot(data: _*)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** A box plot is a convenient way of graphically depicting groups of numerical
@@ -288,13 +250,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def boxplot(data: Array[Double]*): (JFrame, PlotCanvas) = {
+  def boxplot(data: Array[Double]*): Window = {
     val canvas = BoxPlot.plot(data: _*)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Box plot.
@@ -304,13 +262,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def boxplot(data: Array[Array[Double]], labels: Array[String]): (JFrame, PlotCanvas) = {
+  def boxplot(data: Array[Array[Double]], labels: Array[String]): Window = {
     val canvas = BoxPlot.plot(data, labels)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Contour plot. A contour plot is a graphical technique for representing a 3-dimensional
@@ -323,13 +277,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def contour(z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+  def contour(z: Array[Array[Double]]): Window = {
     val canvas = Contour.plot(z)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Contour plot. A contour plot is a graphical technique for representing a 3-dimensional
@@ -344,13 +294,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def contour(z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): (JFrame, PlotCanvas) = {
+  def contour(z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): Window = {
     val canvas = Contour.plot(z, levels, palette)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Contour plot. A contour plot is a graphical technique for representing a 3-dimensional
@@ -365,13 +311,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+  def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Window = {
     val canvas = Contour.plot(x, y, z)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Contour plot. A contour plot is a graphical technique for representing a 3-dimensional
@@ -388,13 +330,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): (JFrame, PlotCanvas) = {
+  def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): Window = {
     val canvas = Contour.plot(x, y, z, levels, palette)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** 3D surface plot.
@@ -403,13 +341,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def surface(z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+  def surface(z: Array[Array[Double]]): Window = {
     val canvas = Surface.plot(z)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** 3D surface plot.
@@ -419,13 +353,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def surface(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+  def surface(z: Array[Array[Double]], palette: Array[Color]): Window = {
     val canvas = Surface.plot(z, palette)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** 3D surface plot.
@@ -436,13 +366,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+  def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Window = {
     val canvas = Surface.plot(x, y, z)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** 3D surface plot.
@@ -454,13 +380,9 @@ trait Operators {
     *
     * @return a tuple of window frame and plot canvas which can be added other shapes.
     */
-  def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+  def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Window = {
     val canvas = Surface.plot(x, y, z, palette)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Wire frame plot.
@@ -472,51 +394,35 @@ trait Operators {
     * @param edges an m-by-2 array of which each row is the vertex indices of two
     *              end points of each edge.
     */
-  def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): (JFrame, PlotCanvas) = {
+  def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): Window = {
     val canvas = Wireframe.plot(vertices, edges)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** 2D grid plot.
     *
     * @param data an m x n x 2 array which are coordinates of m x n grid.
     */
-  def grid(data: Array[Array[Array[Double]]]): (JFrame, PlotCanvas) = {
+  def grid(data: Array[Array[Array[Double]]]): Window = {
     val canvas = Grid.plot(data)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Pseudo heat map plot.
     * @param z a data matrix to be shown in pseudo heat map.
     */
-  def heatmap(z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+  def heatmap(z: Array[Array[Double]]): Window = {
     val canvas = Heatmap.plot(z)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Pseudo heat map plot.
     * @param z a data matrix to be shown in pseudo heat map.
     * @param palette the color palette.
     */
-  def heatmap(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+  def heatmap(z: Array[Array[Double]], palette: Array[Color]): Window = {
     val canvas = Heatmap.plot(z, palette)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Pseudo heat map plot.
@@ -524,13 +430,9 @@ trait Operators {
     * @param y y coordinate of data matrix cells. Must be in ascending order.
     * @param z a data matrix to be shown in pseudo heat map.
     */
-  def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+  def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Window = {
     val canvas = Heatmap.plot(x, y, z)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Pseudo heat map plot.
@@ -539,13 +441,9 @@ trait Operators {
     * @param z a data matrix to be shown in pseudo heat map.
     * @param palette the color palette.
     */
-  def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+  def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Window = {
     val canvas = Heatmap.plot(x, y, z, palette)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Pseudo heat map plot.
@@ -553,13 +451,9 @@ trait Operators {
     * @param rowLabels the labels for rows of data matrix.
     * @param columnLabels the labels for columns of data matrix.
     */
-  def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+  def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): Window = {
     val canvas = Heatmap.plot(rowLabels, columnLabels, z)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Pseudo heat map plot.
@@ -568,63 +462,43 @@ trait Operators {
     * @param columnLabels the labels for columns of data matrix.
     * @param palette the color palette.
     */
-  def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+  def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): Window = {
     val canvas = Heatmap.plot(rowLabels, columnLabels, z, palette)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Visualize sparsity pattern.
     * @param matrix a sparse matrix.
     */
-  def spy(matrix: SparseMatrix): (JFrame, PlotCanvas) = {
+  def spy(matrix: SparseMatrix): Window = {
     val canvas = SparseMatrixPlot.plot(matrix)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Heat map with hex shape.
     * @param z a data matrix to be shown in pseudo heat map.
     */
-  def hexmap(z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+  def hexmap(z: Array[Array[Double]]): Window = {
     val canvas = Heatmap.plot(z)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Heat map with hex shape.
     * @param z a data matrix to be shown in pseudo heat map.
     * @param palette the color palette.
     */
-  def hexmap(z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+  def hexmap(z: Array[Array[Double]], palette: Array[Color]): Window = {
     val canvas = Hexmap.plot(z, palette)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Heat map with hex shape.
     * @param labels the descriptions of each cell in the data matrix.
     * @param z a data matrix to be shown in pseudo heat map.
     */
-  def hexmap(labels: Array[Array[String]], z: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+  def hexmap(labels: Array[Array[String]], z: Array[Array[Double]]): Window = {
     val canvas = Hexmap.plot(labels, z)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Heat map with hex shape.
@@ -632,38 +506,26 @@ trait Operators {
     * @param z a data matrix to be shown in pseudo heat map.
     * @param palette the color palette.
     */
-  def hexmap(labels: Array[Array[String]], z: Array[Array[Double]], palette: Array[Color]): (JFrame, PlotCanvas) = {
+  def hexmap(labels: Array[Array[String]], z: Array[Array[Double]], palette: Array[Color]): Window = {
     val canvas = Hexmap.plot(labels, z, palette)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Histogram plot.
     * @param data a sample set.
     */
-  def histogram(data: Array[Double]): (JFrame, PlotCanvas) = {
+  def histogram(data: Array[Double]): Window = {
     val canvas = Histogram.plot(data)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Histogram plot.
     * @param data a sample set.
     * @param k the number of bins.
     */
-  def histogram(data: Array[Double], k: Int): (JFrame, PlotCanvas) = {
+  def histogram(data: Array[Double], k: Int): Window = {
     val canvas = Histogram.plot(data, k)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Histogram plot.
@@ -671,38 +533,26 @@ trait Operators {
     * @param breaks an array of size k+1 giving the breakpoints between
     *               histogram cells. Must be in ascending order.
     */
-  def histogram(data: Array[Double], breaks: Array[Double]): (JFrame, PlotCanvas) = {
+  def histogram(data: Array[Double], breaks: Array[Double]): Window = {
     val canvas = Histogram.plot(data, breaks)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** 3D histogram plot.
     * @param data a sample set.
     */
-  def histogram(data: Array[Array[Double]]): (JFrame, PlotCanvas) = {
+  def histogram(data: Array[Array[Double]]): Window = {
     val canvas = Histogram3D.plot(data)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** 3D histogram plot.
     * @param data a sample set.
     * @param k the number of bins.
     */
-  def histogram(data: Array[Array[Double]], k: Int): (JFrame, PlotCanvas) = {
+  def histogram(data: Array[Array[Double]], k: Int): Window = {
     val canvas = Histogram3D.plot(data, k)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** 3D histogram plot.
@@ -710,13 +560,9 @@ trait Operators {
     * @param xbins the number of bins on x-axis.
     * @param ybins the number of bins on y-axis.
     */
-  def histogram(data: Array[Array[Double]], xbins: Int, ybins: Int): (JFrame, PlotCanvas) = {
+  def histogram(data: Array[Array[Double]], xbins: Int, ybins: Int): Window = {
     val canvas = Histogram3D.plot(data, xbins, ybins)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** QQ plot of samples to standard normal distribution.
@@ -724,13 +570,9 @@ trait Operators {
     * quantiles of normal distribution.
     * @param x a sample set.
     */
-  def qqplot(x: Array[Double]): (JFrame, PlotCanvas) = {
+  def qqplot(x: Array[Double]): Window = {
     val canvas = QQPlot.plot(x)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** QQ plot of samples to given distribution.
@@ -739,13 +581,9 @@ trait Operators {
     * @param x a sample set.
     * @param d a distribution.
     */
-  def qqplot(x: Array[Double], d: Distribution): (JFrame, PlotCanvas) = {
+  def qqplot(x: Array[Double], d: Distribution): Window = {
     val canvas = QQPlot.plot(x, d)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** QQ plot of two sample sets.
@@ -753,13 +591,9 @@ trait Operators {
     * @param x a sample set.
     * @param y a sample set.
     */
-  def qqplot(x: Array[Double], y: Array[Double]): (JFrame, PlotCanvas) = {
+  def qqplot(x: Array[Double], y: Array[Double]): Window = {
     val canvas = QQPlot.plot(x, y)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** QQ plot of samples to given distribution.
@@ -768,13 +602,9 @@ trait Operators {
     * @param x a sample set.
     * @param d a distribution.
     */
-  def qqplot(x: Array[Int], d: DiscreteDistribution): (JFrame, PlotCanvas) = {
+  def qqplot(x: Array[Int], d: DiscreteDistribution): Window = {
     val canvas = QQPlot.plot(x, d)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** QQ plot of two sample sets.
@@ -782,13 +612,9 @@ trait Operators {
     * @param x a sample set.
     * @param y a sample set.
     */
-  def qqplot(x: Array[Int], y: Array[Int]): (JFrame, PlotCanvas) = {
+  def qqplot(x: Array[Int], y: Array[Int]): Window = {
     val canvas = QQPlot.plot(x, y)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Dendrogram plot.
@@ -801,13 +627,9 @@ trait Operators {
     *               i.e., the value of the criterion associated with the clustering method
     *               for the particular agglomeration.
     */
-  def dendrogram(merge: Array[Array[Int]], height: Array[Double]): (JFrame, PlotCanvas) = {
+  def dendrogram(merge: Array[Array[Int]], height: Array[Double]): Window = {
     val canvas = Dendrogram.plot(merge, height)
-
-    val win = window()
-    win.add(canvas)
-
-    (win, canvas)
+    Window(canvas)
   }
 
   /** Plots the classification boundary.
@@ -816,13 +638,13 @@ trait Operators {
    * @param y training label.
    * @param classifier trained classification model.
    */
-  def plot(x: Array[Array[Double]], y: Array[Int], classifier: Classifier[Array[Double]]): (JFrame, PlotCanvas) = {
+  def plot(x: Array[Array[Double]], y: Array[Int], classifier: Classifier[Array[Double]]): Window = {
     require(x(0).size == 2, "plot of classifier supports only 2-dimensional data")
 
-    val (frame, canvas) = plot(x, y, 'o', Palette.COLORS)
+    val win = plot(x, y, 'o', Palette.COLORS)
 
-    val lower = canvas.getLowerBounds
-    val upper = canvas.getUpperBounds
+    val lower = win.canvas.getLowerBounds
+    val upper = win.canvas.getUpperBounds
 
     val steps = 50
     val step1 = (upper(0) - lower(0)) / steps
@@ -831,21 +653,21 @@ trait Operators {
     val step2 = (upper(1) - lower(1)) / steps
     val v2 = (0 to steps).map(lower(1) + step2 * _).toArray
 
-    val f = Array.ofDim[Double](steps, steps)
+    val f = Array.ofDim[Double](v1.length, v2.length)
     for (i <- 0 to steps) {
       for (j <- 0 to steps) {
         val p = Array(v1(i), v2(j))
         val c = classifier.predict(p)
         f(j)(i) = c
-        canvas.point('.', Palette.COLORS(c), p: _*)
+        win.canvas.point('.', Palette.COLORS(c), p: _*)
       }
     }
 
     val levels = (0 until Math.max(y: _*)).map(_ + 0.5).toArray
     val contour = new Contour(v1, v2, f, levels)
     contour.showLevelValue(false)
-    canvas.add(contour)
+    win.canvas.add(contour)
 
-    (frame, canvas)
+    win
   }
 }
