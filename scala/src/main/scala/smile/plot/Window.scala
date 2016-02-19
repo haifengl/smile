@@ -16,10 +16,15 @@
 
 package smile.plot
 
-import java.awt.Dimension
-import javax.swing.{JFrame, WindowConstants}
+import java.awt.{GridLayout, Dimension}
+import java.awt.event.WindowEvent
+import javax.swing.{JFrame, JPanel, WindowConstants}
 
-case class Window(frame: JFrame, canvas: PlotCanvas)
+case class Window(frame: JFrame, canvas: PlotCanvas) {
+  def close: Unit = {
+    frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING))
+  }
+}
 
 object Window {
   private val windowCount = new java.util.concurrent.atomic.AtomicInteger
@@ -40,9 +45,10 @@ object Window {
 
   /** Create a plot window frame. */
   def frame(title: String = ""): JFrame = {
-    val frameTitle = if (title.isEmpty) { "Smile Plot " + windowCount.addAndGet(1) } else title
+    val frameTitle = if (title.isEmpty) "Smile Plot " + windowCount.addAndGet(1) else title
     val frame = new JFrame(frameTitle)
     frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
+    frame.getContentPane.add(new JPanel(new GridLayout(4, 4)))
     frame.setSize(new Dimension(1000, 1000))
     frame.setLocationRelativeTo(null)
     frame.setVisible(true)
