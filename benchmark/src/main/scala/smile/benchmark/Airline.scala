@@ -80,9 +80,9 @@ object Airline {
     val forest = test2soft(x, y, testx, testy) { (x, y) =>
       println("Training Random Forest of 500 trees...")
       if (x.length <= 100000)
-        randomDecisionForest(x, y, attributes, 500, 500, 5, 2, 0.5, DecisionTree.SplitRule.ENTROPY, classWeight)
+        randomForest(x, y, attributes, 500, 500, 5, 2, 0.5, DecisionTree.SplitRule.ENTROPY, classWeight)
       else
-        randomDecisionForest(x, y, attributes, 500, 800, 25, 2, 0.5, DecisionTree.SplitRule.ENTROPY, classWeight)
+        randomForest(x, y, attributes, 500, 800, 25, 2, 0.5, DecisionTree.SplitRule.ENTROPY, classWeight)
     }.asInstanceOf[RandomForest]
 
     println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
@@ -94,9 +94,9 @@ object Airline {
     test2soft(x, y, testx, testy) { (x, y) =>
       println("Training Gradient Boosted Trees of 300 trees...")
       if (x.length <= 100000)
-        gbct(x, y, attributes, 300, 6, 0.1, 0.5)
+        gbm(x, y, attributes, 300, 6, 0.1, 0.5)
       else
-        gbct(x, y, attributes, 300, 50, 0.1, 0.5)
+        gbm(x, y, attributes, 300, 50, 0.1, 0.5)
     }
 
     // AdaBoost
