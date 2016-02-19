@@ -23,6 +23,10 @@ lazy val commonSettings = Seq(
   }
 )
 
+lazy val nonPubishSettings = commonSettings ++ Seq(
+  publish := { }
+)
+
 lazy val root = project.in(file(".")).settings(commonSettings: _*)
   .aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
 
@@ -43,10 +47,10 @@ lazy val nlp = project.in(file("nlp")).settings(commonSettings: _*).dependsOn(co
 
 lazy val plot = project.in(file("plot")).settings(commonSettings: _*).dependsOn(core)
 
-lazy val demo = project.in(file("demo")).settings(commonSettings: _*).dependsOn(core, interpolation, plot)
+lazy val demo = project.in(file("demo")).settings(nonPubishSettings: _*).dependsOn(core, interpolation, plot)
 
-lazy val benchmark = project.in(file("benchmark")).settings(commonSettings: _*).dependsOn(core, scala)
+lazy val benchmark = project.in(file("benchmark")).settings(nonPubishSettings: _*).dependsOn(core, scala)
 
 lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(interpolation, nlp, plot)
 
-lazy val shell = project.in(file("shell")).settings(commonSettings: _*).dependsOn(benchmark, demo, scala)
+lazy val shell = project.in(file("shell")).settings(nonPubishSettings: _*).dependsOn(benchmark, demo, scala)

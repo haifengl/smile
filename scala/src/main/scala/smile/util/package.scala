@@ -16,6 +16,9 @@
 
 package smile
 
+import smile.math.distance.Metric
+import smile.math.rbf.GaussianRadialBasis
+
 /** Utility functions.
   *
   * @author Haifeng Li
@@ -48,5 +51,95 @@ package object util {
       if (echo) println("runtime: " + (System.nanoTime - s)/1e6 + " ms")
       ret
     }
+  }
+
+  /** Learns Gaussian RBF function and centers from data. The centers are
+    * chosen as the centroids of K-Means. Let d<sub>max</sub> be the maximum
+    * distance between the chosen centers, the standard deviation (i.e. width)
+    * of Gaussian radial basis function is d<sub>max</sub> / sqrt(2*k), where
+    * k is number of centers. This choice would be close to the optimal
+    * solution if the data were uniformly distributed in the input space,
+    * leading to a uniform distribution of centroids.
+    * @param x the training dataset.
+    * @param centers an array to store centers on output. Its length is used as k of k-means.
+    * @return a Gaussian RBF function with parameter learned from data.
+    */
+  def gaussrbf(x: Array[Array[Double]], centers: Array[Array[Double]]): GaussianRadialBasis = {
+    SmileUtils.learnGaussianRadialBasis(x, centers)
+  }
+
+  /** Learns Gaussian RBF function and centers from data. The centers are
+    * chosen as the centroids of K-Means. The standard deviation (i.e. width)
+    * of Gaussian radial basis function is estimated by the p-nearest neighbors
+    * (among centers, not all samples) heuristic. A suggested value for
+    * p is 2.
+    * @param x the training dataset.
+    * @param centers an array to store centers on output. Its length is used as k of k-means.
+    * @param p the number of nearest neighbors of centers to estimate the width
+    *          of Gaussian RBF functions.
+    * @return Gaussian RBF functions with parameter learned from data.
+    */
+  def gaussrbf(x: Array[Array[Double]], centers: Array[Array[Double]], p: Int): Array[GaussianRadialBasis] = {
+    SmileUtils.learnGaussianRadialBasis(x, centers, p)
+  }
+
+  /** Learns Gaussian RBF function and centers from data. The centers are
+    * chosen as the centroids of K-Means. The standard deviation (i.e. width)
+    * of Gaussian radial basis function is estimated as the width of each
+    * cluster multiplied with a given scaling parameter r.
+    * @param x the training dataset.
+    * @param centers an array to store centers on output. Its length is used as k of k-means.
+    * @param r the scaling parameter.
+    * @return Gaussian RBF functions with parameter learned from data.
+    */
+  def gaussrbf(x: Array[Array[Double]], centers: Array[Array[Double]], r: Double): Array[GaussianRadialBasis] = {
+    SmileUtils.learnGaussianRadialBasis(x, centers, r)
+  }
+
+  /** Learns Gaussian RBF function and centers from data. The centers are
+    * chosen as the medoids of CLARANS. Let d<sub>max</sub> be the maximum
+    * distance between the chosen centers, the standard deviation (i.e. width)
+    * of Gaussian radial basis function is d<sub>max</sub> / sqrt(2*k), where
+    * k is number of centers. In this way, the radial basis functions are not
+    * too peaked or too flat. This choice would be close to the optimal
+    * solution if the data were uniformly distributed in the input space,
+    * leading to a uniform distribution of medoids.
+    * @param x the training dataset.
+    * @param centers an array to store centers on output. Its length is used as k of CLARANS.
+    * @param distance the distance functor.
+    * @return a Gaussian RBF function with parameter learned from data.
+    */
+  def gaussrbf[T <: AnyRef](x: Array[T], centers: Array[T], distance: Metric[T]): GaussianRadialBasis = {
+    SmileUtils.learnGaussianRadialBasis(x, centers, distance)
+  }
+
+  /** Learns Gaussian RBF function and centers from data. The centers are
+    * chosen as the medoids of CLARANS. The standard deviation (i.e. width)
+    * of Gaussian radial basis function is estimated by the p-nearest neighbors
+    * (among centers, not all samples) heuristic. A suggested value for
+    * p is 2.
+    * @param x the training dataset.
+    * @param centers an array to store centers on output. Its length is used as k of CLARANS.
+    * @param distance the distance functor.
+    * @param p the number of nearest neighbors of centers to estimate the width
+    *          of Gaussian RBF functions.
+    * @return Gaussian RBF functions with parameter learned from data.
+    */
+  def gaussrbf[T <: AnyRef](x: Array[T], centers: Array[T], distance: Metric[T], p: Int): Array[GaussianRadialBasis] = {
+    SmileUtils.learnGaussianRadialBasis(x, centers, distance, p)
+  }
+
+  /** Learns Gaussian RBF function and centers from data. The centers are
+    * chosen as the medoids of CLARANS. The standard deviation (i.e. width)
+    * of Gaussian radial basis function is estimated as the width of each
+    * cluster multiplied with a given scaling parameter r.
+    * @param x the training dataset.
+    * @param centers an array to store centers on output. Its length is used as k of CLARANS.
+    * @param distance the distance functor.
+    * @param r the scaling parameter.
+    * @return Gaussian RBF functions with parameter learned from data.
+    */
+  def gaussrbf[T <: AnyRef](x: Array[T], centers: Array[T], distance: Metric[T], r: Double): Array[GaussianRadialBasis] = {
+    SmileUtils.learnGaussianRadialBasis(x, centers, distance, r)
   }
 }

@@ -29,29 +29,6 @@ import smile.util._
   */
 trait Operators {
 
-  /** Apply a classifier on an instance.
-    *
-    * @param model classification model.
-    * @param x data sample.
-    * @tparam T the data type.
-    * @return the predicted class label.
-    */
-  def predict[T <: AnyRef](model: Classifier[T], x: T): Int = {
-    model.predict(x)
-  }
-
-  /** Apply a soft classifier on an instance.
-    *
-    * @param model classification model.
-    * @param x data sample.
-    * @param posteriori optional double array of posertiori probability output. Note not all models support it.
-    * @tparam T the data type.
-    * @return the predicted class label.
-    */
-  def predict[T <: AnyRef](model: SoftClassifier[T], x: T, posteriori: Array[Double]): Int = {
-    model.predict(x, posteriori)
-  }
-
   /** K-nearest neighbor classifier.
     * The k-nearest neighbor algorithm (k-NN) is
     * a method for classifying objects by a majority vote of its neighbors,
@@ -113,7 +90,7 @@ trait Operators {
     }
   }
 
-  /** K-nearest neighbor classifier.
+  /** K-nearest neighbor classifier with Euclidean distance as the similarity measure.
     *
     * @param x training samples.
     * @param y training labels in [0, c), where c is the number of classes.
@@ -311,7 +288,7 @@ trait Operators {
     * @param alpha the momentum factor.
     * @param lambda the weight decay for regularization.
     */
-  def neuralnet(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, epochs: Int = 25, activation: NeuralNetwork.ActivationFunction, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork = {
+  def mlp(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, activation: NeuralNetwork.ActivationFunction, epochs: Int = 25, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork = {
     time {
       val nnet = new NeuralNetwork(error, activation, numUnits: _*)
       nnet.setLearningRate(eta)
@@ -381,13 +358,19 @@ trait Operators {
     * @param x training samples.
     * @param y training labels in [0, k), where k is the number of classes.
     * @param distance the distance metric functor.
-    * @param rbf the radial basis functions.
+    * @param rbf the radial basis function.
     * @param centers the centers of RBF functions.
-    * @param normalized true for the normalized RBF network.
     */
-  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T], normalized: Boolean): RBFNetwork[T] = {
+  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
     time {
-      new RBFNetwork[T](x, y, distance, rbf, centers, normalized)
+      new RBFNetwork[T](x, y, distance, rbf, centers, false)
+    }
+  }
+
+  /** Normalized radial basis function networks. */
+  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
+    time {
+      new RBFNetwork[T](x, y, distance, rbf, centers, true)
     }
   }
 
@@ -449,13 +432,19 @@ trait Operators {
     * @param x training samples.
     * @param y training labels in [0, k), where k is the number of classes.
     * @param distance the distance metric functor.
-    * @param rbf the radial basis functions.
+    * @param rbf the radial basis functions at each center.
     * @param centers the centers of RBF functions.
-    * @param normalized true for the normalized RBF network.
     */
-  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T], normalized: Boolean): RBFNetwork[T] = {
+  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T] = {
     time {
-      new RBFNetwork[T](x, y, distance, rbf, centers, normalized)
+      new RBFNetwork[T](x, y, distance, rbf, centers, false)
+    }
+  }
+
+  /** Normalized radial basis function networks. */
+  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T] = {
+    time {
+      new RBFNetwork[T](x, y, distance, rbf, centers, true)
     }
   }
 
@@ -504,7 +493,7 @@ trait Operators {
     * @param y training labels
     * @param kernel Mercer kernel
     * @param C Regularization parameter
-    * @param strategy multi-class classification strategy, one vs all or one vs one.
+    * @param strategy Multi-class classification strategy, one vs all or one vs one. Ignored for binary classification.
     * @param epoch the number of training epochs
     * @tparam T the data type
     *
@@ -512,11 +501,11 @@ trait Operators {
     */
   def svm[T <: AnyRef](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, strategy: SVM.Multiclass = SVM.Multiclass.ONE_VS_ONE, epoch: Int = 1): SVM[T] = {
     val k = Math.max(y: _*) + 1
-    val svm = new SVM[T](kernel, C, k, strategy)
+    val svm = if (k == 2) new SVM[T](kernel, C) else new SVM[T](kernel, C, k, strategy)
     time {
-      svm.learn(x, y)
       for (i <- 1 to epoch) {
         println(s"SVM training epoch $i...")
+        svm.learn(x, y)
         svm.finish
       }
     }
@@ -591,7 +580,7 @@ trait Operators {
     * @param splitRule the splitting rule.
     * @return Decision tree model.
     */
-  def decisionTree(x: Array[Array[Double]], y: Array[Int], maxNodes: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
+  def cart(x: Array[Array[Double]], y: Array[Int], maxNodes: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -658,7 +647,7 @@ trait Operators {
     *
     * @return Random forest classification model.
     */
-  def randomDecisionForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 1, mtry: Int = -1, subsample: Double = 1.0, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
+  def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 1, mtry: Int = -1, subsample: Double = 1.0, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
     val p = x(0).length
 
     val attr = if (attributes == null) {
@@ -679,11 +668,7 @@ trait Operators {
     }
   }
 
-  /** Gradient boosted classification trees. Gradient boosting is typically used
-    * with decision trees (especially CART regression trees) of a fixed size as
-    * base learners. For this special case Friedman proposes a modification to
-    * gradient boosting method which improves the quality of fit of each base
-    * learner.
+  /** Gradient boosted classification trees.
     *
     * Generic gradient boosting at the t-th step would fit a regression tree to
     * pseudo-residuals. Let J be the number of its leaves. The tree partitions
@@ -758,7 +743,7 @@ trait Operators {
     *
     * @return Gradient boosted trees.
     */
-  def gbct(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
+  def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
     val p = x(0).length
 
     val attr = if (attributes == null) {

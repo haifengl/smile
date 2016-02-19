@@ -24,8 +24,19 @@ import smile.math._, Math._
 import smile.math.distance._
 import smile.math.kernel._
 import smile.stat.distribution._
-import smile.data._, smile.io._
+import smile.data._
+import smile.io._
 import java.awt.Color, smile.plot._
 import smile.interpolation._
 import smile.validation._
+import smile.association._
+import smile.regression._
+import smile.classification._
+import smile.clustering._
+import smile.manifold._
+import smile.mds._
+import smile.sequence._
+import smile.projection._
+import smile.nlp._
+import smile.wavelet._
 import smile.shell._
