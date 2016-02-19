@@ -567,13 +567,19 @@ trait Operators {
     * @param x training samples.
     * @param y response variable.
     * @param distance the distance metric functor.
-    * @param rbf the radial basis functions.
+    * @param rbf the radial basis function.
     * @param centers the centers of RBF functions.
-    * @param normalized true for the normalized RBF network.
     */
-  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T], normalized: Boolean): RBFNetwork[T] = {
+  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
     time {
-      new RBFNetwork[T](x, y, distance, rbf, centers, normalized)
+      new RBFNetwork[T](x, y, distance, rbf, centers, false)
+    }
+  }
+
+  /** Normalized radial basis function networks. */
+  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
+    time {
+      new RBFNetwork[T](x, y, distance, rbf, centers, true)
     }
   }
 
@@ -635,13 +641,19 @@ trait Operators {
     * @param x training samples.
     * @param y response variable.
     * @param distance the distance metric functor.
-    * @param rbf the radial basis functions.
+    * @param rbf the radial basis functions at each center.
     * @param centers the centers of RBF functions.
-    * @param normalized true for the normalized RBF network.
     */
-  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T], normalized: Boolean): RBFNetwork[T] = {
+  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T] = {
     time {
-      new RBFNetwork[T](x, y, distance, rbf, centers, normalized)
+      new RBFNetwork[T](x, y, distance, rbf, centers, false)
+    }
+  }
+
+  /** Normalized radial basis function networks. */
+  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T] = {
+    time {
+      new RBFNetwork[T](x, y, distance, rbf, centers, true)
     }
   }
 }
