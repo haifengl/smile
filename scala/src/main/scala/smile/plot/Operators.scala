@@ -702,7 +702,7 @@ trait Operators {
       }
     }
 
-    val surface = Surface.plot(v1, v2, z, Palette.jet(256))
+    val surface = new Surface(v1, v2, z, Palette.jet(256))
     win.canvas.add(surface)
 
     win
