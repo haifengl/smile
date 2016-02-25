@@ -596,17 +596,27 @@
         be estimated using the matrix methods of linear least squares, because
         the approximating function is linear in the weights.</p>
 
-    <p>The centers c<sub>i</sub> can be randomly selected from training data,
-        or learned by some clustering method (e.g. k-means), or learned together
-        with weight parameters undergo a supervised learning processing
-        (e.g. error-correction learning).</p>
+    <p>RBF networks are typically trained by a two-step algorithm.
+        In the first step, the center vectors <code>c<sub>i</sub></code>
+        of the RBF functions in the hidden layer are chosen.
+        This step can be performed in several ways; centers can be randomly
+        sampled from some set of examples, or they can be determined
+        using k-means clustering. Note that this step is unsupervised.</p>
+
+    <p>The second step simply fits a linear model with coefficients <code>w<sub>i</sub></code> to
+        the hidden layer's outputs with respect to some objective function.
+        A common objective function, at least for regression/function estimation,
+        is the least squares function.</p>
+
+    <p>A optional third backpropagation step can be performed to fine-tune all of the RBF
+        network's parameters.</p>
 
     <pre class="prettyprint lang-scala"><code>
     def rbfnet[T](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T]
 
-    def nrbfnet[T](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T]
-
     def rbfnet[T](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T]
+
+    def nrbfnet[T](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T]
 
     def nrbfnet[T](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T]
     </code></pre>
