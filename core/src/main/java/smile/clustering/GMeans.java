@@ -48,6 +48,16 @@ public class GMeans extends KMeans {
      * @param kmax the maximum number of clusters.
      */
     public GMeans(double[][] data, int kmax) {
+    	this(data,kmax,100,true);
+    }
+    /**
+     * Constructor. Clustering data with the number of clusters being
+     * automatically determined by G-Means algorithm.
+     * @param data the input data of which each row is a sample.
+     * @param kmax the maximum number of clusters.
+     * @param maxIter the maximal number of iterations for each inner KMeans run.
+     */
+    public GMeans(double[][] data, int kmax, int maxIter, boolean printDebugMessagesOnConsole) {
         if (kmax < 2) {
             throw new IllegalArgumentException("Invalid parameter kmax = " + kmax);
         }
@@ -74,8 +84,10 @@ public class GMeans extends KMeans {
         for (int i = 0; i < n; i++) {
             distortion += Math.squaredDistance(data[i], centroids[0]);
         }
-        System.out.format("G-Means distortion with %d clusters: %.5f\n", k, distortion);
-
+        if(printDebugMessagesOnConsole)
+        {
+        	System.out.format("G-Means distortion with %d clusters: %.5f\n", k, distortion);
+        }
         BBDTree bbd = new BBDTree(data);
         while (k < kmax) {
             ArrayList<double[]> centers = new ArrayList<double[]>();
@@ -86,7 +98,10 @@ public class GMeans extends KMeans {
                 // don't split too small cluster. anyway likelihood estimation
                 // not accurate in this case.
                 if (size[i] < 25) {
-                    System.out.format("Cluster %3d\ttoo small to split: %d samples\n", i, size[i]);
+                    if(printDebugMessagesOnConsole)
+                    {
+                    	System.out.format("Cluster %3d\ttoo small to split: %d samples\n", i, size[i]);
+                    }
                     continue;
                 }
                 
@@ -97,7 +112,7 @@ public class GMeans extends KMeans {
                     }
                 }
 
-                kmeans[i] = new KMeans(subset, 2, 100, 4);
+                kmeans[i] = new KMeans(subset, 2, maxIter, 4);
                 
                 double[] v = new double[d];
                 for (int j = 0; j < d; j++) {
@@ -113,9 +128,12 @@ public class GMeans extends KMeans {
                 Math.normalize(x);
 
                 score[i] = AndersonDarling(x);
-                System.out.format("Cluster %3d\tAnderson-Darling adjusted test statistic: %3.4f\n", i, score[i]);
+                if(printDebugMessagesOnConsole)
+                {
+                	System.out.format("Cluster %3d\tAnderson-Darling adjusted test statistic: %3.4f\n", i, score[i]);
+            
+                }
             }
-
             int[] index = QuickSort.sort(score);
             for (int i = 0; i < k; i++) {
                 if (score[index[i]] <= 1.8692) {
@@ -127,7 +145,10 @@ public class GMeans extends KMeans {
             for (int i = k; --i >= 0;) {
                 if (score[i] > 1.8692) {
                     if (centers.size() + i - m + 1 < kmax) {
-                        System.out.format("Split cluster %d...\n", index[i]);
+                        if(printDebugMessagesOnConsole)
+                        {
+                        	System.out.format("Split cluster %d...\n", index[i]);
+                        }
                         centers.add(kmeans[index[i]].centroids[0]);
                         centers.add(kmeans[index[i]].centroids[1]);
                     } else {
@@ -166,8 +187,10 @@ public class GMeans extends KMeans {
                     distortion = newDistortion;
                 }
             }
-            
-            System.out.format("G-Means distortion with %d clusters: %.5f\n", k, distortion);
+            if(printDebugMessagesOnConsole)
+            {
+            	System.out.format("G-Means distortion with %d clusters: %.5f\n", k, distortion);
+            }
         }
     }
     
