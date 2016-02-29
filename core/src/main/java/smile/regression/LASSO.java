@@ -18,9 +18,10 @@ package smile.regression;
 import java.util.Arrays;
 import smile.math.Math;
 import smile.math.matrix.IMatrix;
+import smile.math.special.Beta;
 
 /**
- * Least absolute shrinkage and selection operator.
+ * Lasso (least absolute shrinkage and selection operator) regression.
  * The Lasso is a shrinkage and selection method for linear regression.
  * It minimizes the usual sum of squared errors, with a bound on the sum
  * of the absolute values of the coefficients (i.e. L<sub>1</sub>-regularized).
@@ -89,6 +90,52 @@ public class LASSO  implements Regression<double[]> {
      * Scaling factor of input vector.
      */
     private double[] scale;
+    /**
+     * The residuals, that is response minus fitted values.
+     */
+    private double[] residuals;
+    /**
+     * Residual sum of squares.
+     */
+    private double RSS;
+    /**
+     * Residual standard error.
+     */
+    private double error;
+    /**
+     * The degree-of-freedom of residual standard error.
+     */
+    private int df;
+    /**
+     * R<sup>2</sup>. R<sup>2</sup> is a statistic that will give some information
+     * about the goodness of fit of a model. In regression, the R<sup>2</sup>
+     * coefficient of determination is a statistical measure of how well
+     * the regression line approximates the real data points. An R<sup>2</sup>
+     * of 1.0 indicates that the regression line perfectly fits the data.
+     * <p>
+     * In the case of ordinary least-squares regression, R<sup>2</sup>
+     * increases as we increase the number of variables in the model
+     * (R<sup>2</sup> will not decrease). This illustrates a drawback to
+     * one possible use of R<sup>2</sup>, where one might try to include
+     * more variables in the model until "there is no more improvement".
+     * This leads to the alternative approach of looking at the
+     * adjusted R<sup>2</sup>.
+     */
+    private double RSquared;
+    /**
+     * Adjusted R<sup>2</sup>. The adjusted R<sup>2</sup> has almost same
+     * explanation as R<sup>2</sup> but it penalizes the statistic as
+     * extra variables are included in the model.
+     */
+    private double adjustedRSquared;
+    /**
+     * The F-statistic of the goodness-of-fit of the model.
+     */
+    private double F;
+    /**
+     * The p-value of the goodness-of-fit test of the model.
+     */
+    private double pvalue;
 
     /**
      * Trainer for LASSO regression.
@@ -407,11 +454,36 @@ public class LASSO  implements Regression<double[]> {
         }
         
         if (n > p) {
-        for (int j = 0; j < p; j++) {
-            w[j] /= scale[j];
+            for (int j = 0; j < p; j++) {
+                w[j] /= scale[j];
+            }
+            b = ym - Math.dot(w, center);
         }
-        b = ym - Math.dot(w, center);
+
+        double[] yhat = new double[n];
+        Math.ax(x, w, yhat);
+
+        double TSS = 0.0;
+        RSS = 0.0;
+        double ybar = Math.mean(y);
+        residuals = new double[n];
+        for (int i = 0; i < n; i++) {
+            double r = y[i] - yhat[i] - b;
+            residuals[i] = r;
+            RSS += Math.sqr(r);
+            TSS += Math.sqr(y[i] - ybar);
         }
+
+        error = Math.sqrt(RSS / (n - p - 1));
+        df = n - p - 1;
+
+        RSquared = 1.0 - RSS / TSS;
+        adjustedRSquared = 1.0 - ((1 - RSquared) * (n-1) / (n-p-1));
+
+        F = (TSS - RSS) * (n - p - 1) / (RSS * p);
+        int df1 = p;
+        int df2 = n - p - 1;
+        pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
     }
 
     /**
@@ -570,5 +642,97 @@ public class LASSO  implements Regression<double[]> {
         }
 
         return Math.dot(x, w) + b;
+    }
+
+    /**
+     * Returns the residuals, that is response minus fitted values.
+     */
+    public double[] residuals() {
+        return residuals;
+    }
+
+    /**
+     * Returns the residual sum of squares.
+     */
+    public double RSS() {
+        return RSS;
+    }
+
+    /**
+     * Returns the residual standard error.
+     */
+    public double error() {
+        return error;
+    }
+
+    /**
+     * Returns the degree-of-freedom of residual standard error.
+     */
+    public int df() {
+        return df;
+    }
+
+    /**
+     * Returns R<sup>2</sup> statistic. In regression, the R<sup>2</sup>
+     * coefficient of determination is a statistical measure of how well
+     * the regression line approximates the real data points. An R<sup>2</sup>
+     * of 1.0 indicates that the regression line perfectly fits the data.
+     * <p>
+     * In the case of ordinary least-squares regression, R<sup>2</sup>
+     * increases as we increase the number of variables in the model
+     * (R<sup>2</sup> will not decrease). This illustrates a drawback to
+     * one possible use of R<sup>2</sup>, where one might try to include more
+     * variables in the model until "there is no more improvement". This leads
+     * to the alternative approach of looking at the adjusted R<sup>2</sup>.
+     */
+    public double RSquared() {
+        return RSquared;
+    }
+
+    /**
+     * Returns adjusted R<sup>2</sup> statistic. The adjusted R<sup>2</sup>
+     * has almost same explanation as R<sup>2</sup> but it penalizes the
+     * statistic as extra variables are included in the model.
+     */
+    public double adjustedRSquared() {
+        return adjustedRSquared;
+    }
+
+    /**
+     * Returns the F-statistic of goodness-of-fit.
+     */
+    public double ftest() {
+        return F;
+    }
+
+    /**
+     * Returns the p-value of goodness-of-fit test.
+     */
+    public double pvalue() {
+        return pvalue;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("LASSO:\n");
+
+        double[] r = residuals.clone();
+        builder.append("\nResiduals:\n");
+        builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
+        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f\n", Math.min(r), Math.q1(r), Math.median(r), Math.q3(r), Math.max(r)));
+
+        builder.append("\nCoefficients:\n");
+        builder.append("            Estimate\n");
+        builder.append(String.format("Intercept%11.4f\n", b));
+        for (int i = 0; i < p; i++) {
+            builder.append(String.format("Var %d\t %11.4f\n", i+1, w[i]));
+        }
+
+        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom\n", error, df));
+        builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f\n", RSquared, adjustedRSquared));
+        builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g\n", F, p, df, pvalue));
+
+        return builder.toString();
     }
 }
