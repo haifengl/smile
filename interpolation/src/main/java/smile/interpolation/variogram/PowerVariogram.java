@@ -38,7 +38,7 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public class PowVariogram implements Variogram {
+public class PowerVariogram implements Variogram {
 
     private double alpha;
     private double beta;
@@ -47,14 +47,14 @@ public class PowVariogram implements Variogram {
     /**
      * Constructor. No nugget effect and &beta; = 1.5 and &alpha; will be estimated from x and y.
      */
-    public PowVariogram(double[][] x, double[] y) {
+    public PowerVariogram(double[][] x, double[] y) {
         this(x, y, 1.5);
     }
 
     /**
      * Constructor. No nugget effect and &alpha; will be estimated from x and y.
      */
-    public PowVariogram(double[][] x, double[] y, double beta) {
+    public PowerVariogram(double[][] x, double[] y, double beta) {
         this(x, y, beta, 0.0);
     }
 
@@ -63,7 +63,7 @@ public class PowVariogram implements Variogram {
      * @param nugget the nugget effect parameter. The height of the jump of
      * the variogram at the discontinuity at the origin.
      */
-    public PowVariogram(double[][] x, double[] y, double beta, double nugget) {
+    public PowerVariogram(double[][] x, double[] y, double beta, double nugget) {
         if (beta < 1 || beta >= 2) {
             throw new IllegalArgumentException("Invalid beta = " + beta);
         }
@@ -98,5 +98,10 @@ public class PowVariogram implements Variogram {
     @Override
     public double f(double r) {
         return nugget + alpha * Math.pow(r, beta);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Power Variogram (range = %.4f, sill = %.4f, nugget effect = %.4f)", alpha, beta, nugget);
     }
 }
