@@ -17,7 +17,7 @@ package smile.interpolation;
 
 import smile.math.Math;
 import smile.math.matrix.LUDecomposition;
-import smile.interpolation.variogram.PowVariogram;
+import smile.interpolation.variogram.PowerVariogram;
 import smile.interpolation.variogram.Variogram;
 
 /**
@@ -84,7 +84,7 @@ public class KrigingInterpolation {
      * i.e. we are doing interpolation rather fitting.
      */
     public KrigingInterpolation(double[][] x, double[] y) {
-        this(x, y, new PowVariogram(x, y), null);
+        this(x, y, new PowerVariogram(x, y), null);
     }
 
     /**
