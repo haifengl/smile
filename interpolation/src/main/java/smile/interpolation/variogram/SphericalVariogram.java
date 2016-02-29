@@ -84,4 +84,9 @@ public class SphericalVariogram implements Variogram {
         double p = r / a;
         return c + b * (1.5 * p - 0.5 * p * p * p);
     }
+
+    @Override
+    public String toString() {
+        return String.format("Spherical Variogram (range = %.4f, sill = %.4f, nugget effect = %.4f)", a, b, c);
+    }
 }

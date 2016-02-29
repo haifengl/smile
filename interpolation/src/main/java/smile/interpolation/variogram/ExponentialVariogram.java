@@ -76,4 +76,9 @@ public class ExponentialVariogram implements Variogram {
     public double f(double r) {
         return c + b * (1 - Math.exp(-3.0*r/a));
     }
+
+    @Override
+    public String toString() {
+        return String.format("Exponential Variogram (range = %.4f, sill = %.4f, nugget effect = %.4f)", a, b, c);
+    }
 }
