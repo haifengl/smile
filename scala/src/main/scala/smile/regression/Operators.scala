@@ -628,16 +628,16 @@ trait Operators {
     * @param rbf the radial basis functions at each center.
     * @param centers the centers of RBF functions.
     */
-  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T] = {
+  def rbfnet[T <: AnyRef, RBF <: RadialBasisFunction](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RBF], centers: Array[T]): RBFNetwork[T] = {
     time {
-      new RBFNetwork[T](x, y, distance, rbf, centers, false)
+      new RBFNetwork[T](x, y, distance, rbf.asInstanceOf[Array[RadialBasisFunction]], centers, false)
     }
   }
 
   /** Normalized radial basis function networks. */
-  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T] = {
+  def nrbfnet[T <: AnyRef, RBF <: RadialBasisFunction](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RBF], centers: Array[T]): RBFNetwork[T] = {
     time {
-      new RBFNetwork[T](x, y, distance, rbf, centers, true)
+      new RBFNetwork[T](x, y, distance, rbf.asInstanceOf[Array[RadialBasisFunction]], centers, true)
     }
   }
 }
