@@ -78,4 +78,9 @@ public class GaussianVariogram implements Variogram {
     public double f(double r) {
         return c + b * (1 - Math.exp(-3.0*Math.sqr(r/a)));
     }
+
+    @Override
+    public String toString() {
+        return String.format("Gaussian Variogram (range = %.4f, sill = %.4f, nugget effect = %.4f)", a, b, c);
+    }
 }

@@ -70,4 +70,9 @@ public class GaussianRadialBasis implements RadialBasisFunction {
         r /= r0;
         return Math.exp(-0.5 * r * r);
     }
+
+    @Override
+    public String toString() {
+        return String.format("Gaussian Radial Basis (r0 = %.4f)", r0);
+    }
 }

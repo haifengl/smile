@@ -55,4 +55,9 @@ public class ThinPlateRadialBasis implements RadialBasisFunction {
     public double f(double r) {
         return r <= 0.0 ? 0.0 : r * r * Math.log(r / r0);
     }
+
+    @Override
+    public String toString() {
+        return String.format("Thin Plate Radial Basis (r0 = %.4f)", r0);
+    }
 }

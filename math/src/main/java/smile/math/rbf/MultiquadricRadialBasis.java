@@ -52,4 +52,9 @@ public class MultiquadricRadialBasis implements RadialBasisFunction {
     public double f(double r) {
         return Math.sqrt(r * r + r02);
     }
+
+    @Override
+    public String toString() {
+        return String.format("Multiquadric Radial Basis (r0 = %.4f)", r02);
+    }
 }

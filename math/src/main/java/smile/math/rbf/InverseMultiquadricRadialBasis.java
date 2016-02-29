@@ -52,4 +52,9 @@ public class InverseMultiquadricRadialBasis implements RadialBasisFunction {
     public double f(double r) {
         return 1 / Math.sqrt(r*r + r02);
     }
+
+    @Override
+    public String toString() {
+        return String.format("Inverse Multi-quadric Radial Basis (r0^2 = %.4f)", r02);
+    }
 }
