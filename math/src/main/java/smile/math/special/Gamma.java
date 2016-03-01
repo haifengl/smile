@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.math.special;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 
 /**
@@ -23,6 +25,7 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class Gamma {
+    private static final Logger logger = LoggerFactory.getLogger(Gamma.class);
 
     /**
      *  A small number close to the smallest representable floating point number.
@@ -194,7 +197,7 @@ public class Gamma {
             if (i >= INCOMPLETE_GAMMA_MAX_ITERATIONS) {
                 check = false;
                 igf = sum * Math.exp(-x + acopy * Math.log(x) - loggamma);
-                System.err.println("Maximum number of iterations wes exceeded");
+                logger.error("Gamma.regularizedIncompleteGammaSeries: Maximum number of iterations wes exceeded");
             }
         }
         return igf;
@@ -244,7 +247,7 @@ public class Gamma {
             }
             if (i >= INCOMPLETE_GAMMA_MAX_ITERATIONS) {
                 check = false;
-                System.err.println("Maximum number of iterations wes exceeded");
+                logger.error("Gamma.regularizedIncompleteGammaFraction: Maximum number of iterations wes exceeded");
             }
         }
         igf = 1.0 - Math.exp(-x + a * Math.log(x) - loggamma) * prod;

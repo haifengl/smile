@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.manifold;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.graph.AdjacencyList;
 import smile.graph.Graph;
 import smile.graph.Graph.Edge;
@@ -70,6 +72,7 @@ import smile.neighbor.Neighbor;
  * @author Haifeng Li
  */
 public class IsoMap {
+    private static final Logger logger = LoggerFactory.getLogger(IsoMap.class);
 
     /**
      * The original sample index.
@@ -147,7 +150,7 @@ public class IsoMap {
                 }
             }
 
-            System.out.format("IsoMap: %d connected components, largest one has %d samples.\n", cc.length, n);
+            logger.info("IsoMap: {} connected components, largest one has {} samples.", cc.length, n);
 
             index = cc[component];
             graph = graph.subgraph(index);

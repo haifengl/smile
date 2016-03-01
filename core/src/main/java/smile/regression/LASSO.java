@@ -16,6 +16,8 @@
 package smile.regression;
 
 import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.matrix.IMatrix;
 import smile.math.special.Beta;
@@ -60,6 +62,7 @@ import smile.math.special.Beta;
  * @author Haifeng Li
  */
 public class LASSO  implements Regression<double[]> {
+    private static final Logger logger = LoggerFactory.getLogger(LASSO.class);
 
     /**
      * The dimensionality.
@@ -352,13 +355,13 @@ public class LASSO  implements Regression<double[]> {
             pobj = Math.dot(z, z) + lambda * Math.norm1(w);
             dobj = Math.max(-0.25 * Math.dot(nu, nu) - Math.dot(nu, Y), dobj);
             if (ntiter % 10 == 0) {
-                System.out.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g\n", ntiter, pobj, dobj);
+                logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g\n", ntiter, pobj, dobj));
             }
 
             double gap = pobj - dobj;
             // STOPPING CRITERION
             if (gap / dobj < tol) {
-                System.out.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g\n", ntiter, pobj, dobj);
+                logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g\n", ntiter, pobj, dobj));
                 break;
             }
 
@@ -439,7 +442,7 @@ public class LASSO  implements Regression<double[]> {
             }
             
             if (lsiter == MAX_LS_ITER) {
-                System.err.println("LASSO: Too many iterations of line search.");
+                logger.error("LASSO: Too many iterations of line search.");
                 break;
             }
 
@@ -450,7 +453,7 @@ public class LASSO  implements Regression<double[]> {
         }
         
         if (ntiter == maxIter) {
-            System.err.println("LASSO: Too many iterations.");
+            logger.error("LASSO: Too many iterations.");
         }
         
         if (n > p) {

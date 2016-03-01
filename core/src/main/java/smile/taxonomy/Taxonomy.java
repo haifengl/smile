@@ -135,7 +135,7 @@ public class Taxonomy {
         while (vIter.hasNext() && wIter.hasNext()) {
             Concept vAncestor = vIter.next();
             Concept wAncestor = wIter.next();
-            System.out.println(vAncestor + "\t" + wAncestor);
+
             if (vAncestor != wAncestor) {
                 return commonAncestor;
             } else {

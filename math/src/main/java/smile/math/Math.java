@@ -18,7 +18,8 @@ package smile.math;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.matrix.EigenValueDecomposition;
 import smile.math.matrix.IMatrix;
 import smile.math.matrix.LUDecomposition;
@@ -51,6 +52,7 @@ import smile.sort.SortUtils;
  * @author Haifeng Li
  */
 public class Math {
+    private static final Logger logger = LoggerFactory.getLogger(Math.class);
 
     /**
      * The base of the natural logarithms.
@@ -4593,11 +4595,11 @@ public class Math {
             }
 
             if (iter % 10 == 0) {
-                System.out.format("BCG: the error after %3d iterations: %.5g\n", iter, err);
+                logger.info(String.format("BCG: the error after %3d iterations: %.5g", iter, err));
             }
 
             if (err <= tol) {
-                System.out.format("BCG: the error after %3d iterations: %.5g\n", iter, err);
+                logger.info(String.format("BCG: the error after %3d iterations: %.5g", iter, err));
                 break;
             }
         }
@@ -4691,11 +4693,11 @@ public class Math {
             xm = 0.5 * (c - b);
 
             if (iter % 10 == 0) {
-                System.out.format("Brent: the root after %3d iterations: %.5g, error = %.5g\n", iter, b, xm);
+                logger.info(String.format("Brent: the root after %3d iterations: %.5g, error = %.5g", iter, b, xm));
             }
 
             if (abs(xm) <= tol || fb == 0.0) {
-                System.out.format("Brent: the root after %3d iterations: %.5g, error = %.5g\n", iter, b, xm);
+                logger.info(String.format("Brent: the root after %3d iterations: %.5g, error = %.5g", iter, b, xm));
                 return b;
             }
 
@@ -4740,7 +4742,7 @@ public class Math {
             fb = func.f(b);
         }
 
-        System.err.println("Brent's method exceeded the maximum number of iterations.");
+        logger.error("Brent's method exceeded the maximum number of iterations.");
         return b;
     }
 
@@ -4810,7 +4812,7 @@ public class Math {
                 dx = 0.5 * (xh - xl);
                 rts = xl + dx;
                 if (xl == rts) {
-                    System.out.format("Newton-Raphson: the root after %3d iterations: %.5g, error = %.5g\n", iter, rts, dx);
+                    logger.info(String.format("Newton-Raphson: the root after %3d iterations: %.5g, error = %.5g", iter, rts, dx));
                     return rts;
                 }
             } else {
@@ -4819,17 +4821,17 @@ public class Math {
                 double temp = rts;
                 rts -= dx;
                 if (temp == rts) {
-                    System.out.format("Newton-Raphson: the root after %3d iterations: %.5g, error = %.5g\n", iter, rts, dx);
+                    logger.info(String.format("Newton-Raphson: the root after %3d iterations: %.5g, error = %.5g", iter, rts, dx));
                     return rts;
                 }
             }
 
             if (iter % 10 == 0) {
-                System.out.format("Newton-Raphson: the root after %3d iterations: %.5g, error = %.5g\n", iter, rts, dx);
+                logger.info(String.format("Newton-Raphson: the root after %3d iterations: %.5g, error = %.5g", iter, rts, dx));
             }
 
             if (abs(dx) < tol) {
-                System.out.format("Newton-Raphson: the root after %3d iterations: %.5g, error = %.5g\n", iter, rts, dx);
+                logger.info(String.format("Newton-Raphson: the root after %3d iterations: %.5g, error = %.5g", iter, rts, dx));
                 return rts;
             }
 
@@ -4842,7 +4844,7 @@ public class Math {
             }
         }
 
-        System.err.println("Newton-Raphson method exceeded the maximum number of iterations.");
+        logger.error("Newton-Raphson method exceeded the maximum number of iterations.");
         return rts;
     }
 
@@ -5099,7 +5101,7 @@ public class Math {
         // Current function value.
         double f = func.f(x, g);
 
-        System.out.format("L-BFGS: initial function value: %.5g\n", f);
+        logger.info(String.format("L-BFGS: initial function value: %.5g", f));
 
         double sum = 0.0;
         // Initial line search direction.
@@ -5132,7 +5134,7 @@ public class Math {
             }
 
             if (test < TOLX) {
-                System.out.format("L-BFGS: the function value after %3d iterations: %.5g\n", iter, f);
+                logger.info(String.format("L-BFGS: the function value after %3d iterations: %.5g", iter, f));
                 return f;
             }
 
@@ -5148,12 +5150,12 @@ public class Math {
             }
 
             if (test < gtol) {
-                System.out.format("L-BFGS: the function value after %3d iterations: %.5g\n", iter, f);
+                logger.info(String.format("L-BFGS: the function value after %3d iterations: %.5g", iter, f));
                 return f;
             }
 
             if (iter % 10 == 0) {
-                System.out.format("L-BFGS: the function value after %3d iterations: %.5g\n", iter, f);
+                logger.info(String.format("L-BFGS: the function value after %3d iterations: %.5g", iter, f));
             }
 
             double ys = dot(y[k], s[k]);
@@ -5258,7 +5260,7 @@ public class Math {
         // Calculate starting function value and gradient and initialize the
         // inverse Hessian to the unit matrix.
         double f = func.f(x, g);
-        System.out.format("BFGS: initial function value: %.5g\n", f);
+        logger.info(String.format("BFGS: initial function value: %.5g", f));
 
         double sum = 0.0;
         for (int i = 0; i < n; i++) {
@@ -5275,7 +5277,7 @@ public class Math {
             f = linesearch(func, x, f, g, xi, xnew, stpmax);
 
             if (iter % 10 == 0) {
-                System.out.format("BFGS: the function value after %3d iterations: %.5g\n", iter, f);
+                logger.info(String.format("BFGS: the function value after %3d iterations: %.5g", iter, f));
             }
 
             // update the line direction and current point.
@@ -5294,7 +5296,7 @@ public class Math {
             }
 
             if (test < TOLX) {
-                System.out.format("BFGS: the function value after %3d iterations: %.5g\n", iter, f);
+                logger.info(String.format("BFGS: the function value after %3d iterations: %.5g", iter, f));
                 return f;
             }
             
@@ -5313,7 +5315,7 @@ public class Math {
             }
 
             if (test < gtol) {
-                System.out.format("BFGS: the function value after %3d iterations: %.5g\n", iter, f);
+                logger.info(String.format("BFGS: the function value after %3d iterations: %.5g", iter, f));
                 return f;
             }
 

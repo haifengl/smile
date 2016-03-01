@@ -26,6 +26,8 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
 import smile.data.SparseDataset;
@@ -48,6 +50,8 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class LibsvmParser {
+    private static final Logger logger = LoggerFactory.getLogger(LibsvmParser.class);
+
     /**
      * Constructor.
      */
@@ -133,7 +137,7 @@ public class LibsvmParser {
                     response = new NominalAttribute("response");
                     classification = false;
                 } catch (NumberFormatException ex) {
-                    System.err.println(ex);
+                    logger.error("Failed to parse {}", tokens[0], ex);
                     throw new NumberFormatException("Unrecognized response variable value: " + tokens[0]);
                 }
             }

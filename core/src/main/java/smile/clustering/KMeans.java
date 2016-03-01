@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.util.MulticoreExecutor;
 
@@ -71,6 +72,7 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class KMeans extends PartitionClustering<double[]> {
+    private static final Logger logger = LoggerFactory.getLogger(KMeans.class);
 
     /**
      * The total distortion.
@@ -240,7 +242,7 @@ public class KMeans extends PartitionClustering<double[]> {
                 }
             }
         } catch (Exception ex) {
-            System.err.println(ex);
+            logger.error("Failed to run K-Means on multi-core", ex);
 
             for (int i = 0; i < runs; i++) {
                 KMeans kmeans = lloyd(data, k, maxIter);
@@ -367,7 +369,8 @@ public class KMeans extends PartitionClustering<double[]> {
                         wcss += ss;
                     }
                 } catch (Exception ex) {
-                    System.err.println(ex);
+                    logger.error("Failed to run K-Means on multi-core", ex);
+
                     wcss = Double.NaN;
                 }
             }

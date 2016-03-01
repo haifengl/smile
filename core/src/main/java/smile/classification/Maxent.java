@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.util.MulticoreExecutor;
@@ -50,6 +51,7 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class Maxent implements SoftClassifier<int[]> {
+    private static final Logger logger = LoggerFactory.getLogger(Maxent.class);
 
     /**
      * The dimension of input space.
@@ -241,7 +243,7 @@ public class Maxent implements SoftClassifier<int[]> {
             try {
                 L = -Math.min(func, 5, w, tol, maxIter);
             } catch (Exception ex) {
-                System.err.println(ex);
+                logger.error("Failed to minimize binary objective function of Maximum Entropy Classifier", ex);
             }
         } else {
             MultiClassObjectiveFunction func = new MultiClassObjectiveFunction(x, y, k, p, lambda);
@@ -252,7 +254,7 @@ public class Maxent implements SoftClassifier<int[]> {
             try {
                 L = -Math.min(func, 5, w, tol, maxIter);
             } catch (Exception ex) {
-                System.err.println(ex);
+                logger.error("Failed to minimize multi-class objective function of Maximum Entropy Classifier", ex);
             }
 
             W = new double[k][p+1];

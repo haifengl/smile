@@ -23,6 +23,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class to run tasks in a thread pool on multi-core systems.
@@ -30,6 +32,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @author Haifeng Li
  */
 public class MulticoreExecutor {
+    private static final Logger logger = LoggerFactory.getLogger(MulticoreExecutor.class);
 
     /**
      * The number of processors.
@@ -50,7 +53,7 @@ public class MulticoreExecutor {
                     n = Integer.parseInt(env);
                 }
             } catch (Exception ex) {
-                System.err.println(ex);
+                logger.error("Failed to create multi-core execution thread pool", ex);
             }
 
             if (n < 1) {

@@ -20,6 +20,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Paice/Husk Lancaster stemming algorithm. The stemmer is a conflation
@@ -35,6 +37,7 @@ import java.util.ArrayList;
  * @author Haifeng Li
  */
 public class LancasterStemmer implements Stemmer {
+    private static final Logger logger = LoggerFactory.getLogger(LancasterStemmer.class);
 
     /**
      * Array of rules
@@ -68,7 +71,7 @@ public class LancasterStemmer implements Stemmer {
                 }
             }
         } catch (IOException ex) {
-            System.err.println(ex);
+            logger.error("Failed to load /smile/nlp/stemmer/Lancaster_rules.txt", ex);
         }
 
         // Now assign the number of the first rule that starts with each letter

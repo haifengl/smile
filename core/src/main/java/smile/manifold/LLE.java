@@ -17,6 +17,8 @@ package smile.manifold;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.graph.AdjacencyList;
 import smile.graph.Graph;
 import smile.math.Math;
@@ -53,6 +55,7 @@ import smile.neighbor.Neighbor;
  * @author Haifeng Li
  */
 public class LLE {
+    private static final Logger logger = LoggerFactory.getLogger(LLE.class);
 
     /**
      * The original sample index.
@@ -79,7 +82,7 @@ public class LLE {
 
         double tol = 0.0;
         if (k > D) {
-            System.out.println("LLE: regularization will be used since K > D.");
+            logger.info("LLE: regularization will be used since K > D.");
             tol = 1E-3;
         }
 
@@ -129,7 +132,7 @@ public class LLE {
                 }
             }
 
-            System.out.format("LLE: %d connected components, largest one has %d samples.\n", cc.length, n);
+            logger.info("LLE: {} connected components, largest one has {} samples.", cc.length, n);
 
             index = cc[component];
             graph = graph.subgraph(index);

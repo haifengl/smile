@@ -65,7 +65,7 @@ public enum EnglishStopWords implements StopWords {
                 }
             }
         } catch (IOException ex) {
-            System.err.println(ex);
+            ex.printStackTrace();
         }
     }
 

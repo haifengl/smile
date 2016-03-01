@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.mds;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.sort.QuickSort;
@@ -31,6 +33,7 @@ import smile.sort.QuickSort;
  * @author Haifeng Li
  */
 public class IsotonicMDS {
+    private static final Logger logger = LoggerFactory.getLogger(SammonMapping.class);
 
     /**
      * The final stress achieved.
@@ -151,15 +154,15 @@ public class IsotonicMDS {
         }
 
         if (stress == 0.0) {
-            System.out.format("Isotonic MDS: error = %.1f%%. The fit is perfect.\n", 100 * stress);
+            logger.info(String.format("Isotonic MDS: error = %.1f%%. The fit is perfect.", 100 * stress));
         } else if (stress <= 0.025) {
-            System.out.format("Isotonic MDS: error = %.1f%%. The fit is excellent.\n", 100 * stress);
+            logger.info(String.format("Isotonic MDS: error = %.1f%%. The fit is excellent.", 100 * stress));
         } else if (stress <= 0.05) {
-            System.out.format("Isotonic MDS: error = %.1f%%. The fit is good.\n", 100 * stress);
+            logger.info(String.format("Isotonic MDS: error = %.1f%%. The fit is good.", 100 * stress));
         } else if (stress <= 0.10) {
-            System.out.format("Isotonic MDS: error = %.1f%%. The fit is fair.\n", 100 * stress);
+            logger.info(String.format("Isotonic MDS: error = %.1f%%. The fit is fair.", 100 * stress));
         } else {
-            System.out.format("Isotonic MDS: error = %.1f%%. The fit may be poor.\n", 100 * stress);
+            logger.info(String.format("Isotonic MDS: error = %.1f%%. The fit may be poor.", 100 * stress));
         }
 
         coordinates = new double[nr][nc];

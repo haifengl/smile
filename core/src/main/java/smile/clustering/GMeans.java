@@ -17,6 +17,8 @@ package smile.clustering;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.sort.QuickSort;
 import smile.stat.distribution.GaussianDistribution;
@@ -40,7 +42,8 @@ import smile.stat.distribution.GaussianDistribution;
  * @author Haifeng Li
  */
 public class GMeans extends KMeans {
-    
+    private static final Logger logger = LoggerFactory.getLogger(GMeans.class);
+
     /**
      * Constructor. Clustering data with the number of clusters being
      * automatically determined by G-Means algorithm.
@@ -74,7 +77,7 @@ public class GMeans extends KMeans {
         for (int i = 0; i < n; i++) {
             distortion += Math.squaredDistance(data[i], centroids[0]);
         }
-        System.out.format("G-Means distortion with %d clusters: %.5f\n", k, distortion);
+        logger.info(String.format("G-Means distortion with %d clusters: %.5f", k, distortion));
 
         BBDTree bbd = new BBDTree(data);
         while (k < kmax) {
@@ -86,7 +89,7 @@ public class GMeans extends KMeans {
                 // don't split too small cluster. anyway likelihood estimation
                 // not accurate in this case.
                 if (size[i] < 25) {
-                    System.out.format("Cluster %3d\ttoo small to split: %d samples\n", i, size[i]);
+                    logger.info("Cluster {} too small to split: {} samples", i, size[i]);
                     continue;
                 }
                 
@@ -113,7 +116,7 @@ public class GMeans extends KMeans {
                 Math.normalize(x);
 
                 score[i] = AndersonDarling(x);
-                System.out.format("Cluster %3d\tAnderson-Darling adjusted test statistic: %3.4f\n", i, score[i]);
+                logger.info(String.format("Cluster %3d\tAnderson-Darling adjusted test statistic: %3.4f", i, score[i]));
             }
 
             int[] index = QuickSort.sort(score);
@@ -127,7 +130,7 @@ public class GMeans extends KMeans {
             for (int i = k; --i >= 0;) {
                 if (score[i] > 1.8692) {
                     if (centers.size() + i - m + 1 < kmax) {
-                        System.out.format("Split cluster %d...\n", index[i]);
+                        logger.info("Split cluster {}", index[i]);
                         centers.add(kmeans[index[i]].centroids[0]);
                         centers.add(kmeans[index[i]].centroids[1]);
                     } else {
@@ -167,7 +170,7 @@ public class GMeans extends KMeans {
                 }
             }
             
-            System.out.format("G-Means distortion with %d clusters: %.5f\n", k, distortion);
+            logger.info(String.format("G-Means distortion with %d clusters: %.5f\n", k, distortion));
         }
     }
     

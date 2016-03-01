@@ -16,7 +16,8 @@
 package smile.math.matrix;
 
 import java.util.Arrays;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Complex;
 import smile.math.Math;
 
@@ -80,6 +81,7 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class EigenValueDecomposition {
+    private static final Logger logger = LoggerFactory.getLogger(EigenValueDecomposition.class);
 
     /**
      * Array of (real part of) eigenvalues.
@@ -291,17 +293,17 @@ public class EigenValueDecomposition {
 
             double eps = Math.abs(lambda - l);
             if (iter % 10 == 0) {
-                System.out.format("Largest eigenvalue after %3d power iterations: %.5f\n", iter, lambda + p);
+                logger.trace(String.format("Largest eigenvalue after %3d power iterations: %.5f\n", iter, lambda + p));
             }
 
             if (eps < tol) {
-                System.out.format("Largest eigenvalue after %3d power iterations: %.5f\n", iter, lambda + p);
+                logger.info(String.format("Largest eigenvalue after %3d power iterations: %.5f\n", iter, lambda + p));
                 return lambda + p;
             }
         }
 
-        System.out.format("Largest eigenvalue after %3d power iterations: %.5f\n", maxIter, lambda + p);
-        System.err.println("Power iteration exceeded the maximum number of iterations.");
+        logger.info(String.format("Largest eigenvalue after %3d power iterations: %.5f\n", maxIter, lambda + p));
+        logger.error("Power iteration exceeded the maximum number of iterations.");
         return lambda + p;
     }
 
@@ -368,16 +370,16 @@ public class EigenValueDecomposition {
             }
 
             if (iter % 10 == 0) {
-                System.out.format("PageRank residual after %3d power iterations: %.7f\n", iter, delta);
+                logger.info(String.format("PageRank residual after %3d power iterations: %.7f\n", iter, delta));
             }
 
             if (delta < tol) {
-                System.out.format("PageRank residual after %3d power iterations: %.7f\n", iter, delta);
+                logger.info(String.format("PageRank residual after %3d power iterations: %.7f\n", iter, delta));
                 return p;
             }
         }
 
-        System.err.println("PageRank iteration exceeded the maximum number of iterations.");
+        logger.error("PageRank iteration exceeded the maximum number of iterations.");
         return p;
     }
 
@@ -698,7 +700,7 @@ public class EigenValueDecomposition {
 
         // fatal error
         if (rnm <= 0.0) {
-            System.err.println("Lanczos method was unable to find a starting vector within range.");
+            logger.error("Lanczos method was unable to find a starting vector within range.");
             return -1;
         }
 
@@ -763,7 +765,6 @@ public class EigenValueDecomposition {
      * Examine the state of orthogonality between the new Lanczos
      * vector and the previous ones to decide whether re-orthogonalization
      * should be performed.
-     * @param n        dimension of the eigenproblem for matrix B
      * @param ll       number of intitial Lanczos vectors in local orthog.
      * @param r        on input, residual vector to become next Lanczos vector.
      * On output, residual vector orthogonalized against previous Lanczos.
@@ -771,10 +772,8 @@ public class EigenValueDecomposition {
      * Lanczos vector orthogonalized against previous ones.
      * @param ra       previous Lanczos vector
      * @param qa       previous Lanczos vector
-     * @param wrk      temporary vector to store the previous Lanczos vector
      * @param eta      state of orthogonality between r and prev. Lanczos vectors
      * @param oldeta   state of orthogonality between q and prev. Lanczos vectors
-     * @param j        current Lanczos step
      */
     private static double purge(int ll, double[][] Q, double[] r, double[] q, double[] ra, double[] qa, double[] eta, double[] oldeta, int step, double rnm, double tol, double eps, double reps) {
         if (step < ll + 2) {
@@ -905,18 +904,12 @@ public class EigenValueDecomposition {
             }
         }
 
-        System.out.format("Lancozs method found %3d converged eigenvalues of the %3d-by-%-3d matrix", neig, step + 1, step + 1);
-        if (neig == 0) {
-            System.out.println(".");
-        } else {
-            System.out.print(": (");
+        logger.info("Lancozs method found {} converged eigenvalues of the {}-by-{} matrix", neig, step + 1, step + 1);
+        if (neig != 0) {
+            logger.info("ritz: {}", ritz);
             for (int i = 0, n = 0; i <= step; i++) {
                 if (bnd[i] <= 16.0 * Math.EPSILON * Math.abs(ritz[i])) {
-                    if (++n == neig) {
-                        System.out.format("%.4f).\n", ritz[i]);
-                    } else {
-                        System.out.format("%.4f, ", ritz[i]);
-                    }
+                    logger.info("ritz[{}] = ", i, ritz[i]);
                 }
             }
         }

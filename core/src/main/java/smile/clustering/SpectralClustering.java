@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.clustering;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.matrix.EigenValueDecomposition;
 
@@ -39,6 +41,7 @@ import smile.math.matrix.EigenValueDecomposition;
  * @author Haifeng Li
  */
 public class SpectralClustering {
+    private static final Logger logger = LoggerFactory.getLogger(SpectralClustering.class);
 
     /**
      * The number of clusters.
@@ -166,7 +169,7 @@ public class SpectralClustering {
             }
 
             if (D[i] < 1E-5) {
-                System.err.format("Small D[%d] = %f. The data may contain outliers.\n", i, D[i]);
+                logger.error(String.format("Small D[%d] = %f. The data may contain outliers.", i, D[i]));
             }
             
             D[i] = 1.0 / Math.sqrt(D[i]);
@@ -243,7 +246,7 @@ public class SpectralClustering {
             }
             
             if (sum < 1E-5) {
-                System.err.format("Small D[%d] = %f. The data may contain outliers.\n", i, sum);
+                logger.error(String.format("Small D[%d] = %f. The data may contain outliers.", i, sum));
             }
             
             D[i] = 1.0 / Math.sqrt(sum);

@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 
 /**
@@ -29,6 +31,7 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class HMMPOSTagger implements POSTagger, Serializable {
+    private static final Logger logger = LoggerFactory.getLogger(HMMPOSTagger.class);
 
     /**
 	 * Serialization Version UID.
@@ -118,7 +121,7 @@ public class HMMPOSTagger implements POSTagger, Serializable {
                 DEFAULT_TAGGER = (HMMPOSTagger) ois.readObject();
                 ois.close();
             } catch (Exception ex) {
-                System.err.println(ex);
+                logger.error("Failed to load /smile/nlp/pos/hmmpostagger.model", ex);
             }
         }
         return DEFAULT_TAGGER;
@@ -384,7 +387,7 @@ public class HMMPOSTagger implements POSTagger, Serializable {
                 
                 reader.close();
             } catch (Exception e) {
-                System.err.println(e);
+                logger.error("Failed to load training data {}", file, e);
             }
         }
     }
@@ -432,7 +435,7 @@ public class HMMPOSTagger implements POSTagger, Serializable {
             oos.flush();
             oos.close();
         } catch (Exception ex) {
-            System.err.println(ex);
+            logger.error("Failed to save HMM POS model", ex);
         }
     }
 }

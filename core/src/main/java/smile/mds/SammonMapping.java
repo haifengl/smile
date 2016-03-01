@@ -16,6 +16,8 @@
 package smile.mds;
 
 import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 
 /**
@@ -53,6 +55,8 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class SammonMapping {
+    private static final Logger logger = LoggerFactory.getLogger(SammonMapping.class);
+
     /**
      * The final stress achieved.
      */
@@ -178,7 +182,7 @@ public class SammonMapping {
         stress /= c;
         double epast = stress;
         double eprev = stress;
-        System.out.format("Sammon's Mapping initial stress: %.5f\n", stress);
+        logger.info(String.format("Sammon's Mapping initial stress: %.5f", stress));
 
         double[] xv = new double[k];
         double[] e1 = new double[k];
@@ -239,7 +243,7 @@ public class SammonMapping {
                 stress = eprev;
                 lambda = lambda * 0.2;
                 if (lambda < 1E-3) {
-                    System.out.format("Sammon's Mapping stress after %3d iterations: %.5f\n", iter-1, stress);
+                    logger.info(String.format("Sammon's Mapping stress after %3d iterations: %.5f", iter-1, stress));
                     break;
                 }
                 iter--;
@@ -259,7 +263,7 @@ public class SammonMapping {
                 }
 
                 if (iter % 10 == 0) {
-                    System.out.format("Sammon's Mapping stress after %3d iterations: %.5f, magic = %5.3f\n", iter, stress, lambda);
+                    logger.info(String.format("Sammon's Mapping stress after %3d iterations: %.5f, magic = %5.3f", iter, stress, lambda));
                     if (stress > epast - tol) {
                         break;
                     }

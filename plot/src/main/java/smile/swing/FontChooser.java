@@ -60,6 +60,9 @@ import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.Position;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * The <code>FontChooser</code> class is a swing component 
  * for font selection with <code>JFileChooser</code>-like APIs.
@@ -76,6 +79,7 @@ import javax.swing.text.Position;
  */
 @SuppressWarnings("serial")
 public class FontChooser extends JComponent {
+    private static final Logger logger = LoggerFactory.getLogger(FontChooser.class);
 
 	/**
      * Return value from <code>showDialog()</code>.
@@ -532,7 +536,7 @@ public class FontChooser extends JComponent {
                 Document doc = event.getDocument();
                 newValue = doc.getText(0, doc.getLength());
             } catch (BadLocationException ex) {
-                System.err.println(ex);
+                logger.error("update(DocumentEvent) exception", ex);
             }
 
             if (newValue.length() > 0) {
