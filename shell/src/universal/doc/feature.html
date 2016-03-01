@@ -1,0 +1,201 @@
+<!-- Google Analytics -->
+<script src="js/google-analytics.js" type="text/javascript"></script>
+
+<!-- prettify js and CSS -->
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=scala"></script>
+
+<!-- scroll/follow sidebar -->
+<script src="js/follow-sidebar.js" type="text/javascript"></script>
+
+<div class="col-md-3 col-md-push-9">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="feature-top" class="title">Features</h1>
+
+    <p>We have went through the classification and regression algorithms. In the examples,
+        we assume that the data is ready and features are carefully prepared, which many
+        machine learning practitioners take as granted. However, it is not general case
+        in practice. The practitioners should pay a lot attentions on feature generation,
+        selection, and dimension reduction, which often have bigger impacts on the final
+        results than the choice of particular learning algorithm.</p>
+
+    <p>Understanding the problem (and the business) is the most important thing to prepare
+        the features. Besides the attributes supplied with the training instances, researchers
+        should modify or enhance the representation of data objects in search of new features
+        that describe the objects better.</p>
+
+    <p>The accuracy of the inferred function depends strongly on how the input
+        object is represented. Typically, the input object is transformed into
+        a feature vector, which contains a number of features that are descriptive
+        of the object. The number of features should not be too large, because of
+        the curse of dimensionality; but should contain enough information to
+        accurately predict the output. Beyond feature vectors, a few algorithms such as support vector machines
+        can process complex data object such as sequences, trees, and even graphs with
+        properly engineered kernels.</p>
+
+    <p>Many machine learning methods such as Neural Networks and SVM with Gaussian
+        kernel also require the features properly scaled/standardized. For example,
+        each variable is scaled into interval [0, 1] or to have mean 0 and standard
+        deviation 1. Methods that employ a distance function
+        are particularly sensitive to this. Although some method such as decision trees can handle nominal
+        variable directly, other methods generally require nominal variables converted
+        to multiple binary dummy variables to indicate the presence or absence of a
+        characteristic.</p>
+
+    <p>If the input features contain redundant information (e.g., highly correlated
+        features), some learning algorithms (e.g., linear regression, logistic
+        regression, and distance based methods) will perform poorly because of
+        numerical instabilities. These problems can often be solved by imposing
+        some form of regularization.</p>
+
+    <p>If each of the features makes an independent contribution to the output,
+        then algorithms based on linear functions (e.g., linear regression,
+        logistic regression, linear support vector machines, naive Bayes) generally
+        perform well. However, if there are complex interactions among features,
+        then algorithms such as nonlinear support vector machines, decision trees
+        and neural networks work better. Linear methods can also be applied, but
+        engineers must manually specify the interactions when using them.</p>
+
+    <p>In practice, we often start with generating a lot of features with the hope that
+        more relevant information will improve the accuracy. However, it is not always
+        good to include a large number of features in the learning system.
+        It is well known that the optimal rate of convergence to fit the
+        <code>m</code>-th derivate of &theta; (&theta; is a <code>p</code>-times differentiable regression
+        function, especially nonparametric ones) to the data is at best proportional
+        to <code>n<sup>-(p-m)/(2p+d)</sup></code>, where <code>n</code> is the number
+        of data points, and <code>d</code> is the dimensionality of the data.
+        In a nutshell, the rate of convergence will be exponentially slower
+        when we increase the dimensionality of our inputs. In other words,
+        with a fixed number of training samples, the predictive power reduces
+        as the dimensionality increases, known as the Hughes effect.</p>
+
+    <p>Therefore, feature selection that identifies
+        the relevant features and discards the irrelevant ones and dimension reduction
+        that maps the input data into a lower
+        dimensional space are generally required prior to running the supervised learning algorithm.</p>
+
+    <h2 id="feature-selection">Feature Selection</h2>
+
+    <p>Feature selection is the technique of selecting a subset of relevant
+        features for building robust learning models. By removing most irrelevant
+        and redundant features from the data, feature selection helps improve the
+        performance of learning models by alleviating the effect of the curse of
+        dimensionality, enhancing generalization capability, speeding up learning
+        process, etc. More importantly, feature selection also helps researchers
+        to acquire better understanding about the data.</p>
+
+    <p>Feature selection algorithms typically fall into two categories: feature
+        ranking and subset selection. Feature ranking ranks the features by a
+        metric and eliminates all features that do not achieve an adequate score.
+        Subset selection searches the set of possible features for the optimal subset.
+        Clearly, an exhaustive search of optimal subset is impractical if large
+        numbers of features are available. Commonly, heuristic methods such as
+        genetic algorithms are employed for subset selection.</p>
+
+    <h3 id="signal-noise-ratio">Signal Noise Ratio</h3>
+    <p></p>
+
+    <h3 id="sum-squares-ratio">Sum Squares Ratio</h3>
+    <p></p>
+
+    <h3 id="ensemble-learning-feature-selection">Ensemble Learning Based Feature Selection</h3>
+    <p></p>
+
+    <h3 id="genetic-algorithm-feature-selection">Genetic Algorithm Based Feature Selection</h3>
+    <p></p>
+
+    <h2 id="dimension-reduction">Dimension Reduction</h2>
+
+    <p>Dimension Reduction, also called Feature Extraction, transforms the data in the
+        high-dimensional space to a space of fewer dimensions. The data
+        transformation may be linear, as in principal component analysis (PCA),
+        but many nonlinear dimensionality reduction techniques also exist.</p>
+
+    <p>The main linear technique for dimensionality reduction, principal component
+        analysis, performs a linear mapping of the data to a lower dimensional
+        space in such a way that the variance of the data in the low-dimensional
+        representation is maximized. In practice, the correlation matrix of the
+        data is constructed and the eigenvectors on this matrix are computed.
+        The eigenvectors that correspond to the largest eigenvalues (the principal
+        components) can now be used to reconstruct a large fraction of the variance
+        of the original data. Moreover, the first few eigenvectors can often be
+        interpreted in terms of the large-scale physical behavior of the system.
+        The original space has been reduced (with data loss, but hopefully
+        retaining the most important variance) to the space spanned by a few
+        eigenvectors.</p>
+
+    <p>Compared to regular batch PCA algorithm, the generalized Hebbian algorithm
+        is an adaptive method to find the largest k eigenvectors of the covariance
+        matrix, assuming that the associated eigenvalues are distinct. GHA works
+        with an arbitrarily large sample size and the storage requirement is modest.
+        Another attractive feature is that, in a nonstationary environment, it
+        has an inherent ability to track gradual changes in the optimal solution
+        in an inexpensive way.</p>
+
+    <p>Random projection is a promising linear dimensionality reduction technique
+        for learning mixtures of Gaussians. The key idea of random projection arises
+        from the Johnson-Lindenstrauss lemma: if points in a vector space are
+        projected onto a randomly selected subspace of suitably high dimension,
+        then the distances between the points are approximately preserved.</p>
+
+    <p>Principal component analysis can be employed in a nonlinear way by means
+        of the kernel trick. The resulting technique is capable of constructing
+        nonlinear mappings that maximize the variance in the data. The resulting
+        technique is entitled Kernel PCA. Other prominent nonlinear techniques
+        include manifold learning techniques such as locally linear embedding
+        (LLE), Hessian LLE, Laplacian eigenmaps, and LTSA. These techniques
+        construct a low-dimensional data representation using a cost function
+        that retains local properties of the data, and can be viewed as defining
+        a graph-based kernel for Kernel PCA. More recently, techniques have been
+        proposed that, instead of defining a fixed kernel, try to learn the kernel
+        using semidefinite programming. The most prominent example of such a
+        technique is maximum variance unfolding (MVU). The central idea of MVU
+        is to exactly preserve all pairwise distances between nearest neighbors
+        (in the inner product space), while maximizing the distances between points
+        that are not nearest neighbors.</p>
+
+    <p>An alternative approach to neighborhood preservation is through the
+        minimization of a cost function that measures differences between
+        distances in the input and output spaces. Important examples of such
+        techniques include classical multidimensional scaling (which is identical
+        to PCA), Isomap (which uses geodesic distances in the data space), diffusion
+        maps (which uses diffusion distances in the data space), t-SNE (which
+        minimizes the divergence between distributions over pairs of points),
+        and curvilinear component analysis.</p>
+
+    <p>A different approach to nonlinear dimensionality reduction is through the
+        use of autoencoders, a special kind of feed-forward neural networks with
+        a bottle-neck hidden layer. The training of deep encoders is typically
+        performed using a greedy layer-wise pre-training (e.g., using a stack of
+        Restricted Boltzmann machines) that is followed by a fine tuning stage based
+        on backpropagation.</p>
+
+    <h3 id="pca">PCA</h3>
+
+    <p></p>
+
+    <h3 id="ppca">Probabilistic PCA</h3>
+
+    <p></p>
+
+    <h3 id="kpca">Kernel PCA</h3>
+
+    <p></p>
+
+    <h3 id="gha">GHA</h3>
+
+    <p></p>
+
+
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>
