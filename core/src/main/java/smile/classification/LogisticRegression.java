@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.util.MulticoreExecutor;
@@ -74,6 +75,7 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class LogisticRegression implements SoftClassifier<double[]> {
+    private static final Logger logger = LoggerFactory.getLogger(LogisticRegression.class);
 
     /**
      * The dimension of input space.
@@ -400,7 +402,7 @@ public class LogisticRegression implements SoftClassifier<double[]> {
                         f += fi;
                     }
                 } catch (Exception ex) {
-                    System.err.println(ex);
+                    logger.error("Failed to train Logistic Regression on multi-core", ex);
                     f = Double.NaN;
                 }
             }
@@ -491,7 +493,7 @@ public class LogisticRegression implements SoftClassifier<double[]> {
                         }
                     }
                 } catch (Exception ex) {
-                    System.err.println(ex);
+                    logger.error("Failed to train Logistic Regression on multi-core", ex);
                     f = Double.NaN;
                 }
             }
@@ -663,7 +665,7 @@ public class LogisticRegression implements SoftClassifier<double[]> {
                         f += fi;
                     }
                 } catch (Exception ex) {
-                    System.err.println(ex);
+                    logger.error("Failed to train Logistic Regression on multi-core", ex);
                     f = Double.NaN;
                 }
             }
@@ -773,7 +775,7 @@ public class LogisticRegression implements SoftClassifier<double[]> {
                         }
                     }
                 } catch (Exception ex) {
-                    System.err.println(ex);
+                    logger.error("Failed to train Logistic Regression on multi-core", ex);
                     f = Double.NaN;
                 }
             }

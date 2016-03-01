@@ -16,6 +16,8 @@
 package smile.clustering;
 
 import java.util.ArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.sort.QuickSort;
 
@@ -39,6 +41,7 @@ import smile.sort.QuickSort;
  * @author Haifeng Li
  */
 public class XMeans extends KMeans {
+    private static final Logger logger = LoggerFactory.getLogger(XMeans.class);
 
     private static final double LOG2PI = Math.log(Math.PI * 2.0);
 
@@ -78,7 +81,7 @@ public class XMeans extends KMeans {
         }
 
         distortion = wcss[0];
-        System.out.format("X-Means distortion with %d clusters: %.5f\n", k, distortion);
+        logger.info(String.format("X-Means distortion with %d clusters: %.5f", k, distortion));
 
         BBDTree bbd = new BBDTree(data);
         while (k < kmax) {
@@ -90,7 +93,7 @@ public class XMeans extends KMeans {
                 // don't split too small cluster. anyway likelihood estimation
                 // not accurate in this case.
                 if (size[i] < 25) {
-                    System.out.format("Cluster %3d\ttoo small to split: %d samples\n", i, size[i]);
+                    logger.info("Cluster {} too small to split: {} samples", i, size[i]);
                     continue;
                 }
                 
@@ -105,7 +108,7 @@ public class XMeans extends KMeans {
                 double newBIC = bic(2, size[i], d, kmeans[i].distortion, kmeans[i].size);
                 double oldBIC = bic(size[i], d, wcss[i]);
                 score[i] = newBIC - oldBIC;
-                System.out.format("Cluster %3d\tBIC: %.5f\tBIC after split: %.5f\timprovement: %.5f\n", i, oldBIC, newBIC, score[i]);
+                logger.info(String.format("Cluster %3d\tBIC: %.5f\tBIC after split: %.5f\timprovement: %.5f", i, oldBIC, newBIC, score[i]));
             }
 
             int[] index = QuickSort.sort(score);
@@ -119,7 +122,7 @@ public class XMeans extends KMeans {
             for (int i = k; --i >= 0;) {
                 if (score[i] > 0) {
                     if (centers.size() + i - m + 1 < kmax) {
-                        System.out.format("Split cluster %d...\n", index[i]);
+                        logger.info("Split cluster {}", index[i]);
                         centers.add(kmeans[index[i]].centroids[0]);
                         centers.add(kmeans[index[i]].centroids[1]);
                     } else {
@@ -164,7 +167,7 @@ public class XMeans extends KMeans {
                 wcss[y[i]] += Math.squaredDistance(data[i], centroids[y[i]]);
             }
 
-            System.out.format("X-Means distortion with %d clusters: %.5f\n", k, distortion);
+            logger.info(String.format("X-Means distortion with %d clusters: %.5f", k, distortion));
         }
     }
 

@@ -20,6 +20,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An English lexicon with part-of-speech tags.
@@ -27,6 +29,8 @@ import java.util.HashMap;
  * @author Haifeng Li
  */
 public class EnglishPOSLexicon {
+    private static final Logger logger = LoggerFactory.getLogger(EnglishPOSLexicon.class);
+
     /**
      * A list of English words with POS tags.
      */
@@ -131,7 +135,7 @@ public class EnglishPOSLexicon {
                 }
             }
         } catch (IOException ex) {
-            System.err.println(ex);
+            logger.error("Failed to load /smile/nlp/pos/part-of-speech_en.txt", ex);
         }
     }
 

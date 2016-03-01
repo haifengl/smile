@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.data.Attribute;
 import smile.data.NumericAttribute;
 import smile.math.Math;
@@ -69,6 +70,8 @@ import smile.validation.ClassificationMeasure;
  * @author Haifeng Li
  */
 public class RandomForest implements SoftClassifier<double[]> {
+    private static final Logger logger = LoggerFactory.getLogger(RandomForest.class);
+
     /**
      * Decision tree wrapper with a weight. Currently, the weight is the accuracy of
      * tree on the OOB samples, which can be used when aggregating
@@ -398,9 +401,9 @@ public class RandomForest implements SoftClassifier<double[]> {
             double accuracy = 1.0;
             if (oob != 0) {
                 accuracy = (double) correct / oob;
-                //System.out.println("Random forest tree OOB accuracy: " + accuracy);
+                logger.info("Random forest tree OOB accuracy: {}%", accuracy);
             } else {
-                System.err.println("Random forest has a tree trained without OOB samples.");
+                logger.error("Random forest has a tree trained without OOB samples.");
             }
 
             return new Tree(tree, accuracy);
@@ -584,7 +587,7 @@ public class RandomForest implements SoftClassifier<double[]> {
         try {
             trees = MulticoreExecutor.run(tasks);
         } catch (Exception ex) {
-            System.err.println(ex);
+            logger.error("Failed to train random forest on multi-core", ex);
 
             trees = new ArrayList<Tree>(ntrees);
             for (int i = 0; i < ntrees; i++) {

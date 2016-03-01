@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.SparseArray;
 import smile.data.SparseDataset;
@@ -60,6 +61,8 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class SIB extends PartitionClustering<double[]> {
+    private static final Logger logger = LoggerFactory.getLogger(SIB.class);
+
     /**
      * The total distortion.
      */
@@ -200,7 +203,7 @@ public class SIB extends PartitionClustering<double[]> {
                 }
             }
         } catch (Exception ex) {
-            System.err.println(ex);
+            logger.error("Failed to run Sequential Information Bottleneck on multi-core", ex);
 
             best = new SIB(data, k, maxIter);
             for (int i = 1; i < runs; i++) {
@@ -409,7 +412,7 @@ public class SIB extends PartitionClustering<double[]> {
                 }
             }
         } catch (Exception ex) {
-            System.err.println(ex);
+            logger.error("Failed to run Sequential Information Bottleneck on multi-core", ex);
 
             best = new SIB(data, k, maxIter);
             for (int i = 1; i < runs; i++) {

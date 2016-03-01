@@ -23,12 +23,17 @@ import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.swing.JOptionPane;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A printer controller object.
  * 
  * @author Haifeng Li
  */
 public class Printer {
+    private static final Logger logger = LoggerFactory.getLogger(Printer.class);
+
     /**
      * Printer attributes.
      */
@@ -72,7 +77,7 @@ public class Printer {
             try {
                 printer.print(printAttributes);
             } catch (PrinterException ex) {
-                System.err.println(ex);
+                logger.error("Failed to print", ex);
                 JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }

@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.util.MulticoreExecutor;
 
@@ -121,6 +122,7 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class GeneticAlgorithm <T extends Chromosome> {
+    private static final Logger logger = LoggerFactory.getLogger(GeneticAlgorithm.class);
 
     /**
      * The way to select chromosomes from the population as parents to crossover.
@@ -358,7 +360,8 @@ public class GeneticAlgorithm <T extends Chromosome> {
         try {
             MulticoreExecutor.run(tasks);
         } catch (Exception ex) {
-            System.err.println(ex);
+            logger.error("Failed to run Genetic Algorithm on multi-core", ex);
+
             for (Task task : tasks) {
                 task.call();
             }
@@ -394,7 +397,8 @@ public class GeneticAlgorithm <T extends Chromosome> {
             try {
                 MulticoreExecutor.run(tasks);
             } catch (Exception ex) {
-                System.err.println(ex);
+                logger.error("Failed to run Genetic Algorithm on multi-core", ex);
+
                 for (Task task : tasks) {
                     task.call();
                 }
@@ -409,7 +413,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
             }
             avg /= size;
 
-            System.out.format("Genetic Algorithm: generation %d, best fitness %g, average fitness %g\n", g, best.fitness(), avg);
+            logger.info(String.format("Genetic Algorithm: generation %d, best fitness %g, average fitness %g", g, best.fitness(), avg));
         }
 
         return best;

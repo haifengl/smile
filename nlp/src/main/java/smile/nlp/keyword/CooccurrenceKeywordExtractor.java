@@ -164,7 +164,6 @@ public class CooccurrenceKeywordExtractor {
                     
                         js /= 2.0;
                         if (js > log2) {
-                            //System.out.println(js+" "+Arrays.toString(freqTerms[i].words)+" "+Arrays.toString(freqTerms[j].words));
                             cluster[j] = cluster[i];
                         }
                     }*/

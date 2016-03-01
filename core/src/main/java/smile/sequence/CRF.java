@@ -18,7 +18,8 @@ package smile.sequence;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
@@ -49,6 +50,7 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class CRF implements SequenceLabeler<double[]> {
+    private static final Logger logger = LoggerFactory.getLogger(CRF.class);
 
     /**
      * The number of classes.
@@ -573,7 +575,7 @@ public class CRF implements SequenceLabeler<double[]> {
                     MulticoreExecutor.run(gradientTasks);
                     MulticoreExecutor.run(boostingTasks);
                 } catch (Exception e) {
-                    System.err.println(e.getMessage());
+                    logger.error("Failed to train CRF on multi-core", e);
                 }
             }
 
@@ -605,7 +607,7 @@ public class CRF implements SequenceLabeler<double[]> {
                     MulticoreExecutor.run(gradientTasks);
                     MulticoreExecutor.run(boostingTasks);
                 } catch (Exception e) {
-                    System.err.println(e.getMessage());
+                    logger.error("Failed to train CRF on multi-core", e);
                 }
             }
 

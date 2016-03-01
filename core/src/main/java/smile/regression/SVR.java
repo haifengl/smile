@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.DoubleArrayList;
 import smile.math.kernel.MercerKernel;
@@ -47,6 +48,8 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class SVR<T> implements Regression<T> {
+    private static final Logger logger = LoggerFactory.getLogger(SVR.class);
+
     /**
      * The default value for K_tt + K_ss - 2 * K_ts if kernel is not positive.
      */
@@ -292,14 +295,10 @@ public class SVR<T> implements Regression<T> {
         int phase = Math.min(n, 1000);
         for (int count = 1; smo(tol); count++) {
             if (count % phase == 0) {
-                System.out.print('.');
-            }
-            
-            if (count % (80*phase) == 0) {
-                System.out.println();
+                logger.info("SVR finishes {} SMO iterations", count);
             }
         }   
-        System.out.println(); 
+        logger.info("SVR finishes training");
         
         Iterator<SupportVector> iter = sv.iterator();
         while (iter.hasNext()) {
@@ -319,7 +318,7 @@ public class SVR<T> implements Regression<T> {
             }
         }
         
-        System.out.format("%d support vectors, %d bounded\n", nsv, nbsv);
+        logger.info("{} support vectors, {} bounded", nsv, nbsv);
     }
 
     @Override

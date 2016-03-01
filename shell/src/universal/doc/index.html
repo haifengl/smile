@@ -81,6 +81,11 @@
         $('#content').load('regression.html');
       });
 
+      $("#feature").click(function(event){
+        event.preventDefault();
+        $('#content').load('feature.html');
+      });
+
       $("#math").click(function(event){
         event.preventDefault();
         $('#content').load('math.html');
@@ -152,6 +157,7 @@
           <li class="divider"></li>
           <li><a id="classification" href="#">Classification</a></li>
           <li><a id="regression" href="#">Regression</a></li>
+          <li><a id="feature" href="#">Feature Selection and Dimension Reduction</a></li>
           <li class="divider"></li>
           <li><a href="http://xyclade.github.io/MachineLearning/">Third-Party Tutorials</a></li>
           <!--
