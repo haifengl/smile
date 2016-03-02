@@ -373,7 +373,7 @@
         increases).</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val diabetes = readCsv("data/regression/diabetes.csv", Some((new NumericAttribute("gdp"),0)), header=true)
+    val diabetes = readCsv("data/regression/diabetes.csv", Some((new NumericAttribute("y"), 0)), header=true)
     val (data, y) = diabetes.unzipDouble
     val x = data.map(_.slice(0, 10)) // use only the primary attributes
     cv(x, y, 10) { case (x, y) =>

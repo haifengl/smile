@@ -189,26 +189,64 @@
 
     <h3 id="genetic-algorithm-feature-selection">Genetic Algorithm Based Feature Selection</h3>
 
-    <p>Genetic algorithm based feature selection method finds many (random)
-        subsets of variables of expected classification power using a Genetic
-        Algorithm. The "fitness" of each subset of variables is determined by its
+    <p>Genetic algorithm (GA) is a search heuristic that mimics the process of
+        natural evolution. This heuristic is routinely used to generate useful
+        solutions to optimization and search problems. Genetic algorithms belong
+        to the larger class of evolutionary algorithms (EA), which generate solutions
+        to optimization problems using techniques inspired by natural evolution,
+        such as inheritance, mutation, selection, and crossover.</p>
+
+    <p>In a genetic algorithm, a population of strings (called chromosomes), which
+        encode candidate solutions (called individuals) to an optimization problem,
+        evolves toward better solutions. Traditionally, solutions are represented in binary as strings
+        of 0s and 1s, but other encodings are also possible. The evolution usually
+        starts from a population of randomly generated individuals and happens in
+        generations. In each generation, the fitness of every individual in the
+        population is evaluated, multiple individuals are stochastically selected
+        from the current population (based on their fitness), and modified
+        (recombined and possibly randomly mutated) to form a new population. The
+        new population is then used in the next iteration of the algorithm. Commonly,
+        the algorithm terminates when either a maximum number of generations has been
+        produced, or a satisfactory fitness level has been reached for the population.
+        If the algorithm has terminated due to a maximum number of generations, a
+        satisfactory solution may or may not have been reached.</p>
+
+    <p>Genetic algorithm based feature selection finds many (random)
+        subsets of variables of expected classification power.
+        The "fitness" of each subset of variables is determined by its
         ability to classify the samples according to a given classification
-        method. When many such subsets of variables are obtained, the one with best
+        method.</p>
+
+    <p>In the below example, we use gradient boosted trees (100 tress)
+        as the classifier, the accuracy of 5-fold cross validation as the fitness measure.</p>
+
+    <pre class="prettyprint lang-java"><code>
+    val data = readArff("data/weka/segment-test.arff", 19)
+    val (x, y) = data.unzipInt
+
+    val trainer = new GradientTreeBoost.Trainer(100)
+    val measure = new Accuracy
+
+    // Use default settings for Genetic Algorithm.
+    val selector = new GAFeatureSelection
+
+    // The population size is 50, and 20 generation evolution.
+    // Each returned BitString contains the selected feature subset and its fitness.
+    val result = selector.learn(50, 20, trainer, measure, x, y, 5)
+
+    result.foreach { bits =>
+        print(f"${100*bits.fitness}%.2f%% ")
+        println(bits.bits.mkString(" "))
+    }
+    </code></pre>
+
+    <p>When many such subsets of variables are obtained, the one with best
         performance may be used as selected features. Alternatively, the frequencies
         with which variables are selected may be analyzed further. The most
         frequently selected variables may be presumed to be the most relevant to
-        sample distinction and are finally used for prediction. Although GA avoids
-        brute-force search, it is still much slower than univariate feature selection.</p>
+        sample distinction and are finally used for prediction.</p>
 
-    <pre class="prettyprint lang-java"><code>
-    int size = 100;
-    int generation = 20;
-    ClassifierTrainer<double[]> trainer = new LDA.Trainer();
-    ClassificationMeasure measure = new Accuracy();
-
-    GAFeatureSelection selector = new GAFeatureSelection();
-    BitString[] result = selector.learn(size, generation, trainer, measure, x, y, testx, testy);
-    </code></pre>
+    <p>Although GA avoids brute-force search, it is still much slower than univariate feature selection.</p>
 
     <h2 id="dimension-reduction">Dimension Reduction</h2>
 
@@ -216,6 +254,8 @@
         high-dimensional space to a space of fewer dimensions. The data
         transformation may be linear, as in principal component analysis (PCA),
         but many nonlinear dimensionality reduction techniques also exist.</p>
+
+    <h3 id="pca">Principal Component Analysis</h3>
 
     <p>The main linear technique for dimensionality reduction, principal component
         analysis, performs a linear mapping of the data to a lower dimensional
@@ -230,19 +270,79 @@
         retaining the most important variance) to the space spanned by a few
         eigenvectors.</p>
 
-    <p>Compared to regular batch PCA algorithm, the generalized Hebbian algorithm
-        is an adaptive method to find the largest k eigenvectors of the covariance
-        matrix, assuming that the associated eigenvalues are distinct. GHA works
-        with an arbitrarily large sample size and the storage requirement is modest.
-        Another attractive feature is that, in a nonstationary environment, it
-        has an inherent ability to track gradual changes in the optimal solution
-        in an inexpensive way.</p>
+    <pre class="prettyprint lang-scala"><code>
+    def pca(data: Array[Array[Double]], cor: Boolean = false): PCA
+    </code></pre>
 
-    <p>Random projection is a promising linear dimensionality reduction technique
-        for learning mixtures of Gaussians. The key idea of random projection arises
-        from the Johnson-Lindenstrauss lemma: if points in a vector space are
-        projected onto a randomly selected subspace of suitably high dimension,
-        then the distances between the points are approximately preserved.</p>
+    <p>If the parameter <code>cor</code> is true, PCA uses correlation matrix instead of covariance matrix.
+        The correlation matrix is simply the covariance matrix, standardized by setting all variances equal
+        to one. When scales of variables are similar, the covariance matrix is always preferred,
+        as the correlation matrix will lose information when standardizing the variance.
+        The correlation matrix is recommended when variables are measured in different scales.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val pendigits = readTable("shell/src/universal/data/classification/pendigits.txt", Some((new NominalAttribute("class"), 16)))
+    val (x, y) = pendigits.unzipInt
+    val pc = pca(x)
+    screeplot(pc)
+
+    pc.setProjection(3)
+    val x2 = pc.project(x)
+    plot(x2, y, '.', Palette.COLORS)
+    </code></pre>
+
+    <p>In the above example, we apply PCA to the pen-digits data, which includes 16 variables.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/scree.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Scree Plot</div>
+    </div>
+
+    <p>The scree plot is a useful visual aid for determining an appropriate number of principal components.
+        The scree plot graphs the eigenvalue against the component number. To determine the appropriate
+        number of components, we look for an "elbow" in the scree plot. The component number is taken to
+        be the point at which the remaining eigenvalues are relatively small and all about the same size.</p>
+
+    <p>Finally, we plot the data projected into 3-dimensional space.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/pca.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">PCA</div>
+    </div>
+
+    <h3 id="ppca">Probabilistic Principal Component Analysis</h3>
+
+    <p>Probabilistic principal component analysis is a simplified factor analysis
+        that employs a latent variable model with linear relationship:
+
+    <pre class="prettyprint lang-html"><code>
+    y &sim; W * x + &mu; + &epsilon;
+    </code></pre>
+
+    <p>where latent variables x &sim; N(0, I), error (or noise) &epsilon; &sim; N(0, &Psi;),
+        and &mu; is the location term (mean). In probabilistic PCA, an isotropic noise model is used,
+        i.e., noise variances constrained to be equal (&Psi;<sub>i</sub> = &sigma;<sup>2</sup>).
+        A close form of estimation of above parameters can be obtained
+        by maximum likelihood method.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def ppca(data: Array[Array[Double]], k: Int): PPCA
+    </code></pre>
+
+    <p>Similar to PCA example, we apply probabilistic PCA to the pen-digits data.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val pc = ppca(x, 3)
+    val x2 = pc.project(x)
+    plot(x2, y, '.', Palette.COLORS)
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/ppca.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Probabilistic PCA</div>
+    </div>
+
+    <h3 id="kpca">Kernel Principal Component Analysis</h3>
 
     <p>Principal component analysis can be employed in a nonlinear way by means
         of the kernel trick. The resulting technique is capable of constructing
@@ -252,47 +352,75 @@
         (LLE), Hessian LLE, Laplacian eigenmaps, and LTSA. These techniques
         construct a low-dimensional data representation using a cost function
         that retains local properties of the data, and can be viewed as defining
-        a graph-based kernel for Kernel PCA. More recently, techniques have been
-        proposed that, instead of defining a fixed kernel, try to learn the kernel
-        using semidefinite programming. The most prominent example of such a
-        technique is maximum variance unfolding (MVU). The central idea of MVU
-        is to exactly preserve all pairwise distances between nearest neighbors
-        (in the inner product space), while maximizing the distances between points
-        that are not nearest neighbors.</p>
+        a graph-based kernel for Kernel PCA.</p>
 
-    <p>An alternative approach to neighborhood preservation is through the
-        minimization of a cost function that measures differences between
-        distances in the input and output spaces. Important examples of such
-        techniques include classical multidimensional scaling (which is identical
-        to PCA), Isomap (which uses geodesic distances in the data space), diffusion
-        maps (which uses diffusion distances in the data space), t-SNE (which
-        minimizes the divergence between distributions over pairs of points),
-        and curvilinear component analysis.</p>
+    <p>In practice, a large data set leads to a large Kernel/Gram matrix <code>K</code>, and
+        storing K may become a problem. One way to deal with this is to perform
+        clustering on your large dataset, and populate the kernel with the means
+        of those clusters. Since even this method may yield a relatively large K,
+        it is common to compute only the top P eigenvalues and eigenvectors of <code>K</code>.</p>
 
-    <p>A different approach to nonlinear dimensionality reduction is through the
-        use of autoencoders, a special kind of feed-forward neural networks with
-        a bottle-neck hidden layer. The training of deep encoders is typically
-        performed using a greedy layer-wise pre-training (e.g., using a stack of
-        Restricted Boltzmann machines) that is followed by a fine tuning stage based
-        on backpropagation.</p>
+    <pre class="prettyprint lang-scala"><code>
+    def kpca[T <: Object](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T]
+    </code></pre>
 
-    <h3 id="pca">PCA</h3>
+    <p>Here we apply kernel PCA to the pen-digits data.</p>
 
-    <p></p>
+    <pre class="prettyprint lang-scala"><code>
+    val pc = kpca(x, new GaussianKernel(45), 3)
+    val x2 = pc.project(x)
+    plot(x2, y, '.', Palette.COLORS)
+    </code></pre>
 
-    <h3 id="ppca">Probabilistic PCA</h3>
+    <p>Because of its nonlinear nature, the projected data has very different structure from PCA.</p>
 
-    <p></p>
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/kpca.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Kernel PCA</div>
+    </div>
 
-    <h3 id="kpca">Kernel PCA</h3>
+    <h3 id="gha">Generalized Hebbian Algorithm</h3>
 
-    <p></p>
+    <p>Compared to regular batch PCA algorithm, the generalized Hebbian algorithm (GHA)
+        is an adaptive method to find the largest k eigenvectors of the covariance
+        matrix, assuming that the associated eigenvalues are distinct. GHA works
+        with an arbitrarily large sample size and the storage requirement is modest.
+        Another attractive feature is that, in a nonstationary environment, it
+        has an inherent ability to track gradual changes in the optimal solution
+        in an inexpensive way.</p>
 
-    <h3 id="gha">GHA</h3>
+    <p>It guarantees that GHA finds the first k eigenvectors of the covariance matrix,
+        assuming that the associated eigenvalues are distinct. The convergence theorem
+        is formulated in terms of a time-varying learning rate &eta;. In practice, the
+        learning rate &eta; is chosen to be a small constant, in which case convergence is
+        guaranteed with mean-squared error in synaptic weights of order &eta;.</p>
 
-    <p></p>
+    <p>It also has a simple and predictable trade-off between learning speed and
+        accuracy of convergence as set by the learning rate parameter &eta;. It was
+        shown that a larger learning rate &eta; leads to faster convergence
+        and larger asymptotic mean-square error, which is intuitively satisfying.</p>
 
+    <pre class="prettyprint lang-scala"><code>
+    def gha(data: Array[Array[Double]], k: Int, r: Double): GHA
 
+    def gha(data: Array[Array[Double]], w: Array[Array[Double]], r: Double): GHA
+    </code></pre>
+
+    <p>The first method starts with random initial projection matrix, while the second one
+        starts with a given projection matrix.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val pc = gha(x, 3, 0.00001)
+    val x2 = pc.project(x)
+    plot(x2, y, '.', Palette.COLORS)
+    </code></pre>
+
+    <p>The results look similar to PCA.</p>
+    
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/gha.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">GHA</div>
+    </div>
 </div>
 
 <script type="text/javascript">
