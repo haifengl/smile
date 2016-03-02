@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.DoubleArrayList;
 import smile.math.Math;
 import smile.math.SparseArray;
@@ -84,6 +85,8 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class SVM <T> implements OnlineClassifier<T> {
+    private static final Logger logger = LoggerFactory.getLogger(SVM.class);
+
     /**
      * The type of multi-class SVMs.
      */
@@ -264,7 +267,7 @@ public class SVM <T> implements OnlineClassifier<T> {
          */
         public Trainer setTolerance(double tol) {
             if (tol <= 0.0) {
-                throw new IllegalArgumentException("Invlaid tolerance of convergence test:" + tol);
+                throw new IllegalArgumentException("Invalid tolerance of convergence test:" + tol);
             }
 
             this.tol = tol;
@@ -277,7 +280,7 @@ public class SVM <T> implements OnlineClassifier<T> {
          */
         public Trainer setNumEpochs(int epochs) {
             if (epochs < 1) {
-                throw new IllegalArgumentException("Invlaid numer of epochs of stochastic learning:" + epochs);
+                throw new IllegalArgumentException("Invalid numer of epochs of stochastic learning:" + epochs);
             }
         
             this.epochs = epochs;
@@ -848,13 +851,13 @@ public class SVM <T> implements OnlineClassifier<T> {
          * @param epsgr the tolerance of convergence test.
          */
         void finish(double epsgr) {
-            //System.out.print("SVM finializes the training.");
+            logger.info("SVM finializes the training by reprocess.");
             for (int count = 1; smo(null, null, epsgr); count++) {
                 if (count % 1000 == 0) {
-                    //System.out.print('.');
+                    logger.info("finishing {} reprocess iterations.");
                 }
             }
-            //System.out.println();
+            logger.info("SVM finished the reprocess.");
 
             Iterator<SupportVector> iter = sv.iterator();
             while (iter.hasNext()) {
@@ -926,7 +929,7 @@ public class SVM <T> implements OnlineClassifier<T> {
                 }
             }
 
-            System.out.format("%d support vectors, %d bounded\n", nsv, nbsv);
+            logger.info("{} support vectors, {} bounded\n", nsv, nbsv);
         }
     }
 
@@ -1042,7 +1045,7 @@ public class SVM <T> implements OnlineClassifier<T> {
      */
     public SVM setTolerance(double tol) {
         if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invlaid tolerance of convergence test:" + tol);
+            throw new IllegalArgumentException("Invalid tolerance of convergence test:" + tol);
         }
         
         this.tol = tol;
@@ -1232,7 +1235,7 @@ public class SVM <T> implements OnlineClassifier<T> {
             try {
                 MulticoreExecutor.run(tasks);
             } catch (Exception e) {
-                System.err.println(e.getMessage());
+                logger.error("Failed to train SVM on multi-core", e);
             }
         }
     }
@@ -1252,7 +1255,7 @@ public class SVM <T> implements OnlineClassifier<T> {
             try {
                 MulticoreExecutor.run(tasks);
             } catch (Exception e) {
-                System.err.println(e.getMessage());
+                logger.error("Failed to train SVM on multi-core", e);
             }
         }
     }

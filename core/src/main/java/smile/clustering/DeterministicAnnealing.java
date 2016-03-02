@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.util.MulticoreExecutor;
 
@@ -44,6 +45,7 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class DeterministicAnnealing extends KMeans {
+    private static final Logger logger = LoggerFactory.getLogger(DeterministicAnnealing.class);
 
     /**
      * Annealing parameter in (0, 1).
@@ -271,7 +273,8 @@ public class DeterministicAnnealing extends KMeans {
                         H += t.H;
                     }
                 } catch (Exception ex) {
-                    System.err.println(ex);
+                    logger.error("Failed to run Deterministic Annealing on multi-core", ex);
+
                     D = Double.NaN;
                 }
             }
@@ -317,7 +320,8 @@ public class DeterministicAnnealing extends KMeans {
                     MulticoreExecutor.run(ctasks);
                     parallel = true;
                 } catch (Exception ex) {
-                    System.err.println(ex);
+                    logger.error("Failed to run Deterministic Annealing on multi-core", ex);
+
                     parallel = false;
                 }
             }
@@ -338,7 +342,7 @@ public class DeterministicAnnealing extends KMeans {
             iter++;
         }
 
-        System.out.format("Deterministic Annealing clustering entropy after %3d iterations at temperature %.4f and k = %d: %.5f (soft distortion = %.5f )\n", iter, T, k / 2, H, D);
+        logger.info(String.format("Deterministic Annealing clustering entropy after %3d iterations at temperature %.4f and k = %d: %.5f (soft distortion = %.5f )\n", iter, T, k / 2, H, D));
 
         return currentDistortion;
     }

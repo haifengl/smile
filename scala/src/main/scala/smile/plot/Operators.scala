@@ -19,11 +19,13 @@ package smile.plot
 import java.awt.{GridLayout, Color}
 import javax.swing.{JFrame, JPanel}
 import smile.data.AttributeDataset
+import smile.classification.Classifier
 import smile.regression.Regression
-import smile.stat.distribution.{Distribution, DiscreteDistribution}
+import smile.clustering.HierarchicalClustering
 import smile.math.Math
 import smile.math.matrix.SparseMatrix
-import smile.classification.Classifier
+import smile.stat.distribution.{Distribution, DiscreteDistribution}
+import smile.projection.PCA
 
 /** Data visualization operators.
   *
@@ -618,21 +620,6 @@ trait Operators {
     Window(canvas)
   }
 
-  /** Dendrogram plot.
-    *
-    * @param merge an n-1 by 2 matrix of which row i describes the merging of clusters at
-    *              step i of the clustering. If an element j in the row is less than n, then
-    *              observation j was merged at this stage. If j &ge; n then the merge
-    *              was with the cluster formed at the (earlier) stage j-n of the algorithm.
-    * @param height a set of n-1 non-decreasing real values, which are the clustering height,
-    *               i.e., the value of the criterion associated with the clustering method
-    *               for the particular agglomeration.
-    */
-  def dendrogram(merge: Array[Array[Int]], height: Array[Double]): Window = {
-    val canvas = Dendrogram.plot(merge, height)
-    Window(canvas)
-  }
-
   /** Plots the classification boundary.
    *
    * @param x training data.
@@ -706,5 +693,43 @@ trait Operators {
     win.canvas.add(surface)
 
     win
+  }
+
+  /** The scree plot is a useful visual aid for determining an appropriate number of principal components.
+    * The scree plot graphs the eigenvalue against the component number. To determine the appropriate
+    * number of components, we look for an "elbow" in the scree plot. The component number is taken to
+    * be the point at which the remaining eigenvalues are relatively small and all about the same size.
+    *
+    * @param pca principal component analysis object.
+    */
+  def screeplot(pca: PCA): Window = {
+    val canvas = PlotCanvas.screeplot(pca)
+    Window(canvas)
+  }
+
+  /** A dendrogram is a tree diagram to illustrate the arrangement
+    * of the clusters produced by hierarchical clustering.
+    *
+    * @param hc hierarchical clustering object.
+    */
+  def dendrogram(hc: HierarchicalClustering): Window = {
+    val canvas = Dendrogram.plot("Dendrogram", hc.getTree, hc.getHeight)
+    Window(canvas)
+  }
+
+  /** A dendrogram is a tree diagram to illustrate the arrangement
+    * of the clusters produced by hierarchical clustering.
+    *
+    * @param merge an n-1 by 2 matrix of which row i describes the merging of clusters at
+    *              step i of the clustering. If an element j in the row is less than n, then
+    *              observation j was merged at this stage. If j &ge; n then the merge
+    *              was with the cluster formed at the (earlier) stage j-n of the algorithm.
+    * @param height a set of n-1 non-decreasing real values, which are the clustering height,
+    *               i.e., the value of the criterion associated with the clustering method
+    *               for the particular agglomeration.
+    */
+  def dendrogram(merge: Array[Array[Int]], height: Array[Double]): Window = {
+    val canvas = Dendrogram.plot(merge, height)
+    Window(canvas)
   }
 }

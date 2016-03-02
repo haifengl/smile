@@ -17,7 +17,8 @@
 package smile.classification;
 
 import java.util.Arrays;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.data.Attribute;
 import smile.data.NumericAttribute;
@@ -57,6 +58,8 @@ import smile.validation.ClassificationMeasure;
  * @author Haifeng Li
  */
 public class AdaBoost implements SoftClassifier<double[]> {
+    private static final Logger logger = LoggerFactory.getLogger(AdaBoost.class);
+
     /**
      * The number of classes.
      */
@@ -290,7 +293,7 @@ public class AdaBoost implements SoftClassifier<double[]> {
             }
             
             if (1 - e <= guess) {
-                System.err.format("Skip the weak classifier %d makes %.2f%% weighted error\n", t, 100*e);
+                logger.error(String.format("Skip the weak classifier %d makes %.2f%% weighted error", t, 100*e));
                 if (++failures > 3) {
                     trees = Arrays.copyOf(trees, t);
                     alpha = Arrays.copyOf(alpha, t);

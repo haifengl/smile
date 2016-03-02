@@ -109,7 +109,7 @@ public class PCA implements Projection<double[]> {
      * is larger than the data dimension and cor = false, SVD is employed for
      * efficiency. Otherwise, eigen decomposition on covariance or correlation
      * matrix is performed.
-     * @param cor true if use correlation matrix instead of covariance matrix if ture.
+     * @param cor true use correlation matrix instead of covariance matrix if true.
      */
     public PCA(double[][] data, boolean cor) {
         int m = data.length;

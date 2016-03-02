@@ -82,7 +82,7 @@ public class Histogram {
      */
     public static double[][] histogram(int[] data, int k) {
         if (k <= 1) {
-            throw new IllegalArgumentException("Invlaid number of bins: " + k);
+            throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
         
         int min = Math.min(data);
@@ -126,7 +126,7 @@ public class Histogram {
     public static double[][] histogram(int[] data, double[] breaks) {
         int k = breaks.length - 1;
         if (k <= 1) {
-            throw new IllegalArgumentException("Invlaid number of bins: " + k);
+            throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
         
         double[][] freq = new double[3][k];
@@ -165,7 +165,7 @@ public class Histogram {
      */
     public static double[][] histogram(float[] data, int k) {
         if (k <= 1) {
-            throw new IllegalArgumentException("Invlaid number of bins: " + k);
+            throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
         
         float min = Math.min(data);
@@ -198,7 +198,7 @@ public class Histogram {
     public static double[][] histogram(float[] data, float[] breaks) {
         int k = breaks.length - 1;
         if (k <= 1) {
-            throw new IllegalArgumentException("Invlaid number of bins: " + k);
+            throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
         
         double[][] freq = new double[3][k];
@@ -266,7 +266,7 @@ public class Histogram {
     public static double[][] histogram(double[] data, double[] breaks) {
         int k = breaks.length - 1;
         if (k <= 1) {
-            throw new IllegalArgumentException("Invlaid number of bins: " + k);
+            throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
         
         double[][] freq = new double[3][k];

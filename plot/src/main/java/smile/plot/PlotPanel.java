@@ -39,6 +39,9 @@ import javax.swing.JPanel;
 import javax.swing.JToolBar;
 import javax.swing.RepaintManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import smile.swing.FileChooser;
 import smile.swing.Printer;
 
@@ -50,6 +53,8 @@ import smile.swing.Printer;
  */
 @SuppressWarnings("serial")
 public class PlotPanel extends JPanel implements ActionListener, Printable {
+    private static final Logger logger = LoggerFactory.getLogger(PlotPanel.class);
+
     /**
      * Toolbar command.
      */
@@ -161,7 +166,7 @@ public class PlotPanel extends JPanel implements ActionListener, Printable {
             button.setIcon(new ImageIcon(imageURL, altText));
         } else {                                     //no image found
             button.setText(altText);
-            System.err.println("Resource not found: " + imgLocation);
+            logger.error("Resource not found: {}", imgLocation);
         }
 
         return button;
@@ -174,7 +179,7 @@ public class PlotPanel extends JPanel implements ActionListener, Printable {
             try {
                 save();
             } catch (IOException ex) {
-                System.err.println(ex);
+                logger.error("Failed to save the screenshot", ex);
                 JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
 

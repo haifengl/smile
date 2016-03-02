@@ -16,6 +16,8 @@
 
 package smile.manifold
 
+import smile.util._
+
 /** High level manifold learning operators.
   *
   * @author Haifeng Li
@@ -62,7 +64,9 @@ trait Operators {
     * @param CIsomap C-Isomap algorithm if true, otherwise standard algorithm.
     */
   def isomap(data: Array[Array[Double]], d: Int, k: Int, CIsomap: Boolean = true): IsoMap = {
-    new IsoMap(data, d, k, CIsomap)
+    time {
+      new IsoMap(data, d, k, CIsomap)
+    }
   }
 
   /** Locally Linear Embedding. It has several advantages over Isomap, including
@@ -85,7 +89,9 @@ trait Operators {
     * @param k k-nearest neighbor.
     */
   def lle(data: Array[Array[Double]], d: Int, k: Int): LLE = {
-    new LLE(data, d, k)
+    time {
+      new LLE(data, d, k)
+    }
   }
 
   /** Laplacian Eigenmap. Using the notion of the Laplacian of the nearest
@@ -109,6 +115,8 @@ trait Operators {
     *          Non-positive value means discrete weights.
     */
   def laplacianeigenmap(data: Array[Array[Double]], d: Int, k: Int, t: Double = -1): LaplacianEigenmap = {
-    new LaplacianEigenmap(data, d, k, t)
+    time {
+      new LaplacianEigenmap(data, d, k, t)
+    }
   }
 }

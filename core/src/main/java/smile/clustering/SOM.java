@@ -16,6 +16,8 @@
 package smile.clustering;
 
 import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.clustering.linkage.Linkage;
 import smile.clustering.linkage.UPGMALinkage;
 import smile.math.Math;
@@ -81,6 +83,8 @@ import smile.math.matrix.EigenValueDecomposition;
  * @author Haifeng Li
  */
 public class SOM implements Clustering<double[]> {
+    private static final Logger logger = LoggerFactory.getLogger(SOM.class);
+
     /**
      * Self-Organizing Map Neuron.
      */
@@ -261,7 +265,7 @@ public class SOM implements Clustering<double[]> {
         for (int iter = 0; iter < trainLen; iter++) {
             int r = (int) Math.round(Math.sqrt(radius[iter]));
             double distortion = bbd.clustering(centroids, sums, hit, sy);
-            System.out.format("SOM distortion after %3d iterations (radius = %d): %.5f\n", iter + 1, r, distortion);
+            logger.info(String.format("SOM distortion after %3d iterations (radius = %d): %.5f", iter + 1, r, distortion));
 
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {

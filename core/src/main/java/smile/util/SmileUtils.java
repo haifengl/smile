@@ -105,7 +105,7 @@ public class SmileUtils {
      */
     public static GaussianRadialBasis[] learnGaussianRadialBasis(double[][] x, double[][] centers, int p) {
         if (p < 1) {
-            throw new IllegalArgumentException("Invlaid number of nearest neighbors: " + p);
+            throw new IllegalArgumentException("Invalid number of nearest neighbors: " + p);
         }
         
         int k = centers.length;
@@ -144,7 +144,7 @@ public class SmileUtils {
      */
     public static GaussianRadialBasis[] learnGaussianRadialBasis(double[][] x, double[][] centers, double r) {
         if (r <= 0.0) {
-            throw new IllegalArgumentException("Invlaid scaling parameter: " + r);
+            throw new IllegalArgumentException("Invalid scaling parameter: " + r);
         }
         
         int k = centers.length;
@@ -230,7 +230,7 @@ public class SmileUtils {
      */
     public static <T> GaussianRadialBasis[] learnGaussianRadialBasis(T[] x, T[] centers, Metric<T> distance, int p) {
         if (p < 1) {
-            throw new IllegalArgumentException("Invlaid number of nearest neighbors: " + p);
+            throw new IllegalArgumentException("Invalid number of nearest neighbors: " + p);
         }
         
         int k = centers.length;
@@ -270,7 +270,7 @@ public class SmileUtils {
      */
     public static <T> GaussianRadialBasis[] learnGaussianRadialBasis(T[] x, T[] centers, Metric<T> distance, double r) {
         if (r <= 0.0) {
-            throw new IllegalArgumentException("Invlaid scaling parameter: " + r);
+            throw new IllegalArgumentException("Invalid scaling parameter: " + r);
         }
         
         int k = centers.length;

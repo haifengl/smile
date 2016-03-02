@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.classification;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 
 /**
@@ -101,6 +103,8 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier<double[]> {
+    private static final Logger logger = LoggerFactory.getLogger(NeuralNetwork.class);
+
     /**
      * The types of error functions.
      */
@@ -349,7 +353,7 @@ public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier
          */
         public Trainer setNumEpochs(int epochs) {
             if (epochs < 1) {
-                throw new IllegalArgumentException("Invlaid numer of epochs of stochastic learning:" + epochs);
+                throw new IllegalArgumentException("Invalid numer of epochs of stochastic learning:" + epochs);
             }
         
             this.epochs = epochs;
@@ -365,7 +369,7 @@ public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier
             
             for (int i = 1; i <= epochs; i++) {
                 net.learn(x, y);
-                System.out.format("Neural network learning done epoch %d\n", i);
+                logger.info("Neural network learns epoch {}", i);
             }
             
             return net;
@@ -863,9 +867,9 @@ public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier
         if (weight < 0.0) {
             throw new IllegalArgumentException("Invalid weight: " + weight);            
         }
-        
+
         if (weight == 0.0) {
-            System.out.println("Ignore the training instance with zero weight.");
+            logger.info("Ignore the training instance with zero weight.");
             return;
         }
         

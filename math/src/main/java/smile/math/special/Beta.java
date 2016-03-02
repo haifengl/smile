@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.math.special;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 
 /**
@@ -27,6 +29,7 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class Beta {
+    private static final Logger logger = LoggerFactory.getLogger(Beta.class);
 
     /**
      *  A small number close to the smallest representable floating point number.
@@ -124,7 +127,7 @@ public class Beta {
             }
             if (i > MAXITER) {
                 test = false;
-                System.err.println("Maximum number of iterations wes exceeded");
+                logger.error("Beta.incompleteFractionSummation: Maximum number of iterations wes exceeded");
             }
         }
         return h;

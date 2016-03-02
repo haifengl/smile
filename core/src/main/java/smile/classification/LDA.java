@@ -189,7 +189,7 @@ public class LDA implements SoftClassifier<double[]> {
             double sum = 0.0;
             for (double pr : priori) {
                 if (pr <= 0.0 || pr >= 1.0) {
-                    throw new IllegalArgumentException("Invlaid priori probability: " + pr);
+                    throw new IllegalArgumentException("Invalid priori probability: " + pr);
                 }
                 sum += pr;
             }

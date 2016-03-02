@@ -17,6 +17,7 @@
 package smile.projection
 
 import smile.math.kernel.MercerKernel
+import smile.util._
 
 /** High level projection operators for feature extraction.
   *
@@ -61,7 +62,9 @@ trait Operators {
     * @param cor true if use correlation matrix instead of covariance matrix if ture.
     */
   def pca(data: Array[Array[Double]], cor: Boolean = false): PCA = {
-    new PCA(data, cor)
+    time {
+      new PCA(data, cor)
+    }
   }
 
   /** Probabilistic principal component analysis. PPCA is a simplified factor analysis
@@ -82,7 +85,9 @@ trait Operators {
     * @param k the number of principal component to learn.
     */
   def ppca(data: Array[Array[Double]], k: Int): PPCA = {
-    new PPCA(data, k)
+    time {
+      new PPCA(data, k)
+    }
   }
 
   /** Kernel principal component analysis. Kernel PCA is an extension of
@@ -113,7 +118,9 @@ trait Operators {
     *                  the given threshold will be kept.
     */
   def kpca[T <: Object](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T] = {
-    new KPCA[T](data, kernel, k, threshold)
+    time {
+      new KPCA[T](data, kernel, k, threshold)
+    }
   }
 
   /** Generalized Hebbian Algorithm. GHA is a linear feed-forward neural
@@ -148,9 +155,11 @@ trait Operators {
     * @param r the learning rate.
     */
   def gha(data: Array[Array[Double]], w: Array[Array[Double]], r: Double): GHA = {
-    val model = new GHA(w, r)
-    data.foreach(model.learn(_))
-    model
+    time {
+      val model = new GHA(w, r)
+      data.foreach(model.learn(_))
+      model
+    }
   }
 
   /** Generalized Hebbian Algorithm with random initial projection matrix.
@@ -160,8 +169,10 @@ trait Operators {
     * @param r the learning rate.
     */
   def gha(data: Array[Array[Double]], k: Int, r: Double): GHA = {
-    val model = new GHA(data(0).length, k, r)
-    data.foreach(model.learn(_))
-    model
+    time {
+      val model = new GHA(data(0).length, k, r)
+      data.foreach(model.learn(_))
+      model
+    }
   }
 }
