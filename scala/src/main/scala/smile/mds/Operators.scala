@@ -16,6 +16,8 @@
 
 package smile.mds
 
+import smile.util._
+
 /** High level multi-dimensional scaling operators.
   *
   * @author Haifeng Li
@@ -46,7 +48,9 @@ trait Operators {
     *            representing the objects.
     */
   def mds(proximity: Array[Array[Double]], k: Int, add: Boolean = false): MDS = {
-    new MDS(proximity, k, add)
+    time {
+      new MDS(proximity, k, add)
+    }
   }
 
   /** Kruskal's nonmetric MDS. In non-metric MDS, only the rank order of entries
@@ -65,7 +69,9 @@ trait Operators {
     * @param maxIter maximum number of iterations.
    */
   def isomds(proximity: Array[Array[Double]], init: Array[Array[Double]], tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS = {
-    new IsotonicMDS(proximity, init, tol, maxIter)
+    time {
+      new IsotonicMDS(proximity, init, tol, maxIter)
+    }
   }
 
   /** The Sammon's mapping is an iterative technique for making interpoint
@@ -105,6 +111,8 @@ trait Operators {
     * @param maxIter maximum number of iterations.
    */
   def sammon(proximity: Array[Array[Double]], init: Array[Array[Double]], lambda: Double = 0.2, tol: Double = 0.0001, maxIter: Int = 100): SammonMapping = {
-    new SammonMapping(proximity, init, lambda, tol, maxIter)
+    time {
+      new SammonMapping(proximity, init, lambda, tol, maxIter)
+    }
   }
 }

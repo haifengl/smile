@@ -19,6 +19,7 @@ package smile.nlp
 import scala.collection.JavaConversions._
 import smile.nlp.collocation._
 import smile.nlp.pos.{PennTreebankPOS, HMMPOSTagger}
+import smile.util._
 
 /** High level NLP operators.
   *
@@ -56,8 +57,10 @@ trait Operators {
     *         of likelihood ratio.
     */
   def bigram(k: Int, minFreq: Int, text: String*): Array[BigramCollocation] = {
-    val finder = new BigramCollocationFinder(minFreq)
-    finder.find(corpus(text), k)
+    time {
+      val finder = new BigramCollocationFinder(minFreq)
+      finder.find(corpus(text), k)
+    }
   }
 
   /** Identify bigram collocations whose p-value is less than
@@ -70,8 +73,10 @@ trait Operators {
     *         of likelihood ratio.
     */
   def bigram(p: Double, minFreq: Int, text: String*): Array[BigramCollocation] = {
-    val finder = new BigramCollocationFinder(minFreq)
-    finder.find(corpus(text), p)
+    time {
+      val finder = new BigramCollocationFinder(minFreq)
+      finder.find(corpus(text), p)
+    }
   }
 
   private val phrase = new AprioriPhraseExtractor
@@ -84,16 +89,18 @@ trait Operators {
     * @return An array of sets of n-grams. The i-th entry is the set of i-grams.
     */
   def ngram(maxNGramSize: Int, minFreq: Int, text: String*): Seq[Seq[NGram]] = {
-    val sentences = text.flatMap { text =>
-      text.sentences.map { sentence =>
-        sentence.words.map { word =>
-          porter.stripPluralParticiple(word).toLowerCase
+    time {
+      val sentences = text.flatMap { text =>
+        text.sentences.map { sentence =>
+          sentence.words.map { word =>
+            porter.stripPluralParticiple(word).toLowerCase
+          }
         }
       }
-    }
 
-    val ngrams = phrase.extract(sentences, maxNGramSize, minFreq)
-    ngrams.map(_.toSeq).toSeq
+      val ngrams = phrase.extract(sentences, maxNGramSize, minFreq)
+      ngrams.map(_.toSeq).toSeq
+    }
   }
 
   /** Part-of-speech taggers.
@@ -102,6 +109,8 @@ trait Operators {
    * @return the pos tags.
    */
   def postag(sentence: String): Array[PennTreebankPOS] = {
-    HMMPOSTagger.getDefault.tag(sentence.words)
+    time {
+      HMMPOSTagger.getDefault.tag(sentence.words)
+    }
   }
 }

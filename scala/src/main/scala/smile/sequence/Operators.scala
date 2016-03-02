@@ -18,6 +18,7 @@ package smile.sequence
 
 import smile.data.Attribute
 import smile.sequence.CRF.Trainer
+import smile.util._
 
 /** High level sequence annotation operators.
   *
@@ -42,7 +43,9 @@ trait Operators {
     *               values in [0, p), where p is the number of hidden states.
     */
   def hmm(observations: Array[Array[Int]], labels: Array[Array[Int]]): HMM[Int] = {
-    new HMM[Int](observations, labels)
+    time {
+      new HMM[Int](observations, labels)
+    }
   }
 
   /** Trains a first-order Hidden Markov Model.
@@ -53,7 +56,9 @@ trait Operators {
     *               values in [0, p), where p is the number of hidden states.
     */
   def hmm[T <: Object](observations: Array[Array[T]], labels: Array[Array[Int]]): HMM[T] = {
-    new HMM[T](observations, labels)
+    time {
+      new HMM[T](observations, labels)
+    }
   }
 
   /** First-order linear conditional random field. A conditional random field is a
@@ -78,10 +83,12 @@ trait Operators {
     * @param maxNodes the maximum number of leaf nodes in the tree.
     */
   def crf(sequences: Array[Array[Array[Double]]], labels: Array[Array[Int]], attributes: Array[Attribute], k: Int, eta: Double = 1.0, ntrees: Int = 100, maxNodes: Int = 100): CRF = {
-    val trainer = new Trainer(attributes, k)
-    trainer.setLearningRate(eta)
-           .setMaxNodes(maxNodes)
-           .setNumTrees(ntrees)
-    trainer.train(sequences, labels)
+    time {
+      val trainer = new Trainer(attributes, k)
+      trainer.setLearningRate(eta)
+        .setMaxNodes(maxNodes)
+        .setNumTrees(ntrees)
+      trainer.train(sequences, labels)
+    }
   }
 }
