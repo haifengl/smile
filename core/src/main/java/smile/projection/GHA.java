@@ -26,7 +26,7 @@ import smile.math.Math;
  * <p>
  * It guarantees that GHA finds the first k eigenvectors of the covariance matrix,
  * assuming that the associated eigenvalues are distinct. The convergence theorem
- * is forumulated in terms of a time-varying learning rate &eta;. In practice, the
+ * is formulated in terms of a time-varying learning rate &eta;. In practice, the
  * learning rate &eta; is chosen to be a small constant, in which case convergence is
  * guaranteed with mean-squared error in synaptic weights of order &eta;.
  * <p>
