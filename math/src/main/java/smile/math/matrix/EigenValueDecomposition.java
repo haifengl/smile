@@ -906,10 +906,9 @@ public class EigenValueDecomposition {
 
         logger.info("Lancozs method found {} converged eigenvalues of the {}-by-{} matrix", neig, step + 1, step + 1);
         if (neig != 0) {
-            logger.info("ritz: {}", ritz);
             for (int i = 0, n = 0; i <= step; i++) {
                 if (bnd[i] <= 16.0 * Math.EPSILON * Math.abs(ritz[i])) {
-                    logger.info("ritz[{}] = ", i, ritz[i]);
+                    logger.info("ritz[{}] = {}", i, ritz[i]);
                 }
             }
         }
