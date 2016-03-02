@@ -267,7 +267,7 @@ public class SVM <T> implements OnlineClassifier<T> {
          */
         public Trainer setTolerance(double tol) {
             if (tol <= 0.0) {
-                throw new IllegalArgumentException("Invlaid tolerance of convergence test:" + tol);
+                throw new IllegalArgumentException("Invalid tolerance of convergence test:" + tol);
             }
 
             this.tol = tol;
@@ -280,7 +280,7 @@ public class SVM <T> implements OnlineClassifier<T> {
          */
         public Trainer setNumEpochs(int epochs) {
             if (epochs < 1) {
-                throw new IllegalArgumentException("Invlaid numer of epochs of stochastic learning:" + epochs);
+                throw new IllegalArgumentException("Invalid numer of epochs of stochastic learning:" + epochs);
             }
         
             this.epochs = epochs;
@@ -1045,7 +1045,7 @@ public class SVM <T> implements OnlineClassifier<T> {
      */
     public SVM setTolerance(double tol) {
         if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invlaid tolerance of convergence test:" + tol);
+            throw new IllegalArgumentException("Invalid tolerance of convergence test:" + tol);
         }
         
         this.tol = tol;

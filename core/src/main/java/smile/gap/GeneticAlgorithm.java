@@ -353,7 +353,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
      */
     public T evolve(int generation, double threshold) {
         if (generation <= 0) {
-            throw new IllegalArgumentException("Invlid number of generations to go: " + generation);
+            throw new IllegalArgumentException("Invalid number of generations to go: " + generation);
         }
         
         // Calculate the fitness of each chromosome.

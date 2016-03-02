@@ -353,7 +353,7 @@ public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier
          */
         public Trainer setNumEpochs(int epochs) {
             if (epochs < 1) {
-                throw new IllegalArgumentException("Invlaid numer of epochs of stochastic learning:" + epochs);
+                throw new IllegalArgumentException("Invalid numer of epochs of stochastic learning:" + epochs);
             }
         
             this.epochs = epochs;

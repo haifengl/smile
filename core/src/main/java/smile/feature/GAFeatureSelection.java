@@ -149,7 +149,7 @@ public class GAFeatureSelection {
         }
         
         if (generation <= 0) {
-            throw new IllegalArgumentException("Invlid number of generations to go: " + generation);
+            throw new IllegalArgumentException("Invalid number of generations to go: " + generation);
         }
         
         if (x.length != y.length) {
@@ -336,7 +336,7 @@ public class GAFeatureSelection {
         }
         
         if (generation <= 0) {
-            throw new IllegalArgumentException("Invlid number of generations to go: " + generation);
+            throw new IllegalArgumentException("Invalid number of generations to go: " + generation);
         }
         
         if (x.length != y.length) {

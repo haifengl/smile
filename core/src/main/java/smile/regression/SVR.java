@@ -180,7 +180,7 @@ public class SVR<T> implements Regression<T> {
          */
         public Trainer setTolerance(double tol) {
             if (tol <= 0.0) {
-                throw new IllegalArgumentException("Invlaid tolerance of convergence test:" + tol);
+                throw new IllegalArgumentException("Invalid tolerance of convergence test:" + tol);
             }
 
             this.tol = tol;
@@ -262,7 +262,7 @@ public class SVR<T> implements Regression<T> {
         }
         
         if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invlaid tolerance of convergence test:" + tol);
+            throw new IllegalArgumentException("Invalid tolerance of convergence test:" + tol);
         }
         
         this.kernel = kernel;

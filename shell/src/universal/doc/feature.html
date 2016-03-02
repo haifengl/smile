@@ -100,16 +100,115 @@
         genetic algorithms are employed for subset selection.</p>
 
     <h3 id="signal-noise-ratio">Signal Noise Ratio</h3>
-    <p></p>
+
+    <p>The signal-to-noise (S2N) metric ratio is a univariate feature ranking metric,
+        which can be used as a feature selection criterion for binary classification
+        problems. S2N is defined as</p>
+
+    <pre class="prettyprint lang-html"><code>
+    |&mu;<sub>1</sub> - &mu;<sub>2</sub>| / (&sigma;<sub>1</sub> + &sigma;<sub>2</sub>)
+    </code></pre>
+
+    <p>where &mu;<sub>1</sub> and &mu;<sub>2</sub> are the mean value of the variable
+        in classes 1 and 2, respectively, and &sigma;<sub>1</sub> and &sigma;<sub>2</sub>
+        are the standard deviations of the variable in classes 1 and 2, respectively.
+        Clearly, features with larger S2N ratios are better for classification.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def signalNoiseRatio(x: Array[Array[Double]], y: Array[Int]): Array[Double]
+    </code></pre>
+
+    <p>The output is the S2N ratios for each variable.</p>
 
     <h3 id="sum-squares-ratio">Sum Squares Ratio</h3>
-    <p></p>
+
+    <p>The ratio of between-groups to within-groups sum of squares is a univariate
+        feature ranking metric, which can be used as a feature selection criterion
+        for multi-class classification problems. For each variable j, this ratio is</p>
+
+    <pre class="prettyprint lang-html"><code>
+    BSS(j) / WSS(j) = &Sigma;I(y<sub>i</sub> = k)(x<sub>kj</sub> - x<sub>&middot;j</sub>)<sup>2</sup> / &Sigma;I(y<sub>i</sub> = k)(x<sub>ij</sub> - x<sub>kj</sub>)<sup>2</sup>
+    </code></pre>
+
+    <p>where x<sub>&middot;j</sub> denotes the average of variable j across all
+        samples, x<sub>kj</sub> denotes the average of variable j across samples
+        belonging to class k, and x<sub>ij</sub> is the value of variable j of sample i.
+        Clearly, features with larger sum squares ratios are better for classification.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def sumSquaresRatio(x: Array[Array[Double]], y: Array[Int]): Array[Double]
+    </code></pre>
+
+    <p>Applying it to Iris data, we can find that the last two variables have much higher
+        sum squares ratios (about 16 and 13 in contrast to 1.6 and 0.6 of the first two variables).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val iris = readArff("data/weka/iris.arff", 4)
+    val (x, y) = iris.unzipInt
+    sumSquaresRatio(x, y)
+
+    val x2 = x.map(_.slice(2,4)) // take last two columns
+    val window = plot(x2, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
+    window.canvas.setAxisLabels(iris.attributes.map(_.getName).slice(2,4): _*)
+    </code></pre>
+
+    <p>The scatter plot of the last two variables shows clearly that they capture the difference
+        among classes.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris-petal-width-length.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Iris Petal Width vs Length</div>
+    </div>
 
     <h3 id="ensemble-learning-feature-selection">Ensemble Learning Based Feature Selection</h3>
-    <p></p>
+
+    <p>Ensemble learning methods (e.g. random forest, gradient boosted trees, and AdaBoost) can give
+        the estimates of what variables are important in the classification.
+        Every time a split of a node is made on variable
+        the (GINI, information gain, etc.) impurity criterion for the two
+        descendent nodes is less than the parent node. Adding up the decreases
+        for each individual variable over all trees in the forest gives a fast
+        variable importance that is often very consistent with the permutation
+        importance measure.</p>
+
+    <p>For these algorithms, there is a method <code>importance</code> returning
+        the scores for feature selection (higher is better).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val model = randomForest(x, y)
+    println(model.importance.mkString(", ")
+    </code></pre>
+
+    <p>For Iris data, random forest also gives much higher importance scores for
+        the last two variables.</p>
+
+    <p>For data including categorical variables with different number of
+        levels, random forests are biased in favor of those attributes with more
+        levels. Therefore, the variable importance scores from random forest are
+        not reliable for this type of data.</p>
 
     <h3 id="genetic-algorithm-feature-selection">Genetic Algorithm Based Feature Selection</h3>
-    <p></p>
+
+    <p>Genetic algorithm based feature selection method finds many (random)
+        subsets of variables of expected classification power using a Genetic
+        Algorithm. The "fitness" of each subset of variables is determined by its
+        ability to classify the samples according to a given classification
+        method. When many such subsets of variables are obtained, the one with best
+        performance may be used as selected features. Alternatively, the frequencies
+        with which variables are selected may be analyzed further. The most
+        frequently selected variables may be presumed to be the most relevant to
+        sample distinction and are finally used for prediction. Although GA avoids
+        brute-force search, it is still much slower than univariate feature selection.</p>
+
+    <pre class="prettyprint lang-java"><code>
+    int size = 100;
+    int generation = 20;
+    ClassifierTrainer<double[]> trainer = new LDA.Trainer();
+    ClassificationMeasure measure = new Accuracy();
+
+    GAFeatureSelection selector = new GAFeatureSelection();
+    BitString[] result = selector.learn(size, generation, trainer, measure, x, y, testx, testy);
+    </code></pre>
 
     <h2 id="dimension-reduction">Dimension Reduction</h2>
 

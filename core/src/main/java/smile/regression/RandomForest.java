@@ -148,7 +148,7 @@ public class RandomForest implements Regression<double[]> {
          */
         public Trainer setNumTrees(int ntrees) {
             if (ntrees < 1) {
-                throw new IllegalArgumentException("Invlaid number of trees: " + ntrees);
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
             }
 
             this.ntrees = ntrees;
