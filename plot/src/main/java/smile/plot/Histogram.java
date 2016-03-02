@@ -268,7 +268,7 @@ public class Histogram extends BarPlot {
     private static double[][] histogram(int[] data, double[] breaks, boolean prob) {
         int k = breaks.length - 1;
         if (k <= 1) {
-            throw new IllegalArgumentException("Invlaid number of bins: " + k);
+            throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
         
         double[][] hist = smile.math.Histogram.histogram(data, breaks);
@@ -298,7 +298,7 @@ public class Histogram extends BarPlot {
     private static double[][] histogram(double[] data, double[] breaks, boolean prob) {
         int k = breaks.length - 1;
         if (k <= 1) {
-            throw new IllegalArgumentException("Invlaid number of bins: " + k);
+            throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
         
         double[][] hist = smile.math.Histogram.histogram(data, breaks);

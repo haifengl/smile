@@ -32,6 +32,7 @@ import smile.validation._
 import smile.association._
 import smile.regression._
 import smile.classification._
+import smile.feature._
 import smile.clustering._
 import smile.manifold._
 import smile.mds._

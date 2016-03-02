@@ -288,13 +288,13 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
      */
     public NaiveBayes(double[] priori, Distribution[][] condprob) {
         if (priori.length != condprob.length) {
-            throw new IllegalArgumentException("The number of priori probabilites and that of the classes are not same.");
+            throw new IllegalArgumentException("The number of priori probabilities and that of the classes are not same.");
         }
 
         double sum = 0.0;
         for (double pr : priori) {
             if (pr <= 0.0 || pr >= 1.0) {
-                throw new IllegalArgumentException("Invlaid priori probability: " + pr);
+                throw new IllegalArgumentException("Invalid priori probability: " + pr);
             }
             sum += pr;
         }
@@ -405,7 +405,7 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
         double sum = 0.0;
         for (double pr : priori) {
             if (pr <= 0.0 || pr >= 1.0) {
-                throw new IllegalArgumentException("Invlaid priori probability: " + pr);
+                throw new IllegalArgumentException("Invalid priori probability: " + pr);
             }
             sum += pr;
         }

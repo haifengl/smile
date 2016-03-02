@@ -90,7 +90,7 @@ public class DENCLUE extends PartitionClustering<double[]> {
         }
         
         if (m <= 0) {
-            throw new IllegalArgumentException("Invlaid number of selected samples: " + m);
+            throw new IllegalArgumentException("Invalid number of selected samples: " + m);
         }
         
         if (m < 10) {
