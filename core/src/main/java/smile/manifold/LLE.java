@@ -114,7 +114,7 @@ public class LLE {
         }
 
         // Use largest connected component.
-        int[][] cc = graph.dfs();
+        int[][] cc = graph.bfs();
         int[] newIndex = new int[n];
         if (cc.length == 1) {
             index = new int[n];

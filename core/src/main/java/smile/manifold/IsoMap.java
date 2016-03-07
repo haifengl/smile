@@ -134,7 +134,7 @@ public class IsoMap {
         }
         
         // Use largest connected component.
-        int[][] cc = graph.dfs();
+        int[][] cc = graph.bfs();
         if (cc.length == 1) {
             index = new int[n];
             for (int i = 0; i < n; i++) {
