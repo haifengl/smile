@@ -63,14 +63,13 @@ trait Operators {
     *
     * @param proximity the nonnegative proximity matrix of dissimilarities. The
     *                  diagonal should be zero and all other elements should be positive and symmetric.
-    * @param init the initial projected coordinates, of which the column
-    *             size is the projection dimension.
+    * @param k the dimension of the projection.
     * @param tol tolerance for stopping iterations.
     * @param maxIter maximum number of iterations.
-   */
-  def isomds(proximity: Array[Array[Double]], init: Array[Array[Double]], tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS = {
+    */
+  def isomds(proximity: Array[Array[Double]], k: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS = {
     time {
-      new IsotonicMDS(proximity, init, tol, maxIter)
+      new IsotonicMDS(proximity, k, tol, maxIter)
     }
   }
 
@@ -104,15 +103,14 @@ trait Operators {
     *
     * @param proximity the nonnegative proximity matrix of dissimilarities. The
     *                  diagonal should be zero and all other elements should be positive and symmetric.
-    * @param init the initial projected coordinates, of which the column
-    *             size is the projection dimension.
+    * @param k the dimension of the projection.
     * @param lambda initial value of the step size constant in diagonal Newton method.
     * @param tol tolerance for stopping iterations.
     * @param maxIter maximum number of iterations.
-   */
-  def sammon(proximity: Array[Array[Double]], init: Array[Array[Double]], lambda: Double = 0.2, tol: Double = 0.0001, maxIter: Int = 100): SammonMapping = {
+    */
+  def sammon(proximity: Array[Array[Double]], k: Int, lambda: Double = 0.2, tol: Double = 0.0001, maxIter: Int = 100): SammonMapping = {
     time {
-      new SammonMapping(proximity, init, lambda, tol, maxIter)
+      new SammonMapping(proximity, k, lambda, tol, maxIter)
     }
   }
 }
