@@ -114,7 +114,7 @@ trait Operators {
     * @param t the smooth/width parameter of heat kernel e<sup>-||x-y||<sup>2</sup> / t</sup>.
     *          Non-positive value means discrete weights.
     */
-  def laplacianeigenmap(data: Array[Array[Double]], d: Int, k: Int, t: Double = -1): LaplacianEigenmap = {
+  def laplacian(data: Array[Array[Double]], d: Int, k: Int, t: Double = -1): LaplacianEigenmap = {
     time {
       new LaplacianEigenmap(data, d, k, t)
     }
