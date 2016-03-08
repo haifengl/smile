@@ -39,16 +39,16 @@
         Then clone the repo and build the package:</p>
 
     <pre class="prettyprint lang-bash"><code>
-        git clone https://github.com/haifengl/smile.git
-        cd smile
-        ./pkg.sh
+    git clone https://github.com/haifengl/smile.git
+    cd smile
+    ./pkg.sh
     </code></pre>
 
     <p>To test the latest code, run the following</p>
 
     <pre class="prettyprint lang-bash"><code>
-        git pull
-        ./smile.sh
+    git pull
+    ./smile.sh
     </code></pre>
 
     <p>which will build the system and enter the shell.</p>
@@ -65,7 +65,7 @@
     <p>Smile comes with an interactive shell. In the home directory of Smile, type</p>
 
     <pre class="prettyprint lang-bash"><code>
-        ./bin/smile
+    ./bin/smile
     </code></pre>
 
     <p>to enter the shell, which is based on <a href="http://www.scala-lang.org">Scala</a>
@@ -76,7 +76,7 @@
         to handle large data, use the option <code>-J-Xmx</code>. For example,</p>
 
     <pre class="prettyprint lang-bash"><code>
-        ./bin/smile -J-Xmx8192M
+    ./bin/smile -J-Xmx8192M
     </code></pre>
 
     <p>You can also modify the configuration file <code>./conf/application.ini</code>
@@ -101,12 +101,12 @@
         a classification model with Smile. It is as easy as</p>
 
     <pre class="prettyprint lang-scala"><code>
-        val data = readArff("data/weka/iris.arff", 4)
-        val (x, y) = data.unzipInt
+    val data = readArff("data/weka/iris.arff", 4)
+    val (x, y) = data.unzipInt
 
-        val rf = randomForest(x, y)
-        println(s"OOB error = ${rf.error}")
-        rf.predict(x(0)) // or predict(rf, x(0))
+    val rf = randomForest(x, y)
+    println(s"OOB error = ${rf.error}")
+    rf.predict(x(0)) // or predict(rf, x(0))
     </code></pre>
 
     <p>In this example, we use the famous Iris data from R.A. Fisher. The data
