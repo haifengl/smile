@@ -21,7 +21,7 @@ import smile.math.Math;
 /**
  * The bootstrap is a general tool for assessing statistical accuracy. The basic
  * idea is to randomly draw datasets with replacement from the training data,
- * each sample the same size as the original training set. This is done many
+ * each samples the same size as the original training set. This is done many
  * times (say k = 100), producing k bootstrap datasets. Then we refit the model
  * to each of the bootstrap datasets and examine the behavior of the fits over
  * the k replications.
