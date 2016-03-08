@@ -308,6 +308,7 @@ trait Operators {
   def bootstrap[T <: Object](x: Array[T], y: Array[Int], k: Int, measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
     val split = new Bootstrap(x.length, k)
 
+    val m = measuresOrAccuracy(measures)
     val results = (0 until k).map { i =>
       print(s"bootstrap ${i+1}...")
       val trainx = Math.slice[T](x, split.train(i))
@@ -323,7 +324,7 @@ trait Operators {
         predictions(j) = model.predict(x(l))
       }
 
-      measuresOrAccuracy(measures).map { measure =>
+      m.map { measure =>
         val result = measure.measure(truth, predictions)
         println(f"$measure%s: ${100*result}%.2f%%")
         result
@@ -331,8 +332,9 @@ trait Operators {
     }.toArray
 
     val avg = Math.colMean(results)
+    println("Bootstrap average:")
     for (i <- 0 until avg.length) {
-      println(f"${measures(i)}%s: ${100*avg(i)}%.2f%%")
+      println(f"${m(i)}%s: ${100*avg(i)}%.2f%%")
     }
 
     avg
@@ -350,6 +352,7 @@ trait Operators {
   def bootstrap[T <: Object](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
     val split = new Bootstrap(x.length, k)
 
+    val m = measuresOrRMSE(measures)
     val results = (0 until k).map { i =>
       print(s"bootstrap ${i+1}...")
       val trainx = Math.slice[T](x, split.train(i))
@@ -365,7 +368,7 @@ trait Operators {
         predictions(j) = model.predict(x(l))
       }
 
-      measuresOrRMSE(measures).map { measure =>
+      m.map { measure =>
         val result = measure.measure(truth, predictions)
         println(f"$measure%s: $result%.4f")
         result
@@ -375,7 +378,7 @@ trait Operators {
     val avg = Math.colMean(results)
     println("Bootstrap average:")
     for (i <- 0 until avg.length) {
-      println(f"${measures(i)}%s: ${avg(i)}%.4f")
+      println(f"${m(i)}%s: ${avg(i)}%.4f")
     }
 
     avg
