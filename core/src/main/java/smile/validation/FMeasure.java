@@ -18,7 +18,7 @@ package smile.validation;
 
 /**
  * The F-score (or F-measure) considers both the precision and the recall of the test
- * to compute the score. THe precision p is the number of correct positive results
+ * to compute the score. The precision p is the number of correct positive results
  * divided by the number of all positive results, and the recall r is the number of
  * correct positive results divided by the number of positive results that should
  * have been returned.
