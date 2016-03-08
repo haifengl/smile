@@ -1,0 +1,234 @@
+<!-- Google Analytics -->
+<script src="js/google-analytics.js" type="text/javascript"></script>
+
+<!-- prettify js and CSS -->
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=scala"></script>
+
+<!-- scroll/follow sidebar -->
+<script src="js/follow-sidebar.js" type="text/javascript"></script>
+
+<div class="col-md-3 col-md-push-9">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="validation-top" class="title">Model Validation</h1>
+
+    <p>When training a supervised model, we should always evaluate the goodness of fit of
+        the model. This helps on model selection and also hyperparameter tuning.
+        First of all, we should note that the error of the model as measured
+        on the training data is likely to be lower than the actual generalization error.</p>
+
+    <p>Although most supervised learning algorithms try to minimize the empirical error
+        (regularized or not), we should not use only error rate or accuracy as the objective
+        measure. For example, if a highly unbalanced data contains 99% positive sample, a naive
+        algorithm that classifies everything as positive will have 99% accuracy. However,
+        it is useless.</p>
+
+    <p>For classification, Smile has the following measures:</p>
+
+    <ul>
+        <li>The <b>accuracy</b> is the proportion of true results (both true positives and
+            true negatives) in the population.</li>
+        <li>The <b>sensitivity</b> or <b>true positive rate</b> (TPR) (also called <b>hit rate</b>, <b>recall</b>)
+            is a statistical measures of the performance of a binary classification test.
+            Sensitivity is the proportion of actual positives which are correctly identified as such.
+    <pre class="prettyprint lang-html"><code>
+    TPR = TP / P = TP / (TP + FN)
+    </code></pre>
+        </li>
+        <li>The <b>specificity</b> (SPC) or <b>true negative rate</b> is a statistical measures of the performance
+            of a binary classification test. Specificity measures the proportion
+            of negatives which are correctly identified.
+    <pre class="prettyprint lang-html"><code>
+    SPC = TN / N = TN / (FP + TN) = 1 - FPR
+    </code></pre>
+        </li>
+        <li>The <b>precision</b> or <b>positive predictive value</b> (PPV) is ratio of true positives
+            to combined true and false positives, which is different from sensitivity.
+    <pre class="prettyprint lang-html"><code>
+    PPV = TP / (TP + FP)
+    </code></pre>
+        </li>
+        <li>The <b>false discovery rate</b> (FDR) is ratio of false positives
+            to combined true and false positives, which is actually 1 - precision.
+    <pre class="prettyprint lang-html"><code>
+    FDR = FP / (TP + FP)
+    </code></pre>
+        </li>
+        <li><b>Fall-out, false alarm rate, or false positive rate</b> (FPR) is
+    <pre class="prettyprint lang-html"><code>
+    FPR = FP / N = FP / (FP + TN)
+    </code></pre>
+            Fall-out is actually Type I error and closely related to specificity (1 - specificity).</li>
+        <li><p>The <b>F-score</b> (or <b>F-measure</b>) considers both the precision and the recall of the test
+            to compute the score. The traditional or balanced F-score (F1 score) is the harmonic mean of
+            precision and recall, where an F1 score reaches its best value at 1 and worst at 0.</p>
+
+            <p>The general formula involves a positive real &beta; so that F-score measures
+            the effectiveness of retrieval with respect to a user who attaches &beta; times
+            as much importance to recall as precision.</p></li>
+    </ul>
+
+    <p>In Smile, the class label 1 is regarded as positive and all others are regarded as negative.</p>
+
+    <p>Sensitivity and specificity are closely related to the concepts of type I and type II errors.
+        For any test, there is usually a trade-off between the measures. This trade-off
+        can be represented graphically using an ROC curve.</p>
+
+    <p>For regression, Smile has the following measures:</p>
+
+    <ul>
+        <li>MSE (mean squared error) and RMSE (root mean squared error.).</li>
+        <li>Absolute deviation error.</li>
+        <li>RSS (residual sum of squares).</li>
+    </ul>
+
+    <h2 id="out-of-sample">Out-of-sample Evaluation</h2>
+
+    <p>The generalization error (also known as the out-of-sample error) is
+        a measure of how accurately an algorithm is able to predict outcome
+        values for previously unseen data. Ideally, test data should be
+        statistically independent from training data.
+        But in practice, we usually have only one historical dataset and
+        the evaluation of a learning algorithm may be sensitive to sampling error.
+        In what follows, we discuss various testing mechanisms.</p>
+
+    <h3 id="hold-out">Hold-out Testing</h3>
+
+    <p>Hold-out testing assume that all data
+        samples are independently and identically distributed (this is also
+        the basic assumption of most learning algorithms).
+        A part of the data is hold out for testing. Many benchmark data
+        contain a separate test dataset.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    // Test a generic classifier. Only accuracy is calculated.
+    def test[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T]
+
+    // Test a binary classifier. Report accuracy, sensitivity/recall, specificity, precision, and F-Score.
+    def test2[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T]
+
+    // Test a binary soft classifier. In addition to test2, AUC is caulcated.
+    def test2soft[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => SoftClassifier[T]): SoftClassifier[T]
+    </code></pre>
+
+    <p>The above methods takes a code block to train the model and apply it on the test data.
+        If the parameter <code>parTest</code> is true, the testing is performed parallely
+        on multi cores. For some implementations that is not multi-threading safe, e.g. neural
+        networks, this parameter should be set false. These methods return the trained model
+        and print out various measures.</p>
+
+    <h3 id="out-of-bag">Out-of-bag Error</h3>
+
+    <p>Out-of-bag (OOB) error, also called out-of-bag estimate, is a method of measuring
+        the prediction error of random forests, boosted decision trees, and other machine
+        learning models utilizing bootstrap aggregating to sub-sample data sampled used
+        for training. OOB is the mean prediction error on each training sample <code>x<sub>i</sub></code>, using
+        only the trees that did not have <code>x<sub>i</sub></code> in their bootstrap sample.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val rf = randomForest(x, y)
+    println(s"OOB error = ${rf.error}")
+    </code></pre>
+
+    <p>Subsampling allows one to define an out-of-bag estimate of the prediction performance
+        improvement by evaluating predictions on those observations which were not used
+        in the building of the next base learner. Out-of-bag estimates help avoid the
+        need for an independent validation dataset, but often underestimate actual
+        performance improvement and the optimal number of iterations.</p>
+
+    <h2 id="cross-validation">Cross Validation</h2>
+
+    <p>In <code>k</code>-fold cross validation, the dataset is divided into <code>k</code> random partitions.
+        We treat each of the <code>k</code> partition like a hold-out set, train a model on
+        the rest of data, and measure the quality of the model on the held-out.
+        The overall performance is taken to be the average of the performance
+        on all <code>k</code> partitions.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def cv[T](x: Array[T], y: Array[Int], k: Int, measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
+
+    def cv[T](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
+    </code></pre>
+
+    <p>When no measures are provided, the methods use accuracy or RMSE by default
+        for classification or regression, respectively.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val data = readArff("data/weka/iris.arff", 4)
+    val (x, y) = data.unzipInt
+    cv(x, y, 10) { case (x, y) => lda(x, y) }
+    </code></pre>
+
+    <p>On the Iris data, the accuracy estimation of 10-fold cross validation
+        is about 84%. You may get different number because of the random partitions.</p>
+
+    <p>A special case is the leave-one-out cross validation that uses a single observation
+        from the original sample as the validation data, and the remaining
+        observations as the training data. This is repeated such that each
+        observation in the sample is used once as the validation data.
+        Leave-one-out cross-validation is
+        usually very expensive from a computational point of view because of the
+        large number of times the training process is repeated.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def loocv[T](x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
+
+    def loocv[T](x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
+    </code></pre>
+
+    <p>On the Iris data, the accuracy estimation of LOOCV is 85.33%,
+        which is higher than that of 10-fold cross validation. This
+        is because more data is used for training and less for testing.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    loocv(x, y) { case (x, y) => lda(x, y) }
+    </code></pre>
+
+    <h2 id="bootstrap">Bootstrap</h2>
+
+    <p>Bootstrap is a general tool for assessing statistical accuracy. The basic
+        idea is to randomly draw data with replacement from the training data,
+        each bootstrap sample set has the same size as the original training set.
+        In the bootstrap set, the expected ratio of unique instances is
+        approximately <code>1 − 1/e ≈ 63.2%</code>. This process is done many
+        times (say <code>k = 100</code>), producing <code>k</code> bootstrap datasets.
+        Then we fit the model to each of the bootstrap datasets and examine
+        the behavior of the fits over the <code>k</code> replications.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def bootstrap[T](x: Array[T], y: Array[Int], k: Int, measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
+
+    def bootstrap[T](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
+    </code></pre>
+
+    <p>On the Iris data, the accuracy estimation of 100 bootstraps
+        is about 83.3%, which is slightly lower than that of 10-fold cross validation.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    bootstrap(x, y, 100) { case (x, y) => lda(x, y) }
+    </code></pre>
+
+    <p>The bootstrap distribution of a parameter-estimator has been used to
+        calculate confidence intervals for its population-parameter.
+        If the bootstrap distribution of an estimator
+        is symmetric, then percentile confidence-interval are often used;
+        such intervals are appropriate especially for median-unbiased estimators
+        of minimum risk (with respect to an absolute loss function).
+        Otherwise, if the bootstrap distribution is non-symmetric, then percentile
+        confidence-intervals are often inappropriate.</p>
+
+    <p>The bootstrap distribution and the sample may disagree systematically,
+        in which case bias may occur. Bias in the
+        bootstrap distribution will lead to bias in the confidence-interval.</p>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>
