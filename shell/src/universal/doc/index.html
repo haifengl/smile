@@ -86,6 +86,31 @@
         $('#content').load('feature.html');
       });
 
+      $("#validation").click(function(event){
+        event.preventDefault();
+        $('#content').load('validation.html');
+      });
+
+      $("#clustering").click(function(event){
+        event.preventDefault();
+        $('#content').load('clustering.html');
+      });
+
+      $("#association-rule").click(function(event){
+        event.preventDefault();
+        $('#content').load('association-rule.html');
+      });
+
+      $("#manifold").click(function(event){
+        event.preventDefault();
+        $('#content').load('manifold.html');
+      });
+
+      $("#mds").click(function(event){
+        event.preventDefault();
+        $('#content').load('mds.html');
+      });
+
       $("#math").click(function(event){
         event.preventDefault();
         $('#content').load('math.html');
@@ -158,14 +183,20 @@
           <li><a id="classification" href="#">Classification</a></li>
           <li><a id="regression" href="#">Regression</a></li>
           <li><a id="feature" href="#">Feature Selection and Dimension Reduction</a></li>
+          <li><a id="validation" href="#">Model Validation</a></li>
+          <li class="divider"></li>
+          <li><a id="clustering" href="#">Clustering</a></li>
+          <li><a id="association-rule" href="#">Association Rule Mining</a></li>
+          <li><a id="mds" href="#">Multi-Dimensional Scaling</a></li>
+          <li><a id="manifold" href="#">Manifold Learning</a></li>
+          <!--
+          <li class="divider"></li>
+          <li><a id="math" href="#">Math</a></li>
+          <li><a id="graph" href="#">Graph</a></li>
+          <li><a id="interpolation" href="#">Interpolation</a></li>
+          -->
           <li class="divider"></li>
           <li><a href="http://xyclade.github.io/MachineLearning/">Third-Party Tutorials</a></li>
-          <!--
-              <li><a id="math" href="#">Math</a></li>
-              <li><a id="graph" href="#">Graph</a></li>
-              <li><a id="interpolation" href="#">Interpolation</a></li>
-              <li><a id="plot" href="#">Plot</a></li>
-          -->
         </ul>
       </li>
       <li class="dropdown">

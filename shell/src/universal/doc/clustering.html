@@ -1,0 +1,438 @@
+<!-- Google Analytics -->
+<script src="js/google-analytics.js" type="text/javascript"></script>
+
+<!-- prettify js and CSS -->
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=scala"></script>
+
+<!-- scroll/follow sidebar -->
+<script src="js/follow-sidebar.js" type="text/javascript"></script>
+
+<div class="col-md-3 col-md-push-9">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="clustering-top" class="title">Clustering</h1>
+
+    <p>Clustering is the assignment of a set of observations
+        into subsets (called clusters) so that observations in the same cluster are
+        similar in some sense. Clustering is a method of unsupervised learning,
+        and a common technique for statistical data analysis used in many fields.</p>
+
+    <p>Hierarchical algorithms find successive clusters using previously
+        established clusters. These algorithms usually are either agglomerative
+        ("bottom-up") or divisive ("top-down"). Agglomerative algorithms begin
+        with each element as a separate cluster and merge them into successively
+        larger clusters. Divisive algorithms begin with the whole set and proceed
+        to divide it into successively smaller clusters.</p>
+
+    <p>Partitional algorithms typically determine all clusters at once, but can
+        also be used as divisive algorithms in the hierarchical clustering.
+        Many partitional clustering algorithms require the specification of
+        the number of clusters to produce in the input data set, prior to
+        execution of the algorithm. Barring knowledge of the proper value
+        beforehand, the appropriate value must be determined, a problem on
+        its own for which a number of techniques have been developed.</p>
+
+    <p>Density-based clustering algorithms are devised to discover
+        arbitrary-shaped clusters. In this approach, a cluster is regarded as
+        a region in which the density of data objects exceeds a threshold.</p>
+
+    <p>Subspace clustering methods look for clusters that can only be seen in
+        a particular projection (subspace, manifold) of the data. These methods
+        thus can ignore irrelevant attributes. The general problem is also known
+        as Correlation clustering while the special case of axis-parallel subspaces
+        is also known as two-way clustering, co-clustering or biclustering in
+        bioinformatics: in these methods not only the objects are clustered but
+        also the features of the objects, i.e., if the data is represented in
+        a data matrix, the rows and columns are clustered simultaneously. They
+        usually do not however work with arbitrary feature combinations as in general
+        subspace methods.</p>
+
+    <h2 id="hierarchical">Agglomerative Hierarchical Clustering</h2>
+
+    <p>Agglomerative hierarchical clustering
+        seeks to build a hierarchy of clusters in a bottom up approach: each
+        observation starts in its own cluster, and pairs of clusters are merged as
+        one moves up the hierarchy. The results of hierarchical clustering are
+        usually presented in a dendrogram.</p>
+
+    <p>In general, the merges are determined in a greedy manner. In order to decide
+        which clusters should be combined, a measure of dissimilarity between sets
+        of observations is required. In most methods of hierarchical clustering,
+        this is achieved by use of an appropriate metric, and a linkage criteria
+        which specifies the dissimilarity of sets as a function of the pairwise
+        distances of observations in the sets.</p>
+
+    <p>Hierarchical clustering has the distinct advantage that any valid measure
+        of distance can be used. In fact, the observations themselves are not
+        required: all that is used is a matrix of distances.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def hclust(proximity: Array[Array[Double]], method: String): HierarchicalClustering
+    </code></pre>
+
+    <p>The parameter <code>proximity</code> is the proximity matrix to store
+        the distance measure of dissimilarity. To save space, we only need
+        the lower half of matrix. The proximity matrix can be calculated by
+        the helper function:</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def proximity[T](data: Array[T], dist: Distance[T]): Array[Array[Double]]
+    </code></pre>
+
+    <p>In case of Euclidean distance, one may use</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def proximity(data: Array[Array[Double]]): Array[Array[Double]]
+    </code></pre>
+
+    <p>The parameter <code>method</code> specifies the agglomeration method to merge clusters.
+        This should be one of "single", "complete", "upgma"/"average", "upgmc"/"centroid", "wpgma", "wpgmc"/"median", and "ward".</p>
+
+    <p>The single linkage defines the distance between groups as the distance
+        between the closest pair of objects, one from each group.
+        A drawback of this method is the so-called chaining phenomenon: clusters
+        may be forced together due to single elements being close to each other,
+        even though many of the elements in each cluster may be very distant to
+        each other.</p>
+
+    <p>Single linkage clustering is essentially the same as Kruskal's algorithm
+        for minimum spanning trees. However, in single linkage clustering, the
+        order in which clusters are formed is important, while for minimum spanning
+        trees what matters is the set of pairs of points that form distances chosen
+        by the algorithm.</p>
+
+    <p>The complete linkage is the opposite of single linkage. Distance between
+        groups is now defined as the distance between the most distant pair of
+        objects, one from each group.</p>
+
+    <p>UPGMA (Unweighted Pair Group Method with Arithmetic mean, also known as average linkage)
+        defines the distance between two clusters as the mean distance between all possible
+        pairs of nodes in the two clusters.</p>
+
+    <p>In bioinformatics, UPGMA is used for the creation of phenetic trees
+        (phenograms). UPGMA assumes a constant rate of evolution (molecular
+        clock hypothesis), and is not a well-regarded method for inferring
+        relationships unless this assumption has been tested and justified
+        for the data set being used.</p>
+
+    <p>UPGMC (Unweighted Pair Group Method using Centroids, also known as centroid linkage)
+        defines the distance between two clusters as the Euclidean distance between their
+        centroids, as calculated by arithmetic mean. Only valid for Euclidean
+        distance based proximity matrix.</p>
+
+    <p>WPGMA (Weighted Pair Group Method with Arithmetic mean) down-weights the
+        largest group by giving equal weights to the two branches of the dendrogram
+        that are about to fuse.</p>
+
+    <p>Note that the terms weighted and unweighted refer to the final result,
+        not the math by which it is achieved. Thus the simple averaging in WPGMA
+        produces a weighted result, and the proportional averaging in UPGMA produces
+        an unweighted result.</p>
+
+    <p>WPGMC (Weighted Pair Group Method using Centroids, also known as median linkage)
+        defines the distance between two clusters as the Euclidean distance between their
+        weighted centroids. Only valid for Euclidean distance based proximity matrix.</p>
+
+    <p>Ward's linkage. Ward's linkage follows the analysis of variance approach
+        The dissimilarity between two clusters is computed as the
+        increase in the "error sum of squares" (ESS) after fusing two clusters
+        into a single cluster. Ward's Method seeks to choose the successive
+        clustering steps so as to minimize the increase in ESS at each step.
+        Note that it is only valid for Euclidean distance based proximity matrix.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/six.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Mixture of Six Gaussians</div>
+    </div>
+
+    <p>To visualize the clustering results, we apply hierarchical clustering
+        to 2d data in the following. The data is generated from six Gaussian
+        distributions, each 300 samples.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val x = readTable("shell/src/universal/data/clustering/gaussian/six.txt").unzip
+    val clusters = hclust(proximity(x), "complete")
+    dendrogram(clusters)
+    </code></pre>
+
+    <p>The clustering results can be visualized by a hendroagram, which
+        is a tree diagram to illustrate the arrangement
+        of the clusters produced by hierarchical clustering.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/hclust-dendrogram.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Dendrogram</div>
+    </div>
+
+    <p>If a hard partition is need, we can cut a hierarchical clustering tree
+        into several groups by specifying the desired number or the cut height.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val y = clusters.partition(6)
+    plot(x, y, '.', Palette.COLORS)
+    </code></pre>
+
+    <p>The partitioning of six clusters is shown as</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/hclust-six.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Hierarchical Clustering</div>
+    </div>
+
+    <h2 id="k-means">K-Means</h2>
+
+    <p>K-Means clustering partitions <code>n</code> observations into <code>k</code> clusters in which
+        each observation belongs to the cluster with the nearest mean.
+        Although finding an exact solution to the K-Means problem for arbitrary
+        input is NP-hard, the standard approach to finding an approximate solution
+        (often called Lloyd's algorithm or the K-Means algorithm) is used widely
+        and frequently finds reasonable solutions quickly.</p>
+
+    <p>K-Means is a hard clustering method, i.e. each sample is assigned to
+        a specific cluster. In contrast, soft clustering, e.g. the
+        Expectation-Maximization algorithm for Gaussian mixtures, assign samples
+        to different clusters with different probabilities.</p>
+
+    <p>The K-Means algorithm has at least two major theoretic shortcomings:</p>
+    <ul>
+        <li>First, it has been shown that the worst case running time of the
+            algorithm is super-polynomial in the input size.</li>
+
+        <li>Second, the approximation found can be arbitrarily bad with respect
+            to the objective function compared to the optimal learn.</li>
+    </ul>
+
+    <p>In Smile, we use K-Means++ which addresses the second of these
+        obstacles by specifying a procedure to initialize the cluster centers before
+        proceeding with the standard K-Means optimization iterations. With the
+        K-Means++ initialization, the algorithm is guaranteed to find a solution
+        that is O(log k) competitive to the optimal K-Means solution.</p>
+
+    <p>We also use K-D trees to speed up each K-Means step as described in the filter
+        algorithm by Kanungo, et al.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, runs: Int = 1): KMeans
+    </code></pre>
+
+    <p>The parameter <code>maxIter</code> specifies the maximum number of iterations.
+        If the output of K-Means is used to initialize other algorithms, a small number (says 20)
+        is usually sufficient. In practice, we often run the K-Means multiple times
+        and choose the best one. To do that, set the parameter <code>runs &gt; 1</code>
+        (e.g. 10 ~ 20).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val clusters = kmeans(x, 6, runs = 20)
+    val y = clusters.getClusterLabel
+    plot(x, y, '.', Palette.COLORS)
+    </code></pre>
+
+    <p>K-Means works very well on Gaussian mixtures.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/kmeans-six.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">K-Means on Gaussian Mixture</div>
+    </div>
+
+    <p>If the clusters are elongated, however, the results may be far from optimal.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val x = readTable("shell/src/universal/data/clustering/gaussian/elongate.txt").unzip
+    val clusters = kmeans(x, 2, runs = 20)
+    val y = clusters.getClusterLabel
+    plot(x, y, '.', Palette.COLORS)
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/kmeans-elongate.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">K-Means on 2 Elongate Clusters</div>
+    </div>
+
+    <p>In K-Means, the number of clusters <code>K</code> has to be supplied by the user.
+        However, the appropriate number of clusters is often unknown in practice.
+        Several approaches (e.g. X-Means, G-Means, deterministic annealing, etc.)
+        have been proposed to handle this challenge.</p>
+
+    <h2 id="x-means">X-Means</h2>
+
+    <p>X-Means clustering algorithm is an extended K-Means which tries to
+        automatically determine the number of clusters based on BIC scores.
+        Starting with only one cluster, the X-Means algorithm goes into action
+        after each run of K-Means, making local decisions about which subset of the
+        current centroids should split themselves in order to better fit the data.
+        The splitting decision is done by computing the Bayesian Information
+        Criterion (BIC).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans
+    </code></pre>
+
+    <p>where the parameter <code>k</code> is the maximum number of clusters</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/xmeans-six.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">X-Means</div>
+    </div>
+
+    <h2 id="g-means">G-Means</h2>
+
+    <p>G-Means clustering algorithm is another extended K-Means which tries to
+        automatically determine the number of clusters by normality test.
+        The G-Means algorithm is based on a statistical test for the hypothesis
+        that a subset of data follows a Gaussian distribution. G-Means runs
+        K-Means with increasing k in a hierarchical fashion until the test accepts
+        the hypothesis that the data assigned to each K-Means center are Gaussian.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def gmeans(data: Array[Array[Double]], k: Int = 100): XMeans
+    </code></pre>
+
+    <p>where the parameter <code>k</code> is the maximum number of clusters</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/gmeans-six.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">G-Means</div>
+    </div>
+
+    <p>Neither X-Means nor G-Means works well on the elongate data. Both report only
+        one cluster.</p>
+
+    <h2 id="deterministic-annealing">Deterministic Annealing</h2>
+
+    <p>Deterministic annealing extends soft-clustering to an annealing process.
+        For each temperature value, the algorithm iterates between the calculation
+        of all posteriori probabilities and the update of the centroids vectors,
+        until convergence is reached. The annealing starts with a high temperature.
+        Here, all centroids vectors converge to the center of the pattern
+        distribution (independent of their initial positions). Below a critical
+        temperature the vectors start to split. Further decreasing the temperature
+        leads to more splittings until all centroids vectors are separate. The
+        annealing can therefore avoid (if it is sufficiently slow) the convergence
+        to local minima.</p>
+
+    <h2 id="clarans">CLARANS</h2>
+
+    <p>CLARANS (Clustering Large Applications based upon RANdomized Search) is an
+        efficient medoid-based clustering algorithm. The k-medoids algorithm is an
+        adaptation of the k-means algorithm. Rather than calculate the mean of the
+        items in each cluster, a representative item, or medoid, is chosen for each
+        cluster at each iteration. In CLARANS, the process of finding k medoids from
+        n objects is viewed abstractly as searching through a certain graph. In the
+        graph, a node is represented by a set of k objects as selected medoids. Two
+        nodes are neighbors if their sets differ by only one object. In each iteration,
+        CLARANS considers a set of randomly chosen neighbor nodes as candidate
+        of new medoids. We will move to the neighbor node if the neighbor
+        is a better choice for medoids. Otherwise, a local optima is discovered. The
+        entire process is repeated multiple time to find better.</p>
+
+    <p>CLARANS has two parameters: the maximum number of neighbors examined
+        (maxNeighbor) and the number of local minima obtained (numLocal). The
+        higher the value of maxNeighbor, the closer is CLARANS to PAM, and the
+        longer is each search of a local minima. But the quality of such a local
+        minima is higher and fewer local minima needs to be obtained.</p>
+
+    <h2 id="birch">BIRCH</h2>
+
+    <p>BIRCH (Balanced Iterative Reducing and Clustering using Hierarchies) performs
+        hierarchical clustering over particularly large datasets. An advantage of
+        BIRCH is its ability to incrementally and dynamically cluster incoming,
+        multi-dimensional metric data points in an attempt to produce the high
+        quality clustering for a given set of resources (memory and time constraints).</p>
+
+    <p>BIRCH has several advantages. For example, each clustering decision is made
+        without scanning all data points and currently existing clusters. It
+        exploits the observation that data space is not usually uniformly occupied
+        and not every data point is equally important. It makes full use of
+        available memory to derive the finest possible sub-clusters while minimizing
+        I/O costs. It is also an incremental method that does not require the whole
+        data set in advance.</p>
+
+    <p>This implementation produces a clustering in three steps. First step
+        builds a CF (clustering feature) tree by a single scan of database.
+        The second step clusters the leaves of CF tree by hierarchical clustering.
+        Then the user can use the learned model to cluster input data in the final
+        step. In total, we scan the database twice.</p>
+
+    <h2 id="dbscan">DBScan</h2>
+
+    <p> DBScan (Density-Based Spatial Clustering of Applications with Noise)
+        finds a number of clusters starting from the estimated density
+        distribution of corresponding nodes.</p>
+
+    <p>DBScan requires two parameters: radius (i.e. neighborhood radius) and the
+     number of minimum points required to form a cluster (minPts). It starts
+     with an arbitrary starting point that has not been visited. This point's
+     neighborhood is retrieved, and if it contains sufficient number of points,
+     a cluster is started. Otherwise, the point is labeled as noise. Note that
+     this point might later be found in a sufficiently sized radius-environment
+     of a different point and hence be made part of a cluster.</p>
+
+    <p>If a point is found to be part of a cluster, its neighborhood is also
+     part of that cluster. Hence, all points that are found within the
+     neighborhood are added, as is their own neighborhood. This process
+     continues until the cluster is completely found. Then, a new unvisited point
+     is retrieved and processed, leading to the discovery of a further cluster
+     of noise.</p>
+
+    <p>DBScan visits each point of the database, possibly multiple times (e.g.,
+     as candidates to different clusters). For practical considerations, however,
+     the time complexity is mostly governed by the number of nearest neighbor
+     queries. DBScan executes exactly one such query for each point, and if
+     an indexing structure is used that executes such a neighborhood query
+     in O(log n), an overall runtime complexity of O(n log n) is obtained.</p>
+
+    <p>DBScan has many advantages such as</p>
+
+     <ul>
+         <li>DBScan does not need to know the number of clusters in the data
+             a priori, as opposed to k-means.</li>
+
+         <li>DBScan can find arbitrarily shaped clusters. It can even find clusters
+             completely surrounded by (but not connected to) a different cluster.
+             Due to the MinPts parameter, the so-called single-link effect
+             (different clusters being connected by a thin line of points) is reduced.</li>
+
+         <li>DBScan has a notion of noise.</li>
+
+
+         <li>DBScan requires just two parameters and is mostly insensitive to the
+             ordering of the points in the database. (Only points sitting on the
+             edge of two different clusters might swap cluster membership if the
+             ordering of the points is changed, and the cluster assignment is unique
+             only up to isomorphism.)</li>
+     </ul>
+
+    <p>On the other hand, DBScan has the disadvantages of</p>
+
+    <ul>
+        <li>In high dimensional space, the data are sparse everywhere
+            because of the curse of dimensionality. Therefore, DBScan doesn't
+            work well on high-dimensional data in general.
+
+        <li>DBScan does not respond well to data sets with varying densities.
+    </ul>
+
+    <h2 id="denclue">DENCLUE</h2>
+
+    <p>DENCLUE (DENsity CLUstering) employs a cluster model based on
+        kernel density estimation. A cluster is defined by a local maximum of the
+        estimated density function. Data points going to the same local maximum
+        are put into the same cluster.</p>
+
+    <p>Clearly, DENCLUE doesn't work on data with uniform distribution. In high
+        dimensional space, the data always look like uniformly distributed because
+        of the curse of dimensionality. Therefore, DENCLUDE doesn't work well on
+        high-dimensional data in general.</p>
+
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>
