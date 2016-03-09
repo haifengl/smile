@@ -156,7 +156,7 @@ trait Operators {
     * @param data the data set.
     * @param k the maximum number of clusters.
     */
-  def xmeans(data: Array[Array[Double]], k: Int): XMeans = {
+  def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans = {
     time {
       new XMeans(data, k)
     }
@@ -175,7 +175,7 @@ trait Operators {
     * @param data the data set.
     * @param k the maximum number of clusters.
     */
-  def gmeans(data: Array[Array[Double]], k: Int): GMeans = {
+  def gmeans(data: Array[Array[Double]], k: Int = 100): GMeans = {
     time {
       new GMeans(data, k)
     }
