@@ -84,10 +84,10 @@ trait Operators {
     val linkage = method match {
       case "single" => new SingleLinkage(proximity)
       case "complete" => new CompleteLinkage(proximity)
-      case "upgma" => new UPGMALinkage(proximity)
-      case "upgmc" => new UPGMCLinkage(proximity)
+      case "upgma" | "average" => new UPGMALinkage(proximity)
+      case "upgmc" | "centroid" => new UPGMCLinkage(proximity)
       case "wpgma" => new WPGMALinkage(proximity)
-      case "wpgmc" => new WPGMCLinkage(proximity)
+      case "wpgmc" | "median" => new WPGMCLinkage(proximity)
       case "ward" => new WardLinkage(proximity)
       case _ => throw new IllegalArgumentException(s"Unknown agglomeration method: $method")
     }
