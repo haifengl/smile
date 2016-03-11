@@ -48,6 +48,46 @@ private[data] class PimpedDataset(data: AttributeDataset) extends Iterable[Datum
     data.attributes().map(_.getName).toArray
   }
 
+  /** Returns the columns names. */
+  def names = colnames
+
+  def summary: Unit = {
+    println(" \tmin\tq1\tmedian\tmean\tq3\tmax")
+    val matrix = unzip
+    for (i <- 0 until colnames.length) {
+      val x = matrix \ i
+      val min = Math.min(x: _*)
+      val q1 = Math.q1(x)
+      val median = Math.median(x)
+      val mean = Math.mean(x)
+      val q3 = Math.q3(x)
+      val max = Math.max(x: _*)
+      println(f"${colnames(i)}\t$min%1.5f\t$q1%1.5f\t$median%1.5f\t$mean%1.5f\t$q3%1.5f\t$max%1.5f")
+    }
+  }
+
+  /** Shows the first few rows.
+    * Cannot use default parameter value, otherwise it confuses with iterator.head.
+    */
+  def head(n: Int): Unit = {
+    println(colnames.mkString("\t"))
+    for (i <- 0 until Math.min(data.size, n)) {
+      val x = data.get(i).x
+      println(x.map{xi => f"$xi%1.4f"}.mkString("\t"))
+    }
+  }
+
+  /** Shows the last few rows.
+    * Cannot use default parameter value, otherwise it confuses with iterator.tail.
+    */
+  def tail(n: Int): Unit = {
+    println(colnames.mkString("\t"))
+    for (i <- Math.max(0, data.size - n) until data.size) {
+      val x = data.get(i).x
+      println(x.map{xi => f"$xi%1.4f"}.mkString("\t"))
+    }
+  }
+
   /** Unzip the data. If the data contains a response variable, it won't be copied. */
   def unzip: Array[Array[Double]] = {
     data.toArray(new Array[Array[Double]](data.size))
@@ -153,7 +193,7 @@ private[data] class PimpedArray(data: Array[Double]) {
     }
 
     /** Returns a column. */
-    def ::(col: Int): Array[Double] = {
+    def \(col: Int): Array[Double] = {
       data.map(_(col)).toArray
     }
 
