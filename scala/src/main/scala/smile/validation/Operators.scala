@@ -39,7 +39,7 @@ trait Operators {
     * @tparam T the type of training and test data.
     * @return the trained classifier.
     */
-  def test[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T] = {
+  def test[T,  C <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => C): C = {
     println("training...")
     val classifier = time {
       trainer(x, y)
@@ -71,7 +71,7 @@ trait Operators {
     * @tparam T the type of training and test data.
     * @return the trained classifier.
     */
-  def test2[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T] = {
+  def test2[T,  C <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => C): C = {
     println("training...")
     val classifier = time {
       trainer(x, y)
@@ -110,7 +110,7 @@ trait Operators {
     * @tparam T the type of training and test data.
     * @return the trained classifier.
     */
-  def test2soft[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => SoftClassifier[T]): SoftClassifier[T] = {
+  def test2soft[T,  C <: SoftClassifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => C): C = {
     println("training...")
     val classifier = time {
       trainer(x, y)
