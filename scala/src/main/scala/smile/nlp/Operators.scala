@@ -16,7 +16,7 @@
 
 package smile.nlp
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import smile.nlp.collocation._
 import smile.nlp.pos.{PennTreebankPOS, HMMPOSTagger}
 import smile.util._
@@ -98,8 +98,8 @@ trait Operators {
         }
       }
 
-      val ngrams = phrase.extract(sentences, maxNGramSize, minFreq)
-      ngrams.map(_.toSeq).toSeq
+      val ngrams = phrase.extract(sentences.asJava, maxNGramSize, minFreq)
+      ngrams.asScala.map(_.asScala)
     }
   }
 
