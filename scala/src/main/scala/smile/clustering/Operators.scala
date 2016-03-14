@@ -215,7 +215,7 @@ trait Operators {
     * @param maxIter the maximum number of iterations.
     * @param runs the number of runs of SIB algorithm.
     */
-  def sib(data: Array[Array[Double]], k: Int, maxIter: Int = 100, runs: Int = 1): SIB = {
+  def sib(data: Array[Array[Double]], k: Int, maxIter: Int, runs: Int): SIB = {
     time {
       new SIB(data, k, maxIter, runs)
     }
@@ -228,7 +228,7 @@ trait Operators {
     * @param maxIter the maximum number of iterations.
     * @param runs the number of runs of SIB algorithm.
     */
-  def sib(data: SparseDataset, k: Int, maxIter: Int, runs: Int): SIB = {
+  def sib(data: SparseDataset, k: Int, maxIter: Int = 100, runs: Int = 8): SIB = {
     time {
       new SIB(data, k, maxIter, runs)
     }
@@ -254,7 +254,7 @@ trait Operators {
     * @param alpha the temperature T is decreasing as T = T * alpha. alpha has
     *              to be in (0, 1).
     */
-  def dac(data: Array[Array[Double]], k: Int, alpha: Double): DeterministicAnnealing = {
+  def dac(data: Array[Array[Double]], k: Int, alpha: Double = 0.9): DeterministicAnnealing = {
     time {
       new DeterministicAnnealing(data, k, alpha)
     }
@@ -425,11 +425,9 @@ trait Operators {
     }
   }
 
-  /** Density-Based Spatial Clustering of Applications with Noise.
+  /** DBSCan with Euclidean distance.
     * DBScan finds a number of clusters starting from the estimated density
     * distribution of corresponding nodes.
-    * If the data dimensionality is less than 10, KD-Tree is used for
-    * neighbor search, otherwise Cover Tree is employed.
     *
     * @param data the data set.
     * @param minPts the minimum number of neighbors for a core data point.
@@ -437,11 +435,7 @@ trait Operators {
     */
   def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBScan[Array[Double]] = {
     time {
-      val n = data.length
-      val k = data(0).length
-      // KD-Tree performs only when n >> 2^k
-      if (n > 10 * (1 << k)) new DBScan(data, new KDTree[Array[Double]](data, data), minPts, radius)
-      else new DBScan(data, new CoverTree(data, new EuclideanDistance), minPts, radius)
+      dbscan(data, new EuclideanDistance, minPts, radius)
     }
   }
 
