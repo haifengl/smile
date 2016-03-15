@@ -175,9 +175,9 @@
         The bins must be adjacent, and are usually equal size.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def histogram(data: Array[Double]): Window
-    def histogram(data: Array[Double], k: Int): Window
-    def histogram(data: Array[Double], breaks: Array[Double]): Window
+    def hist(data: Array[Double]): Window
+    def hist(data: Array[Double], k: Int): Window
+    def hist(data: Array[Double], breaks: Array[Double]): Window
     </code></pre>
 
     <p>where <code>k</code> is the number of bins (10 by default), or you can
@@ -194,7 +194,7 @@
 
     <pre class="prettyprint lang-scala"><code>
     val cow = readTable("data/npr/cow.txt").unzip.map(_(0))
-    val window = histogram(cow, 50)
+    val window = hist(cow, 50)
     window.canvas.setAxisLabels("Weight", "Probability")
     </code></pre>
 
@@ -206,7 +206,7 @@
         Filter out the weights over 3500 pounds, the histogram shows more details.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val window = histogram(cow.filter(_ <= 3500), 50)
+    val window = hist(cow.filter(_ <= 3500), 50)
     window.canvas.setAxisLabels("Weight", "Probability")
     </code></pre>
 
@@ -217,9 +217,9 @@
     <p>Smile also supports histograms that display the distribution of 2-dimensional data.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def histogram(data: Array[Array[Double]]): Window
-    def histogram(data: Array[Array[Double]], k: Int): Window
-    def histogram(data: Array[Array[Double]], xbins: Int, ybins: Int): Window
+    def hist(data: Array[Array[Double]]): Window
+    def hist(data: Array[Array[Double]], k: Int): Window
+    def hist(data: Array[Array[Double]], xbins: Int, ybins: Int): Window
     </code></pre>
 
     <p>Here we generate a data set from a 2-dimensional Gaussian distribution.</p>
@@ -227,7 +227,7 @@
     <pre class="prettyprint lang-scala"><code>
     val gauss = new MultivariateGaussianDistribution(Array(0.0, 0.0), Array(Array(1.0, 0.6), Array(0.6, 2.0)))
     val data = (0 until 10000) map { i: Int => gauss.rand }
-    histogram(data.toArray, 50)
+    hist(data.toArray, 50)
     </code></pre>
 
     <p>The corresponding histogram looks like</p>
