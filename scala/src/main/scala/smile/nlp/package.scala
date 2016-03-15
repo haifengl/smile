@@ -17,7 +17,7 @@
 package smile
 
 import scala.language.implicitConversions
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /** Natural language processing.
   *
@@ -117,7 +117,7 @@ package nlp {
       * @return the top keywords.
       */
     def keywords(k: Int = 10): Seq[NGram] = {
-      keywordExtractor.extract(text, k)
+      keywordExtractor.extract(text, k).asScala
     }
   }
 }

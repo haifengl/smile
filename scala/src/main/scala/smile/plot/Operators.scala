@@ -517,7 +517,7 @@ trait Operators {
   /** Histogram plot.
     * @param data a sample set.
     */
-  def histogram(data: Array[Double]): Window = {
+  def hist(data: Array[Double]): Window = {
     val canvas = Histogram.plot(data)
     Window(canvas)
   }
@@ -526,7 +526,7 @@ trait Operators {
     * @param data a sample set.
     * @param k the number of bins.
     */
-  def histogram(data: Array[Double], k: Int): Window = {
+  def hist(data: Array[Double], k: Int): Window = {
     val canvas = Histogram.plot(data, k)
     Window(canvas)
   }
@@ -536,7 +536,7 @@ trait Operators {
     * @param breaks an array of size k+1 giving the breakpoints between
     *               histogram cells. Must be in ascending order.
     */
-  def histogram(data: Array[Double], breaks: Array[Double]): Window = {
+  def hist(data: Array[Double], breaks: Array[Double]): Window = {
     val canvas = Histogram.plot(data, breaks)
     Window(canvas)
   }
@@ -544,7 +544,7 @@ trait Operators {
   /** 3D histogram plot.
     * @param data a sample set.
     */
-  def histogram(data: Array[Array[Double]]): Window = {
+  def hist(data: Array[Array[Double]]): Window = {
     val canvas = Histogram3D.plot(data)
     Window(canvas)
   }
@@ -553,7 +553,7 @@ trait Operators {
     * @param data a sample set.
     * @param k the number of bins.
     */
-  def histogram(data: Array[Array[Double]], k: Int): Window = {
+  def hist(data: Array[Array[Double]], k: Int): Window = {
     val canvas = Histogram3D.plot(data, k)
     Window(canvas)
   }
@@ -563,7 +563,7 @@ trait Operators {
     * @param xbins the number of bins on x-axis.
     * @param ybins the number of bins on y-axis.
     */
-  def histogram(data: Array[Array[Double]], xbins: Int, ybins: Int): Window = {
+  def hist(data: Array[Array[Double]], xbins: Int, ybins: Int): Window = {
     val canvas = Histogram3D.plot(data, xbins, ybins)
     Window(canvas)
   }

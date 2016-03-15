@@ -19,7 +19,7 @@ package smile.association
 import java.io.PrintStream
 import scala.io.Source
 import scala.collection.mutable.Buffer
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import smile.util._
 
 /** High level association rule operators.
@@ -63,7 +63,7 @@ trait Operators {
   def fpgrowth(itemsets: Array[Array[Int]], minSupport: Int): Buffer[ItemSet] = {
     time {
       val fim = new FPGrowth(itemsets, minSupport)
-      fim.learn
+      fim.learn.asScala
     }
   }
 
@@ -202,7 +202,7 @@ trait Operators {
   def arm(itemsets: Array[Array[Int]], minSupport: Int, confidence: Double): Buffer[AssociationRule] = {
     time {
       val rule = new ARM(itemsets, minSupport)
-      rule.learn(confidence)
+      rule.learn(confidence).asScala
     }
   }
 

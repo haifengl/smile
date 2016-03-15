@@ -61,7 +61,8 @@ import smile.math.distance.Metric;
  *      completely surrounded by (but not connected to) a different cluster.
  *      Due to the MinPts parameter, the so-called single-link effect
  *     (different clusters being connected by a thin line of points) is reduced.
- * <li> DBScan has a notion of noise.
+ * <li> DBScan has a notion of noise. Outliers are labeled as Clustering.OUTLIER,
+ *      which is Integer.MAX_VALUE.
  * <li> DBScan requires just two parameters and is mostly insensitive to the
  *      ordering of the points in the database. (Only points sitting on the
  *      edge of two different clusters might swap cluster membership if the
