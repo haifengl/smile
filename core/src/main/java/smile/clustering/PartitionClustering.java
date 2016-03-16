@@ -17,7 +17,6 @@ package smile.clustering;
 
 import java.util.Arrays;
 import smile.math.Math;
-import smile.math.distance.Distance;
 
 /**
  * Abstract class of partition clustering. Partition methods break
@@ -31,21 +30,15 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
     /**
      * The number of clusters.
      */
-    int k;
+    protected int k;
     /**
      * The cluster labels of data.
      */
-    int[] y;
+    protected int[] y;
     /**
      * The number of samples in each cluster.
      */
-    int[] size;
-
-    /**
-     * Constructor.
-     */
-    PartitionClustering() {
-    }
+    protected int[] size;
 
     /**
      * Returns the number of clusters.
@@ -93,21 +86,6 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
         return dist;
     }
     
-    static enum DistanceMethod {
-        /**
-         * Squared Euclidean distance for K-Means.
-         */
-        EUCLIDEAN,
-        /**
-         * Squared Euclidean distance with missing value handling for K-Means.
-         */
-        EUCLIDEAN_MISSING_VALUES,
-        /**
-         * Jensen-Shannon divergence for SIB.
-         */
-        JENSEN_SHANNON_DIVERGENCE
-    }
-    
     /**
      * Initialize cluster membership of input objects with KMeans++ algorithm.
      * Many clustering methods, e.g. k-means, need a initial clustering
@@ -143,7 +121,7 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
      * @param k the number of cluster.
      * @return the cluster labels.
      */
-    static int[] seed(double[][] data, int k, DistanceMethod method) {
+    public static int[] seed(double[][] data, int k, ClusteringDistance distance) {
         int n = data.length;
         int[] y = new int[n];
         double[] centroid = data[Math.randomInt(n)];
@@ -160,7 +138,7 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
             for (int i = 0; i < n; i++) {
                 // compute the distance between this sample and the current center
                 double dist = 0.0;
-                switch (method) {
+                switch (distance) {
                     case EUCLIDEAN:
                         dist = Math.squaredDistance(data[i], centroid);
                         break;
@@ -194,7 +172,7 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
         for (int i = 0; i < n; i++) {
             // compute the distance between this sample and the current center
             double dist = 0.0;
-            switch (method) {
+            switch (distance) {
                 case EUCLIDEAN:
                     dist = Math.squaredDistance(data[i], centroid);
                     break;
@@ -253,7 +231,7 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
      * @param d an array of size n to store the distance of each sample to nearest medoid.
      * @return the initial cluster distortion.
      */
-    static <T> double seed(Distance<T> distance, T[] data, T[] medoids, int[] y, double[] d) {
+    public static <T> double seed(smile.math.distance.Distance distance, T[] data, T[] medoids, int[] y, double[] d) {
         int n = data.length;
         int k = medoids.length;
         T medoid = data[Math.randomInt(n)];

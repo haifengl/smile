@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.clustering;
+package smile.vq;
 
 import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import smile.clustering.Clustering;
+import smile.clustering.HierarchicalClustering;
+import smile.clustering.BBDTree;
 import smile.clustering.linkage.Linkage;
 import smile.clustering.linkage.UPGMALinkage;
 import smile.math.Math;

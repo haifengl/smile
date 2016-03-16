@@ -43,11 +43,11 @@ import smile.math.Math;
  * </ol>
  * 
  * @see KMeans
- * @see SOM
+ * @see smile.vq.SOM
  * 
  * @author Haifeng Li
  */
-class BBDTree {
+public class BBDTree {
 
     class Node {
         /**

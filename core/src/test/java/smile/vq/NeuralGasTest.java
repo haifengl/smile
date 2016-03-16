@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.clustering;
+package smile.vq;
 
 import smile.validation.RandIndex;
 import smile.validation.AdjustedRandIndex;
@@ -29,11 +29,11 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author Haifeng
+ * @author Haifeng Li
  */
-public class SOMTest {
+public class NeuralGasTest {
     
-    public SOMTest() {
+    public NeuralGasTest() {
     }
 
     @BeforeClass
@@ -52,9 +52,8 @@ public class SOMTest {
     public void tearDown() {
     }
 
-
     /**
-     * Test of learn method, of class SOM.
+     * Test of learn method, of class NeuralGas.
      */
     @Test
     public void testUSPS() {
@@ -70,20 +69,19 @@ public class SOMTest {
             double[][] testx = test.toArray(new double[test.size()][]);
             int[] testy = test.toArray(new int[test.size()]);
             
-            SOM som = new SOM(x, 10, 10);
-            int[] label = som.partition(10);
+            NeuralGas gas = new NeuralGas(x, 10);
             
             AdjustedRandIndex ari = new AdjustedRandIndex();
             RandIndex rand = new RandIndex();
-            double r = rand.measure(y, label);
-            double r2 = ari.measure(y, label);
+            double r = rand.measure(y, gas.getClusterLabel());
+            double r2 = ari.measure(y, gas.getClusterLabel());
             System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
             assertTrue(r > 0.88);
             assertTrue(r2 > 0.45);
             
             int[] p = new int[testx.length];
             for (int i = 0; i < testx.length; i++) {
-                p[i] = som.predict(testx[i]);
+                p[i] = gas.predict(testx[i]);
             }
             
             r = rand.measure(testy, p);
