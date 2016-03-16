@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.clustering;
+package smile.vq;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import smile.clustering.Clustering;
+import smile.clustering.HierarchicalClustering;
 import smile.clustering.linkage.Linkage;
 import smile.clustering.linkage.UPGMALinkage;
 import smile.sort.HeapSelect;
@@ -36,7 +38,7 @@ import smile.stat.distribution.GaussianDistribution;
  *
  * @see NeuralGas
  * @see GrowingNeuralGas
- * @see BIRCH
+ * @see smile.clustering.BIRCH
  * 
  * @author Haifeng Li
  */

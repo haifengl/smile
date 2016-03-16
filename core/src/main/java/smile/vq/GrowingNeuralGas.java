@@ -14,11 +14,13 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.clustering;
+package smile.vq;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import smile.clustering.Clustering;
+import smile.clustering.HierarchicalClustering;
 import smile.clustering.linkage.Linkage;
 import smile.clustering.linkage.UPGMALinkage;
 import smile.sort.HeapSelect;
@@ -45,7 +47,7 @@ import smile.math.Math;
  * <li> B. Fritzke. A growing neural gas network learns topologies. NIPS, 1995.</li>
  * </ol>
  * 
- * @see KMeans
+ * @see smile.clustering.KMeans
  * @see NeuralGas
  * @see NeuralMap
  * 

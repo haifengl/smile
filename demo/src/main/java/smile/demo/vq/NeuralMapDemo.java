@@ -23,7 +23,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import smile.clustering.Clustering;
-import smile.clustering.NeuralMap;
+import smile.vq.NeuralMap;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;

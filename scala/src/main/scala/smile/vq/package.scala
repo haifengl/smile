@@ -14,31 +14,24 @@
  * limitations under the License.
  *******************************************************************************/
 
-/** Shell initialization script.
+package smile
+
+/** Originally used for data compression, Vector quantization (VQ)
+  * allows the modeling of probability density functions by
+  * the distribution of prototype vectors. It works by dividing a large set of points
+  * (vectors) into groups having approximately the same number of
+  * points closest to them. Each group is represented by its centroid
+  * point, as in K-Means and some other clustering algorithms.
+  *
+  * Vector quantization is is based on the competitive learning paradigm,
+  * and also closely related to sparse coding models
+  * used in deep learning algorithms such as autoencoder.
+  *
+  * Algorithms in this package also support the <code>partition</code>
+  * method for clustering purpose.
   *
   * @author Haifeng Li
   */
+package object vq extends Operators {
 
-import smile.util._
-import smile.math._, Math._
-import smile.math.distance._
-import smile.math.kernel._
-import smile.stat.distribution._
-import smile.data._
-import smile.io._
-import java.awt.Color, smile.plot._
-import smile.interpolation._
-import smile.validation._
-import smile.association._
-import smile.regression._
-import smile.classification._
-import smile.feature._
-import smile.clustering._
-import smile.vq._
-import smile.manifold._
-import smile.mds._
-import smile.sequence._
-import smile.projection._
-import smile.nlp._
-import smile.wavelet._
-import smile.shell._
+}

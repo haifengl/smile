@@ -13,26 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.clustering;
 
-import smile.validation.RandIndex;
-import smile.validation.AdjustedRandIndex;
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
+package smile.vq;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.Math;
+import smile.data.AttributeDataset;
+import smile.data.NominalAttribute;
+import smile.data.parser.DelimitedTextParser;
+import smile.validation.AdjustedRandIndex;
+import smile.validation.RandIndex;
+import static org.junit.Assert.*;
 
 /**
  *
  * @author Haifeng
  */
-public class NeuralMapTest {
+public class GrowingNeuralGasTest {
     
-    public NeuralMapTest() {
+    public GrowingNeuralGasTest() {
     }
 
     @BeforeClass
@@ -52,7 +55,7 @@ public class NeuralMapTest {
     }
 
     /**
-     * Test of learn method, of class NeuralMap.
+     * Test of learn method, of class GrowingNeuralGas.
      */
     @Test
     public void testUSPS() {
@@ -68,41 +71,40 @@ public class NeuralMapTest {
             double[][] testx = test.toArray(new double[test.size()][]);
             int[] testy = test.toArray(new int[test.size()]);
             
-            NeuralMap cortex = new NeuralMap(x[0].length, 8.0, 0.05, 0.0006, 5, 3);
-
-            for (int i = 0; i < 5; i++) {
-                for (double[] xi : x) {
-                    cortex.update(xi);
+            GrowingNeuralGas gng = new GrowingNeuralGas(x[0].length);
+            for (int i = 0; i < 10; i++) {
+                int[] index = Math.permutate(x.length);
+                for (int j = 0; j < x.length; j++) {
+                    gng.update(x[index[j]]);
                 }
             }
-
-            cortex.purge(16);
-            cortex.partition(10);
+            
+            gng.partition(10);
             
             AdjustedRandIndex ari = new AdjustedRandIndex();
             RandIndex rand = new RandIndex();
 
             int[] p = new int[x.length];
             for (int i = 0; i < x.length; i++) {
-                p[i] = cortex.predict(x[i]);
+                p[i] = gng.predict(x[i]);
             }
             
             double r = rand.measure(y, p);
             double r2 = ari.measure(y, p);
             System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
-            //assertTrue(r > 0.65);
-            //assertTrue(r2 > 0.18);
+            assertTrue(r > 0.85);
+            assertTrue(r2 > 0.40);
             
             p = new int[testx.length];
             for (int i = 0; i < testx.length; i++) {
-                p[i] = cortex.predict(testx[i]);
+                p[i] = gng.predict(testx[i]);
             }
             
             r = rand.measure(testy, p);
             r2 = ari.measure(testy, p);
             System.out.format("Testing rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
-            //assertTrue(r > 0.65);
-            //assertTrue(r2 > 0.18);
+            assertTrue(r > 0.85);
+            assertTrue(r2 > 0.40);
         } catch (Exception ex) {
             System.err.println(ex);
         }

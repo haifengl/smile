@@ -96,6 +96,11 @@
         $('#content').load('clustering.html');
       });
 
+      $("#vector-quantization").click(function(event){
+        event.preventDefault();
+        $('#content').load('vector-quantization.html');
+      });
+
       $("#association-rule").click(function(event){
         event.preventDefault();
         $('#content').load('association-rule.html');
@@ -186,6 +191,7 @@
           <li><a id="validation" href="#">Model Validation</a></li>
           <li class="divider"></li>
           <li><a id="clustering" href="#">Clustering</a></li>
+          <li><a id="vector-quantization" href="#">Vector Quantization</a></li>
           <li><a id="association-rule" href="#">Association Rule Mining</a></li>
           <li><a id="mds" href="#">Multi-Dimensional Scaling</a></li>
           <li><a id="manifold" href="#">Manifold Learning</a></li>

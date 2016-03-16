@@ -1,5 +1,5 @@
 /*******************************************************************************
- * (C) Copyright 2015 Haifeng Li
+ * Copyright (c) 2010 Haifeng Li
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,32 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package smile.clustering;
 
-/** Shell initialization script.
-  *
-  * @author Haifeng Li
-  */
-
-import smile.util._
-import smile.math._, Math._
-import smile.math.distance._
-import smile.math.kernel._
-import smile.stat.distribution._
-import smile.data._
-import smile.io._
-import java.awt.Color, smile.plot._
-import smile.interpolation._
-import smile.validation._
-import smile.association._
-import smile.regression._
-import smile.classification._
-import smile.feature._
-import smile.clustering._
-import smile.vq._
-import smile.manifold._
-import smile.mds._
-import smile.sequence._
-import smile.projection._
-import smile.nlp._
-import smile.wavelet._
-import smile.shell._
+/**
+ * Clustering distance measure.
+ *
+ * @author Haifeng Li
+ */
+public enum ClusteringDistance {
+    /**
+     * Squared Euclidean distance for K-Means.
+     */
+    EUCLIDEAN,
+    /**
+     * Squared Euclidean distance with missing value handling for K-Means.
+     */
+    EUCLIDEAN_MISSING_VALUES,
+    /**
+     * Jensen-Shannon divergence for SIB.
+     */
+    JENSEN_SHANNON_DIVERGENCE
+}
