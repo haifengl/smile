@@ -74,7 +74,7 @@
         required: all that is used is a matrix of distances.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def hclust(proximity: Array[Array[Double]], method: String): HierarchicalClustering
+    def hclust(proximity: Array[Array[Double]], linkage: String): HierarchicalClustering
     </code></pre>
 
     <p>The parameter <code>proximity</code> is the proximity matrix to store
@@ -83,16 +83,17 @@
         the helper function:</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def proximity[T](data: Array[T], dist: Distance[T]): Array[Array[Double]]
+    def proximity[T](data: Array[T], dist: Distance[T], half: Boolean = true): Array[Array[Double]]
     </code></pre>
 
-    <p>In case of Euclidean distance, one may use</p>
+    <p>If the parameter <code>half</code> is true, only the lower half of matrix
+        is allocated to save space. In case of Euclidean distance, one may use</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def proximity(data: Array[Array[Double]]): Array[Array[Double]]
+    def distance(data: Array[Array[Double]], half: Boolean = true): Array[Array[Double]]
     </code></pre>
 
-    <p>The parameter <code>method</code> specifies the agglomeration method to merge clusters.
+    <p>The parameter <code>linkage</code> specifies the agglomeration method to merge clusters.
         This should be one of "single", "complete", "upgma"/"average", "upgmc"/"centroid", "wpgma", "wpgmc"/"median", and "ward".</p>
 
     <p>The single linkage defines the distance between groups as the distance
@@ -157,8 +158,8 @@
         distributions, each 300 samples.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = readTable("shell/src/universal/data/clustering/gaussian/six.txt").unzip
-    val clusters = hclust(proximity(x), "complete")
+    val x = readTable("data/clustering/gaussian/six.txt").unzip
+    val clusters = hclust(pdist(x), "complete")
     dendrogram(clusters)
     </code></pre>
 
@@ -244,7 +245,7 @@
     <p>If the clusters are elongated, however, the results may be far from optimal.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = readTable("shell/src/universal/data/clustering/gaussian/elongate.txt").unzip
+    val x = readTable("data/clustering/gaussian/elongate.txt").unzip
     val clusters = kmeans(x, 2, runs = 20)
     val y = clusters.getClusterLabel
     plot(x, y, '.', Palette.COLORS)
@@ -582,7 +583,7 @@
         in <code>O(log n)</code>, an overall runtime complexity of <code>O(n log n)</code> is obtained.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = readTable("shell/src/universal/data/clustering/chameleon/t4.8k.txt").unzip
+    val x = readTable("data/clustering/chameleon/t4.8k.txt").unzip
     val clusters = dbscan(x, 20, 10)
     val y = clusters.getClusterLabel
     plot(x, y, '.', Palette.COLORS)
@@ -701,7 +702,7 @@
         random samples.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = readTable("shell/src/universal/data/clustering/nonconvex/sincos.txt").unzip
+    val x = readTable("data/clustering/nonconvex/sincos.txt").unzip
     val clusters = specc(x, 2, 0.2)
     val y = clusters.getClusterLabel
     plot(x, y, 'o', Palette.COLORS)
@@ -746,7 +747,7 @@
         etc. Note that a random initialization is NOT appropriate.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = readTable("shell/src/universal/data/clustering/gaussian/six.txt").unzip
+    val x = readTable("data/clustering/gaussian/six.txt").unzip
     val clusters = mec(x, 20, 2.0)
     val y = clusters.getClusterLabel
     plot(x, y, '.', Palette.COLORS)

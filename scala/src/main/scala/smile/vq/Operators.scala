@@ -162,7 +162,7 @@ trait Operators {
     *              during inserting a new neuron.
     * @param beta decrease all error variables by multiply them with beta.
     */
-  def growneuralgas(data: Array[Array[Double]], epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, maxEdgeAge: Int = 88, lambda: Int = 300, alpha: Double = 0.5, beta: Double = 0.9995): GrowingNeuralGas = {
+  def gng(data: Array[Array[Double]], epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, maxEdgeAge: Int = 88, lambda: Int = 300, alpha: Double = 0.5, beta: Double = 0.9995): GrowingNeuralGas = {
     time {
       new GrowingNeuralGas(data(0).length, epsBest, epsNeighbor, maxEdgeAge, lambda, alpha, beta)
     }
