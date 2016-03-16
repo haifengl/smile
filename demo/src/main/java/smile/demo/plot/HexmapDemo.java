@@ -23,7 +23,7 @@ import java.util.Arrays;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.clustering.SOM;
+import smile.vq.SOM;
 import smile.data.AttributeDataset;
 import smile.data.NominalAttribute;
 import smile.data.parser.DelimitedTextParser;

@@ -19,7 +19,7 @@ package smile.demo.vq;
 import java.awt.Dimension;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-import smile.clustering.GrowingNeuralGas;
+import smile.vq.GrowingNeuralGas;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;

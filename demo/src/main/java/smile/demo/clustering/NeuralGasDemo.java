@@ -21,7 +21,7 @@ import java.awt.Dimension;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 
-import smile.clustering.NeuralGas;
+import smile.vq.NeuralGas;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;

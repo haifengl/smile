@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.clustering;
+package smile.vq;
 
 import java.util.Arrays;
+
+import smile.clustering.ClusteringDistance;
+import smile.clustering.PartitionClustering;
 import smile.math.Math;
 
 /**
@@ -48,13 +51,21 @@ import smile.math.Math;
  * <li> T. Martinetz and K. Schulten. Topology representing networks. Neural Networks, 7(3):507-522, 1994. </li>
  * </ol>
  * 
- * @see KMeans
+ * @see smile.clustering.KMeans
  * @see GrowingNeuralGas
  * @see NeuralMap
  * 
  * @author Haifeng Li
  */
-public class NeuralGas extends KMeans {
+public class NeuralGas extends PartitionClustering<double[]> {
+    /**
+     * The total distortion.
+     */
+    double distortion;
+    /**
+     * The centroids of each cluster.
+     */
+    double[][] centroids;
 
     /**
      * A class representing a node for all neural gas algorithms.
@@ -139,7 +150,7 @@ public class NeuralGas extends KMeans {
         this.k = k;
 
         // We use k-means++ seeding method to initialize neurons.
-        y = seed(data, k, DistanceMethod.EUCLIDEAN);
+        y = seed(data, k, ClusteringDistance.EUCLIDEAN);
 
         size = new int[k];
         for (int i = 0; i < n; i++) {
@@ -205,7 +216,42 @@ public class NeuralGas extends KMeans {
         for (int i = 0; i < data.length; i++) {
             size[y[i]]++;
         }
-    }        
+    }
+
+    /**
+     * Returns the distortion.
+     */
+    public double distortion() {
+        return distortion;
+    }
+
+    /**
+     * Returns the centroids.
+     */
+    public double[][] centroids() {
+        return centroids;
+    }
+
+    /**
+     * Cluster a new instance.
+     * @param x a new instance.
+     * @return the cluster label, which is the index of nearest centroid.
+     */
+    @Override
+    public int predict(double[] x) {
+        double minDist = Double.MAX_VALUE;
+        int bestCluster = 0;
+
+        for (int i = 0; i < k; i++) {
+            double dist = Math.squaredDistance(x, centroids[i]);
+            if (dist < minDist) {
+                minDist = dist;
+                bestCluster = i;
+            }
+        }
+
+        return bestCluster;
+    }
 
     @Override
     public String toString() {

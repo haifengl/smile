@@ -28,7 +28,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import smile.plot.Palette;
-import smile.clustering.SOM;
+import smile.vq.SOM;
 import smile.math.Math;
 import smile.plot.Hexmap;
 import smile.plot.Histogram;

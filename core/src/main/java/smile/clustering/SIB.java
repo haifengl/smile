@@ -103,7 +103,7 @@ public class SIB extends PartitionClustering<double[]> {
         this.k = k;
         size = new int[k];
         centroids = new double[k][d];
-        y = seed(data, k, DistanceMethod.JENSEN_SHANNON_DIVERGENCE);
+        y = seed(data, k, ClusteringDistance.JENSEN_SHANNON_DIVERGENCE);
 
         for (int i = 0; i < n; i++) {
             size[y[i]]++;

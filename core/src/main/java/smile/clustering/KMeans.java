@@ -64,8 +64,8 @@ import smile.util.MulticoreExecutor;
  * @see GMeans
  * @see CLARANS
  * @see SIB
- * @see SOM
- * @see NeuralGas
+ * @see smile.vq.SOM
+ * @see smile.vq.NeuralGas
  * @see BIRCH
  * @see BBDTree
  * 
@@ -164,7 +164,7 @@ public class KMeans extends PartitionClustering<double[]> {
 
         this.k = k;
         distortion = Double.MAX_VALUE;
-        y = seed(data, k, DistanceMethod.EUCLIDEAN);
+        y = seed(data, k, ClusteringDistance.EUCLIDEAN);
         size = new int[k];
         centroids = new double[k][d];
 
@@ -316,7 +316,7 @@ public class KMeans extends PartitionClustering<double[]> {
         double distortion = Double.MAX_VALUE;
         int[] size = new int[k];
         double[][] centroids = new double[k][d];
-        int[] y = seed(data, k, DistanceMethod.EUCLIDEAN_MISSING_VALUES);
+        int[] y = seed(data, k, ClusteringDistance.EUCLIDEAN_MISSING_VALUES);
 
         int np = MulticoreExecutor.getThreadPoolSize();
         List<LloydThread> tasks = null;
