@@ -668,6 +668,100 @@
         <div class="caption" style="min-width: 480px;">DENCLUE</div>
     </div>
 
+    <h2 id="spectral-clustering">Spectral Clustering</h2>
+
+    <p>Given a set of data points, the similarity matrix may
+        be defined as a matrix <code>S</code> where <code>S<sub>ij</sub></code>
+        represents a measure of the
+        similarity between points. Spectral clustering techniques make use of the
+        spectrum of the similarity matrix of the data to perform dimensionality
+        reduction for clustering in fewer dimensions. Then the clustering will
+        be performed in the dimension-reduce space, in which clusters of non-convex
+        shape may become tight. There are some intriguing similarities between
+        spectral clustering methods and kernel PCA, which has been empirically
+        observed to perform clustering.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def specc(W: Array[Array[Double]], k: Int): SpectralClustering
+
+    def specc(data: Array[Array[Double]], k: Int, sigma: Double): SpectralClustering
+
+    // Nystrom approximation
+    def specc(data: Array[Array[Double]], k: Int, l: Int, sigma: Double): SpectralClustering
+    </code></pre>
+
+    <p>where <code>W</code> is the adjacency matrix of graph. The user may also
+        provides the raw input <code>data</code> and the smooth/width parameter <code>sigma</code>
+        of Gaussian kernel, which is a somewhat sensitive parameter. To search for the best setting,
+        one may pick the value that gives the tightest clusters (smallest
+        distortion, reported by the method <code>distortion</code>) in feature space.
+        Spectral clustering is memory intensive because of the adjacency matrix.
+        For large data, one may use Nystrom approximation by selecting some
+        random samples. The parameter <code>l</code> specifies the number of
+        random samples.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val x = readTable("shell/src/universal/data/clustering/nonconvex/sincos.txt").unzip
+    val clusters = specc(x, 2, 0.2)
+    val y = clusters.getClusterLabel
+    plot(x, y, 'o', Palette.COLORS)
+    </code></pre>
+
+    <p>For this nonconvex data, spectral clustering works very well with appropriate smooth parameter.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/spectral-clustering.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Spectral Clustering</div>
+    </div>
+
+    <h2 id="mec">Minimum Entropy Clustering</h2>
+
+    <p>In this algorithm, the clustering criterion is based on the conditional entropy
+        <code>H(C | x)</code>, where <code>C</code> is the cluster label and
+        <code>x</code> is an observation. According to Fano's
+        inequality, we can estimate <code>C</code> with a low probability of error only if the
+        conditional entropy <code>H(C | x)</code> is small.
+        Minimum Entropy Clustering (MEC) also generalizes the criterion
+        by replacing Shannon's entropy with Havrda-Charvat's structural
+        <code>&alpha;</code>-entropy. Interestingly, the minimum entropy criterion based
+        on structural <code>&alpha;</code>-entropy is equal to the probability error of the
+        nearest neighbor method when <code>&alpha;</code>= 2. To estimate
+        <code>p(C | x)</code>, MEC employs
+        Parzen density estimation, a nonparametric approach.</p>
+
+    <p>This method performs
+        very well especially when the exact number of clusters is unknown.
+        The method can also correctly reveal the structure of data and effectively
+        identify outliers simultaneously.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def mec[T](data: Array[T], distance: Distance[T], k: Int, radius: Double): MEC[T]
+    def mec[T](data: Array[T], distance: Metric[T], k: Int, radius: Double): MEC[T]
+    def mec[T](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int]): MEC[T]
+    def mec(data: Array[Array[Double]], k: Int, radius: Double): MEC[Array[Double]]
+    </code></pre>
+
+    <p>MEC is an iterative algorithm starting with an initial partition given by
+        any other clustering methods, e.g. K-Means, CLARNAS, hierarchical clustering,
+        etc. Note that a random initialization is NOT appropriate.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val x = readTable("shell/src/universal/data/clustering/gaussian/six.txt").unzip
+    val clusters = mec(x, 20, 2.0)
+    val y = clusters.getClusterLabel
+    plot(x, y, '.', Palette.COLORS)
+    </code></pre>
+
+    <p>Note that we use <code>k = 20</code> for this data and the algorithm still successfully
+        finds the correct structure of data. In practice, we rarely know the right number of
+        clusters in advance. With MEC, one may starts with a large <code>k</code> and the algorithm
+        often can automatically remove unnecessary clusters and reach a lower entropy state.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/mec.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">MEC</div>
+    </div>
+
 </div>
 
 <script type="text/javascript">
