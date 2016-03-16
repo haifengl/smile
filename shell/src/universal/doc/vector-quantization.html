@@ -270,7 +270,10 @@
     }
     </code></pre>
 
-    <p>As shown in the plot, GNG nicely capture the structure of data.</p>
+    <p>As shown in the plot, GNG nicely capture the structure of data.
+        However, there are also neurons fitting noises and connecting
+        clusters that should be separated. A further graph cut/clustering
+        may help removing these neurons of noise.</p>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/growing-neural-gas.png" class="enlarge" style="width: 480px;" />
@@ -279,23 +282,46 @@
 
     <h2 id="neural-map">Neural Map</h2>
 
-    <p>NeuralMap is an efficient competitive learning algorithm inspired by growing
-        neural gas and BIRCH. Like growing neural gas, NeuralMap has the ability to
+    <p>Neural Map is an efficient competitive learning algorithm inspired by growing
+        neural gas and BIRCH. Like growing neural gas, Neural Map has the ability to
         add and delete neurons with competitive Hebbian learning. Edges exist between
         neurons close to each other. Such edges are intended place holders for
         localized data distribution. Such edges also help to locate distinct clusters
-        (those clusters are not connected by edges). NeuralMap employs Locality-Sensitive
+        (those clusters are not connected by edges). Neural Map employs Locality-Sensitive
         Hashing to speedup the learning while BIRCH uses balanced CF trees.</p>
 
     <pre class="prettyprint lang-scala"><code>
-        def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans
+    def neuralmap(data: Array[Array[Double]], radius: Double, L: Int, k: Int, epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, epochs: Int = 5): NeuralMap
     </code></pre>
 
-    <p>where the parameter <code>k</code> is the maximum number of clusters</p>
+    <p>where <code>radius</code> is the distance radius to activate
+        a neuron for a given signal, <code>L</code> is the number of hash tables,
+        <code>k</code> is the number of random projection hash functions,
+        <code>epsBest</code> is the fraction to update activated neuron,
+        and <code>epsNeighbor</code> is the fraction to update neighbors of activated neuron.
+        </p>
+    <pre class="prettyprint lang-scala"><code>
+    val cortex = neuralmap(x, 10, 5, 3)
+    // neurons will be removed if the number of its points is less than 6.
+    cortex.purge(6)
+
+    import scala.collection.JavaConverters._
+    val neurons = cortex.neurons.asScala
+    val win = plot(x, '.')
+    win.canvas.points(neurons.map(_.w).toArray, '@', Color.BLUE)
+
+    for (i <- 0 until neurons.size) {
+      val neighbors = neurons(i).neighbors.asScala
+      for (j <- 0 until neighbors.size) {
+        val edge = Array(neurons(i).w, neighbors(j).w)
+        win.canvas.line(edge, Color.BLUE)
+      }
+    }
+    </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/xmeans-six.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">X-Means</div>
+        <img src="images/neural-map.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Neural Map</div>
     </div>
 
 </div>

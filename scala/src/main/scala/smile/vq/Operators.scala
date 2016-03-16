@@ -166,7 +166,7 @@ trait Operators {
   def gng(data: Array[Array[Double]], epochs: Int = 25, epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, maxEdgeAge: Int = 88, lambda: Int = 300, alpha: Double = 0.5, beta: Double = 0.9995): GrowingNeuralGas = {
     time {
       val gas = new GrowingNeuralGas(data(0).length, epsBest, epsNeighbor, maxEdgeAge, lambda, alpha, beta)
-      for (i <- 0 until 25) {
+      for (i <- 0 until epochs) {
         data.foreach(gas.update(_))
       }
       gas
@@ -182,17 +182,17 @@ trait Operators {
     * Hashing to speedup the learning while BIRCH uses balanced CF trees.
     *
     * @param data the data set.
-    * @param minPts neurons will be removed if the number of its points is
-    *               less than minPts.
-    * @param r the distance radius to activate a neuron for a given signal.
+    * @param radius the distance radius to activate a neuron for a given signal.
     * @param epsBest the fraction to update activated neuron.
     * @param epsNeighbor the fraction to update neighbors of activated neuron.
     * @param L the number of hash tables.
-    * @param rp the number of random projection hash functions.
+    * @param k the number of random projection hash functions.
     */
-  def neuralmap(data: Array[Array[Double]], minPts: Int, r: Double, epsBest: Double, epsNeighbor: Double, L: Int, rp: Int): NeuralMap = {
+  def neuralmap(data: Array[Array[Double]], radius: Double, L: Int, k: Int, epsBest: Double = 0.05, epsNeighbor: Double = 0.0006): NeuralMap = {
     time {
-      new NeuralMap(data(0).length, r, epsBest, epsNeighbor, L, rp)
+      val cortex = new NeuralMap(data(0).length, radius, epsBest, epsNeighbor, L, k)
+      data.foreach(cortex.update(_))
+      cortex
     }
   }
 }
