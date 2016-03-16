@@ -86,49 +86,96 @@
     def som(data: Array[Array[Double]], width: Int, height: Int): SOM
     </code></pre>
 
+    <p>It is common to use the U-Matrix to visualize an SOM.
+        The U-Matrix value of a particular node is the average
+        distance between the node's weight vector and that of
+        its closest neighbors. In a square grid, for instance,
+        we might consider the closest 4 or 8 nodes
+        (the Von Neumann and Moore neighborhoods, respectively),
+        or six nodes in a hexagonal grid.</p>
+
     <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/six.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Mixture of Six Gaussians</div>
+        <img src="images/t4.8k.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Chameleon t4.8k</div>
     </div>
 
-    <p>To visualize the clustering results, we apply hierarchical clustering
-        to 2d data in the following. The data is generated from six Gaussian
-        distributions, each 300 samples.</p>
+    <p>In what follows, we apply SOM to a complicated data from Chameleon
+        data set, as shown in the above. The SOM has <code>20 x 20</code>
+        neurons.</p>
 
     <pre class="prettyprint lang-scala"><code>
-        val x = readTable("shell/src/universal/data/clustering/gaussian/six.txt").unzip
-        val clusters = hclust(proximity(x), "complete")
-        dendrogram(clusters)
+    val x = readTable("shell/src/universal/data/clustering/chameleon/t4.8k.txt").unzip
+    val map = som(x, 30, 30)
+    hexmap(map.umatrix, Palette.jet(256))
     </code></pre>
 
-    <p>The clustering results can be visualized by a hendroagram, which
-        is a tree diagram to illustrate the arrangement
-        of the clusters produced by hierarchical clustering.</p>
+    <p>The U-Matrix is visualized with a hexmap, where a dark red coloring between
+        the neurons corresponds to a large distance and thus a gap between
+        the codebook values in the input space. A dark blue coloring between
+        the neurons signifies that the codebook vectors are close to each other
+        in the input space. The blueish areas can be thought as clusters and
+        reddish areas as cluster separators. This can be a helpful presentation
+        when one tries to find clusters in the input data without having any
+        <i>a priori</i> information about the clusters.</p>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/hclust-dendrogram.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Dendrogram</div>
+        <img src="images/som-umatrix-hexmap.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">SOM U-Matrix</div>
     </div>
 
-    <p>If a hard partition is need, we can cut a hierarchical clustering tree
-        into several groups by specifying the desired number or the cut height.</p>
+    <p>One may also fit a Gaussian mixture model on the U-Matrix values.
+        Our implementation of EM algorithm to fix mixture models can automatically
+        determine the number of components in the mixture. The distribution
+        information can be used in other algorithms such as Guassian kernel smooth
+        parameters, nearest neighbor range, etc.</p>
 
     <pre class="prettyprint lang-scala"><code>
-        val y = clusters.partition(6)
-        plot(x, y, '.', Palette.COLORS)
+    val dist = map.umatrix.flatten
+    val win = hist(dist, 100)
+
+    val mixture = new GaussianMixture(dist)
+
+    val minDist = min(dist: _*)
+    val w = (max(dist: _*) - minDist) / 50
+    val pdf = (0 to 50).map {i =>
+      val x = minDist + i * w
+      val y = mixture.p(x) * w
+      Array(x, y)
+    }.toArray
+
+    win.canvas.line(pdf, Color.RED)
     </code></pre>
 
-    <p>The partitioning of six clusters is shown as</p>
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/som-umatrix-hist.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">SOM U-Matrix Value Distribution</div>
+    </div>
+
+    <p>It is also common to visualize an SOM by mapping the neuron
+        codebook vectors to a lower dimensional space (e.g. by Sammon's mapping).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val nodes = 30
+    val map = som(x, nodes, nodes)
+    val codebook = map.map.flatten
+    val codebook2d = sammon(pdist(codebook, false), 2).getCoordinates
+    val neurons = (0 until nodes).map { i => codebook2d.slice(nodes*i, nodes*(i+1)) }.toArray
+    grid(neurons)
+    </code></pre>
+
+    <p>Because this artificial data is 2-dimensional, it is not necessary
+        to map the neurons in the SOM to a lower dimensional space.
+        For demonstration, we still go through the whole process with a Sammon's mapping.</p>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/hclust-six.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Hierarchical Clustering</div>
+        <img src="images/som-sammon.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">SOM Neuron Grid after Sammon's Mapping</div>
     </div>
 
     <h2 id="neural-gas">Neural Gas</h2>
 
     <p>The Neural Gas algorithm is inspired
-        by the Self-Organizing Map for finding optimal data representations based on
+        by the SOM for finding optimal data representations based on
         feature vectors. The algorithm was coined "Neural Gas" because of the
         dynamics of the feature vectors during the adaptation process, which
         distribute themselves like a gas within the data space. Although it is mainly
@@ -180,7 +227,7 @@
     </ul>
 
     <pre class="prettyprint lang-scala"><code>
-    def growneuralgas(data: Array[Array[Double]], epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, maxEdgeAge: Int = 88, lambda: Int = 300, alpha: Double = 0.5, beta: Double = 0.9995): GrowingNeuralGas
+    def gng(data: Array[Array[Double]], epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, maxEdgeAge: Int = 88, lambda: Int = 300, alpha: Double = 0.5, beta: Double = 0.9995): GrowingNeuralGas
     </code></pre>
 
     <pre class="prettyprint lang-scala"><code>
