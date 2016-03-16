@@ -153,6 +153,7 @@ trait Operators {
     *  - B. Fritzke. A growing neural gas network learns topologies. NIPS, 1995.
     *
     * @param data the data set.
+    * @param epochs the number of epochs of learning.
     * @param epsBest the fraction to update nearest neuron.
     * @param epsNeighbor the fraction to update neighbors of nearest neuron.
     * @param maxEdgeAge the maximum age of edges.
@@ -162,9 +163,13 @@ trait Operators {
     *              during inserting a new neuron.
     * @param beta decrease all error variables by multiply them with beta.
     */
-  def gng(data: Array[Array[Double]], epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, maxEdgeAge: Int = 88, lambda: Int = 300, alpha: Double = 0.5, beta: Double = 0.9995): GrowingNeuralGas = {
+  def gng(data: Array[Array[Double]], epochs: Int = 25, epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, maxEdgeAge: Int = 88, lambda: Int = 300, alpha: Double = 0.5, beta: Double = 0.9995): GrowingNeuralGas = {
     time {
-      new GrowingNeuralGas(data(0).length, epsBest, epsNeighbor, maxEdgeAge, lambda, alpha, beta)
+      val gas = new GrowingNeuralGas(data(0).length, epsBest, epsNeighbor, maxEdgeAge, lambda, alpha, beta)
+      for (i <- 0 until 25) {
+        data.foreach(gas.update(_))
+      }
+      gas
     }
   }
 
