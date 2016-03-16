@@ -16,7 +16,7 @@
 
 package smile
 
-import smile.math.distance.Metric
+import smile.math.distance.{EuclideanDistance, Distance, Metric}
 import smile.math.rbf.GaussianRadialBasis
 
 /** Utility functions.
@@ -50,6 +50,46 @@ package object util extends Logging {
       if (echo) logger.info("runtime: {} ms", (System.nanoTime - s)/1e6)
       ret
     }
+  }
+
+  /** Returns the proximity matrix of a dataset for given distance function.
+    *
+    * @param data the data set.
+    * @param dist the distance function.
+    * @param half if true, only the lower half of matrix is allocated to save space.
+    * @return the lower half of proximity matrix.
+    */
+  def proximity[T](data: Array[T], dist: Distance[T], half: Boolean = true): Array[Array[Double]] = {
+    val n = data.length
+
+    if (half) {
+      val d = new Array[Array[Double]](n)
+      for (i <- 0 until n) {
+        d(i) = new Array[Double](i + 1)
+        for (j <- 0 until i)
+          d(i)(j) = dist.d(data(i), data(j))
+      }
+      d
+    } else {
+      val d = Array.ofDim[Double](n, n)
+      for (i <- 0 until n) {
+        for (j <- 0 until i) {
+          d(i)(j) = dist.d(data(i), data(j))
+          d(j)(i) = d(i)(j)
+        }
+      }
+      d
+    }
+  }
+
+  /** Returns the pairwise Euclidean distance matrix.
+    *
+    * @param data the data set.
+    * @param half if true, only the lower half of matrix is allocated to save space.
+    * @return the lower half of proximity matrix.
+    */
+  def pdist(data: Array[Array[Double]], half: Boolean = true): Array[Array[Double]] = {
+    proximity(data, new EuclideanDistance, half)
   }
 
   /** Learns Gaussian RBF function and centers from data. The centers are
