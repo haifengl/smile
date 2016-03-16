@@ -19,7 +19,7 @@ package smile.clustering
 import smile.clustering.linkage._
 import smile.data.SparseDataset
 import smile.math.distance._
-import smile.neighbor.{CoverTree, KDTree, RNNSearch}
+import smile.neighbor.RNNSearch
 import smile.util._
 
 /** High level cluster analysis operators.
@@ -27,33 +27,6 @@ import smile.util._
   * @author Haifeng Li
   */
 trait Operators {
-  /** Returns the proximity matrix of a dataset for given distance function.
-    * To save space, we only store the lower half of matrix.
-    *
-    * @param data the data set.
-    * @param dist the distance function.
-    * @return the lower half of proximity matrix.
-    */
-  def proximity[T](data: Array[T], dist: Distance[T]): Array[Array[Double]] = {
-    val n = data.length
-    val d = new Array[Array[Double]](n)
-    for (i <- 0 until n) {
-      d(i) = new Array[Double](i+1)
-      for (j <- 0 until i)
-        d(i)(j) = dist.d(data(i), data(j))
-    }
-    d
-  }
-
-  /** Returns the proximity matrix of a dataset for Euclidean distance.
-    * To save space, we only store the lower half of matrix.
-    *
-    * @param data the data set.
-    * @return the lower half of proximity matrix.
-    */
-  def proximity(data: Array[Array[Double]]): Array[Array[Double]] = {
-    proximity(data, new EuclideanDistance)
-  }
 
   /** Agglomerative Hierarchical Clustering. This method
     * seeks to build a hierarchy of clusters in a bottom up approach: each
