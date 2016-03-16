@@ -47,7 +47,7 @@ import smile.math.Math;
  * <li> B. Fritzke. A growing neural gas network learns topologies. NIPS, 1995.</li>
  * </ol>
  * 
- * @see KMeans
+ * @see smile.clustering.KMeans
  * @see NeuralGas
  * @see NeuralMap
  * 

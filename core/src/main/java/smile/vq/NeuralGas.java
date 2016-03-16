@@ -226,9 +226,16 @@ public class NeuralGas extends PartitionClustering<double[]> {
     }
 
     /**
-     * Returns the centroids.
+     * Returns the centroids/neurons.
      */
     public double[][] centroids() {
+        return centroids;
+    }
+
+    /**
+     * Returns the centroids/neurons.
+     */
+    public double[][] neurons() {
         return centroids;
     }
 

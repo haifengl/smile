@@ -206,10 +206,25 @@
         and choose the best one. To do that, set the parameter <code>runs &gt; 1</code>
         (e.g. 10 ~ 20).</p>
 
-    <p>A prominent extension is the Growing Neural Gas.
-        Growing Neural Gas
-        can add and delete nodes during algorithm execution.  The growth mechanism
-        is based on growing cell structures and competitive Hebbian learning.</p>
+    <pre class="prettyprint lang-scala"><code>
+    val gas = neuralgas(x, 200, 0.1)
+    val win = plot(x, '.')
+    win.canvas.points(gas.neurons, '#', Color.BLUE)
+    </code></pre>
+
+    <p>In the plot, we draw the neurons as big blue dots.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/neural-gas.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Neural Gas</div>
+    </div>
+
+    <h2 id="growing-neural-gas">Growing Neural Gas</h2>
+
+    <p>A prominent extension is the Growing Neural Gas (GNG).
+        GNG can add and delete nodes during algorithm execution.
+        The growth mechanism is based on growing cell structures
+        and competitive Hebbian learning.</p>
 
     <p>Compared to Neural Gas, GNG has the following distinctions:</p>
     <ul>
@@ -227,40 +242,40 @@
     </ul>
 
     <pre class="prettyprint lang-scala"><code>
-    def gng(data: Array[Array[Double]], epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, maxEdgeAge: Int = 88, lambda: Int = 300, alpha: Double = 0.5, beta: Double = 0.9995): GrowingNeuralGas
+    def gng(data: Array[Array[Double]], epochs: Int = 25, epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, maxEdgeAge: Int = 88, lambda: Int = 300, alpha: Double = 0.5, beta: Double = 0.9995): GrowingNeuralGas
     </code></pre>
+
+    <p>where <code>epochs</code> is the number of epochs of learning as GNG is an online
+        learning algorithm. The parameter <code>epsBest</code> is the fraction to update nearest neuron,
+        <code>epsNeighbor</code> is the fraction to update neighbors of nearest neuron,
+        <code>maxEdgeAge</code> is the maximum age of edges.
+        If the number of input signals so far is an integer multiple
+        of <code>lambda</code>, insert a new neuron.
+        When inserting a new neuron, we decrease error variables by multiplying them with <code>alpha</code>.
+        We also decrease all error variables by multiply them with <code>beta</code>.</p>
 
     <pre class="prettyprint lang-scala"><code>
-        val clusters = kmeans(x, 6, runs = 20)
-        val y = clusters.getClusterLabel
-        plot(x, y, '.', Palette.COLORS)
+    val gas = gng(x)
+
+    val neurons = gas.neurons
+    val win = plot(x, '.')
+    win.canvas.points(neurons.map(_.w).toArray, '@', Color.BLUE)
+
+    for (i <- 0 until neurons.length) {
+      val neighbors = neurons(i).neighbors
+      for (j <- 0 until neighbors.length) {
+        val edge = Array(neurons(i).w, neighbors(j).w)
+        win.canvas.line(edge, Color.BLUE)
+      }
+    }
     </code></pre>
 
-    <p>K-Means works very well on Gaussian mixtures.</p>
+    <p>As shown in the plot, GNG nicely capture the structure of data.</p>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/kmeans-six.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">K-Means on Gaussian Mixture</div>
+        <img src="images/growing-neural-gas.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Growing Neural Gas</div>
     </div>
-
-    <p>If the clusters are elongated, however, the results may be far from optimal.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-        val x = readTable("shell/src/universal/data/clustering/gaussian/elongate.txt").unzip
-        val clusters = kmeans(x, 2, runs = 20)
-        val y = clusters.getClusterLabel
-        plot(x, y, '.', Palette.COLORS)
-    </code></pre>
-
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/kmeans-elongate.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">K-Means on 2 Elongate Clusters</div>
-    </div>
-
-    <p>In K-Means, the number of clusters <code>K</code> has to be supplied by the user.
-        However, the appropriate number of clusters is often unknown in practice.
-        Several approaches (e.g. X-Means, G-Means, deterministic annealing, etc.)
-        have been proposed to handle this challenge.</p>
 
     <h2 id="neural-map">Neural Map</h2>
 
