@@ -167,35 +167,18 @@
 are the indices of nonzero elements in ascending order
 </p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.io.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.io.Operators#readCsv" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="readCsv(file:String,comment:String,missing:String,header:Boolean,rowNames:Boolean):smile.data.AttributeDataset"></a>
-      <a id="readCsv(String,String,String,Boolean,Boolean):AttributeDataset"></a>
+      <a id="readCsv(file:String,response:Option[(smile.data.Attribute,Int)],comment:String,missing:String,header:Boolean,rowNames:Boolean):smile.data.AttributeDataset"></a>
+      <a id="readCsv(String,Option[(Attribute,Int)],String,String,Boolean,Boolean):AttributeDataset"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">readCsv</span><span class="params">(<span name="file">file: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="comment">comment: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;%&quot;</span></span>, <span name="missing">missing: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;?&quot;</span></span>, <span name="header">header: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="rowNames">rowNames: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>)</span><span class="result">: <span class="extype" name="smile.data.AttributeDataset">AttributeDataset</span></span>
+        <span class="name">readCsv</span><span class="params">(<span name="file">file: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="response">response: <span class="extype" name="scala.Option">Option</span>[(<span class="extype" name="smile.data.Attribute">Attribute</span>, <span class="extype" name="scala.Int">Int</span>)] = <span class="symbol">None</span></span>, <span name="comment">comment: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;%&quot;</span></span>, <span name="missing">missing: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;?&quot;</span></span>, <span name="header">header: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="rowNames">rowNames: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>)</span><span class="result">: <span class="extype" name="smile.data.AttributeDataset">AttributeDataset</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.io.package@readCsv(file:String,comment:String,missing:String,header:Boolean,rowNames:Boolean):smile.data.AttributeDataset" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Reads a CSV file.</p><div class="fullcomment"><div class="comment cmt"><p>Reads a CSV file.</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.io.Operators">Operators</a></dd></dl></div>
-    </li><li name="smile.io.Operators#readCsv2" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="readCsv2(file:String,response:smile.data.Attribute,responseIndex:Int,comment:String,missing:String,header:Boolean,rowNames:Boolean):smile.data.AttributeDataset"></a>
-      <a id="readCsv2(String,Attribute,Int,String,String,Boolean,Boolean):AttributeDataset"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">readCsv2</span><span class="params">(<span name="file">file: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="response">response: <span class="extype" name="smile.data.Attribute">Attribute</span></span>, <span name="responseIndex">responseIndex: <span class="extype" name="scala.Int">Int</span></span>, <span name="comment">comment: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;%&quot;</span></span>, <span name="missing">missing: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;?&quot;</span></span>, <span name="header">header: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="rowNames">rowNames: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>)</span><span class="result">: <span class="extype" name="smile.data.AttributeDataset">AttributeDataset</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.io.package@readCsv2(file:String,response:smile.data.Attribute,responseIndex:Int,comment:String,missing:String,header:Boolean,rowNames:Boolean):smile.data.AttributeDataset" title="Permalink" target="_top">
+      <a href="../../index.html#smile.io.package@readCsv(file:String,response:Option[(smile.data.Attribute,Int)],comment:String,missing:String,header:Boolean,rowNames:Boolean):smile.data.AttributeDataset" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -319,42 +302,18 @@ by other programming language such as Fortran.</p></dd></dl><dl class="attribute
     </span>
       <p class="shortcomment cmt">Reads Harwell-Boeing column-compressed sparse matrix.</p><div class="fullcomment"><div class="comment cmt"><p>Reads Harwell-Boeing column-compressed sparse matrix.</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.io.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.io.Operators#readTable" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="readTable(file:String,delimiter:String,comment:String,missing:String,header:Boolean,rowNames:Boolean):smile.data.AttributeDataset"></a>
-      <a id="readTable(String,String,String,String,Boolean,Boolean):AttributeDataset"></a>
+      <a id="readTable(file:String,response:Option[(smile.data.Attribute,Int)],delimiter:String,comment:String,missing:String,header:Boolean,rowNames:Boolean):smile.data.AttributeDataset"></a>
+      <a id="readTable(String,Option[(Attribute,Int)],String,String,String,Boolean,Boolean):AttributeDataset"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">readTable</span><span class="params">(<span name="file">file: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="delimiter">delimiter: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;\\s+&quot;</span></span>, <span name="comment">comment: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;%&quot;</span></span>, <span name="missing">missing: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;?&quot;</span></span>, <span name="header">header: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="rowNames">rowNames: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>)</span><span class="result">: <span class="extype" name="smile.data.AttributeDataset">AttributeDataset</span></span>
+        <span class="name">readTable</span><span class="params">(<span name="file">file: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="response">response: <span class="extype" name="scala.Option">Option</span>[(<span class="extype" name="smile.data.Attribute">Attribute</span>, <span class="extype" name="scala.Int">Int</span>)] = <span class="symbol">None</span></span>, <span name="delimiter">delimiter: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;\\s+&quot;</span></span>, <span name="comment">comment: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;%&quot;</span></span>, <span name="missing">missing: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;?&quot;</span></span>, <span name="header">header: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="rowNames">rowNames: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>)</span><span class="result">: <span class="extype" name="smile.data.AttributeDataset">AttributeDataset</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.io.package@readTable(file:String,delimiter:String,comment:String,missing:String,header:Boolean,rowNames:Boolean):smile.data.AttributeDataset" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Reads a delimited text file.</p><div class="fullcomment"><div class="comment cmt"><p>Reads a delimited text file. By default, the parser expects a
-white-space-separated-values file. Each line in the file corresponds
-to a row in the table. Within a line, fields are separated by white spaces,
-each field belonging to one table column. This class can also be
-used to read other text tabular files by setting delimiter character
-such ash ','. The file may contain comment lines (starting with '%')
-and missing values (indicated by placeholder '?').
-</p></div><dl class="paramcmts block"><dt class="param">file</dt><dd class="cmt"><p>the file path</p></dd><dt class="param">delimiter</dt><dd class="cmt"><p>delimiter string</p></dd><dt class="param">comment</dt><dd class="cmt"><p>the start of comment lines</p></dd><dt class="param">missing</dt><dd class="cmt"><p>the missing value placeholder</p></dd><dt class="param">header</dt><dd class="cmt"><p>true if the first row is header/column names</p></dd><dt class="param">rowNames</dt><dd class="cmt"><p>true if the first column is row id/names</p></dd><dt>returns</dt><dd class="cmt"><p>an attribute dataset</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.io.Operators">Operators</a></dd></dl></div>
-    </li><li name="smile.io.Operators#readTable2" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="readTable2(file:String,response:smile.data.Attribute,responseIndex:Int,delimiter:String,comment:String,missing:String,header:Boolean,rowNames:Boolean):smile.data.AttributeDataset"></a>
-      <a id="readTable2(String,Attribute,Int,String,String,String,Boolean,Boolean):AttributeDataset"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">readTable2</span><span class="params">(<span name="file">file: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="response">response: <span class="extype" name="smile.data.Attribute">Attribute</span></span>, <span name="responseIndex">responseIndex: <span class="extype" name="scala.Int">Int</span></span>, <span name="delimiter">delimiter: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;\\s+&quot;</span></span>, <span name="comment">comment: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;%&quot;</span></span>, <span name="missing">missing: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;?&quot;</span></span>, <span name="header">header: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="rowNames">rowNames: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>)</span><span class="result">: <span class="extype" name="smile.data.AttributeDataset">AttributeDataset</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.io.package@readTable2(file:String,response:smile.data.Attribute,responseIndex:Int,delimiter:String,comment:String,missing:String,header:Boolean,rowNames:Boolean):smile.data.AttributeDataset" title="Permalink" target="_top">
+      <a href="../../index.html#smile.io.package@readTable(file:String,response:Option[(smile.data.Attribute,Int)],delimiter:String,comment:String,missing:String,header:Boolean,rowNames:Boolean):smile.data.AttributeDataset" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -365,7 +324,7 @@ each field belonging to one table column. This class can also be
 used to read other text tabular files by setting delimiter character
 such ash ','. The file may contain comment lines (starting with '%')
 and missing values (indicated by placeholder '?').
-</p></div><dl class="paramcmts block"><dt class="param">file</dt><dd class="cmt"><p>the file path</p></dd><dt class="param">response</dt><dd class="cmt"><p>the attribute type of response variable</p></dd><dt class="param">responseIndex</dt><dd class="cmt"><p>the column index of response variable. The column index starts at 0.</p></dd><dt class="param">delimiter</dt><dd class="cmt"><p>delimiter string</p></dd><dt class="param">comment</dt><dd class="cmt"><p>the start of comment lines</p></dd><dt class="param">missing</dt><dd class="cmt"><p>the missing value placeholder</p></dd><dt class="param">header</dt><dd class="cmt"><p>true if the first row is header/column names</p></dd><dt class="param">rowNames</dt><dd class="cmt"><p>true if the first column is row id/names</p></dd><dt>returns</dt><dd class="cmt"><p>an attribute dataset</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.io.Operators">Operators</a></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">file</dt><dd class="cmt"><p>the file path</p></dd><dt class="param">response</dt><dd class="cmt"><p>optional response variable attribute and the column index of response variable. The column index starts at 0.</p></dd><dt class="param">delimiter</dt><dd class="cmt"><p>delimiter string</p></dd><dt class="param">comment</dt><dd class="cmt"><p>the start of comment lines</p></dd><dt class="param">missing</dt><dd class="cmt"><p>the missing value placeholder</p></dd><dt class="param">header</dt><dd class="cmt"><p>true if the first row is header/column names</p></dd><dt class="param">rowNames</dt><dd class="cmt"><p>true if the first column is row id/names</p></dd><dt>returns</dt><dd class="cmt"><p>an attribute dataset</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.io.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.io.Operators#readTxt" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="readTxt(file:String):smile.data.AttributeDataset"></a>
       <a id="readTxt(String):AttributeDataset"></a>

@@ -135,18 +135,18 @@ into another.
         <div id="values" class="values members">
               <h3>Value Members</h3>
               <ol><li name="smile.mds.Operators#isomds" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="isomds(proximity:Array[Array[Double]],init:Array[Array[Double]],tol:Double,maxIter:Int):smile.mds.IsotonicMDS"></a>
-      <a id="isomds(Array[Array[Double]],Array[Array[Double]],Double,Int):IsotonicMDS"></a>
+      <a id="isomds(proximity:Array[Array[Double]],k:Int,tol:Double,maxIter:Int):smile.mds.IsotonicMDS"></a>
+      <a id="isomds(Array[Array[Double]],Int,Double,Int):IsotonicMDS"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isomds</span><span class="params">(<span name="proximity">proximity: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="init">init: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.0001</span></span>, <span name="maxIter">maxIter: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">200</span></span>)</span><span class="result">: <span class="extype" name="smile.mds.IsotonicMDS">IsotonicMDS</span></span>
+        <span class="name">isomds</span><span class="params">(<span name="proximity">proximity: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="k">k: <span class="extype" name="scala.Int">Int</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.0001</span></span>, <span name="maxIter">maxIter: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">200</span></span>)</span><span class="result">: <span class="extype" name="smile.mds.IsotonicMDS">IsotonicMDS</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.mds.package@isomds(proximity:Array[Array[Double]],init:Array[Array[Double]],tol:Double,maxIter:Int):smile.mds.IsotonicMDS" title="Permalink" target="_top">
+      <a href="../../index.html#smile.mds.package@isomds(proximity:Array[Array[Double]],k:Int,tol:Double,maxIter:Int):smile.mds.IsotonicMDS" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -158,8 +158,7 @@ original data. Note that a perfect ordinal re-scaling of the data into
 distances is usually not possible. The relationship is typically found
 using isotonic regression.
 </p></div><dl class="paramcmts block"><dt class="param">proximity</dt><dd class="cmt"><p>the nonnegative proximity matrix of dissimilarities. The
-                 diagonal should be zero and all other elements should be positive and symmetric.</p></dd><dt class="param">init</dt><dd class="cmt"><p>the initial projected coordinates, of which the column
-            size is the projection dimension.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>tolerance for stopping iterations.</p></dd><dt class="param">maxIter</dt><dd class="cmt"><p>maximum number of iterations.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.mds.Operators">Operators</a></dd></dl></div>
+                 diagonal should be zero and all other elements should be positive and symmetric.</p></dd><dt class="param">k</dt><dd class="cmt"><p>the dimension of the projection.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>tolerance for stopping iterations.</p></dd><dt class="param">maxIter</dt><dd class="cmt"><p>maximum number of iterations.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.mds.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.mds.Operators#mds" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="mds(proximity:Array[Array[Double]],k:Int,add:Boolean):smile.mds.MDS"></a>
       <a id="mds(Array[Array[Double]],Int,Boolean):MDS"></a>
@@ -197,18 +196,18 @@ equivalent to PCA.
            to minimize the dimensionality of the Euclidean space required for
            representing the objects.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.mds.Operators">Operators</a></dd></dl></div>
     </li><li name="smile.mds.Operators#sammon" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="sammon(proximity:Array[Array[Double]],init:Array[Array[Double]],lambda:Double,tol:Double,maxIter:Int):smile.mds.SammonMapping"></a>
-      <a id="sammon(Array[Array[Double]],Array[Array[Double]],Double,Double,Int):SammonMapping"></a>
+      <a id="sammon(proximity:Array[Array[Double]],k:Int,lambda:Double,tol:Double,maxIter:Int):smile.mds.SammonMapping"></a>
+      <a id="sammon(Array[Array[Double]],Int,Double,Double,Int):SammonMapping"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">sammon</span><span class="params">(<span name="proximity">proximity: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="init">init: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="lambda">lambda: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.2</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.0001</span></span>, <span name="maxIter">maxIter: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">100</span></span>)</span><span class="result">: <span class="extype" name="smile.mds.SammonMapping">SammonMapping</span></span>
+        <span class="name">sammon</span><span class="params">(<span name="proximity">proximity: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="k">k: <span class="extype" name="scala.Int">Int</span></span>, <span name="lambda">lambda: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.2</span></span>, <span name="tol">tol: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.0001</span></span>, <span name="maxIter">maxIter: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">100</span></span>)</span><span class="result">: <span class="extype" name="smile.mds.SammonMapping">SammonMapping</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.mds.package@sammon(proximity:Array[Array[Double]],init:Array[Array[Double]],lambda:Double,tol:Double,maxIter:Int):smile.mds.SammonMapping" title="Permalink" target="_top">
+      <a href="../../index.html#smile.mds.package@sammon(proximity:Array[Array[Double]],k:Int,lambda:Double,tol:Double,maxIter:Int):smile.mds.SammonMapping" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -238,8 +237,7 @@ topology of the object.</p><p>The projection cannot be solved in a closed form a
 iterative algorithm such as gradient descent suggested by Sammon. Kohonen
 also provides a heuristic that is simple and works reasonably well.
 </p></div><dl class="paramcmts block"><dt class="param">proximity</dt><dd class="cmt"><p>the nonnegative proximity matrix of dissimilarities. The
-                 diagonal should be zero and all other elements should be positive and symmetric.</p></dd><dt class="param">init</dt><dd class="cmt"><p>the initial projected coordinates, of which the column
-            size is the projection dimension.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>initial value of the step size constant in diagonal Newton method.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>tolerance for stopping iterations.</p></dd><dt class="param">maxIter</dt><dd class="cmt"><p>maximum number of iterations.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.mds.Operators">Operators</a></dd></dl></div>
+                 diagonal should be zero and all other elements should be positive and symmetric.</p></dd><dt class="param">k</dt><dd class="cmt"><p>the dimension of the projection.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>initial value of the step size constant in diagonal Newton method.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>tolerance for stopping iterations.</p></dd><dt class="param">maxIter</dt><dd class="cmt"><p>maximum number of iterations.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Operators.html" class="extype" name="smile.mds.Operators">Operators</a></dd></dl></div>
     </li></ol>
             </div>
 

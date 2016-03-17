@@ -252,42 +252,19 @@ This implementation is a multi-class AdaBoost without such reductions.</p><h6>Re
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="clone():Object"></a>
-      <a id="clone():AnyRef"></a>
+    </li><li name="smile.classification.Operators#cart" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="cart(x:Array[Array[Double]],y:Array[Int],maxNodes:Int,attributes:Array[smile.data.Attribute],splitRule:smile.classification.DecisionTree.SplitRule):smile.classification.DecisionTree"></a>
+      <a id="cart(Array[Array[Double]],Array[Int],Int,Array[Attribute],SplitRule):DecisionTree"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">cart</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="maxNodes">maxNodes: <span class="extype" name="scala.Int">Int</span></span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="splitRule">splitRule: <span class="extype" name="smile.classification.DecisionTree.SplitRule">SplitRule</span> = <span class="symbol">DecisionTree.SplitRule.GINI</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.DecisionTree">DecisionTree</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@clone():Object" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
-                <span class="name">@throws</span><span class="args">(<span>
-      
-      <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
-    </span>)</span>
-              
-        </dd></dl></div>
-    </li><li name="smile.classification.Operators#decisionTree" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="decisionTree(x:Array[Array[Double]],y:Array[Int],maxNodes:Int,attributes:Array[smile.data.Attribute],splitRule:smile.classification.DecisionTree.SplitRule):smile.classification.DecisionTree"></a>
-      <a id="decisionTree(Array[Array[Double]],Array[Int],Int,Array[Attribute],SplitRule):DecisionTree"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">decisionTree</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="maxNodes">maxNodes: <span class="extype" name="scala.Int">Int</span></span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="splitRule">splitRule: <span class="extype" name="smile.classification.DecisionTree.SplitRule">SplitRule</span> = <span class="symbol">DecisionTree.SplitRule.GINI</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.DecisionTree">DecisionTree</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@decisionTree(x:Array[Array[Double]],y:Array[Int],maxNodes:Int,attributes:Array[smile.data.Attribute],splitRule:smile.classification.DecisionTree.SplitRule):smile.classification.DecisionTree" title="Permalink" target="_top">
+      <a href="../../index.html#smile.classification.Operators@cart(x:Array[Array[Double]],y:Array[Int],maxNodes:Int,attributes:Array[smile.data.Attribute],splitRule:smile.classification.DecisionTree.SplitRule):smile.classification.DecisionTree" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -341,6 +318,29 @@ Another limitation of trees is the lack of smoothness of the prediction
 surface.</p><p>Some techniques such as bagging, boosting, and random forest use more than
 one decision tree for their analysis.
 </p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>the training instances.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response variable.</p></dd><dt class="param">maxNodes</dt><dd class="cmt"><p>the maximum number of leaf nodes in the tree.</p></dd><dt class="param">attributes</dt><dd class="cmt"><p>the attribute properties.</p></dd><dt class="param">splitRule</dt><dd class="cmt"><p>the splitting rule.</p></dd><dt>returns</dt><dd class="cmt"><p>Decision tree model.</p></dd></dl></div>
+    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a>
+      <a id="clone():AnyRef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.classification.Operators@clone():Object" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a>
       <a id="ensuring((Operators)⇒Boolean,⇒Any):Operators"></a>
@@ -543,27 +543,23 @@ problem.
                 <span class="name">@inline</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="smile.classification.Operators#gbct" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="gbct(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,shrinkage:Double,subsample:Double):smile.classification.GradientTreeBoost"></a>
-      <a id="gbct(Array[Array[Double]],Array[Int],Array[Attribute],Int,Int,Double,Double):GradientTreeBoost"></a>
+    </li><li name="smile.classification.Operators#gbm" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="gbm(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,shrinkage:Double,subsample:Double):smile.classification.GradientTreeBoost"></a>
+      <a id="gbm(Array[Array[Double]],Array[Int],Array[Attribute],Int,Int,Double,Double):GradientTreeBoost"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">gbct</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="ntrees">ntrees: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="maxNodes">maxNodes: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">6</span></span>, <span name="shrinkage">shrinkage: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.05</span></span>, <span name="subsample">subsample: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.7</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.GradientTreeBoost">GradientTreeBoost</span></span>
+        <span class="name">gbm</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="ntrees">ntrees: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="maxNodes">maxNodes: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">6</span></span>, <span name="shrinkage">shrinkage: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.05</span></span>, <span name="subsample">subsample: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.7</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.GradientTreeBoost">GradientTreeBoost</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@gbct(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,shrinkage:Double,subsample:Double):smile.classification.GradientTreeBoost" title="Permalink" target="_top">
+      <a href="../../index.html#smile.classification.Operators@gbm(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,shrinkage:Double,subsample:Double):smile.classification.GradientTreeBoost" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Gradient boosted classification trees.</p><div class="fullcomment"><div class="comment cmt"><p>Gradient boosted classification trees. Gradient boosting is typically used
-with decision trees (especially CART regression trees) of a fixed size as
-base learners. For this special case Friedman proposes a modification to
-gradient boosting method which improves the quality of fit of each base
-learner.</p><p>Generic gradient boosting at the t-th step would fit a regression tree to
+      <p class="shortcomment cmt">Gradient boosted classification trees.</p><div class="fullcomment"><div class="comment cmt"><p>Gradient boosted classification trees.</p><p>Generic gradient boosting at the t-th step would fit a regression tree to
 pseudo-residuals. Let J be the number of its leaves. The tree partitions
 the input space into J disjoint regions and predicts a constant value in
 each region. The parameter J controls the maximum allowed
@@ -677,7 +673,7 @@ Imposing this limit helps to reduce variance in predictions at leaves.</p><h6>Re
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">K-nearest neighbor classifier.</p><div class="fullcomment"><div class="comment cmt"><p>K-nearest neighbor classifier.
+      <p class="shortcomment cmt">K-nearest neighbor classifier with Euclidean distance as the similarity measure.</p><div class="fullcomment"><div class="comment cmt"><p>K-nearest neighbor classifier with Euclidean distance as the similarity measure.
 </p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, c), where c is the number of classes.</p></dd><dt class="param">k</dt><dd class="cmt"><p>the number of neighbors for classification.</p></dd></dl></div>
     </li><li name="smile.classification.Operators#knn" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="knn[T&lt;:AnyRef](x:Array[T],y:Array[Int],distance:smile.math.distance.Distance[T],k:Int):smile.classification.KNN[T]"></a>
@@ -857,75 +853,19 @@ entries are the indices of nonzero features.</p><h6>References:</h6><ul><li>A. L
          are the indices of nonzero features.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">p</dt><dd class="cmt"><p>the dimension of feature space.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>&lambda; &gt; 0 gives a &quot;regularized&quot; estimate of linear
               weights which often has superior generalization performance, especially
               when the dimensionality is high.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>tolerance for stopping iterations.</p></dd><dt class="param">maxIter</dt><dd class="cmt"><p>maximum number of iterations.</p></dd><dt>returns</dt><dd class="cmt"><p>Maximum entropy model.</p></dd></dl></div>
-    </li><li name="smile.classification.Operators#naiveBayes" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="naiveBayes(priori:Array[Double],condprob:Array[Array[smile.stat.distribution.Distribution]]):smile.classification.NaiveBayes"></a>
-      <a id="naiveBayes(Array[Double],Array[Array[Distribution]]):NaiveBayes"></a>
+    </li><li name="smile.classification.Operators#mlp" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="mlp(x:Array[Array[Double]],y:Array[Int],numUnits:Array[Int],error:smile.classification.NeuralNetwork.ErrorFunction,activation:smile.classification.NeuralNetwork.ActivationFunction,epochs:Int,eta:Double,alpha:Double,lambda:Double):smile.classification.NeuralNetwork"></a>
+      <a id="mlp(Array[Array[Double]],Array[Int],Array[Int],ErrorFunction,ActivationFunction,Int,Double,Double,Double):NeuralNetwork"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">naiveBayes</span><span class="params">(<span name="priori">priori: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="condprob">condprob: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.stat.distribution.Distribution">Distribution</span>]]</span>)</span><span class="result">: <span class="extype" name="smile.classification.NaiveBayes">NaiveBayes</span></span>
+        <span class="name">mlp</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="numUnits">numUnits: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="error">error: <span class="extype" name="smile.classification.NeuralNetwork.ErrorFunction">ErrorFunction</span></span>, <span name="activation">activation: <span class="extype" name="smile.classification.NeuralNetwork.ActivationFunction">ActivationFunction</span></span>, <span name="epochs">epochs: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">25</span></span>, <span name="eta">eta: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.1</span></span>, <span name="alpha">alpha: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.0</span></span>, <span name="lambda">lambda: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.0</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.NeuralNetwork">NeuralNetwork</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@naiveBayes(priori:Array[Double],condprob:Array[Array[smile.stat.distribution.Distribution]]):smile.classification.NaiveBayes" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Creates a general naive Bayes classifier.</p><div class="fullcomment"><div class="comment cmt"><p>Creates a general naive Bayes classifier.
-</p></div><dl class="paramcmts block"><dt class="param">priori</dt><dd class="cmt"><p>the priori probability of each class.</p></dd><dt class="param">condprob</dt><dd class="cmt"><p>the conditional distribution of each variable in
-                each class. In particular, condprob[i][j] is the conditional
-                distribution P(x<sub>j</sub> | class i).</p></dd></dl></div>
-    </li><li name="smile.classification.Operators#naiveBayes" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="naiveBayes(x:Array[Array[Double]],y:Array[Int],model:smile.classification.NaiveBayes.Model,priori:Array[Double],sigma:Double):smile.classification.NaiveBayes"></a>
-      <a id="naiveBayes(Array[Array[Double]],Array[Int],Model,Array[Double],Double):NaiveBayes"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">naiveBayes</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="model">model: <span class="extype" name="smile.classification.NaiveBayes.Model">Model</span></span>, <span name="priori">priori: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>] = <span class="symbol">null</span></span>, <span name="sigma">sigma: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1.0</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.NaiveBayes">NaiveBayes</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@naiveBayes(x:Array[Array[Double]],y:Array[Int],model:smile.classification.NaiveBayes.Model,priori:Array[Double],sigma:Double):smile.classification.NaiveBayes" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Creates a naive Bayes classifier for document classification.</p><div class="fullcomment"><div class="comment cmt"><p>Creates a naive Bayes classifier for document classification.
-Add-k smoothing.
-</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">model</dt><dd class="cmt"><p>the generation model of naive Bayes classifier.</p></dd><dt class="param">priori</dt><dd class="cmt"><p>the priori probability of each class. If null, equal probability is assume for each class.</p></dd><dt class="param">sigma</dt><dd class="cmt"><p>the prior count of add-k smoothing of evidence.</p></dd></dl></div>
-    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ne(x$1:AnyRef):Boolean"></a>
-      <a id="ne(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="smile.classification.Operators#neuralnet" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="neuralnet(x:Array[Array[Double]],y:Array[Int],numUnits:Array[Int],error:smile.classification.NeuralNetwork.ErrorFunction,epochs:Int,activation:smile.classification.NeuralNetwork.ActivationFunction,eta:Double,alpha:Double,lambda:Double):smile.classification.NeuralNetwork"></a>
-      <a id="neuralnet(Array[Array[Double]],Array[Int],Array[Int],ErrorFunction,Int,ActivationFunction,Double,Double,Double):NeuralNetwork"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">neuralnet</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="numUnits">numUnits: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="error">error: <span class="extype" name="smile.classification.NeuralNetwork.ErrorFunction">ErrorFunction</span></span>, <span name="epochs">epochs: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">25</span></span>, <span name="activation">activation: <span class="extype" name="smile.classification.NeuralNetwork.ActivationFunction">ActivationFunction</span></span>, <span name="eta">eta: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.1</span></span>, <span name="alpha">alpha: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.0</span></span>, <span name="lambda">lambda: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.0</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.NeuralNetwork">NeuralNetwork</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@neuralnet(x:Array[Array[Double]],y:Array[Int],numUnits:Array[Int],error:smile.classification.NeuralNetwork.ErrorFunction,epochs:Int,activation:smile.classification.NeuralNetwork.ActivationFunction,eta:Double,alpha:Double,lambda:Double):smile.classification.NeuralNetwork" title="Permalink" target="_top">
+      <a href="../../index.html#smile.classification.Operators@mlp(x:Array[Array[Double]],y:Array[Int],numUnits:Array[Int],error:smile.classification.NeuralNetwork.ErrorFunction,activation:smile.classification.NeuralNetwork.ActivationFunction,epochs:Int,eta:Double,alpha:Double,lambda:Double):smile.classification.NeuralNetwork" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -986,7 +926,63 @@ recommended:</p><ul><li>linear output units and a least squares penalty function
    activation function.</li></ul><p>By assigning a softmax activation function on the output layer of
 the neural network for categorical target variables, the outputs
 can be interpreted as posterior probabilities, which are very useful.
-</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">numUnits</dt><dd class="cmt"><p>the number of units in each layer.</p></dd><dt class="param">error</dt><dd class="cmt"><p>the error function.</p></dd><dt class="param">epochs</dt><dd class="cmt"><p>the number of epochs of stochastic learning.</p></dd><dt class="param">activation</dt><dd class="cmt"><p>the activation function of output layer.</p></dd><dt class="param">eta</dt><dd class="cmt"><p>the learning rate.</p></dd><dt class="param">alpha</dt><dd class="cmt"><p>the momentum factor.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>the weight decay for regularization.</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">numUnits</dt><dd class="cmt"><p>the number of units in each layer.</p></dd><dt class="param">error</dt><dd class="cmt"><p>the error function.</p></dd><dt class="param">activation</dt><dd class="cmt"><p>the activation function of output layer.</p></dd><dt class="param">epochs</dt><dd class="cmt"><p>the number of epochs of stochastic learning.</p></dd><dt class="param">eta</dt><dd class="cmt"><p>the learning rate.</p></dd><dt class="param">alpha</dt><dd class="cmt"><p>the momentum factor.</p></dd><dt class="param">lambda</dt><dd class="cmt"><p>the weight decay for regularization.</p></dd></dl></div>
+    </li><li name="smile.classification.Operators#naiveBayes" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="naiveBayes(priori:Array[Double],condprob:Array[Array[smile.stat.distribution.Distribution]]):smile.classification.NaiveBayes"></a>
+      <a id="naiveBayes(Array[Double],Array[Array[Distribution]]):NaiveBayes"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">naiveBayes</span><span class="params">(<span name="priori">priori: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="condprob">condprob: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.stat.distribution.Distribution">Distribution</span>]]</span>)</span><span class="result">: <span class="extype" name="smile.classification.NaiveBayes">NaiveBayes</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.classification.Operators@naiveBayes(priori:Array[Double],condprob:Array[Array[smile.stat.distribution.Distribution]]):smile.classification.NaiveBayes" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Creates a general naive Bayes classifier.</p><div class="fullcomment"><div class="comment cmt"><p>Creates a general naive Bayes classifier.
+</p></div><dl class="paramcmts block"><dt class="param">priori</dt><dd class="cmt"><p>the priori probability of each class.</p></dd><dt class="param">condprob</dt><dd class="cmt"><p>the conditional distribution of each variable in
+                each class. In particular, condprob[i][j] is the conditional
+                distribution P(x<sub>j</sub> | class i).</p></dd></dl></div>
+    </li><li name="smile.classification.Operators#naiveBayes" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="naiveBayes(x:Array[Array[Double]],y:Array[Int],model:smile.classification.NaiveBayes.Model,priori:Array[Double],sigma:Double):smile.classification.NaiveBayes"></a>
+      <a id="naiveBayes(Array[Array[Double]],Array[Int],Model,Array[Double],Double):NaiveBayes"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">naiveBayes</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="model">model: <span class="extype" name="smile.classification.NaiveBayes.Model">Model</span></span>, <span name="priori">priori: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>] = <span class="symbol">null</span></span>, <span name="sigma">sigma: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1.0</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.NaiveBayes">NaiveBayes</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.classification.Operators@naiveBayes(x:Array[Array[Double]],y:Array[Int],model:smile.classification.NaiveBayes.Model,priori:Array[Double],sigma:Double):smile.classification.NaiveBayes" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Creates a naive Bayes classifier for document classification.</p><div class="fullcomment"><div class="comment cmt"><p>Creates a naive Bayes classifier for document classification.
+Add-k smoothing.
+</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">model</dt><dd class="cmt"><p>the generation model of naive Bayes classifier.</p></dd><dt class="param">priori</dt><dd class="cmt"><p>the priori probability of each class. If null, equal probability is assume for each class.</p></dd><dt class="param">sigma</dt><dd class="cmt"><p>the prior count of add-k smoothing of evidence.</p></dd></dl></div>
+    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a>
+      <a id="ne(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.classification.Operators@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <a id="notify():Unit"></a>
@@ -1021,42 +1017,40 @@ can be interpreted as posterior probabilities, which are very useful.
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="smile.classification.Operators#predict" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="predict[T&lt;:AnyRef](model:smile.classification.SoftClassifier[T],x:T,posteriori:Array[Double]):Int"></a>
-      <a id="predict[T&lt;:AnyRef](SoftClassifier[T],T,Array[Double]):Int"></a>
+    </li><li name="smile.classification.Operators#nrbfnet" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="nrbfnet[T&lt;:AnyRef,RBF&lt;:smile.math.rbf.RadialBasisFunction](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:Array[RBF],centers:Array[T]):smile.classification.RBFNetwork[T]"></a>
+      <a id="nrbfnet[T&lt;:AnyRef,RBF&lt;:RadialBasisFunction](Array[T],Array[Int],Metric[T],Array[RBF],Array[T]):RBFNetwork[T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">predict</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="model">model: <span class="extype" name="smile.classification.SoftClassifier">SoftClassifier</span>[<span class="extype" name="smile.classification.Operators.predict.T">T</span>]</span>, <span name="x">x: <span class="extype" name="smile.classification.Operators.predict.T">T</span></span>, <span name="posteriori">posteriori: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">nrbfnet</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>, <span name="RBF">RBF &lt;: <span class="extype" name="smile.math.rbf.RadialBasisFunction">RadialBasisFunction</span></span>]</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.nrbfnet.T">T</span>]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="distance">distance: <span class="extype" name="smile.math.distance.Metric">Metric</span>[<span class="extype" name="smile.classification.Operators.nrbfnet.T">T</span>]</span>, <span name="rbf">rbf: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.nrbfnet.RBF">RBF</span>]</span>, <span name="centers">centers: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.nrbfnet.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="smile.classification.RBFNetwork">RBFNetwork</span>[<span class="extype" name="smile.classification.Operators.nrbfnet.T">T</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@predict[T&lt;:AnyRef](model:smile.classification.SoftClassifier[T],x:T,posteriori:Array[Double]):Int" title="Permalink" target="_top">
+      <a href="../../index.html#smile.classification.Operators@nrbfnet[T&lt;:AnyRef,RBF&lt;:smile.math.rbf.RadialBasisFunction](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:Array[RBF],centers:Array[T]):smile.classification.RBFNetwork[T]" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Apply a soft classifier on an instance.</p><div class="fullcomment"><div class="comment cmt"><p>Apply a soft classifier on an instance.
-</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the data type.</p></dd><dt class="param">model</dt><dd class="cmt"><p>classification model.</p></dd><dt class="param">x</dt><dd class="cmt"><p>data sample.</p></dd><dt class="param">posteriori</dt><dd class="cmt"><p>optional double array of posertiori probability output. Note not all models support it.</p></dd><dt>returns</dt><dd class="cmt"><p>the predicted class label.</p></dd></dl></div>
-    </li><li name="smile.classification.Operators#predict" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="predict[T&lt;:AnyRef](model:smile.classification.Classifier[T],x:T):Int"></a>
-      <a id="predict[T&lt;:AnyRef](Classifier[T],T):Int"></a>
+      <p class="shortcomment cmt">Normalized radial basis function networks.</p>
+    </li><li name="smile.classification.Operators#nrbfnet" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="nrbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:smile.math.rbf.RadialBasisFunction,centers:Array[T]):smile.classification.RBFNetwork[T]"></a>
+      <a id="nrbfnet[T&lt;:AnyRef](Array[T],Array[Int],Metric[T],RadialBasisFunction,Array[T]):RBFNetwork[T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">predict</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="model">model: <span class="extype" name="smile.classification.Classifier">Classifier</span>[<span class="extype" name="smile.classification.Operators.predict.T">T</span>]</span>, <span name="x">x: <span class="extype" name="smile.classification.Operators.predict.T">T</span></span>)</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+        <span class="name">nrbfnet</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.nrbfnet.T">T</span>]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="distance">distance: <span class="extype" name="smile.math.distance.Metric">Metric</span>[<span class="extype" name="smile.classification.Operators.nrbfnet.T">T</span>]</span>, <span name="rbf">rbf: <span class="extype" name="smile.math.rbf.RadialBasisFunction">RadialBasisFunction</span></span>, <span name="centers">centers: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.nrbfnet.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="smile.classification.RBFNetwork">RBFNetwork</span>[<span class="extype" name="smile.classification.Operators.nrbfnet.T">T</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@predict[T&lt;:AnyRef](model:smile.classification.Classifier[T],x:T):Int" title="Permalink" target="_top">
+      <a href="../../index.html#smile.classification.Operators@nrbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:smile.math.rbf.RadialBasisFunction,centers:Array[T]):smile.classification.RBFNetwork[T]" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Apply a classifier on an instance.</p><div class="fullcomment"><div class="comment cmt"><p>Apply a classifier on an instance.
-</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the data type.</p></dd><dt class="param">model</dt><dd class="cmt"><p>classification model.</p></dd><dt class="param">x</dt><dd class="cmt"><p>data sample.</p></dd><dt>returns</dt><dd class="cmt"><p>the predicted class label.</p></dd></dl></div>
+      <p class="shortcomment cmt">Normalized radial basis function networks.</p>
     </li><li name="smile.classification.Operators#qda" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="qda(x:Array[Array[Double]],y:Array[Int],priori:Array[Double],tol:Double):smile.classification.QDA"></a>
       <a id="qda(Array[Array[Double]],Array[Int],Array[Double],Double):QDA"></a>
@@ -1088,19 +1082,19 @@ One of these regularization methods is <code><a href="#rda(x:Array[Array[Double]
 </p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">priori</dt><dd class="cmt"><p>the priori probability of each class. If null, it will be
               estimated from the training data.</p></dd><dt class="param">tol</dt><dd class="cmt"><p>a tolerance to decide if a covariance matrix is singular; it
            will reject variables whose variance is less than tol<sup>2</sup>.</p></dd><dt>returns</dt><dd class="cmt"><p>Quadratic discriminant analysis model.</p></dd></dl></div>
-    </li><li name="smile.classification.Operators#randomDecisionForest" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="randomDecisionForest(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,nodeSize:Int,mtry:Int,subsample:Double,splitRule:smile.classification.DecisionTree.SplitRule,classWeight:Array[Int]):smile.classification.RandomForest"></a>
-      <a id="randomDecisionForest(Array[Array[Double]],Array[Int],Array[Attribute],Int,Int,Int,Int,Double,SplitRule,Array[Int]):RandomForest"></a>
+    </li><li name="smile.classification.Operators#randomForest" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="randomForest(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,nodeSize:Int,mtry:Int,subsample:Double,splitRule:smile.classification.DecisionTree.SplitRule,classWeight:Array[Int]):smile.classification.RandomForest"></a>
+      <a id="randomForest(Array[Array[Double]],Array[Int],Array[Attribute],Int,Int,Int,Int,Double,SplitRule,Array[Int]):RandomForest"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">randomDecisionForest</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="ntrees">ntrees: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="maxNodes">maxNodes: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="nodeSize">nodeSize: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="mtry">mtry: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="subsample">subsample: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1.0</span></span>, <span name="splitRule">splitRule: <span class="extype" name="smile.classification.DecisionTree.SplitRule">SplitRule</span> = <span class="symbol">DecisionTree.SplitRule.GINI</span></span>, <span name="classWeight">classWeight: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>] = <span class="symbol">null</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.RandomForest">RandomForest</span></span>
+        <span class="name">randomForest</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="attributes">attributes: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.data.Attribute">Attribute</span>] = <span class="symbol">null</span></span>, <span name="ntrees">ntrees: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">500</span></span>, <span name="maxNodes">maxNodes: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="nodeSize">nodeSize: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="mtry">mtry: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="subsample">subsample: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1.0</span></span>, <span name="splitRule">splitRule: <span class="extype" name="smile.classification.DecisionTree.SplitRule">SplitRule</span> = <span class="symbol">DecisionTree.SplitRule.GINI</span></span>, <span name="classWeight">classWeight: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>] = <span class="symbol">null</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.RandomForest">RandomForest</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@randomDecisionForest(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,nodeSize:Int,mtry:Int,subsample:Double,splitRule:smile.classification.DecisionTree.SplitRule,classWeight:Array[Int]):smile.classification.RandomForest" title="Permalink" target="_top">
+      <a href="../../index.html#smile.classification.Operators@randomForest(x:Array[Array[Double]],y:Array[Int],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,nodeSize:Int,mtry:Int,subsample:Double,splitRule:smile.classification.DecisionTree.SplitRule,classWeight:Array[Int]):smile.classification.RandomForest" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -1125,18 +1119,18 @@ not reliable for this type of data.
             generally good performance, where dim is the number of variables.</p></dd><dt class="param">subsample</dt><dd class="cmt"><p>the sampling rate for training tree. 1.0 means sampling with replacement. &lt; 1.0 means
                  sampling without replacement.</p></dd><dt class="param">splitRule</dt><dd class="cmt"><p>Decision tree node split rule.</p></dd><dt class="param">classWeight</dt><dd class="cmt"><p>Priors of the classes.</p></dd><dt>returns</dt><dd class="cmt"><p>Random forest classification model.</p></dd></dl></div>
     </li><li name="smile.classification.Operators#rbfnet" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="rbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:Array[smile.math.rbf.RadialBasisFunction],centers:Array[T],normalized:Boolean):smile.classification.RBFNetwork[T]"></a>
-      <a id="rbfnet[T&lt;:AnyRef](Array[T],Array[Int],Metric[T],Array[RadialBasisFunction],Array[T],Boolean):RBFNetwork[T]"></a>
+      <a id="rbfnet[T&lt;:AnyRef,RBF&lt;:smile.math.rbf.RadialBasisFunction](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:Array[RBF],centers:Array[T]):smile.classification.RBFNetwork[T]"></a>
+      <a id="rbfnet[T&lt;:AnyRef,RBF&lt;:RadialBasisFunction](Array[T],Array[Int],Metric[T],Array[RBF],Array[T]):RBFNetwork[T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">rbfnet</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="distance">distance: <span class="extype" name="smile.math.distance.Metric">Metric</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>, <span name="rbf">rbf: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.math.rbf.RadialBasisFunction">RadialBasisFunction</span>]</span>, <span name="centers">centers: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>, <span name="normalized">normalized: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.RBFNetwork">RBFNetwork</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>
+        <span class="name">rbfnet</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>, <span name="RBF">RBF &lt;: <span class="extype" name="smile.math.rbf.RadialBasisFunction">RadialBasisFunction</span></span>]</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="distance">distance: <span class="extype" name="smile.math.distance.Metric">Metric</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>, <span name="rbf">rbf: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.rbfnet.RBF">RBF</span>]</span>, <span name="centers">centers: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="smile.classification.RBFNetwork">RBFNetwork</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@rbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:Array[smile.math.rbf.RadialBasisFunction],centers:Array[T],normalized:Boolean):smile.classification.RBFNetwork[T]" title="Permalink" target="_top">
+      <a href="../../index.html#smile.classification.Operators@rbfnet[T&lt;:AnyRef,RBF&lt;:smile.math.rbf.RadialBasisFunction](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:Array[RBF],centers:Array[T]):smile.classification.RBFNetwork[T]" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -1175,20 +1169,20 @@ vectors/centers, SVM shows better generalization performance than RBF
 network when the training data size is relatively small. On the other hand,
 RBF network gives better generalization performance than SVM on large
 training data.</p><h6>References:</h6><ul><li>Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.</li><li>T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li>Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
-</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl></div>
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions at each center.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd></dl></div>
     </li><li name="smile.classification.Operators#rbfnet" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="rbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:smile.math.rbf.RadialBasisFunction,centers:Array[T],normalized:Boolean):smile.classification.RBFNetwork[T]"></a>
-      <a id="rbfnet[T&lt;:AnyRef](Array[T],Array[Int],Metric[T],RadialBasisFunction,Array[T],Boolean):RBFNetwork[T]"></a>
+      <a id="rbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:smile.math.rbf.RadialBasisFunction,centers:Array[T]):smile.classification.RBFNetwork[T]"></a>
+      <a id="rbfnet[T&lt;:AnyRef](Array[T],Array[Int],Metric[T],RadialBasisFunction,Array[T]):RBFNetwork[T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">rbfnet</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="distance">distance: <span class="extype" name="smile.math.distance.Metric">Metric</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>, <span name="rbf">rbf: <span class="extype" name="smile.math.rbf.RadialBasisFunction">RadialBasisFunction</span></span>, <span name="centers">centers: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>, <span name="normalized">normalized: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <span class="extype" name="smile.classification.RBFNetwork">RBFNetwork</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>
+        <span class="name">rbfnet</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="scala.AnyRef">AnyRef</span></span>]</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>, <span name="distance">distance: <span class="extype" name="smile.math.distance.Metric">Metric</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>, <span name="rbf">rbf: <span class="extype" name="smile.math.rbf.RadialBasisFunction">RadialBasisFunction</span></span>, <span name="centers">centers: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="smile.classification.RBFNetwork">RBFNetwork</span>[<span class="extype" name="smile.classification.Operators.rbfnet.T">T</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.classification.Operators@rbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:smile.math.rbf.RadialBasisFunction,centers:Array[T],normalized:Boolean):smile.classification.RBFNetwork[T]" title="Permalink" target="_top">
+      <a href="../../index.html#smile.classification.Operators@rbfnet[T&lt;:AnyRef](x:Array[T],y:Array[Int],distance:smile.math.distance.Metric[T],rbf:smile.math.rbf.RadialBasisFunction,centers:Array[T]):smile.classification.RBFNetwork[T]" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -1228,7 +1222,7 @@ vectors/centers, SVM shows better generalization performance than RBF
 network when the training data size is relatively small. On the other hand,
 RBF network gives better generalization performance than SVM on large
 training data.</p><h6>References:</h6><ul><li>Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.</li><li>T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.</li><li>Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
-</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis functions.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd><dt class="param">normalized</dt><dd class="cmt"><p>true for the normalized RBF network.</p></dd></dl></div>
+</li></ul></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>training samples.</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels in [0, k), where k is the number of classes.</p></dd><dt class="param">distance</dt><dd class="cmt"><p>the distance metric functor.</p></dd><dt class="param">rbf</dt><dd class="cmt"><p>the radial basis function.</p></dd><dt class="param">centers</dt><dd class="cmt"><p>the centers of RBF functions.</p></dd></dl></div>
     </li><li name="smile.classification.Operators#rda" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="rda(x:Array[Array[Double]],y:Array[Int],alpha:Double,priori:Array[Double],tol:Double):smile.classification.RDA"></a>
       <a id="rda(Array[Array[Double]],Array[Int],Double,Array[Double],Double):RDA"></a>
@@ -1306,7 +1300,7 @@ is done by a max-wins voting strategy, in which every classifier assigns
 the instance to one of the two classes, then the vote for the assigned
 class is increased by one vote, and finally the class with most votes
 determines the instance classification.
-</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the data type</p></dd><dt class="param">x</dt><dd class="cmt"><p>training data</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels</p></dd><dt class="param">kernel</dt><dd class="cmt"><p>Mercer kernel</p></dd><dt class="param">C</dt><dd class="cmt"><p>Regularization parameter</p></dd><dt class="param">strategy</dt><dd class="cmt"><p>multi-class classification strategy, one vs all or one vs one.</p></dd><dt class="param">epoch</dt><dd class="cmt"><p>the number of training epochs</p></dd><dt>returns</dt><dd class="cmt"><p>SVM model.</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the data type</p></dd><dt class="param">x</dt><dd class="cmt"><p>training data</p></dd><dt class="param">y</dt><dd class="cmt"><p>training labels</p></dd><dt class="param">kernel</dt><dd class="cmt"><p>Mercer kernel</p></dd><dt class="param">C</dt><dd class="cmt"><p>Regularization parameter</p></dd><dt class="param">strategy</dt><dd class="cmt"><p>Multi-class classification strategy, one vs all or one vs one. Ignored for binary classification.</p></dd><dt class="param">epoch</dt><dd class="cmt"><p>the number of training epochs</p></dd><dt>returns</dt><dd class="cmt"><p>SVM model.</p></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
