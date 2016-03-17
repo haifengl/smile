@@ -18,8 +18,8 @@ package smile.imputation;
 import smile.clustering.KMeans;
 
 /**
- * Missing value imputation by K-Means clustering. First cluster data by KMeans
- * and then impute missing values with the average value of each attribute
+ * Missing value imputation by K-Means clustering. First cluster data by K-Means
+ * with missing values and then impute missing values with the average value of each attribute
  * in the clusters.
  * 
  * @author Haifeng Li
@@ -106,7 +106,7 @@ public class KMeansImputation implements MissingValueImputation {
     /**
      * Impute the missing values with column averages.
      * @param data data with missing values.
-     * @throws smile.data.imputation.MissingValueImputationException
+     * @throws smile.imputation.MissingValueImputationException
      */
     static void columnAverageImpute(double[][] data) throws MissingValueImputationException {
         for (int j = 0; j < data[0].length; j++) {
