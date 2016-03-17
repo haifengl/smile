@@ -48,10 +48,11 @@ lazy val commonSettings = Seq(
 )
 
 lazy val nonPubishSettings = commonSettings ++ Seq(
-  publish := { }
+  publishLocal := {},
+  publish := {}
 )
 
-lazy val root = project.in(file(".")).settings(commonSettings: _*)
+lazy val root = project.in(file(".")).settings(nonPubishSettings: _*)
   .aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
 
 // Don't publish to central Maven repo
