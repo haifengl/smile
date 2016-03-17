@@ -91,6 +91,11 @@
         $('#content').load('validation.html');
       });
 
+      $("#missing-value-imputation").click(function(event){
+        event.preventDefault();
+        $('#content').load('missing-value-imputation.html');
+      });
+
       $("#clustering").click(function(event){
         event.preventDefault();
         $('#content').load('clustering.html');
@@ -189,6 +194,7 @@
           <li><a id="regression" href="#">Regression</a></li>
           <li><a id="feature" href="#">Feature Selection and Dimension Reduction</a></li>
           <li><a id="validation" href="#">Model Validation</a></li>
+          <li><a id="missing-value-imputation" href="#">Missing Value Imputation</a></li>
           <li class="divider"></li>
           <li><a id="clustering" href="#">Clustering</a></li>
           <li><a id="vector-quantization" href="#">Vector Quantization</a></li>
