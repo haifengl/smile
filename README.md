@@ -34,7 +34,7 @@ For Scala API, please use
 ```
     <dependency>
       <groupId>com.github.haifengl</groupId>
-      <artifactId>smile-scala</artifactId>
+      <artifactId>smile-scala_2.11</artifactId>
       <version>1.1.0</version>
     </dependency>
 ```
