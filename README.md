@@ -18,19 +18,42 @@ Natural language processing.
 * **Plot**
 Swing-based data visualization library.
 
-Smile is well documented and please check out the [project website](http://haifengl.github.io/smile/) for more information. Tutorials are available on the project [wiki](http://github.com/haifengl/smile/wiki). A basic tutorial is also included at the bottom of this file.
-
-To see Smile in action, please download the [demo](http://haifengl.github.io/smile/smile-demo.jar) jar file and then run <tt>java -jar smile-demo.jar</tt>.
+Smile is well documented and please check out the [project website](http://haifengl.github.io/smile/) for programming guides and more information.
 
 You can use the libraries through Maven central repository by adding the following to your project pom.xml file.
 ```
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>1.0.4</version>
+      <version>1.1.0</version>
     </dependency>
 ```
 You can similarly replace artifactId smile-core with smile-math, smile-data, smile-graph, smile-interpolation, smile-nlp, or smile-plot for other modules.
+
+For Scala API, please use
+```
+    <dependency>
+      <groupId>com.github.haifengl</groupId>
+      <artifactId>smile-scala</artifactId>
+      <version>1.1.0</version>
+    </dependency>
+```
+
+Smile comes with an interactive shell. Download pre-packaged Smile from the [releases page](https://github.com/haifengl/smile/releases).
+In the home directory of Smile, type
+```
+    ./bin/smile
+```
+to enter the shell, which is based on Scala interpreter. So you can run any valid Scala expressions in the shell.
+In the simplest case, you can use it as a calculator. Besides, all high-level Smile operators are predefined
+in the shell. Be default, the shell uses up to 4GB memory. If you need more memory to handle large data,
+use the option -J-Xmx. For example,
+
+```
+    ./bin/smile -J-Xmx8192M
+```
+You can also modify the configuration file ./conf/application.ini for the memory and other JVM settings.
+For detailed helps, checkout the [project website](http://haifengl.github.io/smile/).
 
 Smile implements the following major machine learning algorithms
 
@@ -66,7 +89,16 @@ Sentence Splitter and Tokenizer, Bigram Statistical Test, Phrase Extractor, Keyw
 
 Model Serialization
 ===================
-You may notice that none of models supports Java Serializable interface. It is because the exact format is hard to keep stable, class changes can easily make your serialized data unreadable, reading/writing the data in non-Java code is almost impossible. Currently, we suggest <a href="http://xstream.codehaus.org">XStream</a> to serialize the trained models. XStream is a simple library to serialize objects to XML and back again. XStream is easy to use and doesn't require mappings (actually requires no modifications to objects). <a href="http://code.google.com/p/protostuff/">Protostuff</a> is a nice alternative that supports forward-backward compatibility (schema evolution) and validation. Beyond XML, Protostuff supports many other formats such as JSON, YAML, protobuf, etc. For some predicitive models, we look forward to supporting PMML (Predictive Model Markup Language), an XML-based file format developed by the Data Mining Group.
+You may notice that none of models supports Java Serializable interface. It is because the exact format is hard to keep stable,
+class changes can easily make your serialized data unreadable, reading/writing the data in non-Java code is almost impossible.
+Currently, we suggest <a href="http://xstream.codehaus.org">XStream</a> to serialize the trained models.
+XStream is a simple library to serialize objects to XML and back again. XStream is easy to use and doesn't require mappings
+(actually requires no modifications to objects). <a href="http://code.google.com/p/protostuff/">Protostuff</a> is a
+nice alternative that supports forward-backward compatibility (schema evolution) and validation.
+Beyond XML, Protostuff supports many other formats such as JSON, YAML, protobuf, etc. For some predicitive models,
+we look forward to supporting PMML (Predictive Model Markup Language), an XML-based file format developed by the Data Mining Group.
+
+Smile Scala API provides read and write functions in package smile.io to read and save models by XStream.
 
 SmilePlot
 =========
@@ -80,7 +112,7 @@ To use SmilePlot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>1.0.4</version>
+      <version>1.1.0</version>
     </dependency>
 ```
 

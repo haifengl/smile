@@ -32,5 +32,5 @@ else
     echo "Unsupported OS: $OSTYPE"
 fi
 
-#sbt publishSigned
+sbt publish-signed
 check_error "Publishing"
