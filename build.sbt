@@ -13,14 +13,38 @@ lazy val commonSettings = Seq(
   parallelExecution in Test := false,
   crossPaths := false,
   autoScalaLibrary := false,
-  publishMavenStyle := true,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
       Some("snapshots" at nexus + "content/repositories/snapshots")
     else
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-  }
+  },
+  publishArtifact in Test := false ,
+  publishMavenStyle := true,
+  useGpg := true,
+  pomIncludeRepository := { _ => false },
+  pomExtra := (
+    <url>https://github.com/haifengl/smile</url>
+      <licenses>
+        <license>
+          <name>Apache License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+          <distribution>repo</distribution>
+        </license>
+      </licenses>
+      <scm>
+        <url>git@github.com:haifengl/smile.git</url>
+        <connection>scm:git:git@github.com:haifengl/smile.git</connection>
+      </scm>
+      <developers>
+        <developer>
+          <id>haifengl</id>
+          <name>Haifeng Li</name>
+          <url>http://haifengl.github.io/smile/</url>
+        </developer>
+      </developers>
+  )
 )
 
 lazy val nonPubishSettings = commonSettings ++ Seq(
