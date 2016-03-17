@@ -114,7 +114,7 @@ public class SVDImputation implements MissingValueImputation {
 
     /**
      * Impute the missing values by SVD.
-     * @param rawData the raw data with missing values.
+     * @param raw the raw data with missing values.
      * @param data the data with current imputations.
      */
     private void svdImpute(double[][] raw, double[][] data) {
