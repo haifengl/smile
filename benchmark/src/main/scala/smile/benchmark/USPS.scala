@@ -46,7 +46,7 @@ object USPS {
     val test = parser.parse(smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"))
     val (x, y) = train.unzipInt
     val (testx, testy) = test.unzipInt
-    val k = Math.max(y: _*) + 1
+    val k = Math.max(y) + 1
 
     // Random Forest
     val forest = test2(x, y, testx, testy) { (x, y) =>

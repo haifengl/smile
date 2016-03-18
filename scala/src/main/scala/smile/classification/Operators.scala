@@ -499,7 +499,7 @@ trait Operators {
     * @return SVM model.
     */
   def svm[T <: AnyRef](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, strategy: SVM.Multiclass = SVM.Multiclass.ONE_VS_ONE, epoch: Int = 1): SVM[T] = {
-    val k = Math.max(y: _*) + 1
+    val k = Math.max(y) + 1
     val svm = if (k == 2) new SVM[T](kernel, C) else new SVM[T](kernel, C, k, strategy)
     time {
       for (i <- 1 to epoch) {
@@ -659,7 +659,7 @@ trait Operators {
 
     val j = if (maxNodes <= 1) x.length / nodeSize else maxNodes
 
-    val k = Math.max(y: _*) + 1
+    val k = Math.max(y) + 1
     val weight = if (classWeight == null) Array.fill[Int](k)(1) else classWeight
 
     time {
@@ -954,7 +954,7 @@ trait Operators {
   def naiveBayes(x: Array[Array[Double]], y: Array[Int], model: NaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): NaiveBayes = {
     time {
       val p = x(0).length
-      val k = Math.max(y: _*) + 1
+      val k = Math.max(y) + 1
       val naive = if (priori == null) new NaiveBayes(model, k, p, sigma) else new NaiveBayes(model, priori, p, sigma)
       naive.learn(x, y)
       naive
