@@ -1,5 +1,7 @@
 name := "smile"
 
+import com.typesafe.sbt.pgp.PgpKeys.{useGpg, publishSigned, publishLocalSigned}
+
 lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
@@ -48,15 +50,15 @@ lazy val commonSettings = Seq(
 )
 
 lazy val nonPubishSettings = commonSettings ++ Seq(
+  publishArtifact := false,
   publishLocal := {},
-  publish := {}
+  publish := {},
+  publishSigned := {},
+  publishLocalSigned := {}
 )
 
 lazy val root = project.in(file(".")).settings(nonPubishSettings: _*)
   .aggregate(core, data, math, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
-
-// Don't publish to central Maven repo
-publishArtifact := false
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
