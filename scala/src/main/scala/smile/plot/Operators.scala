@@ -651,7 +651,7 @@ trait Operators {
       }
     }
 
-    val levels = (0 until Math.max(y: _*)).map(_ + 0.5).toArray
+    val levels = (0 until Math.max(y)).map(_ + 0.5).toArray
     val contour = new Contour(v1, v2, z, levels)
     contour.showLevelValue(false)
     win.canvas.add(contour)

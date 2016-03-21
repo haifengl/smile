@@ -250,8 +250,8 @@ public class CRFTest {
 
         CRF.Trainer trainer = new CRF.Trainer(train.p, train.k);
         trainer.setLearningRate(0.3);
-        trainer.setMaximumLeafNodes(100);
-        trainer.setNumIterations(100);
+        trainer.setMaxNodes(100);
+        trainer.setNumTrees(100);
         CRF crf = trainer.train(train.x, train.y);
 
         int error = 0;
@@ -297,8 +297,8 @@ public class CRFTest {
 
         CRF.Trainer trainer = new CRF.Trainer(train.p, train.k);
         trainer.setLearningRate(1.0);
-        trainer.setMaximumLeafNodes(100);
-        trainer.setNumIterations(100);
+        trainer.setMaxNodes(100);
+        trainer.setNumTrees(100);
         CRF crf = trainer.train(train.x, train.y);
 
         int error = 0;
@@ -344,8 +344,8 @@ public class CRFTest {
 
         CRF.Trainer trainer = new CRF.Trainer(train.attributes, train.k);
         trainer.setLearningRate(0.3);
-        trainer.setMaximumLeafNodes(100);
-        trainer.setNumIterations(100);
+        trainer.setMaxNodes(100);
+        trainer.setNumTrees(100);
         CRF crf = trainer.train(train.x, train.y);
 
         int error = 0;
@@ -391,8 +391,8 @@ public class CRFTest {
 
         CRF.Trainer trainer = new CRF.Trainer(train.attributes, train.k);
         trainer.setLearningRate(1.0);
-        trainer.setMaximumLeafNodes(100);
-        trainer.setNumIterations(100);
+        trainer.setMaxNodes(100);
+        trainer.setNumTrees(100);
         CRF crf = trainer.train(train.x, train.y);
 
         int error = 0;

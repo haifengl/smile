@@ -18,6 +18,7 @@ package smile
 
 import scala.language.implicitConversions
 import scala.collection.JavaConverters._
+import smile.math.matrix.Matrix
 
 /** Data manipulation functions.
   *
@@ -29,6 +30,7 @@ package object data {
   implicit def pimpSparseDataset(data: SparseDataset) = new PimpedSparseDataset(data)
   implicit def pimpArray(data: Array[Double]) = new PimpedArray(data)
   implicit def pimpArray2D(data: Array[Array[Double]]) = new PimpedArray2D(data)
+  implicit def pimpMatrix(data: Array[Array[Double]]) = new Matrix(data)
 }
 
 package data {
@@ -56,12 +58,12 @@ private[data] class PimpedDataset(data: AttributeDataset) extends Iterable[Datum
     val matrix = unzip
     for (i <- 0 until colnames.length) {
       val x = matrix \ i
-      val min = Math.min(x: _*)
+      val min = Math.min(x)
       val q1 = Math.q1(x)
       val median = Math.median(x)
       val mean = Math.mean(x)
       val q3 = Math.q3(x)
-      val max = Math.max(x: _*)
+      val max = Math.max(x)
       println(f"${colnames(i)}\t$min%1.5f\t$q1%1.5f\t$median%1.5f\t$mean%1.5f\t$q3%1.5f\t$max%1.5f")
     }
   }

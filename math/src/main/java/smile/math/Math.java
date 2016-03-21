@@ -1120,7 +1120,7 @@ public class Math {
     /**
      * Returns the minimum value of an array.
      */
-    public static int min(int... x) {
+    public static int min(int[] x) {
         int m = x[0];
 
         for (int n : x) {
@@ -1135,7 +1135,7 @@ public class Math {
     /**
      * Returns the minimum value of an array.
      */
-    public static float min(float... x) {
+    public static float min(float[] x) {
         float m = Float.POSITIVE_INFINITY;
 
         for (float n : x) {
@@ -1150,7 +1150,7 @@ public class Math {
     /**
      * Returns the minimum value of an array.
      */
-    public static double min(double... x) {
+    public static double min(double[] x) {
         double m = Double.POSITIVE_INFINITY;
 
         for (double n : x) {
@@ -1165,7 +1165,7 @@ public class Math {
     /**
      * Returns the index of minimum value of an array.
      */
-    public static int whichMin(int... x) {
+    public static int whichMin(int[] x) {
         int m = x[0];
         int which = 0;
 
@@ -1182,7 +1182,7 @@ public class Math {
     /**
      * Returns the index of minimum value of an array.
      */
-    public static int whichMin(float... x) {
+    public static int whichMin(float[] x) {
         float m = Float.POSITIVE_INFINITY;
         int which = 0;
 
@@ -1199,7 +1199,7 @@ public class Math {
     /**
      * Returns the index of minimum value of an array.
      */
-    public static int whichMin(double... x) {
+    public static int whichMin(double[] x) {
         double m = Double.POSITIVE_INFINITY;
         int which = 0;
 
@@ -1216,7 +1216,7 @@ public class Math {
     /**
      * Returns the maximum value of an array.
      */
-    public static int max(int... x) {
+    public static int max(int[] x) {
         int m = x[0];
 
         for (int n : x) {
@@ -1231,7 +1231,7 @@ public class Math {
     /**
      * Returns the maximum value of an array.
      */
-    public static float max(float... x) {
+    public static float max(float[] x) {
         float m = Float.NEGATIVE_INFINITY;
 
         for (float n : x) {
@@ -1246,7 +1246,7 @@ public class Math {
     /**
      * Returns the maximum value of an array.
      */
-    public static double max(double... x) {
+    public static double max(double[] x) {
         double m = Double.NEGATIVE_INFINITY;
 
         for (double n : x) {
@@ -1261,7 +1261,7 @@ public class Math {
     /**
      * Returns the index of maximum value of an array.
      */
-    public static int whichMax(int... x) {
+    public static int whichMax(int[] x) {
         int m = x[0];
         int which = 0;
 
@@ -1278,7 +1278,7 @@ public class Math {
     /**
      * Returns the index of maximum value of an array.
      */
-    public static int whichMax(float... x) {
+    public static int whichMax(float[] x) {
         float m = Float.NEGATIVE_INFINITY;
         int which = 0;
 
@@ -1295,7 +1295,7 @@ public class Math {
     /**
      * Returns the index of maximum value of an array.
      */
-    public static int whichMax(double... x) {
+    public static int whichMax(double[] x) {
         double m = Double.NEGATIVE_INFINITY;
         int which = 0;
 
