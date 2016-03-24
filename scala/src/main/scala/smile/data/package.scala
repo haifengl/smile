@@ -18,6 +18,7 @@ package smile
 
 import scala.language.implicitConversions
 import scala.collection.JavaConverters._
+import scala.reflect.ClassTag
 import smile.math.matrix.Matrix
 
 /** Data manipulation functions.
@@ -28,9 +29,9 @@ package object data {
 
   implicit def pimpDataset(data: AttributeDataset) = new PimpedDataset(data)
   implicit def pimpSparseDataset(data: SparseDataset) = new PimpedSparseDataset(data)
-  implicit def pimpArray(data: Array[Double]) = new PimpedArray(data)
+  implicit def pimpDIntArray(data: Array[Int]) = new PimpedArray[Int](data)
+  implicit def pimpDoubleArray(data: Array[Double]) = new PimpedArray[Double](data)
   implicit def pimpArray2D(data: Array[Array[Double]]) = new PimpedArray2D(data)
-  implicit def pimpMatrix(data: Array[Array[Double]]) = new Matrix(data)
 }
 
 package data {
@@ -138,106 +139,106 @@ private[data] class PimpedSparseDataset(data: SparseDataset) extends Iterable[Da
   }
 }
 
-private[data] class PimpedArray(data: Array[Double]) {
-    /** Get an element */
-    def apply(rows: Int*): Array[Double] = {
-      rows.map { row => data(row) }.toArray
-    }
-
-    /** Get a range of array */
-    def apply(rows: Range): Array[Double] = {
-      rows.map { row => data(row) }.toArray
-    }
-
-    /** Sampling the data.
-      * @param n the number of samples.
-      * @return samples
-      */
-    def sample(n: Int): Array[Double] = {
-      val perm = (0 until data.length).toArray
-      Math.permutate(perm)
-      (0 until n).map{ i => data(perm(i)) }.toArray
-    }
-
-    /** Sampling the data.
-      * @param f the fraction of samples.
-      * @return samples
-      */
-    def sample(f: Double): Array[Double] = {
-      val perm = (0 until data.length).toArray
-      Math.permutate(perm)
-      val n = Math.round(data.length * f).toInt
-      (0 until n).map{ i => data(perm(i)) }.toArray
-    }
+private[data] class PimpedArray[T](data: Array[T])(implicit tag: ClassTag[T]) {
+  /** Get an element */
+  def apply(rows: Int*): Array[T] = {
+    rows.map { row => data(row) }.toArray
   }
 
-  private[data] class PimpedArray2D(data: Array[Array[Double]]) {
-    def nrows: Int = data.length
-
-    def ncols: Int = data(0).length
-
-    /** Returns multiple rows. */
-    def apply(rows: Int*): Array[Array[Double]] = {
-      rows.map { row => data(row) }.toArray
-    }
-
-    /** Returns a range of rows. */
-    def apply(rows: Range): Array[Array[Double]] = {
-      rows.map { row => data(row) }.toArray
-    }
-
-    /** Returns a submatrix. */
-    def apply(rows: Range, cols: Range): Array[Array[Double]] = {
-      rows.map { row =>
-        val x = data(row)
-        cols.map { col => x(col) }.toArray
-      }.toArray
-    }
-
-    /** Returns a column. */
-    def \(col: Int): Array[Double] = {
-      data.map(_(col)).toArray
-    }
-
-    /** Returns multiple rows. */
-    def row(i: Int*): Array[Array[Double]] = apply(i: _*)
-
-    /** Returns a range of rows. */
-    def row(i: Range): Array[Array[Double]] = apply(i)
-
-    /** Returns multiple columns. */
-    def col(j: Int*): Array[Array[Double]] = {
-      data.map { x =>
-        j.map { col => x(col) }.toArray
-      }.toArray
-    }
-
-    /** Returns a range of columns. */
-    def col(j: Range): Array[Array[Double]] = {
-      data.map { x =>
-        j.map { col => x(col) }.toArray
-      }.toArray
-    }
-
-    /** Sampling the data.
-      * @param n the number of samples.
-      * @return samples
-      */
-    def sample(n: Int): Array[Array[Double]] = {
-      val perm = (0 to data.length).toArray
-      Math.permutate(perm)
-      (0 until n).map{ i => data(perm(i)) }.toArray
-    }
-
-    /** Sampling the data.
-      * @param f the fraction of samples.
-      * @return samples
-      */
-    def sample(f: Double): Array[Array[Double]] = {
-      val perm = (0 to data.length).toArray
-      Math.permutate(perm)
-      val n = Math.round(nrows * f).toInt
-      (0 until n).map{ i => data(perm(i)) }.toArray
-    }
+  /** Get a range of array */
+  def apply(rows: Range): Array[T] = {
+    rows.map { row => data(row) }.toArray
   }
+
+  /** Sampling the data.
+    * @param n the number of samples.
+    * @return samples
+    */
+  def sample(n: Int): Array[T] = {
+    val perm = (0 until data.length).toArray
+    Math.permutate(perm)
+    (0 until n).map{ i => data(perm(i)) }.toArray
+  }
+
+  /** Sampling the data.
+    * @param f the fraction of samples.
+    * @return samples
+    */
+  def sample(f: Double): Array[T] = {
+    val perm = (0 until data.length).toArray
+    Math.permutate(perm)
+    val n = Math.round(data.length * f).toInt
+    (0 until n).map{ i => data(perm(i)) }.toArray
+  }
+}
+
+private[data] class PimpedArray2D(data: Array[Array[Double]]) {
+  def nrows: Int = data.length
+
+  def ncols: Int = data(0).length
+
+  /** Returns multiple rows. */
+  def apply(rows: Int*): Array[Array[Double]] = {
+    rows.map { row => data(row) }.toArray
+  }
+
+  /** Returns a range of rows. */
+  def apply(rows: Range): Array[Array[Double]] = {
+    rows.map { row => data(row) }.toArray
+  }
+
+  /** Returns a submatrix. */
+  def apply(rows: Range, cols: Range): Array[Array[Double]] = {
+    rows.map { row =>
+      val x = data(row)
+      cols.map { col => x(col) }.toArray
+    }.toArray
+  }
+
+  /** Returns a column. */
+  def \(col: Int): Array[Double] = {
+    data.map(_(col)).toArray
+  }
+
+  /** Returns multiple rows. */
+  def row(i: Int*): Array[Array[Double]] = apply(i: _*)
+
+  /** Returns a range of rows. */
+  def row(i: Range): Array[Array[Double]] = apply(i)
+
+  /** Returns multiple columns. */
+  def col(j: Int*): Array[Array[Double]] = {
+    data.map { x =>
+      j.map { col => x(col) }.toArray
+    }.toArray
+  }
+
+  /** Returns a range of columns. */
+  def col(j: Range): Array[Array[Double]] = {
+    data.map { x =>
+      j.map { col => x(col) }.toArray
+    }.toArray
+  }
+
+  /** Sampling the data.
+    * @param n the number of samples.
+    * @return samples
+    */
+  def sample(n: Int): Array[Array[Double]] = {
+    val perm = (0 to data.length).toArray
+    Math.permutate(perm)
+    (0 until n).map{ i => data(perm(i)) }.toArray
+  }
+
+  /** Sampling the data.
+    * @param f the fraction of samples.
+    * @return samples
+    */
+  def sample(f: Double): Array[Array[Double]] = {
+    val perm = (0 to data.length).toArray
+    Math.permutate(perm)
+    val n = Math.round(nrows * f).toInt
+    (0 until n).map{ i => data(perm(i)) }.toArray
+  }
+}
 }
