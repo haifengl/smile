@@ -75,8 +75,8 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
 
         logTheta = Math.log(theta);
         thetaGammaK = theta * Gamma.gamma(k);
-        logGammaK = Gamma.logGamma(k);
-        entropy = k + Math.log(theta) + Gamma.logGamma(k) + (1 - k) * Gamma.digamma(k);
+        logGammaK = Gamma.lgamma(k);
+        entropy = k + Math.log(theta) + Gamma.lgamma(k) + (1 - k) * Gamma.digamma(k);
     }
 
     /**
@@ -104,8 +104,8 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
 
         logTheta = Math.log(theta);
         thetaGammaK = theta * Gamma.gamma(k);
-        logGammaK = Gamma.logGamma(k);
-        entropy = k + Math.log(theta) + Gamma.logGamma(k) + (1 - k) * Gamma.digamma(k);
+        logGammaK = Gamma.lgamma(k);
+        entropy = k + Math.log(theta) + Gamma.lgamma(k) + (1 - k) * Gamma.digamma(k);
     }
 
     /**

@@ -55,8 +55,8 @@ public class FDistribution extends AbstractDistribution {
 
         this.nu1 = nu1;
         this.nu2 = nu2;
-        fac = 0.5 * (nu1 * Math.log(nu1) + nu2 * Math.log(nu2)) + Gamma.logGamma(0.5 * (nu1 + nu2))
-                - Gamma.logGamma(0.5 * nu1) - Gamma.logGamma(0.5 * nu2);
+        fac = 0.5 * (nu1 * Math.log(nu1) + nu2 * Math.log(nu2)) + Gamma.lgamma(0.5 * (nu1 + nu2))
+                - Gamma.lgamma(0.5 * nu1) - Gamma.lgamma(0.5 * nu2);
     }
 
     /**

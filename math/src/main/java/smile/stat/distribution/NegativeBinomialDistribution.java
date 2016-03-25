@@ -132,7 +132,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
         if (k < 0) {
             return Double.NEGATIVE_INFINITY;
         } else {
-            return Gamma.logGamma(r + k) - Math.logFactorial(k) - Gamma.logGamma(r) + r * Math.log(p) + k * Math.log(1 - p);
+            return Gamma.lgamma(r + k) - Math.logFactorial(k) - Gamma.lgamma(r) + r * Math.log(p) + k * Math.log(1 - p);
         }
     }
 
