@@ -67,7 +67,7 @@ trait Operators {
   def gamma(x: Double): Double = Gamma.gamma(x)
 
   /** log of the Gamma function. Lanczos approximation (6 terms) */
-  def lgamma(x: Double): Double = Gamma.logGamma(x)
+  def lgamma(x: Double): Double = Gamma.lgamma(x)
 
   /** The digamma function is defined as the logarithmic derivative of the gamma function. */
   def digamma(x: Double): Double = Gamma.digamma(x)

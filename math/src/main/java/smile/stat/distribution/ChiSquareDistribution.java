@@ -55,8 +55,8 @@ public class ChiSquareDistribution extends AbstractDistribution implements Expon
         }
 
         this.nu = nu;
-        fac = 0.693147180559945309 * (0.5 * nu) + Gamma.logGamma(0.5 * nu);
-        entropy = nu / 2.0 + Math.log(2) + Gamma.logGamma(nu / 2.0) + (1 - nu / 2.0) * Gamma.digamma(nu / 2.0);
+        fac = 0.693147180559945309 * (0.5 * nu) + Gamma.lgamma(0.5 * nu);
+        entropy = nu / 2.0 + Math.log(2) + Gamma.lgamma(nu / 2.0) + (1 - nu / 2.0) * Gamma.digamma(nu / 2.0);
     }
 
     /**
