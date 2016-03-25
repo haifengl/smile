@@ -145,6 +145,13 @@
         event.preventDefault();
         $('#content').load('gallery.html');
       });
+
+      var hash = window.location.hash;
+      if (typeof(hash) != 'undefined' && hash != null && hash != "") {
+        setTimeout(function() {
+          $(hash).trigger('click');
+        },10);
+      }
     });
   </script>
 </head>
