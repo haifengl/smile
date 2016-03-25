@@ -41,7 +41,7 @@ public class Beta {
      * The beta function is symmetric, i.e. B(x,y)==B(y,x).
      */
     public static double beta(double x, double y) {
-        return Math.exp(Gamma.logGamma(x) + Gamma.logGamma(y) - Gamma.logGamma(x + y));
+        return Math.exp(Gamma.lgamma(x) + Gamma.lgamma(y) - Gamma.lgamma(x + y));
     }
 
     /**
@@ -61,7 +61,7 @@ public class Beta {
                 ibeta = 1.0;
             } else {
                 // Term before continued fraction
-                ibeta = Math.exp(Gamma.logGamma(alpha + beta) - Gamma.logGamma(alpha) - Gamma.logGamma(beta) + alpha * Math.log(x) + beta * Math.log(1.0D - x));
+                ibeta = Math.exp(Gamma.lgamma(alpha + beta) - Gamma.lgamma(alpha) - Gamma.lgamma(beta) + alpha * Math.log(x) + beta * Math.log(1.0D - x));
                 // Continued fraction
                 if (x < (alpha + 1.0) / (alpha + beta + 2.0)) {
                     ibeta = ibeta * incompleteFractionSummation(alpha, beta, x) / alpha;
@@ -174,7 +174,7 @@ public class Beta {
                 x = 1. - Math.pow(beta * w * (1. - p), 1. / beta);
             }
         }
-        afac = -Gamma.logGamma(alpha) - Gamma.logGamma(beta) + Gamma.logGamma(alpha + beta);
+        afac = -Gamma.lgamma(alpha) - Gamma.lgamma(beta) + Gamma.lgamma(alpha + beta);
         for (int j = 0; j < 10; j++) {
             if (x == 0. || x == 1.) {
                 return x;

@@ -80,7 +80,7 @@ public class Gamma {
     /**
      * log of the Gamma function. Lanczos approximation (6 terms)
      */
-    public static double logGamma(double x) {
+    public static double lgamma(double x) {
         double xcopy = x;
         double fg = 0.0;
         double first = x + LANCZOS_SMALL_GAMMA + 0.5;
@@ -183,7 +183,7 @@ public class Gamma {
         double acopy = a;
         double sum = 1.0 / a;
         double incr = sum;
-        double loggamma = logGamma(a);
+        double loggamma = lgamma(a);
 
         while (check) {
             ++i;
@@ -218,7 +218,7 @@ public class Gamma {
         double igf = 0.0;
         boolean check = true;
 
-        double loggamma = logGamma(a);
+        double loggamma = lgamma(a);
         double numer = 0.0;
         double incr = 0.0;
         double denom = x - a + 1.0;
@@ -328,7 +328,7 @@ public class Gamma {
         double lna1 = 0.0;
         double afac = 0.0;
         double a1 = a - 1;
-        double gln = logGamma(a);
+        double gln = lgamma(a);
         if (p >= 1.) {
             return Math.max(100., a + 100. * Math.sqrt(a));
         }

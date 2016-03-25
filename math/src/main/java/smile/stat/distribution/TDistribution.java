@@ -52,7 +52,7 @@ public class TDistribution extends AbstractDistribution {
 
         entropy = 0.5 * (nu + 1) * (Gamma.digamma((nu + 1) / 2.0) - Gamma.digamma(nu / 2.0)) + Math.log(Math.sqrt(nu) * Beta.beta(nu / 2.0, 0.5));
         np = 0.5 * (nu + 1.0);
-        fac = Gamma.logGamma(np) - Gamma.logGamma(0.5 * nu);
+        fac = Gamma.lgamma(np) - Gamma.lgamma(0.5 * nu);
     }
 
     @Override
