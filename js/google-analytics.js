@@ -5,5 +5,6 @@
 })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
 ga('create', 'UA-52181830-5', 'auto');
+ga('require', 'autotrack');
 ga('send', 'pageview');
-ga('send', 'event', 'link', 'click', event.target.href);
+
