@@ -47,12 +47,15 @@
 
   <!-- Load static page by jQuery AJAX -->
   <script type="text/javascript">
+
     $(document).ready(function(){
       $("#faq").click(function(event){
         event.preventDefault();
         $('#content').load('faq.html');
         document.location.hash = "#faq";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/faq.html');
+        ga('send', 'pageview');
       });
 
       $("#quickstart").click(function(event){
@@ -60,6 +63,8 @@
         $('#content').load('quickstart.html');
         document.location.hash = "#quickstart";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/quickstart.html');
+        ga('send', 'pageview');
       });
 
       $("#overview").click(function(event){
@@ -67,6 +72,8 @@
         $('#content').load('overview.html');
         document.location.hash = "#overview";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/overview.html');
+        ga('send', 'pageview');
       });
 
       $("#shell").click(function(event){
@@ -74,6 +81,8 @@
         $('#content').load('shell.html');
         document.location.hash = "#shell";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/shell.html');
+        ga('send', 'pageview');
       });
 
       $("#data").click(function(event){
@@ -81,6 +90,8 @@
         $('#content').load('data.html');
         document.location.hash = "#data";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/data.html');
+        ga('send', 'pageview');
       });
 
       $("#visualization").click(function(event){
@@ -88,6 +99,8 @@
         $('#content').load('visualization.html');
         document.location.hash = "#visualization";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/visualization.html');
+        ga('send', 'pageview');
       });
 
       $("#classification").click(function(event){
@@ -95,6 +108,8 @@
         $('#content').load('classification.html');
         document.location.hash = "#classification";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/classification.html');
+        ga('send', 'pageview');
       });
 
       $("#regression").click(function(event){
@@ -102,6 +117,8 @@
         $('#content').load('regression.html');
         document.location.hash = "#regression";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/regression.html');
+        ga('send', 'pageview');
       });
 
       $("#feature").click(function(event){
@@ -109,6 +126,8 @@
         $('#content').load('feature.html');
         document.location.hash = "#feature";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/feature.html');
+        ga('send', 'pageview');
       });
 
       $("#validation").click(function(event){
@@ -116,6 +135,8 @@
         $('#content').load('validation.html');
         document.location.hash = "#validation";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/validation.html');
+        ga('send', 'pageview');
       });
 
       $("#missing-value-imputation").click(function(event){
@@ -123,6 +144,8 @@
         $('#content').load('missing-value-imputation.html');
         document.location.hash = "#missing-value-imputation";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/missing-value-imputation.html');
+        ga('send', 'pageview');
       });
 
       $("#clustering").click(function(event){
@@ -130,6 +153,8 @@
         $('#content').load('clustering.html');
         document.location.hash = "#clustering";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/clustering.html');
+        ga('send', 'pageview');
       });
 
       $("#vector-quantization").click(function(event){
@@ -137,6 +162,8 @@
         $('#content').load('vector-quantization.html');
         document.location.hash = "#vector-quantization";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/vector-quantization.html');
+        ga('send', 'pageview');
       });
 
       $("#association-rule").click(function(event){
@@ -144,6 +171,8 @@
         $('#content').load('association-rule.html');
         document.location.hash = "#association-rule";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/association-rule.html');
+        ga('send', 'pageview');
       });
 
       $("#manifold").click(function(event){
@@ -151,6 +180,8 @@
         $('#content').load('manifold.html');
         document.location.hash = "#manifold";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/manifold.html');
+        ga('send', 'pageview');
       });
 
       $("#mds").click(function(event){
@@ -158,6 +189,8 @@
         $('#content').load('mds.html');
         document.location.hash = "#mds";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/mds.html');
+        ga('send', 'pageview');
       });
 
       $("#math").click(function(event){
@@ -165,6 +198,8 @@
         $('#content').load('math.html');
         document.location.hash = "#math";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/math.html');
+        ga('send', 'pageview');
       });
 
       $("#graph").click(function(event){
@@ -172,6 +207,8 @@
         $('#content').load('graph.html');
         document.location.hash = "#graph";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/graph.html');
+        ga('send', 'pageview');
       });
 
       $("#interpolation").click(function(event){
@@ -179,6 +216,8 @@
         $('#content').load('interpolation.html');
         document.location.hash = "#interpolation";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/interpolation.html');
+        ga('send', 'pageview');
       });
 
       $("#plot").click(function(event){
@@ -186,6 +225,8 @@
         $('#content').load('plot.html');
         document.location.hash = "#plot";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/plot.html');
+        ga('send', 'pageview');
       });
 
       $("#gallery").click(function(event){
@@ -193,6 +234,8 @@
         $('#content').load('gallery.html');
         document.location.hash = "#gallery";
         window.scrollTo(0, 0);
+        ga('set', 'page', '/gallery.html');
+        ga('send', 'pageview');
       });
 
       var hash = window.location.hash;
