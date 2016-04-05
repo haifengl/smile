@@ -24,7 +24,7 @@
   <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
   <![endif]-->
 
-  <script src="https://code.jquery.com/jquery.js"></script>
+  <script src="http://code.jquery.com/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
   <script async="" defer="" id="github-bjs" src="https://buttons.github.io/buttons.js"></script>
 
@@ -47,6 +47,12 @@
 
   <!-- Load static page by jQuery AJAX -->
   <script type="text/javascript">
+    $(document).on('click','.navbar-collapse.in',function(e) {
+      if( $(e.target).is('a') && $(e.target).attr('class') != 'dropdown-toggle' ) {
+        $(this).collapse('hide');
+      }
+    });
+
     $(document).ready(function(){
       $("#faq").click(function(event){
         event.preventDefault();
