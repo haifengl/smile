@@ -58,10 +58,10 @@
         event.preventDefault();
         $('#content').load(page + '.html', function() {
           document.title = 'Smile - ' + $("h1").text();
+          ga('set', 'page', '/' + page + '.html');
+          ga('send', 'pageview');
         });
         window.scrollTo(0, 0);
-        ga('set', 'page', '/' + page + '.html');
-        ga('send', 'pageview');
       }
 
       $(window).on("popstate", function(event) {
@@ -76,18 +76,20 @@
         }
       });
 
-      $(function() {
-        $(document).on("click", "a", function(event) {
-          var href = $(this).attr("href");
-          if (href === "#") {
-            var page = $(this).attr("id");
-            ajaxLoad(event, page, true);
-            history.pushState({"id": page}, page, 'index.html#' + page);
-            return false;
-          } else {
-            ga('send', 'event', 'outbound', 'click', href, {'transport': 'beacon'});
-          }
-        });
+      $(document).on("click", "a", function(event) {
+        var href = $(this).attr("href");
+        if (href === "#") {
+          var page = $(this).attr("id");
+          ajaxLoad(event, page, true);
+          history.pushState({"id": page}, page, 'index.html#' + page);
+          return false;
+        } else {
+          ga('send', 'event', 'outbound', 'click', href, {'transport': 'beacon'});
+        }
+      });
+
+      $('.navbar-collapse').click('li', function() {
+        $('.navbar-collapse').collapse('hide');
       });
 
       var hash = window.location.hash;
