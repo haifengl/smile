@@ -189,8 +189,24 @@
 </header>
 
 <div id="content" class="row">
-  <div class="col-md-3 col-md-push-9">
-    <div class="news hidden-xs hidden-sm" style="margin-bottom: 20px;">
+  <div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+    <div id="search">
+      <script>
+        (function() {
+          var cx = '010264411143030149390:ajvee_ckdzs';
+          var gcse = document.createElement('script');
+          gcse.type = 'text/javascript';
+          gcse.async = true;
+          gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                  '//cse.google.com/cse.js?cx=' + cx;
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(gcse, s);
+        })();
+      </script>
+      <gcse:searchbox-only></gcse:searchbox-only>
+    </div>
+
+    <div class="news" style="margin-bottom: 20px;">
       <h5>Latest News</h5>
       <ul class="list-unstyled">
           <li><a href="https://haifengl.wordpress.com/2016/03/21/smile-1-1-is-released/">Smile 1.1 is released!</a>
@@ -206,7 +222,8 @@
       <p class="small" style="text-align: right;"><a href="news.html">Archive</a></p>
       -->
     </div>
-    <div class="hidden-xs hidden-sm">
+
+    <div>
       <a href="https://github.com/haifengl/smile/releases" class="btn btn-primary btn-lg btn-block" style="margin-bottom: 30px;">
         Download
       </a>
