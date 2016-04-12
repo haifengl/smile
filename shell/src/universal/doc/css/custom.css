@@ -81,6 +81,10 @@ ul.nav li.dropdown:hover > ul.dropdown-menu {
   display: block;
 }
 
+ul.nav li.dropdown:hover > ul.dropdown-menu > li > a {
+  color: black;
+}
+
 footer {
   text-align: center;
   color: #8f8f8f;
