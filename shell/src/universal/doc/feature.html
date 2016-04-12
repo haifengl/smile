@@ -358,7 +358,7 @@
         it is common to compute only the top P eigenvalues and eigenvectors of <code>K</code>.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def kpca[T <: Object](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T]
+    def kpca[T](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T]
     </code></pre>
 
     <p>Here we apply kernel PCA to the pen-digits data.</p>
@@ -417,6 +417,13 @@
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/gha.png" class="enlarge" style="width: 480px;" />
         <div class="caption" style="min-width: 480px;">GHA</div>
+    </div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" id="regression" href="#" title="Previous Section: Regression"><span>Regression</span></a>
+        <a class="btn-next-text" id="validation" href="#" title="Next Section: Model Validation"><span>Model Validation</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
 

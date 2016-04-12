@@ -377,13 +377,10 @@ p.toc-header {
   width: 270px
 }
 
-#btnv .btn-arrow-right, #btnv .btn-prev-text, .align-left, .text-left,
-div.body td, th {
+#btnv .btn-arrow-right, #btnv .btn-prev-text, .align-left, .text-left, div.body td, th {
   text-align: left
 }
 
-#btnv .btn-arrow-left, #btnv .btn-next-text, .align-right, .modal-footer,
-.text-right, blockquote.pull-right p, blockquote.pull-right small {
+#btnv .btn-arrow-left, #btnv .btn-next-text, .align-right, .modal-footer, .text-right, blockquote.pull-right p, blockquote.pull-right small {
   text-align: right
 }
-
