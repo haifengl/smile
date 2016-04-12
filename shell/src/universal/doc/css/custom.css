@@ -359,3 +359,31 @@ p.toc-header {
   transform: scale(1.5, 1.5);
   transform-origin: 50% 50%;
 }
+
+#btnv {
+  padding-top: 2em;
+  padding-bottom: 2.5em;
+  display: table;
+  width: 100%
+}
+
+#btnv .btn-arrow-left, #btnv .btn-arrow-right, #btnv .btn-next-text, #btnv .btn-prev-text {
+  display: table-cell;
+  vertical-align: middle
+}
+
+#btnv .btn-next-text > span, #btnv .btn-prev-text > span {
+  display: inline-block;
+  width: 270px
+}
+
+#btnv .btn-arrow-right, #btnv .btn-prev-text, .align-left, .text-left,
+div.body td, th {
+  text-align: left
+}
+
+#btnv .btn-arrow-left, #btnv .btn-next-text, .align-right, .modal-footer,
+.text-right, blockquote.pull-right p, blockquote.pull-right small {
+  text-align: right
+}
+
