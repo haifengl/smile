@@ -75,6 +75,8 @@
             ajaxLoad(event, page, true);
             history.pushState({"id": page}, page, 'index.html#' + page);
             return false;
+          } else {
+            ga('send', 'event', 'outbound', 'click', href, {'transport': 'beacon'});
           }
         });
       });
