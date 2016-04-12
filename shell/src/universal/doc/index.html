@@ -70,6 +70,8 @@
       $(function() {
         $("a").click(function(event) {
           var href = $(this).attr("href");
+          console.log(href);
+          console.log($(this).attr("id"));
           if (href === "#") {
             var page = $(this).attr("id");
             ajaxLoad(event, page, true);
@@ -100,10 +102,9 @@
 <div class="masthead">
   <p class="lead">
     <a href="index.html">
-    <img src="images/smile.jpg" style="height:100px; width:auto; vertical-align: bottom; margin-top: 20px;"></a>
-    <span class="tagline">
-      Smile - Statistical Machine Intelligence and Learning Engine
-    </span>
+    <img src="images/smile.jpg" style="height:100px; width:auto; vertical-align: bottom; margin-top: 20px;">
+    <span class="tagline">Smile - Statistical Machine Intelligence and Learning Engine</span>
+    </a>
   </p>
 </div>
 
@@ -180,7 +181,7 @@
 
 <div id="content" class="row">
   <div class="col-md-3 col-md-push-9">
-    <div class="news" style="margin-bottom: 20px;">
+    <div class="news hidden-xs hidden-sm" style="margin-bottom: 20px;">
       <h5>Latest News</h5>
       <ul class="list-unstyled">
           <li><a href="https://haifengl.wordpress.com/2016/03/21/smile-1-1-is-released/">Smile 1.1 is released!</a>
