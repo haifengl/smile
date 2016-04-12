@@ -79,8 +79,6 @@
       $(function() {
         $(document).on("click", "a", function(event) {
           var href = $(this).attr("href");
-          console.log(href);
-          console.log($(this).attr("id"));
           if (href === "#") {
             var page = $(this).attr("id");
             ajaxLoad(event, page, true);
