@@ -83,7 +83,7 @@
           ajaxLoad(event, page, true);
           history.pushState({"id": page}, page, 'index.html#' + page);
           return false;
-        } else {
+        } else if (href.startsWith("http")) {
           ga('send', 'event', 'outbound', 'click', href, {'transport': 'beacon'});
         }
       });
