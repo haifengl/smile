@@ -389,18 +389,14 @@ p.toc-header {
   text-align: right
 }
 
-/*AM22 - To make google search box appear correct - START*/
-input.gsc-input, .gsc-input-box, .gsc-input-box-hover, .gsc-input-box-focus, .gsc-search-button
-{
+/*AM22 - To make google search box appear correct */
+input.gsc-input, .gsc-input-box, .gsc-input-box-hover, .gsc-input-box-focus, .gsc-search-button {
   box-sizing: content-box;
   line-height: normal;
 }
-/*AM22 - To make google search box appear correct - END*/
 
-/*AM22 - To make google search results tabs appear correct - START*/
-.gsc-tabsArea div
-{
+/*AM22 - To make google search results tabs appear correct */
+.gsc-tabsArea div {
   /*By default, Google custom search CSS sets it as AUTO, which shows scroll bars*/
   overflow: visible;
 }
-/*AM22 - To make google search results tabs appear correct - END*/
