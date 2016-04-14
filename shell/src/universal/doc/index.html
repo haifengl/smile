@@ -55,7 +55,6 @@
       }
 
       function ajaxLoad(event, page) {
-        event.preventDefault();
         $('#content').load(page + '.html', function() {
           document.title = 'Smile - ' + $("h1").text();
           ga('set', 'page', '/' + page + '.html');
@@ -133,8 +132,7 @@
     <ul class="nav navbar-nav">
       <li><a id="quickstart" href="#">Quick Start</a></li>
       <li class="dropdown">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Programming Guide <b class="caret"></b>
-        </a>
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Programming Guide <b class="caret"></b></a>
         <ul class="dropdown-menu">
           <li><a id="overview" href="#">Overview</a></li>
           <li class="divider"></li>
