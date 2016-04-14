@@ -1,14 +1,29 @@
 Smile
 =====
 
-Smile (Statistical Machine Intelligence and Learning Engine) is a set of pure Java libraries of various state-of-art machine learning algorithms. Smile is self contained and requires only Java standard library. The major components include
+Smile (Statistical Machine Intelligence and Learning Engine) is
+a fast and comprehensive machine learning system.
+With advanced data structures and algorithms,
+Smile delivers the state-of-art performance.
+
+Smile covers every aspect of machine learning, including classification,
+regression, clustering, association rule mining, feature selection,
+manifold learning, multidimensional scaling, genetic algorithm,
+missing value imputation, efficient nearest neighbor search, etc.
+
+The core algorithms are implemented in Java and self contained.
 
 * **Core**
 The core machine learning library
+* **Scala**
+The high level operators in Scala.
 * **Math**
-Linear algebra, statistical distribution, hypothesis tests, random number generators, sort, special functions, various kernel, distance and rbf functions.
+Linear algebra, statistical distribution, hypothesis tests,
+random number generators, sort, special functions, various kernel,
+distance and rbf functions.
 * **Data**
-Parsers for arff, libsvm, delimited text, sparse matrix, microarray gene expression data.
+Parsers for arff, libsvm, delimited text, sparse matrix,
+microarray gene expression data.
 * **Graph**
 Graph algorithms on adjacency list and matrix.
 * **Interpolation**
@@ -18,7 +33,9 @@ Natural language processing.
 * **Plot**
 Swing-based data visualization library.
 
-Smile is well documented and please check out the [project website](http://haifengl.github.io/smile/) for programming guides and more information.
+Smile is well documented and please check out the
+[project website](http://haifengl.github.io/smile/)
+for programming guides and more information.
 
 You can use the libraries through Maven central repository by adding the following to your project pom.xml file.
 ```
@@ -28,7 +45,7 @@ You can use the libraries through Maven central repository by adding the followi
       <version>1.1.0</version>
     </dependency>
 ```
-You can similarly replace artifactId smile-core with smile-math, smile-data, smile-graph, smile-interpolation, smile-nlp, or smile-plot for other modules.
+For NLP, use the artifactId smile-nlp.
 
 For Scala API, please use
 ```
@@ -207,7 +224,12 @@ Demo Gallery
 
 Tutorial
 ========
-This tutorial shows how to use Smile for predictive modeling (classification and regression) from Java code. It includes loading data, training and testing the model, and applying the model.
+This tutorial shows how to use Smile Java API for predictive modeling
+(classification and regression). It includes loading data, training
+and testing the model, and applying the model. If you use Scala, we
+strongly recommend the new high level Scala API, which is similar to
+R and Matlab. The programming guide with Scala API is available at
+[project website](http://haifengl.github.io/smile/).
 
 ## Load Data
 Most Smile algorithms take simple double[] as input. So you can use your favorite methods or library to import the data as long as the samples are in double arrays. To make the life easier, Smile does provide a couple of parsers for popular data formats, such as Weka's ARFF files, LibSVM's file format, delimited text files, and binary sparse data. These classes are in the package smile.data.parser. The package smile.data.parser.microarray also provides several parsers for microarray gene expression datasets, including GCT, PCL, RES, and TXT files. In the following example, we use the ARFF parser to load the weather dataset:
