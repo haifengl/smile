@@ -55,7 +55,6 @@
       }
 
       function ajaxLoad(event, page) {
-        event.preventDefault();
         $('#content').load(page + '.html', function() {
           document.title = 'Smile - ' + $("h1").text();
           ga('set', 'page', '/' + page + '.html');
@@ -120,8 +119,7 @@
 <nav class="navbar navbar-default" role="navigation">
   <!-- Brand and toggle get grouped for better mobile display -->
   <div class="navbar-header">
-    <button type="button" class="navbar-toggle" data-toggle="collapse"
-            data-target="#navbar-collapse">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
       <span class="sr-only">Toggle navigation</span>
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
@@ -134,8 +132,7 @@
     <ul class="nav navbar-nav">
       <li><a id="quickstart" href="#">Quick Start</a></li>
       <li class="dropdown">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Programming Guide <b class="caret"></b>
-        </a>
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Programming Guide <b class="caret"></b></a>
         <ul class="dropdown-menu">
           <li><a id="overview" href="#">Overview</a></li>
           <li class="divider"></li>
@@ -466,7 +463,7 @@
         </p>
         <p>Classification, regression, clustering, association rule mining, feature selection,
           manifold learning, multidimensional scaling, genetic algorithm, missing value imputation,
-          efficient nearest neighbor search, etc. See the sidebar for a list of available aglorithms.
+          efficient nearest neighbor search, etc. See the sidebar for a list of available algorithms.
         </p>
       </div>
       <div class="col-md-5 col-sm-5 col-padded-top col-center">
