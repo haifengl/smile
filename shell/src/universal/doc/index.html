@@ -53,7 +53,7 @@
         });
       }
 
-      function ajaxLoad(event, page) {
+      function ajaxLoad(page) {
         $('#content').load(page + '.html', function() {
           document.title = 'Smile - ' + $("h1").text();
           ga('set', 'page', '/' + page + '.html');
@@ -67,22 +67,20 @@
           var hash = location.hash;
           if (typeof(hash) != 'undefined' && hash != null && hash != "") {
             var page = hash.substring(1);
-            ajaxLoad(event, page);
+            ajaxLoad(page);
           } else {
             location.href = "index.html";
           }
         }
       });
 
-      $(document).on("click", "a", function(event) {
+      $(document).on("click", "a", function() {
         var href = $(this).attr("href");
-        if (href === "#") {
-          var page = $(this).attr("id");
-          ajaxLoad(event, page, true);
+        var page = $(this).attr("id");
+        if (href === "#" && typeof(page) != 'undefined') {
+          ajaxLoad(page);
           history.pushState({"id": page}, page, 'index.html#' + page);
           return false;
-        } else if (href.startsWith("http")) {
-          ga('send', 'event', 'outbound', 'click', href, {'transport': 'beacon'});
         }
       });
 
