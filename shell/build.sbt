@@ -27,8 +27,6 @@ bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.
 
 bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../conf/application.conf""""
 
-bashScriptExtraDefines += """addJava "-Dlog4j.configuration=${app_home}/../conf/log4j.properties""""
-
 // G1 garbage collector
 bashScriptExtraDefines += """addJava "-XX:+UseG1GC""""
 
