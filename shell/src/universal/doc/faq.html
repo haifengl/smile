@@ -82,6 +82,23 @@
         and <code>smile.io</code> provides high level operators on top of these parsers. The package
         <code>smile.data.parser.microarray</code> also provides several parsers for microarray gene expression datasets,
         including GCT, PCL, RES, and TXT files.</p>
+
+    <h2 class="question" id="pom">Cannot build Smile with maven</h2>
+    <p class="answer">
+        We have moved to SBT to build packages. The maven pom.xml files are deprecated and will be removed in v1.1.1.
+    </p>
+
+    <h2 class="question" id="sbt-pgp">sbt error "not found: value useGpg"</h2>
+    <p class="answer">
+        Smile uses <a href="http://www.scala-sbt.org/sbt-pgp/">sbt-pgp</a> plugin when
+        publishing to maven central repository. Although you will not publish the project,
+        you still have to set up sbt-pgp in order to build the packages. Fortunately, it is
+        very easy. Simply add the following to your <code>~/.sbt/0.13/plugins/gpg.sbt</code> file:
+    </p>
+
+    <pre class="prettyprint lang-scala"><code>
+    addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
+    </code></pre>
 </div>
 
 <script type="text/javascript">

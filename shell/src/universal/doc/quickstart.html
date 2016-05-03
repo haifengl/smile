@@ -47,7 +47,16 @@
         the project website. Downloads are pre-packaged for Mac, Windows, and universal tarball.</p>
 
     <p>If you would like to build Smile from source, please first install Java, Scala and SBT.
-        Then clone the repo and build the package:</p>
+        Smile uses <a href="http://www.scala-sbt.org/sbt-pgp/">sbt-pgp</a> plugin when
+        publishing to maven central repository. Although you will not publish the project,
+        you still have to set up sbt-pgp in order to build the packages. Fortunately, it is
+        very easy. Simply add the following to your <code>~/.sbt/0.13/plugins/gpg.sbt</code> file:</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
+    </code></pre>
+
+    <p>Then clone the repo and build the package:</p>
 
     <pre class="prettyprint lang-bash"><code>
     git clone https://github.com/haifengl/smile.git
