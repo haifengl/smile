@@ -99,6 +99,32 @@
     <pre class="prettyprint lang-scala"><code>
     addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
     </code></pre>
+
+    <h2 class="question" id="headless-plot">Headless Plot</h2>
+    <p class="answer">
+        In case that your environment does not have a display or you need to generate and save
+        a lot of plots without showing them on the screen, you may run Smile in headless model.
+    </p>
+
+    <pre class="prettyprint lang-bash"><code>
+    bin/smile -Djava.awt.headless=true
+    </code></pre>
+
+    <p>The following example shows how to save a plot in the headless mode.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val toy = readTable("data/classification/toy/toy-train.txt", Some((new NominalAttribute("class"), 0)))
+    val (x, y) = toy.unzipInt
+
+    val canvas = ScatterPlot.plot(x, y, '*', Array(Color.RED, Color.BLUE))
+
+    val headless = new Headless(canvas);
+    headless.pack();
+    headless.setVisible(true);
+
+    canvas.save(new java.io.File("headless.png"))
+    </code></pre>
+
 </div>
 
 <script type="text/javascript">

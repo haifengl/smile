@@ -18,7 +18,7 @@ public class Headless extends JInternalFrame {
     public Headless(JComponent component) {
         setContentPane(component);
     }
-    
+
     // Note, this must override the (deprecated) method show, not setVisible
     public void show() {
         super.show();
