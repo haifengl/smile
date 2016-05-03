@@ -244,7 +244,7 @@
         <code>k</code>, the smoother the boundary.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val toy = readTable("classification/toy/toy-train.txt", Some((new NominalAttribute("class"), 0)))
+    val toy = readTable("data/classification/toy/toy-train.txt", Some((new NominalAttribute("class"), 0)))
     val (x, y) = toy.unzipInt
     plot(x, y, knn(x, y, 3)
     </code></pre>
