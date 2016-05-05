@@ -34,7 +34,7 @@ import smile.data.BinarySparseDataset;
  * Parser for binary spare dataset. In the file, each line is a datum as an
  * integer list, which are the indices of nonzero elements. During the parsing,
  * the duplicated indices will be removed and indices will be sorted into
- * ascending order
+ * ascending order.
  * 
  * @author Haifeng Li
  */
