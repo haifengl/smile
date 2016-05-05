@@ -14,7 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.io
+package smile
 
 import java.io.PrintWriter
 import scala.io.Source
@@ -27,10 +27,10 @@ import smile.math.matrix.SparseMatrix
   *
   * @author Haifeng Li
   */
-trait Operators {
+object write {
 
   /** Writes an object/model to a file. */
-  def write[T <: Object](x: T, file: String): Unit = {
+  def model[T <: Object](x: T, file: String): Unit = {
     val xstream = new XStream
     val xml = xstream.toXML(x)
     new PrintWriter(file) {
@@ -38,26 +38,28 @@ trait Operators {
       close
     }
   }
+}
 
+object read {
   /** Reads an object/model back from a file created by write command. */
-  def read(file: String): AnyRef = {
+  def model(file: String): AnyRef = {
     val xml = Source.fromFile(file).mkString
     val xstream = new XStream
     xstream.fromXML(xml)
   }
 
   /** Reads an ARFF file. */
-  def readArff(file: String, responseIndex: Int = -1): AttributeDataset = {
+  def arff(file: String, responseIndex: Int = -1): AttributeDataset = {
     new ArffParser().setResponseIndex(responseIndex).parse(file)
   }
 
   /** Reads a LivSVM file. */
-  def readLibsvm(file: String): SparseDataset = {
+  def libsvm(file: String): SparseDataset = {
     new LibsvmParser().parse(file)
   }
 
   /** Reads Harwell-Boeing column-compressed sparse matrix. */
-  def readSparseMatrix(file: String): SparseMatrix = {
+  def hb(file: String): SparseMatrix = {
     new SparseMatrixParser().parse(file)
   }
 
@@ -95,14 +97,14 @@ trait Operators {
     * 0 as in C/C++ and Java. But it could be 1 to parse data produced
     * by other programming language such as Fortran.
     */
-  def readSparseData(file: String, arrayIndexOrigin: Int = 0): SparseDataset = {
+  def coo(file: String, arrayIndexOrigin: Int = 0): SparseDataset = {
     new SparseDatasetParser(arrayIndexOrigin).parse(file)
   }
 
   /** Reads binary sparse dataset. Each item is stored as an integer array, which
-    * are the indices of nonzero elements in ascending order
+    * are the indices of nonzero elements in ascending order.
     */
-  def readBinarySparseData(file: String): BinarySparseDataset = {
+  def binary(file: String): BinarySparseDataset = {
     new BinarySparseDatasetParser().parse(file)
   }
 
@@ -123,7 +125,7 @@ trait Operators {
     * @param rowNames true if the first column is row id/names
     * @return an attribute dataset
     */
-  def readTable(file: String, response: Option[(Attribute, Int)] = None, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset = {
+  def table(file: String, response: Option[(Attribute, Int)] = None, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset = {
     val parser = new DelimitedTextParser
 
     response match {
@@ -140,22 +142,22 @@ trait Operators {
   }
 
   /** Reads a CSV file  with response variable. */
-  def readCsv(file: String, response: Option[(Attribute, Int)] = None, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset = {
+  def csv(file: String, response: Option[(Attribute, Int)] = None, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset = {
     readTable(file, response, ",", comment, missing, header, rowNames)
   }
 
   /** Reads GCT microarray gene expression file. */
-  def readGct(file: String): AttributeDataset = {
+  def gct(file: String): AttributeDataset = {
     new GCTParser().parse(file)
   }
 
   /** Reads PCL microarray gene expression file. */
-  def readPcl(file: String): AttributeDataset = {
+  def pcl(file: String): AttributeDataset = {
     new PCLParser().parse(file)
   }
 
   /** Reads RES microarray gene expression file. */
-  def readRes(file: String): AttributeDataset = {
+  def res(file: String): AttributeDataset = {
     new RESParser().parse(file)
   }
 
@@ -192,7 +194,7 @@ trait Operators {
     *  AFFX-BioB-5_at AFFX-BioB-5_at (endogenous control) -104 -152 -158 ... -44
     * }}}
     */
-  def readTxt(file: String): AttributeDataset = {
+  def txt(file: String): AttributeDataset = {
     new TXTParser().parse(file)
   }
 
@@ -208,7 +210,7 @@ trait Operators {
     * @param file the file path
     * @return a tuple of vertex array and edge array.
     */
-  def readWavefrontObj(file: String): (Array[Array[Double]], Array[Array[Int]]) = {
+  def wavefront(file: String): (Array[Array[Double]], Array[Array[Int]]) = {
     val vertices = new ArrayBuffer[Array[Double]]
     val edges = new ArrayBuffer[Array[Int]]
 
