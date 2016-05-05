@@ -17,27 +17,16 @@
 package smile
 
 import java.io.PrintWriter
-
+import scala.io.Source
+import scala.collection.mutable.ArrayBuffer
 import com.thoughtworks.xstream.XStream
 import smile.data.parser.microarray.{TXTParser, RESParser, PCLParser, GCTParser}
 import smile.data.{Attribute, BinarySparseDataset, SparseDataset, AttributeDataset}
 import smile.data.parser._
 import smile.math.matrix.SparseMatrix
 
-/** I/O functions.
-  *
-  * @author Haifeng Li
-  */
-package object io {
-
-}
-
-/** High level I/O operators.
-  *
-  * @author Haifeng Li
-  */
+/** Output operators. */
 object write {
-
   /** Writes an object/model to a file. */
   def model[T <: Object](x: T, file: String): Unit = {
     val xstream = new XStream
@@ -49,6 +38,7 @@ object write {
   }
 }
 
+/** Input operators. */
 object read {
   /** Reads an object/model back from a file created by write command. */
   def model(file: String): AnyRef = {
@@ -110,10 +100,10 @@ object read {
     new SparseDatasetParser(arrayIndexOrigin).parse(file)
   }
 
-  /** Reads binary sparse dataset. Each item is stored as an integer array, which
+  /** Reads sparse binary dataset. Each item is stored as an integer array, which
     * are the indices of nonzero elements in ascending order.
     */
-  def binary(file: String): BinarySparseDataset = {
+  def sb(file: String): BinarySparseDataset = {
     new BinarySparseDatasetParser().parse(file)
   }
 
@@ -152,7 +142,7 @@ object read {
 
   /** Reads a CSV file  with response variable. */
   def csv(file: String, response: Option[(Attribute, Int)] = None, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset = {
-    readTable(file, response, ",", comment, missing, header, rowNames)
+    table(file, response, ",", comment, missing, header, rowNames)
   }
 
   /** Reads GCT microarray gene expression file. */
