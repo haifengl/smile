@@ -21,11 +21,13 @@ packageDescription := "Statistical Machine Intelligence and Learning Engine"
 
 executableScriptName := "smile"
 
+bashScriptConfigLocation := Some("${app_home}/../conf/smile.ini")
+
 bashScriptExtraDefines += """addJava "-Dsmile.home=${app_home}""""
 
 bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.scala""""
 
-bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../conf/application.conf""""
+bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../conf/smile.conf""""
 
 // G1 garbage collector
 bashScriptExtraDefines += """addJava "-XX:+UseG1GC""""
