@@ -80,12 +80,9 @@
         if (href === "#" && typeof(page) != 'undefined') {
           ajaxLoad(page);
           history.pushState({"id": page}, page, 'index.html#' + page);
+          $(this).closest(".dropdown-menu").prev().dropdown("toggle");
           return false;
         }
-      });
-
-      $(".dropdown-menu a").click(function() {
-        $(this).closest(".dropdown-menu").prev().dropdown("toggle");
       });
 
       $('.navbar-collapse').click('li', function() {
