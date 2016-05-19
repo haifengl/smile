@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.classification;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -69,7 +70,8 @@ import smile.validation.ClassificationMeasure;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements SoftClassifier<double[]> {
+public class RandomForest implements SoftClassifier<double[]>, Serializable {
+    private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(RandomForest.class);
 
     /**

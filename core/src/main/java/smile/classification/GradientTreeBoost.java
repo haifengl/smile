@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.classification;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import smile.data.Attribute;
@@ -98,7 +99,9 @@ import smile.validation.ClassificationMeasure;
  * 
  * @author Haifeng Li
  */
-public class GradientTreeBoost implements SoftClassifier<double[]> {
+public class GradientTreeBoost implements SoftClassifier<double[]>, Serializable {
+    private static final long serialVersionUID = 1L;
+
     /**
      * The number of classes.
      */

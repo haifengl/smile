@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.classification;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -84,7 +85,8 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class SVM <T> implements OnlineClassifier<T> {
+public class SVM <T> implements OnlineClassifier<T>, Serializable {
+    private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(SVM.class);
 
     /**

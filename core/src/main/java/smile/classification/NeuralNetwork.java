@@ -19,6 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
 
+import java.io.Serializable;
+
 /**
  * Multilayer perceptron neural network. 
  * An MLP consists of several layers of nodes, interconnected through weighted
@@ -102,7 +104,8 @@ import smile.math.Math;
  * 
  * @author Haifeng Li
  */
-public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier<double[]> {
+public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier<double[]>, Serializable {
+    private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(NeuralNetwork.class);
 
     /**

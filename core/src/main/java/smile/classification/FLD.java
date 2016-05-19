@@ -16,6 +16,7 @@
 
 package smile.classification;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.Math;
 import smile.math.matrix.EigenValueDecomposition;
@@ -53,7 +54,9 @@ import smile.projection.Projection;
  * 
  * @author Haifeng Li
  */
-public class FLD implements Classifier<double[]>, Projection<double[]> {
+public class FLD implements Classifier<double[]>, Projection<double[]>, Serializable {
+    private static final long serialVersionUID = 1L;
+
     /**
      * The dimensionality of data.
      */

@@ -17,6 +17,8 @@ package smile.classification;
 
 import smile.stat.distribution.Distribution;
 
+import java.io.Serializable;
+
 /**
  * Naive Bayes classifier. A naive Bayes classifier is a simple probabilistic
  * classifier based on applying Bayes' theorem with strong (naive) independence
@@ -76,7 +78,9 @@ import smile.stat.distribution.Distribution;
  * 
  * @author Haifeng Li
  */
-public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<double[]> {
+public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<double[]>, Serializable {
+    private static final long serialVersionUID = 1L;
+
     /**
      * The generation models of naive Bayes classifier.
      * For document classification in NLP, there are two different ways we can set
