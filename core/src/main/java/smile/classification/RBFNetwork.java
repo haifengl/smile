@@ -16,6 +16,7 @@
 
 package smile.classification;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import smile.math.Math;
@@ -90,7 +91,8 @@ import smile.util.SmileUtils;
  * 
  * @author Haifeng Li
  */
-public class RBFNetwork<T> implements Classifier<T> {
+public class RBFNetwork<T> implements Classifier<T>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The number of classes.
