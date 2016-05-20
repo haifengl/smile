@@ -68,16 +68,16 @@ public class PennTreebankTokenizer implements Tokenizer {
 
     private static final Pattern[] DELIMITERS = {
         // Separate most punctuation
-        Pattern.compile("([^\\p{L}\\p{N}\\p{M}\\p{Sk}\u200C\u200D\\.\\'\\-\\/,&])"),
+        Pattern.compile("(?U)([^\\w\\.\\'\\-\\/,&])"),
         // Separate commas if they're followed by space (e.g., don't separate 2,500)
-        Pattern.compile("(,\\s)"),
+        Pattern.compile("(?U)(,\\s)"),
         // Separate single quotes if they're followed by a space.
-        Pattern.compile("('\\s)"),
+        Pattern.compile("(?U)('\\s)"),
         // Separate periods that come before newline or end of string.
-        Pattern.compile("\\. *(\\n|$)")
+        Pattern.compile("(?U)\\. *(\\n|$)")
     };
 
-    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
+    private static final Pattern WHITESPACE = Pattern.compile("(?U)\\s+");
 
     /**
      * The singleton instance.
