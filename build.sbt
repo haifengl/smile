@@ -5,8 +5,8 @@ import com.typesafe.sbt.pgp.PgpKeys.{useGpg, publishSigned, publishLocalSigned}
 lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
-  organizationHomepage := Some(url("https://github.com/haifengl/smile")),
-  version := "1.1.1",
+  organizationHomepage := Some(url("http://haifengl.github.io/")),
+  version := "1.2.0",
   javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-g:lines,vars,source"),
   javacOptions in (Compile, doc) ++= Seq("-Xdoclint:none"),
   libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test",
@@ -43,7 +43,7 @@ lazy val commonSettings = Seq(
         <developer>
           <id>haifengl</id>
           <name>Haifeng Li</name>
-          <url>http://haifengl.github.io/smile/</url>
+          <url>http://haifengl.github.io/</url>
         </developer>
       </developers>
   )
