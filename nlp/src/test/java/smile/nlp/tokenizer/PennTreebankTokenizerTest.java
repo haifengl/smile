@@ -287,4 +287,23 @@ public class PennTreebankTokenizerTest {
             assertEquals(expResult[i], result[i]);
         }
     }
+
+    /**
+     * Test of split method, of class TreebankWordTokenizer.
+     */
+    @Test
+    public void testTokenizeVariousSpaces() {
+        System.out.println("tokenize words separated by various kinds of space");
+        // No-break space and em-space
+        String text = "the\u00A0cat\u2003the_cat";
+        String[] expResult = {"the", "cat", "the_cat"};
+
+        SimpleTokenizer instance = new SimpleTokenizer();
+        String[] result = instance.split(text);
+
+        assertEquals(expResult.length, result.length);
+        for (int i = 0; i < result.length; i++) {
+            assertEquals(expResult[i], result[i]);
+        }
+    }
 }
