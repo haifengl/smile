@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  * <li>Apply Unicode normalization form NFKC.</li>
  * <li>Strip, trim, normalize, and compress whitespace.</li>
  * <li>Remove control and formatting characters.</li>
- * <li>Normalize greater-than and less-than signs, double and single quotes, and dashes.</li>
+ * <li>Normalize double and single quotes.</li>
  * </ul>
  *
  * @author Mark Arehart
@@ -35,15 +35,9 @@ public class SimpleNormalizer implements Normalizer {
 
     private static final Pattern CONTROL_FORMAT_CHARS = Pattern.compile("[\\p{Cc}\\p{Cf}]");
 
-    private static final Pattern LT_SIGNS = Pattern.compile("[\\u003C\\u2039\\u2329\\u276E\\u3008]");
+    private static final Pattern DOUBLE_QUOTES = Pattern.compile("[\\u02BA\\u201C\\u201D\\u201E\\u201F\\u2033\\u2036\\u275D\\u275E\\u301D\\u301E\\u301F\\uFF02]");
 
-    private static final Pattern GT_SIGNS = Pattern.compile("[\\u003E\\u203A\\u232A\\u276F\\u3009]");
-
-    private static final Pattern DOUBLE_QUOTES = Pattern.compile("\\u0022\\u02BA\\u201C\\u201D\\u201E\\u201F\\u2033\\u2036\\u275D\\u275E\\u301D\\u301E\\u301F\\uFF02");
-
-    private static final Pattern SINGLE_QUOTES = Pattern.compile("[\\u0060\\u0027\\u02BB\\u02BC\\u02BD\\u2018\\u2019\\u201A\\u201B\\u275B\\u275C]");
-
-    private static final Pattern DASHES = Pattern.compile("[\\u002D\\u2012\\u2013\\u2014\\u2015\\uFE58\\uFE31\\uFE32]");
+    private static final Pattern SINGLE_QUOTES = Pattern.compile("[\\u0060\\u02BB\\u02BC\\u02BD\\u2018\\u2019\\u201A\\u201B\\u275B\\u275C]");
 
     /**
      * The singleton instance.
@@ -66,14 +60,19 @@ public class SimpleNormalizer implements Normalizer {
     public String normalize(String text) {
 
         text = text.trim();
-        text = java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFKC);
+
+        if (!java.text.Normalizer.isNormalized(text, java.text.Normalizer.Form.NFKC)) {
+            text = java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFKC);
+        }
+
         text = WHITESPACE.matcher(text).replaceAll(" ");
+
         text = CONTROL_FORMAT_CHARS.matcher(text).replaceAll("");
-        text = LT_SIGNS.matcher(text).replaceAll("<");
-        text = GT_SIGNS.matcher(text).replaceAll(">");
+
         text = DOUBLE_QUOTES.matcher(text).replaceAll("\"");
+
         text = SINGLE_QUOTES.matcher(text).replaceAll("'");
-        text = DASHES.matcher(text).replaceAll("-");
+
         return text;
     }
 }
