@@ -227,4 +227,84 @@ public class SimpleTokenizerTest {
             assertEquals(expResult[i], result[i]);
         }
     }
+
+    /**
+     * Test of split method, of class SimpleTokenizer.
+     */
+    @Test
+    public void testTokenizeMixedAlphanumWords() {
+        System.out.println("tokenize words with mixed numbers, letters, and punctuation");
+        String text = "3M, L-3, BB&T, AutoZone, O'Reilly, Harley-Davidson, CH2M, A-Mark, "
+                + "Quad/Graphics, Bloomin' Brands, B/E Aerospace, J.Crew, E*Trade.";
+
+        // Note: would be very hard to get "Bloomin'" and "E*Trade" correct
+        String[] expResult = {"3M", ",", "L-3", ",", "BB&T", ",", "AutoZone", ",", "O'Reilly",
+                ",", "Harley-Davidson", ",", "CH2M", ",", "A-Mark", ",", "Quad/Graphics", ",", "Bloomin",
+                "'", "Brands", ",", "B/E", "Aerospace", ",", "J.Crew", ",", "E", "*", "Trade", "."};
+
+        SimpleTokenizer instance = new SimpleTokenizer();
+        String[] result = instance.split(text);
+
+        assertEquals(expResult.length, result.length);
+        for (int i = 0; i < result.length; i++) {
+            assertEquals(expResult[i], result[i]);
+        }
+    }
+
+    /**
+     * Test of split method, of class SimpleTokenizer.
+     */
+    @Test
+    public void testTokenizeDiacritizedWords() {
+        System.out.println("tokenize words with diacritized chars (both composite and combining)");
+        String text = "The naïve résumé of Raúl Ibáñez; re\u0301sume\u0301.";
+        String[] expResult = {"The", "naïve", "résumé", "of", "Raúl", "Ibáñez", ";", "re\u0301sume\u0301", "."};
+
+        SimpleTokenizer instance = new SimpleTokenizer();
+        String[] result = instance.split(text);
+
+        assertEquals(expResult.length, result.length);
+        for (int i = 0; i < result.length; i++) {
+            assertEquals(expResult[i], result[i]);
+        }
+    }
+
+    /**
+     * Test of split method, of class TreebankWordTokenizer.
+     */
+    @Test
+    public void testTokenizeNonLatinChars() {
+        System.out.println("tokenize words containing non-Latin chars");
+        // See https://en.wikipedia.org/wiki/Zero-width_non-joiner
+        String text = "می‌خواهم   עֲו‌ֹנֹת   Auf‌lage";
+        String[] expResult = {"می‌خواهم", "עֲו‌ֹנֹת", "Auf‌lage"};
+
+        SimpleTokenizer instance = new SimpleTokenizer();
+        String[] result = instance.split(text);
+
+        assertEquals(expResult.length, result.length);
+        for (int i = 0; i < result.length; i++) {
+            assertEquals(expResult[i], result[i]);
+        }
+    }
+
+    /**
+     * Test of split method, of class TreebankWordTokenizer.
+     */
+    @Test
+    public void testTokenizeVariousSpaces() {
+        System.out.println("tokenize words separated by various kinds of space");
+        // No-break space and em-space
+        String text = "the\u00A0cat\u2003the_cat";
+        String[] expResult = {"the", "cat", "the_cat"};
+
+        SimpleTokenizer instance = new SimpleTokenizer();
+        String[] result = instance.split(text);
+
+        assertEquals(expResult.length, result.length);
+        for (int i = 0; i < result.length; i++) {
+            assertEquals(expResult[i], result[i]);
+        }
+    }
+
 }
