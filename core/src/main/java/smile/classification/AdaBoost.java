@@ -217,8 +217,8 @@ public class AdaBoost implements SoftClassifier<double[]>, Serializable {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        if (maxNodes < 1) {
-            throw new IllegalArgumentException("Invalid number of trees: " + maxNodes);
+        if (ntrees < 1) {
+            throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }
         
         if (maxNodes < 2) {
