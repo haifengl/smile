@@ -16,7 +16,8 @@
 
 package smile
 
-import java.io.PrintWriter
+import java.io._
+import java.sql.ResultSet
 import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
 import com.thoughtworks.xstream.XStream
@@ -27,8 +28,15 @@ import smile.math.matrix.SparseMatrix
 
 /** Output operators. */
 object write {
-  /** Writes an object/model to a file. */
-  def model[T <: Object](x: T, file: String): Unit = {
+  /** Serializes a `Serializable` object/model to a file. */
+  def apply[T <: Serializable](x: T, file: String): Unit = {
+    val oos = new ObjectOutputStream(new FileOutputStream(file))
+    oos.writeObject(x)
+    oos.close
+  }
+
+  /** Serializes an object/model to a file by XStream. */
+  def xstream[T <: Object](x: T, file: String): Unit = {
     val xstream = new XStream
     val xml = xstream.toXML(x)
     new PrintWriter(file) {
@@ -40,8 +48,16 @@ object write {
 
 /** Input operators. */
 object read {
-  /** Reads an object/model back from a file created by write command. */
-  def model(file: String): AnyRef = {
+  /** Reads a `Serializable` object/model. */
+  def apply(file: String): AnyRef = {
+    val ois = new ObjectInputStream(new FileInputStream(file))
+    val o = ois.readObject
+    ois.close
+    o
+  }
+
+  /** Reads an object/model that was serialized by XStream. */
+  def xstream(file: String): AnyRef = {
     val xml = Source.fromFile(file).mkString
     val xstream = new XStream
     xstream.fromXML(xml)
