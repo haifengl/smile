@@ -17,13 +17,12 @@
 package smile
 
 import java.io._
-import java.sql.ResultSet
+import java.sql.{ResultSet, Types}
 import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
 import com.thoughtworks.xstream.XStream
-import smile.data.parser.microarray.{TXTParser, RESParser, PCLParser, GCTParser}
-import smile.data.{Attribute, BinarySparseDataset, SparseDataset, AttributeDataset}
-import smile.data.parser._
+import smile.data._
+import smile.data.parser._, microarray._
 import smile.math.matrix.SparseMatrix
 
 /** Output operators. */
@@ -61,6 +60,46 @@ object read {
     val xml = Source.fromFile(file).mkString
     val xstream = new XStream
     xstream.fromXML(xml)
+  }
+
+  /** Reads a JDBC query result to an AttributeDataset. */
+  def jdbc(rs: ResultSet): AttributeDataset = {
+    val meta = rs.getMetaData
+
+    val p = meta.getColumnCount
+    val attributes = new Array[Attribute](p)
+    for (i <- 1 to p) {
+      val column = meta.getColumnLabel(i)
+      attributes(i-1) = meta.getColumnType(i) match {
+        case Types.SMALLINT | Types.INTEGER | Types.BIGINT | Types.DECIMAL | Types.NUMERIC | Types.DOUBLE =>
+          new NumericAttribute(column)
+        case Types.CHAR | Types.VARCHAR | Types.NCHAR | Types.NVARCHAR =>
+          new NominalAttribute(column)
+        case Types.DATE | Types.TIMESTAMP =>
+          new DateAttribute(column)
+        case t =>
+          throw new UnsupportedOperationException(s"Unsupported SQL data type: $t")
+      }
+    }
+
+    val data = new AttributeDataset("JDBC Query", attributes)
+    while (rs.next) {
+      val datum = new Array[Double](p)
+      for (i <- 1 to p) {
+        datum(i-1) = meta.getColumnType(i) match {
+          case Types.SMALLINT => rs.getShort(i)
+          case Types.INTEGER => rs.getInt(i)
+          case Types.BIGINT => rs.getLong(i)
+          case Types.DECIMAL | Types.NUMERIC | Types.DOUBLE => rs.getDouble(i)
+          case Types.CHAR | Types.VARCHAR | Types.NCHAR | Types.NVARCHAR => attributes(i-1).valueOf(rs.getString(i))
+          case Types.DATE => java.lang.Double.longBitsToDouble(rs.getDate(i).getTime)
+          case Types.TIMESTAMP => java.lang.Double.longBitsToDouble(rs.getTimestamp(i).getTime)
+        }
+      }
+      data.add(datum)
+    }
+
+    data
   }
 
   /** Reads an ARFF file. */
