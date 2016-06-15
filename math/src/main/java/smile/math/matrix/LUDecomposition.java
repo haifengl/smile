@@ -24,7 +24,7 @@ import smile.math.Math;
  * and a permutation vector piv of length m so that A(piv,:) = L*U.
  * If m &lt; n, then L is m-by-m and U is m-by-n.
  * <p>
- * The LU decompostion with pivoting always exists, even if the matrix is
+ * The LU decomposition with pivoting always exists, even if the matrix is
  * singular. The primary use of the LU decomposition is in the solution of
  * square systems of simultaneous linear equations if it is not singular.
  * <p>
