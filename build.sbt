@@ -50,7 +50,7 @@ lazy val commonSettings = Seq(
 )
 
 lazy val nonPubishSettings = commonSettings ++ Seq(
-  publishArtifact := false,
+  //publishArtifact := false,
   publishLocal := {},
   publish := {},
   publishSigned := {},
