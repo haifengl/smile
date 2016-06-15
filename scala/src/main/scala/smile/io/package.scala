@@ -16,19 +16,26 @@
 
 package smile
 
-import java.io.PrintWriter
+import java.io._
+import java.sql.{ResultSet, Types}
 import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
 import com.thoughtworks.xstream.XStream
-import smile.data.parser.microarray.{TXTParser, RESParser, PCLParser, GCTParser}
-import smile.data.{Attribute, BinarySparseDataset, SparseDataset, AttributeDataset}
-import smile.data.parser._
+import smile.data._
+import smile.data.parser._, microarray._
 import smile.math.matrix.SparseMatrix
 
 /** Output operators. */
 object write {
-  /** Writes an object/model to a file. */
-  def model[T <: Object](x: T, file: String): Unit = {
+  /** Serializes a `Serializable` object/model to a file. */
+  def apply[T <: Serializable](x: T, file: String): Unit = {
+    val oos = new ObjectOutputStream(new FileOutputStream(file))
+    oos.writeObject(x)
+    oos.close
+  }
+
+  /** Serializes an object/model to a file by XStream. */
+  def xstream[T <: Object](x: T, file: String): Unit = {
     val xstream = new XStream
     val xml = xstream.toXML(x)
     new PrintWriter(file) {
@@ -40,11 +47,59 @@ object write {
 
 /** Input operators. */
 object read {
-  /** Reads an object/model back from a file created by write command. */
-  def model(file: String): AnyRef = {
+  /** Reads a `Serializable` object/model. */
+  def apply(file: String): AnyRef = {
+    val ois = new ObjectInputStream(new FileInputStream(file))
+    val o = ois.readObject
+    ois.close
+    o
+  }
+
+  /** Reads an object/model that was serialized by XStream. */
+  def xstream(file: String): AnyRef = {
     val xml = Source.fromFile(file).mkString
     val xstream = new XStream
     xstream.fromXML(xml)
+  }
+
+  /** Reads a JDBC query result to an AttributeDataset. */
+  def jdbc(rs: ResultSet): AttributeDataset = {
+    val meta = rs.getMetaData
+
+    val p = meta.getColumnCount
+    val attributes = new Array[Attribute](p)
+    for (i <- 1 to p) {
+      val column = meta.getColumnLabel(i)
+      attributes(i-1) = meta.getColumnType(i) match {
+        case Types.SMALLINT | Types.INTEGER | Types.BIGINT | Types.DECIMAL | Types.NUMERIC | Types.DOUBLE =>
+          new NumericAttribute(column)
+        case Types.CHAR | Types.VARCHAR | Types.NCHAR | Types.NVARCHAR =>
+          new NominalAttribute(column)
+        case Types.DATE | Types.TIMESTAMP =>
+          new DateAttribute(column)
+        case t =>
+          throw new UnsupportedOperationException(s"Unsupported SQL data type: $t")
+      }
+    }
+
+    val data = new AttributeDataset("JDBC Query", attributes)
+    while (rs.next) {
+      val datum = new Array[Double](p)
+      for (i <- 1 to p) {
+        datum(i-1) = meta.getColumnType(i) match {
+          case Types.SMALLINT => rs.getShort(i)
+          case Types.INTEGER => rs.getInt(i)
+          case Types.BIGINT => rs.getLong(i)
+          case Types.DECIMAL | Types.NUMERIC | Types.DOUBLE => rs.getDouble(i)
+          case Types.CHAR | Types.VARCHAR | Types.NCHAR | Types.NVARCHAR => attributes(i-1).valueOf(rs.getString(i))
+          case Types.DATE => java.lang.Double.longBitsToDouble(rs.getDate(i).getTime)
+          case Types.TIMESTAMP => java.lang.Double.longBitsToDouble(rs.getTimestamp(i).getTime)
+        }
+      }
+      data.add(datum)
+    }
+
+    data
   }
 
   /** Reads an ARFF file. */

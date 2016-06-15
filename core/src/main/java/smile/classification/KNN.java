@@ -16,6 +16,7 @@
 
 package smile.classification;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.Math;
 import smile.math.distance.Distance;
@@ -67,7 +68,9 @@ import smile.neighbor.Neighbor;
  * 
  * @author Haifeng Li
  */
-public class KNN<T> implements SoftClassifier<T> {
+public class KNN<T> implements SoftClassifier<T>, Serializable {
+    private static final long serialVersionUID = 1L;
+
     /**
      * The data structure for nearest neighbor search.
      */

@@ -16,6 +16,7 @@
 
 package smile.classification;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +58,8 @@ import smile.validation.ClassificationMeasure;
  * 
  * @author Haifeng Li
  */
-public class AdaBoost implements SoftClassifier<double[]> {
+public class AdaBoost implements SoftClassifier<double[]>, Serializable {
+    private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(AdaBoost.class);
 
     /**
@@ -215,8 +217,8 @@ public class AdaBoost implements SoftClassifier<double[]> {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        if (maxNodes < 1) {
-            throw new IllegalArgumentException("Invalid number of trees: " + maxNodes);
+        if (ntrees < 1) {
+            throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }
         
         if (maxNodes < 2) {

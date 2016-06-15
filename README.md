@@ -106,11 +106,11 @@ Sentence Splitter and Tokenizer, Bigram Statistical Test, Phrase Extractor, Keyw
 
 Model Serialization
 ===================
-You may notice that none of models supports Java Serializable interface. It is because the exact format is hard to keep stable,
+You may notice that most models supports Java `Serializable` interface (all classifiers do support `Serializable` interface). It is because the exact format is hard to keep stable,
 class changes can easily make your serialized data unreadable, reading/writing the data in non-Java code is almost impossible.
-Currently, we suggest <a href="http://xstream.codehaus.org">XStream</a> to serialize the trained models.
+Currently, we suggest [XStream](http://xstream.codehaus.org) to serialize the trained models.
 XStream is a simple library to serialize objects to XML and back again. XStream is easy to use and doesn't require mappings
-(actually requires no modifications to objects). <a href="http://code.google.com/p/protostuff/">Protostuff</a> is a
+(actually requires no modifications to objects). [Protostuff](http://code.google.com/p/protostuff/) is a
 nice alternative that supports forward-backward compatibility (schema evolution) and validation.
 Beyond XML, Protostuff supports many other formats such as JSON, YAML, protobuf, etc. For some predicitive models,
 we look forward to supporting PMML (Predictive Model Markup Language), an XML-based file format developed by the Data Mining Group.
@@ -236,11 +236,15 @@ Most Smile algorithms take simple double[] as input. So you can use your favorit
 ```java
 ArffParser arffParser = new ArffParser();
 arffParser.setResponseIndex(4);
-AttributeDataset weather = arffParser.parse(this.getClass().getResourceAsStream("/smile/data/weka/weather.nominal.arff"));
+AttributeDataset weather = arffParser.parse(new FileInputStream("data/weka/weather.nominal.arff"));
 double[][] x = weather.toArray(new double[weather.size()][]);
 int[] y = weather.toArray(new int[weather.size()]);
 ```
-Note that the data file weather.nominal.arff is not included in the release. To try out the example, please just download any arff file from Internet. In the second line, we use setResponseIndex to set the column index (starting at 0) of dependent/response variable. In supervised learning, we need a response variable for each sample to train the model. Basically, it is the _y_ in the mathematical model. For classification, it is the class label. For regression, it is of real value. Without setting it, the data assume no response variable. In that case, the data can be used for testing or unsupervised learning.
+Note that the data file weather.nominal.arff is in Smile distribution package.
+After unpack the package, there are a lot of testing data in the directory of
+`$smile/data`, where `$smile` is the the root of Smile package.
+
+In the second line, we use setResponseIndex to set the column index (starting at 0) of dependent/response variable. In supervised learning, we need a response variable for each sample to train the model. Basically, it is the _y_ in the mathematical model. For classification, it is the class label. For regression, it is of real value. Without setting it, the data assume no response variable. In that case, the data can be used for testing or unsupervised learning.
 
 The parse method can take a URI, File, path string, or InputStream as input argument. And it returns an AttributeDataset object, which is a dataset of a number of attributes. All attribute values are stored as double even if the attribute may be nominal, ordinal, string, or date. The first call of toArray taking a double[][] argument fills the array with all the parsed data and returns it, of which each row is a sample/object. The second call of toArray taking an int array fills it with the class labels of the samples and then returns it.
 
@@ -250,7 +254,7 @@ Similar to ArffParser, we can also use the DelimitedTextParser class to parse pl
 ```java
 DelimitedTextParser parser = new DelimitedTextParser();
 parser.setResponseIndex(new NominalAttribute("class"), 0);
-AttributeDataset usps = parser.parse("USPS Train", this.getClass().getResourceAsStream("/smile/data/usps/zip.train"));
+AttributeDataset usps = parser.parse("USPS Train", new FileInputStream("data/usps/zip.train"));
 ```
 where the setResponseIndex also take an extra parameter about the attribute of response variable. Because this is a classification problem, we set it a NominalAttribute with name "class". In case of regression, we should use NumericAttribute instead.
 
@@ -262,8 +266,8 @@ Smile implements a variety of classification and regression algorithms. In what 
 DelimitedTextParser parser = new DelimitedTextParser();
 parser.setResponseIndex(new NominalAttribute("class"), 0);
 try {
-    AttributeDataset train = parser.parse("USPS Train", this.getClass().getResourceAsStream("/smile/data/usps/zip.train"));
-    AttributeDataset test = parser.parse("USPS Test", this.getClass().getResourceAsStream("/smile/data/usps/zip.test"));
+    AttributeDataset train = parser.parse("USPS Train", new FileInputStream("/data/usps/zip.train"));
+    AttributeDataset test = parser.parse("USPS Test", new FileInputStream("/data/usps/zip.test"));
 
     double[][] x = train.toArray(new double[train.size()][]);
     int[] y = train.toArray(new int[train.size()]);
@@ -306,7 +310,7 @@ As aforementioned, tree base methods need the type information of attributes. In
 ```java
 ArffParser arffParser = new ArffParser();
 arffParser.setResponseIndex(4);
-AttributeDataset weather = arffParser.parse(this.getClass().getResourceAsStream("/smile/data/weka/weather.nominal.arff"));
+AttributeDataset weather = arffParser.parse(new FileInputStream("/data/weka/weather.nominal.arff"));
 double[][] x = weather.toArray(new double[weather.size()][]);
 int[] y = weather.toArray(new int[weather.size()]);
 
