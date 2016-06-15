@@ -217,7 +217,8 @@ public class LASSO  implements Regression<double[]> {
     
     /**
      * Constructor. Learn the L1-regularized least squares model.
-     * @param x a matrix containing the explanatory variables.
+     * @param x a matrix containing the explanatory variables. NOTE that the matrix will
+     *          be modified (normalization) on exit.
      * @param y the response values.
      * @param lambda the shrinkage/regularization parameter.
      * @param tol the tolerance for stopping iterations (relative target duality gap).
