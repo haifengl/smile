@@ -403,7 +403,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
             double accuracy = 1.0;
             if (oob != 0) {
                 accuracy = (double) correct / oob;
-                logger.info("Random forest tree OOB accuracy: {}%", accuracy);
+                logger.info("Random forest tree OOB accuracy: {}", String.format("%.2f%%", 100 * accuracy));
             } else {
                 logger.error("Random forest has a tree trained without OOB samples.");
             }
