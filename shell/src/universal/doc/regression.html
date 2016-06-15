@@ -305,6 +305,8 @@
         <code>tol</code> is the tolerance for stopping iterations (relative target duality gap),
         and <code>maxIter</code> is the maximum number of iterations.</p>
 
+    <p>Note that the input matrix <code>x</code> will be normalized on exit.</p>
+
     <p>For over-determined systems (more instances than variables, commonly in
         machine learning), we normalize variables with mean 0 and standard deviation
         1. For under-determined systems (less instances than variables, e.g.
