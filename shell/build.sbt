@@ -29,12 +29,6 @@ bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.
 
 bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../conf/smile.conf""""
 
-// G1 garbage collector
-bashScriptExtraDefines += """addJava "-XX:+UseG1GC""""
-
-// Optimize string duplication, which happens a lot when parsing a data file
-bashScriptExtraDefines += """addJava "-XX:+UseStringDeduplication""""
-
 // SBT BuildInfo
 enablePlugins(BuildInfoPlugin)
 
