@@ -18,6 +18,7 @@ package smile.regression;
 
 import smile.math.Math;
 import smile.math.matrix.CholeskyDecomposition;
+import smile.math.matrix.SingularValueDecomposition;
 import smile.math.matrix.QRDecomposition;
 import smile.math.special.Beta;
 
@@ -148,13 +149,24 @@ public class OLS implements Regression<double[]> {
             return new OLS(x, y);
         }
     }
-    
+
     /**
-     * Constructor. Learn the ordinary least squares model.
-     * @param x a matrix containing the explanatory variables.
+     * Constructor. Learn the ordinary least squares model with QR decomposition.
+     * @param x a matrix containing the explanatory variables. NO NEED to include a constant column of 1s for bias.
      * @param y the response values.
      */
     public OLS(double[][] x, double[] y) {
+        this(x, y, false);
+    }
+
+    /**
+     * Constructor. Learn the ordinary least squares model.
+     * @param x a matrix containing the explanatory variables. NO NEED to include a constant column of 1s for bias.
+     * @param y the response values.
+     * @param SVD If true, use SVD to fit the model. Otherwise, use QR decomposition. SVD is slower than QR but
+     *            can handle rand-deficient matrix.
+     */
+    public OLS(double[][] x, double[] y, boolean SVD) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -170,8 +182,15 @@ public class OLS implements Regression<double[]> {
             X[i][p] = 1.0;
         }
 
-        QRDecomposition qr = new QRDecomposition(X, true);
-        qr.solve(y, w1);
+        QRDecomposition qr = null;
+        SingularValueDecomposition svd = null;
+        if (SVD) {
+            svd = SingularValueDecomposition.decompose(X);
+            svd.solve(y, w1);
+        } else {
+            qr = new QRDecomposition(X, true);
+            qr.solve(y, w1);
+        }
 
         b = w1[p];
         w = new double[p];
@@ -202,7 +221,14 @@ public class OLS implements Regression<double[]> {
         int df2 = n - p - 1;
         pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
 
-        CholeskyDecomposition cholesky = qr.toCholesky();
+        CholeskyDecomposition cholesky = null;
+        if (SVD) {
+            cholesky = svd.toCholesky();
+        } else {
+            cholesky = qr.toCholesky();
+
+        }
+
         double[][] inv = cholesky.inverse();
 
         coefficients = new double[p+1][4];
@@ -214,6 +240,7 @@ public class OLS implements Regression<double[]> {
             coefficients[i][2] = t;
             coefficients[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
         }
+
     }
 
     /**
