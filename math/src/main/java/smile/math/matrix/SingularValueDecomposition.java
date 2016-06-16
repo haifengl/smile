@@ -255,7 +255,7 @@ public class SingularValueDecomposition {
                 VD[i][j] = V[i][j] * s[j];
             }
         }
-        
+
         double[][] A = Math.aatmm(VD);
 
         return new CholeskyDecomposition(A, true);

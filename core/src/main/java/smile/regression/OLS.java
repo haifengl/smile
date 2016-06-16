@@ -221,26 +221,37 @@ public class OLS implements Regression<double[]> {
         int df2 = n - p - 1;
         pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
 
-        CholeskyDecomposition cholesky = null;
-        if (SVD) {
-            cholesky = svd.toCholesky();
-        } else {
-            cholesky = qr.toCholesky();
-
-        }
-
-        double[][] inv = cholesky.inverse();
-
         coefficients = new double[p+1][4];
-        for (int i = 0; i <= p; i++) {
-            coefficients[i][0] = w1[i];
-            double se = error * Math.sqrt(inv[i][i]);
-            coefficients[i][1] = se;
-            double t = w1[i] / se;
-            coefficients[i][2] = t;
-            coefficients[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
-        }
+        if (SVD) {
+            for (int i = 0; i <= p; i++) {
+                coefficients[i][0] = w1[i];
+                double s = svd.getSingularValues()[i];
+                if (!Math.isZero(s, 1E-10)) {
+                    double se = error / svd.getSingularValues()[i];
+                    coefficients[i][1] = se;
+                    double t = w1[i] / se;
+                    coefficients[i][2] = t;
+                    coefficients[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
+                } else {
+                    coefficients[i][1] = Double.NaN;
+                    coefficients[i][2] = 0.0;
+                    coefficients[i][3] = 1.0;
+                }
+            }
+        } else {
+            CholeskyDecomposition cholesky = qr.toCholesky();
 
+            double[][] inv = cholesky.inverse();
+
+            for (int i = 0; i <= p; i++) {
+                coefficients[i][0] = w1[i];
+                double se = error * Math.sqrt(inv[i][i]);
+                coefficients[i][1] = se;
+                double t = w1[i] / se;
+                coefficients[i][2] = t;
+                coefficients[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
+            }
+        }
     }
 
     /**
