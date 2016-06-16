@@ -72,10 +72,15 @@ trait Operators {
     *
     * @param x a matrix containing the explanatory variables.
     * @param y the response values.
+    * @param method qr or svd.
     */
-  def ols(x: Array[Array[Double]], y: Array[Double]): OLS = {
+  def ols(x: Array[Array[Double]], y: Array[Double], method: String = "qr"): OLS = {
     time {
-      new OLS(x, y)
+      method match {
+        case "qr" => new OLS(x, y, false)
+        case "svd" => new OLS(x, y, true)
+        case _ => throw new IllegalArgumentException(s"Invalid method: $method")
+      }
     }
   }
 

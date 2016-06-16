@@ -246,6 +246,22 @@ public class SingularValueDecomposition {
     }
 
     /**
+     * Returns the Cholesky decomposition of A'A.
+     */
+    public CholeskyDecomposition toCholesky() {
+        double[][] VD = new double[V.length][V[0].length];
+        for (int i = 0; i < V.length; i++) {
+            for (int j = 0; j < V[i].length; j++) {
+                VD[i][j] = V[i][j] * s[j];
+            }
+        }
+        
+        double[][] A = Math.aatmm(VD);
+
+        return new CholeskyDecomposition(A, true);
+    }
+
+    /**
      * Solve A * x = b using the pseudoinverse of A as obtained by SVD.
      */
     public void solve(double[] b, double[] x) {
