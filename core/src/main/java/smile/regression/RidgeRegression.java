@@ -206,10 +206,12 @@ public class RidgeRegression implements Regression<double[]> {
             }
             scale[j] = Math.sqrt(scale[j] / n);
         }
-        
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++) {
-                X[i][j] /= scale[j];
+
+        for (int j = 0; j < p; j++) {
+            if (!Math.isZero(scale[j])) {
+                for (int i = 0; i < n; i++) {
+                    X[i][j] /= scale[j];
+                }
             }
         }
 
@@ -225,7 +227,9 @@ public class RidgeRegression implements Regression<double[]> {
         cholesky.solve(w);
         
         for (int j = 0; j < p; j++) {
-            w[j] /= scale[j];
+            if (!Math.isZero(scale[j])) {
+                w[j] /= scale[j];
+            }
         }
         b = ym - Math.dot(w, center);
 

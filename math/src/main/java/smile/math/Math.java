@@ -3278,6 +3278,26 @@ public class Math {
         return true;
     }
 
+    /** Tests if a floating number is zero. */
+    public static boolean isZero(float x) {
+        return isZero(x, Float.MIN_VALUE);
+    }
+
+    /** Tests if a floating number is zero with given epsilon. */
+    public static boolean isZero(float x, float epsilon) {
+        return abs(x) < 2*epsilon;
+    }
+
+    /** Tests if a floating number is zero. */
+    public static boolean isZero(double x) {
+        return isZero(x, Double.MIN_VALUE);
+    }
+
+    /** Tests if a floating number is zero with given epsilon. */
+    public static boolean isZero(double x, double epsilon) {
+        return abs(x) < 2*epsilon;
+    }
+
     /**
      * Check if x element-wisely equals y.
      */

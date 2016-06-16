@@ -217,8 +217,7 @@ public class LASSO  implements Regression<double[]> {
     
     /**
      * Constructor. Learn the L1-regularized least squares model.
-     * @param x a matrix containing the explanatory variables. NOTE that the matrix will
-     *          be modified (normalization) on exit.
+     * @param x a matrix containing the explanatory variables.
      * @param y the response values.
      * @param lambda the shrinkage/regularization parameter.
      * @param tol the tolerance for stopping iterations (relative target duality gap).
@@ -259,33 +258,35 @@ public class LASSO  implements Regression<double[]> {
         double[][] X = x;
         double[] Y = y;
         if (n > p) {
-        center = Math.colMean(x);            
-        X = new double[n][p];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++) {
-                X[i][j] = x[i][j] - center[j];
-            }
-        }
-        
-        scale = new double[p];
-        for (int j = 0; j < p; j++) {
+            center = Math.colMean(x);
+            X = new double[n][p];
             for (int i = 0; i < n; i++) {
-                scale[j] += Math.sqr(X[i][j]);
+                for (int j = 0; j < p; j++) {
+                    X[i][j] = x[i][j] - center[j];
+                }
             }
-            scale[j] = Math.sqrt(scale[j] / n);
-        }
-        
-        for (int i = 0; i < n; i++) {
+
+            scale = new double[p];
             for (int j = 0; j < p; j++) {
-                X[i][j] /= scale[j];
+                for (int i = 0; i < n; i++) {
+                    scale[j] += Math.sqr(X[i][j]);
+                }
+                scale[j] = Math.sqrt(scale[j] / n);
             }
-        }
-        
-        Y = new double[n];
-        ym = Math.mean(y);
-        for (int i = 0; i < n; i++) {
-            Y[i] = y[i] - ym;
-        }
+
+            for (int j = 0; j < p; j++) {
+                if (!Math.isZero(scale[j])) {
+                    for (int i = 0; i < n; i++) {
+                        X[i][j] /= scale[j];
+                    }
+                }
+            }
+
+            Y = new double[n];
+            ym = Math.mean(y);
+            for (int i = 0; i < n; i++) {
+                Y[i] = y[i] - ym;
+            }
         }
 
         double t = Math.min(Math.max(1.0, 1.0 / lambda), 2 * p / 1e-3);
@@ -459,7 +460,9 @@ public class LASSO  implements Regression<double[]> {
         
         if (n > p) {
             for (int j = 0; j < p; j++) {
-                w[j] /= scale[j];
+                if (!Math.isZero(scale[j])) {
+                    w[j] /= scale[j];
+                }
             }
             b = ym - Math.dot(w, center);
         }
