@@ -156,7 +156,7 @@ public class LASSO  implements Regression<double[]> {
         /**
          * The maximum number of IPM (Newton) iterations.
          */
-        private int maxIter = 500;
+        private int maxIter = 1000;
 
         /**
          * Constructor.
@@ -212,7 +212,7 @@ public class LASSO  implements Regression<double[]> {
      * @param lambda the shrinkage/regularization parameter.
      */
     public LASSO(double[][] x, double[] y, double lambda) {
-        this(x, y, lambda, 1E-3, 5000);
+        this(x, y, lambda, 1E-4, 1000);
     }
     
     /**
