@@ -231,7 +231,7 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
      * @param d an array of size n to store the distance of each sample to nearest medoid.
      * @return the initial cluster distortion.
      */
-    public static <T> double seed(smile.math.distance.Distance distance, T[] data, T[] medoids, int[] y, double[] d) {
+    public static <T> double seed(smile.math.distance.Distance<T> distance, T[] data, T[] medoids, int[] y, double[] d) {
         int n = data.length;
         int k = medoids.length;
         T medoid = data[Math.randomInt(n)];
