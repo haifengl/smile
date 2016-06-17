@@ -33,7 +33,7 @@ import smile.sort.QuickSort;
  * @author Haifeng Li
  */
 public class IsotonicMDS {
-    private static final Logger logger = LoggerFactory.getLogger(SammonMapping.class);
+    private static final Logger logger = LoggerFactory.getLogger(IsotonicMDS.class);
 
     /**
      * The final stress achieved.
