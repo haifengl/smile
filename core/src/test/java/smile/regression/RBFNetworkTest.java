@@ -87,7 +87,7 @@ public class RBFNetworkTest {
     public void testLearn() {
         System.out.println("learn");
 
-        Math.normalize(longley);
+        Math.standardize(longley);
 
         int n = longley.length;
         LOOCV loocv = new LOOCV(n);
@@ -118,7 +118,7 @@ public class RBFNetworkTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
-            Math.normalize(datax);
+            Math.standardize(datax);
 
             int n = datax.length;
             int k = 10;
@@ -199,7 +199,7 @@ public class RBFNetworkTest {
         try {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/regression/ailerons.arff"));
             double[][] datax = data.toArray(new double[data.size()][]);
-            Math.normalize(datax);
+            Math.standardize(datax);
 
             double[] datay = data.toArray(new double[data.size()]);
             for (int i = 0; i < datay.length; i++) {
@@ -245,7 +245,7 @@ public class RBFNetworkTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/regression/bank32nh.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
-            Math.normalize(datax);
+            Math.standardize(datax);
 
             int n = datax.length;
             int k = 10;
