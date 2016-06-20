@@ -583,18 +583,18 @@ public class PlotCanvas extends JPanel {
     /**
      * Toolbar button actions.
      */
-    private Action saveAction = new SaveAction();
-    private Action printAction = new PrintAction();
-    private Action zoomInAction = new ZoomInAction();
-    private Action zoomOutAction = new ZoomOutAction();
-    private Action resetAction = new ResetAction();
-    private Action enlargePlotAreaAction = new EnlargePlotAreaAction();
-    private Action shrinkPlotAreaAction = new ShrinkPlotAreaAction();
-    private Action propertyAction = new PropertyAction();
-    private Action increaseHeightAction = new IncreaseHeightAction();
-    private Action increaseWidthAction = new IncreaseWidthAction();
-    private Action decreaseHeightAction = new DecreaseHeightAction();
-    private Action decreaseWidthAction = new DecreaseWidthAction();
+    private transient Action saveAction = new SaveAction();
+    private transient Action printAction = new PrintAction();
+    private transient Action zoomInAction = new ZoomInAction();
+    private transient Action zoomOutAction = new ZoomOutAction();
+    private transient Action resetAction = new ResetAction();
+    private transient Action enlargePlotAreaAction = new EnlargePlotAreaAction();
+    private transient Action shrinkPlotAreaAction = new ShrinkPlotAreaAction();
+    private transient Action propertyAction = new PropertyAction();
+    private transient Action increaseHeightAction = new IncreaseHeightAction();
+    private transient Action increaseWidthAction = new IncreaseWidthAction();
+    private transient Action decreaseHeightAction = new DecreaseHeightAction();
+    private transient Action decreaseWidthAction = new DecreaseWidthAction();
     private JScrollPane scrollPane;
 
     /**

@@ -56,7 +56,7 @@ public class ButtonCellRenderer extends AbstractCellEditor
 	implements TableCellRenderer, TableCellEditor, ActionListener, MouseListener
 {
     private JTable table;
-    private Action action;
+    private transient Action action;
     private int mnemonic;
     private Border originalBorder;
     private Border focusBorder;
