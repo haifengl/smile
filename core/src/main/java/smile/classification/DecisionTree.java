@@ -409,6 +409,26 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
             return (int) Math.signum(a.node.splitScore - node.splitScore);
         }
 
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj == null) {
+                return true;
+            }
+            if (obj instanceof TrainNode) {
+                return this.node.splitFeature == ((TrainNode)obj).node.splitScore;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            long fitnessLong = Double.doubleToLongBits(node.splitScore);
+            return 41 + (int) (fitnessLong ^ (fitnessLong >>> 32));
+        }
+
         /**
          * Task to find the best split cutoff for attribute j at the current node.
          */

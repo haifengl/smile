@@ -228,6 +228,26 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
             // to sort PrH in decreasing order.
             return (int) Math.signum(o.pr - pr);
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj == null) {
+                return true;
+            }
+            if (obj instanceof PrH) {
+                return this.pr == ((PrH)obj).pr;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            long fitnessLong = Double.doubleToLongBits(pr);
+            return 37 + (int) (fitnessLong ^ (fitnessLong >>> 32));
+        }
     }
 
     /**
@@ -249,6 +269,29 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
         public int compareTo(PrZ o) {
             // to sort PrZ in decreasing order.
             return prh[0].compareTo(o.prh[0]);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj == null) {
+                return true;
+            }
+            if (obj instanceof PrZ) {
+                return this.prh[0].equals(((PrZ)obj).prh[0]);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            if (prh != null && prh.length > 0) {
+                return prh[0].hashCode();
+            } else {
+                return 0;
+            }
         }
     }
 
@@ -658,6 +701,26 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
         @Override
         public int compareTo(Probe o) {
             return (int) Math.signum(prob - o.prob);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj == null) {
+                return true;
+            }
+            if (this.getClass() == obj.getClass()) {
+                return this.prob == ((Probe)obj).prob;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            long fitnessLong = Double.doubleToLongBits(prob);
+            return 37 + (int) (fitnessLong ^ (fitnessLong >>> 32));
         }
 
         /**

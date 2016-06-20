@@ -202,6 +202,27 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
         public int compareTo(DistanceNode o) {
             return (int) Math.signum(dist - o.dist);
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj == null) {
+                return true;
+            }
+            if (this.getClass() == obj.getClass()) {
+                return this.dist == ((DistanceNode)obj).dist;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            long fitnessLong = Double.doubleToLongBits(dist);
+            return 31 + (int) (fitnessLong ^ (fitnessLong >>> 32));
+        }
+
     }
 
     /**
