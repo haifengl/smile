@@ -113,7 +113,7 @@ public class GMeans extends KMeans {
                 }
                 
                 // normalize to mean 0 and variance 1.
-                Math.normalize(x);
+                Math.standardize(x);
 
                 score[i] = AndersonDarling(x);
                 logger.info(String.format("Cluster %3d\tAnderson-Darling adjusted test statistic: %3.4f", i, score[i]));
