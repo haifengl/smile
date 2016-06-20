@@ -24,6 +24,7 @@ import smile.util._
 import smile.math._, Math._
 import smile.math.distance._
 import smile.math.kernel._
+import smile.math.matrix._
 import smile.stat.distribution._
 import smile.data._
 import java.awt.Color, smile.plot._
