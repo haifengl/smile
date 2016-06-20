@@ -15,19 +15,19 @@
  *******************************************************************************/
 package smile.classification;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.concurrent.Callable;
-
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
 import smile.math.Math;
 import smile.sort.QuickSort;
 import smile.util.MulticoreExecutor;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.concurrent.Callable;
 
 /**
  * Decision tree for classification. A decision tree can be learned by
@@ -407,6 +407,26 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
         @Override
         public int compareTo(TrainNode a) {
             return (int) Math.signum(a.node.splitScore - node.splitScore);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (obj instanceof TrainNode) {
+                return this.node.splitFeature == ((TrainNode)obj).node.splitScore;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            long fitnessLong = Double.doubleToLongBits(node.splitScore);
+            return 41 + (int) (fitnessLong ^ (fitnessLong >>> 32));
         }
 
         /**

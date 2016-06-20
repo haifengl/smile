@@ -15,12 +15,13 @@
  *******************************************************************************/
 package smile.neighbor;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import smile.math.Math;
 import smile.math.distance.Metric;
 import smile.sort.DoubleHeapSelect;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Cover tree is a data structure for generic nearest neighbor search, which
@@ -202,6 +203,27 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
         public int compareTo(DistanceNode o) {
             return (int) Math.signum(dist - o.dist);
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (this.getClass() == obj.getClass()) {
+                return this.dist == ((DistanceNode)obj).dist;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            long fitnessLong = Double.doubleToLongBits(dist);
+            return 31 + (int) (fitnessLong ^ (fitnessLong >>> 32));
+        }
+
     }
 
     /**

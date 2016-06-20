@@ -192,7 +192,27 @@ public class BitString implements Chromosome {
     public int compareTo(Chromosome o) {
         return (int) Math.signum(fitness - o.fitness());
     }
-    
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (obj instanceof Chromosome) {
+            return this.fitness == ((Chromosome)obj).fitness();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        long fitnessLong = Double.doubleToLongBits(fitness);
+        return 37 + (int) (fitnessLong ^ (fitnessLong >>> 32));
+    }
+
     @Override
     public double fitness() {
         if (Double.isNaN(fitness)) {
