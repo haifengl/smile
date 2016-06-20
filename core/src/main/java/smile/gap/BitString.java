@@ -199,7 +199,7 @@ public class BitString implements Chromosome {
             return true;
         }
         if (obj == null) {
-            return true;
+            return false;
         }
         if (obj instanceof Chromosome) {
             return this.fitness == ((Chromosome)obj).fitness();

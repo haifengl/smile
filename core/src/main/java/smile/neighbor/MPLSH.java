@@ -15,14 +15,15 @@
  *******************************************************************************/
 package smile.neighbor;
 
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.PriorityQueue;
 import smile.math.IntArrayList;
 import smile.math.Math;
 import smile.sort.HeapSelect;
 import smile.stat.distribution.GaussianDistribution;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.PriorityQueue;
 
 /**
  * Multi-Probe Locality-Sensitive Hashing. LSH is an efficient algorithm for
@@ -235,7 +236,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
                 return true;
             }
             if (obj == null) {
-                return true;
+                return false;
             }
             if (obj instanceof PrH) {
                 return this.pr == ((PrH)obj).pr;
@@ -277,7 +278,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
                 return true;
             }
             if (obj == null) {
-                return true;
+                return false;
             }
             if (obj instanceof PrZ) {
                 return this.prh[0].equals(((PrZ)obj).prh[0]);
@@ -709,7 +710,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
                 return true;
             }
             if (obj == null) {
-                return true;
+                return false;
             }
             if (this.getClass() == obj.getClass()) {
                 return this.prob == ((Probe)obj).prob;
