@@ -167,6 +167,35 @@ footer a {
   font-size: 16px;
 }
 
+.community {
+  background: #fef4e9;
+  border-radius: 6px;
+  padding: 4px 12px 1px 12px;
+}
+
+.community h1, .community h2, .community h3, .community h4, .community h5 {
+  color: rgb(85, 85, 85);
+}
+
+.community ul li {
+  margin-bottom: 6px;
+}
+
+.community li .small {
+  /*display: inline-block;*/
+  color: #888;
+  font-size: 12px;
+}
+
+.community h5 {
+  font-size: 16px;
+}
+
+.community ul {
+  list-style: inside;
+  padding-left: 0;
+}​
+
 .col-right {
   text-align: center;
 }
