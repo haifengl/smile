@@ -32,6 +32,8 @@ bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../conf/smile.co
 // native packager Docker plugin
 enablePlugins(DockerPlugin)
 
+import com.typesafe.sbt.packager.docker._
+
 dockerBaseImage := "frolvlad/alpine-oraclejdk8"
 
 dockerCommands := dockerCommands.value.flatMap{
