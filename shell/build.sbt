@@ -8,7 +8,7 @@ autoScalaLibrary := true
 
 mainClass in Compile := Some("smile.shell.Main")
 
-// SBT native packager
+// native packager
 enablePlugins(JavaAppPackaging)
 
 maintainer := "Haifeng Li <haifeng.hli@gmail.com>"
@@ -29,7 +29,13 @@ bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.
 
 bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../conf/smile.conf""""
 
-// SBT BuildInfo
+// native packager Docker plugin
+enablePlugins(DockerPlugin)
+
+dockerBaseImage := "frolvlad/alpine-oraclejdk8"
+
+
+// BuildInfo
 enablePlugins(BuildInfoPlugin)
 
 buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
