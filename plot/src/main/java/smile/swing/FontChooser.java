@@ -422,7 +422,6 @@ public class FontChooser extends JComponent {
 
         dialog.setVisible(true);
         dialog.dispose();
-        dialog = null;
 
         return dialogResultValue;
     }
@@ -484,7 +483,7 @@ public class FontChooser extends JComponent {
 
         @Override
         public void keyPressed(KeyEvent e) {
-            int i = targetList.getSelectedIndex();
+            int i;
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_UP:
                     i = targetList.getSelectedIndex() - 1;

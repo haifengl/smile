@@ -230,7 +230,7 @@ public class CLARANS <T> extends PartitionClustering<T> {
         int n = data.length;
 
         int index = Math.randomInt(k);
-        T medoid = null;
+        T medoid;
         boolean dup;
         do {
             dup = false;

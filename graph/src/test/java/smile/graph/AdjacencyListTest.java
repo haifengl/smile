@@ -349,8 +349,6 @@ public class AdjacencyListTest {
     @Test
     public void testDfs2() {
         System.out.println("dfs connected component");
-        int[] size = {3, 5};
-        int[] id = {0, 1, 0, 1, 1, 1, 0, 1};
         int[][] cc = {{0, 2, 6}, {1, 3, 4, 5, 7}};
 
         Graph graph = new AdjacencyList(8);
@@ -423,8 +421,6 @@ public class AdjacencyListTest {
     @Test
     public void testBfs2() {
         System.out.println("bfs connected component");
-        int[] size = {3, 5};
-        int[] id = {0, 1, 0, 1, 1, 1, 0, 1};
         int[][] cc = {{0, 2, 6}, {1, 3, 4, 5, 7}};
 
         Graph graph = new AdjacencyList(8);

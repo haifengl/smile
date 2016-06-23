@@ -183,7 +183,7 @@ public class ArffParser {
      */
     private String readHeader(StreamTokenizer tokenizer, List<Attribute> attributes) throws IOException, ParseException {
         /// The name of dataset.
-        String relationName = null;
+        String relationName;
         // clear attribute set, which may be from previous parsing of other datasets.
         attributes.clear();
 

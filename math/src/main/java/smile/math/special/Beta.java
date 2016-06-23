@@ -53,7 +53,7 @@ public class Beta {
             throw new IllegalArgumentException("Invalid x: " + x);
         }
 
-        double ibeta = 0.0;
+        double ibeta;
         if (x == 0.0) {
             ibeta = 0.0;
         } else {
@@ -92,9 +92,9 @@ public class Beta {
         }
         d = 1.0 / d;
         double h = d;
-        double aa = 0.0;
-        double del = 0.0;
-        int i = 1, i2 = 0;
+        double aa;
+        double del;
+        int i = 1, i2;
         boolean test = true;
         while (test) {
             i2 = 2 * i;
