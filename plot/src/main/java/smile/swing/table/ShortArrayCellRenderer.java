@@ -34,7 +34,7 @@ public class ShortArrayCellRenderer extends DefaultTableCellRenderer {
     @Override
     public void setValue(Object value) {
         if (value == null) {
-            setText("");
+            setText("[]");
             return;
         }
         
