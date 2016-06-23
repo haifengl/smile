@@ -35,6 +35,7 @@ public class ShortArrayCellRenderer extends DefaultTableCellRenderer {
     public void setValue(Object value) {
         if (value == null) {
             setText("");
+            return;
         }
         
         short[] data = (short[]) value;
