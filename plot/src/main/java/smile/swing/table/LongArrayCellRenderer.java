@@ -35,6 +35,7 @@ public class LongArrayCellRenderer extends DefaultTableCellRenderer {
     public void setValue(Object value) {
         if (value == null) {
             setText("");
+            return;
         }
         
         long[] data = (long[]) value;

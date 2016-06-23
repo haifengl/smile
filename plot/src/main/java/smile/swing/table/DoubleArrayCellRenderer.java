@@ -35,6 +35,7 @@ public class DoubleArrayCellRenderer extends DefaultTableCellRenderer {
     public void setValue(Object value) {
         if (value == null) {
             setText("");
+            return;
         }
         
         double[] data = (double[]) value;
