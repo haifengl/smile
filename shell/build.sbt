@@ -38,6 +38,8 @@ dockerBaseImage := "frolvlad/alpine-oraclejdk8"
 
 packageName in Docker := "haifengl/smile"
 
+dockerUpdateLatest := true
+
 dockerCommands := dockerCommands.value.flatMap{
   case cmd@Cmd("FROM",_) => List(cmd, Cmd("RUN", "apk update && apk add bash"))
   case other => List(other)
