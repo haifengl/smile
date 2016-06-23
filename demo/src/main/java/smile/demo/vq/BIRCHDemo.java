@@ -34,6 +34,7 @@ import smile.plot.ScatterPlot;
  */
 @SuppressWarnings("serial")
 public class BIRCHDemo extends VQDemo {
+    private static final String ERROR = "Error";
     JTextField BNumberField;
     int B = 5;
 
@@ -60,33 +61,33 @@ public class BIRCHDemo extends VQDemo {
         try {
             B = Integer.parseInt(BNumberField.getText().trim());
             if (B < 2) {
-                JOptionPane.showMessageDialog(this, "Invalid B: " + B, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Invalid B: " + B, ERROR, JOptionPane.ERROR_MESSAGE);
                 return null;
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Invalid B: " + BNumberField.getText(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Invalid B: " + BNumberField.getText(), ERROR, JOptionPane.ERROR_MESSAGE);
             return null;
         }
 
         try {
             T = Double.parseDouble(TNumberField.getText().trim());
             if (T <= 0) {
-                JOptionPane.showMessageDialog(this, "Invalid T: " + T, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Invalid T: " + T, ERROR, JOptionPane.ERROR_MESSAGE);
                 return null;
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Invalid T: " + TNumberField.getText(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Invalid T: " + TNumberField.getText(), ERROR, JOptionPane.ERROR_MESSAGE);
             return null;
         }
 
         try {
             minPts = Integer.parseInt(minPtsNumberField.getText().trim());
             if (minPts < 0) {
-                JOptionPane.showMessageDialog(this, "Invalid minPts: " + minPts, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Invalid minPts: " + minPts, ERROR, JOptionPane.ERROR_MESSAGE);
                 return null;
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Invalid minPts: " + minPtsNumberField.getText(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Invalid minPts: " + minPtsNumberField.getText(), ERROR, JOptionPane.ERROR_MESSAGE);
             return null;
         }
 
