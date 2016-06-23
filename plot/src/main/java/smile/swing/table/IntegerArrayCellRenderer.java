@@ -35,6 +35,7 @@ public class IntegerArrayCellRenderer extends DefaultTableCellRenderer {
     public void setValue(Object value) {
         if (value == null) {
             setText("");
+            return;
         }
         
         int[] data = (int[]) value;
