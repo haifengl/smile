@@ -15,8 +15,8 @@
  *******************************************************************************/
 package smile.swing.table;
 
+import java.awt.Font;
 import javax.swing.table.DefaultTableCellRenderer;
-import java.awt.*;
 
 /**
  * Font renderer in JTable.
