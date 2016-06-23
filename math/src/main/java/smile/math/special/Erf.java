@@ -42,6 +42,9 @@ public class Erf {
         -1.12708e-13, 3.81e-16, 7.106e-15, -1.523e-15, -9.4e-17, 1.21e-16, -2.8e-17
     };
 
+    private Erf() {
+    }
+
     /**
      * The Gauss error function.
      */

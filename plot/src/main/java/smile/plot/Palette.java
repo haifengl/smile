@@ -109,6 +109,9 @@ public class Palette {
         BLACK,
     };
 
+    private Palette() {
+    }
+
     /**
      * Generate terrain color palette.
      * @param n the number of colors in the palette.

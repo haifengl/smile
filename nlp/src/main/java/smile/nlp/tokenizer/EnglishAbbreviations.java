@@ -51,6 +51,9 @@ class EnglishAbbreviations {
         }
     }
 
+    private EnglishAbbreviations() {
+    }
+
     /**
      * Returns true if this abbreviation dictionary contains the specified element.
      */

@@ -27,6 +27,9 @@ import smile.regression.RegressionTrainer;
  * @author Haifeng
  */
 public class Validation {
+    private Validation() {
+    }
+
     /**
      * Tests a classifier on a validation set.
      * 

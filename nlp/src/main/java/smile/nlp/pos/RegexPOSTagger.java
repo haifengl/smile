@@ -55,6 +55,9 @@ class RegexPOSTagger {
         PennTreebankPOS.NN
     };
 
+    private RegexPOSTagger() {
+    }
+
     /**
      * Returns the POS tag of a given word based on the regular expression over
      * word string. Returns null if no match.

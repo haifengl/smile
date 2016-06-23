@@ -36,6 +36,9 @@ public class Beta {
      */
     private static final double FPMIN = 1e-300;
 
+    private Beta() {
+    }
+
     /**
      * Beta function, also called the Euler integral of the first kind.
      * The beta function is symmetric, i.e. B(x,y)==B(y,x).

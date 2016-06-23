@@ -46,6 +46,9 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class WaveletShrinkage {
+    private WaveletShrinkage() {
+    }
+
     /**
      * Adaptive hard-thresholding denoising a time series with given wavelet.
      *

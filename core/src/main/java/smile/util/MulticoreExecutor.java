@@ -43,6 +43,9 @@ public class MulticoreExecutor {
      */
     private static ThreadPoolExecutor threads = null;
 
+    private MulticoreExecutor() {
+    }
+
     /** Creates the worker thread pool. */
     private static void createThreadPool() {
         if (nprocs == -1) {

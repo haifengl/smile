@@ -139,6 +139,9 @@ public class EnglishPOSLexicon {
         }
     }
 
+    private EnglishPOSLexicon() {
+    }
+
     /**
      * Returns part-of-speech tags for given word, or null if the word does
      * not exist in the dictionary.

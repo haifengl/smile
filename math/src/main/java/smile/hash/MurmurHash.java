@@ -32,6 +32,9 @@ import java.nio.ByteBuffer;
  * This class is copied from Apache Cassandra.
  */
 public class MurmurHash {
+    private MurmurHash() {
+    }
+
     public static int hash32(ByteBuffer data, int offset, int length, int seed) {
         int m = 0x5bd1e995;
         int r = 24;

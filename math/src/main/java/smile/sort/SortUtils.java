@@ -23,6 +23,9 @@ package smile.sort;
  * @author Haifeng Li
  */
 public class SortUtils {
+    private SortUtils() {
+    }
+
     /**
      * Swap two positions.
      */
