@@ -1,4 +1,5 @@
 #!/bin/bash
 
 sbt docker:publishLocal
-docker run -it haifengl/smile
+docker images -q --filter "dangling=true" | xargs docker rmi
+docker run -it --rm haifengl/smile
