@@ -36,11 +36,12 @@ import com.typesafe.sbt.packager.docker._
 
 dockerBaseImage := "frolvlad/alpine-oraclejdk8"
 
-dockerCommands += ExecCmd("RUN", "apk update && apk add bash")
-
 packageName in Docker := "haifengl/smile"
 
-version in Docker := "latest"
+dockerCommands := dockerCommands.value.flatMap{
+  case cmd@Cmd("FROM",_) => List(cmd, Cmd("RUN", "apk update && apk add bash"))
+  case other => List(other)
+}
 
 // BuildInfo
 enablePlugins(BuildInfoPlugin)
