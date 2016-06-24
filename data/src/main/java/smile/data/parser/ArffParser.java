@@ -282,7 +282,7 @@ public class ArffParser {
         } else {
 
             // Attribute is nominal.
-            List<String> attributeValues = new ArrayList<String>();
+            List<String> attributeValues = new ArrayList<>();
             tokenizer.pushBack();
 
             // Get values for nominal attribute.
@@ -359,7 +359,7 @@ public class ArffParser {
         ArffParser parser = new ArffParser();
         parser.initTokenizer(tokenizer);
 
-        List<Attribute> attributes = new ArrayList<Attribute>();
+        List<Attribute> attributes = new ArrayList<>();
         parser.readHeader(tokenizer, attributes);
 
         return attributes.toArray(new Attribute[attributes.size()]);
@@ -397,7 +397,7 @@ public class ArffParser {
             StreamTokenizer tokenizer = new StreamTokenizer(r);
             initTokenizer(tokenizer);
 
-            List<Attribute> attributes = new ArrayList<Attribute>();
+            List<Attribute> attributes = new ArrayList<>();
             String relationName = readHeader(tokenizer, attributes);
 
             if (attributes.isEmpty()) {
@@ -478,7 +478,7 @@ public class ArffParser {
             }
         }
         
-        return new Datum<double[]>(x, y);
+        return new Datum<>(x, y);
     }
 
     /**
@@ -528,6 +528,6 @@ public class ArffParser {
             
         } while (tokenizer.ttype == StreamTokenizer.TT_WORD);
         
-        return new Datum<double[]>(x, y);
+        return new Datum<>(x, y);
     }
 }

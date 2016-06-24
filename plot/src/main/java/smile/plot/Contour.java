@@ -84,7 +84,7 @@ public class Contour extends Plot {
         /**
          * The coordinates of points along the contour line.
          */
-        List<double[]> points = new ArrayList<double[]>();
+        List<double[]> points = new ArrayList<>();
         /**
          * The level value of contour line.
          */
@@ -450,7 +450,7 @@ public class Contour extends Plot {
         zMin = Math.min(z);
         zMax = Math.max(z);
 
-        contours = new ArrayList<Isoline>(numLevels);
+        contours = new ArrayList<>(numLevels);
 
         if (logScale && zMin <= 0.0) {
             throw new IllegalArgumentException("Log scale is not support for non-positive data");

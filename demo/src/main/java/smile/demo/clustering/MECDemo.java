@@ -59,7 +59,7 @@ public class MECDemo extends ClusteringDemo {
         }
 
         long clock = System.currentTimeMillis();
-        MEC<double[]> mec = new MEC<double[]>(dataset[datasetIndex], new EuclideanDistance(), clusterNumber, range);
+        MEC<double[]> mec = new MEC<>(dataset[datasetIndex], new EuclideanDistance(), clusterNumber, range);
         System.out.format("MEC clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
         PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);

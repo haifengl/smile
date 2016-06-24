@@ -356,7 +356,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
 
                 double distance = Math.distance(q, keys[index[idx]]);
                 if (distance <= radius) {
-                    neighbors.add(new Neighbor<double[], E>(keys[index[idx]], data[index[idx]], index[idx], distance));
+                    neighbors.add(new Neighbor<>(keys[index[idx]], data[index[idx]], index[idx], distance));
                 }
             }
         } else {
@@ -381,7 +381,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
 
     @Override
     public Neighbor<double[], E> nearest(double[] q) {
-        Neighbor<double[], E> neighbor = new Neighbor<double[], E>(null, null, 0, Double.MAX_VALUE);
+        Neighbor<double[], E> neighbor = new Neighbor<>(null, null, 0, Double.MAX_VALUE);
         search(q, root, neighbor);
         neighbor.distance = Math.sqrt(neighbor.distance);
         return neighbor;
@@ -397,13 +397,13 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             throw new IllegalArgumentException("Neighbor array length is larger than the dataset size");
         }
 
-        Neighbor<double[], E> neighbor = new Neighbor<double[], E>(null, null, 0, Double.MAX_VALUE);
+        Neighbor<double[], E> neighbor = new Neighbor<>(null, null, 0, Double.MAX_VALUE);
         @SuppressWarnings("unchecked")
         Neighbor<double[], E>[] neighbors = (Neighbor<double[], E>[]) java.lang.reflect.Array.newInstance(neighbor.getClass(), k);
-        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<Neighbor<double[], E>>(neighbors);
+        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<>(neighbors);
         for (int i = 0; i < k; i++) {
             heap.add(neighbor);
-            neighbor = new Neighbor<double[], E>(null, null, 0, Double.MAX_VALUE);
+            neighbor = new Neighbor<>(null, null, 0, Double.MAX_VALUE);
         }
 
         search(q, root, heap);

@@ -34,7 +34,7 @@ public class EnglishPOSLexicon {
     /**
      * A list of English words with POS tags.
      */
-    private static final HashMap<String, PennTreebankPOS[]> dict = new HashMap<String, PennTreebankPOS[]>();
+    private static final HashMap<String, PennTreebankPOS[]> dict = new HashMap<>();
 
     /**
      * The part-of-speech.txt file contains is a combination of

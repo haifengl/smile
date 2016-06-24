@@ -47,8 +47,8 @@ public class CoverTreeTest {
                 data[i][j] = Math.random();
         }
 
-        coverTree = new CoverTree<double[]>(data, new EuclideanDistance());
-        naive = new LinearSearch<double[]>(data, new EuclideanDistance());
+        coverTree = new CoverTree<>(data, new EuclideanDistance());
+        naive = new LinearSearch<>(data, new EuclideanDistance());
     }
 
 
@@ -107,8 +107,8 @@ public class CoverTreeTest {
     @Test
     public void testRange() {
         System.out.println("range");
-        List<Neighbor<double[], double[]>> n1 = new ArrayList<Neighbor<double[], double[]>>();
-        List<Neighbor<double[], double[]>> n2 = new ArrayList<Neighbor<double[], double[]>>();
+        List<Neighbor<double[], double[]>> n1 = new ArrayList<>();
+        List<Neighbor<double[], double[]>> n2 = new ArrayList<>();
         for (int i = 0; i < data.length; i++) {
             coverTree.range(data[i], 0.5, n1);
             naive.range(data[i], 0.5, n2);

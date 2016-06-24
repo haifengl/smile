@@ -108,7 +108,7 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
             }
         }
 
-        return new SimpleNeighbor<T>(neighbor, index, dist);
+        return new SimpleNeighbor<>(neighbor, index, dist);
     }
 
     @Override
@@ -121,13 +121,13 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
             throw new IllegalArgumentException("Neighbor array length is larger than the dataset size");
         }
 
-        SimpleNeighbor<T> neighbor = new SimpleNeighbor<T>(null, 0, Double.MAX_VALUE);
+        SimpleNeighbor<T> neighbor = new SimpleNeighbor<>(null, 0, Double.MAX_VALUE);
         @SuppressWarnings("unchecked")
         SimpleNeighbor<T>[] neighbors = (SimpleNeighbor<T>[]) java.lang.reflect.Array.newInstance(neighbor.getClass(), k);
-        HeapSelect<Neighbor<T,T>> heap = new HeapSelect<Neighbor<T,T>>(neighbors);
+        HeapSelect<Neighbor<T,T>> heap = new HeapSelect<>(neighbors);
         for (int i = 0; i < k; i++) {
             heap.add(neighbor);
-            neighbor = new SimpleNeighbor<T>(null, 0, Double.MAX_VALUE);
+            neighbor = new SimpleNeighbor<>(null, 0, Double.MAX_VALUE);
         }
 
         for (int i = 0; i < data.length; i++) {
@@ -164,7 +164,7 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
             double d = distance.d(q, data[i]);
 
             if (d <= radius) {
-                neighbors.add(new SimpleNeighbor<T>(data[i], i, d));
+                neighbors.add(new SimpleNeighbor<>(data[i], i, d));
             }
         }
     }

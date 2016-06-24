@@ -97,7 +97,7 @@ public class RBFNetworkTest {
             double[] trainy = Math.slice(y, loocv.train[i]);
             double[][] centers = new double[10][];
             RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
-            RBFNetwork<double[]> rbf = new RBFNetwork<double[]>(trainx, trainy, new EuclideanDistance(), basis, centers);
+            RBFNetwork<double[]> rbf = new RBFNetwork<>(trainx, trainy, new EuclideanDistance(), basis, centers);
 
             double r = y[loocv.test[i]] - rbf.predict(longley[loocv.test[i]]);
             rss += r * r;
@@ -133,7 +133,7 @@ public class RBFNetworkTest {
 
                 double[][] centers = new double[20][];
                 RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
-                RBFNetwork<double[]> rbf = new RBFNetwork<double[]>(trainx, trainy, new EuclideanDistance(), basis, centers);
+                RBFNetwork<double[]> rbf = new RBFNetwork<>(trainx, trainy, new EuclideanDistance(), basis, centers);
 
                 for (int j = 0; j < testx.length; j++) {
                     double r = testy[j] - rbf.predict(testx[j]);
@@ -174,7 +174,7 @@ public class RBFNetworkTest {
 
                 double[][] centers = new double[20][];
                 RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
-                RBFNetwork<double[]> rbf = new RBFNetwork<double[]>(trainx, trainy, new EuclideanDistance(), basis, centers);
+                RBFNetwork<double[]> rbf = new RBFNetwork<>(trainx, trainy, new EuclideanDistance(), basis, centers);
 
                 for (int j = 0; j < testx.length; j++) {
                     double r = testy[j] - rbf.predict(testx[j]);
@@ -219,7 +219,7 @@ public class RBFNetworkTest {
 
                 double[][] centers = new double[20][];
                 RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
-                RBFNetwork<double[]> rbf = new RBFNetwork<double[]>(trainx, trainy, new EuclideanDistance(), basis, centers);
+                RBFNetwork<double[]> rbf = new RBFNetwork<>(trainx, trainy, new EuclideanDistance(), basis, centers);
 
                 for (int j = 0; j < testx.length; j++) {
                     double r = testy[j] - rbf.predict(testx[j]);
@@ -260,7 +260,7 @@ public class RBFNetworkTest {
 
                 double[][] centers = new double[20][];
                 RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
-                RBFNetwork<double[]> rbf = new RBFNetwork<double[]>(trainx, trainy, new EuclideanDistance(), basis, centers);
+                RBFNetwork<double[]> rbf = new RBFNetwork<>(trainx, trainy, new EuclideanDistance(), basis, centers);
 
                 for (int j = 0; j < testx.length; j++) {
                     double r = testy[j] - rbf.predict(testx[j]);

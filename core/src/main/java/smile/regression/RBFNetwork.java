@@ -173,9 +173,9 @@ public class RBFNetwork<T> implements Regression<T> {
             T[] centers = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), m);
             GaussianRadialBasis gaussian = SmileUtils.learnGaussianRadialBasis(x, centers, distance);
             if (rbf == null) {
-                return new RBFNetwork<T>(x, y, distance, gaussian, centers, normalized);
+                return new RBFNetwork<>(x, y, distance, gaussian, centers, normalized);
             } else {
-                return new RBFNetwork<T>(x, y, distance, rbf, centers, normalized);
+                return new RBFNetwork<>(x, y, distance, rbf, centers, normalized);
             }
         }
         
@@ -188,7 +188,7 @@ public class RBFNetwork<T> implements Regression<T> {
          * @return a trained RBF network
          */
         public RBFNetwork<T> train(T[] x, double[] y, T[] centers) {
-            return new RBFNetwork<T>(x, y, distance, rbf, centers, normalized);
+            return new RBFNetwork<>(x, y, distance, rbf, centers, normalized);
         }
     }
     

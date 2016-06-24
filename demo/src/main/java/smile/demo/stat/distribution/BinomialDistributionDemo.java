@@ -54,7 +54,7 @@ public class BinomialDistributionDemo extends JPanel implements ChangeListener {
     public BinomialDistributionDemo() {
         super(new BorderLayout());
 
-        Hashtable<Integer, JLabel> nLabelTable = new Hashtable<Integer, JLabel>();
+        Hashtable<Integer, JLabel> nLabelTable = new Hashtable<>();
         nLabelTable.put(1, new JLabel(String.valueOf(1)));
         for (int i = 10; i <= 50; i+=10) {
             nLabelTable.put(new Integer(i), new JLabel(String.valueOf(i)));
@@ -68,7 +68,7 @@ public class BinomialDistributionDemo extends JPanel implements ChangeListener {
         nSlider.setPaintTicks(true);
         nSlider.setPaintLabels(true);
 
-        Hashtable<Integer, JLabel> probLabelTable = new Hashtable<Integer, JLabel>();
+        Hashtable<Integer, JLabel> probLabelTable = new Hashtable<>();
         for (int i = 1; i < 10; i+=2) {
             probLabelTable.put(new Integer(i), new JLabel(String.valueOf(i/10.0)));
         }

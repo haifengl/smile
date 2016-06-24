@@ -43,7 +43,7 @@ public class Dataset<E> implements Iterable<Datum<E>> {
     /**
      * The data objects.
      */
-    private List<Datum<E>> data = new ArrayList<Datum<E>>();
+    private List<Datum<E>> data = new ArrayList<>();
 
     /**
      * Constructor.
@@ -136,7 +136,7 @@ public class Dataset<E> implements Iterable<Datum<E>> {
      * @param x a datum item.
      */
     public void add(E x) {
-        add(new Datum<E>(x));
+        add(new Datum<>(x));
     }
 
     /**
@@ -153,7 +153,7 @@ public class Dataset<E> implements Iterable<Datum<E>> {
             throw new IllegalArgumentException("The response variable is not nominal.");
         }
         
-        add(new Datum<E>(x, y));
+        add(new Datum<>(x, y));
     }
 
     /**
@@ -174,7 +174,7 @@ public class Dataset<E> implements Iterable<Datum<E>> {
             throw new IllegalArgumentException("The response variable is not nominal.");
         }
         
-        add(new Datum<E>(x, y, weight));
+        add(new Datum<>(x, y, weight));
     }
 
     /**
@@ -191,7 +191,7 @@ public class Dataset<E> implements Iterable<Datum<E>> {
             throw new IllegalArgumentException("The response variable is not numeric.");
         }
         
-        add(new Datum<E>(x, y));
+        add(new Datum<>(x, y));
     }
 
     /**
@@ -211,7 +211,7 @@ public class Dataset<E> implements Iterable<Datum<E>> {
             throw new IllegalArgumentException("The response variable is not numeric.");
         }
         
-        add(new Datum<E>(x, y, weight));
+        add(new Datum<>(x, y, weight));
     }
 
     /**

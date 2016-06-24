@@ -56,7 +56,7 @@ public class LancasterStemmer implements Stemmer {
         /**
          * Load rules from Lancaster_rules.txt
          */
-        RULES = new ArrayList<String>();
+        RULES = new ArrayList<>();
 
         try (BufferedReader input = new BufferedReader(new InputStreamReader(LancasterStemmer.class.getResourceAsStream("/smile/nlp/stemmer/Lancaster_rules.txt")))) {
             String line = null;

@@ -32,7 +32,7 @@ public class EnglishPunctuations implements Punctuations {
     /**
      * A set of punctuation marks.
      */
-    private HashSet<String> dict = new HashSet<String>(50);
+    private HashSet<String> dict = new HashSet<>(50);
 
     /**
      * Constructor.

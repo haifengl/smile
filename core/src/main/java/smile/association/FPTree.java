@@ -89,7 +89,7 @@ final class FPTree {
          */
         void add(int index, int end, int[] itemset, int support) {
             if (children == null) {
-                children = new HashMap<Integer, Node>();
+                children = new HashMap<>();
             }
             
             Node child = children.get(itemset[index]);
@@ -114,7 +114,7 @@ final class FPTree {
          */
         void append(int index, int end, int[] itemset, int support) {
             if (children == null) {
-                children = new HashMap<Integer, Node>();
+                children = new HashMap<>();
             }
             
             if (index >= maxItemSetSize) {

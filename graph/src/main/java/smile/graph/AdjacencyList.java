@@ -63,12 +63,12 @@ public class AdjacencyList implements Graph {
         this.n = n;
         this.digraph = digraph;
 
-        LinkedList<Edge> list = new LinkedList<Edge>();
+        LinkedList<Edge> list = new LinkedList<>();
         graph = (LinkedList<Edge>[]) java.lang.reflect.Array.newInstance(list.getClass(), n);
 
         graph[0] = list;
         for (int i = 1; i < n; i++) {
-            graph[i] = new LinkedList<Edge>();
+            graph[i] = new LinkedList<>();
         }
     }
 
@@ -139,7 +139,7 @@ public class AdjacencyList implements Graph {
 
     @Override
     public Collection<Edge> getEdges() {
-        Collection<Edge> set = new HashSet<Edge>();
+        Collection<Edge> set = new HashSet<>();
 
         for (int i = 0; i < n; i++) {
             set.addAll(graph[i]);
@@ -155,7 +155,7 @@ public class AdjacencyList implements Graph {
 
     @Override
     public Collection<Edge> getEdges(int source, int target) {
-        Collection<Edge> set = new LinkedList<Edge>();
+        Collection<Edge> set = new LinkedList<>();
 
         if (digraph) {
             for (Edge edge : graph[source]) {
@@ -444,7 +444,7 @@ public class AdjacencyList implements Graph {
             }
         }
 
-        Queue<Integer> queue = new LinkedList<Integer>();
+        Queue<Integer> queue = new LinkedList<>();
         for (int i = 0; i < n; i++) {
             if (in[i] == 0) {
                 queue.offer(i);
@@ -473,7 +473,7 @@ public class AdjacencyList implements Graph {
      */
     private void bfs(int v, int[] cc, int id) {
         cc[v] = id;
-        Queue<Integer> queue = new LinkedList<Integer>();
+        Queue<Integer> queue = new LinkedList<>();
         queue.offer(v);
         while (!queue.isEmpty()) {
             int t = queue.poll();
@@ -531,7 +531,7 @@ public class AdjacencyList implements Graph {
     private void bfs(Visitor visitor, int v, int[] cc, int id) {
         visitor.visit(v);
         cc[v] = id;
-        Queue<Integer> queue = new LinkedList<Integer>();
+        Queue<Integer> queue = new LinkedList<>();
         queue.offer(v);
         while (!queue.isEmpty()) {
             int t = queue.poll();

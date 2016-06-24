@@ -52,8 +52,8 @@ public class LSHTest {
             System.err.println(ex);
         }
 
-        naive = new LinearSearch<double[]>(x, new EuclideanDistance());
-        lsh = new LSH<double[]>(x, x);
+        naive = new LinearSearch<>(x, new EuclideanDistance());
+        lsh = new LSH<>(x, x);
         /*
         lsh = new LSH<double[]>(256, 100, 3, 4.0);
         for (double[] xi : x) {
@@ -147,8 +147,8 @@ public class LSHTest {
         long time = System.currentTimeMillis();
         double recall = 0.0;
         for (int i = 0; i < testx.length; i++) {
-            ArrayList<Neighbor<double[], double[]>> n1 = new ArrayList<Neighbor<double[], double[]>>();
-            ArrayList<Neighbor<double[], double[]>> n2 = new ArrayList<Neighbor<double[], double[]>>();
+            ArrayList<Neighbor<double[], double[]>> n1 = new ArrayList<>();
+            ArrayList<Neighbor<double[], double[]>> n2 = new ArrayList<>();
             lsh.range(testx[i], 8.0, n1);
             naive.range(testx[i], 8.0, n2);
 

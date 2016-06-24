@@ -56,7 +56,7 @@ public class LogNormalDistributionDemo extends JPanel implements ChangeListener 
     public LogNormalDistributionDemo() {
         super(new BorderLayout());
 
-        Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
+        Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 0; i <= 20; i+=10) {
             labelTable.put(new Integer(i), new JLabel(String.valueOf(i/10)));
         }

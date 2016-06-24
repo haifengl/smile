@@ -32,7 +32,7 @@ import smile.math.distance.EditDistance;
  */
 public class CoverTreeStringSpeedTest {
 
-    List<String> words = new ArrayList<String>();
+    List<String> words = new ArrayList<>();
     CoverTree<String> cover;
 
     public CoverTreeStringSpeedTest() {
@@ -57,7 +57,7 @@ public class CoverTreeStringSpeedTest {
         String[] data = words.toArray(new String[words.size()]);
 
         start = System.currentTimeMillis();
-        cover = new CoverTree<String>(data, new EditDistance(50, true));
+        cover = new CoverTree<>(data, new EditDistance(50, true));
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Building cover tree: %.2fs%n", time);
     }
@@ -85,7 +85,7 @@ public class CoverTreeStringSpeedTest {
     public void testNaiveSpeed() {
         System.out.println("cover tree");
         long start = System.currentTimeMillis();
-        List<Neighbor<String, String>> neighbors = new ArrayList<Neighbor<String, String>>();
+        List<Neighbor<String, String>> neighbors = new ArrayList<>();
         for (int i = 1000; i < 1100; i++) {
             cover.range(words.get(i), 1, neighbors);
             neighbors.clear();

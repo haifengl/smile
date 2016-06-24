@@ -58,11 +58,11 @@ public class CRFTest {
         int p = 0;
         int k = 0;
         IntDataset dataset = new IntDataset();
-        ArrayList<int[][]> x = new ArrayList<int[][]>();
-        ArrayList<int[]> y = new ArrayList<int[]>();
+        ArrayList<int[][]> x = new ArrayList<>();
+        ArrayList<int[]> y = new ArrayList<>();
 
-        ArrayList<int[]> seq = new ArrayList<int[]>();
-        ArrayList<Integer> label = new ArrayList<Integer>();
+        ArrayList<int[]> seq = new ArrayList<>();
+        ArrayList<Integer> label = new ArrayList<>();
 
         int id = 1;
         try(BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
@@ -102,8 +102,8 @@ public class CRFTest {
                     x.add(xx);
                     y.add(yy);
 
-                    seq = new ArrayList<int[]>();
-                    label = new ArrayList<Integer>();
+                    seq = new ArrayList<>();
+                    label = new ArrayList<>();
                     seq.add(feature);
                     label.add(Integer.valueOf(words[len + 3]));
                 }
@@ -138,11 +138,11 @@ public class CRFTest {
         int k = 0;
         Dataset dataset = new Dataset();
         dataset.attributes = attributes;
-        ArrayList<double[][]> x = new ArrayList<double[][]>();
-        ArrayList<int[]> y = new ArrayList<int[]>();
+        ArrayList<double[][]> x = new ArrayList<>();
+        ArrayList<int[]> y = new ArrayList<>();
 
-        ArrayList<double[]> seq = new ArrayList<double[]>();
-        ArrayList<Integer> label = new ArrayList<Integer>();
+        ArrayList<double[]> seq = new ArrayList<>();
+        ArrayList<Integer> label = new ArrayList<>();
 
         int id = 1;
         try(BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
@@ -189,8 +189,8 @@ public class CRFTest {
                     x.add(xx);
                     y.add(yy);
 
-                    seq = new ArrayList<double[]>();
-                    label = new ArrayList<Integer>();
+                    seq = new ArrayList<>();
+                    label = new ArrayList<>();
                     seq.add(feature);
                     label.add(Integer.valueOf(words[len + 3]));
                 }
