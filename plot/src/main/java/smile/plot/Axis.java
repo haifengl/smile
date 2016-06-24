@@ -504,7 +504,7 @@ public class Axis {
                 int prevx = xy[0];
                 int prevy = xy[1];
                 for (int i = 0; i < gridLabels.length; i++) {
-                    if (gridLabels[i].text.length() > 0) {
+                    if (!gridLabels[i].text.isEmpty()) {
                         double[] coord = gridLabels[i].getCoordinate();
                         xy = g.projection.screenProjection(coord);
                         int x = xy[0];

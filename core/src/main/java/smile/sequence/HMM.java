@@ -714,7 +714,7 @@ public class HMM<O> implements SequenceLabeler<O> {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("HMM (%d states, %d emission symbols)\n", numStates, numSymbols));
+        sb.append(String.format("HMM (%d states, %d emission symbols)%n", numStates, numSymbols));
 
         sb.append("\tInitial state probability:\n\t\t");
         for (int i = 0; i < numStates; i++) {

@@ -55,7 +55,7 @@ public class CLARANSDemo extends ClusteringDemo {
         try {
             numLocal = Integer.parseInt(numLocalField.getText().trim());
             if (numLocal < 5) {
-                JOptionPane.showMessageDialog(this, "Toll smal NumLocal: " + numLocal, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Too small NumLocal: " + numLocal, "Error", JOptionPane.ERROR_MESSAGE);
                 return null;
             }
         } catch (Exception e) {
