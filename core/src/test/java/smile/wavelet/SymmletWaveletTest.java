@@ -52,7 +52,7 @@ public class SymmletWaveletTest {
     public void testFilter() {
         System.out.println("filter");
         for (int p = 8; p <= 20; p += 2) {
-            System.out.format("p = %d\n", p);
+            System.out.format("p = %d%n", p);
             double[] a = {.2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3};
             double[] b = a.clone();
             Wavelet instance = new SymmletWavelet(p);
