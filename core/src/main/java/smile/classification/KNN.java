@@ -118,7 +118,7 @@ public class KNN<T> implements SoftClassifier<T>, Serializable {
         
         @Override
         public KNN<T> train(T[] x, int[] y) {
-            return new KNN<T>(x, y, distance, k);
+            return new KNN<>(x, y, distance, k);
         }
     }
     
@@ -202,9 +202,9 @@ public class KNN<T> implements SoftClassifier<T>, Serializable {
         this.y = y;
         this.k = k;
         if (distance instanceof Metric) {
-            knn = new CoverTree<T>(x, (Metric<T>) distance);
+            knn = new CoverTree<>(x, (Metric<T>) distance);
         } else {
-            knn = new LinearSearch<T>(x, distance);
+            knn = new LinearSearch<>(x, distance);
         }
     }
 
@@ -234,12 +234,12 @@ public class KNN<T> implements SoftClassifier<T>, Serializable {
 
         KNNSearch<double[], double[]> knn = null;
         if (x[0].length < 10) {
-            knn = new KDTree<double[]>(x, x);
+            knn = new KDTree<>(x, x);
         } else {
-            knn = new CoverTree<double[]>(x, new EuclideanDistance());
+            knn = new CoverTree<>(x, new EuclideanDistance());
         }
         
-        return new KNN<double[]>(knn, y, k);
+        return new KNN<>(knn, y, k);
     }
 
     @Override

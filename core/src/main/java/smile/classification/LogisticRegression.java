@@ -334,8 +334,8 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
             int n = x.length;
             int m = MulticoreExecutor.getThreadPoolSize();
             if (n >= 1000 && m >= 2) {
-                ftasks = new ArrayList<FTask>(m + 1);
-                gtasks = new ArrayList<GTask>(m + 1);
+                ftasks = new ArrayList<>(m + 1);
+                gtasks = new ArrayList<>(m + 1);
                 int step = n / m;
                 if (step < 100) {
                     step = 100;
@@ -587,8 +587,8 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
             int n = x.length;
             int m = MulticoreExecutor.getThreadPoolSize();
             if (n >= 1000 && m >= 2) {
-                ftasks = new ArrayList<FTask>(m + 1);
-                gtasks = new ArrayList<GTask>(m + 1);
+                ftasks = new ArrayList<>(m + 1);
+                gtasks = new ArrayList<>(m + 1);
                 int step = n / m;
                 if (step < 100) {
                     step = 100;

@@ -58,7 +58,7 @@ public class WeibullDistributionDemo extends JPanel implements ChangeListener {
     public WeibullDistributionDemo() {
         super(new BorderLayout());
 
-        Hashtable<Integer, JLabel> shapeLabelTable = new Hashtable<Integer, JLabel>();
+        Hashtable<Integer, JLabel> shapeLabelTable = new Hashtable<>();
         for (int i = 0; i <= 10; i+=2) {
             shapeLabelTable.put(new Integer(i), new JLabel(String.valueOf(i)));
         }
@@ -71,7 +71,7 @@ public class WeibullDistributionDemo extends JPanel implements ChangeListener {
         shapeSlider.setPaintTicks(true);
         shapeSlider.setPaintLabels(true);
 
-        Hashtable<Integer, JLabel> scaleLabelTable = new Hashtable<Integer, JLabel>();
+        Hashtable<Integer, JLabel> scaleLabelTable = new Hashtable<>();
         for (int i = 0; i <= 50; i+=10) {
             scaleLabelTable.put(new Integer(i), new JLabel(String.valueOf(i/10)));
         }

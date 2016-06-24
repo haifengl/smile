@@ -56,7 +56,7 @@ public class ExponentialDistributionDemo extends JPanel implements ChangeListene
     public ExponentialDistributionDemo() {
         super(new BorderLayout());
 
-        Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
+        Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 0; i <= 50; i+=10) {
             labelTable.put(new Integer(i), new JLabel(String.valueOf(i/10)));
         }

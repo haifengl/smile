@@ -159,7 +159,7 @@ public class ExponentialFamilyMixture extends Mixture {
             }
 
             // Maximization step
-            ArrayList<Component> newConfig = new ArrayList<Component>();
+            ArrayList<Component> newConfig = new ArrayList<>();
             for (int i = 0; i < m; i++)
                 newConfig.add(((ExponentialFamily) components.get(i).distribution).M(x, posteriori[i]));
 

@@ -118,7 +118,7 @@ public class DENCLUE extends PartitionClustering<double[]> {
         int np = MulticoreExecutor.getThreadPoolSize();
         List<DENCLUEThread> tasks = null;
         if (n >= 1000 && np >= 2) {
-            tasks = new ArrayList<DENCLUEThread>(np + 1);
+            tasks = new ArrayList<>(np + 1);
             int step = n / np;
             if (step < 100) {
                 step = 100;
@@ -175,9 +175,9 @@ public class DENCLUE extends PartitionClustering<double[]> {
         }
 
         y = new int[n];
-        ArrayList<double[]> cluster = new ArrayList<double[]>();
-        ArrayList<Double> probability = new ArrayList<Double>();
-        ArrayList<Double> step = new ArrayList<Double>();
+        ArrayList<double[]> cluster = new ArrayList<>();
+        ArrayList<Double> probability = new ArrayList<>();
+        ArrayList<Double> step = new ArrayList<>();
 
         y[0] = 0;
         cluster.add(attractors[0]);

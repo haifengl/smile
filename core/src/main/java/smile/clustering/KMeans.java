@@ -226,7 +226,7 @@ public class KMeans extends PartitionClustering<double[]> {
 
         BBDTree bbd = new BBDTree(data);
 
-        List<KMeansThread> tasks = new ArrayList<KMeansThread>();
+        List<KMeansThread> tasks = new ArrayList<>();
         for (int i = 0; i < runs; i++) {
             tasks.add(new KMeansThread(bbd, data, k, maxIter));
         }
@@ -321,7 +321,7 @@ public class KMeans extends PartitionClustering<double[]> {
         int np = MulticoreExecutor.getThreadPoolSize();
         List<LloydThread> tasks = null;
         if (n >= 1000 && np >= 2) {
-            tasks = new ArrayList<LloydThread>(np + 1);
+            tasks = new ArrayList<>(np + 1);
             int step = n / np;
             if (step < 100) {
                 step = 100;

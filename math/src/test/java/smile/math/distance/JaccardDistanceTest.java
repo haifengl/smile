@@ -56,13 +56,13 @@ public class JaccardDistanceTest {
     @Test
     public void testDistance() {
         System.out.println("distance");
-        Set<Integer> a = new HashSet<Integer>();
+        Set<Integer> a = new HashSet<>();
         a.add(1);
         a.add(2);
         a.add(3);
         a.add(4);
 
-        Set<Integer> b = new HashSet<Integer>();
+        Set<Integer> b = new HashSet<>();
         b.add(3);
         b.add(4);
         b.add(5);

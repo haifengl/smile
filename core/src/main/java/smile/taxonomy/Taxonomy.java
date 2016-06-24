@@ -32,7 +32,7 @@ public class Taxonomy {
     /**
      * All the concepts in this taxonomy.
      */
-    HashMap<String, Concept> concepts = new HashMap<String, Concept>();
+    HashMap<String, Concept> concepts = new HashMap<>();
     /**
      * The root node in the taxonomy.
      */
@@ -84,7 +84,7 @@ public class Taxonomy {
      * Returns all named concepts from this taxonomy
      */
     private List<String> getConcepts(Concept c) {
-        List<String> keywords = new ArrayList<String>();
+        List<String> keywords = new ArrayList<>();
 
         while (c != null) {
             if (c.synset != null) {

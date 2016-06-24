@@ -367,7 +367,7 @@ public class Maxent implements SoftClassifier<int[]>, Serializable {
                     f += log1pe(wx) - y[i] * wx;
                 }
             } else {
-                List<FTask> tasks = new ArrayList<FTask>(m+1);
+                List<FTask> tasks = new ArrayList<>(m + 1);
                 int step = n / m;
                 if (step < 100) step = 100;
                 
@@ -470,7 +470,7 @@ public class Maxent implements SoftClassifier<int[]>, Serializable {
                     g[p] -= yi;
                 }
             } else {
-                List<GTask> tasks = new ArrayList<GTask>(m+1);
+                List<GTask> tasks = new ArrayList<>(m + 1);
                 int step = n / m;
                 if (step < 100) step = 100;
                 
@@ -631,7 +631,7 @@ public class Maxent implements SoftClassifier<int[]>, Serializable {
                     f -= log(prob[y[i]]);
                 }
             } else {
-                List<FTask> tasks = new ArrayList<FTask>(m+1);
+                List<FTask> tasks = new ArrayList<>(m + 1);
                 int step = n / m;
                 if (step < 100) step = 100;
 
@@ -761,7 +761,7 @@ public class Maxent implements SoftClassifier<int[]>, Serializable {
                     }
                 }
             } else {
-                List<GTask> tasks = new ArrayList<GTask>(m+1);
+                List<GTask> tasks = new ArrayList<>(m + 1);
                 int step = n / m;
                 if (step < 100) {
                     step = 100;

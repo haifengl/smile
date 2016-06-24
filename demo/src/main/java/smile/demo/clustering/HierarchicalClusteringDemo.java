@@ -48,7 +48,7 @@ public class HierarchicalClusteringDemo extends ClusteringDemo {
     JComboBox<String> linkageBox;
 
     public HierarchicalClusteringDemo() {
-        linkageBox = new JComboBox<String>();
+        linkageBox = new JComboBox<>();
         linkageBox.addItem("Single");
         linkageBox.addItem("Complete");
         linkageBox.addItem("UPGMA");

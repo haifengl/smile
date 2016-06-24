@@ -74,7 +74,7 @@ public class SVR<T> implements Regression<T> {
     /**
      * Support vectors.
      */
-    private List<SupportVector> sv = new ArrayList<SupportVector>();
+    private List<SupportVector> sv = new ArrayList<>();
     /**
      * Threshold of decision function.
      */
@@ -189,7 +189,7 @@ public class SVR<T> implements Regression<T> {
 
         @Override
         public SVR<T> train(T[] x, double[] y) {
-            SVR<T> svr = new SVR<T>(x, y, kernel, eps, C, tol);
+            SVR<T> svr = new SVR<>(x, y, kernel, eps, C, tol);
             return svr;
         }
     }
@@ -415,7 +415,7 @@ public class SVR<T> implements Regression<T> {
                 i.kcache.add(kernel.k(i.x, v.x));
             }
         } else {
-            List<KernelTask> tasks = new ArrayList<KernelTask>(m + 1);
+            List<KernelTask> tasks = new ArrayList<>(m + 1);
             int step = n / m;
             if (step < 100) {
                 step = 100;

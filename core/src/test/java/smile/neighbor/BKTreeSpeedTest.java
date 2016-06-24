@@ -32,7 +32,7 @@ import smile.math.distance.EditDistance;
  */
 public class BKTreeSpeedTest {
 
-    List<String> words = new ArrayList<String>();
+    List<String> words = new ArrayList<>();
     BKTree<String> bktree;
 
     public BKTreeSpeedTest() {
@@ -57,7 +57,7 @@ public class BKTreeSpeedTest {
         String[] data = words.toArray(new String[words.size()]);
 
         start = System.currentTimeMillis();
-        bktree = new BKTree<String>(new EditDistance(50, true));
+        bktree = new BKTree<>(new EditDistance(50, true));
         bktree.add(data);
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Building BK-tree: %.2fs%n", time);
@@ -86,7 +86,7 @@ public class BKTreeSpeedTest {
     public void testBKTreeSpeed() {
         System.out.println("BK-Tree range 1 speed");
         long start = System.currentTimeMillis();
-        List<Neighbor<String, String>> neighbors = new ArrayList<Neighbor<String, String>>();
+        List<Neighbor<String, String>> neighbors = new ArrayList<>();
         for (int i = 1000; i < 1100; i++) {
             bktree.range(words.get(i), 1, neighbors);
             neighbors.clear();

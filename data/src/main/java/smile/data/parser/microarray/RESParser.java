@@ -210,7 +210,7 @@ public class RESParser {
                 x[j] = Double.valueOf(tokens[2*j+2]);
             }
 
-            Datum<double[]> datum = new Datum<double[]>(x);
+            Datum<double[]> datum = new Datum<>(x);
             datum.name = tokens[1];
             datum.description = tokens[0];
             data.add(datum);

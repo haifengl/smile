@@ -61,7 +61,7 @@ public class Mixture extends AbstractDistribution {
      * Constructor.
      */
     Mixture() {
-        components = new ArrayList<Component>();
+        components = new ArrayList<>();
     }
 
     /**
@@ -69,7 +69,7 @@ public class Mixture extends AbstractDistribution {
      * @param mixture a list of distributions.
      */
     public Mixture(List<Component> mixture) {
-        components = new ArrayList<Component>();
+        components = new ArrayList<>();
         components.addAll(mixture);
 
         double sum = 0.0;

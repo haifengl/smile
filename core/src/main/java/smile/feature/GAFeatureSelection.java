@@ -125,7 +125,7 @@ public class GAFeatureSelection {
             seeds[i] = new BitString(p, fitness, crossover, crossoverRate, mutationRate);
         }
 
-        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<BitString>(seeds, selection);
+        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, selection);
         ga.evolve(generation);       
         
         return seeds;
@@ -168,7 +168,7 @@ public class GAFeatureSelection {
             seeds[i] = new BitString(p, fitness, crossover, crossoverRate, mutationRate);
         }
 
-        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<BitString>(seeds, selection);
+        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, selection);
         ga.evolve(generation);       
         
         return seeds;        
@@ -312,7 +312,7 @@ public class GAFeatureSelection {
             seeds[i] = new BitString(p, fitness, crossover, crossoverRate, mutationRate);
         }
 
-        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<BitString>(seeds, selection);
+        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, selection);
         ga.evolve(generation);       
         
         return seeds;
@@ -355,7 +355,7 @@ public class GAFeatureSelection {
             seeds[i] = new BitString(p, fitness, crossover, crossoverRate, mutationRate);
         }
 
-        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<BitString>(seeds, selection);
+        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, selection);
         ga.evolve(generation);       
         
         return seeds;        

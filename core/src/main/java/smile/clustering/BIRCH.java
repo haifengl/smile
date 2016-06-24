@@ -387,9 +387,9 @@ public class BIRCH implements Clustering<double[]> {
      * @return the number of non-outlier leaves.
      */
     public int partition(int k, int minPts) {
-        ArrayList<Leaf> leaves = new ArrayList<Leaf>();
-        ArrayList<double[]> centers = new ArrayList<double[]>();
-        Queue<Node> queue = new LinkedList<Node>();
+        ArrayList<Leaf> leaves = new ArrayList<>();
+        ArrayList<double[]> centers = new ArrayList<>();
+        Queue<Node> queue = new LinkedList<>();
         queue.offer(root);
 
         for (Node node = queue.poll(); node != null; node = queue.poll()) {
