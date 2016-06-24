@@ -59,7 +59,7 @@ public class ShiftedGeometricDistributionTest {
         for (int i = 0; i < data.length; i++)
             data[i] = (int) instance.rand();
         ShiftedGeometricDistribution est = new ShiftedGeometricDistribution(data);
-        assertEquals(0.0, (0.4 - est.getProb()) / 0.4, 0.05);
+        assertEquals(0.0, (0.4 - est.getProb()) / 0.4, 0.1);
     }
 
     /**
