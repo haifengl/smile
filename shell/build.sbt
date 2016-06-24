@@ -56,4 +56,4 @@ buildInfoOptions += BuildInfoOption.BuildTime
 
 libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.11.7"
 
-libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.18"
+libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.21"
