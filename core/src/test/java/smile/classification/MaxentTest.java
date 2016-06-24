@@ -49,20 +49,20 @@ public class MaxentTest {
 
         try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
             String[] words = input.readLine().split(" ");
-            int nseq = Integer.valueOf(words[0]);
-            int k = Integer.valueOf(words[1]);
-            p = Integer.valueOf(words[2]);
+            int nseq = Integer.parseInt(words[0]);
+            int k = Integer.parseInt(words[1]);
+            p = Integer.parseInt(words[2]);
 
             String line = null;
             while ((line = input.readLine()) != null) {
                 words = line.split(" ");
-                int seqid = Integer.valueOf(words[0]);
-                int pos = Integer.valueOf(words[1]);
-                int len = Integer.valueOf(words[2]);
+                int seqid = Integer.parseInt(words[0]);
+                int pos = Integer.parseInt(words[1]);
+                int len = Integer.parseInt(words[2]);
 
                 int[] feature = new int[len];
                 for (int i = 0; i < len; i++) {
-                    feature[i] = Integer.valueOf(words[i+3]);
+                    feature[i] = Integer.parseInt(words[i+3]);
                 }
 
                 x.add(feature);

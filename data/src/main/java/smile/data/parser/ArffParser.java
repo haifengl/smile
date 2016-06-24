@@ -501,7 +501,7 @@ public class ArffParser {
             
             String s = tokenizer.sval.trim();
             if (index < 0) {
-                index = Integer.valueOf(s);
+                index = Integer.parseInt(s);
                 if (index < 0 || index >= attributes.length) {
                     throw new ParseException("Invalid attribute index: " + index, tokenizer.lineno());
                 }
