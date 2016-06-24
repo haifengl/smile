@@ -357,13 +357,13 @@ public class LASSO  implements Regression<double[]> {
             pobj = Math.dot(z, z) + lambda * Math.norm1(w);
             dobj = Math.max(-0.25 * Math.dot(nu, nu) - Math.dot(nu, Y), dobj);
             if (ntiter % 10 == 0) {
-                logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g\n", ntiter, pobj, dobj));
+                logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g%n", ntiter, pobj, dobj));
             }
 
             double gap = pobj - dobj;
             // STOPPING CRITERION
             if (gap / dobj < tol) {
-                logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g\n", ntiter, pobj, dobj));
+                logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g%n", ntiter, pobj, dobj));
                 break;
             }
 
@@ -727,18 +727,18 @@ public class LASSO  implements Regression<double[]> {
         double[] r = residuals.clone();
         builder.append("\nResiduals:\n");
         builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
-        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f\n", Math.min(r), Math.q1(r), Math.median(r), Math.q3(r), Math.max(r)));
+        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", Math.min(r), Math.q1(r), Math.median(r), Math.q3(r), Math.max(r)));
 
         builder.append("\nCoefficients:\n");
         builder.append("            Estimate\n");
-        builder.append(String.format("Intercept%11.4f\n", b));
+        builder.append(String.format("Intercept%11.4f%n", b));
         for (int i = 0; i < p; i++) {
-            builder.append(String.format("Var %d\t %11.4f\n", i+1, w[i]));
+            builder.append(String.format("Var %d\t %11.4f%n", i+1, w[i]));
         }
 
-        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom\n", error, df));
-        builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f\n", RSquared, adjustedRSquared));
-        builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g\n", F, p, df, pvalue));
+        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom%n", error, df));
+        builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
+        builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g%n", F, p, df, pvalue));
 
         return builder.toString();
     }

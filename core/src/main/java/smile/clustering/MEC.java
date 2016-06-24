@@ -378,11 +378,11 @@ public class MEC <T> extends PartitionClustering<T> {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(String.format("MEC cluster conditional entropy: %.5f\n", entropy));
-        sb.append(String.format("Clusters of %d data points:\n", y.length));
+        sb.append(String.format("MEC cluster conditional entropy: %.5f%n", entropy));
+        sb.append(String.format("Clusters of %d data points:%n", y.length));
         for (int i = 0; i < k; i++) {
             int r = (int) Math.round(1000.0 * size[i] / y.length);
-            sb.append(String.format("%3d\t%5d (%2d.%1d%%)\n", i, size[i], r / 10, r % 10));
+            sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
 
         return sb.toString();

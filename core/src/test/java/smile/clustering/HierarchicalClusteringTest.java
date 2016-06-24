@@ -91,49 +91,49 @@ public class HierarchicalClusteringTest {
             int[] label = hc.partition(10);
             double r = rand.measure(y, label);
             double r2 = ari.measure(y, label);
-            System.out.format("SingleLinkage rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
+            System.out.format("SingleLinkage rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
             assertTrue(r > 0.1);
             
             hc = new HierarchicalClustering(new CompleteLinkage(proximity));
             label = hc.partition(10);
             r = rand.measure(y, label);
             r2 = ari.measure(y, label);
-            System.out.format("CompleteLinkage rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
+            System.out.format("CompleteLinkage rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
             assertTrue(r > 0.75);
             
             hc = new HierarchicalClustering(new UPGMALinkage(proximity));
             label = hc.partition(10);
             r = rand.measure(y, label);
             r2 = ari.measure(y, label);
-            System.out.format("UPGMA rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
+            System.out.format("UPGMA rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
             assertTrue(r > 0.1);
             
             hc = new HierarchicalClustering(new WPGMALinkage(proximity));
             label = hc.partition(10);            
             r = rand.measure(y, label);
             r2 = ari.measure(y, label);
-            System.out.format("WPGMA rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
+            System.out.format("WPGMA rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
             assertTrue(r > 0.2);
             
             hc = new HierarchicalClustering(new UPGMCLinkage(proximity));
             label = hc.partition(10);            
             r = rand.measure(y, label);
             r2 = ari.measure(y, label);
-            System.out.format("UPGMC rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
+            System.out.format("UPGMC rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
             assertTrue(r > 0.1);
             
             hc = new HierarchicalClustering(new WPGMCLinkage(proximity));
             label = hc.partition(10);
             r = rand.measure(y, label);
             r2 = ari.measure(y, label);
-            System.out.format("WPGMC rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
+            System.out.format("WPGMC rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
             assertTrue(r > 0.1);
             
             hc = new HierarchicalClustering(new WardLinkage(proximity));
             label = hc.partition(10);
             r = rand.measure(y, label);
             r2 = ari.measure(y, label);
-            System.out.format("Ward rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
+            System.out.format("Ward rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
             assertTrue(r > 0.9);
             assertTrue(r2 > 0.5);
         } catch (Exception ex) {
