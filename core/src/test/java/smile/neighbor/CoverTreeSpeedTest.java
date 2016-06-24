@@ -52,12 +52,12 @@ public class CoverTreeSpeedTest {
         }
 
         double time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Loading data: %.2fs\n", time);
+        System.out.format("Loading data: %.2fs%n", time);
 
         start = System.currentTimeMillis();
         coverTree = new CoverTree<double[]>(x, new EuclideanDistance());
         time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Building cover tree: %.2fs\n", time);
+        System.out.format("Building cover tree: %.2fs%n", time);
     }
 
     @BeforeClass
@@ -86,14 +86,14 @@ public class CoverTreeSpeedTest {
             coverTree.nearest(testx[i]);
         }
         double time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("NN: %.2fs\n", time);
+        System.out.format("NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
         for (int i = 0; i < testx.length; i++) {
             coverTree.knn(testx[i], 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("10-NN: %.2fs\n", time);
+        System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<Neighbor<double[], double[]>>();
@@ -102,6 +102,6 @@ public class CoverTreeSpeedTest {
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Range: %.2fs\n", time);
+        System.out.format("Range: %.2fs%n", time);
     }
 }

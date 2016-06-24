@@ -71,7 +71,7 @@ public class SIBTest {
             RandIndex rand = new RandIndex();
             double r = rand.measure(y, sib.getClusterLabel());
             double r2 = ari.measure(y, sib.getClusterLabel());
-            System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
+            System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
             assertTrue(r > 0.85);
             assertTrue(r2 > 0.2);
             
@@ -82,7 +82,7 @@ public class SIBTest {
             
             r = rand.measure(testy, p);
             r2 = ari.measure(testy, p);
-            System.out.format("Testing rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
+            System.out.format("Testing rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
             assertTrue(r > 0.85);
             assertTrue(r2 > 0.2);
         } catch (Exception ex) {

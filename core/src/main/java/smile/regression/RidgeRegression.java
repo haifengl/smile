@@ -405,21 +405,21 @@ public class RidgeRegression implements Regression<double[]> {
         double[] r = residuals.clone();
         builder.append("\nResiduals:\n");
         builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
-        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f\n", Math.min(r), Math.q1(r), Math.median(r), Math.q3(r), Math.max(r)));
+        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", Math.min(r), Math.q1(r), Math.median(r), Math.q3(r), Math.max(r)));
 
         builder.append("\nCoefficients:\n");
         builder.append("            Estimate        Std. Error        t value        Pr(>|t|)\n");
-        builder.append(String.format("Intercept%11.4f                NA             NA              NA\n", b));
+        builder.append(String.format("Intercept%11.4f                NA             NA              NA%n", b));
         for (int i = 0; i < p; i++) {
-            builder.append(String.format("Var %d\t %11.4f%18.4f%15.4f%16.4f %s\n", i+1, coefficients[i][0], coefficients[i][1], coefficients[i][2], coefficients[i][3], significance(coefficients[i][3])));
+            builder.append(String.format("Var %d\t %11.4f%18.4f%15.4f%16.4f %s%n", i+1, coefficients[i][0], coefficients[i][1], coefficients[i][2], coefficients[i][3], significance(coefficients[i][3])));
         }
 
         builder.append("---------------------------------------------------------------------\n");
         builder.append("Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
 
-        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom\n", error, df));
-        builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f\n", RSquared, adjustedRSquared));
-        builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g\n", F, p, df, pvalue));
+        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom%n", error, df));
+        builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
+        builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g%n", F, p, df, pvalue));
 
         return builder.toString();
     }

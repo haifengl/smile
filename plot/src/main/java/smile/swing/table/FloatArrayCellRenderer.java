@@ -34,7 +34,8 @@ public class FloatArrayCellRenderer extends DefaultTableCellRenderer {
     @Override
     public void setValue(Object value) {
         if (value == null) {
-            setText("");
+            setText("[]");
+            return;
         }
         
         float[] data = (float[]) value;

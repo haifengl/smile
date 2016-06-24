@@ -158,7 +158,7 @@ public class SVMTest {
                 }
             }
 
-            System.out.format("Segment error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("Segment error rate = %.2f%%%n", 100.0 * error / testx.length);
             assertTrue(error < 70);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -193,7 +193,7 @@ public class SVMTest {
                 }
             }
 
-            System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
             assertTrue(error < 95);
             
             System.out.println("USPS one more epoch...");
@@ -210,7 +210,7 @@ public class SVMTest {
                     error++;
                 }
             }
-            System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
             assertTrue(error < 95);
         } catch (Exception ex) {
             ex.printStackTrace();

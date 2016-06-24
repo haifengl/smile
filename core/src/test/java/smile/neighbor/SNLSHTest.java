@@ -52,12 +52,12 @@ public class SNLSHTest {
 
         private List<String> tokenize(String line, String regex) {
             List<String> tokens = new LinkedList<String>();
-            if (line == null || line.length() == 0) {
+            if (line == null || line.isEmpty()) {
                 throw new IllegalArgumentException("Line should not be blank!");
             }
             String[] ss = line.split(regex);
             for (String s : ss) {
-                if (s == null || s.length() == 0) {
+                if (s == null || s.isEmpty()) {
                     continue;
                 }
                 tokens.add(s);
@@ -263,7 +263,7 @@ public class SNLSHTest {
                     }
                 }
             }
-            if (n2.size() > 0) {
+            if (!n2.isEmpty()) {
                 recall += 1.0 * hit / n2.size();
             }
         }
@@ -281,12 +281,12 @@ public class SNLSHTest {
 
     private List<String> tokenize(String line, String regex) {
         List<String> tokens = new LinkedList<String>();
-        if (line == null || line.length() == 0) {
+        if (line == null || line.isEmpty()) {
             throw new IllegalArgumentException("Line should not be blank!");
         }
         String[] ss = line.split(regex);
         for (String s : ss) {
-            if (s == null || s.length() == 0) {
+            if (s == null || s.isEmpty()) {
                 continue;
             }
             tokens.add(s);

@@ -146,8 +146,8 @@ public class RandomForestTest {
             }
 
             System.out.println(error);
-            System.out.format("USPS OOB error rate = %.2f%%\n", 100.0 * forest.error());
-            System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("USPS OOB error rate = %.2f%%%n", 100.0 * forest.error());
+            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
             assertTrue(error <= 140);
         } catch (Exception ex) {
             System.err.println(ex);
@@ -203,18 +203,18 @@ public class RandomForestTest {
             }
 
             System.out.println(error);
-            System.out.format("USPS OOB error rate = %.2f%%\n", 100.0 * forest.error());
-            System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("USPS OOB error rate = %.2f%%%n", 100.0 * forest.error());
+            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
             
             double[] accuracy = forest.test(testx, testy);
             for (int i = 1; i <= accuracy.length; i++) {
-                System.out.format("%d trees accuracy = %.2f%%\n", i, 100.0 * accuracy[i-1]);
+                System.out.format("%d trees accuracy = %.2f%%%n", i, 100.0 * accuracy[i-1]);
             }
             
             double[] importance = forest.importance();
             int[] index = QuickSort.sort(importance);
             for (int i = importance.length; i-- > 0; ) {
-                System.out.format("%s importance is %.4f\n", train.attributes()[index[i]], importance[i]);
+                System.out.format("%s importance is %.4f%n", train.attributes()[index[i]], importance[i]);
             }
             assertTrue(error <= 150);
         } catch (Exception ex) {

@@ -59,8 +59,8 @@ public class LogNormalDistributionTest {
         for (int i = 0; i < data.length; i++)
             data[i] = instance.rand();
         LogNormalDistribution est = new LogNormalDistribution(data);
-        assertEquals(3, est.getMu(), 1.5E-1);
-        assertEquals(2.1, est.getSigma(), 1.5E-1);
+        assertEquals(0.0, (est.getMu() - 3.0) / 3.0, 0.1);
+        assertEquals(0.0, (est.getSigma() - 2.1) / 2.1, 0.1);
     }
 
     /**

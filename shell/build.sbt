@@ -32,7 +32,13 @@ bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../conf/smile.co
 // native packager Docker plugin
 enablePlugins(DockerPlugin)
 
+import com.typesafe.sbt.packager.docker._
+
 dockerBaseImage := "frolvlad/alpine-oraclejdk8"
+
+packageName in Docker := "haifengl/smile"
+
+dockerUpdateLatest := true
 
 dockerCommands := dockerCommands.value.flatMap{
   case cmd@Cmd("FROM",_) => List(cmd, Cmd("RUN", "apk update && apk add bash"))

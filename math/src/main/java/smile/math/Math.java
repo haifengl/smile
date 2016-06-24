@@ -3784,16 +3784,8 @@ public class Math {
      */
     public static double[][] aatmm(double[][] A) {
         int m = A.length;
-        int n = A[0].length;
         double[][] C = new double[m][m];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < m; j++) {
-                for (int k = 0; k < n; k++) {
-                    C[i][j] += A[i][k] * A[j][k];
-                }
-            }
-        }
-
+        aatmm(A, C);
         return C;
     }
 
@@ -3806,6 +3798,7 @@ public class Math {
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < m; j++) {
+                C[i][j] = 0.0;
                 for (int k = 0; k < n; k++) {
                     C[i][j] += A[i][k] * A[j][k];
                 }
@@ -3817,18 +3810,9 @@ public class Math {
      * Matrix multiplication A' * A according to the rules of linear algebra.
      */
     public static double[][] atamm(double[][] A) {
-        int m = A.length;
         int n = A[0].length;
-
         double[][] C = new double[n][n];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                for (int k = 0; k < m; k++) {
-                    C[i][j] += A[k][i] * A[k][j];
-                }
-            }
-        }
-
+        atamm(A, C);
         return C;
     }
 
@@ -3841,6 +3825,7 @@ public class Math {
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
+                C[i][j] = 0.0;
                 for (int k = 0; k < m; k++) {
                     C[i][j] += A[k][i] * A[k][j];
                 }
@@ -3858,16 +3843,8 @@ public class Math {
 
         int m = A.length;
         int n = B[0].length;
-        int l = B.length;
         double[][] C = new double[m][n];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                for (int k = 0; k < l; k++) {
-                    C[i][j] += A[i][k] * B[k][j];
-                }
-            }
-        }
-
+        abmm(A, B, C);
         return C;
     }
 
@@ -3885,6 +3862,7 @@ public class Math {
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
+                C[i][j] = 0.0;
                 for (int k = 0; k < l; k++) {
                     C[i][j] += A[i][k] * B[k][j];
                 }
@@ -3902,16 +3880,8 @@ public class Math {
 
         int m = A[0].length;
         int n = B[0].length;
-        int l = B.length;
         double[][] C = new double[m][n];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                for (int k = 0; k < l; k++) {
-                    C[i][j] += A[k][i] * B[k][j];
-                }
-            }
-        }
-
+        atbmm(A, B, C);
         return C;
     }
 
@@ -3929,6 +3899,7 @@ public class Math {
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
+                C[i][j] = 0.0;
                 for (int k = 0; k < l; k++) {
                     C[i][j] += A[k][i] * B[k][j];
                 }
@@ -3946,16 +3917,8 @@ public class Math {
 
         int m = A.length;
         int n = B.length;
-        int l = B[0].length;
         double[][] C = new double[m][n];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                for (int k = 0; k < l; k++) {
-                    C[i][j] += A[i][k] * B[j][k];
-                }
-            }
-        }
-
+        abtmm(A, B, C);
         return C;
     }
 
@@ -3973,6 +3936,7 @@ public class Math {
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
+                C[i][j] = 0.0;
                 for (int k = 0; k < l; k++) {
                     C[i][j] += A[i][k] * B[j][k];
                 }
@@ -3990,16 +3954,8 @@ public class Math {
 
         int m = A[0].length;
         int n = B.length;
-        int l = A.length;
         double[][] C = new double[m][n];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                for (int k = 0; k < l; k++) {
-                    C[i][j] += A[k][i] * B[j][k];
-                }
-            }
-        }
-
+        atbtmm(A, B, C);
         return C;
     }
 
@@ -4017,6 +3973,7 @@ public class Math {
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
+                C[i][j] = 0.0;
                 for (int k = 0; k < l; k++) {
                     C[i][j] += A[k][i] * B[j][k];
                 }

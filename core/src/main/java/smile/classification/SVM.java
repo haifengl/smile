@@ -750,7 +750,7 @@ public class SVM <T> implements OnlineClassifier<T>, Serializable {
             // Compute gradient
             double g = y;
             DoubleArrayList kcache = new DoubleArrayList(sv.size() + 1);
-            if (sv.size() > 0) {
+            if (!sv.isEmpty()) {
                 for (SupportVector v : sv) {
                     if (v != null) {
                         // Bail out if already in expansion?

@@ -132,7 +132,7 @@ public class RegressionTreeTest {
                 }
             }
 
-            System.out.format("10-CV RMSE = %.4f \t AbsoluteDeviation = %.4f\n", Math.sqrt(rss/n), ad/n);
+            System.out.format("10-CV RMSE = %.4f \t AbsoluteDeviation = %.4f%n", Math.sqrt(rss/n), ad/n);
          } catch (Exception ex) {
              System.err.println(ex);
          }
@@ -186,12 +186,12 @@ public class RegressionTreeTest {
             }
 
             RegressionTree tree = new RegressionTree(data.attributes(), trainx, trainy, 20);
-            System.out.format("RMSE = %.4f\n", Validation.test(tree, testx, testy));
+            System.out.format("RMSE = %.4f%n", Validation.test(tree, testx, testy));
             
             double[] importance = tree.importance();
             index = QuickSort.sort(importance);
             for (int i = importance.length; i-- > 0; ) {
-                System.out.format("%s importance is %.4f\n", data.attributes()[index[i]], importance[i]);
+                System.out.format("%s importance is %.4f%n", data.attributes()[index[i]], importance[i]);
             }
         } catch (Exception ex) {
             System.err.println(ex);
