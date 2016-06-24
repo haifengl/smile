@@ -230,7 +230,7 @@ public class MEC <T> extends PartitionClustering<T> {
         // The number of samples with nonzero conditional entropy.
         entropy = 0.0;
         for (int i = 0; i < n; i++) {
-            if (neighbors.get(i).size() > 0) {
+            if (!neighbors.get(i).isEmpty()) {
                 int ni = neighbors.get(i).size();
                 double m = 0.0;
                 for (int j = 0; j < k; j++) {
@@ -295,7 +295,7 @@ public class MEC <T> extends PartitionClustering<T> {
             double prevObj = entropy;
             entropy = 0.0;
             for (int i = 0; i < n; i++) {
-                if (neighbors.get(i).size() > 0) {
+                if (!neighbors.get(i).isEmpty()) {
                     int ni = neighbors.get(i).size();
                     double m = 0.0;
                     for (int j = 0; j < k; j++) {
