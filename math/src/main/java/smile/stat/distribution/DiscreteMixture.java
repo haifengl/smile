@@ -73,7 +73,7 @@ public class DiscreteMixture extends DiscreteDistribution {
 
     @Override
     public double mean() {
-        if (components.size() == 0) {
+        if (components.isEmpty()) {
             throw new IllegalStateException("Mixture is empty!");
         }
 
@@ -88,7 +88,7 @@ public class DiscreteMixture extends DiscreteDistribution {
 
     @Override
     public double var() {
-        if (components.size() == 0) {
+        if (components.isEmpty()) {
             throw new IllegalStateException("Mixture is empty!");
         }
 
@@ -131,7 +131,7 @@ public class DiscreteMixture extends DiscreteDistribution {
 
     @Override
     public double logp(int x) {
-        if (components.size() == 0) {
+        if (components.isEmpty()) {
             throw new IllegalStateException("Mixture is empty!");
         }
 
@@ -140,7 +140,7 @@ public class DiscreteMixture extends DiscreteDistribution {
 
     @Override
     public double cdf(double x) {
-        if (components.size() == 0) {
+        if (components.isEmpty()) {
             throw new IllegalStateException("Mixture is empty!");
         }
 
@@ -155,7 +155,7 @@ public class DiscreteMixture extends DiscreteDistribution {
 
     @Override
     public double rand() {
-        if (components.size() == 0) {
+        if (components.isEmpty()) {
             throw new IllegalStateException("Mixture is empty!");
         }
 
@@ -175,7 +175,7 @@ public class DiscreteMixture extends DiscreteDistribution {
 
     @Override
     public double quantile(double p) {
-        if (components.size() == 0) {
+        if (components.isEmpty()) {
             throw new IllegalStateException("Mixture is empty!");
         }
 
@@ -208,7 +208,7 @@ public class DiscreteMixture extends DiscreteDistribution {
 
     @Override
     public int npara() {
-        if (components.size() == 0) {
+        if (components.isEmpty()) {
             throw new IllegalStateException("Mixture is empty!");
         }
 
@@ -231,7 +231,7 @@ public class DiscreteMixture extends DiscreteDistribution {
      * BIC score of the mixture for given data.
      */
     public double bic(double[] data) {
-        if (components.size() == 0) {
+        if (components.isEmpty()) {
             throw new IllegalStateException("Mixture is empty!");
         }
 
