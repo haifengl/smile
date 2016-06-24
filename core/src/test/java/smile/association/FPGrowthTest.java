@@ -147,15 +147,15 @@ public class FPGrowthTest {
         int[][] data = dataList.toArray(new int[dataList.size()][]);
 
         int n = Math.max(data);
-        System.out.format("%d transactions, %d items\n", data.length, n);
+        System.out.format("%d transactions, %d items%n", data.length, n);
         
         long time = System.currentTimeMillis();
         FPGrowth fpgrowth = new FPGrowth(data, 20);
-        System.out.format("Done building FP-tree: %.2f secs.\n", (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("Done building FP-tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
 
         time = System.currentTimeMillis();
         long numItemsets = fpgrowth.learn(System.out);
-        System.out.format("%d frequent item sets discovered: %.2f secs.\n", numItemsets, (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("%d frequent item sets discovered: %.2f secs.%n", numItemsets, (System.currentTimeMillis() - time) / 1000.0);
         
         assertEquals(1803, numItemsets);
         assertEquals(1803, fpgrowth.learn().size());
@@ -200,15 +200,15 @@ public class FPGrowthTest {
         int[][] data = dataList.toArray(new int[dataList.size()][]);
 
         int n = Math.max(data);
-        System.out.format("%d transactions, %d items\n", data.length, n);
+        System.out.format("%d transactions, %d items%n", data.length, n);
         
         long time = System.currentTimeMillis();
         FPGrowth fpgrowth = new FPGrowth(data, 1500);
-        System.out.format("Done building FP-tree: %.2f secs.\n", (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("Done building FP-tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
 
         time = System.currentTimeMillis();
         List<ItemSet> results = fpgrowth.learn();
-        System.out.format("%d frequent item sets discovered: %.2f secs.\n", results.size(), (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("%d frequent item sets discovered: %.2f secs.%n", results.size(), (System.currentTimeMillis() - time) / 1000.0);
         
         assertEquals(219725, results.size());
     }

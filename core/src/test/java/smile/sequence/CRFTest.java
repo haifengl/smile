@@ -278,10 +278,10 @@ public class CRFTest {
             }
         }
 
-        System.out.format("Protein error (forward-backward) is %d of %d\n", error, n);
-        System.out.format("Protein error (forward-backward) rate = %.2f%%\n", 100.0 * error / n);
-        System.out.format("Protein error (Viterbi) is %d of %d\n", viterbiError, n);
-        System.out.format("Protein error (Viterbi) rate = %.2f%%\n", 100.0 * viterbiError / n);
+        System.out.format("Protein error (forward-backward) is %d of %d%n", error, n);
+        System.out.format("Protein error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
+        System.out.format("Protein error (Viterbi) is %d of %d%n", viterbiError, n);
+        System.out.format("Protein error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
         assertEquals(1259, error);
         assertEquals(1377, viterbiError);
     }
@@ -325,10 +325,10 @@ public class CRFTest {
             }
         }
 
-        System.out.format("Hypen error (forward-backward) is %d of %d\n", error, n);
-        System.out.format("Hypen error (forward-backward) rate = %.2f%%\n", 100.0 * error / n);
-        System.out.format("Hypen error (Viterbi) is %d of %d\n", viterbiError, n);
-        System.out.format("Hypen error (Viterbi) rate = %.2f%%\n", 100.0 * viterbiError / n);
+        System.out.format("Hypen error (forward-backward) is %d of %d%n", error, n);
+        System.out.format("Hypen error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
+        System.out.format("Hypen error (Viterbi) is %d of %d%n", viterbiError, n);
+        System.out.format("Hypen error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
         assertEquals(461, error);
         assertEquals(462, viterbiError);
     }
@@ -372,10 +372,10 @@ public class CRFTest {
             }
         }
 
-        System.out.format("Protein error (forward-backward) is %d of %d\n", error, n);
-        System.out.format("Protein error (forward-backward) rate = %.2f%%\n", 100.0 * error / n);
-        System.out.format("Protein error (Viterbi) is %d of %d\n", viterbiError, n);
-        System.out.format("Protein error (Viterbi) rate = %.2f%%\n", 100.0 * viterbiError / n);
+        System.out.format("Protein error (forward-backward) is %d of %d%n", error, n);
+        System.out.format("Protein error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
+        System.out.format("Protein error (Viterbi) is %d of %d%n", viterbiError, n);
+        System.out.format("Protein error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
         assertEquals(1253, error);
         assertEquals(1412, viterbiError);
     }
@@ -419,10 +419,10 @@ public class CRFTest {
             }
         }
 
-        System.out.format("Hypen error (forward-backward) is %d of %d\n", error, n);
-        System.out.format("Hypen error (forward-backward) rate = %.2f%%\n", 100.0 * error / n);
-        System.out.format("Hypen error (Viterbi) is %d of %d\n", viterbiError, n);
-        System.out.format("Hypen error (Viterbi) rate = %.2f%%\n", 100.0 * viterbiError / n);
+        System.out.format("Hypen error (forward-backward) is %d of %d%n", error, n);
+        System.out.format("Hypen error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
+        System.out.format("Hypen error (Viterbi) is %d of %d%n", viterbiError, n);
+        System.out.format("Hypen error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
         assertEquals(468, error);
         assertEquals(470, viterbiError);
     }
