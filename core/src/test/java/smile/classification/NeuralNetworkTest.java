@@ -194,7 +194,7 @@ public class NeuralNetworkTest {
                 }
             }
 
-            System.out.format("Segment error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("Segment error rate = %.2f%%%n", 100.0 * error / testx.length);
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -243,7 +243,7 @@ public class NeuralNetworkTest {
                 }
             }
 
-            System.out.format("Segment error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("Segment error rate = %.2f%%%n", 100.0 * error / testx.length);
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -292,7 +292,7 @@ public class NeuralNetworkTest {
                 }
             }
 
-            System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -341,7 +341,7 @@ public class NeuralNetworkTest {
                 }
             }
 
-            System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
         } catch (Exception ex) {
             System.err.println(ex);
         }

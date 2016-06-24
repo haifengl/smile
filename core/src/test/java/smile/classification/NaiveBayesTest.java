@@ -146,7 +146,7 @@ public class NaiveBayesTest {
                     error++;
             }
 
-            System.out.format("Iris error rate = %.2f%%\n", 100.0 * error / x.length);
+            System.out.format("Iris error rate = %.2f%%%n", 100.0 * error / x.length);
             assertEquals(5, error);
         } catch (Exception ex) {
             System.err.println(ex);
@@ -187,7 +187,7 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Multinomial error = %d of %d\n", error, total);
+        System.out.format("Multinomial error = %d of %d%n", error, total);
         assertTrue(error < 265);
     }
 
@@ -227,7 +227,7 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Multinomial error = %d of %d\n", error, total);
+        System.out.format("Multinomial error = %d of %d%n", error, total);
         assertTrue(error < 265);
     }
 
@@ -266,7 +266,7 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Bernoulli error = %d of %d\n", error, total);
+        System.out.format("Bernoulli error = %d of %d%n", error, total);
         assertTrue(error < 270);
     }
 
@@ -307,7 +307,7 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Bernoulli error = %d of %d\n", error, total);
+        System.out.format("Bernoulli error = %d of %d%n", error, total);
         assertTrue(error < 270);
     }
 }

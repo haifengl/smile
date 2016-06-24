@@ -52,14 +52,14 @@ public class CoverTreeStringSpeedTest {
         }
 
         double time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Loading data: %.2fs\n", time);
+        System.out.format("Loading data: %.2fs%n", time);
 
         String[] data = words.toArray(new String[words.size()]);
 
         start = System.currentTimeMillis();
         cover = new CoverTree<String>(data, new EditDistance(50, true));
         time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Building cover tree: %.2fs\n", time);
+        System.out.format("Building cover tree: %.2fs%n", time);
     }
 
     @BeforeClass
@@ -91,6 +91,6 @@ public class CoverTreeStringSpeedTest {
             neighbors.clear();
         }
         double time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Cover tree string search: %.2fs\n", time);
+        System.out.format("Cover tree string search: %.2fs%n", time);
     }
 }
