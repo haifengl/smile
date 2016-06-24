@@ -366,7 +366,7 @@ public class Concept {
     @Override
     public String toString() {
         String displayName = "anonymous";
-        if (synset != null && synset.size() > 0) {
+        if (synset != null && !synset.isEmpty()) {
             StringBuilder builder = new StringBuilder();
             builder.append('(');
             Iterator<String> iter = synset.iterator();

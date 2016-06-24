@@ -59,7 +59,7 @@ public class HMMPOSTaggerTest {
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
                     if (line.isEmpty()) {
-                        if (sent.size() > 0) {
+                        if (!sent.isEmpty()) {
                             sentences.add(sent.toArray(new String[sent.size()]));
                             labels.add(label.toArray(new PennTreebankPOS[label.size()]));
                             sent.clear();
@@ -82,7 +82,7 @@ public class HMMPOSTaggerTest {
                     }
                 }
                 
-                if (sent.size() > 0) {
+                if (!sent.isEmpty()) {
                     sentences.add(sent.toArray(new String[sent.size()]));
                     labels.add(label.toArray(new PennTreebankPOS[label.size()]));
                     sent.clear();

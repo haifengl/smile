@@ -502,14 +502,14 @@ public class NeuralMap implements Clustering<double[]> {
                 iter.remove();
             }
 
-            if (neighbor.neighbors.size() > 0) {
+            if (!neighbor.neighbors.isEmpty()) {
                 lsh.add(neighbor);
             } else {
                 neurons.remove(neighbor);
             }
         }
 
-        if (neuron.neighbors.size() == 0) {
+        if (neuron.neighbors.isEmpty()) {
             lsh.remove(neuron);
             neurons.remove(neuron);
         }

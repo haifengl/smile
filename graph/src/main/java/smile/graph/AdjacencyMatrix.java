@@ -390,7 +390,7 @@ public class AdjacencyMatrix implements Graph {
             }
         }
 
-        for (int i = 0; queue.size() > 0; i++) {
+        for (int i = 0; !queue.isEmpty(); i++) {
             int t = queue.poll();
             ts[i] = t;
             for (int v = 0; v < n; v++) {
@@ -415,7 +415,7 @@ public class AdjacencyMatrix implements Graph {
         cc[v] = id;
         Queue<Integer> queue = new LinkedList<Integer>();
         queue.offer(v);
-        while (queue.size() > 0) {
+        while (!queue.isEmpty()) {
             int t = queue.poll();
             for (int i = 0; i < n; i++) {
                 if (graph[t][i] != 0.0 && cc[i] == -1) {
@@ -469,7 +469,7 @@ public class AdjacencyMatrix implements Graph {
         cc[v] = id;
         Queue<Integer> queue = new LinkedList<Integer>();
         queue.offer(v);
-        while (queue.size() > 0) {
+        while (!queue.isEmpty()) {
             int t = queue.poll();
             for (int i = 0; i < n; i++) {
                 if (graph[t][i] != 0.0 && cc[i] == -1) {
