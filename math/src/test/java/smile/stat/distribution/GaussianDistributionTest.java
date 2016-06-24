@@ -59,8 +59,8 @@ public class GaussianDistributionTest {
         for (int i = 0; i < data.length; i++)
             data[i] = instance.rand();
         GaussianDistribution est = new GaussianDistribution(data);
-        assertEquals(3, est.mean(), 1E-1);
-        assertEquals(2.1, est.sd(), 1E-1);
+        assertEquals(0.0, (est.mean() - 3.0) / 3.0, 0.1);
+        assertEquals(0.0, (est.sd() - 2.1) / 2.1, 0.1);
     }
 
     /**
