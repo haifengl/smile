@@ -789,7 +789,7 @@ public class Contour extends Plot {
                         }
                         contour.add(s.x1, s.y1);
                         
-                        if (contour.points.size() > 0) {
+                        if (!contour.points.isEmpty()) {
                             contours.add(contour);
                         }
                     }

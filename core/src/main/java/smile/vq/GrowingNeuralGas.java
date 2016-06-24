@@ -316,11 +316,11 @@ public class GrowingNeuralGas implements Clustering<double[]> {
                     edge.a.edges.remove(edge);
                     // If it results in neuron having no emanating edges,
                     // remove the neuron as well.
-                    if (edge.a.edges.size() == 0)
+                    if (edge.a.edges.isEmpty())
                         nodes.remove(edge.a);
                 } else {
                     edge.b.edges.remove(edge);
-                    if (edge.b.edges.size() == 0)
+                    if (edge.b.edges.isEmpty())
                         nodes.remove(edge.b);
                 }
             }

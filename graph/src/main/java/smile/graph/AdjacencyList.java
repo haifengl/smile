@@ -451,7 +451,7 @@ public class AdjacencyList implements Graph {
             }
         }
 
-        for (int i = 0; queue.size() > 0; i++) {
+        for (int i = 0; !queue.isEmpty(); i++) {
             int t = queue.poll();
             ts[i] = t;
             for (Edge edge : graph[t]) {
@@ -475,7 +475,7 @@ public class AdjacencyList implements Graph {
         cc[v] = id;
         Queue<Integer> queue = new LinkedList<Integer>();
         queue.offer(v);
-        while (queue.size() > 0) {
+        while (!queue.isEmpty()) {
             int t = queue.poll();
             for (Edge edge : graph[t]) {
                 int i = edge.v2;
@@ -533,7 +533,7 @@ public class AdjacencyList implements Graph {
         cc[v] = id;
         Queue<Integer> queue = new LinkedList<Integer>();
         queue.offer(v);
-        while (queue.size() > 0) {
+        while (!queue.isEmpty()) {
             int t = queue.poll();
             for (Edge edge : graph[t]) {
                 int i = edge.v2;
