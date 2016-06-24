@@ -145,7 +145,7 @@ public class DecisionTreeTest {
                 }
             }
 
-            System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
             assertEquals(328, error);
         } catch (Exception ex) {
             System.err.println(ex);
@@ -200,12 +200,12 @@ public class DecisionTreeTest {
                 }
             }
 
-            System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
             
             double[] importance = tree.importance();
             int[] index = QuickSort.sort(importance);
             for (int i = importance.length; i-- > 0; ) {
-                System.out.format("%s importance is %.4f\n", train.attributes()[index[i]], importance[i]);
+                System.out.format("%s importance is %.4f%n", train.attributes()[index[i]], importance[i]);
             }
             
             assertEquals(324, error);

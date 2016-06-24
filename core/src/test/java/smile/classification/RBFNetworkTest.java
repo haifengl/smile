@@ -124,7 +124,7 @@ public class RBFNetworkTest {
                 }
             }
 
-            System.out.format("Segment error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("Segment error rate = %.2f%%%n", 100.0 * error / testx.length);
             assertTrue(error <= 210);
         } catch (Exception ex) {
             System.err.println(ex);
@@ -159,7 +159,7 @@ public class RBFNetworkTest {
                 }
             }
 
-            System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
             assertTrue(error <= 150);
         } catch (Exception ex) {
             System.err.println(ex);

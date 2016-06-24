@@ -150,7 +150,7 @@ public class GradientTreeBoostTest {
                 }
             }
 
-            System.out.format("Gradient Tree Boost error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("Gradient Tree Boost error rate = %.2f%%%n", 100.0 * error / testx.length);
             //assertEquals(28, error);
         } catch (Exception ex) {
             System.err.println(ex);
@@ -183,17 +183,17 @@ public class GradientTreeBoostTest {
                 }
             }
 
-            System.out.format("Gradient Tree Boost error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("Gradient Tree Boost error rate = %.2f%%%n", 100.0 * error / testx.length);
 
             double[] accuracy = boost.test(testx, testy);
             for (int i = 1; i <= accuracy.length; i++) {
-                System.out.format("%d trees accuracy = %.2f%%\n", i, 100.0 * accuracy[i-1]);
+                System.out.format("%d trees accuracy = %.2f%%%n", i, 100.0 * accuracy[i-1]);
             }
             
             double[] importance = boost.importance();
             int[] index = QuickSort.sort(importance);
             for (int i = importance.length; i-- > 0; ) {
-                System.out.format("%s importance is %.4f\n", train.attributes()[index[i]], importance[i]);
+                System.out.format("%s importance is %.4f%n", train.attributes()[index[i]], importance[i]);
             }
         } catch (Exception ex) {
             System.err.println(ex);
@@ -237,17 +237,17 @@ public class GradientTreeBoostTest {
                 }
             }
 
-            System.out.format("Gradient Tree Boost error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("Gradient Tree Boost error rate = %.2f%%%n", 100.0 * error / testx.length);
             
             double[] accuracy = boost.test(testx, testy);
             for (int i = 1; i <= accuracy.length; i++) {
-                System.out.format("%d trees accuracy = %.2f%%\n", i, 100.0 * accuracy[i-1]);
+                System.out.format("%d trees accuracy = %.2f%%%n", i, 100.0 * accuracy[i-1]);
             }
             
             double[] importance = boost.importance();
             int[] index = QuickSort.sort(importance);
             for (int i = importance.length; i-- > 0; ) {
-                System.out.format("%s importance is %.4f\n", train.attributes()[index[i]], importance[i]);
+                System.out.format("%s importance is %.4f%n", train.attributes()[index[i]], importance[i]);
             }
         } catch (Exception ex) {
             System.err.println(ex);

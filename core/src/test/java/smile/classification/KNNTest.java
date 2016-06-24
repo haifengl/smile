@@ -177,7 +177,7 @@ public class KNNTest {
                 }
             }
 
-            System.out.format("Segment error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("Segment error rate = %.2f%%%n", 100.0 * error / testx.length);
             assertEquals(39, error);
         } catch (IOException ex) {
             System.err.println(ex);
@@ -210,7 +210,7 @@ public class KNNTest {
                 }
             }
 
-            System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
             assertEquals(113, error);
         } catch (Exception ex) {
             System.err.println(ex);

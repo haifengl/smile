@@ -234,7 +234,7 @@ public class RDATest {
                 }
             }
 
-            System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
             assertEquals(235, error);
         } catch (Exception ex) {
             System.err.println(ex);

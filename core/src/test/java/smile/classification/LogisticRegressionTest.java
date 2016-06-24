@@ -152,7 +152,7 @@ public class LogisticRegressionTest {
                 }
             }
 
-            System.out.format("Segment error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("Segment error rate = %.2f%%%n", 100.0 * error / testx.length);
             assertEquals(48, error);
         } catch (Exception ex) {
             System.err.println(ex);
@@ -185,7 +185,7 @@ public class LogisticRegressionTest {
                 }
             }
 
-            System.out.format("USPS error rate = %.2f%%\n", 100.0 * error / testx.length);
+            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
             assertEquals(188, error);
         } catch (Exception ex) {
             System.err.println(ex);
