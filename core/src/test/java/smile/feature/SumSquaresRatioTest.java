@@ -125,7 +125,7 @@ public class SumSquaresRatioTest {
             }
 
             double accuracy = new Accuracy().measure(testy, prediction);
-            System.out.format("SSR %.2f%%\n", 100 * accuracy);
+            System.out.format("SSR %.2f%%%n", 100 * accuracy);
         } catch (Exception ex) {
             System.err.println(ex);
         }

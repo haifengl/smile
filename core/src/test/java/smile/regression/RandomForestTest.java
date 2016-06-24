@@ -127,7 +127,7 @@ public class RandomForestTest {
                 double[] testy = Math.slice(datay, cv.test[i]);
 
                 RandomForest forest = new RandomForest(data.attributes(), trainx, trainy, 200, n, 5, trainx[0].length/3);
-                System.out.format("OOB error rate = %.4f\n", forest.error());
+                System.out.format("OOB error rate = %.4f%n", forest.error());
 
                 for (int j = 0; j < testx.length; j++) {
                     double r = testy[j] - forest.predict(testx[j]);
@@ -136,7 +136,7 @@ public class RandomForestTest {
                 }
             }
 
-            System.out.format("10-CV RMSE = %.4f \t AbsoluteDeviation = %.4f\n", Math.sqrt(rss/n), ad/n);
+            System.out.format("10-CV RMSE = %.4f \t AbsoluteDeviation = %.4f%n", Math.sqrt(rss/n), ad/n);
          } catch (Exception ex) {
              System.err.println(ex);
          }
@@ -190,17 +190,17 @@ public class RandomForestTest {
             }
 
             RandomForest forest = new RandomForest(data.attributes(), trainx, trainy, 100, n, 5, trainx[0].length / 3);
-            System.out.format("RMSE = %.4f\n", Validation.test(forest, testx, testy));
+            System.out.format("RMSE = %.4f%n", Validation.test(forest, testx, testy));
             
             double[] rmse = forest.test(testx, testy);
             for (int i = 1; i <= rmse.length; i++) {
-                System.out.format("%d trees RMSE = %.4f\n", i, rmse[i-1]);
+                System.out.format("%d trees RMSE = %.4f%n", i, rmse[i-1]);
             }
             
             double[] importance = forest.importance();
             index = QuickSort.sort(importance);
             for (int i = importance.length; i-- > 0; ) {
-                System.out.format("%s importance is %.4f\n", data.attributes()[index[i]], importance[i]);
+                System.out.format("%s importance is %.4f%n", data.attributes()[index[i]], importance[i]);
             }
         } catch (Exception ex) {
             System.err.println(ex);

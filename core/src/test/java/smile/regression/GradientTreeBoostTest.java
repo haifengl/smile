@@ -82,7 +82,7 @@ public class GradientTreeBoostTest {
                 }
             }
 
-            System.out.format("10-CV RMSE = %.4f \t AbsoluteDeviation = %.4f\n", Math.sqrt(rss/n), ad/n);
+            System.out.format("10-CV RMSE = %.4f \t AbsoluteDeviation = %.4f%n", Math.sqrt(rss/n), ad/n);
          } catch (Exception ex) {
              System.err.println(ex);
          }
@@ -168,17 +168,17 @@ public class GradientTreeBoostTest {
             }
 
             GradientTreeBoost boost = new GradientTreeBoost(data.attributes(), trainx, trainy, 100);
-            System.out.format("RMSE = %.4f\n", Validation.test(boost, testx, testy));
+            System.out.format("RMSE = %.4f%n", Validation.test(boost, testx, testy));
             
             double[] rmse = boost.test(testx, testy);
             for (int i = 1; i <= rmse.length; i++) {
-                System.out.format("%d trees RMSE = %.4f\n", i, rmse[i-1]);
+                System.out.format("%d trees RMSE = %.4f%n", i, rmse[i-1]);
             }
 
             double[] importance = boost.importance();
             index = QuickSort.sort(importance);
             for (int i = importance.length; i-- > 0; ) {
-                System.out.format("%s importance is %.4f\n", data.attributes()[index[i]], importance[i]);
+                System.out.format("%s importance is %.4f%n", data.attributes()[index[i]], importance[i]);
             }
         } catch (Exception ex) {
             System.err.println(ex);

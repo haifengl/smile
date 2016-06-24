@@ -174,19 +174,19 @@ public class TotalSupportTreeTest {
         int[][] data = dataList.toArray(new int[dataList.size()][]);
 
         int n = Math.max(data);
-        System.out.format("%d transactions, %d items\n", data.length, n);
+        System.out.format("%d transactions, %d items%n", data.length, n);
         
         long time = System.currentTimeMillis();
         FPGrowth fpgrowth = new FPGrowth(data, 20);
-        System.out.format("Done building FP-tree: %.2f secs.\n", (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("Done building FP-tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
 
         time = System.currentTimeMillis();
         TotalSupportTree ttree = fpgrowth.buildTotalSupportTree();
-        System.out.format("Done building total support tree: %.2f secs.\n", (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("Done building total support tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
         
         time = System.currentTimeMillis();
         long numItemsets = ttree.getFrequentItemsets(System.out);
-        System.out.format("%d frequent item sets discovered: %.2f secs.\n", numItemsets, (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("%d frequent item sets discovered: %.2f secs.%n", numItemsets, (System.currentTimeMillis() - time) / 1000.0);
         
         assertEquals(1803, numItemsets);
         assertEquals(1803, ttree.getFrequentItemsets().size());
@@ -233,19 +233,19 @@ public class TotalSupportTreeTest {
         int[][] data = dataList.toArray(new int[dataList.size()][]);
 
         int n = Math.max(data);
-        System.out.format("%d transactions, %d items\n", data.length, n);
+        System.out.format("%d transactions, %d items%n", data.length, n);
         
         long time = System.currentTimeMillis();
         FPGrowth fpgrowth = new FPGrowth(data, 1500);
-        System.out.format("Done building FP-tree: %.2f secs.\n", (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("Done building FP-tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
 
         time = System.currentTimeMillis();
         TotalSupportTree ttree = fpgrowth.buildTotalSupportTree();
-        System.out.format("Done building total support tree: %.2f secs.\n", (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("Done building total support tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
         
         time = System.currentTimeMillis();
         //long numItemsets = ttree.getFrequentItemsets(System.out);
-        //System.out.format("%d frequent item sets discovered: %.2f secs.\n", numItemsets, (System.currentTimeMillis() - time) / 1000.0);
+        //System.out.format("%d frequent item sets discovered: %.2f secs.%n", numItemsets, (System.currentTimeMillis() - time) / 1000.0);
         
         assertEquals(219725, ttree.getFrequentItemsets().size());
     }

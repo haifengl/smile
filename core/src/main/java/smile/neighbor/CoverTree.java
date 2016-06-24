@@ -304,7 +304,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
                 ArrayList<Node> children = new ArrayList<Node>();
                 Node leaf = newLeaf(p);
                 children.add(leaf);
-                while (pointSet.size() > 0) {
+                while (!pointSet.isEmpty()) {
                     DistanceSet set = pointSet.get(pointSet.size() - 1);
                     pointSet.remove(pointSet.size() - 1);
                     leaf = newLeaf(set.idx);
@@ -533,7 +533,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
             emptyHeap = false;
         }
 
-        while (currentCoverSet.size() > 0) {
+        while (!currentCoverSet.isEmpty()) {
             ArrayList<DistanceNode> nextCoverSet = new ArrayList<DistanceNode>();
             for (int i = 0; i < currentCoverSet.size(); i++) {
                 DistanceNode par = currentCoverSet.get(i);
@@ -597,7 +597,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
         double d = distance.d(root.getObject(), q);
         currentCoverSet.add(new DistanceNode(d, root));
 
-        while (currentCoverSet.size() > 0) {
+        while (!currentCoverSet.isEmpty()) {
             ArrayList<DistanceNode> nextCoverSet = new ArrayList<DistanceNode>();
             for (int i = 0; i < currentCoverSet.size(); i++) {
                 DistanceNode par = currentCoverSet.get(i);

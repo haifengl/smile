@@ -161,7 +161,7 @@ public class LSHTest {
                     }
                 }
             }
-            if (n2.size() > 0) {
+            if (!n2.isEmpty()) {
                 recall += 1.0 * hit / n2.size();
             }
         }

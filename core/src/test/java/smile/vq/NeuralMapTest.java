@@ -89,7 +89,7 @@ public class NeuralMapTest {
             
             double r = rand.measure(y, p);
             double r2 = ari.measure(y, p);
-            System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
+            System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
             //assertTrue(r > 0.65);
             //assertTrue(r2 > 0.18);
             
@@ -100,7 +100,7 @@ public class NeuralMapTest {
             
             r = rand.measure(testy, p);
             r2 = ari.measure(testy, p);
-            System.out.format("Testing rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
+            System.out.format("Testing rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
             //assertTrue(r > 0.65);
             //assertTrue(r2 > 0.18);
         } catch (Exception ex) {
