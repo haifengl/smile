@@ -187,7 +187,7 @@ public class RESParser {
             throw new IOException("Premature end of file.");
         }
 
-        int n = Integer.valueOf(line);
+        int n = Integer.parseInt(line);
         if (n <= 0) {
             throw new IOException("Invalid number of rows: " + n);            
         }
