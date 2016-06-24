@@ -9,6 +9,7 @@ lazy val commonSettings = Seq(
   version := "1.2.0",
   javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-g:lines,vars,source", "-Xlint:unchecked"),
   javacOptions in (Compile, doc) ++= Seq("-Xdoclint:none"),
+  libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.21" % "test",
   libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test",
   scalaVersion := "2.11.7",
   scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8"),
