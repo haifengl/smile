@@ -135,15 +135,12 @@ public class MultivariateGaussianDistributionTest {
     public void testIsDiagonal() {
         System.out.println("isDiagonal");
         MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, 1.0);
-        instance.rand();
         assertEquals(true, instance.isDiagonal());
 
         instance = new MultivariateGaussianDistribution(mu, sigma[0]);
-        instance.rand();
         assertEquals(true, instance.isDiagonal());
 
         instance = new MultivariateGaussianDistribution(mu, sigma);
-        instance.rand();
         assertEquals(false, instance.isDiagonal());
     }
 
@@ -154,15 +151,12 @@ public class MultivariateGaussianDistributionTest {
     public void testNpara() {
         System.out.println("npara");
         MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, 1.0);
-        instance.rand();
         assertEquals(4, instance.npara());
 
         instance = new MultivariateGaussianDistribution(mu, sigma[0]);
-        instance.rand();
         assertEquals(6, instance.npara());
 
         instance = new MultivariateGaussianDistribution(mu, sigma);
-        instance.rand();
         assertEquals(9, instance.npara());
     }
 
@@ -173,7 +167,6 @@ public class MultivariateGaussianDistributionTest {
     public void testEntropy() {
         System.out.println("entropy");
         MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, sigma);
-        instance.rand();
         assertEquals(2.954971, instance.entropy(), 1E-6);
     }
 
@@ -184,7 +177,6 @@ public class MultivariateGaussianDistributionTest {
     public void testPdf() {
         System.out.println("pdf");
         MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, sigma);
-        instance.rand();
         for (int i = 0; i < x.length; i++) {
             assertEquals(pdf[i], instance.p(x[i]), 1E-4);
         }
@@ -197,7 +189,6 @@ public class MultivariateGaussianDistributionTest {
     public void testCdf() {
         System.out.println("cdf");
         MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, sigma);
-        instance.rand();
         for (int i = 0; i < x.length; i++) {
             assertEquals(cdf[i], instance.cdf(x[i]), 1E-2);
         }

@@ -59,8 +59,8 @@ public class GammaDistributionTest {
         for (int i = 0; i < data.length; i++)
             data[i] = instance.rand();
         GammaDistribution est = new GammaDistribution(data);
-        assertEquals(2.1, est.getScale(), 3E-1);
-        assertEquals(3, est.getShape(), 3E-1);
+        assertEquals(0.0, (est.getScale() - 2.1) / 2.1, 0.1);
+        assertEquals(0.0, (est.getShape() - 3.0) / 3.0, 0.1);
     }
 
     /**
