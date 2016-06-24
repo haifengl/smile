@@ -141,11 +141,11 @@ public class ARMTest {
         int[][] data = dataList.toArray(new int[dataList.size()][]);
 
         int n = Math.max(data);
-        System.out.format("%d transactions, %d items\n", data.length, n);
+        System.out.format("%d transactions, %d items%n", data.length, n);
         
         ARM instance = new ARM(data, 20);
         long numRules = instance.learn(0.9, System.out);
-        System.out.format("%d association rules discovered\n", numRules);
+        System.out.format("%d association rules discovered%n", numRules);
         assertEquals(6803, numRules);
         assertEquals(6803, instance.learn(0.9).size());
     }
@@ -190,11 +190,11 @@ public class ARMTest {
         int[][] data = dataList.toArray(new int[dataList.size()][]);
 
         int n = Math.max(data);
-        System.out.format("%d transactions, %d items\n", data.length, n);
+        System.out.format("%d transactions, %d items%n", data.length, n);
         
         ARM instance = new ARM(data, 0.003);
         long numRules = instance.learn(0.5, System.out);
-        System.out.format("%d association rules discovered\n", numRules);
+        System.out.format("%d association rules discovered%n", numRules);
         assertEquals(17932, numRules);
     }
 }

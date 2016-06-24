@@ -337,7 +337,7 @@ public class FPGrowth {
                 for (int i = 0; i < itemset.length; i++) {
                     out.format("%d ", itemset[i]);
                 }
-                out.format("(%d)\n", support);
+                out.format("(%d)%n", support);
             }
         }
         if (ttree != null) {
@@ -364,7 +364,7 @@ public class FPGrowth {
                             for (int i = 0; i < newItemset.length; i++) {
                                 out.format("%d ", newItemset[i]);
                             }
-                            out.format("(%d)\n", support);
+                            out.format("(%d)%n", support);
                         }
                     }
                     if (ttree != null) {

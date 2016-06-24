@@ -116,7 +116,7 @@ public class DBScanTest {
         double r = rand.measure(y1, y2);
         double r2 = ari.measure(y1, y2);
         System.out.println("The number of clusters: " + dbscan.getNumClusters());
-        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%\n", 100.0 * r, 100.0 * r2);
+        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertTrue(r > 0.40);
         assertTrue(r2 > 0.15);
     }

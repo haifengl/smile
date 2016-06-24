@@ -144,7 +144,7 @@ public class RidgeRegressionTest {
                 rss += r * r;
             }
 
-            System.out.format("LOOCV MSE with lambda %.2f = %.3f\n", 0.01*lambda, rss/n);
+            System.out.format("LOOCV MSE with lambda %.2f = %.3f%n", 0.01*lambda, rss/n);
         }
     }
 
