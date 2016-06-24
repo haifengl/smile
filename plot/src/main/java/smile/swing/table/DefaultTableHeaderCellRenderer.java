@@ -127,7 +127,7 @@ public class DefaultTableHeaderCellRenderer extends DefaultTableCellRenderer {
         }
 
         List sortedColumns = rowSorter.getSortKeys();
-        if (sortedColumns.size() > 0) {
+        if (!sortedColumns.isEmpty()) {
             return (SortKey) sortedColumns.get(0);
         }
         return null;

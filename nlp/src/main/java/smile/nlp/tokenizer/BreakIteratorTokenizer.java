@@ -55,7 +55,7 @@ public class BreakIteratorTokenizer implements Tokenizer {
 
         while (end != BreakIterator.DONE) {
             String word = text.substring(start, end).trim();
-            if (word.length() > 0) {
+            if (!word.isEmpty()) {
                 words.add(word);
             }
             start = end;
