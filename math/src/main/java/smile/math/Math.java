@@ -4017,7 +4017,7 @@ public class Math {
      * @return the same values as in x but with no repetitions.
      */
     public static int[] unique(int[] x) {
-        HashSet<Integer> hash = new HashSet<Integer>();
+        HashSet<Integer> hash = new HashSet<>();
         for (int i = 0; i < x.length; i++) {
             hash.add(x[i]);
         }
@@ -4038,7 +4038,7 @@ public class Math {
      * @return the same values as in x but with no repetitions.
      */
     public static String[] unique(String[] x) {
-        HashSet<String> hash = new HashSet<String>(Arrays.asList(x));
+        HashSet<String> hash = new HashSet<>(Arrays.asList(x));
 
         String[] y = new String[hash.size()];
 

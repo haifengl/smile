@@ -97,9 +97,9 @@ public class SparseMatrixParser {
             String[] tokens = line.split("\\s+");
             if (tokens.length == 3) {
                 try {
-                    nrows = Integer.valueOf(tokens[0]);
-                    ncols = Integer.valueOf(tokens[1]);
-                    n = Integer.valueOf(tokens[2]);        
+                    nrows = Integer.parseInt(tokens[0]);
+                    ncols = Integer.parseInt(tokens[1]);
+                    n = Integer.parseInt(tokens[2]);
                 } catch (Exception ex) {
                 }
             }
@@ -108,7 +108,7 @@ public class SparseMatrixParser {
                 // Harwell-Boeing Exchange Format. We ignore first two lines.
                 line = scanner.nextLine().trim();
                 tokens = line.split("\\s+");
-                int RHSCRD = Integer.valueOf(tokens[4]);
+                int RHSCRD = Integer.parseInt(tokens[4]);
 
                 line = scanner.nextLine().trim();
                 if (!line.startsWith("R")) {
@@ -116,9 +116,9 @@ public class SparseMatrixParser {
                 }
 
                 tokens = line.split("\\s+");
-                nrows = Integer.valueOf(tokens[1]);
-                ncols = Integer.valueOf(tokens[2]);
-                n = Integer.valueOf(tokens[3]);
+                nrows = Integer.parseInt(tokens[1]);
+                ncols = Integer.parseInt(tokens[2]);
+                n = Integer.parseInt(tokens[3]);
 
                 line = scanner.nextLine();
                 if (RHSCRD > 0) {

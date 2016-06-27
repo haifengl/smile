@@ -283,7 +283,7 @@ public class FileChooser extends JFileChooser {
         /**
          * The file extensions in lower case.
          */
-        private TreeSet<String> filters = new TreeSet<String>();
+        private TreeSet<String> filters = new TreeSet<>();
         /**
          * The human readable description of this filter.
          */

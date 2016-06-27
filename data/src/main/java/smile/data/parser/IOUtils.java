@@ -74,7 +74,7 @@ public class IOUtils {
      */
     public static List<String> readLines(Reader input) throws IOException {
         BufferedReader reader = input instanceof BufferedReader ? (BufferedReader) input : new BufferedReader(input);
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         String line = reader.readLine();
         while (line != null) {
             list.add(line);

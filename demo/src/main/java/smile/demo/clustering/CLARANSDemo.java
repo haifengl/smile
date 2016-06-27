@@ -36,6 +36,7 @@ import smile.plot.ScatterPlot;
  */
 @SuppressWarnings("serial")
 public class CLARANSDemo extends ClusteringDemo {
+    private static final String ERROR = "Error";
     JTextField numLocalField;
     int numLocal = 10;
     JTextField maxNeighborField;
@@ -55,27 +56,27 @@ public class CLARANSDemo extends ClusteringDemo {
         try {
             numLocal = Integer.parseInt(numLocalField.getText().trim());
             if (numLocal < 5) {
-                JOptionPane.showMessageDialog(this, "Too small NumLocal: " + numLocal, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Toll smal NumLocal: " + numLocal, ERROR, JOptionPane.ERROR_MESSAGE);
                 return null;
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Invalid NumLocal: " + numLocalField.getText(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Invalid NumLocal: " + numLocalField.getText(), ERROR, JOptionPane.ERROR_MESSAGE);
             return null;
         }
 
         try {
             maxNeighbor = Integer.parseInt(maxNeighborField.getText().trim());
             if (maxNeighbor < 5) {
-                JOptionPane.showMessageDialog(this, "Too small MaxNeighbor: " + maxNeighbor, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Too small MaxNeighbor: " + maxNeighbor, ERROR, JOptionPane.ERROR_MESSAGE);
                 return null;
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Invalid MaxNeighbor: " + maxNeighborField.getText(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Invalid MaxNeighbor: " + maxNeighborField.getText(), ERROR, JOptionPane.ERROR_MESSAGE);
             return null;
         }
 
         long clock = System.currentTimeMillis();
-        CLARANS<double[]> clarans = new CLARANS<double[]>(dataset[datasetIndex], new EuclideanDistance(), clusterNumber, maxNeighbor, numLocal);
+        CLARANS<double[]> clarans = new CLARANS<>(dataset[datasetIndex], new EuclideanDistance(), clusterNumber, maxNeighbor, numLocal);
         System.out.format("CLARANS clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
         PlotCanvas plot = ScatterPlot.plot(clarans.medoids(), '@');

@@ -53,7 +53,7 @@ public class SparseDataset implements Iterable<Datum<SparseArray>> {
     /**
      * The data objects.
      */
-    private List<Datum<SparseArray>> data = new ArrayList<Datum<SparseArray>>();
+    private List<Datum<SparseArray>> data = new ArrayList<>();
     /**
      * The number of nonzero entries.
      */
@@ -192,7 +192,7 @@ public class SparseDataset implements Iterable<Datum<SparseArray>> {
         int nrows = size();
         if (i >= nrows) {
             for (int k = nrows; k <= i; k++) {
-                data.add(new Datum<SparseArray>(new SparseArray()));
+                data.add(new Datum<>(new SparseArray()));
             }
         }
 
@@ -221,7 +221,7 @@ public class SparseDataset implements Iterable<Datum<SparseArray>> {
         int nrows = size();
         if (i >= nrows) {
             for (int k = nrows; k <= i; k++) {
-                data.add(new Datum<SparseArray>(new SparseArray()));
+                data.add(new Datum<>(new SparseArray()));
             }
         }
 
@@ -243,7 +243,7 @@ public class SparseDataset implements Iterable<Datum<SparseArray>> {
         int nrows = size();
         if (i >= nrows) {
             for (int k = nrows; k <= i; k++) {
-                data.add(new Datum<SparseArray>(new SparseArray()));
+                data.add(new Datum<>(new SparseArray()));
             }
         }
 
@@ -267,7 +267,7 @@ public class SparseDataset implements Iterable<Datum<SparseArray>> {
         int nrows = size();
         if (i >= nrows) {
             for (int k = nrows; k <= i; k++) {
-                data.add(new Datum<SparseArray>(new SparseArray()));
+                data.add(new Datum<>(new SparseArray()));
             }
         }
 

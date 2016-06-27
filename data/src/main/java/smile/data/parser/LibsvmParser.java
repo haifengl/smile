@@ -147,10 +147,10 @@ public class LibsvmParser {
                 tokens = line.trim().split("\\s+");
 
                 if (classification) {
-                    int y = Integer.valueOf(tokens[0]);
+                    int y = Integer.parseInt(tokens[0]);
                     sparse.set(i, y);
                 } else {
-                    double y = Double.valueOf(tokens[0]);
+                    double y = Double.parseDouble(tokens[0]);
                     sparse.set(i, y);
                 }
 
@@ -160,8 +160,8 @@ public class LibsvmParser {
                         throw new NumberFormatException("Invalid data: " + tokens[k]);
                     }
 
-                    int j = Integer.valueOf(pair[0]) - 1;
-                    double x = Double.valueOf(pair[1]);
+                    int j = Integer.parseInt(pair[0]) - 1;
+                    double x = Double.parseDouble(pair[1]);
                     sparse.set(i, j, x);
                 }
 

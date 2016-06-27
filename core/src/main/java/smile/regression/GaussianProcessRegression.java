@@ -111,7 +111,7 @@ public class GaussianProcessRegression <T> implements Regression<T> {
         
         @Override
         public GaussianProcessRegression<T> train(T[] x, double[] y) {
-            return new GaussianProcessRegression<T>(x, y, kernel, lambda);
+            return new GaussianProcessRegression<>(x, y, kernel, lambda);
         }
         
         /**
@@ -125,7 +125,7 @@ public class GaussianProcessRegression <T> implements Regression<T> {
          * @return a trained Gaussian Process.
          */
         public GaussianProcessRegression<T> train(T[] x, double[] y, T[] t) {
-            return new GaussianProcessRegression<T>(x, y, t, kernel, lambda);
+            return new GaussianProcessRegression<>(x, y, t, kernel, lambda);
         }
     }
     

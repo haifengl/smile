@@ -186,7 +186,7 @@ public class SIB extends PartitionClustering<double[]> {
             throw new IllegalArgumentException("Invalid number of runs: " + runs);
         }
 
-        List<SIBThread> tasks = new ArrayList<SIBThread>();
+        List<SIBThread> tasks = new ArrayList<>();
         for (int i = 0; i < runs; i++) {
             tasks.add(new SIBThread(data, k, maxIter));
         }
@@ -395,7 +395,7 @@ public class SIB extends PartitionClustering<double[]> {
             throw new IllegalArgumentException("Invalid number of runs: " + runs);
         }
 
-        List<SIBThread> tasks = new ArrayList<SIBThread>();
+        List<SIBThread> tasks = new ArrayList<>();
         for (int i = 0; i < runs; i++) {
             tasks.add(new SIBThread(data, k, maxIter));
         }

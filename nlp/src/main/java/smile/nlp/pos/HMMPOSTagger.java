@@ -275,8 +275,8 @@ public class HMMPOSTagger implements POSTagger, Serializable {
     public static HMMPOSTagger learn(String[][] sentences, PennTreebankPOS[][] labels) {
         int index = 1;
         int suffixIndex = 0;
-        Map<String, Integer> symbol = new HashMap<String, Integer>();
-        Map<String, Integer> suffix = new HashMap<String, Integer>();
+        Map<String, Integer> symbol = new HashMap<>();
+        Map<String, Integer> suffix = new HashMap<>();
         for (int i = 0; i < sentences.length; i++) {
             for (int j = 0; j < sentences[i].length; j++) {
                 Integer sym = symbol.get(sentences[i][j]);
@@ -342,7 +342,7 @@ public class HMMPOSTagger implements POSTagger, Serializable {
      * @param dir a file object defining the top directory
      */
     public static void load(String dir, List<String[]> sentences, List<PennTreebankPOS[]> labels) {
-        List<File> files = new ArrayList<File>();
+        List<File> files = new ArrayList<>();
         walkin(new File(dir), files);
 
         for (File file : files) {
@@ -350,8 +350,8 @@ public class HMMPOSTagger implements POSTagger, Serializable {
                 FileInputStream stream = new FileInputStream(file);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
                 String line = null;
-                List<String> sent = new ArrayList<String>();
-                List<PennTreebankPOS> label = new ArrayList<PennTreebankPOS>();
+                List<String> sent = new ArrayList<>();
+                List<PennTreebankPOS> label = new ArrayList<>();
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
                     if (line.isEmpty()) {
@@ -417,8 +417,8 @@ public class HMMPOSTagger implements POSTagger, Serializable {
      * Train the default model on WSJ and BROWN datasets.
      */
     public static void main(String[] argvs) {
-        List<String[]> sentences = new ArrayList<String[]>();
-        List<PennTreebankPOS[]> labels = new ArrayList<PennTreebankPOS[]>();
+        List<String[]> sentences = new ArrayList<>();
+        List<PennTreebankPOS[]> labels = new ArrayList<>();
         
         load("D:\\sourceforge\\corpora\\PennTreebank\\PennTreebank2\\TAGGED\\POS\\WSJ", sentences, labels);        
         load("D:\\sourceforge\\corpora\\PennTreebank\\PennTreebank2\\TAGGED\\POS\\BROWN", sentences, labels);

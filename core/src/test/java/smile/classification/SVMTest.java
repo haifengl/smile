@@ -69,7 +69,7 @@ public class SVMTest {
             double[][] x = iris.toArray(new double[iris.size()][]);
             int[] y = iris.toArray(new int[iris.size()]);
 
-            SVM<double[]> svm = new SVM<double[]>(new LinearKernel(), 10.0, Math.max(y)+1, SVM.Multiclass.ONE_VS_ALL);
+            SVM<double[]> svm = new SVM<>(new LinearKernel(), 10.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
             svm.learn(x, y);
             svm.learn(x, y);
             svm.finish();
@@ -83,7 +83,7 @@ public class SVMTest {
             System.out.println("Linear ONE vs. ALL error = " + error);
             assertTrue(error <= 10);
 
-            svm = new SVM<double[]>(new GaussianKernel(1), 1.0, Math.max(y)+1, SVM.Multiclass.ONE_VS_ALL);
+            svm = new SVM<>(new GaussianKernel(1), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
             svm.learn(x, y);
             svm.learn(x, y);
             svm.finish();
@@ -97,7 +97,7 @@ public class SVMTest {
             System.out.println("Gaussian ONE vs. ALL error = " + error);
             assertTrue(error <= 5);
 
-            svm = new SVM<double[]>(new GaussianKernel(1), 1.0, Math.max(y)+1, SVM.Multiclass.ONE_VS_ONE);
+            svm = new SVM<>(new GaussianKernel(1), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ONE);
             svm.learn(x, y);
             svm.learn(x, y);
             svm.finish();
@@ -111,7 +111,7 @@ public class SVMTest {
             System.out.println("Gaussian ONE vs. ONE error = " + error);
             assertTrue(error <= 5);
 
-            svm = new SVM<double[]>(new PolynomialKernel(2), 1.0, Math.max(y)+1, SVM.Multiclass.ONE_VS_ALL);
+            svm = new SVM<>(new PolynomialKernel(2), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
             svm.learn(x, y);
             svm.learn(x, y);
             svm.finish();
@@ -147,7 +147,7 @@ public class SVMTest {
             double[][] testx = test.toArray(new double[0][]);
             int[] testy = test.toArray(new int[0]);
             
-            SVM<double[]> svm = new SVM<double[]>(new GaussianKernel(8.0), 5.0, Math.max(y)+1, SVM.Multiclass.ONE_VS_ALL);
+            SVM<double[]> svm = new SVM<>(new GaussianKernel(8.0), 5.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
             svm.learn(x, y);
             svm.finish();
             
@@ -182,7 +182,7 @@ public class SVMTest {
             double[][] testx = test.toArray(new double[test.size()][]);
             int[] testy = test.toArray(new int[test.size()]);
             
-            SVM<double[]> svm = new SVM<double[]>(new GaussianKernel(8.0), 5.0, Math.max(y)+1, SVM.Multiclass.ONE_VS_ONE);
+            SVM<double[]> svm = new SVM<>(new GaussianKernel(8.0), 5.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ONE);
             svm.learn(x, y);
             svm.finish();
             

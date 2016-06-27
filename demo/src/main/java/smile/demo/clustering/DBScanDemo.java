@@ -82,7 +82,7 @@ public class DBScanDemo extends ClusteringDemo {
         }
 
         long clock = System.currentTimeMillis();
-        DBScan<double[]> dbscan = new DBScan<double[]>(dataset[datasetIndex], new EuclideanDistance(), minPts, range);
+        DBScan<double[]> dbscan = new DBScan<>(dataset[datasetIndex], new EuclideanDistance(), minPts, range);
         System.out.format("DBSCAN clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
         JPanel pane = new JPanel(new GridLayout(1, 2));

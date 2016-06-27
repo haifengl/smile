@@ -63,11 +63,11 @@ public class BagTest {
         String[] featuresForBuildingStories = {"truck", "concrete", "foundation", "steel", "crane"};
         String testMessage = "This story is about a crane and a sparrow";
 
-        ArrayList<String> mergedFeatureLists = new ArrayList<String>();
+        ArrayList<String> mergedFeatureLists = new ArrayList<>();
         mergedFeatureLists.addAll(Arrays.asList(featuresForBirdStories));
         mergedFeatureLists.addAll(Arrays.asList(featuresForBuildingStories));
 
-        Bag<String> bag = new Bag<String>(mergedFeatureLists.toArray(new String[featuresForBirdStories.length + featuresForBuildingStories.length]));
+        Bag<String> bag = new Bag<>(mergedFeatureLists.toArray(new String[featuresForBirdStories.length + featuresForBuildingStories.length]));
 
         double[] result = bag.feature(testMessage.split(" "));
         assertEquals(9, result.length);
@@ -98,7 +98,7 @@ public class BagTest {
             "perfectly", "masterpiece", "realistic", "flaws"
         };
         
-        Bag<String> bag = new Bag<String>(feature);
+        Bag<String> bag = new Bag<>(feature);
         
         double[][] x = new double[text.length][];
         for (int i = 0; i < text.length; i++) {
