@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-
 package smile.data.parser;
 
 import java.io.BufferedReader;
@@ -36,6 +35,7 @@ import smile.data.Datum;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
 import smile.data.StringAttribute;
+
 
 /**
  * Weka ARFF (attribute relation file format) file parser. ARFF is an ASCII
@@ -86,6 +86,7 @@ public class ArffParser {
     private static final String ARFF_ATTRIBUTE_RELATIONAL = "relational";
     /** The keyword used to denote the end of the declaration of a subrelation */
     private static final String ARFF_END_SUBRELATION = "@end";
+    private static final String PREMATURE_END_OF_FILE = "premature end of file";
     /**
      * The column index of dependent/response variable.
      */
@@ -166,7 +167,7 @@ public class ArffParser {
             throw new ParseException("premature end of line", tokenizer.lineno());
         }
         if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
-            throw new ParseException("premature end of file", tokenizer.lineno());
+            throw new ParseException(PREMATURE_END_OF_FILE, tokenizer.lineno());
         } else if ((tokenizer.ttype == '\'') || (tokenizer.ttype == '"')) {
             tokenizer.ttype = StreamTokenizer.TT_WORD;
         } else if ((tokenizer.ttype == StreamTokenizer.TT_WORD) && (tokenizer.sval.equals("?"))) {
@@ -190,7 +191,7 @@ public class ArffParser {
         // Get name of relation.
         getFirstToken(tokenizer);
         if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
-            throw new ParseException("premature end of file", tokenizer.lineno());
+            throw new ParseException(PREMATURE_END_OF_FILE, tokenizer.lineno());
         }
         if (ARFF_RELATION.equalsIgnoreCase(tokenizer.sval)) {
             getNextToken(tokenizer);
@@ -203,7 +204,7 @@ public class ArffParser {
         // Get attribute declarations.
         getFirstToken(tokenizer);
         if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
-            throw new ParseException("premature end of file", tokenizer.lineno());
+            throw new ParseException(PREMATURE_END_OF_FILE, tokenizer.lineno());
         }
 
         while (ARFF_ATTRIBUTE.equalsIgnoreCase(tokenizer.sval)) {
@@ -307,7 +308,7 @@ public class ArffParser {
         getLastToken(tokenizer, false);
         getFirstToken(tokenizer);
         if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
-            throw new ParseException("premature end of file", tokenizer.lineno());
+            throw new ParseException(PREMATURE_END_OF_FILE, tokenizer.lineno());
         }
 
         return attribute;

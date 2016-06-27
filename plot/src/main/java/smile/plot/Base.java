@@ -16,6 +16,7 @@
 package smile.plot;
 
 import java.util.Arrays;
+
 import smile.math.Math;
 
 /**
@@ -29,6 +30,7 @@ import smile.math.Math;
  */
 public class Base {
 
+    private static final String BOUND_SIZE_DON_T_MATCH_THE_DIMENSION = "Bound size don't match the dimension.";
     /**
      * The dimensionality of base. Should be 2 or 3.
      */
@@ -229,7 +231,7 @@ public class Base {
      */
     public void extendLowerBound(double[] bound) {
         if (bound.length != dimension) {
-            throw new IllegalArgumentException("Bound size don't match the dimension.");
+            throw new IllegalArgumentException(BOUND_SIZE_DON_T_MATCH_THE_DIMENSION);
         }
 
         boolean extend = false;
@@ -250,7 +252,7 @@ public class Base {
      */
     public void extendUpperBound(double[] bound) {
         if (bound.length != dimension) {
-            throw new IllegalArgumentException("Bound size don't match the dimension.");
+            throw new IllegalArgumentException(BOUND_SIZE_DON_T_MATCH_THE_DIMENSION);
         }
 
         boolean extend = false;
@@ -271,7 +273,7 @@ public class Base {
      */
     public void extendBound(double[] lowerBound, double[] upperBound) {
         if (lowerBound.length != dimension || upperBound.length != dimension) {
-            throw new IllegalArgumentException("Bound size don't match the dimension.");
+            throw new IllegalArgumentException(BOUND_SIZE_DON_T_MATCH_THE_DIMENSION);
         }
 
         boolean extend = false;

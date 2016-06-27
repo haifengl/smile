@@ -18,6 +18,7 @@ package smile.plot;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
+
 import smile.math.Math;
 
 /**
@@ -31,6 +32,8 @@ import smile.math.Math;
  */
 public class Contour extends Plot {
 
+    private static final String DIMENSIONS_XZ_DONT_MATCH = "The dimensions of x and z don't match.";
+    private static final String DIMENSIONS_YZ_DONT_MATCH = "The dimensions of y and z don't match.";
     /**
      * The x coordinate of surface.
      */
@@ -278,11 +281,11 @@ public class Contour extends Plot {
      */
     public Contour(double[] x, double[] y, double[][] z) {
         if (x.length != z[0].length) {
-            throw new IllegalArgumentException("The dimensions of x and z don't match.");
+            throw new IllegalArgumentException(DIMENSIONS_XZ_DONT_MATCH);
         }
 
         if (y.length != z.length) {
-            throw new IllegalArgumentException("The dimensions of y and z don't match.");
+            throw new IllegalArgumentException(DIMENSIONS_YZ_DONT_MATCH);
         }
 
         this.x = x;
@@ -300,11 +303,11 @@ public class Contour extends Plot {
      */
     public Contour(double[] x, double[] y, double[][] z, int numLevels) {
         if (x.length != z[0].length) {
-            throw new IllegalArgumentException("The dimensions of x and z don't match.");
+            throw new IllegalArgumentException(DIMENSIONS_XZ_DONT_MATCH);
         }
 
         if (y.length != z.length) {
-            throw new IllegalArgumentException("The dimensions of y and z don't match.");
+            throw new IllegalArgumentException(DIMENSIONS_YZ_DONT_MATCH);
         }
 
         this.x = x;
@@ -324,11 +327,11 @@ public class Contour extends Plot {
      */
     public Contour(double[] x, double[] y, double[][] z, int numLevels, boolean logScale) {
         if (x.length != z[0].length) {
-            throw new IllegalArgumentException("The dimensions of x and z don't match.");
+            throw new IllegalArgumentException(DIMENSIONS_XZ_DONT_MATCH);
         }
 
         if (y.length != z.length) {
-            throw new IllegalArgumentException("The dimensions of y and z don't match.");
+            throw new IllegalArgumentException(DIMENSIONS_YZ_DONT_MATCH);
         }
 
         this.x = x;
@@ -348,11 +351,11 @@ public class Contour extends Plot {
      */
     public Contour(double[] x, double[] y, double[][] z, double[] levels) {
         if (x.length != z[0].length) {
-            throw new IllegalArgumentException("The dimensions of x and z don't match.");
+            throw new IllegalArgumentException(DIMENSIONS_XZ_DONT_MATCH);
         }
 
         if (y.length != z.length) {
-            throw new IllegalArgumentException("The dimensions of y and z don't match.");
+            throw new IllegalArgumentException(DIMENSIONS_YZ_DONT_MATCH);
         }
 
         this.x = x;
@@ -372,11 +375,11 @@ public class Contour extends Plot {
      */
     public Contour(double[] x, double[] y, double[][] z, double[] levels, Color[] colors) {
         if (x.length != z[0].length) {
-            throw new IllegalArgumentException("The dimensions of x and z don't match.");
+            throw new IllegalArgumentException(DIMENSIONS_XZ_DONT_MATCH);
         }
 
         if (y.length != z.length) {
-            throw new IllegalArgumentException("The dimensions of y and z don't match.");
+            throw new IllegalArgumentException(DIMENSIONS_YZ_DONT_MATCH);
         }
 
         if (levels.length != colors.length) {
