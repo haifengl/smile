@@ -55,7 +55,7 @@ public class HyperGeometricDistributionDemo extends JPanel implements ChangeList
     public HyperGeometricDistributionDemo() {
         super(new BorderLayout());
 
-        Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
+        Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         labelTable.put(1, new JLabel(String.valueOf(1)));
         for (int i = 20; i <= 100; i+=20) {
             labelTable.put(new Integer(i), new JLabel(String.valueOf(i)));

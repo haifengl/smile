@@ -173,9 +173,9 @@ public class SparseDatasetParser {
                     throw new ParseException("Invalid number of tokens.", nrow);
                 }
 
-                int d = Integer.valueOf(tokens[0]) - arrayIndexOrigin;
-                int w = Integer.valueOf(tokens[1]) - arrayIndexOrigin;
-                double c = Double.valueOf(tokens[2]);
+                int d = Integer.parseInt(tokens[0]) - arrayIndexOrigin;
+                int w = Integer.parseInt(tokens[1]) - arrayIndexOrigin;
+                double c = Double.parseDouble(tokens[2]);
                 sparse.set(d, w, c);
 
                 line = reader.readLine();

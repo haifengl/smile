@@ -159,7 +159,7 @@ public class TXTParser {
                 }
             }
 
-            Datum<double[]> datum = new Datum<double[]>(x);
+            Datum<double[]> datum = new Datum<>(x);
             datum.name = tokens[0];
             if (start == 2) {
                 datum.description = tokens[1];

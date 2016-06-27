@@ -125,7 +125,7 @@ public class ARM {
      * @param confidence the confidence threshold for association rules.
      */
     public List<AssociationRule> learn(double confidence) {
-        List<AssociationRule> list = new ArrayList<AssociationRule>();
+        List<AssociationRule> list = new ArrayList<>();
         ttree = fim.buildTotalSupportTree();
         for (int i = 0; i < ttree.root.children.length; i++) {
             if (ttree.root.children[i] != null) {

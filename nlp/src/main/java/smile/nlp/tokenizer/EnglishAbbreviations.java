@@ -36,7 +36,7 @@ class EnglishAbbreviations {
     private static final HashSet<String> DICTIONARY;
 
     static {
-        DICTIONARY = new HashSet<String>();
+        DICTIONARY = new HashSet<>();
 
         try (BufferedReader input = new BufferedReader(new InputStreamReader(EnglishAbbreviations.class.getResourceAsStream("/smile/nlp/tokenizer/abbreviations_en.txt")))) {
             String line = null;

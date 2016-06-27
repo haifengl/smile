@@ -46,7 +46,7 @@ public class MultivariateMixture extends AbstractMultivariateDistribution {
      * Construct an empty Mixture.
      */
     MultivariateMixture() {
-        components = new ArrayList<Component>();
+        components = new ArrayList<>();
     }
 
     /**
@@ -54,7 +54,7 @@ public class MultivariateMixture extends AbstractMultivariateDistribution {
      * @param mixture a list of multivariate distributions.
      */
     public MultivariateMixture(List<Component> mixture) {
-        components = new ArrayList<Component>();
+        components = new ArrayList<>();
         components.addAll(mixture);
     }
 

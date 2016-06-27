@@ -155,7 +155,7 @@ public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
             }
 
             // Maximization step
-            ArrayList<Component> newConfig = new ArrayList<Component>();
+            ArrayList<Component> newConfig = new ArrayList<>();
             for (int i = 0; i < m; i++)
                 newConfig.add(((MultivariateExponentialFamily) components.get(i).distribution).M(x, posteriori[i]));
 

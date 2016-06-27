@@ -55,7 +55,7 @@ public class Trie<K, V> {
         public Node(K key) {
             this.key = key;
             this.value = null;
-            this.children = new LinkedList<Node>();
+            this.children = new LinkedList<>();
         }
         
         public K getKey() {
@@ -117,7 +117,7 @@ public class Trie<K, V> {
      * Constructor.
      */
     public Trie() {
-        root = new HashMap<K, Node>();
+        root = new HashMap<>();
     }
 
     /**
@@ -125,7 +125,7 @@ public class Trie<K, V> {
      * @param initialCapacity the initial capacity of root node.
      */
     public Trie(int initialCapacity) {
-        root = new HashMap<K, Node>(initialCapacity);
+        root = new HashMap<>(initialCapacity);
     }
 
     /**

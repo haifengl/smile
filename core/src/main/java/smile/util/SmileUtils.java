@@ -198,7 +198,7 @@ public class SmileUtils {
      */
     public static <T> GaussianRadialBasis learnGaussianRadialBasis(T[] x, T[] centers, Metric<T> distance) {
         int k = centers.length;
-        CLARANS<T> clarans = new CLARANS<T>(x, distance, k, Math.min(100, (int) Math.round(0.01 * k * (x.length-k))));
+        CLARANS<T> clarans = new CLARANS<>(x, distance, k, Math.min(100, (int) Math.round(0.01 * k * (x.length - k))));
         System.arraycopy(clarans.medoids(), 0, centers, 0, k);
 
         double r0 = 0.0;
@@ -234,7 +234,7 @@ public class SmileUtils {
         }
         
         int k = centers.length;
-        CLARANS<T> clarans = new CLARANS<T>(x, distance, k, Math.min(100, (int) Math.round(0.01 * k * (x.length-k))));
+        CLARANS<T> clarans = new CLARANS<>(x, distance, k, Math.min(100, (int) Math.round(0.01 * k * (x.length - k))));
         System.arraycopy(clarans.medoids(), 0, centers, 0, k);
 
         p = Math.min(p, k-1);
@@ -274,7 +274,7 @@ public class SmileUtils {
         }
         
         int k = centers.length;
-        CLARANS<T> clarans = new CLARANS<T>(x, distance, k, Math.min(100, (int) Math.round(0.01 * k * (x.length-k))));
+        CLARANS<T> clarans = new CLARANS<>(x, distance, k, Math.min(100, (int) Math.round(0.01 * k * (x.length - k))));
         System.arraycopy(clarans.medoids(), 0, centers, 0, k);
 
         int n = x.length;

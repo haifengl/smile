@@ -43,7 +43,7 @@ public enum EnglishDictionary implements Dictionary {
      * text, in which each line is a word.
      */
     private EnglishDictionary(String resource) {
-        dict = new HashSet<String>();
+        dict = new HashSet<>();
 
         try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
         

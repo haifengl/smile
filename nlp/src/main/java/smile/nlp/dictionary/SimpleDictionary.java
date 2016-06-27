@@ -41,7 +41,7 @@ public class SimpleDictionary implements Dictionary {
      * text, in which each line is a word.
      */
     public SimpleDictionary(String resource) {
-        dict = new HashSet<String>();
+        dict = new HashSet<>();
 
         File file = new File(resource);
         try (BufferedReader input = file.exists() ?

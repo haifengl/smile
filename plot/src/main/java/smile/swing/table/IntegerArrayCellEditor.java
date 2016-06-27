@@ -75,7 +75,7 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
 
                 int[] data = new int[items.length];
                 for (int i = 0; i < data.length; i++) {
-                    data[i] = Integer.valueOf(items[i].trim());
+                    data[i] = Integer.parseInt(items[i].trim());
                 }
 
                 return data;

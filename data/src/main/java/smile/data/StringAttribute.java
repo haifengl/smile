@@ -38,11 +38,11 @@ public class StringAttribute extends Attribute {
     /**
      * The list of unique string values of this attribute.
      */
-    private List<String> values = new ArrayList<String>();
+    private List<String> values = new ArrayList<>();
     /**
      * Map a string to an integer level.
      */
-    private Map<String, Integer> map = new HashMap<String, Integer>();
+    private Map<String, Integer> map = new HashMap<>();
 
     /**
      * Constructor.

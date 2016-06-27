@@ -87,7 +87,7 @@ public class MEC <T> extends PartitionClustering<T> {
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
 
-        LinearSearch<T> naive = new LinearSearch<T>(data, distance);
+        LinearSearch<T> naive = new LinearSearch<>(data, distance);
         naive.setIdenticalExcluded(false);
 
         // Initialize clusters with KMeans/CLARANS.
@@ -95,7 +95,7 @@ public class MEC <T> extends PartitionClustering<T> {
             KMeans kmeans = new KMeans((double[][]) data, k, 10, Math.max(1, MulticoreExecutor.getThreadPoolSize()));
             y = kmeans.getClusterLabel();
         } else {
-            CLARANS<T> clarans = new CLARANS<T>(data, distance, k, Math.min(100, (int) Math.round(0.01 * k * (data.length - k))), Math.max(1, MulticoreExecutor.getThreadPoolSize()));
+            CLARANS<T> clarans = new CLARANS<>(data, distance, k, Math.min(100, (int) Math.round(0.01 * k * (data.length - k))), Math.max(1, MulticoreExecutor.getThreadPoolSize()));
             y = clarans.getClusterLabel();
         }
 
@@ -119,7 +119,7 @@ public class MEC <T> extends PartitionClustering<T> {
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
 
-        CoverTree<T> cover = new CoverTree<T>(data, distance);
+        CoverTree<T> cover = new CoverTree<>(data, distance);
         cover.setIdenticalExcluded(false);
 
 
@@ -128,7 +128,7 @@ public class MEC <T> extends PartitionClustering<T> {
             KMeans kmeans = new KMeans((double[][]) data, k, 10, Math.max(1, MulticoreExecutor.getThreadPoolSize()));
             y = kmeans.getClusterLabel();
         } else {
-            CLARANS<T> clarans = new CLARANS<T>(data, distance, k, Math.min(100, (int) Math.round(0.01 * k * (data.length - k))), Math.max(1, MulticoreExecutor.getThreadPoolSize()));
+            CLARANS<T> clarans = new CLARANS<>(data, distance, k, Math.min(100, (int) Math.round(0.01 * k * (data.length - k))), Math.max(1, MulticoreExecutor.getThreadPoolSize()));
             y = clarans.getClusterLabel();
         }
 
@@ -191,12 +191,12 @@ public class MEC <T> extends PartitionClustering<T> {
         double[] px = new double[n];
 
         // Neighbors of each sample.
-        ArrayList<ArrayList<Integer>> neighbors = new ArrayList<ArrayList<Integer>>();
+        ArrayList<ArrayList<Integer>> neighbors = new ArrayList<>();
 
         for (int i = 0; i < n; i++) {
-            ArrayList<Neighbor<T,T>> list = new ArrayList<Neighbor<T,T>>();
+            ArrayList<Neighbor<T,T>> list = new ArrayList<>();
             nns.range(data[i], radius, list);
-            ArrayList<Integer> neighbor = new ArrayList<Integer>(list.size());
+            ArrayList<Integer> neighbor = new ArrayList<>(list.size());
             neighbors.add(neighbor);
             for (Neighbor<T,T> nt : list) {
                 neighbor.add(nt.index);
@@ -358,7 +358,7 @@ public class MEC <T> extends PartitionClustering<T> {
      */
     @Override
     public int predict(T x) {
-        List<Neighbor<T,T>> neighbors = new ArrayList<Neighbor<T,T>>();
+        List<Neighbor<T,T>> neighbors = new ArrayList<>();
         nns.range(x, radius, neighbors);
 
         if (neighbors.isEmpty()) {

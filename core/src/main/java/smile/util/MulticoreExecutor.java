@@ -90,7 +90,7 @@ public class MulticoreExecutor {
     public static <T> List<T> run(Collection<? extends Callable<T>> tasks) throws Exception {
         createThreadPool();
 
-        List<T> results = new ArrayList<T>();
+        List<T> results = new ArrayList<>();
         if (threads == null) {
             for (Callable<T> task : tasks) {
                 results.add(task.call());

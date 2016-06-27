@@ -88,9 +88,9 @@ public class LLE {
 
         KNNSearch<double[], double[]> knn = null;
         if (D < 10) {
-            knn = new KDTree<double[]>(data, data);
+            knn = new KDTree<>(data, data);
         } else {
-            knn = new CoverTree<double[]>(data, new EuclideanDistance());
+            knn = new CoverTree<>(data, new EuclideanDistance());
         }
 
         Comparator<Neighbor<double[], double[]>> comparator = new Comparator<Neighbor<double[], double[]>>() {

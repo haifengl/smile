@@ -96,7 +96,7 @@ public class LSHSpeedTest {
         System.out.format("Generating toy data (four Gaussians): %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        LSH<double[]> lsh = new LSH<double[]>(3, 5, 10, 4.0);
+        LSH<double[]> lsh = new LSH<>(3, 5, 10, 4.0);
         for (double[] x : data) {
             lsh.put(x, x);
         }
@@ -118,7 +118,7 @@ public class LSHSpeedTest {
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        List<Neighbor<double[], double[]>> n = new ArrayList<Neighbor<double[], double[]>>();
+        List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             lsh.range(data[Math.randomInt(data.length)], 1.0, n);
             n.clear();
@@ -153,7 +153,7 @@ public class LSHSpeedTest {
         System.out.format("Loading USPS: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        LSH<double[]> lsh = new LSH<double[]>(x, x);
+        LSH<double[]> lsh = new LSH<>(x, x);
         /**
         LSH<double[]> lsh = new LSH<double[]>(256, 100, 3, 4.0);
         for (double[] xi : x) {
@@ -179,7 +179,7 @@ public class LSHSpeedTest {
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        List<Neighbor<double[], double[]>> n = new ArrayList<Neighbor<double[], double[]>>();
+        List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (int i = 0; i < testx.length; i++) {
             lsh.range(testx[i], 8.0, n);
             n.clear();

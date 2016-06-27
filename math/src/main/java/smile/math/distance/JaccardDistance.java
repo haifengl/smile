@@ -50,8 +50,8 @@ public class JaccardDistance<T> implements Distance<T[]> {
 
     @Override
     public double d(T[] a, T[] b) {
-        Set<T> union = new HashSet<T>();
-        Set<T> intersection = new HashSet<T>();
+        Set<T> union = new HashSet<>();
+        Set<T> intersection = new HashSet<>();
 
         for (int i = 0; i < b.length; i++)
             union.add(b[i]);
@@ -71,10 +71,10 @@ public class JaccardDistance<T> implements Distance<T[]> {
      * Returns the Jaccard distance between sets.
      */
     public static <T> double d(Set<T> a, Set<T> b) {
-        Set<T> union = new HashSet<T>(a);
+        Set<T> union = new HashSet<>(a);
         union.addAll(b);
 
-        Set<T> intersection = new HashSet<T>(a);
+        Set<T> intersection = new HashSet<>(a);
         intersection.retainAll(b);
 
         return 1.0 - (double) intersection.size() / union.size();

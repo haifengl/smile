@@ -46,8 +46,8 @@ public class KDTreeTest {
                 data[i][j] = Math.random();
         }
 
-        kdtree = new KDTree<double[]>(data, data);
-        naive = new LinearSearch<double[]>(data, new EuclideanDistance());
+        kdtree = new KDTree<>(data, data);
+        naive = new LinearSearch<>(data, new EuclideanDistance());
     }
 
     @BeforeClass
@@ -104,8 +104,8 @@ public class KDTreeTest {
     @Test
     public void testRange() {
         System.out.println("range");
-        List<Neighbor<double[], double[]>> n1 = new ArrayList<Neighbor<double[], double[]>>();
-        List<Neighbor<double[], double[]>> n2 = new ArrayList<Neighbor<double[], double[]>>();
+        List<Neighbor<double[], double[]>> n1 = new ArrayList<>();
+        List<Neighbor<double[], double[]>> n2 = new ArrayList<>();
         for (int i = 0; i < data.length; i++) {
             kdtree.range(data[i], 0.5, n1);
             naive.range(data[i], 0.5, n2);

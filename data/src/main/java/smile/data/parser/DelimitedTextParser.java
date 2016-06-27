@@ -348,7 +348,7 @@ public class DelimitedTextParser {
                 }
             }
 
-            Datum<double[]> datum = new Datum<double[]>(x, y);
+            Datum<double[]> datum = new Datum<>(x, y);
             datum.name = rowName;
             data.add(datum);
         }
@@ -378,7 +378,7 @@ public class DelimitedTextParser {
                 }
             }
 
-            Datum<double[]> datum = new Datum<double[]>(x, y);
+            Datum<double[]> datum = new Datum<>(x, y);
             datum.name = rowName;
             data.add(datum);
         }

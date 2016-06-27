@@ -97,7 +97,7 @@ public class KDTreeSpeedTest {
         System.out.format("Generating toy data (four Gaussians): %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        KDTree<double[]> kdtree = new KDTree<double[]>(data, data);
+        KDTree<double[]> kdtree = new KDTree<>(data, data);
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Building KD-tree: %.2fs%n", time);
 
@@ -116,7 +116,7 @@ public class KDTreeSpeedTest {
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        List<Neighbor<double[], double[]>> n = new ArrayList<Neighbor<double[], double[]>>();
+        List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             kdtree.range(data[Math.randomInt(data.length)], 1.0, n);
             n.clear();
@@ -151,7 +151,7 @@ public class KDTreeSpeedTest {
         System.out.format("Loading USPS: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        KDTree<double[]> kdtree = new KDTree<double[]>(x, x);
+        KDTree<double[]> kdtree = new KDTree<>(x, x);
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Building KD-tree: %.2fs%n", time);
 
@@ -170,7 +170,7 @@ public class KDTreeSpeedTest {
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        List<Neighbor<double[], double[]>> n = new ArrayList<Neighbor<double[], double[]>>();
+        List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (int i = 0; i < testx.length; i++) {
             kdtree.range(testx[i], 8.0, n);
             n.clear();
