@@ -168,8 +168,8 @@ public class GCTParser {
             throw new IOException("Invalid data size inforamation.");            
         }
         
-        int n = Integer.valueOf(tokens[0]);
-        int p = Integer.valueOf(tokens[1]);
+        int n = Integer.parseInt(tokens[0]);
+        int p = Integer.parseInt(tokens[1]);
         if (n <= 0 || p <= 0) {
             throw new IOException(String.format("Invalid data size %d x %d.", n, p));                        
         }
