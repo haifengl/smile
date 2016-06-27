@@ -38,6 +38,7 @@ import smile.plot.ScatterPlot;
 @SuppressWarnings("serial")
 public abstract class ClusteringDemo extends JPanel implements Runnable, ActionListener, AncestorListener {
 
+    private static final String ERROR = "Error";
     private static String[] datasetName = {
         "Gaussian/One", "Gaussian/Two", "Gaussian/Three",
         "Gaussian/Five", "Gaussian/Six", "Gaussian/Elongate",
@@ -158,16 +159,16 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
             try {
                 clusterNumber = Integer.parseInt(clusterNumberField.getText().trim());
                 if (clusterNumber < 2) {
-                    JOptionPane.showMessageDialog(this, "Invalid K: " + clusterNumber, "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Invalid K: " + clusterNumber, ERROR, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 if (clusterNumber > dataset[datasetIndex].length / 2) {
-                    JOptionPane.showMessageDialog(this, "Too large K: " + clusterNumber, "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Too large K: " + clusterNumber, ERROR, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Invalid K: " + clusterNumberField.getText(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Invalid K: " + clusterNumberField.getText(), ERROR, JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
