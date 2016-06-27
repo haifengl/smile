@@ -93,7 +93,7 @@ public class ApproximateStringSearchDemo extends JPanel implements Runnable, Act
 
         if (data == null) {
             System.out.print("Loading dataset...");
-            List<String> words = new ArrayList<String>();
+            List<String> words = new ArrayList<>();
 
             try {
                 FileInputStream stream = new FileInputStream(smile.data.parser.IOUtils.getTestDataFile("index.noun"));
@@ -115,16 +115,16 @@ public class ApproximateStringSearchDemo extends JPanel implements Runnable, Act
             
             System.out.println("Building searching data structure...");
             long time = System.currentTimeMillis();
-            naive = new LinearSearch<String>(data, new EditDistance(50, true));
+            naive = new LinearSearch<>(data, new EditDistance(50, true));
             int naiveBuild = (int) (System.currentTimeMillis() - time) / 1000;
 
             time = System.currentTimeMillis();
-            bktree = new BKTree<String>(new EditDistance(50, true));
+            bktree = new BKTree<>(new EditDistance(50, true));
             bktree.add(data);
             int bktreeBuild = (int) (System.currentTimeMillis() - time) / 1000;
 
             time = System.currentTimeMillis();
-            cover = new CoverTree<String>(data, new EditDistance(50, true));
+            cover = new CoverTree<>(data, new EditDistance(50, true));
             int coverBuild = (int) (System.currentTimeMillis() - time) / 1000;
 
             double[] buildTime = {naiveBuild, bktreeBuild, coverBuild};
@@ -138,7 +138,7 @@ public class ApproximateStringSearchDemo extends JPanel implements Runnable, Act
 
         System.out.println("Perform 1000 searches...");
         long time = System.currentTimeMillis();
-        List<Neighbor<String, String>> neighbors = new ArrayList<Neighbor<String, String>>();
+        List<Neighbor<String, String>> neighbors = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             naive.range(data[perm[i]], knn, neighbors);
             neighbors.clear();

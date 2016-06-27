@@ -422,7 +422,7 @@ public class RegressionTree implements Regression<double[]> {
                 }
             } else {
 
-                List<SplitTask> tasks = new ArrayList<SplitTask>(mtry);
+                List<SplitTask> tasks = new ArrayList<>(mtry);
                 for (int j = 0; j < mtry; j++) {
                     tasks.add(new SplitTask(n, sum, variables[j]));
                 }
@@ -965,7 +965,7 @@ public class RegressionTree implements Regression<double[]> {
         }
 
         // Priority queue for best-first tree growing.
-        PriorityQueue<TrainNode> nextSplits = new PriorityQueue<TrainNode>();
+        PriorityQueue<TrainNode> nextSplits = new PriorityQueue<>();
 
         int n = 0;
         double sum = 0.0;
@@ -1063,7 +1063,7 @@ public class RegressionTree implements Regression<double[]> {
         importance = new double[numFeatures];
         
         // Priority queue for best-first tree growing.
-        PriorityQueue<SparseBinaryTrainNode> nextSplits = new PriorityQueue<SparseBinaryTrainNode>();
+        PriorityQueue<SparseBinaryTrainNode> nextSplits = new PriorityQueue<>();
 
         int n = 0;
         double sum = 0.0;

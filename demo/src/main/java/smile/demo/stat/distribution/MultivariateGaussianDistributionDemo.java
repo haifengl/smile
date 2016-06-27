@@ -51,7 +51,7 @@ public class MultivariateGaussianDistributionDemo extends JPanel implements Chan
     public MultivariateGaussianDistributionDemo() {
         super(new BorderLayout());
 
-        Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
+        Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 0; i <= 30; i+=10) {
             labelTable.put(new Integer(i), new JLabel(String.valueOf(i/10.0)));
         }

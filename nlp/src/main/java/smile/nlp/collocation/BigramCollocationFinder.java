@@ -65,7 +65,7 @@ public class BigramCollocationFinder {
      */
     public BigramCollocation[] find(Corpus corpus, int k) {
         BigramCollocation[] bigrams = new BigramCollocation[k];
-        HeapSelect<BigramCollocation> heap = new HeapSelect<BigramCollocation>(bigrams);
+        HeapSelect<BigramCollocation> heap = new HeapSelect<>(bigrams);
         
         Iterator<Bigram> iterator = corpus.getBigrams();
         while (iterator.hasNext()) {
@@ -106,7 +106,7 @@ public class BigramCollocationFinder {
 
         double cutoff = chisq.quantile(p);
         
-        ArrayList<BigramCollocation> bigrams = new ArrayList<BigramCollocation>();
+        ArrayList<BigramCollocation> bigrams = new ArrayList<>();
 
         Iterator<Bigram> iterator = corpus.getBigrams();
         while (iterator.hasNext()) {

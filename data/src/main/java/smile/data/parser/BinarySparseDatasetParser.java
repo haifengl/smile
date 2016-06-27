@@ -122,7 +122,7 @@ public class BinarySparseDatasetParser {
                 throw new IOException("Empty data source.");
            }
         
-           Set<Integer> items = new HashSet<Integer>();
+           Set<Integer> items = new HashSet<>();
            do {
                 line = line.trim();
                 if (line.isEmpty()) {

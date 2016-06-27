@@ -158,7 +158,7 @@ public class DiscreteExponentialFamilyMixture extends DiscreteMixture {
             }
 
             // Maximization step
-            List<Component> newConfig = new ArrayList<Component>();
+            List<Component> newConfig = new ArrayList<>();
             for (int i = 0; i < m; i++)
                 newConfig.add(((DiscreteExponentialFamily) components.get(i).distribution).M(x, posteriori[i]));
 

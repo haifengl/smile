@@ -146,7 +146,7 @@ public class TotalSupportTreeTest {
     public void testPima() {
         System.out.println("pima");
 
-        List<int[]> dataList = new ArrayList<int[]>(1000);
+        List<int[]> dataList = new ArrayList<>(1000);
 
         try {
             InputStream stream = getClass().getResourceAsStream("/smile/data/transaction/pima.D38.N768.C2");
@@ -199,7 +199,7 @@ public class TotalSupportTreeTest {
     public void testKosarak() {
         System.out.println("kosarak");
 
-        List<int[]> dataList = new ArrayList<int[]>(1000);
+        List<int[]> dataList = new ArrayList<>(1000);
 
         try {
             InputStream stream = getClass().getResourceAsStream("/smile/data/transaction/kosarak.dat");
@@ -213,7 +213,7 @@ public class TotalSupportTreeTest {
 
                 String[] s = line.split(" ");
 
-                Set<Integer> items = new HashSet<Integer>();
+                Set<Integer> items = new HashSet<>();
                 for (int i = 0; i < s.length; i++) {
                     items.add(Integer.parseInt(s[i]));
                 }

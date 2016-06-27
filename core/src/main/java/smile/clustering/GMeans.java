@@ -81,7 +81,7 @@ public class GMeans extends KMeans {
 
         BBDTree bbd = new BBDTree(data);
         while (k < kmax) {
-            ArrayList<double[]> centers = new ArrayList<double[]>();
+            ArrayList<double[]> centers = new ArrayList<>();
             double[] score = new double[k];
             KMeans[] kmeans = new KMeans[k];
             

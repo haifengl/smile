@@ -39,7 +39,7 @@ public class PCADemo extends ProjectionDemo {
     JComboBox<String> corBox;
 
     public PCADemo() {
-        corBox = new JComboBox<String>();
+        corBox = new JComboBox<>();
         corBox.addItem("Covariance");
         corBox.addItem("Correlation");
         corBox.setSelectedIndex(0);

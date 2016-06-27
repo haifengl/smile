@@ -57,7 +57,7 @@ public class ExponentialFamilyMixtureDemo extends JPanel {
         for (int i = 1000; i < 2000; i++)
             data[i] = gamma.rand();
 
-        Vector<Mixture.Component> m = new Vector<Mixture.Component>();
+        Vector<Mixture.Component> m = new Vector<>();
         Mixture.Component c = new Mixture.Component();
         c.priori = 0.25;
         c.distribution = new GaussianDistribution(0.0, 1.0);
@@ -114,7 +114,7 @@ public class ExponentialFamilyMixtureDemo extends JPanel {
         for (int i = 1000; i < 2000; i++)
             data[i] = gamma.rand();
 
-        Vector<Mixture.Component> m = new Vector<Mixture.Component>();
+        Vector<Mixture.Component> m = new Vector<>();
         Mixture.Component c = new Mixture.Component();
         c.priori = 0.25;
         c.distribution = new GaussianDistribution(0.0, 1.0);

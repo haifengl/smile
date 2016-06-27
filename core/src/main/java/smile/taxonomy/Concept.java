@@ -66,7 +66,7 @@ public class Concept {
         this.parent = parent;
 
         if (parent.children == null) {
-            parent.children = new ArrayList<Concept>();
+            parent.children = new ArrayList<>();
         }
 
         parent.children.add(this);
@@ -86,11 +86,11 @@ public class Concept {
 
         this.parent = parent;
 
-        synset = new TreeSet<String>();
+        synset = new TreeSet<>();
         synset.add(keyword);
 
         if (parent.children == null) {
-            parent.children = new ArrayList<Concept>();
+            parent.children = new ArrayList<>();
         }
 
         parent.children.add(this);
@@ -116,13 +116,13 @@ public class Concept {
 
         this.parent = parent;
 
-        synset = new TreeSet<String>();
+        synset = new TreeSet<>();
         for (String keyword : keywords) {
             synset.add(keyword);
         }
 
         if (parent.children == null) {
-            parent.children = new ArrayList<Concept>();
+            parent.children = new ArrayList<>();
         }
 
         parent.children.add(this);
@@ -152,11 +152,11 @@ public class Concept {
 
         this.parent = parent;
 
-        synset = new TreeSet<String>();
+        synset = new TreeSet<>();
         synset.addAll(keywords);
 
         if (parent.children == null) {
-            parent.children = new ArrayList<Concept>();
+            parent.children = new ArrayList<>();
         }
 
         parent.children.add(this);
@@ -200,7 +200,7 @@ public class Concept {
         taxonomy.concepts.put(keyword, this);
 
         if (synset == null) {
-            synset = new TreeSet<String>();
+            synset = new TreeSet<>();
         }
 
         synset.add(keyword);
@@ -221,7 +221,7 @@ public class Concept {
         }
 
         if (synset == null) {
-            synset = new TreeSet<String>();
+            synset = new TreeSet<>();
         }
 
         for (String keyword : keywords) {
@@ -244,7 +244,7 @@ public class Concept {
         }
 
         if (synset == null) {
-            synset = new TreeSet<String>();
+            synset = new TreeSet<>();
         }
 
         synset.addAll(keywords);
@@ -290,7 +290,7 @@ public class Concept {
         }
 
         if (children == null) {
-            children = new ArrayList<Concept>();
+            children = new ArrayList<>();
         }
         
         children.add(concept);
@@ -337,7 +337,7 @@ public class Concept {
      * Returns the path from root to the given node.
      */
     public List<Concept> getPathFromRoot() {
-        LinkedList<Concept> path = new LinkedList<Concept>();
+        LinkedList<Concept> path = new LinkedList<>();
 
         Concept node = this;
         while (node != null) {
@@ -352,7 +352,7 @@ public class Concept {
      * Returns the path from the given node to the root.
      */
     public List<Concept> getPathToRoot() {
-        LinkedList<Concept> path = new LinkedList<Concept>();
+        LinkedList<Concept> path = new LinkedList<>();
 
         Concept node = this;
         while (node != null) {

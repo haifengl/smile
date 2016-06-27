@@ -123,7 +123,7 @@ public class HMM<O> implements SequenceLabeler<O> {
                 throw new IllegalArgumentException("Invalid size of emission symbol list.");
             }
 
-            this.symbols = new HashMap<O, Integer>();
+            this.symbols = new HashMap<>();
             for (int i = 0; i < symbols.length; i++) {
                 this.symbols.put(symbols[i], i);
             }
@@ -481,7 +481,7 @@ public class HMM<O> implements SequenceLabeler<O> {
         }
 
         int index = 0;
-        symbols = new HashMap<O, Integer>();
+        symbols = new HashMap<>();
         for (int i = 0; i < observations.length; i++) {
             if (observations[i].length != labels[i].length) {
                 throw new IllegalArgumentException(String.format("The length of observation sequence %d and that of corresponding label sequence are different.", i));
@@ -573,7 +573,7 @@ public class HMM<O> implements SequenceLabeler<O> {
      * @return an updated HMM.
      */
     private HMM<O> iterate(int[][] sequences) {
-        HMM<O> hmm = new HMM<O>(numStates, numSymbols);
+        HMM<O> hmm = new HMM<>(numStates, numSymbols);
         hmm.symbols = symbols;
 
         // gamma[n] = gamma array associated to observation sequence n

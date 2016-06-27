@@ -92,7 +92,7 @@ public class DeterministicAnnealing extends KMeans {
 
         int np = MulticoreExecutor.getThreadPoolSize();
         if (n >= 1000 && np >= 2) {
-            tasks = new ArrayList<UpdateThread>(np + 1);
+            tasks = new ArrayList<>(np + 1);
             int step = n / np;
             if (step < 100) {
                 step = 100;
@@ -107,7 +107,7 @@ public class DeterministicAnnealing extends KMeans {
             }
             tasks.add(new UpdateThread(data, centroids, posteriori, priori, start, n));
             
-            ctasks = new ArrayList<CentroidThread>(2 * Kmax);
+            ctasks = new ArrayList<>(2 * Kmax);
             for (int i = 0; i < 2*Kmax; i++) {
                 ctasks.add(new CentroidThread(data, centroids, posteriori, priori, i));
             }
