@@ -147,7 +147,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
                 b[i] = Math.random(0, r);
             }
 
-            ArrayList<HashEntry> list = new ArrayList<HashEntry>();
+            ArrayList<HashEntry> list = new ArrayList<>();
             table = (ArrayList<HashEntry>[]) java.lang.reflect.Array.newInstance(list.getClass(), H);
         }
 
@@ -202,7 +202,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
             int i = bucket % H;
 
             if (table[i] == null) {
-                table[i] = new ArrayList<HashEntry>();
+                table[i] = new ArrayList<>();
             }
 
             table[i].add(new HashEntry(bucket, index, x, data));
@@ -442,7 +442,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
                      */
 
                     // Here we only generate those h values with reasonably large probability
-                    ArrayList<PrH> probs = new ArrayList<PrH>();
+                    ArrayList<PrH> probs = new ArrayList<>();
                     int h0 = (int) Math.floor(parzen.mean);
                     for (int h = h0;; h++) {
                         PrH prh = new PrH();
@@ -513,7 +513,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
                 range[i] = pz[i].prh.length;
             }
 
-            PriorityQueue<Probe> heap = new PriorityQueue<Probe>();
+            PriorityQueue<Probe> heap = new PriorityQueue<>();
             heap.add(new Probe(range));
 
             heap.peek().setProb(pz);
@@ -791,14 +791,14 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
         this.r = r;
         this.H = H;
 
-        keys = new ArrayList<double[]>();
-        data = new ArrayList<E>();
+        keys = new ArrayList<>();
+        data = new ArrayList<>();
         c = new int[k];
         for (int i = 0; i < c.length; i++) {
             c[i] = Math.randomInt(P);
         }
 
-        hash = new ArrayList<Hash>(L);
+        hash = new ArrayList<>(L);
         for (int i = 0; i < L; i++) {
             hash.add(new Hash());
         }
@@ -868,15 +868,15 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
         for (int i = 0; i < samples.length; i++) {
             training[i] = new TrainSample();
             training[i].query = samples[i];
-            training[i].neighbors = new ArrayList<double[]>();
-            ArrayList<Neighbor<double[], double[]>> neighbors = new ArrayList<Neighbor<double[], double[]>>();
+            training[i].neighbors = new ArrayList<>();
+            ArrayList<Neighbor<double[], double[]>> neighbors = new ArrayList<>();
             range.range(training[i].query, radius, neighbors);
             for (Neighbor<double[], double[]> n : neighbors) {
                 training[i].neighbors.add(keys.get(n.index));
             }
         }
 
-        model = new ArrayList<PosterioriModel>(hash.size());
+        model = new ArrayList<>(hash.size());
         for (int i = 0; i < hash.size(); i++) {
             model.add(new PosterioriModel(hash.get(i), training, Nz, sigma));
         }
@@ -920,7 +920,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
             }
         }
         
-        Neighbor<double[], E> neighbor = new Neighbor<double[], E>(null, null, -1, Double.MAX_VALUE);
+        Neighbor<double[], E> neighbor = new Neighbor<>(null, null, -1, Double.MAX_VALUE);
 
         int[] cand = candidates.toArray();
         Arrays.sort(cand);
@@ -992,10 +992,10 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
         int[] cand = candidates.toArray();
         Arrays.sort(cand);
 
-        Neighbor<double[], E> neighbor = new Neighbor<double[], E>(null, null, 0, Double.MAX_VALUE);
+        Neighbor<double[], E> neighbor = new Neighbor<>(null, null, 0, Double.MAX_VALUE);
         @SuppressWarnings("unchecked")
         Neighbor<double[], E>[] neighbors = (Neighbor<double[], E>[]) java.lang.reflect.Array.newInstance(neighbor.getClass(), k);
-        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<Neighbor<double[], E>>(neighbors);
+        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<>(neighbors);
         for (int i = 0; i < k; i++) {
             heap.add(neighbor);
         }
@@ -1011,7 +1011,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
             double[] key = keys.get(index);
             double dist = Math.distance(q, key);
             if (dist < heap.peek().distance) {
-                heap.add(new Neighbor<double[], E>(key, data.get(index), index, dist));
+                heap.add(new Neighbor<>(key, data.get(index), index, dist));
                 hit++;
             }
         }
@@ -1080,7 +1080,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
                                 }
 
                                 if (!existed) {
-                                    neighbors.add(new Neighbor<double[], E>(e.key, e.data, e.index, distance));
+                                    neighbors.add(new Neighbor<>(e.key, e.data, e.index, distance));
                                 }
                             }
                         }

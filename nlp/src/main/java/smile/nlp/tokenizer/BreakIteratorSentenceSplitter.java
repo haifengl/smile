@@ -49,7 +49,7 @@ public class BreakIteratorSentenceSplitter implements SentenceSplitter {
     @Override
     public String[] split(String text) {
         boundary.setText(text);
-        ArrayList<String> sentences = new ArrayList<String>();
+        ArrayList<String> sentences = new ArrayList<>();
         int start = boundary.first();
         for (int end = boundary.next();
                 end != BreakIterator.DONE;

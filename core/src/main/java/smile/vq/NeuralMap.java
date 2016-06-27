@@ -63,7 +63,7 @@ public class NeuralMap implements Clustering<double[]> {
         /**
          * Connected neighbors.
          */
-        public final LinkedList<Neuron> neighbors = new LinkedList<Neuron>();
+        public final LinkedList<Neuron> neighbors = new LinkedList<>();
 
         /**
          * Constructor.
@@ -172,7 +172,7 @@ public class NeuralMap implements Clustering<double[]> {
                     b[i] = Math.random(0, w);
                 }
 
-                LinkedList<Item> list = new LinkedList<Item>();
+                LinkedList<Item> list = new LinkedList<>();
                 table = (LinkedList<Item>[]) java.lang.reflect.Array.newInstance(list.getClass(), H);
             }
 
@@ -218,7 +218,7 @@ public class NeuralMap implements Clustering<double[]> {
                 int i = bucket % H;
 
                 if (table[i] == null) {
-                    table[i] = new LinkedList<Item>();
+                    table[i] = new LinkedList<>();
                 }
 
                 table[i].add(new Item(bucket, neuron));
@@ -343,7 +343,7 @@ public class NeuralMap implements Clustering<double[]> {
          */
         int knn(double[] x, Neighbor[] neighbors) {
             int hit = 0;
-            HeapSelect<Neighbor> heap = new HeapSelect<Neighbor>(neighbors);
+            HeapSelect<Neighbor> heap = new HeapSelect<>(neighbors);
 
             for (int i = 0; i < hash.length; i++) {
                 int bucket = hash[i].hash(x);
@@ -399,7 +399,7 @@ public class NeuralMap implements Clustering<double[]> {
     /**
      * The list of neurons.
      */
-    private List<Neuron> neurons = new ArrayList<Neuron>();
+    private List<Neuron> neurons = new ArrayList<>();
 
     /**
      * Constructor.
@@ -530,7 +530,7 @@ public class NeuralMap implements Clustering<double[]> {
      * @return the number of neurons after purging.
      */
     public int purge(int minPts) {
-        List<Neuron> outliers = new ArrayList<Neuron>();
+        List<Neuron> outliers = new ArrayList<>();
         for (Neuron neuron : neurons) {
             if (neuron.n < minPts) {
                 outliers.add(neuron);
@@ -569,7 +569,7 @@ public class NeuralMap implements Clustering<double[]> {
      * @return the number of non-outlier leaves.
      */
     public int partition(int k, int minPts) {
-        List<Neuron> data = new ArrayList<Neuron>();
+        List<Neuron> data = new ArrayList<>();
         for (Neuron neuron : neurons) {
             neuron.y = OUTLIER;
             if (neuron.n >= minPts) {

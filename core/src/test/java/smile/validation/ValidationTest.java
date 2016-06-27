@@ -119,7 +119,7 @@ public class ValidationTest {
 
             double[][] centers = new double[20][];
             RadialBasisFunction[] rbf = SmileUtils.learnGaussianRadialBasis(x, centers, 2);
-            RBFNetwork<double[]> rkhs = new RBFNetwork<double[]>(x, y, new EuclideanDistance(), rbf, centers);
+            RBFNetwork<double[]> rkhs = new RBFNetwork<>(x, y, new EuclideanDistance(), rbf, centers);
             double rmse = Validation.test(rkhs, testx, testy);
             System.out.println("RMSE = " + rmse);
         } catch (Exception ex) {
@@ -187,7 +187,7 @@ public class ValidationTest {
 
             double[][] centers = new double[20][];
             RadialBasisFunction[] rbf = SmileUtils.learnGaussianRadialBasis(x, centers, 2);
-            RBFNetwork<double[]> rkhs = new RBFNetwork<double[]>(x, y, new EuclideanDistance(), rbf, centers);
+            RBFNetwork<double[]> rkhs = new RBFNetwork<>(x, y, new EuclideanDistance(), rbf, centers);
 
             RegressionMeasure[] measures = {new RMSE(), new AbsoluteDeviation()};
             double[] results = Validation.test(rkhs, testx, testy, measures);
@@ -235,7 +235,7 @@ public class ValidationTest {
             double[][] x = data.toArray(new double[data.size()][]);
             Math.standardize(x);
 
-            RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<double[]>(new EuclideanDistance());
+            RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
             double rmse = Validation.loocv(trainer, x, y);
             System.out.println("RMSE = " + rmse);
@@ -284,7 +284,7 @@ public class ValidationTest {
             double[][] x = data.toArray(new double[data.size()][]);
             Math.standardize(x);
 
-            RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<double[]>(new EuclideanDistance());
+            RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
             RegressionMeasure[] measures = {new RMSE(), new AbsoluteDeviation()};
             double[] results = Validation.loocv(trainer, x, y, measures);
@@ -331,7 +331,7 @@ public class ValidationTest {
             double[][] x = data.toArray(new double[data.size()][]);
             Math.standardize(x);
 
-            RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<double[]>(new EuclideanDistance());
+            RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
             double rmse = Validation.cv(10, trainer, x, y);
             System.out.println("RMSE = " + rmse);
@@ -378,7 +378,7 @@ public class ValidationTest {
             double[][] x = data.toArray(new double[data.size()][]);
             Math.standardize(x);
 
-            RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<double[]>(new EuclideanDistance());
+            RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
             RegressionMeasure[] measures = {new RMSE(), new AbsoluteDeviation()};
             double[] results = Validation.cv(10, trainer, x, y, measures);
@@ -426,7 +426,7 @@ public class ValidationTest {
             double[][] x = data.toArray(new double[data.size()][]);
             Math.standardize(x);
 
-            RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<double[]>(new EuclideanDistance());
+            RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
             double[] rmse = Validation.bootstrap(100, trainer, x, y);
             System.out.println("100-fold bootstrap RMSE average = " + Math.mean(rmse));
@@ -484,7 +484,7 @@ public class ValidationTest {
             double[][] x = data.toArray(new double[data.size()][]);
             Math.standardize(x);
 
-            RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<double[]>(new EuclideanDistance());
+            RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
             RegressionMeasure[] measures = {new RMSE(), new AbsoluteDeviation()};
             double[][] results = Validation.bootstrap(100, trainer, x, y, measures);

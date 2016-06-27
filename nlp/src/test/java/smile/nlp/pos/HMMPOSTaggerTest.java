@@ -36,8 +36,8 @@ import smile.math.Math;
  */
 public class HMMPOSTaggerTest {
 
-    List<String[]> sentences = new ArrayList<String[]>();
-    List<PennTreebankPOS[]> labels = new ArrayList<PennTreebankPOS[]>();
+    List<String[]> sentences = new ArrayList<>();
+    List<PennTreebankPOS[]> labels = new ArrayList<>();
     public HMMPOSTaggerTest() {
     }
     
@@ -46,7 +46,7 @@ public class HMMPOSTaggerTest {
      * @param dir a file object defining the top directory
      */
     public void load(String dir) {
-        List<File> files = new ArrayList<File>();
+        List<File> files = new ArrayList<>();
         walkin(new File(dir), files);
 
         for (File file : files) {
@@ -54,8 +54,8 @@ public class HMMPOSTaggerTest {
                 FileInputStream stream = new FileInputStream(file);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
                 String line = null;
-                List<String> sent = new ArrayList<String>();
-                List<PennTreebankPOS> label = new ArrayList<PennTreebankPOS>();
+                List<String> sent = new ArrayList<>();
+                List<PennTreebankPOS> label = new ArrayList<>();
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
                     if (line.isEmpty()) {

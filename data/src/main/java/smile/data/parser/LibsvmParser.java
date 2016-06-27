@@ -60,43 +60,43 @@ public class LibsvmParser {
 
     /**
      * Parse a libsvm sparse dataset from given URI.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public SparseDataset parse(URI uri) throws FileNotFoundException, IOException, ParseException {
+    public SparseDataset parse(URI uri) throws IOException, ParseException {
         return parse(new File(uri));
     }
 
     /**
      * Parse a libsvm sparse dataset from given URI.
      * @param uri the URI of data source.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public SparseDataset parse(String name, URI uri) throws FileNotFoundException, IOException, ParseException {
+    public SparseDataset parse(String name, URI uri) throws IOException, ParseException {
         return parse(name, new File(uri));
     }
 
     /**
      * Parse a libsvm sparse dataset from given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public SparseDataset parse(String path) throws FileNotFoundException, IOException, ParseException {
+    public SparseDataset parse(String path) throws IOException, ParseException {
         return parse(new File(path));
     }
 
     /**
      * Parse a libsvm sparse dataset from given file.
      * @param path the file path of data source.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public SparseDataset parse(String name, String path) throws FileNotFoundException, IOException, ParseException {
+    public SparseDataset parse(String name, String path) throws IOException, ParseException {
         return parse(name, new File(path));
     }
 
     /**
      * Parse a libsvm sparse dataset from given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public SparseDataset parse(File file) throws FileNotFoundException, IOException, ParseException {
+    public SparseDataset parse(File file) throws IOException, ParseException {
         String name = file.getPath();
         return parse(name, new FileInputStream(file));
     }
@@ -104,9 +104,9 @@ public class LibsvmParser {
     /**
      * Parse a libsvm sparse dataset from given file.
      * @param file the file of data source.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public SparseDataset parse(String name, File file) throws FileNotFoundException, IOException, ParseException {
+    public SparseDataset parse(String name, File file) throws IOException, ParseException {
         return parse(name, new FileInputStream(file));
     }
 
@@ -114,7 +114,7 @@ public class LibsvmParser {
      * Parse a libsvm sparse dataset from an input stream.
      * @param name the name of dataset.
      * @param stream the input stream of data.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
     public SparseDataset parse(String name, InputStream stream) throws IOException, ParseException {
 
@@ -147,10 +147,10 @@ public class LibsvmParser {
                 tokens = line.trim().split("\\s+");
 
                 if (classification) {
-                    int y = Integer.valueOf(tokens[0]);
+                    int y = Integer.parseInt(tokens[0]);
                     sparse.set(i, y);
                 } else {
-                    double y = Double.valueOf(tokens[0]);
+                    double y = Double.parseDouble(tokens[0]);
                     sparse.set(i, y);
                 }
 
@@ -160,8 +160,8 @@ public class LibsvmParser {
                         throw new NumberFormatException("Invalid data: " + tokens[k]);
                     }
 
-                    int j = Integer.valueOf(pair[0]) - 1;
-                    double x = Double.valueOf(pair[1]);
+                    int j = Integer.parseInt(pair[0]) - 1;
+                    double x = Double.parseDouble(pair[1]);
                     sparse.set(i, j, x);
                 }
 

@@ -145,7 +145,7 @@ public class CRF implements SequenceLabeler<double[]> {
         /**
          * Gradient regression tree boosting.
          */
-        private List<RegressionTree> trees = new ArrayList<RegressionTree>();
+        private List<RegressionTree> trees = new ArrayList<>();
     }
 
     /**
@@ -560,12 +560,12 @@ public class CRF implements SequenceLabeler<double[]> {
                 trellis[i] = crf.getTrellis(sequences[i]);
             }
 
-            List<GradientTask> gradientTasks = new ArrayList<GradientTask>();
+            List<GradientTask> gradientTasks = new ArrayList<>();
             for (int i = 0; i < sequences.length; i++) {
                 gradientTasks.add(new GradientTask(crf, trellis[i], scaling[i], labels[i]));
             }
 
-            List<BoostingTask> boostingTasks = new ArrayList<BoostingTask>();
+            List<BoostingTask> boostingTasks = new ArrayList<>();
             for (int i = 0; i < numClasses; i++) {
                 boostingTasks.add(new BoostingTask(crf.potentials[i], trellis, i));
             }
@@ -592,12 +592,12 @@ public class CRF implements SequenceLabeler<double[]> {
                 trellis[i] = crf.getTrellis(sequences[i]);
             }
 
-            List<GradientTask> gradientTasks = new ArrayList<GradientTask>();
+            List<GradientTask> gradientTasks = new ArrayList<>();
             for (int i = 0; i < sequences.length; i++) {
                 gradientTasks.add(new GradientTask(crf, trellis[i], scaling[i], labels[i]));
             }
 
-            List<BoostingTask> boostingTasks = new ArrayList<BoostingTask>();
+            List<BoostingTask> boostingTasks = new ArrayList<>();
             for (int i = 0; i < numClasses; i++) {
                 boostingTasks.add(new BoostingTask(crf.potentials[i], trellis, i));
             }

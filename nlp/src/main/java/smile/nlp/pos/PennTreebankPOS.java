@@ -413,7 +413,7 @@ public enum PennTreebankPOS {
      */
     private static final Map<String, String> map;
     static {
-        map = new HashMap<String, String>();
+        map = new HashMap<>();
 
         map.put(".", "SENT");
         map.put("?", "SENT");

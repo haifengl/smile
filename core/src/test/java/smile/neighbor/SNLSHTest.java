@@ -51,7 +51,7 @@ public class SNLSHTest {
         }
 
         private List<String> tokenize(String line, String regex) {
-            List<String> tokens = new LinkedList<String>();
+            List<String> tokens = new LinkedList<>();
             if (line == null || line.isEmpty()) {
                 throw new IllegalArgumentException("Line should not be blank!");
             }
@@ -82,19 +82,19 @@ public class SNLSHTest {
     public void before() throws IOException {
         trainData = loadData("msrp/msr_paraphrase_train.txt");
         testData = loadData("msrp/msr_paraphrase_test.txt");
-        signCache = new HashMap<String, Long>();
+        signCache = new HashMap<>();
         for (Sentence sentence : trainData) {
             long sign = simhash64(sentence.tokens);
             signCache.put(sentence.line, sign);
         }
-        toyData = new ArrayList<Sentence>();
+        toyData = new ArrayList<>();
         for (String text : texts) {
             toyData.add(new Sentence(text));
         }
     }
 
     private List<Sentence> loadData(String path) throws IOException {
-        List<Sentence> data = new ArrayList<Sentence>();
+        List<Sentence> data = new ArrayList<>();
         List<String> lines = IOUtils.readLines(IOUtils.getTestDataReader(path));
         for (String line : lines) {
             List<String> s = tokenize(line, "\t");
@@ -107,8 +107,8 @@ public class SNLSHTest {
     private Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[] linearKNN(SNLSH.AbstractSentence q, int k) {
         @SuppressWarnings("unchecked")
         Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[] neighbors = (Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>[])Array.newInstance(Neighbor.class, k);
-        HeapSelect<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> heap = new HeapSelect<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>>(neighbors);
-        Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence> neighbor = new Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>(null, null, 0, Double.MAX_VALUE);
+        HeapSelect<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> heap = new HeapSelect<>(neighbors);
+        Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence> neighbor = new Neighbor<>(null, null, 0, Double.MAX_VALUE);
         for (int i = 0; i < k; i++) {
             heap.add(neighbor);
         }
@@ -121,7 +121,7 @@ public class SNLSHTest {
             long sign2 = signCache.get(sentence.line);
             double distance = HammingDistance.d(sign1, sign2);
             if(distance < heap.peek().distance) {
-                heap.add(new Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>(sentence, sentence, 0, distance));
+                heap.add(new Neighbor<>(sentence, sentence, 0, distance));
                 hit++;
             }
         }
@@ -154,7 +154,7 @@ public class SNLSHTest {
                 minKey = sentence;
             }
         }
-        return new Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>(minKey, minKey, 0, minDist);
+        return new Neighbor<>(minKey, minKey, 0, minDist);
     }
 
     private void linearRange(Sentence q, double d, List<Neighbor<SNLSH.AbstractSentence,SNLSH.AbstractSentence>> neighbors) {
@@ -166,7 +166,7 @@ public class SNLSHTest {
             long sign2 = signCache.get(sentence.line);
             double distance = HammingDistance.d(sign1, sign2);
             if (distance <= d) {
-                neighbors.add(new Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>(sentence, sentence, 0, distance));
+                neighbors.add(new Neighbor<>(sentence, sentence, 0, distance));
             }
         }
     }
@@ -234,7 +234,7 @@ public class SNLSHTest {
     @Test
     public void testRange() {
         SNLSH<SNLSH.AbstractSentence> lsh = createLSH(toyData);
-        List<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> ns = new ArrayList<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>>();
+        List<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> ns = new ArrayList<>();
         lsh.range(new Sentence(texts[0]), 10, ns);
         System.out.println("-------test range begin-------");
         for (Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence> n : ns) {
@@ -250,9 +250,9 @@ public class SNLSHTest {
         double dist = 15.0;
         double recall = 0.0;
         for (Sentence q : testData) {
-            List<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> n1 = new ArrayList<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>>();
+            List<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> n1 = new ArrayList<>();
             lsh.range(q, dist, n1);
-            List<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> n2 = new ArrayList<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>>();
+            List<Neighbor<SNLSH.AbstractSentence, SNLSH.AbstractSentence>> n2 = new ArrayList<>();
             linearRange(q, dist, n2);
             int hit = 0;
             for (int m = 0; m < n1.size(); m++) {
@@ -272,7 +272,7 @@ public class SNLSHTest {
     }
 
     private SNLSH<SNLSH.AbstractSentence> createLSH(List<Sentence> data) {
-        SNLSH<SNLSH.AbstractSentence> lsh = new SNLSH<SNLSH.AbstractSentence>(8);
+        SNLSH<SNLSH.AbstractSentence> lsh = new SNLSH<>(8);
         for (Sentence sentence : data) {
             lsh.put(sentence, sentence);
         }
@@ -280,7 +280,7 @@ public class SNLSHTest {
     }
 
     private List<String> tokenize(String line, String regex) {
-        List<String> tokens = new LinkedList<String>();
+        List<String> tokens = new LinkedList<>();
         if (line == null || line.isEmpty()) {
             throw new IllegalArgumentException("Line should not be blank!");
         }

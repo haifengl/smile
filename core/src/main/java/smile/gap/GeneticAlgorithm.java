@@ -219,7 +219,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
     /**
      * Parallel tasks to evaluate the fitness of population.
      */
-    private List<Task> tasks = new ArrayList<Task>();
+    private List<Task> tasks = new ArrayList<>();
     
     /**
      * Constructor. The default selection strategy is tournament selection

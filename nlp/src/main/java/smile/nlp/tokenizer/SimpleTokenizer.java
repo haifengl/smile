@@ -144,7 +144,7 @@ public class SimpleTokenizer implements Tokenizer {
             }
         }
         
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
         for (String token : words) {
             if (!token.isEmpty()) {
                 result.add(token);

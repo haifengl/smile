@@ -58,7 +58,7 @@ public class Bag<T> {
      */
     public Bag(T[] features, boolean binary) {
         this.binary = binary;
-        this.features = new HashMap<T, Integer>();
+        this.features = new HashMap<>();
         for (int i = 0, k = 0; i < features.length; i++) {
             if (!this.features.containsKey(features[i])) {
                 this.features.put(features[i], k++);

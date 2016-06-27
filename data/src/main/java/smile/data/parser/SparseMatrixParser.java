@@ -59,32 +59,32 @@ public class SparseMatrixParser {
 
     /**
      * Parse a Harwell-Boeing column-compressed sparse matrix dataset from given URI.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public SparseMatrix parse(URI uri) throws FileNotFoundException, IOException, ParseException {
+    public SparseMatrix parse(URI uri) throws IOException, ParseException {
         return parse(new File(uri));
     }
 
     /**
      * Parse a Harwell-Boeing column-compressed sparse matrix dataset from given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public SparseMatrix parse(String path) throws FileNotFoundException, IOException, ParseException {
+    public SparseMatrix parse(String path) throws IOException, ParseException {
         return parse(new File(path));
     }
 
     /**
      * Parse a Harwell-Boeing column-compressed sparse matrix dataset from given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public SparseMatrix parse(File file) throws FileNotFoundException, IOException, ParseException {
+    public SparseMatrix parse(File file) throws IOException, ParseException {
         return parse(new FileInputStream(file));
     }
 
     /**
      * Parse a Harwell-Boeing column-compressed sparse matrix dataset from an input stream.
      * @param stream the input stream of data.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
     public SparseMatrix parse(InputStream stream) throws IOException, ParseException {
         int nrows = 0, ncols = 0, n = 0;
@@ -97,9 +97,9 @@ public class SparseMatrixParser {
             String[] tokens = line.split("\\s+");
             if (tokens.length == 3) {
                 try {
-                    nrows = Integer.valueOf(tokens[0]);
-                    ncols = Integer.valueOf(tokens[1]);
-                    n = Integer.valueOf(tokens[2]);        
+                    nrows = Integer.parseInt(tokens[0]);
+                    ncols = Integer.parseInt(tokens[1]);
+                    n = Integer.parseInt(tokens[2]);
                 } catch (Exception ex) {
                 }
             }
@@ -108,7 +108,7 @@ public class SparseMatrixParser {
                 // Harwell-Boeing Exchange Format. We ignore first two lines.
                 line = scanner.nextLine().trim();
                 tokens = line.split("\\s+");
-                int RHSCRD = Integer.valueOf(tokens[4]);
+                int RHSCRD = Integer.parseInt(tokens[4]);
 
                 line = scanner.nextLine().trim();
                 if (!line.startsWith("R")) {
@@ -116,9 +116,9 @@ public class SparseMatrixParser {
                 }
 
                 tokens = line.split("\\s+");
-                nrows = Integer.valueOf(tokens[1]);
-                ncols = Integer.valueOf(tokens[2]);
-                n = Integer.valueOf(tokens[3]);
+                nrows = Integer.parseInt(tokens[1]);
+                ncols = Integer.parseInt(tokens[2]);
+                n = Integer.parseInt(tokens[3]);
 
                 line = scanner.nextLine();
                 if (RHSCRD > 0) {

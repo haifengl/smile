@@ -50,11 +50,11 @@ public class AprioriPhraseExtractor {
      * @return An array list of sets of n-grams. The i-th entry is the set of i-grams.
      */
     public ArrayList<ArrayList<NGram>> extract(Collection<String[]> sentences, int maxNGramSize, int minFrequency) {
-        ArrayList<Set<NGram>> features = new ArrayList<Set<NGram>>(maxNGramSize + 1);
-        features.add(new HashSet<NGram>());
+        ArrayList<Set<NGram>> features = new ArrayList<>(maxNGramSize + 1);
+        features.add(new HashSet<>());
         for (int n = 1; n <= maxNGramSize; n++) {
-            Map<NGram, Integer> candidates = new HashMap<NGram, Integer>();
-            Set<NGram> feature = new HashSet<NGram>();
+            Map<NGram, Integer> candidates = new HashMap<>();
+            Set<NGram> feature = new HashSet<>();
             features.add(feature);
             Set<NGram> feature_1 = features.get(n - 1);
             for (String[] sentence : sentences) {
@@ -95,9 +95,9 @@ public class AprioriPhraseExtractor {
         }
         
         // filter out stop words
-        ArrayList<ArrayList<NGram>> results = new ArrayList<ArrayList<NGram>>();
+        ArrayList<ArrayList<NGram>> results = new ArrayList<>();
         for (Set<NGram> ngrams : features) {
-            ArrayList<NGram> result = new ArrayList<NGram>();
+            ArrayList<NGram> result = new ArrayList<>();
             results.add(result);
             for (NGram ngram : ngrams) {
                 boolean stopWord = true;

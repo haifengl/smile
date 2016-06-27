@@ -65,7 +65,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         startButton.setActionCommand("startButton");
         startButton.addActionListener(this);
 
-        Hashtable<Integer, JLabel> logNLabelTable = new Hashtable<Integer, JLabel>();
+        Hashtable<Integer, JLabel> logNLabelTable = new Hashtable<>();
         for (int i = 3; i <= 7; i++) {
             logNLabelTable.put(new Integer(i), new JLabel(String.valueOf(i)));
         }
@@ -76,7 +76,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         logNSlider.setPaintTicks(true);
         logNSlider.setPaintLabels(true);
 
-        Hashtable<Integer, JLabel> dimensionLabelTable = new Hashtable<Integer, JLabel>();
+        Hashtable<Integer, JLabel> dimensionLabelTable = new Hashtable<>();
         dimensionLabelTable.put(new Integer(2), new JLabel(String.valueOf(2)));
         for (int i = 20; i <= 120; i += 20) {
             dimensionLabelTable.put(new Integer(i), new JLabel(String.valueOf(i)));
@@ -127,15 +127,15 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
 
         System.out.println("Building searching data structure...");
         long time = System.currentTimeMillis();
-        LinearSearch<double[]> naive = new LinearSearch<double[]>(data, new EuclideanDistance());
+        LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
         int naiveBuild = (int) (System.currentTimeMillis() - time);
 
         time = System.currentTimeMillis();
-        KDTree<double[]> kdtree = new KDTree<double[]>(data, data);
+        KDTree<double[]> kdtree = new KDTree<>(data, data);
         int kdtreeBuild = (int) (System.currentTimeMillis() - time);
 
         time = System.currentTimeMillis();
-        CoverTree<double[]> cover = new CoverTree<double[]>(data, new EuclideanDistance());
+        CoverTree<double[]> cover = new CoverTree<>(data, new EuclideanDistance());
         int coverBuild = (int) (System.currentTimeMillis() - time);
 
         System.out.println("Perform 100 searches...");
@@ -163,7 +163,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         int coverSearch = (int) (System.currentTimeMillis() - time);
 
         time = System.currentTimeMillis();
-        LSH<double[]> lsh = new LSH<double[]>(dimension, 5, (int) Math.ceil(Math.log2(dimension)), 4 * radius, 1017881);
+        LSH<double[]> lsh = new LSH<>(dimension, 5, (int) Math.ceil(Math.log2(dimension)), 4 * radius, 1017881);
         for (int i = 0; i < n; i++) {
             lsh.put(data[i], data[i]);
         }
@@ -181,7 +181,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         System.out.format("The recall of LSH is %.1f%%\n", lshRecall * 100);
 
         time = System.currentTimeMillis();
-        MPLSH<double[]> mplsh = new MPLSH<double[]>(dimension, 5, (int) Math.ceil(Math.log2(n)), 4 * radius, 1017881);
+        MPLSH<double[]> mplsh = new MPLSH<>(dimension, 5, (int) Math.ceil(Math.log2(n)), 4 * radius, 1017881);
         for (int i = 0; i < n; i++) {
             mplsh.put(data[i], data[i]);
         }
