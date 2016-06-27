@@ -211,7 +211,7 @@ public class GCTParser {
                 }
             }
 
-            Datum<double[]> datum = new Datum<double[]>(x);
+            Datum<double[]> datum = new Datum<>(x);
             datum.name = tokens[0];
             datum.description = tokens[1];
             data.add(datum);

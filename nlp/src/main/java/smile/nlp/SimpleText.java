@@ -37,7 +37,7 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
     /**
      * The term frequency.
      */
-    private HashMap<String, Integer> freq = new HashMap<String, Integer>();
+    private HashMap<String, Integer> freq = new HashMap<>();
     /**
      * The maximum term frequency over all terms in the documents;
      */

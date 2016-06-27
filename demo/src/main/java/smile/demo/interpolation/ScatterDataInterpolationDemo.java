@@ -64,8 +64,8 @@ public class ScatterDataInterpolationDemo extends JPanel {
         add(canvas);
 
         double[][] ww = new double[26][26];
-        ArrayList<double[]> xx = new ArrayList<double[]>();
-        ArrayList<Double> zz = new ArrayList<Double>();
+        ArrayList<double[]> xx = new ArrayList<>();
+        ArrayList<Double> zz = new ArrayList<>();
         for (int i = 0; i <= 25; i++) {
             for (int j = 0; j <= 25; j++) {
                 if (Math.random() < 0.2)

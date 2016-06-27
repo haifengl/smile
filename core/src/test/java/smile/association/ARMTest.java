@@ -114,7 +114,7 @@ public class ARMTest {
     public void testLearnPima() {
         System.out.println("pima");
 
-        List<int[]> dataList = new ArrayList<int[]>(1000);
+        List<int[]> dataList = new ArrayList<>(1000);
 
         try {
             BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("transaction/pima.D38.N768.C2");
@@ -157,7 +157,7 @@ public class ARMTest {
     public void testLearnKosarak() {
         System.out.println("kosarak");
 
-        List<int[]> dataList = new ArrayList<int[]>(1000);
+        List<int[]> dataList = new ArrayList<>(1000);
 
         try {
             BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("transaction/kosarak.dat");
@@ -170,7 +170,7 @@ public class ARMTest {
 
                 String[] s = line.split(" ");
 
-                Set<Integer> items = new HashSet<Integer>();
+                Set<Integer> items = new HashSet<>();
                 for (int i = 0; i < s.length; i++) {
                     items.add(Integer.parseInt(s[i]));
                 }

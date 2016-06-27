@@ -93,7 +93,7 @@ public class SimpleSentenceSplitter implements SentenceSplitter {
 
     @Override
     public String[] split(String text) {
-        ArrayList<String> sentences = new ArrayList<String>();
+        ArrayList<String> sentences = new ArrayList<>();
 
         // The number of words in the sentence.
         int len = 0;

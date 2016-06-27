@@ -161,7 +161,7 @@ public class ScatterPlot extends Plot {
         int[] id = Math.unique(y);
         Arrays.sort(id);
 
-        classLookupTable = new HashMap<Integer, Integer>(id.length);
+        classLookupTable = new HashMap<>(id.length);
 
         for (int i = 0; i < id.length; i++) {
             classLookupTable.put(id[i], i);

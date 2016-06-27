@@ -64,7 +64,7 @@ public class CooccurrenceKeywordExtractor {
      * @return The top keywords.
      */
     public ArrayList<NGram> extract(String text, int maxNumKeywords) {
-        ArrayList<String[]> sentences = new ArrayList<String[]>();
+        ArrayList<String[]> sentences = new ArrayList<>();
         
         SimpleTokenizer tokenizer = new SimpleTokenizer();
         PorterStemmer stemmer = new PorterStemmer();
@@ -84,7 +84,7 @@ public class CooccurrenceKeywordExtractor {
 
         //  Extract phrases by Apriori-like algorithm.
         int maxNGramSize = 4;
-        ArrayList<NGram> terms = new ArrayList<NGram>();
+        ArrayList<NGram> terms = new ArrayList<>();
         AprioriPhraseExtractor phraseExtractor = new AprioriPhraseExtractor();
         for (ArrayList<NGram> ngrams : phraseExtractor.extract(sentences, maxNGramSize, 4)) {
             for (NGram ngram : ngrams) {
@@ -101,7 +101,7 @@ public class CooccurrenceKeywordExtractor {
         }
         
         // Trie for phrase matching.
-        Trie<String, Integer> trie = new Trie<String, Integer>();
+        Trie<String, Integer> trie = new Trie<>();
         for (int i = 0; i < n; i++) {
             trie.put(freqTerms[i].words, i);
         }
@@ -110,7 +110,7 @@ public class CooccurrenceKeywordExtractor {
         int[] nw = new int[n];
         int[][] table = new int[n][n];
         for (String[] sentence : sentences) {
-            Set<Integer> phrases = new HashSet<Integer>();
+            Set<Integer> phrases = new HashSet<>();
             for (int j = 1; j <= maxNGramSize; j++) {
                 for (int i = 0; i <= sentence.length - j; i++) {
                     String[] phrase  = Arrays.copyOfRange(sentence, i, i+j);
@@ -208,7 +208,7 @@ public class CooccurrenceKeywordExtractor {
         }
         
         int[] index = QuickSort.sort(score);
-        ArrayList<NGram> keywords = new ArrayList<NGram>();
+        ArrayList<NGram> keywords = new ArrayList<>();
         for (int i = n; i-- > 0; ) {
             boolean add = true;
             // filter out components of phrases, e.g. "digital" in "digital computer".

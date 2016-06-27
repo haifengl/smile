@@ -49,19 +49,19 @@ public class SimpleCorpus implements Corpus {
     /**
      * The set of documents.
      */
-    private List<SimpleText> docs = new ArrayList<SimpleText>();
+    private List<SimpleText> docs = new ArrayList<>();
     /**
      * Frequency of single tokens.
      */
-    private HashMap<String, Integer> freq = new HashMap<String, Integer>();
+    private HashMap<String, Integer> freq = new HashMap<>();
     /**
      * Frequency of bigrams.
      */
-    private HashMap<Bigram, Integer> freq2 = new HashMap<Bigram, Integer>();
+    private HashMap<Bigram, Integer> freq2 = new HashMap<>();
     /**
      * Inverted file storing a mapping from terms to the documents containing it.
      */
-    private HashMap<String, List<SimpleText>> invertedFile = new HashMap<String, List<SimpleText>>();
+    private HashMap<String, List<SimpleText>> invertedFile = new HashMap<>();
     /**
      * Sentence splitter.
      */
@@ -106,7 +106,7 @@ public class SimpleCorpus implements Corpus {
      * Add a document to the corpus.
      */
     public Text add(String id, String title, String body) {
-        ArrayList<String> bag = new ArrayList<String>();
+        ArrayList<String> bag = new ArrayList<>();
         
         for (String sentence : splitter.split(body)) {
             String[] tokens = tokenizer.split(sentence);
@@ -166,7 +166,7 @@ public class SimpleCorpus implements Corpus {
         for (String term : doc.unique()) {
             List<SimpleText> hit = invertedFile.get(term);
             if (hit == null) {
-                hit = new ArrayList<SimpleText>();
+                hit = new ArrayList<>();
                 invertedFile.put(term, hit);
             }
             hit.add(doc);
@@ -235,7 +235,7 @@ public class SimpleCorpus implements Corpus {
     @Override
     public Iterator<Text> search(String term) {
         if (invertedFile.containsKey(term)) {
-            ArrayList<Text> hits = new ArrayList<Text>(invertedFile.get(term));
+            ArrayList<Text> hits = new ArrayList<>(invertedFile.get(term));
             return hits.iterator();
         } else {
             return Collections.emptyIterator();
@@ -249,7 +249,7 @@ public class SimpleCorpus implements Corpus {
 
             int n = hits.size();
 
-            ArrayList<Relevance> rank = new ArrayList<Relevance>(n);
+            ArrayList<Relevance> rank = new ArrayList<>(n);
             for (SimpleText doc : hits) {
                 int tf = doc.tf(term);
                 rank.add(new Relevance(doc, ranker.rank(this, doc, term, tf, n)));
@@ -264,7 +264,7 @@ public class SimpleCorpus implements Corpus {
 
     @Override
     public Iterator<Relevance> search(RelevanceRanker ranker, String[] terms) {
-        Set<SimpleText> hits = new HashSet<SimpleText>();
+        Set<SimpleText> hits = new HashSet<>();
 
         for (int i = 0; i < terms.length; i++) {
             if (invertedFile.containsKey(terms[i])) {
@@ -277,7 +277,7 @@ public class SimpleCorpus implements Corpus {
             return Collections.emptyIterator();
         }
         
-        ArrayList<Relevance> rank = new ArrayList<Relevance>(n);
+        ArrayList<Relevance> rank = new ArrayList<>(n);
         for (SimpleText doc : hits) {
             double r = 0.0;
             for (int i = 0; i < terms.length; i++) {

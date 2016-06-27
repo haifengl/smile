@@ -52,7 +52,7 @@ public class Bagging {
             // Training samples draw with replacement.
             for (int l = 0; l < k; l++) {
                 int nj = 0;
-                ArrayList<Integer> cj = new ArrayList<Integer>();
+                ArrayList<Integer> cj = new ArrayList<>();
                 for (int i = 0; i < n; i++) {
                     if (y[i] == l) {
                         cj.add(i);
