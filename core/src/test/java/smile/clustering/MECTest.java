@@ -72,7 +72,7 @@ public class MECTest {
             
             AdjustedRandIndex ari = new AdjustedRandIndex();
             RandIndex rand = new RandIndex();
-            MEC<double[]> mec = new MEC<double[]>(x, new EuclideanDistance(), 10, 8.0);
+            MEC<double[]> mec = new MEC<>(x, new EuclideanDistance(), 10, 8.0);
             
             double r = rand.measure(y, mec.getClusterLabel());
             double r2 = ari.measure(y, mec.getClusterLabel());

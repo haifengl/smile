@@ -65,7 +65,7 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
         startButton.setActionCommand("startButton");
         startButton.addActionListener(this);
 
-        datasetBox = new JComboBox<String>();
+        datasetBox = new JComboBox<>();
         for (int i = 0; i < datasetName.length; i++) {
             datasetBox.addItem(datasetName[i]);
         }

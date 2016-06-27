@@ -65,7 +65,7 @@ public class LinearSearchSpeedTest {
     public void testString() {
         System.out.println("string");
 
-        List<String> words = new ArrayList<String>();
+        List<String> words = new ArrayList<>();
         long start = System.currentTimeMillis();
         try {
             BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("neighbor/index.noun");
@@ -85,10 +85,10 @@ public class LinearSearchSpeedTest {
         System.out.format("Loading string data: %.2fs%n", time);
 
         String[] data = words.toArray(new String[words.size()]);
-        LinearSearch<String> naive = new LinearSearch<String>(data, new EditDistance(50, true));
+        LinearSearch<String> naive = new LinearSearch<>(data, new EditDistance(50, true));
 
         start = System.currentTimeMillis();
-        List<Neighbor<String, String>> neighbors = new ArrayList<Neighbor<String, String>>();
+        List<Neighbor<String, String>> neighbors = new ArrayList<>();
         for (int i = 1000; i < 1100; i++) {
             naive.range(words.get(i), 1, neighbors);
             neighbors.clear();
@@ -139,7 +139,7 @@ public class LinearSearchSpeedTest {
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Generating toy data (four Gaussians): %.2fs%n", time);
 
-        LinearSearch<double[]> naive = new LinearSearch<double[]>(data, new EuclideanDistance());
+        LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
 
         start = System.currentTimeMillis();
         for (int i = 0; i < 1000; i++) {
@@ -156,7 +156,7 @@ public class LinearSearchSpeedTest {
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        List<Neighbor<double[], double[]>> n = new ArrayList<Neighbor<double[], double[]>>();
+        List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             naive.range(data[Math.randomInt(data.length)], 1.0, n);
             n.clear();
@@ -190,7 +190,7 @@ public class LinearSearchSpeedTest {
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Loading USPS: %.2fs%n", time);
 
-        LinearSearch<double[]> naive = new LinearSearch<double[]>(x, new EuclideanDistance());
+        LinearSearch<double[]> naive = new LinearSearch<>(x, new EuclideanDistance());
 
         start = System.currentTimeMillis();
         for (int i = 0; i < testx.length; i++) {
@@ -207,7 +207,7 @@ public class LinearSearchSpeedTest {
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        List<Neighbor<double[], double[]>> n = new ArrayList<Neighbor<double[], double[]>>();
+        List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (int i = 0; i < testx.length; i++) {
             naive.range(testx[i], 8.0, n);
             n.clear();

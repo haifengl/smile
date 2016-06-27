@@ -79,7 +79,7 @@ public class MPLSHSpeedTest {
         System.out.format("Loading USPS: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        MPLSH<double[]> lsh = new MPLSH<double[]>(256, 100, 3, 4.0);
+        MPLSH<double[]> lsh = new MPLSH<>(256, 100, 3, 4.0);
         for (double[] xi : x) {
             lsh.put(xi, xi);
         }
@@ -90,7 +90,7 @@ public class MPLSHSpeedTest {
             train[i] = x[index[i]];
         }
 
-        LinearSearch<double[]> naive = new LinearSearch<double[]>(x, new EuclideanDistance());
+        LinearSearch<double[]> naive = new LinearSearch<>(x, new EuclideanDistance());
         lsh.learn(naive, train, 8.0);
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Building LSH: %.2fs%n", time);
@@ -110,7 +110,7 @@ public class MPLSHSpeedTest {
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        List<Neighbor<double[], double[]>> n = new ArrayList<Neighbor<double[], double[]>>();
+        List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (int i = 0; i < testx.length; i++) {
             lsh.range(testx[i], 8.0, n);
             n.clear();

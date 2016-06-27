@@ -47,43 +47,43 @@ public class BinarySparseDatasetParser {
 
     /**
      * Parse a binary sparse dataset from given URI.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public BinarySparseDataset parse(URI uri) throws FileNotFoundException, IOException, ParseException {
+    public BinarySparseDataset parse(URI uri) throws IOException, ParseException {
         return parse(new File(uri));
     }
 
     /**
      * Parse a binary sparse dataset from given URI.
      * @param uri the URI of data source.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public BinarySparseDataset parse(String name, URI uri) throws FileNotFoundException, IOException, ParseException {
+    public BinarySparseDataset parse(String name, URI uri) throws IOException, ParseException {
         return parse(name, new File(uri));
     }
 
     /**
      * Parse a binary sparse dataset from given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public BinarySparseDataset parse(String path) throws FileNotFoundException, IOException, ParseException {
+    public BinarySparseDataset parse(String path) throws IOException, ParseException {
         return parse(new File(path));
     }
 
     /**
      * Parse a binary sparse dataset from given file.
      * @param path the file path of data source.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public BinarySparseDataset parse(String name, String path) throws FileNotFoundException, IOException, ParseException {
+    public BinarySparseDataset parse(String name, String path) throws IOException, ParseException {
         return parse(name, new File(path));
     }
 
     /**
      * Parse a binary sparse dataset from given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public BinarySparseDataset parse(File file) throws FileNotFoundException, IOException, ParseException {
+    public BinarySparseDataset parse(File file) throws IOException, ParseException {
         String name = file.getPath();
         return parse(name, new FileInputStream(file));
     }
@@ -91,16 +91,16 @@ public class BinarySparseDatasetParser {
     /**
      * Parse a binary sparse dataset from given file.
      * @param file the file of data source.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public BinarySparseDataset parse(String name, File file) throws FileNotFoundException, IOException, ParseException {
+    public BinarySparseDataset parse(String name, File file) throws IOException, ParseException {
         return parse(name, new FileInputStream(file));
     }
 
     /**
      * Parse a binary sparse dataset from an input stream.
      * @param stream the input stream of data.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
     public BinarySparseDataset parse(InputStream stream) throws IOException, ParseException {
         return parse("Binary Sparse Dataset", stream);
@@ -110,7 +110,7 @@ public class BinarySparseDatasetParser {
      * Parse a binary sparse dataset from an input stream.
      * @param name the name of dataset.
      * @param stream the input stream of data.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
     public BinarySparseDataset parse(String name, InputStream stream) throws IOException, ParseException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
@@ -122,7 +122,7 @@ public class BinarySparseDatasetParser {
                 throw new IOException("Empty data source.");
            }
         
-           Set<Integer> items = new HashSet<Integer>();
+           Set<Integer> items = new HashSet<>();
            do {
                 line = line.trim();
                 if (line.isEmpty()) {

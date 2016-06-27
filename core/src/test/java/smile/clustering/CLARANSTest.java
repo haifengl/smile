@@ -72,7 +72,7 @@ public class CLARANSTest {
             
             AdjustedRandIndex ari = new AdjustedRandIndex();
             RandIndex rand = new RandIndex();
-            CLARANS<double[]> clarans = new CLARANS<double[]>(x, new EuclideanDistance(), 10, 50, 8);
+            CLARANS<double[]> clarans = new CLARANS<>(x, new EuclideanDistance(), 10, 50, 8);
 
             double r = rand.measure(y, clarans.getClusterLabel());
             double r2 = ari.measure(y, clarans.getClusterLabel());

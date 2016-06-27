@@ -305,12 +305,12 @@ public class SVM <T> implements OnlineClassifier<T>, Serializable {
         public SVM<T> train(T[] x, int[] y, double[] weight) {
             SVM<T> svm = null;
             if (k == 2) {
-                svm = new SVM<T>(kernel, Cp, Cn);
+                svm = new SVM<>(kernel, Cp, Cn);
             } else {
                 if (this.weight == null) {
-                    svm = new SVM<T>(kernel, Cp, k, strategy);
+                    svm = new SVM<>(kernel, Cp, k, strategy);
                 } else {
-                    svm = new SVM<T>(kernel, Cp, this.weight, strategy);
+                    svm = new SVM<>(kernel, Cp, this.weight, strategy);
                 }
             }
             
@@ -377,7 +377,7 @@ public class SVM <T> implements OnlineClassifier<T>, Serializable {
         /**
          * Support vectors.
          */
-        List<SupportVector> sv = new ArrayList<SupportVector>();
+        List<SupportVector> sv = new ArrayList<>();
         /**
          * Weight vector for linear SVM.
          */
@@ -984,12 +984,12 @@ public class SVM <T> implements OnlineClassifier<T>, Serializable {
         this.strategy = strategy;
         
         if (strategy == Multiclass.ONE_VS_ALL) {
-            svms = new ArrayList<LASVM>(k);
+            svms = new ArrayList<>(k);
             for (int i = 0; i < k; i++) {
                 svms.add(new LASVM(C, C));
             }
         } else {
-            svms = new ArrayList<LASVM>(k * (k - 1) / 2);
+            svms = new ArrayList<>(k * (k - 1) / 2);
             for (int i = 0; i < k; i++) {
                 for (int j = i + 1; j < k; j++) {
                     svms.add(new LASVM(C, C));
@@ -1026,12 +1026,12 @@ public class SVM <T> implements OnlineClassifier<T>, Serializable {
         this.wi = weight;
         
         if (strategy == Multiclass.ONE_VS_ALL) {
-            svms = new ArrayList<LASVM>(k);
+            svms = new ArrayList<>(k);
             for (int i = 0; i < k; i++) {
                 svms.add(new LASVM(C, C));
             }
         } else {
-            svms = new ArrayList<LASVM>(k * (k - 1) / 2);
+            svms = new ArrayList<>(k * (k - 1) / 2);
             for (int i = 0; i < k; i++) {
                 for (int j = i + 1; j < k; j++) {
                     svms.add(new LASVM(weight[i]*C, weight[j]*C));
@@ -1170,7 +1170,7 @@ public class SVM <T> implements OnlineClassifier<T>, Serializable {
                 svm.learn(x, yi, weight);
             }
         } else if (strategy == Multiclass.ONE_VS_ALL) {
-            List<TrainingTask> tasks = new ArrayList<TrainingTask>(k);
+            List<TrainingTask> tasks = new ArrayList<>(k);
             for (int i = 0; i < k; i++) {
                 int[] yi = new int[y.length];
                 double[] w = wi == null ? weight : new double[y.length];
@@ -1198,7 +1198,7 @@ public class SVM <T> implements OnlineClassifier<T>, Serializable {
                 e.printStackTrace();
             }
         } else {
-            List<TrainingTask> tasks = new ArrayList<TrainingTask>(k * (k - 1) / 2);
+            List<TrainingTask> tasks = new ArrayList<>(k * (k - 1) / 2);
             for (int i = 0, m = 0; i < k; i++) {
                 for (int j = i + 1; j < k; j++, m++) {
                     int n = 0;
@@ -1249,7 +1249,7 @@ public class SVM <T> implements OnlineClassifier<T>, Serializable {
         if (k == 2) {
             svm.finish();
         } else {
-            List<ProcessTask> tasks = new ArrayList<ProcessTask>(svms.size());
+            List<ProcessTask> tasks = new ArrayList<>(svms.size());
             for (LASVM s : svms) {
                 tasks.add(new ProcessTask(s));
             }

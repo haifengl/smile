@@ -35,11 +35,11 @@ public class FeatureSet <T> {
     /**
      * Feature generators.
      */
-    List<Feature<T>> features = new ArrayList<Feature<T>>();
+    List<Feature<T>> features = new ArrayList<>();
     /**
      * The variable attributes of generated features.
      */
-    List<Attribute> attributes = new ArrayList<Attribute>();
+    List<Attribute> attributes = new ArrayList<>();
     
     /**
      * Constructor.
@@ -123,7 +123,7 @@ public class FeatureSet <T> {
 
         for (int i = 0; i < data.size(); i++) {
             Datum<T> datum = data.get(i);
-            Datum<double[]> x = new Datum<double[]>(f(datum.x), datum.y, datum.weight);
+            Datum<double[]> x = new Datum<>(f(datum.x), datum.y, datum.weight);
             x.name = datum.name;
             x.description = datum.description;
             x.timestamp = datum.timestamp;

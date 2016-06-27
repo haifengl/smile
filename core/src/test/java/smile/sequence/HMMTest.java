@@ -247,7 +247,7 @@ public class HMMTest {
     public void testP_intArr_intArr2() {
         System.out.println("p");
         String[] symbols = {"0", "1"};
-        HMM<String> hmm = new HMM<String>(pi, a, b, symbols);
+        HMM<String> hmm = new HMM<>(pi, a, b, symbols);
 
         String[] o = {"0", "0", "1", "1", "0", "1", "1", "0"};
         int[] s = {0, 0, 1, 1, 1, 1, 1, 0};
@@ -263,7 +263,7 @@ public class HMMTest {
     public void testLogp_intArr_intArr2() {
         System.out.println("logp");
         String[] symbols = {"0", "1"};
-        HMM<String> hmm = new HMM<String>(pi, a, b, symbols);
+        HMM<String> hmm = new HMM<>(pi, a, b, symbols);
 
         String[] o = {"0", "0", "1", "1", "0", "1", "1", "0"};
         int[] s = {0, 0, 1, 1, 1, 1, 1, 0};
@@ -279,7 +279,7 @@ public class HMMTest {
     public void testP_intArr2() {
         System.out.println("p");
         String[] symbols = {"0", "1"};
-        HMM<String> hmm = new HMM<String>(pi, a, b, symbols);
+        HMM<String> hmm = new HMM<>(pi, a, b, symbols);
 
         String[] o = {"0", "0", "1", "1", "0", "1", "1", "0"};
         double expResult = 0.003663364;
@@ -294,7 +294,7 @@ public class HMMTest {
     public void testLogp_intArr2() {
         System.out.println("logp");
         String[] symbols = {"0", "1"};
-        HMM<String> hmm = new HMM<String>(pi, a, b, symbols);
+        HMM<String> hmm = new HMM<>(pi, a, b, symbols);
 
         String[] o = {"0", "0", "1", "1", "0", "1", "1", "0"};
         double expResult = -5.609373;
@@ -309,7 +309,7 @@ public class HMMTest {
     public void testPredict2() {
         System.out.println("predict");
         String[] symbols = {"0", "1"};
-        HMM<String> hmm = new HMM<String>(pi, a, b, symbols);
+        HMM<String> hmm = new HMM<>(pi, a, b, symbols);
 
         String[] o = {"0", "0", "1", "1", "0", "1", "1", "0"};
         int[] s = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -338,7 +338,7 @@ public class HMMTest {
             {0.5, 0.2, 0.3},
             {0.2, 0.3, 0.5}
         };
-        HMM<String> hmm = new HMM<String>(pi2, a2, b2, symbols);
+        HMM<String> hmm = new HMM<>(pi2, a2, b2, symbols);
 
         String[] o = {"H", "H", "P", "P", "P", "H", "H", "H", "P", "P", "P", "H", "T", "T", "T"};
         int[] s = {0, 1, 2, 2, 2, 0, 1, 1, 2, 2, 2, 0, 2, 2, 0};
@@ -389,7 +389,7 @@ public class HMMTest {
         double[] pi2 = {0.55, 0.45};
         double[][] a2 = {{0.7, 0.3}, {0.15, 0.85}};
         double[][] b2 = {{0.45, 0.55}, {0.3, 0.7}};
-        HMM<String> init = new HMM<String>(pi2, a2, b2, symbols);
+        HMM<String> init = new HMM<>(pi2, a2, b2, symbols);
         HMM<String> result = init.learn(sequences, 100);
         System.out.println(result);
     }

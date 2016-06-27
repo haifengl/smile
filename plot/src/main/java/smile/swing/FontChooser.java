@@ -227,7 +227,7 @@ public class FontChooser extends JComponent {
 
     private JList<String> getFontFamilyList() {
         if (fontNameList == null) {
-            fontNameList = new JList<String>(getFontFamilies());
+            fontNameList = new JList<>(getFontFamilies());
             fontNameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             fontNameList.addListSelectionListener(
                     new ListSelectionHandler(getFontFamilyTextField()));
@@ -240,7 +240,7 @@ public class FontChooser extends JComponent {
 
     private JList<String> getFontStyleList() {
         if (fontStyleList == null) {
-            fontStyleList = new JList<String>(getFontStyleNames());
+            fontStyleList = new JList<>(getFontStyleNames());
             fontStyleList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             fontStyleList.addListSelectionListener(
                     new ListSelectionHandler(getFontStyleTextField()));
@@ -253,7 +253,7 @@ public class FontChooser extends JComponent {
 
     private JList<String> getFontSizeList() {
         if (fontSizeList == null) {
-            fontSizeList = new JList<String>(this.fontSizeStrings);
+            fontSizeList = new JList<>(this.fontSizeStrings);
             fontSizeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             fontSizeList.addListSelectionListener(
                     new ListSelectionHandler(getFontSizeTextField()));

@@ -93,7 +93,7 @@ public class DBScanTest {
             label[i] = 3;
         }
         
-        DBScan<double[]> dbscan = new DBScan<double[]>(data, new KDTree<double[]>(data, data), 200, 0.8);
+        DBScan<double[]> dbscan = new DBScan<>(data, new KDTree<>(data, data), 200, 0.8);
         System.out.println(dbscan);
         
         int[] size = dbscan.getClusterSize();

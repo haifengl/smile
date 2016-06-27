@@ -341,7 +341,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
                 // Training samples draw with replacement.
                 for (int l = 0; l < k; l++) {
                     int nj = 0;
-                    ArrayList<Integer> cj = new ArrayList<Integer>();
+                    ArrayList<Integer> cj = new ArrayList<>();
                     for (int i = 0; i < n; i++) {
                         if (y[i] == l) {
                             cj.add(i);
@@ -581,7 +581,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
         int n = x.length;
         int[][] prediction = new int[n][k]; // out-of-bag prediction
         int[][] order = SmileUtils.sort(attributes, x);
-        List<TrainingTask> tasks = new ArrayList<TrainingTask>();
+        List<TrainingTask> tasks = new ArrayList<>();
         for (int i = 0; i < ntrees; i++) {
             tasks.add(new TrainingTask(attributes, x, y, maxNodes, nodeSize, mtry, subsample, rule, classWeight, order, prediction));
         }
@@ -591,7 +591,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
         } catch (Exception ex) {
             logger.error("Failed to train random forest on multi-core", ex);
 
-            trees = new ArrayList<Tree>(ntrees);
+            trees = new ArrayList<>(ntrees);
             for (int i = 0; i < ntrees; i++) {
                 trees.add(tasks.get(i).call());
             }
@@ -672,7 +672,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
             throw new IllegalArgumentException("Invalid new model size: " + ntrees);
         }
 
-        List<Tree> model = new ArrayList<Tree>(ntrees);
+        List<Tree> model = new ArrayList<>(ntrees);
         for (int i = 0; i < ntrees; i++) {
             model.add(trees.get(i));
         }

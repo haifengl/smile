@@ -76,7 +76,7 @@ public class SVMDemo extends ClassificationDemo {
         double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
         int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
         
-        SVM<double[]> svm = new SVM<double[]>(new GaussianKernel(gamma), C);
+        SVM<double[]> svm = new SVM<>(new GaussianKernel(gamma), C);
         svm.learn(data, label);
         svm.finish();
         
