@@ -59,32 +59,32 @@ public class SparseMatrixParser {
 
     /**
      * Parse a Harwell-Boeing column-compressed sparse matrix dataset from given URI.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public SparseMatrix parse(URI uri) throws FileNotFoundException, IOException, ParseException {
+    public SparseMatrix parse(URI uri) throws IOException, ParseException {
         return parse(new File(uri));
     }
 
     /**
      * Parse a Harwell-Boeing column-compressed sparse matrix dataset from given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public SparseMatrix parse(String path) throws FileNotFoundException, IOException, ParseException {
+    public SparseMatrix parse(String path) throws IOException, ParseException {
         return parse(new File(path));
     }
 
     /**
      * Parse a Harwell-Boeing column-compressed sparse matrix dataset from given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public SparseMatrix parse(File file) throws FileNotFoundException, IOException, ParseException {
+    public SparseMatrix parse(File file) throws IOException, ParseException {
         return parse(new FileInputStream(file));
     }
 
     /**
      * Parse a Harwell-Boeing column-compressed sparse matrix dataset from an input stream.
      * @param stream the input stream of data.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
     public SparseMatrix parse(InputStream stream) throws IOException, ParseException {
         int nrows = 0, ncols = 0, n = 0;
