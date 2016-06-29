@@ -328,25 +328,25 @@ public class ArffParser {
 
     /**
      * Returns the attribute set of given URI.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public static Attribute[] getAttributes(URI uri) throws FileNotFoundException, IOException, ParseException {
+    public static Attribute[] getAttributes(URI uri) throws IOException, ParseException {
         return getAttributes(new File(uri));
     }
 
     /**
      * Returns the attribute set of given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public static Attribute[] getAttributes(String path) throws FileNotFoundException, IOException, ParseException {
+    public static Attribute[] getAttributes(String path) throws IOException, ParseException {
         return getAttributes(new File(path));
     }
 
     /**
      * Returns the attribute set of given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public static Attribute[] getAttributes(File file) throws FileNotFoundException, IOException, ParseException {
+    public static Attribute[] getAttributes(File file) throws IOException, ParseException {
         return getAttributes(new FileInputStream(file));
     }
 
@@ -368,25 +368,25 @@ public class ArffParser {
     
     /**
      * Parse a dataset from given URI.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public AttributeDataset parse(URI uri) throws FileNotFoundException, IOException, ParseException {
+    public AttributeDataset parse(URI uri) throws IOException, ParseException {
         return parse(new File(uri));
     }
 
     /**
      * Parse a dataset from given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public AttributeDataset parse(String path) throws FileNotFoundException, IOException, ParseException {
+    public AttributeDataset parse(String path) throws IOException, ParseException {
         return parse(new File(path));
     }
 
     /**
      * Parse a dataset from given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public AttributeDataset parse(File file) throws FileNotFoundException, IOException, ParseException {
+    public AttributeDataset parse(File file) throws IOException, ParseException {
         return parse(new FileInputStream(file));
     }
 
