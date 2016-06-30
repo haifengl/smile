@@ -85,7 +85,7 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class SVM <T> implements OnlineClassifier<T>, Serializable {
+public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(SVM.class);
 
@@ -394,6 +394,10 @@ public class SVM <T> implements OnlineClassifier<T>, Serializable {
          * The number of bounded support vectors.
          */
         int nbsv = 0;
+        /**
+         * Platt Scaling for estimating posterior probabilities.
+         */
+        PlattScaling platt;
         /**
          * If minimax is called after update.
          */
@@ -901,6 +905,22 @@ public class SVM <T> implements OnlineClassifier<T>, Serializable {
             }
         }
 
+        /**
+         * After calling finish, the user should call this method
+         * to train Platt Scaling to estimate posteriori probabilities.
+         *
+         * @param x training samples.
+         * @param y training labels.
+         */
+        void trainPlattScaling(T[] x, int[] y) {
+            int l = y.length;
+            double[] scores = new double[l];
+            for (int i = 0; i < l; i++) {
+                scores[i] = predict(x[i]);
+            }
+            platt = new PlattScaling(scores, y);
+        }
+
         void evict() {
             minmax();
             
@@ -1263,6 +1283,68 @@ public class SVM <T> implements OnlineClassifier<T>, Serializable {
     }
 
     /**
+     * After calling finish, the user should call this method
+     * to train Platt Scaling to estimate posteriori probabilities.
+     *
+     * @param x training samples.
+     * @param y training labels.
+     */
+
+    public void trainPlattScaling(T[] x, int[] y) {
+        if (k == 2) {
+            svm.trainPlattScaling(x, y);
+        } else if (strategy == Multiclass.ONE_VS_ALL) {
+            List<PlattScalingTask> tasks = new ArrayList<>(svms.size());
+
+            for (int m = 0; m < svms.size(); m++) {
+                LASVM s = svms.get(m);
+
+                int l = y.length;
+                int[] yi = new int[l];
+                for (int i = 0; i < l; i++) {
+                    if (y[i] == m)
+                        yi[i] = +1;
+                    else
+                        yi[i] = -1;
+                }
+
+                tasks.add(new PlattScalingTask(s, x, yi));
+            }
+
+            try {
+                MulticoreExecutor.run(tasks);
+            } catch (Exception e) {
+                logger.error("Failed to train Platt Scaling on multi-core", e);
+            }
+        } else {
+            List<PlattScalingTask> tasks = new ArrayList<>(svms.size());
+
+            for (int i = 0, m = 0; i < k; i++) {
+                for (int j = i + 1; j < k; j++, m++) {
+                    LASVM s = svms.get(m);
+
+                    int l = y.length;
+                    int[] yi = new int[l];
+                    for (int p = 0; p < l; p++) {
+                        if (y[p] == i)
+                            yi[p] = +1;
+                        else
+                            yi[p] = -1;
+                    }
+
+                    tasks.add(new PlattScalingTask(s, x, yi));
+                }
+            }
+
+            try {
+                MulticoreExecutor.run(tasks);
+            } catch (Exception e) {
+                logger.error("Failed to train Platt Scaling on multi-core", e);
+            }
+        }
+    }
+
+    /**
      * Trains a LASVM.
      */
     class TrainingTask implements Callable<LASVM> {
@@ -1297,6 +1379,27 @@ public class SVM <T> implements OnlineClassifier<T>, Serializable {
         @Override
         public LASVM call() {
             svm.finish();
+            return svm;
+        }
+    }
+
+    /**
+     * Train Platt Scaling.
+     */
+    class PlattScalingTask implements Callable<LASVM> {
+        LASVM svm;
+        T[] x;
+        int[] y;
+
+        PlattScalingTask(LASVM svm, T[] x, int[] y) {
+            this.svm = svm;
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public LASVM call() {
+            svm.trainPlattScaling(x, y);
             return svm;
         }
     }
@@ -1346,6 +1449,86 @@ public class SVM <T> implements OnlineClassifier<T>, Serializable {
                 }
             }
             
+            return label;
+        }
+    }
+
+    /** Calculate the posterior probability. */
+    private double posterior(LASVM svm, double y) {
+        final double minProb = 1e-7;
+        final double maxProb = 1 - minProb;
+
+        return Math.min(Math.max(svm.platt.predict(y), minProb), maxProb);
+    }
+
+    @Override
+    public int predict(T x, double[] prob) {
+        if (k == 2) {
+            if (svm.platt == null) {
+                throw new UnsupportedOperationException("PlattScaling was not trained yet. Please call SVM.trainPlattScaling() first.");
+            }
+            // two class
+            double y = svm.predict(x);
+            prob[1] = posterior(svm, y);
+            prob[0] = 1.0 - prob[1];
+            if (y > 0) {
+                return 1;
+            } else {
+                return 0;
+            }
+        } else if (strategy == Multiclass.ONE_VS_ALL) {
+            // one-vs-all
+            int label = 0;
+            double maxf = Double.NEGATIVE_INFINITY;
+            for (int i = 0; i < svms.size(); i++) {
+                LASVM svm = svms.get(i);
+                if (svm.platt == null) {
+                    throw new UnsupportedOperationException("PlattScaling was not trained yet. Please call SVM.trainPlattScaling() first.");
+                }
+                double f = svm.predict(x);
+                prob[i] = posterior(svm, f);
+                if (f > maxf) {
+                    label = i;
+                    maxf = f;
+                }
+            }
+
+            smile.math.Math.unitize1(prob);
+
+            return label;
+        } else {
+            // one-vs-one
+            int[] count = new int[k];
+            double[][] r = new double[k][k];
+            for (int i = 0, m = 0; i < k; i++) {
+                for (int j = i + 1; j < k; j++, m++) {
+                    LASVM svm = svms.get(m);
+                    if (svm.platt == null) {
+                        throw new UnsupportedOperationException("PlattScaling was not trained yet. Please call SVM.trainPlattScaling() first.");
+                    }
+
+                    double f = svm.predict(x);
+                    r[i][j] = posterior(svm, f);
+                    r[j][i] = 1.0 - r[i][j];
+                    if (f > 0) {
+                        count[i]++;
+                    } else {
+                        count[j]++;
+                    }
+                }
+            }
+
+            PlattScaling.multiclass(k, r, prob);
+
+            int max = 0;
+            int label = 0;
+            for (int i = 0; i < k; i++) {
+                if (count[i] > max) {
+                    max = count[i];
+                    label = i;
+                }
+            }
+
             return label;
         }
     }
