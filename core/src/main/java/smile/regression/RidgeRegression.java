@@ -189,6 +189,11 @@ public class RidgeRegression implements Regression<double[]> {
 
         int n = x.length;
         p = x[0].length;
+
+        if (n <= p) {
+            throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
+        }
+
         ym = Math.mean(y);                
         center = Math.colMean(x); 
         
