@@ -246,7 +246,7 @@
     <pre class="prettyprint lang-scala"><code>
     val toy = readTable("data/classification/toy/toy-train.txt", Some((new NominalAttribute("class"), 0)))
     val (x, y) = toy.unzipInt
-    plot(x, y, knn(x, y, 3)
+    plot(x, y, knn(x, y, 3))
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
