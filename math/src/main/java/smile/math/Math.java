@@ -728,6 +728,13 @@ public class Math {
     }
 
     /**
+     * Initialize the random generator with a seed.
+     */
+    public void setSeed(long seed) {
+        random.get().setSeed(seed);
+    }
+
+    /**
      * Given a set of n probabilities, generate a random number in [0, n).
      * @param prob probabilities of size n. The prob argument can be used to
      * give a vector of weights for obtaining the elements of the vector being

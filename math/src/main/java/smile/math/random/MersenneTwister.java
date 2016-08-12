@@ -70,6 +70,15 @@ public class MersenneTwister implements RandomNumberGenerator {
      * Constructor.
      */
     public MersenneTwister(int seed) {
+        setSeed(seed);
+    }
+
+    @Override
+    public void setSeed(long seed) {
+        setSeed(seed % UniversalGenerator.BIG_PRIME);
+    }
+
+    public void setSeed(int seed) {
         mt[0] = seed;
         for (mti = 1; mti < N; mti++) {
             mt[mti] = (MAGIC_FACTOR1 * (mt[mti - 1] ^ (mt[mti - 1] >>> 30)) + mti);

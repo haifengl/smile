@@ -93,6 +93,13 @@ public class Random {
     }
 
     /**
+     * Initialize the random generator with a seed.
+     */
+    public void setSeed(long seed) {
+        rng.setSeed(seed);
+    }
+
+    /**
      * Returns a random integer.
      */
     public int nextInt() {
