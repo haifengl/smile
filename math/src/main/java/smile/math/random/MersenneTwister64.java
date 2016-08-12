@@ -75,22 +75,27 @@ public class MersenneTwister64 implements RandomNumberGenerator {
      * @param seed 
      */
     public MersenneTwister64(long seed) {
-	mt[0] = seed;
-	for (mti = 1; mti < NN; mti++) {
-	    mt[mti] = (MAGIC_FACTOR1 * (mt[mti - 1] ^ (mt[mti - 1] >>> 62)) + mti);
-	}
+        setSeed(seed);
     }
-    
+
+    @Override
+    public void setSeed(long seed) {
+        mt[0] = seed;
+        for (mti = 1; mti < NN; mti++) {
+            mt[mti] = (MAGIC_FACTOR1 * (mt[mti - 1] ^ (mt[mti - 1] >>> 62)) + mti);
+        }
+    }
+
     @Override
     public int next(int numbits) {
-	if (bitState) {
-	    bits64 = nextLong();
-	    bitState = false;
-	    return (int) (bits64 >>> (64 - numbits));
-	} else {
-	    bitState = true;
-	    return ((int) bits64) >>> (32 - numbits);
-	}
+        if (bitState) {
+            bits64 = nextLong();
+            bitState = false;
+            return (int) (bits64 >>> (64 - numbits));
+        } else {
+            bitState = true;
+            return ((int) bits64) >>> (32 - numbits);
+        }
     }
     
     @Override
