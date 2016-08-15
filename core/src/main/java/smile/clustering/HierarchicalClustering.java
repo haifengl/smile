@@ -185,7 +185,7 @@ public class HierarchicalClustering {
      */
     private void bfs(int[] membership, int cluster, int id) {
         int n = merge.length + 1;
-        Queue<Integer> queue = new LinkedList<Integer>();
+        Queue<Integer> queue = new LinkedList<>();
         queue.offer(cluster);
 
         for (Integer i = queue.poll(); i != null; i = queue.poll()) {

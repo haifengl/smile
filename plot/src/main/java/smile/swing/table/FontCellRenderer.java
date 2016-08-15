@@ -16,7 +16,6 @@
 package smile.swing.table;
 
 import java.awt.Font;
-
 import javax.swing.table.DefaultTableCellRenderer;
 
 /**
@@ -45,6 +44,7 @@ public class FontCellRenderer extends DefaultTableCellRenderer {
     public void setValue(Object value) {
         if (value == null) {
             setText("");
+            return;
         }
         
         Font font = (Font) value;

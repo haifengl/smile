@@ -227,7 +227,7 @@ public class FontChooser extends JComponent {
 
     private JList<String> getFontFamilyList() {
         if (fontNameList == null) {
-            fontNameList = new JList<String>(getFontFamilies());
+            fontNameList = new JList<>(getFontFamilies());
             fontNameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             fontNameList.addListSelectionListener(
                     new ListSelectionHandler(getFontFamilyTextField()));
@@ -240,7 +240,7 @@ public class FontChooser extends JComponent {
 
     private JList<String> getFontStyleList() {
         if (fontStyleList == null) {
-            fontStyleList = new JList<String>(getFontStyleNames());
+            fontStyleList = new JList<>(getFontStyleNames());
             fontStyleList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             fontStyleList.addListSelectionListener(
                     new ListSelectionHandler(getFontStyleTextField()));
@@ -253,7 +253,7 @@ public class FontChooser extends JComponent {
 
     private JList<String> getFontSizeList() {
         if (fontSizeList == null) {
-            fontSizeList = new JList<String>(this.fontSizeStrings);
+            fontSizeList = new JList<>(this.fontSizeStrings);
             fontSizeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             fontSizeList.addListSelectionListener(
                     new ListSelectionHandler(getFontSizeTextField()));
@@ -484,22 +484,21 @@ public class FontChooser extends JComponent {
 
         @Override
         public void keyPressed(KeyEvent e) {
-            int i = targetList.getSelectedIndex();
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_UP:
-                    i = targetList.getSelectedIndex() - 1;
-                    if (i < 0) {
-                        i = 0;
+                    int up = targetList.getSelectedIndex() - 1;
+                    if (up < 0) {
+                        up = 0;
                     }
-                    targetList.setSelectedIndex(i);
+                    targetList.setSelectedIndex(up);
                     break;
                 case KeyEvent.VK_DOWN:
                     int listSize = targetList.getModel().getSize();
-                    i = targetList.getSelectedIndex() + 1;
-                    if (i >= listSize) {
-                        i = listSize - 1;
+                    int down = targetList.getSelectedIndex() + 1;
+                    if (down >= listSize) {
+                        down = listSize - 1;
                     }
-                    targetList.setSelectedIndex(i);
+                    targetList.setSelectedIndex(down);
                     break;
                 default:
                     break;
@@ -539,7 +538,7 @@ public class FontChooser extends JComponent {
                 logger.error("update(DocumentEvent) exception", ex);
             }
 
-            if (newValue.length() > 0) {
+            if (!newValue.isEmpty()) {
                 int index = targetList.getNextMatch(newValue, 0, Position.Bias.Forward);
                 if (index < 0) {
                     index = 0;

@@ -173,7 +173,7 @@ public class RidgeRegression implements Regression<double[]> {
     
     /**
      * Constructor. Learn the ridge regression model.
-     * @param x a matrix containing the explanatory variables.
+     * @param x a matrix containing the explanatory variables. NO NEED to include a constant column of 1s for bias.
      * @param y the response values.
      * @param lambda the shrinkage/regularization parameter. Large lambda means more shrinkage.
      *               Choosing an appropriate value of lambda is important, and also difficult.
@@ -189,6 +189,11 @@ public class RidgeRegression implements Regression<double[]> {
 
         int n = x.length;
         p = x[0].length;
+
+        if (n <= p) {
+            throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
+        }
+
         ym = Math.mean(y);                
         center = Math.colMean(x); 
         
@@ -206,10 +211,12 @@ public class RidgeRegression implements Regression<double[]> {
             }
             scale[j] = Math.sqrt(scale[j] / n);
         }
-        
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++) {
-                X[i][j] /= scale[j];
+
+        for (int j = 0; j < p; j++) {
+            if (!Math.isZero(scale[j])) {
+                for (int i = 0; i < n; i++) {
+                    X[i][j] /= scale[j];
+                }
             }
         }
 
@@ -225,7 +232,9 @@ public class RidgeRegression implements Regression<double[]> {
         cholesky.solve(w);
         
         for (int j = 0; j < p; j++) {
-            w[j] /= scale[j];
+            if (!Math.isZero(scale[j])) {
+                w[j] /= scale[j];
+            }
         }
         b = ym - Math.dot(w, center);
 
@@ -401,21 +410,21 @@ public class RidgeRegression implements Regression<double[]> {
         double[] r = residuals.clone();
         builder.append("\nResiduals:\n");
         builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
-        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f\n", Math.min(r), Math.q1(r), Math.median(r), Math.q3(r), Math.max(r)));
+        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", Math.min(r), Math.q1(r), Math.median(r), Math.q3(r), Math.max(r)));
 
         builder.append("\nCoefficients:\n");
         builder.append("            Estimate        Std. Error        t value        Pr(>|t|)\n");
-        builder.append(String.format("Intercept%11.4f                NA             NA              NA\n", b));
+        builder.append(String.format("Intercept%11.4f                NA             NA              NA%n", b));
         for (int i = 0; i < p; i++) {
-            builder.append(String.format("Var %d\t %11.4f%18.4f%15.4f%16.4f %s\n", i+1, coefficients[i][0], coefficients[i][1], coefficients[i][2], coefficients[i][3], significance(coefficients[i][3])));
+            builder.append(String.format("Var %d\t %11.4f%18.4f%15.4f%16.4f %s%n", i+1, coefficients[i][0], coefficients[i][1], coefficients[i][2], coefficients[i][3], significance(coefficients[i][3])));
         }
 
         builder.append("---------------------------------------------------------------------\n");
         builder.append("Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
 
-        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom\n", error, df));
-        builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f\n", RSquared, adjustedRSquared));
-        builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g\n", F, p, df, pvalue));
+        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom%n", error, df));
+        builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
+        builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g%n", F, p, df, pvalue));
 
         return builder.toString();
     }

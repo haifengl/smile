@@ -91,7 +91,7 @@ public class AdjacencyMatrix implements Graph {
 
     @Override
     public Collection<Edge> getEdges() {
-        Collection<Edge> set = new LinkedList<Edge>();
+        Collection<Edge> set = new LinkedList<>();
 
         if (digraph) {
             for (int i = 0; i < n; i++) {
@@ -124,7 +124,7 @@ public class AdjacencyMatrix implements Graph {
 
     @Override
     public Collection<Edge> getEdges(int vertex) {
-        Collection<Edge> set = new LinkedList<Edge>();
+        Collection<Edge> set = new LinkedList<>();
         for (int j = 0; j < n; j++) {
             if (graph[vertex][j] != 0.0) {
                 Edge edge = new Edge();
@@ -139,7 +139,7 @@ public class AdjacencyMatrix implements Graph {
 
     @Override
     public Collection<Edge> getEdges(int source, int target) {
-        Collection<Edge> set = new LinkedList<Edge>();
+        Collection<Edge> set = new LinkedList<>();
         Edge edge = getEdge(source, target);
         if (edge != null) {
             set.add(edge);
@@ -383,14 +383,14 @@ public class AdjacencyMatrix implements Graph {
             }
         }
 
-        Queue<Integer> queue = new LinkedList<Integer>();
+        Queue<Integer> queue = new LinkedList<>();
         for (int i = 0; i < n; i++) {
             if (in[i] == 0) {
                 queue.offer(i);
             }
         }
 
-        for (int i = 0; queue.size() > 0; i++) {
+        for (int i = 0; !queue.isEmpty(); i++) {
             int t = queue.poll();
             ts[i] = t;
             for (int v = 0; v < n; v++) {
@@ -413,9 +413,9 @@ public class AdjacencyMatrix implements Graph {
      */
     private void bfs(int v, int[] cc, int id) {
         cc[v] = id;
-        Queue<Integer> queue = new LinkedList<Integer>();
+        Queue<Integer> queue = new LinkedList<>();
         queue.offer(v);
-        while (queue.size() > 0) {
+        while (!queue.isEmpty()) {
             int t = queue.poll();
             for (int i = 0; i < n; i++) {
                 if (graph[t][i] != 0.0 && cc[i] == -1) {
@@ -467,9 +467,9 @@ public class AdjacencyMatrix implements Graph {
     private void bfs(Visitor visitor, int v, int[] cc, int id) {
         visitor.visit(v);
         cc[v] = id;
-        Queue<Integer> queue = new LinkedList<Integer>();
+        Queue<Integer> queue = new LinkedList<>();
         queue.offer(v);
-        while (queue.size() > 0) {
+        while (!queue.isEmpty()) {
             int t = queue.poll();
             for (int i = 0; i < n; i++) {
                 if (graph[t][i] != 0.0 && cc[i] == -1) {

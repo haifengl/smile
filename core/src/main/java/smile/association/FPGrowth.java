@@ -142,7 +142,7 @@ public class FPGrowth {
      * @return the list of frequent item sets
      */
     public List<ItemSet> learn() {
-        List<ItemSet> list = new ArrayList<ItemSet>();
+        List<ItemSet> list = new ArrayList<>();
         learn(null, list, null);
         return list;
     }
@@ -277,16 +277,16 @@ public class FPGrowth {
     private long grow(PrintStream out, List<ItemSet> list, TotalSupportTree ttree, FPTree fptree, int[] itemset, int[] localItemSupport, int[] prefixItemset) {
         if (fptree == T0) {
             int nprocs = MulticoreExecutor.getThreadPoolSize();
-            List<List<HeaderTableItem>> headers = new ArrayList<List<HeaderTableItem>>();
+            List<List<HeaderTableItem>> headers = new ArrayList<>();
             for (int i = 0; i < 2*nprocs; i++) {
-                headers.add(new ArrayList<HeaderTableItem>());
+                headers.add(new ArrayList<>());
             }
             
             for (int i = fptree.headerTable.length; i-- > 0;) {
                 headers.get(i % headers.size()).add(fptree.headerTable[i]);  
             }
             
-            List<FPGrowthTask> tasks = new ArrayList<FPGrowthTask>();
+            List<FPGrowthTask> tasks = new ArrayList<>();
             // Loop through header table from end to start, item by item
             for (int i = 0; i < headers.size(); i++) {
                 // process trail of links from header table element
@@ -337,7 +337,7 @@ public class FPGrowth {
                 for (int i = 0; i < itemset.length; i++) {
                     out.format("%d ", itemset[i]);
                 }
-                out.format("(%d)\n", support);
+                out.format("(%d)%n", support);
             }
         }
         if (ttree != null) {
@@ -364,7 +364,7 @@ public class FPGrowth {
                             for (int i = 0; i < newItemset.length; i++) {
                                 out.format("%d ", newItemset[i]);
                             }
-                            out.format("(%d)\n", support);
+                            out.format("(%d)%n", support);
                         }
                     }
                     if (ttree != null) {

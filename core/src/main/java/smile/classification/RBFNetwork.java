@@ -186,9 +186,9 @@ public class RBFNetwork<T> implements Classifier<T>, Serializable {
             GaussianRadialBasis gaussian = SmileUtils.learnGaussianRadialBasis(x, centers, distance);
             
             if (rbf == null) {
-                return new RBFNetwork<T>(x, y, distance, gaussian, centers, normalized);
+                return new RBFNetwork<>(x, y, distance, gaussian, centers, normalized);
             } else {
-                return new RBFNetwork<T>(x, y, distance, rbf, centers, normalized);
+                return new RBFNetwork<>(x, y, distance, rbf, centers, normalized);
             }
         }
         
@@ -201,7 +201,7 @@ public class RBFNetwork<T> implements Classifier<T>, Serializable {
          * @return a trained RBF network
          */
         public RBFNetwork<T> train(T[] x, int[] y, T[] centers) {
-            return new RBFNetwork<T>(x, y, distance, rbf, centers, normalized);
+            return new RBFNetwork<>(x, y, distance, rbf, centers, normalized);
         }
     }
     

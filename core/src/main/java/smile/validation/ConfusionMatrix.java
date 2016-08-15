@@ -31,7 +31,7 @@ public class ConfusionMatrix {
 			 throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
 		}
 		
-		Set<Integer> ySet = new HashSet<Integer>();
+		Set<Integer> ySet = new HashSet<>();
 		
 		for(int i = 0; i < truth.length; i++){
 			ySet.add(truth[i]);

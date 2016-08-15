@@ -115,7 +115,7 @@ public class DBScan <T> extends PartitionClustering<T> {
      * @param radius the neighborhood radius.
      */
     public DBScan(T[] data, Distance<T> distance, int minPts, double radius) {
-        this(data, new LinearSearch<T>(data, distance), minPts, radius);
+        this(data, new LinearSearch<>(data, distance), minPts, radius);
     }
 
     /**
@@ -127,7 +127,7 @@ public class DBScan <T> extends PartitionClustering<T> {
      * @param radius the neighborhood radius.
      */
     public DBScan(T[] data, Metric<T> distance, int minPts, double radius) {
-        this(data, new CoverTree<T>(data, distance), minPts, radius);
+        this(data, new CoverTree<>(data, distance), minPts, radius);
     }
 
     /**
@@ -158,7 +158,7 @@ public class DBScan <T> extends PartitionClustering<T> {
 
         for (int i = 0; i < data.length; i++) {
             if (y[i] == UNCLASSIFIED) {
-                List<Neighbor<T,T>> neighbors = new ArrayList<Neighbor<T,T>>();
+                List<Neighbor<T,T>> neighbors = new ArrayList<>();
                 nns.range(data[i], radius, neighbors);
                 if (neighbors.size() < minPts) {
                     y[i] = OUTLIER;
@@ -168,7 +168,7 @@ public class DBScan <T> extends PartitionClustering<T> {
                         if (y[neighbors.get(j).index] == UNCLASSIFIED) {
                             y[neighbors.get(j).index] = k;
                             Neighbor<T,T> neighbor = neighbors.get(j);
-                            List<Neighbor<T,T>> secondaryNeighbors = new ArrayList<Neighbor<T,T>>();
+                            List<Neighbor<T,T>> secondaryNeighbors = new ArrayList<>();
                             nns.range(neighbor.key, radius, secondaryNeighbors);
 
                             if (secondaryNeighbors.size() >= minPts) {
@@ -216,7 +216,7 @@ public class DBScan <T> extends PartitionClustering<T> {
      */
     @Override
     public int predict(T x) {
-        List<Neighbor<T,T>> neighbors = new ArrayList<Neighbor<T,T>>();
+        List<Neighbor<T,T>> neighbors = new ArrayList<>();
         nns.range(x, radius, neighbors);
         
         if (neighbors.size() < minPts) {
@@ -239,14 +239,14 @@ public class DBScan <T> extends PartitionClustering<T> {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         
-        sb.append(String.format("DBScan clusters of %d data points:\n", y.length));
+        sb.append(String.format("DBScan clusters of %d data points:%n", y.length));
         for (int i = 0; i < k; i++) {
             int r = (int) Math.round(1000.0 * size[i] / y.length);
-            sb.append(String.format("%3d\t%5d (%2d.%1d%%)\n", i, size[i], r / 10, r % 10));
+            sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
 
         int r = (int) Math.round(1000.0 * size[k] / y.length);
-        sb.append(String.format("Noise\t%5d (%2d.%1d%%)\n", size[k], r / 10, r % 10));
+        sb.append(String.format("Noise\t%5d (%2d.%1d%%)%n", size[k], r / 10, r % 10));
         
         return sb.toString();
     }

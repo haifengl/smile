@@ -64,7 +64,7 @@ public class SVRTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
-            Math.normalize(datax);
+            Math.standardize(datax);
 
             int n = datax.length;
             int k = 10;
@@ -77,7 +77,7 @@ public class SVRTest {
                 double[][] testx = Math.slice(datax, cv.test[i]);
                 double[] testy = Math.slice(datay, cv.test[i]);
 
-                SVR<double[]> svr = new SVR<double[]>(trainx, trainy, new PolynomialKernel(3, 1.0, 1.0), 0.1, 1.0);
+                SVR<double[]> svr = new SVR<>(trainx, trainy, new PolynomialKernel(3, 1.0, 1.0), 0.1, 1.0);
 
                 for (int j = 0; j < testx.length; j++) {
                     double r = testy[j] - svr.predict(testx[j]);

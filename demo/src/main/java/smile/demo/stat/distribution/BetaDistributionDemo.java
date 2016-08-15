@@ -58,7 +58,7 @@ public class BetaDistributionDemo extends JPanel implements ChangeListener {
     public BetaDistributionDemo() {
         super(new BorderLayout());
 
-        Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
+        Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 0; i <= 100; i+=20) {
             labelTable.put(new Integer(i), new JLabel(String.valueOf(i / 10)));
         }

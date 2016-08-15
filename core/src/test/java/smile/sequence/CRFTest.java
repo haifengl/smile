@@ -58,30 +58,30 @@ public class CRFTest {
         int p = 0;
         int k = 0;
         IntDataset dataset = new IntDataset();
-        ArrayList<int[][]> x = new ArrayList<int[][]>();
-        ArrayList<int[]> y = new ArrayList<int[]>();
+        ArrayList<int[][]> x = new ArrayList<>();
+        ArrayList<int[]> y = new ArrayList<>();
 
-        ArrayList<int[]> seq = new ArrayList<int[]>();
-        ArrayList<Integer> label = new ArrayList<Integer>();
+        ArrayList<int[]> seq = new ArrayList<>();
+        ArrayList<Integer> label = new ArrayList<>();
 
         int id = 1;
         try(BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
             String[] words = input.readLine().split(" ");
-            int nseq = Integer.valueOf(words[0]);
-            k = Integer.valueOf(words[1]);
-            p = Integer.valueOf(words[2]);
+            int nseq = Integer.parseInt(words[0]);
+            k = Integer.parseInt(words[1]);
+            p = Integer.parseInt(words[2]);
 
             String line = null;
             while ((line = input.readLine()) != null) {
                 words = line.split(" ");
-                int seqid = Integer.valueOf(words[0]);
-                int pos = Integer.valueOf(words[1]);
-                int len = Integer.valueOf(words[2]);
+                int seqid = Integer.parseInt(words[0]);
+                int pos = Integer.parseInt(words[1]);
+                int len = Integer.parseInt(words[2]);
                 
                 int[] feature = new int[len];
                 for (int i = 0; i < len; i++) {
                     try {
-                        feature[i] = Integer.valueOf(words[i+3]);
+                        feature[i] = Integer.parseInt(words[i+3]);
                     } catch (Exception ex) {
                         System.err.println(ex);
                     }
@@ -102,8 +102,8 @@ public class CRFTest {
                     x.add(xx);
                     y.add(yy);
 
-                    seq = new ArrayList<int[]>();
-                    label = new ArrayList<Integer>();
+                    seq = new ArrayList<>();
+                    label = new ArrayList<>();
                     seq.add(feature);
                     label.add(Integer.valueOf(words[len + 3]));
                 }
@@ -138,25 +138,25 @@ public class CRFTest {
         int k = 0;
         Dataset dataset = new Dataset();
         dataset.attributes = attributes;
-        ArrayList<double[][]> x = new ArrayList<double[][]>();
-        ArrayList<int[]> y = new ArrayList<int[]>();
+        ArrayList<double[][]> x = new ArrayList<>();
+        ArrayList<int[]> y = new ArrayList<>();
 
-        ArrayList<double[]> seq = new ArrayList<double[]>();
-        ArrayList<Integer> label = new ArrayList<Integer>();
+        ArrayList<double[]> seq = new ArrayList<>();
+        ArrayList<Integer> label = new ArrayList<>();
 
         int id = 1;
         try(BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
             String[] words = input.readLine().split(" ");
-            int nseq = Integer.valueOf(words[0]);
-            k = Integer.valueOf(words[1]);
-            p = Integer.valueOf(words[2]);
+            int nseq = Integer.parseInt(words[0]);
+            k = Integer.parseInt(words[1]);
+            p = Integer.parseInt(words[2]);
 
             String line = null;
             while ((line = input.readLine()) != null) {
                 words = line.split(" ");
-                int seqid = Integer.valueOf(words[0]);
-                int pos = Integer.valueOf(words[1]);
-                int len = Integer.valueOf(words[2]);
+                int seqid = Integer.parseInt(words[0]);
+                int pos = Integer.parseInt(words[1]);
+                int len = Integer.parseInt(words[2]);
                 
                 if (dataset.attributes == null) {
                     dataset.attributes = new Attribute[len];
@@ -189,8 +189,8 @@ public class CRFTest {
                     x.add(xx);
                     y.add(yy);
 
-                    seq = new ArrayList<double[]>();
-                    label = new ArrayList<Integer>();
+                    seq = new ArrayList<>();
+                    label = new ArrayList<>();
                     seq.add(feature);
                     label.add(Integer.valueOf(words[len + 3]));
                 }
@@ -278,10 +278,10 @@ public class CRFTest {
             }
         }
 
-        System.out.format("Protein error (forward-backward) is %d of %d\n", error, n);
-        System.out.format("Protein error (forward-backward) rate = %.2f%%\n", 100.0 * error / n);
-        System.out.format("Protein error (Viterbi) is %d of %d\n", viterbiError, n);
-        System.out.format("Protein error (Viterbi) rate = %.2f%%\n", 100.0 * viterbiError / n);
+        System.out.format("Protein error (forward-backward) is %d of %d%n", error, n);
+        System.out.format("Protein error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
+        System.out.format("Protein error (Viterbi) is %d of %d%n", viterbiError, n);
+        System.out.format("Protein error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
         assertEquals(1259, error);
         assertEquals(1377, viterbiError);
     }
@@ -325,10 +325,10 @@ public class CRFTest {
             }
         }
 
-        System.out.format("Hypen error (forward-backward) is %d of %d\n", error, n);
-        System.out.format("Hypen error (forward-backward) rate = %.2f%%\n", 100.0 * error / n);
-        System.out.format("Hypen error (Viterbi) is %d of %d\n", viterbiError, n);
-        System.out.format("Hypen error (Viterbi) rate = %.2f%%\n", 100.0 * viterbiError / n);
+        System.out.format("Hypen error (forward-backward) is %d of %d%n", error, n);
+        System.out.format("Hypen error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
+        System.out.format("Hypen error (Viterbi) is %d of %d%n", viterbiError, n);
+        System.out.format("Hypen error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
         assertEquals(461, error);
         assertEquals(462, viterbiError);
     }
@@ -372,10 +372,10 @@ public class CRFTest {
             }
         }
 
-        System.out.format("Protein error (forward-backward) is %d of %d\n", error, n);
-        System.out.format("Protein error (forward-backward) rate = %.2f%%\n", 100.0 * error / n);
-        System.out.format("Protein error (Viterbi) is %d of %d\n", viterbiError, n);
-        System.out.format("Protein error (Viterbi) rate = %.2f%%\n", 100.0 * viterbiError / n);
+        System.out.format("Protein error (forward-backward) is %d of %d%n", error, n);
+        System.out.format("Protein error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
+        System.out.format("Protein error (Viterbi) is %d of %d%n", viterbiError, n);
+        System.out.format("Protein error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
         assertEquals(1253, error);
         assertEquals(1412, viterbiError);
     }
@@ -419,10 +419,10 @@ public class CRFTest {
             }
         }
 
-        System.out.format("Hypen error (forward-backward) is %d of %d\n", error, n);
-        System.out.format("Hypen error (forward-backward) rate = %.2f%%\n", 100.0 * error / n);
-        System.out.format("Hypen error (Viterbi) is %d of %d\n", viterbiError, n);
-        System.out.format("Hypen error (Viterbi) rate = %.2f%%\n", 100.0 * viterbiError / n);
+        System.out.format("Hypen error (forward-backward) is %d of %d%n", error, n);
+        System.out.format("Hypen error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
+        System.out.format("Hypen error (Viterbi) is %d of %d%n", viterbiError, n);
+        System.out.format("Hypen error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
         assertEquals(468, error);
         assertEquals(470, viterbiError);
     }

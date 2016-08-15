@@ -49,13 +49,13 @@ public class BreakIteratorTokenizer implements Tokenizer {
     @Override
     public String[] split(String text) {
         boundary.setText(text);
-        ArrayList<String> words = new ArrayList<String>();
+        ArrayList<String> words = new ArrayList<>();
         int start = boundary.first();
         int end = boundary.next();
 
         while (end != BreakIterator.DONE) {
             String word = text.substring(start, end).trim();
-            if (word.length() > 0) {
+            if (!word.isEmpty()) {
                 words.add(word);
             }
             start = end;

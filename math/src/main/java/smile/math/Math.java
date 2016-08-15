@@ -100,8 +100,8 @@ public class Math {
     /**
      * High quality random number generator.
      */
-    private static ThreadLocal<smile.math.Random> random = new ThreadLocal() {
-        protected synchronized Object initialValue() {
+    private static ThreadLocal<smile.math.Random> random = new ThreadLocal<smile.math.Random>() {
+        protected synchronized smile.math.Random initialValue() {
             if (Thread.currentThread().getName().equals("run-main-0")) {
                 // For main thread, we use the default seed so that we can
                 // get repeatable results for random algorithms.
@@ -725,6 +725,13 @@ public class Math {
         }
 
         return Math.logFactorial(n) - Math.logFactorial(k) - Math.logFactorial(n - k);
+    }
+
+    /**
+     * Initialize the random generator with a seed.
+     */
+    public void setSeed(long seed) {
+        random.get().setSeed(seed);
     }
 
     /**
@@ -2930,14 +2937,15 @@ public class Math {
     }
 
     /**
-     * Normalizes an array to mean 0 and variance 1.
+     * Standardizes an array to mean 0 and variance 1.
      */
-    public static void normalize(double[] x) {
+    public static void standardize(double[] x) {
         double mu = mean(x);
         double sigma = sd(x);
 
-        if (sigma <= 0) {
-            throw new IllegalArgumentException("array has variance of 0.");
+        if (isZero(sigma)) {
+            logger.warn("array has variance of 0.");
+            return;
         }
 
         for (int i = 0; i < x.length; i++) {
@@ -2946,31 +2954,152 @@ public class Math {
     }
 
     /**
-     * Normalizes each column of a matrix to mean 0 and variance 1.
+     * Rescales each column of a matrix to range [0, 1].
      */
-    public static void normalize(double[][] x) {
+    public static java.util.function.Function<double[], double[]> rescale(double[][] x) {
+        return rescale(x, 0.0, 1.0);
+    }
+
+    /**
+     * Rescales each column of a matrix to range [lo, hi].
+     * @param lo lower limit of range
+     * @param hi upper limit of range
+     */
+    public static java.util.function.Function<double[], double[]> rescale(double[][] x, double lo, double hi) {
         int n = x.length;
         int p = x[0].length;
 
+        double[] min = colMin(x);
+        double[] max = colMax(x);
+
         for (int j = 0; j < p; j++) {
-            double mu = 0.0;
-            double sd = 0.0;
-            for (int i = 0; i < n; i++) {
-                mu += x[i][j];
-                sd += x[i][j] * x[i][j];
-            }
-
-            sd = Math.sqrt(sd / (n-1) - (mu / n) * (mu / (n-1)));
-            mu /= n;
-
-            if (sd <= 0) {
-                throw new IllegalArgumentException(String.format("Column %d has variance of 0.", j));
-            }
-
-            for (int i = 0; i < n; i++) {
-                x[i][j] = (x[i][j] - mu) / sd;
+            double scale = max[j] - min[j];
+            if (!Math.isZero(scale)) {
+                for (int i = 0; i < n; i++) {
+                    x[i][j] = (x[i][j] - min[j]) / scale;
+                }
+            } else {
+                for (int i = 0; i < n; i++) {
+                    x[i][j] = 0.5;
+                }
             }
         }
+
+        return (double[] xi) -> {
+            if (xi.length != p)
+                throw new IllegalArgumentException(String.format("array size: %d, expected: %d", xi.length, p));
+
+            double l = hi - lo;
+            double[] y = new double[p];
+            for (int j = 0; j < p; j++) {
+                double scale = max[j] - min[j];
+                if (!Math.isZero(scale)) {
+                    y[j] = (xi[j] - min[j]) / scale;
+                } else {
+                    y[j] = 0.5;
+                }
+                y[j] = lo + l * y[j];
+            }
+
+            return y;
+        };
+    }
+
+    /**
+     * Standardizes each column of a matrix to 0 mean and unit variance.
+     */
+    public static java.util.function.Function<double[], double[]> standardize(double[][] x) {
+        int n = x.length;
+        int p = x[0].length;
+
+        double[] center = colMean(x);
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < p; j++) {
+                x[i][j] = x[i][j] - center[j];
+            }
+        }
+
+        double[] scale = new double[p];
+        for (int j = 0; j < p; j++) {
+            for (int i = 0; i < n; i++) {
+                scale[j] += Math.sqr(x[i][j]);
+            }
+            scale[j] = Math.sqrt(scale[j] / (n-1));
+
+            if (!Math.isZero(scale[j])) {
+                for (int i = 0; i < n; i++) {
+                    x[i][j] /= scale[j];
+                }
+            }
+        }
+
+        return (double[] xi) -> {
+            if (xi.length != p)
+                throw new IllegalArgumentException(String.format("array size: %d, expected: %d", xi.length, p));
+
+            double[] y = new double[p];
+            for (int j = 0; j < p; j++) {
+                if (!Math.isZero(scale[j])) {
+                    y[j] = (xi[j] - center[j]) / scale[j];
+                } else {
+                    y[j] = 0.0;
+                }
+            }
+
+            return y;
+        };
+    }
+
+    /**
+     * Unitizes each column of a matrix to unit length (L_2 norm).
+     * @param centerizing If true, centerize each column to 0 mean.
+     */
+    public static java.util.function.Function<double[], double[]> normalize(double[][] x, boolean centerizing) {
+        int n = x.length;
+        int p = x[0].length;
+
+        double[] center = colMean(x);
+        if (centerizing) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < p; j++) {
+                    x[i][j] = x[i][j] - center[j];
+                }
+            }
+        }
+
+        double[] scale = new double[p];
+        for (int j = 0; j < p; j++) {
+            for (int i = 0; i < n; i++) {
+                scale[j] += Math.sqr(x[i][j]);
+            }
+            scale[j] = Math.sqrt(scale[j]);
+        }
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < p; j++) {
+                if (!Math.isZero(scale[j])) {
+                    x[i][j] /= scale[j];
+                }
+            }
+        }
+
+        return (double[] xi) -> {
+            if (xi.length != p)
+                throw new IllegalArgumentException(String.format("array size: %d, expected: %d", xi.length, p));
+
+            double[] y = new double[p];
+            for (int j = 0; j < p; j++) {
+                if (centerizing) y[j] = xi[j] - center[j];
+
+                if (!Math.isZero(scale[j])) {
+                    y[j] /= scale[j];
+                } else {
+                    y[j] = 0.0;
+                }
+            }
+
+            return y;
+        };
     }
 
     /**
@@ -3276,6 +3405,26 @@ public class Math {
             }
         }
         return true;
+    }
+
+    /** Tests if a floating number is zero. */
+    public static boolean isZero(float x) {
+        return isZero(x, Float.MIN_VALUE);
+    }
+
+    /** Tests if a floating number is zero with given epsilon. */
+    public static boolean isZero(float x, float epsilon) {
+        return abs(x) < 2*epsilon;
+    }
+
+    /** Tests if a floating number is zero. */
+    public static boolean isZero(double x) {
+        return isZero(x, Double.MIN_VALUE);
+    }
+
+    /** Tests if a floating number is zero with given epsilon. */
+    public static boolean isZero(double x, double epsilon) {
+        return abs(x) < 2*epsilon;
     }
 
     /**
@@ -3589,20 +3738,16 @@ public class Math {
 
     /**
      * Product of a matrix and a vector y = A * x according to the rules of linear algebra.
-     * Number of columns in A must equal number of elements in x.
+     * The left upper submatrix of A is used in the computation based
+     * on the size of x and y.
      */
     public static void ax(double[][] A, double[] x, double[] y) {
-        if (A[0].length != x.length) {
-            throw new IllegalArgumentException(String.format("Array dimensions do not match for matrix multiplication: %dx%d vs %dx1", A.length, A[0].length, x.length));
-        }
-
-        if (A.length != y.length) {
-            throw new IllegalArgumentException(String.format("Array dimensions do not match"));
-        }
+        int n = min(A.length, y.length);
+        int p = min(A[0].length, x.length);
 
         Arrays.fill(y, 0.0);
-        for (int i = 0; i < y.length; i++) {
-            for (int k = 0; k < A[i].length; k++) {
+        for (int i = 0; i < n; i++) {
+            for (int k = 0; k < p; k++) {
                 y[i] += A[i][k] * x[k];
             }
         }
@@ -3610,19 +3755,15 @@ public class Math {
 
     /**
      * Product of a matrix and a vector y = A * x + y according to the rules of linear algebra.
-     * Number of columns in A must equal number of elements in x.
+     * The left upper submatrix of A is used in the computation based
+     * on the size of x and y.
      */
     public static void axpy(double[][] A, double[] x, double[] y) {
-        if (A[0].length != x.length) {
-            throw new IllegalArgumentException(String.format("Array dimensions do not match for matrix multiplication: %dx%d vs %dx1", A.length, A[0].length, x.length));
-        }
+        int n = min(A.length, y.length);
+        int p = min(A[0].length, x.length);
 
-        if (A.length != y.length) {
-            throw new IllegalArgumentException(String.format("Array dimensions do not match"));
-        }
-
-        for (int i = 0; i < y.length; i++) {
-            for (int k = 0; k < A[i].length; k++) {
+        for (int i = 0; i < n; i++) {
+            for (int k = 0; k < p; k++) {
                 y[i] += A[i][k] * x[k];
             }
         }
@@ -3630,20 +3771,16 @@ public class Math {
 
     /**
      * Product of a matrix and a vector y = A * x + b * y according to the rules of linear algebra.
-     * Number of columns in A must equal number of elements in x.
+     * The left upper submatrix of A is used in the computation based
+     * on the size of x and y.
      */
     public static void axpy(double[][] A, double[] x, double[] y, double b) {
-        if (A[0].length != x.length) {
-            throw new IllegalArgumentException(String.format("Array dimensions do not match for matrix multiplication: %dx%d vs %dx1", A.length, A[0].length, x.length));
-        }
+        int n = min(A.length, y.length);
+        int p = min(A[0].length, x.length);
 
-        if (A.length != y.length) {
-            throw new IllegalArgumentException(String.format("Array dimensions do not match"));
-        }
-
-        for (int i = 0; i < y.length; i++) {
+        for (int i = 0; i < n; i++) {
             y[i] *= b;
-            for (int k = 0; k < A[i].length; k++) {
+            for (int k = 0; k < p; k++) {
                 y[i] += A[i][k] * x[k];
             }
         }
@@ -3651,20 +3788,16 @@ public class Math {
 
     /**
      * Product of a matrix and a vector y = A<sup>T</sup> * x according to the rules of linear algebra.
-     * Number of elements in x must equal number of rows in A.
+     * The left upper submatrix of A is used in the computation based
+     * on the size of x and y.
      */
     public static void atx(double[][] A, double[] x, double[] y) {
-        if (A.length != x.length) {
-            throw new IllegalArgumentException(String.format("Array dimensions do not match for matrix multiplication: %d x %d vs 1 x %d", A.length, A[0].length, x.length));
-        }
-
-        if (A[0].length != y.length) {
-            throw new IllegalArgumentException(String.format("Array dimensions do not match"));
-        }
+        int n = min(A[0].length, y.length);
+        int p = min(A.length, x.length);
 
         Arrays.fill(y, 0.0);
-        for (int i = 0; i < y.length; i++) {
-            for (int k = 0; k < x.length; k++) {
+        for (int i = 0; i < n; i++) {
+            for (int k = 0; k < p; k++) {
                 y[i] += x[k] * A[k][i];
             }
         }
@@ -3672,19 +3805,15 @@ public class Math {
 
     /**
      * Product of a matrix and a vector y = A<sup>T</sup> * x + y according to the rules of linear algebra.
-     * Number of elements in x must equal number of rows in A.
+     * The left upper submatrix of A is used in the computation based
+     * on the size of x and y.
      */
     public static void atxpy(double[][] A, double[] x, double[] y) {
-        if (A.length != x.length) {
-            throw new IllegalArgumentException(String.format("Array dimensions do not match for matrix multiplication: 1 x %d vs %d x %d", x.length, A.length, A[0].length));
-        }
+        int n = min(A[0].length, y.length);
+        int p = min(A.length, x.length);
 
-        if (A[0].length != y.length) {
-            throw new IllegalArgumentException(String.format("Array dimensions do not match"));
-        }
-
-        for (int i = 0; i < y.length; i++) {
-            for (int k = 0; k < x.length; k++) {
+        for (int i = 0; i < n; i++) {
+            for (int k = 0; k < p; k++) {
                 y[i] += x[k] * A[k][i];
             }
         }
@@ -3692,20 +3821,16 @@ public class Math {
 
     /**
      * Product of a matrix and a vector y = A<sup>T</sup> * x + b * y according to the rules of linear algebra.
-     * Number of elements in x must equal number of rows in A.
+     * The left upper submatrix of A is used in the computation based
+     * on the size of x and y.
      */
     public static void atxpy(double[][] A, double[] x, double[] y, double b) {
-        if (A.length != x.length) {
-            throw new IllegalArgumentException(String.format("Array dimensions do not match for matrix multiplication: 1 x %d vs %d x %d", x.length, A.length, A[0].length));
-        }
+        int n = min(A[0].length, y.length);
+        int p = min(A.length, x.length);
 
-        if (A[0].length != y.length) {
-            throw new IllegalArgumentException(String.format("Array dimensions do not match"));
-        }
-
-        for (int i = 0; i < y.length; i++) {
+        for (int i = 0; i < n; i++) {
             y[i] *= b;
-            for (int k = 0; k < x.length; k++) {
+            for (int k = 0; k < p; k++) {
                 y[i] += x[k] * A[k][i];
             }
         }
@@ -3713,17 +3838,15 @@ public class Math {
 
     /**
      * Returns x' * A * x.
+     * The left upper submatrix of A is used in the computation based
+     * on the size of x.
      */
     public static double xax(double[][] A, double[] x) {
         if (A.length != A[0].length) {
             throw new IllegalArgumentException("The matrix is not square");
         }
 
-        if (A.length != x.length) {
-            throw new IllegalArgumentException(String.format("x' * A * x: 1 x %d vs %d x %d", x.length, A.length, A[0].length));
-        }
-
-        int n = A.length;
+        int n = min(A.length, x.length);
         double s = 0.0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -3739,16 +3862,8 @@ public class Math {
      */
     public static double[][] aatmm(double[][] A) {
         int m = A.length;
-        int n = A[0].length;
         double[][] C = new double[m][m];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < m; j++) {
-                for (int k = 0; k < n; k++) {
-                    C[i][j] += A[i][k] * A[j][k];
-                }
-            }
-        }
-
+        aatmm(A, C);
         return C;
     }
 
@@ -3761,6 +3876,7 @@ public class Math {
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < m; j++) {
+                C[i][j] = 0.0;
                 for (int k = 0; k < n; k++) {
                     C[i][j] += A[i][k] * A[j][k];
                 }
@@ -3772,18 +3888,9 @@ public class Math {
      * Matrix multiplication A' * A according to the rules of linear algebra.
      */
     public static double[][] atamm(double[][] A) {
-        int m = A.length;
         int n = A[0].length;
-
         double[][] C = new double[n][n];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                for (int k = 0; k < m; k++) {
-                    C[i][j] += A[k][i] * A[k][j];
-                }
-            }
-        }
-
+        atamm(A, C);
         return C;
     }
 
@@ -3796,6 +3903,7 @@ public class Math {
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
+                C[i][j] = 0.0;
                 for (int k = 0; k < m; k++) {
                     C[i][j] += A[k][i] * A[k][j];
                 }
@@ -3813,16 +3921,8 @@ public class Math {
 
         int m = A.length;
         int n = B[0].length;
-        int l = B.length;
         double[][] C = new double[m][n];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                for (int k = 0; k < l; k++) {
-                    C[i][j] += A[i][k] * B[k][j];
-                }
-            }
-        }
-
+        abmm(A, B, C);
         return C;
     }
 
@@ -3840,6 +3940,7 @@ public class Math {
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
+                C[i][j] = 0.0;
                 for (int k = 0; k < l; k++) {
                     C[i][j] += A[i][k] * B[k][j];
                 }
@@ -3857,16 +3958,8 @@ public class Math {
 
         int m = A[0].length;
         int n = B[0].length;
-        int l = B.length;
         double[][] C = new double[m][n];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                for (int k = 0; k < l; k++) {
-                    C[i][j] += A[k][i] * B[k][j];
-                }
-            }
-        }
-
+        atbmm(A, B, C);
         return C;
     }
 
@@ -3884,6 +3977,7 @@ public class Math {
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
+                C[i][j] = 0.0;
                 for (int k = 0; k < l; k++) {
                     C[i][j] += A[k][i] * B[k][j];
                 }
@@ -3901,16 +3995,8 @@ public class Math {
 
         int m = A.length;
         int n = B.length;
-        int l = B[0].length;
         double[][] C = new double[m][n];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                for (int k = 0; k < l; k++) {
-                    C[i][j] += A[i][k] * B[j][k];
-                }
-            }
-        }
-
+        abtmm(A, B, C);
         return C;
     }
 
@@ -3928,6 +4014,7 @@ public class Math {
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
+                C[i][j] = 0.0;
                 for (int k = 0; k < l; k++) {
                     C[i][j] += A[i][k] * B[j][k];
                 }
@@ -3945,16 +4032,8 @@ public class Math {
 
         int m = A[0].length;
         int n = B.length;
-        int l = A.length;
         double[][] C = new double[m][n];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                for (int k = 0; k < l; k++) {
-                    C[i][j] += A[k][i] * B[j][k];
-                }
-            }
-        }
-
+        atbtmm(A, B, C);
         return C;
     }
 
@@ -3972,6 +4051,7 @@ public class Math {
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
+                C[i][j] = 0.0;
                 for (int k = 0; k < l; k++) {
                     C[i][j] += A[k][i] * B[j][k];
                 }
@@ -4015,7 +4095,7 @@ public class Math {
      * @return the same values as in x but with no repetitions.
      */
     public static int[] unique(int[] x) {
-        HashSet<Integer> hash = new HashSet<Integer>();
+        HashSet<Integer> hash = new HashSet<>();
         for (int i = 0; i < x.length; i++) {
             hash.add(x[i]);
         }
@@ -4036,7 +4116,7 @@ public class Math {
      * @return the same values as in x but with no repetitions.
      */
     public static String[] unique(String[] x) {
-        HashSet<String> hash = new HashSet<String>(Arrays.asList(x));
+        HashSet<String> hash = new HashSet<>(Arrays.asList(x));
 
         String[] y = new String[hash.size()];
 

@@ -81,7 +81,7 @@ public class GMeans extends KMeans {
 
         BBDTree bbd = new BBDTree(data);
         while (k < kmax) {
-            ArrayList<double[]> centers = new ArrayList<double[]>();
+            ArrayList<double[]> centers = new ArrayList<>();
             double[] score = new double[k];
             KMeans[] kmeans = new KMeans[k];
             
@@ -113,7 +113,7 @@ public class GMeans extends KMeans {
                 }
                 
                 // normalize to mean 0 and variance 1.
-                Math.normalize(x);
+                Math.standardize(x);
 
                 score[i] = AndersonDarling(x);
                 logger.info(String.format("Cluster %3d\tAnderson-Darling adjusted test statistic: %3.4f", i, score[i]));
@@ -170,7 +170,7 @@ public class GMeans extends KMeans {
                 }
             }
             
-            logger.info(String.format("G-Means distortion with %d clusters: %.5f\n", k, distortion));
+            logger.info(String.format("G-Means distortion with %d clusters: %.5f%n", k, distortion));
         }
     }
     
@@ -205,11 +205,11 @@ public class GMeans extends KMeans {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         
-        sb.append(String.format("G-Means distortion: %.5f\n", distortion));
-        sb.append(String.format("Clusters of %d data points of dimension %d:\n", y.length, centroids[0].length));
+        sb.append(String.format("G-Means distortion: %.5f%n", distortion));
+        sb.append(String.format("Clusters of %d data points of dimension %d:%n", y.length, centroids[0].length));
         for (int i = 0; i < k; i++) {
             int r = (int) Math.round(1000.0 * size[i] / y.length);
-            sb.append(String.format("%3d\t%5d (%2d.%1d%%)\n", i, size[i], r / 10, r % 10));
+            sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
         
         return sb.toString();

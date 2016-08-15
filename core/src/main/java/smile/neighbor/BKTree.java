@@ -93,7 +93,7 @@ public class BKTree<E> implements RNNSearch<E, E> {
             }
 
             if (children == null) {
-                children = new ArrayList<Node>();
+                children = new ArrayList<>();
             }
 
             while (children.size() <= d) {
@@ -203,7 +203,7 @@ public class BKTree<E> implements RNNSearch<E, E> {
 
         if (d <= k) {
             if (node.object != q || !identicalExcluded) {
-                neighbors.add(new Neighbor<E, E>(node.object, node.object, node.index, d));
+                neighbors.add(new Neighbor<>(node.object, node.object, node.index, d));
             }
         }
 

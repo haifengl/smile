@@ -1,0 +1,409 @@
+{
+  "metadata" : {
+    "name" : "Data Science with Scala",
+    "user_save_timestamp" : "1970-01-01T01:00:00.000Z",
+    "auto_save_timestamp" : "1970-01-01T01:00:00.000Z",
+    "language_info" : {
+      "name" : "scala",
+      "file_extension" : "scala",
+      "codemirror_mode" : "text/x-scala"
+    },
+    "trusted" : true,
+    "customLocalRepo" : "/tmp/repo",
+    "customRepos" : [ "spartakus % default % http://dl.bintray.com/spark-clustering-notebook/maven % maven" ],
+    "customDeps" : [ "com.github.haifengl % smile-scala_2.11 % 1.1.0" ],
+    "customImports" : null,
+    "customArgs" : null,
+    "customSparkConf" : null
+  },
+  "cells" : [ {
+    "metadata" : {
+      "id" : "B0A64FACA3AE41FD8A8CC61106CDB042"
+    },
+    "cell_type" : "markdown",
+    "source" : "# [Smile (Statistical Machine Intelligence and Learning Engine)](https://github.com/haifengl/smile)"
+  }, {
+    "metadata" : {
+      "id" : "4E0845C51EEE484A8CF7C1B606E0AA4E"
+    },
+    "cell_type" : "markdown",
+    "source" : "Smile is a fast and comprehensive machine learning system. With advanced data structures and algorithms, Smile delivers the state-of-art performance. Smile is self contained and requires only Java standard library. It also provides high-level operators in Scala and an interactive shell. In practice, data scientists usually build models with high-level tools such as R, Matlab, SAS, etc. However, developers have to spend a lot of time and energy to incorporate these models in the production system that are often implemented in general purpose programming languages such as Java and Scala. With Smile, data scientists and developers can work in the same environment to build machine learning applications quickly!"
+  }, {
+    "metadata" : {
+      "id" : "33B8C5A6C08F42F5BFA994B8173E3380"
+    },
+    "cell_type" : "markdown",
+    "source" : "Get Smile from the [GitHub project releases page](https://github.com/haifengl/smile/releases). Downloads are pre-packaged for Mac and universal tarball.\n\nSmile comes with an interactive shell. All high-level Smile operators are predefined in the shell.\n\nWe may also run Smile code as a shell script or batch command."
+  }, {
+    "metadata" : {
+      "id" : "091F7CD7443B491C8C482BC3A8D82286"
+    },
+    "cell_type" : "markdown",
+    "source" : "* Classification\n  * Support Vector Machines\n  * Decision Trees\n  * AdaBoost\n  * Gradient Boosting\n  * Random Forest\n  * Logistic Regression\n  * Neural Networks\n  * RBF Networks\n  * Maximum Entropy Classifier\n  * Naïve Bayesian\n  * Fisher / Linear / Quadratic / Regularized Discriminant Analysis\n* Regression\n  * Support Vector Regression\n  * Gaussian Process\n  * Regression Trees\n  * Gradient Boosting\n  * Random Forest\n  * RBF Networks\n  * Linear Regression\n  * LASSO\n  * Ridge Regression\n* Feature Selection\n  * Genetic Algorithm based Feature Selection\n  * Ensemble Learning based Feature Selection\n  * Signal Noise ratio\n  * Sum Squares ratio\n* Dimension Reduction\n  * PCA\n  * Kernel PCA\n  * Probabilistic PCA\n  * Generalized Hebbian Algorithm\n  * Random Project\n* Model Validation\n  * Cross Validation\n  * Leave-One-Out Validation\n  * Bootstrap\n  * Confusion Matrix\n  * AUC\n  * Fallout\n  * FDR\n  * F-Score\n  * Precision\n  * Recall\n  * Sensitivity\n  * Specificity\n  * MSE\n  * RMSE\n  * RSS\n  * Absolute Deviation\n  * Rand Index\n  * Adjusted Rand Index\n* Clustering\n  * BIRCH\n  * CLARANS\n  * DBScan\n  * DENCLUE\n  * Deterministic Annealing\n  * K-Means\n  * X-Means\n  * G-Means\n  * Neural Gas\n  * Growing Neural Gas\n  * Hierarchical Clustering\n  * Sequential Information Bottleneck\n  * Self-Organizing Maps\n  * Spectral Clustering\n  * Minimum Entropy Clustering\n* Association Rules\n  * Frequent Itemset Mining\n  * Association Rule Mining\n* Manifold learning\n  * IsoMap\n  * LLE\n  * Laplacian Eigenmap\n* Multi-Dimensional Scaling\n  * Classical MDS\n  * Isotonic MDS\n  * Sammon Mapping\n* Nearest Neighbor Search\n  * BK-Tree\n  * Cover Tree\n  * KD-Tree\n  * Locality-Sensitive Hashing\n* Sequence Learning\n  * Hidden Markov Model\n  * Conditional Random Field\n* Natural Language Processing\n  * Sentence Splitter\n  * Tokenizer\n  * Bigram Statistical Test\n  * Phrase Extractor\n  * Keyword Extractor\n  * Porter Stemmer\n  * Lancaster Stemmer\n  * POS Tagging\n  * Relevance Ranking\n* Interpolation\n  * Linear\n  * Bilinear\n  * Cubic\n  * Bicubic\n  * Kriging\n  * Laplace\n  * Shepard\n  * RBF\n* Wavelet\n  * Discrete Wavelet Transform\n  * Wavelet Shrinkage Haar Daubechies D4 Best Localized Wavelet\n  * Coiflet\n  * Symmlet"
+  }, {
+    "metadata" : {
+      "id" : "EBD0412CF39649C08C1010F6D3988950"
+    },
+    "cell_type" : "markdown",
+    "source" : "## Introduction to Machine Learning"
+  }, {
+    "metadata" : {
+      "id" : "3B8D998D17854C738259E5CCE2329BD4"
+    },
+    "cell_type" : "markdown",
+    "source" : "Machine learning is a type of artificial intelligence that provides computers with the ability to learn without being explicitly programmed. Machine learning algorithms can make predictions on data by building a model from example inputs.\n\nA core objective of machine learning is to generalize from its experience. Generalization is the ability of a learning machine to perform accurately on new, unseen examples/tasks after having experienced a training data set. The training examples come from some generally unknown probability distribution and the learner has to build a general model about this space that enables it to produce sufficiently accurate predictions in new cases.\n\nMachine learning tasks are typically classified into three broad categories, depending on the nature of the learning \"signal\" or \"feedback\" available to a learning system.\n\n* **Supervised learning**\nThe computer is presented with example inputs and their desired outputs, given by a \"teacher\", and the goal is to learn a general rule that maps inputs to outputs.\n\n* **Unsupervised learning**\nNo labels are given to the learning algorithm, leaving it on its own to find structure in its input. Unsupervised learning can be a goal in itself (discovering hidden patterns in data) or a means towards an end (feature learning).\n\n* **Reinforcement learning**\nA computer program interacts with a dynamic environment in which it must perform a certain goal, without a teacher explicitly telling it whether it has come close to its goal.\n\nBetween supervised and unsupervised learning is semi-supervised learning, where the teacher gives an incomplete training signal: a training set with some (often many) of the target outputs missing."
+  }, {
+    "metadata" : {
+      "id" : "FCAA1ECA9DFD4F168D46D301BDD8A3CB"
+    },
+    "cell_type" : "markdown",
+    "source" : "### Features "
+  }, {
+    "metadata" : {
+      "id" : "A409AE663A954D8C886526E510EA05F6"
+    },
+    "cell_type" : "markdown",
+    "source" : "A feature is an individual measurable property of a phenomenon being observed. Features are also called explanatory variables, independent variables, predictors, regressors, etc. Any attribute could be a feature, but choosing informative, discriminating and independent features is a crucial step for effective algorithms in machine learning. Features are usually numeric and a set of numeric features can be conveniently described by a feature vector. Structural features such as strings, sequences and graphs are also used in areas such as natural language processing, computational biology, etc.\n\nFeature engineering is the process of using domain knowledge of the data to create features that make machine learning algorithms work. Feature engineering is fundamental to the application of machine learning, and is both difficult and expensive. It requires the experimentation of multiple possibilities and the combination of automated techniques with the intuition and knowledge of the domain expert.\n\nThe initial set of raw features can be redundant and too large to be managed. Therefore, a preliminary step in many applications consists of selecting a subset of features, or constructing a new and reduced set of features to facilitate learning, and to improve generalization and interpretability."
+  }, {
+    "metadata" : {
+      "id" : "BB391CD6832645428576EE8E2C317E35"
+    },
+    "cell_type" : "markdown",
+    "source" : "### Supervised Learning"
+  }, {
+    "metadata" : {
+      "id" : "6F2538EF64F2403B888D8F1591255205"
+    },
+    "cell_type" : "markdown",
+    "source" : "In supervised learning, each example is a pair consisting of an input object (typically a feature vector) and a desired output value (also called the response variable or dependent variable). Supervised learning algorithms try to learn a function (often called hypothesis) from input object to the output value. By analyzing the training data, it produces an inferred function (referred as a model), which can be used for mapping new examples.\n\nSupervised learning problems are often solved by optimizating the loss functions that represent the price paid for inaccuracy of predictions. The risk associated with hypothesis is then defined as the expectation of the loss function. In general, the risk cannot be computed because the underlying distribution is unknown. However, we can compute an approximation, called empirical risk, by averaging the loss function on the training set.\n\nEmpirical risk minimization principle states that the learning algorithm should choose a hypothesis which minimizes the empirical risk.\n\nBatch learning algorithms generate the model by learning on the entire training data set at once. In contrast, online learning methods update the model with new data in a sequential order. Online learning is a common technique on big data where it is computationally infeasible to train over the entire dataset. It is also used when the data itself is generated over the time.\n\nIf the response variable is of category values, supervised learning problems care called classification. While the response variable is of real values, it is referred as regression."
+  }, {
+    "metadata" : {
+      "id" : "E69098B20AF2479AAF8B67B5AAC17989"
+    },
+    "cell_type" : "markdown",
+    "source" : "#### Overfitting"
+  }, {
+    "metadata" : {
+      "id" : "13D2BF13803040AB87E7EED365ACF96B"
+    },
+    "cell_type" : "markdown",
+    "source" : "When a model describes random error or noise instead of the underlying relationship, it is called overfitting. Overfitting generally occurs when a model is excessively complex, such as having too many parameters relative to the number of observations. A overfit model will generally have poor generalization performance, as it can exaggerate minor fluctuations in the data."
+  }, {
+    "metadata" : {
+      "id" : "A0C5A04006A9469B815605EDFF3B60A7"
+    },
+    "cell_type" : "markdown",
+    "source" : "#### Model Validation"
+  }, {
+    "metadata" : {
+      "id" : "1B43C9D5669A49CE8FE420C00628DCA2"
+    },
+    "cell_type" : "markdown",
+    "source" : "To assess if the model be not overfit and can generalize to an independent data set, out-of-sample evaluation is generally employed. If the model has been estimated over some, but not all, of the available data, then the model using the estimated parameters can be used to predict the held-back data.\n\nA popular model validation technique is cross-validation. One round of cross-validation involves partitioning a sample of data into complementary subsets, performing the analysis on one subset (called the training set), and validating the analysis on the other subset (called the testing set). To reduce variability, multiple rounds of cross-validation are performed using different partitions, and the validation results are averaged over the rounds."
+  }, {
+    "metadata" : {
+      "id" : "66395A82EB974DD9B32B50D6692921C1"
+    },
+    "cell_type" : "markdown",
+    "source" : "#### Regularization"
+  }, {
+    "metadata" : {
+      "id" : "A81ED0FD5EDD418FBF1981B3FCA9A39E"
+    },
+    "cell_type" : "markdown",
+    "source" : "Regularization refers to a process of introducing additional information in order to prevent overfitting (or to solve an ill-posed problem). In general, a regularization term, typically a penalty on the complexity of hypothesis, is introduced to a general loss function with a parameter controlling the importance of the regularization term. For example, regularization term may be restrictions for smoothness or bounds on the vector space norm.\n\nRegularization can be used to learn simpler models, induce models to be sparse, introduce group structure into the learning problem, and more.\n\nA theoretical justification for regularization is that it attempts to impose Occam's razor on the solution. From a Bayesian point of view, many regularization techniques correspond to imposing certain prior distributions on model parameters."
+  }, {
+    "metadata" : {
+      "id" : "7DFCF9C2104E4C6A80D713523E28EDBF"
+    },
+    "cell_type" : "markdown",
+    "source" : "### Unsupervised Learning"
+  }, {
+    "metadata" : {
+      "id" : "E44483E22592406F8F86F93823AFCF5D"
+    },
+    "cell_type" : "markdown",
+    "source" : "Unsupervised learning tries to infer a function to describe hidden structure from unlabeled data. Since the examples given to the learner are unlabeled, there is no error or reward signal to evaluate a potential solution.\n\nUnsupervised learning is closely related to the problem of density estimation in statistics. However unsupervised learning also encompasses many other techniques that seek to summarize and explain key features of the data."
+  }, {
+    "metadata" : {
+      "id" : "B15C81A2F1E8434B802896FE8D054DB3"
+    },
+    "cell_type" : "markdown",
+    "source" : "#### Clustering"
+  }, {
+    "metadata" : {
+      "id" : "4E3A776C98434E5E8B82DC99E4FDCD64"
+    },
+    "cell_type" : "markdown",
+    "source" : "Cluster analysis or clustering is the task of grouping a set of objects such that objects in the same group (called a cluster) are more similar to each other than to those in other groups."
+  }, {
+    "metadata" : {
+      "id" : "C3A60CC2A7344661864E9A267D7B2892"
+    },
+    "cell_type" : "markdown",
+    "source" : "#### Latent Variable Models"
+  }, {
+    "metadata" : {
+      "id" : "12A12299AD934408B9D399F23147184C"
+    },
+    "cell_type" : "markdown",
+    "source" : "In statistics, latent variables are variables that are not directly observed but are rather inferred from other observed variables. Mathematical models that aim to explain observed variables in terms of latent variables are called latent variable models."
+  }, {
+    "metadata" : {
+      "id" : "36D7B3A090D54AB8891F9C8896590295"
+    },
+    "cell_type" : "markdown",
+    "source" : "#### Association Rules"
+  }, {
+    "metadata" : {
+      "id" : "69FB2184847248DBA7F4DE944F12D9A7"
+    },
+    "cell_type" : "markdown",
+    "source" : "Association rule mining is to identify strong and interesting relations between variables in large databases. Introduced by Rakesh Agrawal et al., a typeical use case is to discover regularities between products in large-scale transaction data recorded by point-of-sale systems in supermarkets. For example, the rule {onions, potatoes} -> {burger} found in the sales data of a supermarket would indicate that if a customer buys onions and potatoes together, they are likely to also buy hamburger meat. Such information can be used as the basis for decisions about marketing activities (e.g., promotional pricing or product placements)."
+  }, {
+    "metadata" : {
+      "id" : "529874113846451D8CBF5CC20E2D2CEE"
+    },
+    "cell_type" : "markdown",
+    "source" : "### Semi-supervised Learning"
+  }, {
+    "metadata" : {
+      "id" : "725D7DAD18C14B8B9CED3767F5C9589B"
+    },
+    "cell_type" : "markdown",
+    "source" : "The acquisition of labeled data for a learning problem is usually labor intensive, time consuming, and of high cost. On the other hand, acquisition of unlabeled data is relatively inexpensive. Researchers have found that unlabeled data, when used in conjunction with a small amount of labeled data, can produce considerable improvement in model accuracy. Semi-supervised learning is a class of supervised learning tasks and techniques that make use of both a large amount of unlabeled data and a small amount of labeled data."
+  }, {
+    "metadata" : {
+      "id" : "D7737B7107FA42618B0EA992684E2C1D"
+    },
+    "cell_type" : "markdown",
+    "source" : "### Reinforcement Learning"
+  }, {
+    "metadata" : {
+      "id" : "84F98C31BF8042008AFF932919F69F2F"
+    },
+    "cell_type" : "markdown",
+    "source" : "Reinforcement learning is about a learning agent interacting with its environment to achieve a goal. The learning agent has to map situations to actions to maximize a numerical reward signal. Different from supervised learning, the learner is not told which actions to take but instead must discover which actions yield the most reward by trying them. Moreover, actions may affect not only the immediate reward but also all subsequent rewards. Trial-and-error search and delayed reward are the most important features of reinforcement learning.\n\nMarkov decision processes (MDPs) provide a mathematical framework for modeling decision making in situations where outcomes are partly random and partly under the control of a decision maker."
+  }, {
+    "metadata" : {
+      "id" : "AC7221F8220D43BB90670EFB2699F620"
+    },
+    "cell_type" : "markdown",
+    "source" : "## Data"
+  }, {
+    "metadata" : {
+      "id" : "1B328F2D965D45E588127B1686440F73"
+    },
+    "cell_type" : "markdown",
+    "source" : "### Data Types"
+  }, {
+    "metadata" : {
+      "id" : "5336DE81F5E9481795886342AFD574DE"
+    },
+    "cell_type" : "markdown",
+    "source" : "Generally speaking, there are two major types of attributes:\n\n* **Qualitative variables:**\nThe data values are non-numeric categories. Examples: Blood type, Gender.\n\n* **Quantitative variables:**\nThe data values are counts or numerical measurements. A quantitative variable can be either discrete such as the number of students receiving an 'A' in a class, or continuous such as GPA, salary and so on.\n\nAnother way of classifying data is by the measurement scales. In statistics, there are four generally used measurement scales:\n\n* **Nominal data:**\nData values are non-numeric group labels. For example, Gender variable can be defined as male = 0 and female =1.\n\n* **Ordinal data:**\nData values are categorical and may be ranked in some numerically meaningful way. For example, strongly disagree to strong agree may be defined as 1 to 5.\n\n* **Continuous data:**\n * **Interval data:** Data values are ranged in a real interval, which can be as large as from negative infinity to positive infinity. The difference between two values are meaningful, however, the ratio of two interval data is not meaningful. For example temperature, IQ.\n\n * **Ratio data:** Both difference and ratio of two values are meaningful. For example, salary, weight.\n\nSmile has four attribute types: `NominalAttribute`, `NumericAttribute`, `DateAttribute`, and `StringAttribute`. Many machine learning algorithms can only handle numeric attributes while a few such as decision trees can process nominal attribute directly. Date attribute is useful in plotting. With some feature engineering, values like day of week can be used as nominal attribute. String attribute could be used in text mining and natural language processing."
+  }, {
+    "metadata" : {
+      "id" : "3FB06F466B0C4BBFAC9CC6429C614C98"
+    },
+    "cell_type" : "markdown",
+    "source" : "### AttributeDataset"
+  }, {
+    "metadata" : {
+      "id" : "9B20B4E5F4624758831482935854566F"
+    },
+    "cell_type" : "markdown",
+    "source" : "Most Smile algorithms take simple `double[]` as input. But we often use the encapsulation class `AttributeDataset`. In fact, the output of most Smile data parsers is an `AttributeDataset` object. `AttributeDataset` contains a fixed number of attributes. All attribute values are stored as double even if the attribute may be nominal, ordinal, string, or date. The dataset is stored row-wise internally, which is fast for frequently accessing instances of dataset.\n\nA data object may have an associated class label (for classification) or real-valued response value (for regression). Optionally, a data object or attribute may have a (positive) weight value, whose meaning depends on applications. However, most machine learning methods are not able to utilize this extra weight information.\n\n`AttributeDataset` may also contains meta data such as data name and descriptions.\n\nSuppose we have an `AttributeDataset` object, which may be created by a parser. To feed the data to a learning algorithm, we need to unwrap the data by the function unzip function. If the data also have labels, the function `unzipInt` can be used to return a tuple `(x, y)`, of which `x` is an array of feature vectors and `y` is an array of labels. If the response variable is real valued in case of regression, `unzipDouble` can be used."
+  }, {
+    "metadata" : {
+      "id" : "49874525965349838E6A6BF7DCA1C300"
+    },
+    "cell_type" : "markdown",
+    "source" : "## Smile Packages"
+  }, {
+    "metadata" : {
+      "id" : "8C49D8D0D60B4DD5956FE2DAC8F2808F"
+    },
+    "cell_type" : "markdown",
+    "source" : "In the below examples, we assume that the following packages are imported."
+  }, {
+    "metadata" : {
+      "trusted" : true,
+      "input_collapsed" : false,
+      "collapsed" : true,
+      "id" : "8B2DEFC72CBB47C2A5080209171F1676"
+    },
+    "cell_type" : "code",
+    "source" : "import smile._\nimport smile.util._\nimport smile.math._, Math._\nimport smile.math.distance._\nimport smile.math.kernel._\nimport smile.math.matrix._\nimport smile.stat.distribution._\nimport smile.data._\nimport smile.interpolation._\nimport smile.validation._\nimport smile.association._\nimport smile.regression._\nimport smile.classification._\nimport smile.feature._\nimport smile.clustering._\nimport smile.vq._\nimport smile.manifold._\nimport smile.mds._\nimport smile.sequence._\nimport smile.projection._\nimport smile.nlp._\nimport smile.wavelet._\nimport smile.shell._",
+    "outputs" : [ ]
+  }, {
+    "metadata" : {
+      "id" : "C81200E85FC24612B955674626A5EB2D"
+    },
+    "cell_type" : "markdown",
+    "source" : "## Classification"
+  }, {
+    "metadata" : {
+      "id" : "18D2215D7D724BE78C8CD8901735C33C"
+    },
+    "cell_type" : "markdown",
+    "source" : "Smile's classification algorithms are in the package `smile.classification` and all algorithms implement the interface `Classifier` that has a method `predict` to predict the class label of an instance. An overloaded version in `SoftClassifier` can also calculate the a posteriori probabilities besides the class label. For all algorithms, the model can be trained through the constructor. Meanwhile, each algorithm has a `Trainer` companion class that can hold model hyper-parameters and be applied to multiple training datasets.\n\nSome algorithms with online learning capability also implement the interface `OnlineClassifier`. Online learning is a model of induction that learns one instance at a time. The method learn updates the model with a new instance."
+  }, {
+    "metadata" : {
+      "id" : "0449FAD2A3464B03BD7B39F3145B5D0B"
+    },
+    "cell_type" : "markdown",
+    "source" : "### K-Nearest Neighbor"
+  }, {
+    "metadata" : {
+      "id" : "CCAC834328774A2780921D4A08FD9746"
+    },
+    "cell_type" : "markdown",
+    "source" : "The k-nearest neighbor algorithm (k-NN) is a method for classifying objects by a majority vote of its neighbors, with the object being assigned to the class most common amongst its k nearest neighbors (k is typically small). k-NN is a type of instance-based learning, or lazy learning where the function is only approximated locally and all computation is deferred until classification."
+  }, {
+    "metadata" : {
+      "trusted" : true,
+      "input_collapsed" : false,
+      "collapsed" : true,
+      "id" : "677F0B6481984A7285EBEFC23BC9C9AC"
+    },
+    "cell_type" : "code",
+    "source" : "def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]]",
+    "outputs" : [ ]
+  }, {
+    "metadata" : {
+      "id" : "D24B89CEA12045E2817A976B359CCF85"
+    },
+    "cell_type" : "markdown",
+    "source" : "The simplest k-NN method takes a data set of feature vectors and labels with Euclidean distance as the similarity measure. When applied to the Iris datset, the accuracy of 10-fold cross validation is 96% for k = 3."
+  }, {
+    "metadata" : {
+      "trusted" : true,
+      "input_collapsed" : false,
+      "collapsed" : true,
+      "id" : "B859030D0AE74ED89144A3DA2683CCD9"
+    },
+    "cell_type" : "code",
+    "source" : "import sys.process._\nimport scala.language.postfixOps\n\n\"wget https://raw.githubusercontent.com/haifengl/smile/master/shell/src/universal/data/weka/iris.arff -O /tmp/iris.arff \"!!",
+    "outputs" : [ ]
+  }, {
+    "metadata" : {
+      "id" : "09D2DFDDE484406D8CB726FDFC5E33A8"
+    },
+    "cell_type" : "markdown",
+    "source" : "The above code downloads the Iris dataset to the /tmp directory."
+  }, {
+    "metadata" : {
+      "trusted" : true,
+      "input_collapsed" : false,
+      "collapsed" : true,
+      "id" : "C92B187CC5EF40E28CB9DD4B177FCACA"
+    },
+    "cell_type" : "code",
+    "source" : "val iris = readArff(\"/tmp/iris.arff\", 4)\nval (x, y) = iris.unzipInt\ncv(x, y, 10) { case (x, y) => knn(x, y, 3) }",
+    "outputs" : [ ]
+  }, {
+    "metadata" : {
+      "id" : "AA1FE1D449D344F5AE80244CF4EA357F"
+    },
+    "cell_type" : "markdown",
+    "source" : "The best choice of k depends upon the data; generally, larger values of k reduce the effect of noise on the classification, but make boundaries between classes less distinct. A good k can be selected by various heuristic techniques, e.g. cross-validation. In binary problems, it is helpful to choose k to be an odd number as this avoids tied votes.\n\nThe nearest neighbor algorithm has some strong consistency results. As the amount of data approaches infinity, the algorithm is guaranteed to yield an error rate no worse than twice the Bayes error rate (the minimum achievable error rate given the distribution of the data). k-NN is guaranteed to approach the Bayes error rate, for some value of k (where k increases as a function of the number of data points).\n\nThe user can also provide a customized distance function."
+  }, {
+    "metadata" : {
+      "trusted" : true,
+      "input_collapsed" : false,
+      "collapsed" : true,
+      "id" : "435913CDC0034920AA5386EAA49EF527"
+    },
+    "cell_type" : "code",
+    "source" : "def knn[T](x: Array[T], y: Array[Int], distance: Distance[T], k: Int): KNN[T]",
+    "outputs" : [ ]
+  }, {
+    "metadata" : {
+      "id" : "5071505A1A604D69B0BD6CD31D9B8B4A"
+    },
+    "cell_type" : "markdown",
+    "source" : "Often, the classification accuracy of k-NN can be improved significantly if the distance metric is learned with specialized algorithms such as Large Margin Nearest Neighbor or Neighborhood Components Analysis.\n\nAlternatively, the user may provide a k-nearest neighbor search data structure. Besides the simple linear search, Smile provides KD-Tree, Cover Tree, and LSH (Locality-Sensitive Hashing) for efficient k-nearest neighbor search."
+  }, {
+    "metadata" : {
+      "trusted" : true,
+      "input_collapsed" : false,
+      "collapsed" : true,
+      "id" : "301BCEB671EB4548AE5EE100BC194C28"
+    },
+    "cell_type" : "code",
+    "source" : "def knn[T](x: KNNSearch[T, T], y: Array[Int], k: Int): KNN[T]",
+    "outputs" : [ ]
+  }, {
+    "metadata" : {
+      "id" : "4F3CC5C4FAF4440C94995AFC1D95F961"
+    },
+    "cell_type" : "markdown",
+    "source" : "A KD-tree (short for k-dimensional tree) is a space-partitioning dataset structure for organizing points in a k-dimensional space. Cover tree is a data structure for generic nearest neighbor search (with a metric), which is especially efficient in spaces with small intrinsic dimension. The cover tree has a theoretical bound that is based on the dataset's doubling constant. LSH is an efficient algorithm for approximate nearest neighbor search in high dimensional spaces by performing probabilistic dimension reduction of data."
+  }, {
+    "metadata" : {
+      "id" : "3E0F0919691340D3B3A946411500D586"
+    },
+    "cell_type" : "markdown",
+    "source" : "### Maximum Entropy Classifier (Maxent)"
+  }, {
+    "metadata" : {
+      "id" : "114AA350182B48A0ABDBFBA19C441111"
+    },
+    "cell_type" : "markdown",
+    "source" : "In maximum entropy models, the observed data itself is assumed to be the testable information. Maximum entropy models don't assume anything about the probability distribution other than what have been observed and always choose the most uniform distribution subject to the observed constraints."
+  }, {
+    "metadata" : {
+      "id" : "9700BA7AFD894F729780D0F0BB0E8AE3"
+    },
+    "cell_type" : "markdown",
+    "source" : "```scala\ndef maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent\n```"
+  }, {
+    "metadata" : {
+      "id" : "446B6E618681440CAA93A50975B4C7C6"
+    },
+    "cell_type" : "markdown",
+    "source" : "where `x` is the sparse training samples. Each sample is represented by a set of sparse binary features. The features are stored in an integer array, of which are the indices of nonzero features. \n\nThe parameter `p` is the dimension of feature space, and `lambda` is the regularization factor.\n\nBasically, maximum entropy classifier is another name of multinomial logistic regression applied to categorical independent variables, which are converted to binary dummy variables. \n\nMaximum entropy models are widely used in natural language processing. Therefore, Smile's implementation assumes that **binary features** are stored in a sparse array, of which entries are the indices of nonzero features."
+  }, {
+    "metadata" : {
+      "trusted" : true,
+      "input_collapsed" : false,
+      "collapsed" : true,
+      "id" : "4699144082CF486A804DCED6326066BD"
+    },
+    "cell_type" : "code",
+    "source" : "import sys.process._\nimport scala.language.postfixOps\n\n\"wget https://raw.githubusercontent.com/haifengl/smile/master/shell/src/universal/data/sequence/sparse.hyphen.6.train -O /tmp/sparse.hyphen.6.train \"!!\n\n\"wget https://raw.githubusercontent.com/haifengl/smile/master/shell/src/universal/data/sequence/sparse.hyphen.6.test -O /tmp/sparse.hyphen.6.test \"!!",
+    "outputs" : [ ]
+  }, {
+    "metadata" : {
+      "trusted" : true,
+      "input_collapsed" : false,
+      "collapsed" : true,
+      "id" : "DD548922D7734331811948F0FF6946BF"
+    },
+    "cell_type" : "code",
+    "source" : "case class SmileDataset(\n  x:Array[Array[Int]],\n  y:Array[Int],\n  p:Int\n)",
+    "outputs" : [ ]
+  }, {
+    "metadata" : {
+      "trusted" : true,
+      "input_collapsed" : false,
+      "collapsed" : true,
+      "id" : "D76F34DAF0934FA29142026AA82BDBB9"
+    },
+    "cell_type" : "code",
+    "source" : "def load(resource:String):SmileDataset  = {\n  val xs = scala.collection.mutable.ArrayBuffer.empty[Array[Int]]\n  val ys = scala.collection.mutable.ArrayBuffer.empty[Int]\n  \n  val head :: content = scala.io.Source.fromFile(new java.io.File(resource)).getLines.toList\n  \n  val Array(nseq, k, p) = head.split(\" \").map(_.trim.toInt)\n  \n  content.foreach{ line =>\n    val seqid :: pos :: len :: featureAndY = line.split(\" \").map(_.trim.toInt).toList\n    val (feature, y) = (featureAndY.init, featureAndY.last)\n    xs += feature.toArray\n    ys += y\n  }\n  \n  SmileDataset(xs.toArray, ys.toArray, p)\n}",
+    "outputs" : [ ]
+  }, {
+    "metadata" : {
+      "trusted" : true,
+      "input_collapsed" : false,
+      "collapsed" : true,
+      "id" : "9CC0506B62854016892AE78C94D7A9F5"
+    },
+    "cell_type" : "code",
+    "source" : "val train = load(\"/tmp/sparse.hyphen.6.train\")\nval test = load(\"/tmp/sparse.hyphen.6.test\")\n\nval maxent = new Maxent(train.p, train.x, train.y, 0.1, 1E-5, 500);\n\nval error = (test.x zip test.y).filter{ case (x,y) => maxent.predict(x) != y }.size",
+    "outputs" : [ ]
+  } ],
+  "nbformat" : 4
+}

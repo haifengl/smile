@@ -168,7 +168,7 @@ class TotalSupportTree {
      * @return the list of frequent item sets
      */
     public List<ItemSet> getFrequentItemsets() {
-        List<ItemSet> list = new ArrayList<ItemSet>();
+        List<ItemSet> list = new ArrayList<>();
         getFrequentItemsets(null, list);
         return list;
     }

@@ -168,7 +168,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
         if (data.length < 20)
             throw new IllegalArgumentException("Too few samples.");
 
-        ArrayList<Component> mixture = new ArrayList<Component>();
+        ArrayList<Component> mixture = new ArrayList<>();
         Component c = new Component();
         c.priori = 1.0;
         c.distribution = new MultivariateGaussianDistribution(data, diagonal);

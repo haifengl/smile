@@ -15,14 +15,14 @@
  *******************************************************************************/
 
 package smile.classification;
-
 import java.io.Serializable;
 import java.util.Arrays;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
 import smile.data.Attribute;
 import smile.data.NumericAttribute;
+import smile.math.Math;
 import smile.util.SmileUtils;
 import smile.validation.Accuracy;
 import smile.validation.ClassificationMeasure;
@@ -61,6 +61,7 @@ import smile.validation.ClassificationMeasure;
 public class AdaBoost implements SoftClassifier<double[]>, Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(AdaBoost.class);
+    private static final String INVALID_NUMBER_OF_TREES = "Invalid number of trees: ";
 
     /**
      * The number of classes.
@@ -115,7 +116,7 @@ public class AdaBoost implements SoftClassifier<double[]>, Serializable {
          */
         public Trainer(int ntrees) {
             if (ntrees < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
+                throw new IllegalArgumentException(INVALID_NUMBER_OF_TREES + ntrees);
             }
 
             this.ntrees = ntrees;
@@ -131,7 +132,7 @@ public class AdaBoost implements SoftClassifier<double[]>, Serializable {
             super(attributes);
 
             if (ntrees < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
+                throw new IllegalArgumentException(INVALID_NUMBER_OF_TREES + ntrees);
             }
 
             this.ntrees = ntrees;
@@ -143,7 +144,7 @@ public class AdaBoost implements SoftClassifier<double[]>, Serializable {
          */
         public Trainer setNumTrees(int ntrees) {
             if (ntrees < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
+                throw new IllegalArgumentException(INVALID_NUMBER_OF_TREES + ntrees);
             }
 
             this.ntrees = ntrees;
@@ -218,7 +219,7 @@ public class AdaBoost implements SoftClassifier<double[]>, Serializable {
         }
 
         if (ntrees < 1) {
-            throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
+            throw new IllegalArgumentException(INVALID_NUMBER_OF_TREES + ntrees);
         }
         
         if (maxNodes < 2) {

@@ -407,21 +407,17 @@ public class Heatmap extends Plot {
         canvas.getAxis(1).setFrameVisible(false);
         canvas.getAxis(1).setGridVisible(false);
 
-        if (rowLabels != null) {
-            double[] locations = new double[rowLabels.length];
-            for (int i = 0; i < rowLabels.length; i++) {
-                locations[i] = z.length - i - 0.5;
-            }
-            canvas.getAxis(1).addLabel(rowLabels, locations);
+        double[] locations = new double[rowLabels.length];
+        for (int i = 0; i < rowLabels.length; i++) {
+            locations[i] = z.length - i - 0.5;
         }
+        canvas.getAxis(1).addLabel(rowLabels, locations);
 
-        if (columnLabels != null) {
-            double[] locations = new double[columnLabels.length];
-            for (int i = 0; i < columnLabels.length; i++) {
-                locations[i] = i + 0.5;
-            }
-            canvas.getAxis(0).addLabel(columnLabels, locations);
+        locations = new double[columnLabels.length];
+        for (int i = 0; i < columnLabels.length; i++) {
+            locations[i] = i + 0.5;
         }
+        canvas.getAxis(0).addLabel(columnLabels, locations);
 
         return canvas;
     }
@@ -449,21 +445,17 @@ public class Heatmap extends Plot {
         canvas.getAxis(1).setFrameVisible(false);
         canvas.getAxis(1).setGridVisible(false);
 
-        if (rowLabels != null) {
-            double[] locations = new double[rowLabels.length];
-            for (int i = 0; i < rowLabels.length; i++) {
-                locations[i] = z.length - i - 0.5;
-            }
-            canvas.getAxis(1).addLabel(rowLabels, locations);
+        double[] locations = new double[rowLabels.length];
+        for (int i = 0; i < rowLabels.length; i++) {
+            locations[i] = z.length - i - 0.5;
         }
+        canvas.getAxis(1).addLabel(rowLabels, locations);
 
-        if (columnLabels != null) {
-            double[] locations = new double[columnLabels.length];
-            for (int i = 0; i < columnLabels.length; i++) {
-                locations[i] = i + 0.5;
-            }
-            canvas.getAxis(0).addLabel(columnLabels, locations);
+        locations = new double[columnLabels.length];
+        for (int i = 0; i < columnLabels.length; i++) {
+            locations[i] = i + 0.5;
         }
+        canvas.getAxis(0).addLabel(columnLabels, locations);
 
         return canvas;
     }

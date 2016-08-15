@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-
 package smile.data.parser;
 
 import java.io.BufferedReader;
@@ -36,6 +35,7 @@ import smile.data.Datum;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
 import smile.data.StringAttribute;
+
 
 /**
  * Weka ARFF (attribute relation file format) file parser. ARFF is an ASCII
@@ -86,6 +86,7 @@ public class ArffParser {
     private static final String ARFF_ATTRIBUTE_RELATIONAL = "relational";
     /** The keyword used to denote the end of the declaration of a subrelation */
     private static final String ARFF_END_SUBRELATION = "@end";
+    private static final String PREMATURE_END_OF_FILE = "premature end of file";
     /**
      * The column index of dependent/response variable.
      */
@@ -166,7 +167,7 @@ public class ArffParser {
             throw new ParseException("premature end of line", tokenizer.lineno());
         }
         if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
-            throw new ParseException("premature end of file", tokenizer.lineno());
+            throw new ParseException(PREMATURE_END_OF_FILE, tokenizer.lineno());
         } else if ((tokenizer.ttype == '\'') || (tokenizer.ttype == '"')) {
             tokenizer.ttype = StreamTokenizer.TT_WORD;
         } else if ((tokenizer.ttype == StreamTokenizer.TT_WORD) && (tokenizer.sval.equals("?"))) {
@@ -190,7 +191,7 @@ public class ArffParser {
         // Get name of relation.
         getFirstToken(tokenizer);
         if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
-            throw new ParseException("premature end of file", tokenizer.lineno());
+            throw new ParseException(PREMATURE_END_OF_FILE, tokenizer.lineno());
         }
         if (ARFF_RELATION.equalsIgnoreCase(tokenizer.sval)) {
             getNextToken(tokenizer);
@@ -203,7 +204,7 @@ public class ArffParser {
         // Get attribute declarations.
         getFirstToken(tokenizer);
         if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
-            throw new ParseException("premature end of file", tokenizer.lineno());
+            throw new ParseException(PREMATURE_END_OF_FILE, tokenizer.lineno());
         }
 
         while (ARFF_ATTRIBUTE.equalsIgnoreCase(tokenizer.sval)) {
@@ -282,7 +283,7 @@ public class ArffParser {
         } else {
 
             // Attribute is nominal.
-            List<String> attributeValues = new ArrayList<String>();
+            List<String> attributeValues = new ArrayList<>();
             tokenizer.pushBack();
 
             // Get values for nominal attribute.
@@ -307,7 +308,7 @@ public class ArffParser {
         getLastToken(tokenizer, false);
         getFirstToken(tokenizer);
         if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
-            throw new ParseException("premature end of file", tokenizer.lineno());
+            throw new ParseException(PREMATURE_END_OF_FILE, tokenizer.lineno());
         }
 
         return attribute;
@@ -327,25 +328,25 @@ public class ArffParser {
 
     /**
      * Returns the attribute set of given URI.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public static Attribute[] getAttributes(URI uri) throws FileNotFoundException, IOException, ParseException {
+    public static Attribute[] getAttributes(URI uri) throws IOException, ParseException {
         return getAttributes(new File(uri));
     }
 
     /**
      * Returns the attribute set of given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public static Attribute[] getAttributes(String path) throws FileNotFoundException, IOException, ParseException {
+    public static Attribute[] getAttributes(String path) throws IOException, ParseException {
         return getAttributes(new File(path));
     }
 
     /**
      * Returns the attribute set of given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public static Attribute[] getAttributes(File file) throws FileNotFoundException, IOException, ParseException {
+    public static Attribute[] getAttributes(File file) throws IOException, ParseException {
         return getAttributes(new FileInputStream(file));
     }
 
@@ -359,7 +360,7 @@ public class ArffParser {
         ArffParser parser = new ArffParser();
         parser.initTokenizer(tokenizer);
 
-        List<Attribute> attributes = new ArrayList<Attribute>();
+        List<Attribute> attributes = new ArrayList<>();
         parser.readHeader(tokenizer, attributes);
 
         return attributes.toArray(new Attribute[attributes.size()]);
@@ -367,25 +368,25 @@ public class ArffParser {
     
     /**
      * Parse a dataset from given URI.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public AttributeDataset parse(URI uri) throws FileNotFoundException, IOException, ParseException {
+    public AttributeDataset parse(URI uri) throws IOException, ParseException {
         return parse(new File(uri));
     }
 
     /**
      * Parse a dataset from given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public AttributeDataset parse(String path) throws FileNotFoundException, IOException, ParseException {
+    public AttributeDataset parse(String path) throws IOException, ParseException {
         return parse(new File(path));
     }
 
     /**
      * Parse a dataset from given file.
-     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
      */
-    public AttributeDataset parse(File file) throws FileNotFoundException, IOException, ParseException {
+    public AttributeDataset parse(File file) throws IOException, ParseException {
         return parse(new FileInputStream(file));
     }
 
@@ -397,7 +398,7 @@ public class ArffParser {
             StreamTokenizer tokenizer = new StreamTokenizer(r);
             initTokenizer(tokenizer);
 
-            List<Attribute> attributes = new ArrayList<Attribute>();
+            List<Attribute> attributes = new ArrayList<>();
             String relationName = readHeader(tokenizer, attributes);
 
             if (attributes.isEmpty()) {
@@ -478,7 +479,7 @@ public class ArffParser {
             }
         }
         
-        return new Datum<double[]>(x, y);
+        return new Datum<>(x, y);
     }
 
     /**
@@ -501,7 +502,7 @@ public class ArffParser {
             
             String s = tokenizer.sval.trim();
             if (index < 0) {
-                index = Integer.valueOf(s);
+                index = Integer.parseInt(s);
                 if (index < 0 || index >= attributes.length) {
                     throw new ParseException("Invalid attribute index: " + index, tokenizer.lineno());
                 }
@@ -528,6 +529,6 @@ public class ArffParser {
             
         } while (tokenizer.ttype == StreamTokenizer.TT_WORD);
         
-        return new Datum<double[]>(x, y);
+        return new Datum<>(x, y);
     }
 }

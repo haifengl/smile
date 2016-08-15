@@ -321,7 +321,7 @@ public class Axis {
      */
     public Axis addLabel(String label, double location) {
         if (labels == null) {
-            labels = new HashMap<String, Double>();
+            labels = new HashMap<>();
         }
 
         labels.put(label, location);
@@ -340,7 +340,7 @@ public class Axis {
         }
 
         if (labels == null) {
-            labels = new HashMap<String, Double>();
+            labels = new HashMap<>();
         }
 
         for (int i = 0; i < label.length; i++) {
@@ -504,7 +504,7 @@ public class Axis {
                 int prevx = xy[0];
                 int prevy = xy[1];
                 for (int i = 0; i < gridLabels.length; i++) {
-                    if (gridLabels[i].text.length() > 0) {
+                    if (!gridLabels[i].text.isEmpty()) {
                         double[] coord = gridLabels[i].getCoordinate();
                         xy = g.projection.screenProjection(coord);
                         int x = xy[0];

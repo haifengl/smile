@@ -135,7 +135,7 @@ public class GHATest {
             error /= USArrests.length;
 
             if (iter % 100 == 0) {
-                System.out.format("Iter %3d, Error = %.5g\n", iter, error);
+                System.out.format("Iter %3d, Error = %.5g%n", iter, error);
             }
         }
 

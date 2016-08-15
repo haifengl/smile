@@ -103,9 +103,9 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         bands = (Band[]) Array.newInstance(Band.class, bandSize);
         Arrays.fill(bands, new Band());
         this.mask = -1 >>> (BITS / bandSize * (bandSize - 1));
-        data = new ArrayList<E>();
-        keys = new ArrayList<AbstractSentence>();
-        signs = new ArrayList<Long>();
+        data = new ArrayList<>();
+        keys = new ArrayList<>();
+        signs = new ArrayList<>();
     }
 
     public void put(AbstractSentence sentence, E v) {
@@ -133,8 +133,8 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         Set<Integer> candidates = obtainCandidates(q.tokens);
 
         Neighbor<AbstractSentence, E>[] neighbors = (Neighbor<AbstractSentence, E>[])Array.newInstance(Neighbor.class, k);
-        HeapSelect<Neighbor<AbstractSentence, E>> heap = new HeapSelect<Neighbor<AbstractSentence, E>>(neighbors);
-        Neighbor<AbstractSentence, E> neighbor = new Neighbor<AbstractSentence, E>(null, null, 0, Double.MAX_VALUE);
+        HeapSelect<Neighbor<AbstractSentence, E>> heap = new HeapSelect<>(neighbors);
+        Neighbor<AbstractSentence, E> neighbor = new Neighbor<>(null, null, 0, Double.MAX_VALUE);
         for (int i = 0; i < k; i++) {
             heap.add(neighbor);
         }
@@ -147,7 +147,7 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
             long sign = signs.get(index);
             double distance = HammingDistance.d(fpq, sign);
             if (distance < heap.peek().distance) {
-                heap.add(new Neighbor<AbstractSentence, E>(keys.get(index), data.get(index), index, distance));
+                heap.add(new Neighbor<>(keys.get(index), data.get(index), index, distance));
                 hit++;
             }
         }
@@ -169,7 +169,7 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         if(ns.length>0) {
             return ns[0];
         }
-        return new Neighbor<AbstractSentence, E>(null, null, -1, Double.MAX_VALUE);
+        return new Neighbor<>(null, null, -1, Double.MAX_VALUE);
     }
 
     public void range(AbstractSentence q, double radius, List<Neighbor<AbstractSentence, E>> neighbors) {
@@ -182,7 +182,7 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
             double distance = HammingDistance.d(fpq, signs.get(index));
             if (distance <= radius) {
                 if (keys.get(index).line != q.line || !identicalExcluded) {
-                    neighbors.add(new Neighbor<AbstractSentence, E>(keys.get(index), data.get(index), index, distance));
+                    neighbors.add(new Neighbor<>(keys.get(index), data.get(index), index, distance));
                 }
             }
         }
@@ -199,7 +199,7 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
     }
 
     private Set<Integer> obtainCandidates(List<String> q) {
-        Set<Integer> candidates = new HashSet<Integer>();
+        Set<Integer> candidates = new HashSet<>();
         long sign = simhash64(q);
         for (int i = 0; i < bands.length; i++) {
             long bandKey = bandHash(sign, i);

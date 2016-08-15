@@ -21,7 +21,7 @@ package smile.math.matrix;
  * multiplication, which is the only operation needed in many iterative matrix
  * algorithms, e.g. biconjugate gradient method for solving linear equations and
  * power iteration and Lanczos algorithm for eigen decomposition, which are
- * usually very effecient for very large and sparse matrices.
+ * usually very efficient for very large and sparse matrices.
  *
  * @author Haifeng Li
  */

@@ -226,7 +226,7 @@ public class KMeans extends PartitionClustering<double[]> {
 
         BBDTree bbd = new BBDTree(data);
 
-        List<KMeansThread> tasks = new ArrayList<KMeansThread>();
+        List<KMeansThread> tasks = new ArrayList<>();
         for (int i = 0; i < runs; i++) {
             tasks.add(new KMeansThread(bbd, data, k, maxIter));
         }
@@ -321,7 +321,7 @@ public class KMeans extends PartitionClustering<double[]> {
         int np = MulticoreExecutor.getThreadPoolSize();
         List<LloydThread> tasks = null;
         if (n >= 1000 && np >= 2) {
-            tasks = new ArrayList<LloydThread>(np + 1);
+            tasks = new ArrayList<>(np + 1);
             int step = n / np;
             if (step < 100) {
                 step = 100;
@@ -515,11 +515,11 @@ public class KMeans extends PartitionClustering<double[]> {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         
-        sb.append(String.format("K-Means distortion: %.5f\n", distortion));
-        sb.append(String.format("Clusters of %d data points of dimension %d:\n", y.length, centroids[0].length));
+        sb.append(String.format("K-Means distortion: %.5f%n", distortion));
+        sb.append(String.format("Clusters of %d data points of dimension %d:%n", y.length, centroids[0].length));
         for (int i = 0; i < k; i++) {
             int r = (int) Math.round(1000.0 * size[i] / y.length);
-            sb.append(String.format("%3d\t%5d (%2d.%1d%%)\n", i, size[i], r / 10, r % 10));
+            sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
         
         return sb.toString();

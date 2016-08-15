@@ -156,7 +156,7 @@ public class LASSO  implements Regression<double[]> {
         /**
          * The maximum number of IPM (Newton) iterations.
          */
-        private int maxIter = 500;
+        private int maxIter = 1000;
 
         /**
          * Constructor.
@@ -212,13 +212,12 @@ public class LASSO  implements Regression<double[]> {
      * @param lambda the shrinkage/regularization parameter.
      */
     public LASSO(double[][] x, double[] y, double lambda) {
-        this(x, y, lambda, 1E-3, 5000);
+        this(x, y, lambda, 1E-4, 1000);
     }
     
     /**
      * Constructor. Learn the L1-regularized least squares model.
-     * @param x a matrix containing the explanatory variables. NOTE that the matrix will
-     *          be modified (normalization) on exit.
+     * @param x a matrix containing the explanatory variables. NO NEED to include a constant column of 1s for bias.
      * @param y the response values.
      * @param lambda the shrinkage/regularization parameter.
      * @param tol the tolerance for stopping iterations (relative target duality gap).
@@ -259,33 +258,35 @@ public class LASSO  implements Regression<double[]> {
         double[][] X = x;
         double[] Y = y;
         if (n > p) {
-        center = Math.colMean(x);            
-        X = new double[n][p];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++) {
-                X[i][j] = x[i][j] - center[j];
-            }
-        }
-        
-        scale = new double[p];
-        for (int j = 0; j < p; j++) {
+            center = Math.colMean(x);
+            X = new double[n][p];
             for (int i = 0; i < n; i++) {
-                scale[j] += Math.sqr(X[i][j]);
+                for (int j = 0; j < p; j++) {
+                    X[i][j] = x[i][j] - center[j];
+                }
             }
-            scale[j] = Math.sqrt(scale[j] / n);
-        }
-        
-        for (int i = 0; i < n; i++) {
+
+            scale = new double[p];
             for (int j = 0; j < p; j++) {
-                X[i][j] /= scale[j];
+                for (int i = 0; i < n; i++) {
+                    scale[j] += Math.sqr(X[i][j]);
+                }
+                scale[j] = Math.sqrt(scale[j] / n);
             }
-        }
-        
-        Y = new double[n];
-        ym = Math.mean(y);
-        for (int i = 0; i < n; i++) {
-            Y[i] = y[i] - ym;
-        }
+
+            for (int j = 0; j < p; j++) {
+                if (!Math.isZero(scale[j])) {
+                    for (int i = 0; i < n; i++) {
+                        X[i][j] /= scale[j];
+                    }
+                }
+            }
+
+            Y = new double[n];
+            ym = Math.mean(y);
+            for (int i = 0; i < n; i++) {
+                Y[i] = y[i] - ym;
+            }
         }
 
         double t = Math.min(Math.max(1.0, 1.0 / lambda), 2 * p / 1e-3);
@@ -356,13 +357,13 @@ public class LASSO  implements Regression<double[]> {
             pobj = Math.dot(z, z) + lambda * Math.norm1(w);
             dobj = Math.max(-0.25 * Math.dot(nu, nu) - Math.dot(nu, Y), dobj);
             if (ntiter % 10 == 0) {
-                logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g\n", ntiter, pobj, dobj));
+                logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g%n", ntiter, pobj, dobj));
             }
 
             double gap = pobj - dobj;
             // STOPPING CRITERION
             if (gap / dobj < tol) {
-                logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g\n", ntiter, pobj, dobj));
+                logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g%n", ntiter, pobj, dobj));
                 break;
             }
 
@@ -459,7 +460,9 @@ public class LASSO  implements Regression<double[]> {
         
         if (n > p) {
             for (int j = 0; j < p; j++) {
-                w[j] /= scale[j];
+                if (!Math.isZero(scale[j])) {
+                    w[j] /= scale[j];
+                }
             }
             b = ym - Math.dot(w, center);
         }
@@ -724,18 +727,18 @@ public class LASSO  implements Regression<double[]> {
         double[] r = residuals.clone();
         builder.append("\nResiduals:\n");
         builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
-        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f\n", Math.min(r), Math.q1(r), Math.median(r), Math.q3(r), Math.max(r)));
+        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", Math.min(r), Math.q1(r), Math.median(r), Math.q3(r), Math.max(r)));
 
         builder.append("\nCoefficients:\n");
         builder.append("            Estimate\n");
-        builder.append(String.format("Intercept%11.4f\n", b));
+        builder.append(String.format("Intercept%11.4f%n", b));
         for (int i = 0; i < p; i++) {
-            builder.append(String.format("Var %d\t %11.4f\n", i+1, w[i]));
+            builder.append(String.format("Var %d\t %11.4f%n", i+1, w[i]));
         }
 
-        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom\n", error, df));
-        builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f\n", RSquared, adjustedRSquared));
-        builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g\n", F, p, df, pvalue));
+        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom%n", error, df));
+        builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
+        builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g%n", F, p, df, pvalue));
 
         return builder.toString();
     }

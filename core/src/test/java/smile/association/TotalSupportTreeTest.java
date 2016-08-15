@@ -146,7 +146,7 @@ public class TotalSupportTreeTest {
     public void testPima() {
         System.out.println("pima");
 
-        List<int[]> dataList = new ArrayList<int[]>(1000);
+        List<int[]> dataList = new ArrayList<>(1000);
 
         try {
             InputStream stream = getClass().getResourceAsStream("/smile/data/transaction/pima.D38.N768.C2");
@@ -174,19 +174,19 @@ public class TotalSupportTreeTest {
         int[][] data = dataList.toArray(new int[dataList.size()][]);
 
         int n = Math.max(data);
-        System.out.format("%d transactions, %d items\n", data.length, n);
+        System.out.format("%d transactions, %d items%n", data.length, n);
         
         long time = System.currentTimeMillis();
         FPGrowth fpgrowth = new FPGrowth(data, 20);
-        System.out.format("Done building FP-tree: %.2f secs.\n", (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("Done building FP-tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
 
         time = System.currentTimeMillis();
         TotalSupportTree ttree = fpgrowth.buildTotalSupportTree();
-        System.out.format("Done building total support tree: %.2f secs.\n", (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("Done building total support tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
         
         time = System.currentTimeMillis();
         long numItemsets = ttree.getFrequentItemsets(System.out);
-        System.out.format("%d frequent item sets discovered: %.2f secs.\n", numItemsets, (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("%d frequent item sets discovered: %.2f secs.%n", numItemsets, (System.currentTimeMillis() - time) / 1000.0);
         
         assertEquals(1803, numItemsets);
         assertEquals(1803, ttree.getFrequentItemsets().size());
@@ -199,7 +199,7 @@ public class TotalSupportTreeTest {
     public void testKosarak() {
         System.out.println("kosarak");
 
-        List<int[]> dataList = new ArrayList<int[]>(1000);
+        List<int[]> dataList = new ArrayList<>(1000);
 
         try {
             InputStream stream = getClass().getResourceAsStream("/smile/data/transaction/kosarak.dat");
@@ -213,7 +213,7 @@ public class TotalSupportTreeTest {
 
                 String[] s = line.split(" ");
 
-                Set<Integer> items = new HashSet<Integer>();
+                Set<Integer> items = new HashSet<>();
                 for (int i = 0; i < s.length; i++) {
                     items.add(Integer.parseInt(s[i]));
                 }
@@ -233,19 +233,19 @@ public class TotalSupportTreeTest {
         int[][] data = dataList.toArray(new int[dataList.size()][]);
 
         int n = Math.max(data);
-        System.out.format("%d transactions, %d items\n", data.length, n);
+        System.out.format("%d transactions, %d items%n", data.length, n);
         
         long time = System.currentTimeMillis();
         FPGrowth fpgrowth = new FPGrowth(data, 1500);
-        System.out.format("Done building FP-tree: %.2f secs.\n", (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("Done building FP-tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
 
         time = System.currentTimeMillis();
         TotalSupportTree ttree = fpgrowth.buildTotalSupportTree();
-        System.out.format("Done building total support tree: %.2f secs.\n", (System.currentTimeMillis() - time) / 1000.0);
+        System.out.format("Done building total support tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
         
         time = System.currentTimeMillis();
         //long numItemsets = ttree.getFrequentItemsets(System.out);
-        //System.out.format("%d frequent item sets discovered: %.2f secs.\n", numItemsets, (System.currentTimeMillis() - time) / 1000.0);
+        //System.out.format("%d frequent item sets discovered: %.2f secs.%n", numItemsets, (System.currentTimeMillis() - time) / 1000.0);
         
         assertEquals(219725, ttree.getFrequentItemsets().size());
     }

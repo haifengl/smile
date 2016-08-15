@@ -92,7 +92,7 @@ public class DeterministicAnnealing extends KMeans {
 
         int np = MulticoreExecutor.getThreadPoolSize();
         if (n >= 1000 && np >= 2) {
-            tasks = new ArrayList<UpdateThread>(np + 1);
+            tasks = new ArrayList<>(np + 1);
             int step = n / np;
             if (step < 100) {
                 step = 100;
@@ -107,7 +107,7 @@ public class DeterministicAnnealing extends KMeans {
             }
             tasks.add(new UpdateThread(data, centroids, posteriori, priori, start, n));
             
-            ctasks = new ArrayList<CentroidThread>(2 * Kmax);
+            ctasks = new ArrayList<>(2 * Kmax);
             for (int i = 0; i < 2*Kmax; i++) {
                 ctasks.add(new CentroidThread(data, centroids, posteriori, priori, i));
             }
@@ -342,7 +342,7 @@ public class DeterministicAnnealing extends KMeans {
             iter++;
         }
 
-        logger.info(String.format("Deterministic Annealing clustering entropy after %3d iterations at temperature %.4f and k = %d: %.5f (soft distortion = %.5f )\n", iter, T, k / 2, H, D));
+        logger.info(String.format("Deterministic Annealing clustering entropy after %3d iterations at temperature %.4f and k = %d: %.5f (soft distortion = %.5f )%n", iter, T, k / 2, H, D));
 
         return currentDistortion;
     }
@@ -452,11 +452,11 @@ public class DeterministicAnnealing extends KMeans {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         
-        sb.append(String.format("Deterministic Annealing clustering distortion: %.5f\n", distortion));
-        sb.append(String.format("Clusters of %d data points:\n", y.length));
+        sb.append(String.format("Deterministic Annealing clustering distortion: %.5f%n", distortion));
+        sb.append(String.format("Clusters of %d data points:%n", y.length));
         for (int i = 0; i < k; i++) {
             int r = (int) Math.round(1000.0 * size[i] / y.length);
-            sb.append(String.format("%3d\t%5d (%2d.%1d%%)\n", i, size[i], r / 10, r % 10));
+            sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
 
         return sb.toString();

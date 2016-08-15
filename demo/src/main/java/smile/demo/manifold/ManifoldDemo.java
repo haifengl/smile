@@ -63,7 +63,7 @@ public abstract class ManifoldDemo extends JPanel implements Runnable, ActionLis
         startButton.setActionCommand("startButton");
         startButton.addActionListener(this);
 
-        datasetBox = new JComboBox<String>();
+        datasetBox = new JComboBox<>();
         for (int i = 0; i < datasetName.length; i++) {
             datasetBox.addItem(datasetName[i]);
         }

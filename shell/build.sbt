@@ -8,7 +8,7 @@ autoScalaLibrary := true
 
 mainClass in Compile := Some("smile.shell.Main")
 
-// SBT native packager
+// native packager
 enablePlugins(JavaAppPackaging)
 
 maintainer := "Haifeng Li <haifeng.hli@gmail.com>"
@@ -29,13 +29,23 @@ bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.
 
 bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../conf/smile.conf""""
 
-// G1 garbage collector
-bashScriptExtraDefines += """addJava "-XX:+UseG1GC""""
+// native packager Docker plugin
+enablePlugins(DockerPlugin)
 
-// Optimize string duplication, which happens a lot when parsing a data file
-bashScriptExtraDefines += """addJava "-XX:+UseStringDeduplication""""
+import com.typesafe.sbt.packager.docker._
 
-// SBT BuildInfo
+dockerBaseImage := "frolvlad/alpine-oraclejdk8"
+
+packageName in Docker := "haifengl/smile"
+
+dockerUpdateLatest := true
+
+dockerCommands := dockerCommands.value.flatMap{
+  case cmd@Cmd("FROM",_) => List(cmd, Cmd("RUN", "apk update && apk add bash"))
+  case other => List(other)
+}
+
+// BuildInfo
 enablePlugins(BuildInfoPlugin)
 
 buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
@@ -46,4 +56,4 @@ buildInfoOptions += BuildInfoOption.BuildTime
 
 libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.11.7"
 
-libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.18"
+libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.21"

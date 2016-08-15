@@ -120,7 +120,7 @@ public class KPCADemo extends ProjectionDemo {
         plot.setTitle("PCA");
         pane.add(plot);
 
-        KPCA<double[]> kpca = new KPCA<double[]>(data, new GaussianKernel(gamma[datasetIndex]), 2);
+        KPCA<double[]> kpca = new KPCA<>(data, new GaussianKernel(gamma[datasetIndex]), 2);
 
         y = kpca.getCoordinates();
         plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
@@ -139,7 +139,7 @@ public class KPCADemo extends ProjectionDemo {
         pane.add(plot);
 
         clock = System.currentTimeMillis();
-        kpca = new KPCA<double[]>(data, new GaussianKernel(gamma[datasetIndex]), 3);
+        kpca = new KPCA<>(data, new GaussianKernel(gamma[datasetIndex]), 3);
         System.out.format("Learn KPCA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
         y = kpca.getCoordinates();

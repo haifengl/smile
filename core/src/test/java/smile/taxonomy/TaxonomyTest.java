@@ -113,7 +113,7 @@ public class TaxonomyTest {
     @Test
     public void testGetPathToRoot() {
         System.out.println("getPathToRoot");
-        LinkedList<Concept> expResult = new LinkedList<Concept>();
+        LinkedList<Concept> expResult = new LinkedList<>();
         expResult.addFirst(instance.getRoot());
         expResult.addFirst(ad);
         expResult.addFirst(a);
@@ -129,7 +129,7 @@ public class TaxonomyTest {
     @Test
     public void testGetPathFromRoot() {
         System.out.println("getPathToRoot");
-        LinkedList<Concept> expResult = new LinkedList<Concept>();
+        LinkedList<Concept> expResult = new LinkedList<>();
         expResult.add(instance.getRoot());
         expResult.add(ad);
         expResult.add(a);
