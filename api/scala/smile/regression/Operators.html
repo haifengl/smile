@@ -55,7 +55,6 @@
           <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
                 <span class="toggle diagram-link">Type Hierarchy</span>
-                <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#diagrams" target="_blank" class="diagram-help">Learn more about scaladoc diagrams</a>
                 <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 146.00 120.00" height="120pt" width="146pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 116)" class="graph" id="graph0"><polygon points="-4,4 -4,-116 142,-116 142,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this trait" id="graph1_0"><g id="a_this trait|graph1_0"><a xlink:title="smile.regression.Operators (this trait)" xlink:href="#inheritance-diagram"><polygon points="113.25,-50 24.75,-50 24.75,-24 113.25,-24 113.25,-50" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../lib/trait_diagram.png" y="-43" x="37" preserveAspectRatio="xMinYMin meet" height="12px" width="12px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-34.7495" x="56.8794" text-anchor="start">Operators</text></a></g></g><!-- node1 --><g class="node class" id="graph1_1"><g id="a_class|graph1_1"><a xlink:title="scala.AnyRef"><polygon points="107.25,-112 30.75,-112 30.75,-86 107.25,-86 107.25,-112" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../lib/class_diagram.png" y="-105" x="43" preserveAspectRatio="xMinYMin meet" height="12px" width="12px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-96.7495" x="62.7144" text-anchor="start">AnyRef</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="Operators is a subtype of AnyRef"><path d="M69,-80.6826C69,-70.8961 69,-58.9026 69,-50.1238" stroke="#d4d4d4" fill="none"></path><polygon points="67.2501,-80.8581 69,-85.8581 70.7501,-80.8581 67.2501,-80.8581" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
               </div></div>
         
@@ -67,7 +66,7 @@
               <ol>
                 
                 <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By inheritance</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
               </ol>
             </div>
         <div id="ancestors">
@@ -85,7 +84,7 @@
             <span class="filtertype"></span>
             <ol>
               <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show all</span></li>
+              <li class="showall in"><span>Show All</span></li>
             </ol>
           </div>
         <div id="visbl">
@@ -776,18 +775,18 @@ as by specific algorithms such as the least angle regression algorithm.</p><h6>R
     </span>
       <p class="shortcomment cmt">Normalized radial basis function networks.</p>
     </li><li name="smile.regression.Operators#ols" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ols(x:Array[Array[Double]],y:Array[Double]):smile.regression.OLS"></a>
-      <a id="ols(Array[Array[Double]],Array[Double]):OLS"></a>
+      <a id="ols(x:Array[Array[Double]],y:Array[Double],method:String):smile.regression.OLS"></a>
+      <a id="ols(Array[Array[Double]],Array[Double],String):OLS"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ols</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>)</span><span class="result">: <span class="extype" name="smile.regression.OLS">OLS</span></span>
+        <span class="name">ols</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>, <span name="y">y: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="method">method: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;qr&quot;</span></span>)</span><span class="result">: <span class="extype" name="smile.regression.OLS">OLS</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.regression.Operators@ols(x:Array[Array[Double]],y:Array[Double]):smile.regression.OLS" title="Permalink" target="_top">
+      <a href="../../index.html#smile.regression.Operators@ols(x:Array[Array[Double]],y:Array[Double],method:String):smile.regression.OLS" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -824,7 +823,7 @@ in small samples the estimated parameters will not follow normal
 distributions and complicate inference. With relatively large samples,
 however, a central limit theorem can be invoked such that hypothesis
 testing may proceed using asymptotic approximations.
-</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>a matrix containing the explanatory variables.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response values.</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">x</dt><dd class="cmt"><p>a matrix containing the explanatory variables.</p></dd><dt class="param">y</dt><dd class="cmt"><p>the response values.</p></dd><dt class="param">method</dt><dd class="cmt"><p>qr or svd.</p></dd></dl></div>
     </li><li name="smile.regression.Operators#randomForest" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="randomForest(x:Array[Array[Double]],y:Array[Double],attributes:Array[smile.data.Attribute],ntrees:Int,maxNodes:Int,nodeSize:Int,mtry:Int,subsample:Double):smile.regression.RandomForest"></a>
       <a id="randomForest(Array[Array[Double]],Array[Double],Array[Attribute],Int,Int,Int,Int,Double):RandomForest"></a>

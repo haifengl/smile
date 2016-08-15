@@ -26,6 +26,7 @@ smile.nlp
 smile.nlp.collocation
 smile.nlp.dictionary
 smile.nlp.keyword
+smile.nlp.normalizer
 smile.nlp.pos
 smile.nlp.relevance
 smile.nlp.stemmer
@@ -33,6 +34,7 @@ smile.nlp.tokenizer
 smile.plot
 smile.projection
 smile.regression
+smile.sampling
 smile.sequence
 smile.sort
 smile.stat.distribution
