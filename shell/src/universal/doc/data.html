@@ -142,7 +142,8 @@
 
     <p>Smile provides a couple of parsers for popular data formats, such as Weka's ARFF files,
         LibSVM's file format, delimited text files, and binary sparse data. We will demonstrate
-        these parsers with the sample data in the <code>data</code> directory.</p>
+        these parsers with the sample data in the <code>data</code> directory. In Scala API, the
+        parsing functions are in the <code>smile.read</code> object.</p>
 
     <h3 id="arff">Weka ARFF</h3>
     <p><a href="http://www.cs.waikato.ac.nz/ml/weka/arff.html">Weka ARFF (attribute relation file format)</a>
@@ -165,7 +166,7 @@
     <p>To read an ARFF file, <code>smile.io</code> has the function</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def readArff(file: String, responseIndex: Int = -1): AttributeDataset
+    def read.arff(file: String, responseIndex: Int = -1): AttributeDataset
     </code></pre>
 
     <p>where <code>responseIndex</code> is the column index (starting at 0) of response variable.
@@ -173,7 +174,7 @@
         we have many sample ARFF files. Try the following code to load a dataset:</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val data = readArff("data/weka/iris.arff", 4)
+    val data = read.arff("data/weka/iris.arff", 4)
     </code></pre>
 
     <h3 id="libsvm">LibSVM</h3>
@@ -195,7 +196,7 @@
     <p>To read a libsvm file, <code>smile.io</code> has the function</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def readLibsvm(file: String): SparseDataset
+    def read.libsvm(file: String): SparseDataset
     </code></pre>
 
     <p>Although libsvm employs a sparse format, most libsvm files contain dense data.
@@ -203,7 +204,7 @@
         it to dense arrays.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val data = readLibsvm("data/libsvm/glass.txt")
+    val data = read.libsvm("data/libsvm/glass.txt")
     val (x, y) = data.unzipInt
     </code></pre>
 
@@ -220,9 +221,9 @@
         parser for them.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def readTable(file: String, response: Option[(Attribute, Int)] = None, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
+    def read.table(file: String, response: Option[(Attribute, Int)] = None, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
 
-    def readCsv(file: String, response: Option[(Attribute, Int)] = None, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
+    def read.csv(file: String, response: Option[(Attribute, Int)] = None, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
     </code></pre>
 
     <p>By default, the parser <code>readTable</code> expects a white-space-separated-values file.
@@ -235,7 +236,7 @@
 
     <pre class="prettyprint lang-scala"><code>
     val label = new NominalAttribute("class")
-    val data = readTable("data/usps/zip.train", Some((label, 0)))
+    val data = read.table("data/usps/zip.train", Some((label, 0)))
     </code></pre>
 
     <h3 id="microarray">Microarray</h3>
@@ -250,13 +251,13 @@
         and <a href="api/java/smile/data/parser/microarray/TXTParser.html">TXT</a> file formats.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def readGct(file: String): AttributeDataset
+    def read.gct(file: String): AttributeDataset
 
-    def readPcl(file: String): AttributeDataset
+    def read.pcl(file: String): AttributeDataset
 
-    def readRes(file: String): AttributeDataset
+    def read.res(file: String): AttributeDataset
 
-    def readTxt(file: String): AttributeDataset
+    def read.txt(file: String): AttributeDataset
     </code></pre>
 
     <h3 id="sparse-format">Coordinate Triple Tuple List</h3>
@@ -264,7 +265,7 @@
     <p>The function <code>readSparseData</code> can read sparse data in coordinate triple tuple list format.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def readSparseData(file: String, arrayIndexOrigin: Int = 0): SparseDataset
+    def read.coo(file: String, arrayIndexOrigin: Int = 0): SparseDataset
     </code></pre>
 
     <p>where <code>arrayIndexOrigin</code> is the starting index of array. By default, it is
@@ -306,7 +307,7 @@
     <p>The sample data <code>data/text/kos.txt</code> is in the coordinate format.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val data = readSparseData("data/text/kos.txt")
+    val data = read.coo("data/text/kos.txt")
     </code></pre>
 
     <h3 id="Harwell-Boeing">Harwell-Boeing Column-Compressed Sparse Matrix</h3>
@@ -314,14 +315,14 @@
     <p>The function <code>readSparseMatrix</code> can read sparse matrix in Harwell-Boeing column-compressed format.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def readSparseMatrix(file: String): SparseMatrix
+    def read.hb(file: String): SparseMatrix
     </code></pre>
 
     <p>In the directory <code>data/matrix</code>, there are several sample files in
        the Harwell-Boeing format.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val data = readSparseMatrix("data/matrix/08blocks.txt")
+    val data = read.hb("data/matrix/08blocks.txt")
     </code></pre>
 
     <p>In Harwell-Boeing column-compressed sparse matrix file, nonzero values are stored in an array
@@ -348,14 +349,14 @@
     <p>Smile can parse 3D wireframe models in Wavefront OBJ files.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def readWavefrontObj(file: String): (Array[Array[Double]], Array[Array[Int]])
+    def read.wavefront(file: String): (Array[Array[Double]], Array[Array[Int]])
     </code></pre>
 
     <p>In the directory <code>data/wireframe</code>, there is a teapot wireframe model. In the
         next section, we will learn how to visualize the 3D wireframe models.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val (vertices, edges) = readWavefrontObj("data/wireframe/teapot.obj")
+    val (vertices, edges) = read.wavefront("data/wireframe/teapot.obj")
     </code></pre>
 
     <div id="btnv">

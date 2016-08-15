@@ -204,7 +204,10 @@
     <div class="news" style="margin-bottom: 20px;">
       <h5>Latest News</h5>
       <ul class="list-unstyled">
-        <li><a href="https://haifengl.wordpress.com/2016/03/21/smile-1-1-is-released/">Smile 1.1 is released!</a>
+        <li><a href="https://haifengl.wordpress.com/2016/08/15/smile-1-2-0-released/">Smile 1.2.0 Released!</a>
+          <span class="small">(Aug 15, 2016)</span></li>
+
+        <li><a href="https://haifengl.wordpress.com/2016/03/21/smile-1-1-is-released/">Smile 1.1 Released!</a>
           <span class="small">(Mar 21, 2016)</span></li>
 
         <li><a href="https://haifengl.wordpress.com/2015/03/03/smile-is-the-most-exciting-project-on-github-today/">Smile is the most exciting project on Github today!</a>
@@ -460,7 +463,7 @@
       <div class="col-md-5 col-sm-5 col-padded-top col-center">
         <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
-  val data = readArff("iris.arff", 4)
+  val data = read.arff("iris.arff", 4)
   val (x, y) = data.unzipInt
 
   val rf = randomForest(x, y)
