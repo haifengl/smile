@@ -151,7 +151,7 @@ smile&gt;
     import smile.data._
     import smile.shell._
 
-    val data = readArff("data/weka/iris.arff", 4)
+    val data = read.arff("data/weka/iris.arff", 4)
     val (x, y) = data.unzipInt
 
     val rf = randomDecisionForest(x, y)

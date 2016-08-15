@@ -121,7 +121,7 @@
         a classification model with Smile. It is as easy as</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val data = readArff("data/weka/iris.arff", 4)
+    val data = read.arff("data/weka/iris.arff", 4)
     val (x, y) = data.unzipInt
 
     val rf = randomForest(x, y)
@@ -130,9 +130,9 @@
     </code></pre>
 
     <p>In this example, we use the famous Iris data from R.A. Fisher. The data
-        is in Weka's ARFF format. The second parameter of readArff is the column index
+        is in Weka's ARFF format. The second parameter of read.arff is the column index
         of response variable. With our parsers, the column index starts with 0. The
-        function readArff returns an object of <code>AttributeDataset</code>.
+        function read.arff returns an object of <code>AttributeDataset</code>.
         Besides the data itself, an <code>AttributeDataset</code> object also contains many meta data.
         Then we use the help function <code>unzipInt</code> to get the training
         data and labels. For regression, you may use <code>unzipDouble</code> as
