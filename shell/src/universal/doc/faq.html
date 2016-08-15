@@ -58,20 +58,21 @@
 
     <h2 class="question" id="model-serialization">Model serialization</h2>
     <p class="answer">
-        You may notice that none of models supports Java Serializable interface. It is because the exact format is hard
-        to keep stable, class changes can easily make your serialized data unreadable, reading/writing the data in
-        non-Java code is almost impossible. Currently, we suggest XStream to serialize the trained models.
-        XStream is a simple library to serialize objects to XML and back again. XStream is easy to use and
-        doesn't require mappings (actually requires no modifications to objects). In Scala API, we also provide
-        the helper functions <a href="api/scala/index.html#smile.io.package"><code>read</code></a> and
-        <a href="api/scala/index.html#smile.io.package"><code>write</code></a> to serialize and deserialize a model (or any
-        object).<p/>
+        To serialize a model, you may use</p>
+    <pre class="prettyprint lang-scala"><code>
+    write(model, file)
+    </code></pre>
+    <p>This method is in the Scala API <code>smile.write</code> object and serialize the model to Java
+    serialization format. This is handy if you want to use a model in Spark.</p>
 
-    <p>A nice alternative is Protostuff, which supports forward-backward compatibility (schema evolution) and
-        validation. Beyond XML, Protostuff supports many other formats such as JSON, YAML, protobuf, etc.</p>
+    <p>Alternatively, you can also use</p>
+    <pre class="prettyprint lang-scala"><code>
+    write.xstream(model, file)
+    </code></pre>
 
-    <p>For some predicitive models, we look forward to supporting PMML (Predictive Model Markup Language),
-        an XML-based file format developed by the Data Mining Group.</p>
+    <p>which uses XStream library to serialize the model (actually any objects) to XML file.</p>
+
+    <p>To read the model back, you can use <code>read(file)</code> or <code>read.xstream(file)</code>, correspondingly.</p>
 
     <h2 class="question" id="data-format">Data Format</h2>
     <p class="answer">
