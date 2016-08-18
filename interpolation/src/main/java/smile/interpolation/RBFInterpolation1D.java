@@ -16,6 +16,8 @@
 package smile.interpolation;
 
 import smile.math.Math;
+import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.DenseMatrix;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.math.rbf.RadialBasisFunction;
 import smile.math.matrix.CholeskyDecomposition;
@@ -129,14 +131,15 @@ public class RBFInterpolation1D implements Interpolation {
             cholesky.solve(rhs);
             w = rhs;
         } else {
-            double[][] G = new double[n][n];
+            DenseMatrix G = new ColumnMajorMatrix(n, n);
             double[] rhs = new double[n];
             for (int i = 0; i < n; i++) {
                 double sum = 0.0;
                 for (int j = 0; j <= i; j++) {
-                    G[i][j] = rbf.f(Math.abs(x[i] - x[j]));
-                    G[j][i] = G[i][j];
-                    sum += G[i][j] + G[j][i];
+                    double r = rbf.f(Math.abs(x[i] - x[j]));
+                    G.set(i, j, r);
+                    G.set(j, i, r);
+                    sum += 2 * r;
                 }
 
                 if (normalized) {
@@ -146,7 +149,7 @@ public class RBFInterpolation1D implements Interpolation {
                 }
             }
 
-            LUDecomposition lu = new LUDecomposition(G, true);
+            LUDecomposition lu = new LUDecomposition(G);
             lu.solve(rhs);
             w = rhs;
         }
