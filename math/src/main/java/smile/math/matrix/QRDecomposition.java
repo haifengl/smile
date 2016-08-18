@@ -85,9 +85,9 @@ public class QRDecomposition {
                     nrm = -nrm;
                 }
                 for (int i = k; i < m; i++) {
-                    QR.set(i, k, QR.get(i, k) / nrm);
+                    QR.div(i, k, nrm);
                 }
-                QR.set(k, k, QR.get(k, k) + 1.0);
+                QR.add(k, k, 1.0);
 
                 // Apply transformation to remaining columns.
                 for (int j = k + 1; j < n; j++) {
@@ -97,7 +97,7 @@ public class QRDecomposition {
                     }
                     s = -s / QR.get(k, k);
                     for (int i = k; i < m; i++) {
-                        QR.set(i, j, QR.get(i, j) + s * QR.get(i, k));
+                        QR.add(i, j, s * QR.get(i, k));
                     }
                 }
             }
@@ -406,7 +406,7 @@ public class QRDecomposition {
 
         Rdiagonal[0] += u[0] * v[0];
         for (int i = 1; i < n; i++) {
-            QR.set(0, i, QR.get(0, i) + u[0] * v[i]);
+            QR.add(0, i, u[0] * v[i]);
         }
 
         for (int i = 0; i < k; i++) {
