@@ -61,7 +61,7 @@ import smile.stat.distribution.GaussianDistribution;
  * 
  * @author Haifeng Li
  */
-public class Matrix implements IMatrix {
+public class Matrix implements DenseMatrix {
 
     /**
      * The original matrix.

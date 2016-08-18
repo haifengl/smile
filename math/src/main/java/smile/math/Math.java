@@ -4223,7 +4223,7 @@ public class Math {
             LUDecomposition lu = new LUDecomposition(A, false);
             lu.solve(inv);
         } else {
-            QRDecomposition qr = new QRDecomposition(A, false);
+            QRDecomposition qr = new QRDecomposition(A);
             qr.solve(inv);
         }
 
@@ -4367,7 +4367,7 @@ public class Math {
             return b;
         } else {
             double[] x = new double[A[0].length];
-            QRDecomposition qr = new QRDecomposition(A, false);
+            QRDecomposition qr = new QRDecomposition(A);
             qr.solve(b, x);
             return x;
         }
@@ -4386,7 +4386,7 @@ public class Math {
             return B;
         } else {
             double[][] X = new double[A[0].length][B[0].length];
-            QRDecomposition qr = new QRDecomposition(A, false);
+            QRDecomposition qr = new QRDecomposition(A);
             qr.solve(B, X);
             return X;
         }

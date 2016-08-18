@@ -322,7 +322,7 @@ public class RBFNetwork<T> implements Classifier<T>, Serializable {
             }
         }
 
-        QRDecomposition qr = new QRDecomposition(G, true);
+        QRDecomposition qr = new QRDecomposition(G);
         qr.solve(b, w);
     }
 
