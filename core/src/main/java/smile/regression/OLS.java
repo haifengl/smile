@@ -197,7 +197,7 @@ public class OLS implements Regression<double[]> {
             svd.solve(y, w1);
         } else {
             try {
-                qr = new QRDecomposition(X, true);
+                qr = new QRDecomposition(X);
                 qr.solve(y, w1);
             } catch (RuntimeException e) {
                 logger.warn("Matrix is not of full rank, try SVD instead");
