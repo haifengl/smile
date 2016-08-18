@@ -168,7 +168,7 @@ public class PPCA implements Projection<double[]> {
             M[i][i] += noise;
         }
 
-        LUDecomposition lu = new LUDecomposition(M, true);
+        LUDecomposition lu = new LUDecomposition(M);
         double[][] Mi = lu.inverse();
         projection = Math.abtmm(Mi, loading);
 
