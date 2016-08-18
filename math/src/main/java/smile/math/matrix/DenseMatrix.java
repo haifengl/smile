@@ -22,5 +22,33 @@ package smile.math.matrix;
  * @author Haifeng Li
  */
 public interface DenseMatrix extends IMatrix {
-    
+    /**
+     * Set the entry value at row i and column j.
+     */
+    public IMatrix set(int i, int j, double x);
+
+    /**
+     * Set the entry value at row i and column j. For Scala users.
+     */
+    public IMatrix update(int i, int j, double x);
+
+    /**
+     * A[i][j] += x
+     */
+    public IMatrix add(int i, int j, double x);
+
+    /**
+     * A[i][j] -= x
+     */
+    public IMatrix sub(int i, int j, double x);
+
+    /**
+     * A[i][j] *= x
+     */
+    public IMatrix mul(int i, int j, double x);
+
+    /**
+     * A[i][j] /= x
+     */
+    public IMatrix div(int i, int j, double x);
 }

@@ -176,6 +176,12 @@ public class SparseMatrix implements IMatrix {
     }
 
     @Override
+    public double apply(int i, int j) {
+        return get(i, j);
+    }
+
+/*
+    @Override
     public SparseMatrix set(int i, int j, double x) {
         if (i < 0 || i >= nrows || j < 0 || j >= ncols) {
             throw new IllegalArgumentException("i = " + i + " j = " + j);
@@ -190,7 +196,7 @@ public class SparseMatrix implements IMatrix {
 
         throw new IllegalArgumentException("SparseMatrix does not support changing zero values to non-zeros.");
     }
-
+*/
     @Override
     public void ax(double[] x, double[] y) {
         Arrays.fill(y, 0.0);

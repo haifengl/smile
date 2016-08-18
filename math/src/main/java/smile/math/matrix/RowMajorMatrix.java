@@ -118,8 +118,43 @@ public class RowMajorMatrix implements DenseMatrix {
     }
 
     @Override
+    public double apply(int i, int j) {
+        return A[i*ncols + j];
+    }
+
+    @Override
     public RowMajorMatrix set(int i, int j, double x) {
         A[i*ncols + j] = x;
+        return this;
+    }
+
+    @Override
+    public RowMajorMatrix update(int i, int j, double x) {
+        A[i*ncols + j] = x;
+        return this;
+    }
+
+    @Override
+    public IMatrix add(int i, int j, double x) {
+        A[i*ncols + j] += x;
+        return this;
+    }
+
+    @Override
+    public IMatrix sub(int i, int j, double x) {
+        A[i*ncols + j] -= x;
+        return this;
+    }
+
+    @Override
+    public IMatrix mul(int i, int j, double x) {
+        A[i*ncols + j] *= x;
+        return this;
+    }
+
+    @Override
+    public IMatrix div(int i, int j, double x) {
+        A[i*ncols + j] /= x;
         return this;
     }
 

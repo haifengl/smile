@@ -118,8 +118,43 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
+    public double apply(int i, int j) {
+        return A[j*nrows + i];
+    }
+
+    @Override
     public ColumnMajorMatrix set(int i, int j, double x) {
         A[j*nrows + i] = x;
+        return this;
+    }
+
+    @Override
+    public ColumnMajorMatrix update(int i, int j, double x) {
+        A[j*nrows + i] = x;
+        return this;
+    }
+
+    @Override
+    public IMatrix add(int i, int j, double x) {
+        A[j*nrows + i] += x;
+        return this;
+    }
+
+    @Override
+    public IMatrix sub(int i, int j, double x) {
+        A[j*nrows + i] -= x;
+        return this;
+    }
+
+    @Override
+    public IMatrix mul(int i, int j, double x) {
+        A[j*nrows + i] *= x;
+        return this;
+    }
+
+    @Override
+    public IMatrix div(int i, int j, double x) {
+        A[j*nrows + i] /= x;
         return this;
     }
 
