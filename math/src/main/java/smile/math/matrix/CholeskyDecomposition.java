@@ -55,10 +55,17 @@ public class CholeskyDecomposition {
     private double[][] L;
 
     /**
+     * Symmetric and positive definite flag.
+     * 
+     * @serial is symmetric and positive definite flag.
+     */
+    private final boolean isSPD;
+    
+    /**
      * Constructor. Used by newInstance().
      */
     private CholeskyDecomposition() {
-        
+        isSPD = true;
     }
     
     /**
@@ -83,6 +90,10 @@ public class CholeskyDecomposition {
     public CholeskyDecomposition(double[][] A) {
         this(A, false);
     }
+    
+    public CholeskyDecomposition(double[][] A, boolean overwrite) {
+        this(A, overwrite, false);
+    }
 
     /**
      * Constructor. Cholesky decomposition for symmetric and positive definite matrix. The
@@ -96,9 +107,10 @@ public class CholeskyDecomposition {
      * @param  overwrite  true if the decomposition will be taken in place.
      * Otherwise, a new matrix will be allocated to store the decomposition. It
      * is very useful in practice if the matrix is huge.
+     * @param  partialDecomposition whether to do partial decomposition
      * @throws IllegalArgumentException if the matrix is not positive definite.
      */
-    public CholeskyDecomposition(double[][] A, boolean overwrite) {
+    public CholeskyDecomposition(double[][] A, boolean overwrite, boolean partialDecomposition) {
         int n = A.length;
         if (n != A[n - 1].length) {
             throw new IllegalArgumentException("The matrix is not square.");
@@ -113,6 +125,7 @@ public class CholeskyDecomposition {
         }
 
         // Main loop.
+        boolean spd = true;
         for (int j = 0; j < n; j++) {
             double[] Lrowj = L[j];
             double d = 0.0;
@@ -128,7 +141,12 @@ public class CholeskyDecomposition {
             d = A[j][j] - d;
 
             if (d < 0.0) {
-                throw new IllegalArgumentException("The matrix is not positive definite.");
+                if (partialDecomposition) {
+                    spd = false;
+                    d = Double.MIN_VALUE; // smallest positive nonzero value
+                } else {
+                    throw new IllegalArgumentException("The matrix is not positive definite.");
+                }
             }
 
             L[j][j] = Math.sqrt(d);
@@ -137,6 +155,16 @@ public class CholeskyDecomposition {
                 Arrays.fill(L[j], j+1, n, 0.0);
             }
         }
+        this.isSPD = spd;
+    }
+    
+    /**
+     * Is the matrix symmetric and positive definite?
+     * 
+     * @return true if A is symmetric and positive definite.
+     */
+    public boolean isSPD() {
+        return isSPD;
     }
 
     /**
