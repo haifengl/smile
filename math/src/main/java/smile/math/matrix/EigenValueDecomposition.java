@@ -384,8 +384,8 @@ public class EigenValueDecomposition {
     }
 
     /**
-     * Calculate and normalize y = (A - pI) x.* Returns the largest element of y
-     * in magnitude.
+     * Calculate and normalize y = (A - pI) x.
+     * Returns the largest element of y in magnitude.
      */
     private static double ax(IMatrix A, double[] x, double[] y, double p) {
         A.ax(x, y);

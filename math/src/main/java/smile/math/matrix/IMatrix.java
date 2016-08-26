@@ -42,9 +42,9 @@ public interface IMatrix {
     public double get(int i, int j);
 
     /**
-     * Set the entry value at row i and column j.
+     * Returns the entry value at row i and column j. For Scala users.
      */
-    public IMatrix set(int i, int j, double x);
+    public double apply(int i, int j);
 
     /**
      * y = A * x

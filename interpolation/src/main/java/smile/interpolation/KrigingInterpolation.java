@@ -16,6 +16,8 @@
 package smile.interpolation;
 
 import smile.math.Math;
+import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.LUDecomposition;
 import smile.interpolation.variogram.PowerVariogram;
 import smile.interpolation.variogram.Variogram;
@@ -104,29 +106,30 @@ public class KrigingInterpolation {
 
         yvi = new double[n + 1];
         vstar = new double[n + 1];
-        double[][] v = new double[n + 1][n + 1];
+        DenseMatrix v = new ColumnMajorMatrix(n + 1, n + 1);
 
         for (int i = 0; i < n; i++) {
             yvi[i] = y[i];
 
             for (int j = i; j < n; j++) {
-                v[i][j] = variogram.f(rdist(x[i], x[j]));
-                v[j][i] = v[i][j];
+                double var = variogram.f(rdist(x[i], x[j]));
+                v.set(i, j, var);
+                v.set(j, i, var);
             }
-            v[n][i] = 1.0;
-            v[i][n] = 1.0;
+            v.set(n, i, 1.0);
+            v.set(i, n, 1.0);
         }
 
         yvi[n] = 0.0;
-        v[n][n] = 0.0;
+        v.set(n, n, 0.0);
 
         if (error != null) {
             for (int i = 0; i < n; i++) {
-                v[i][i] -= error[i] * error[i];
+                v.sub(i, i, error[i] * error[i]);
             }
         }
 
-        LUDecomposition lu = new LUDecomposition(v, true);
+        LUDecomposition lu = new LUDecomposition(v);
         lu.solve(yvi);
     }
 

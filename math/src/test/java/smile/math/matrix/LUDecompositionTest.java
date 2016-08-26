@@ -119,7 +119,7 @@ public class LUDecompositionTest {
     @Test
     public void testSolveMatrixOverwrite() {
         System.out.println("solve in place");
-        LUDecomposition result = new LUDecomposition(A, true);
+        LUDecomposition result = new LUDecomposition(A);
         double[][] x = B2;
         result.solve(B2, x);
         assertEquals(X2.length, x.length);

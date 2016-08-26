@@ -174,15 +174,14 @@ public class LaplacianEigenmap {
             }
         }
 
-        SparseMatrix L = W.toSparseMatrix();
         for (int i = 0; i < n; i++) {
             SparseArray edges = W.get(i).x;
             for (SparseArray.Entry edge : edges) {
                 int j = edge.i;
                 double s = D[i] * edge.x * D[j];
-                L.set(i, j, s);
+                W.set(i, j, s);
             }
-            L.set(i, i, -1.0);
+            W.set(i, i, -1.0);
         }
 
         double[] v = new double[n];
@@ -191,11 +190,13 @@ public class LaplacianEigenmap {
         }
 
         // Largest eigenvalue.
+        SparseMatrix L = W.toSparseMatrix();
         double lambda = -Math.eigen(L, v, 1E-6);
         for (int i = 0; i < n; i++) {
-            L.set(i, i, lambda - 1.0);
+            W.set(i, i, lambda - 1.0);
         }
 
+        L = W.toSparseMatrix();
         EigenValueDecomposition eigen = EigenValueDecomposition.decompose(L, d + 1);
 
         coordinates = new double[n][d];

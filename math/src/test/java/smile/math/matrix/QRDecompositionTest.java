@@ -120,7 +120,7 @@ public class QRDecompositionTest {
     @Test
     public void testSolveMatrixOverwrite() {
         System.out.println("solve in place");
-        QRDecomposition result = new QRDecomposition(A, true);
+        QRDecomposition result = new QRDecomposition(A);
         double[][] x = B2;
         result.solve(B2, x);
         assertEquals(X2.length, x.length);

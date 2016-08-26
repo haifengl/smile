@@ -4220,10 +4220,10 @@ public class Math {
         double[][] inv = eye(A[0].length, A.length);
 
         if (A.length == A[0].length) {
-            LUDecomposition lu = new LUDecomposition(A, false);
+            LUDecomposition lu = new LUDecomposition(A);
             lu.solve(inv);
         } else {
-            QRDecomposition qr = new QRDecomposition(A, false);
+            QRDecomposition qr = new QRDecomposition(A);
             qr.solve(inv);
         }
 
@@ -4238,7 +4238,7 @@ public class Math {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.length, A[0].length));
         }
 
-        LUDecomposition lu = new LUDecomposition(A, false);
+        LUDecomposition lu = new LUDecomposition(A);
         return lu.det();
     }
 
@@ -4362,12 +4362,12 @@ public class Math {
      */
     public static double[] solve(double[][] A, double[] b) {
         if (A.length == A[0].length) {
-            LUDecomposition lu = new LUDecomposition(A, true);
+            LUDecomposition lu = new LUDecomposition(A);
             lu.solve(b);
             return b;
         } else {
             double[] x = new double[A[0].length];
-            QRDecomposition qr = new QRDecomposition(A, false);
+            QRDecomposition qr = new QRDecomposition(A);
             qr.solve(b, x);
             return x;
         }
@@ -4381,12 +4381,12 @@ public class Math {
      */
     public static double[][] solve(double[][] A, double[][] B) {
         if (A.length == A[0].length) {
-            LUDecomposition lu = new LUDecomposition(A, true);
+            LUDecomposition lu = new LUDecomposition(A);
             lu.solve(B);
             return B;
         } else {
             double[][] X = new double[A[0].length][B[0].length];
-            QRDecomposition qr = new QRDecomposition(A, false);
+            QRDecomposition qr = new QRDecomposition(A);
             qr.solve(B, X);
             return X;
         }

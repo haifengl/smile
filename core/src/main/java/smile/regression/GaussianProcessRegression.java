@@ -212,7 +212,7 @@ public class GaussianProcessRegression <T> implements Regression<T> {
         w = new double[m];
         Math.atx(G, y, b);
 
-        LUDecomposition lu = new LUDecomposition(K, true);
+        LUDecomposition lu = new LUDecomposition(K);
         lu.solve(b, w);
     }
 
