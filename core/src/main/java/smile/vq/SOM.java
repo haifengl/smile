@@ -391,6 +391,19 @@ public class SOM implements Clustering<double[]> {
     }
 
     /**
+     * Returns the cluster labels for each Neuron.
+     */
+    public int[][] clabels() {
+        int[][] clabels = new int[height][width];
+        for (int i = 0, l = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                clabels[i][j] = y[i*width + j];
+            }
+        }
+        return clabels;
+    }
+
+    /**
      * Clustering the neurons into k groups. And then assigns the samples in
      * each neuron to the corresponding cluster.
      * @param k the number of clusters.
