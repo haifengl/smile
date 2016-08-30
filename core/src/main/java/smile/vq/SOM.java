@@ -398,13 +398,13 @@ public class SOM implements Clustering<double[]> {
         if( y == null ){
             throw new IllegalStateException();
         }
-        int[][] classLabels = new int[height][width];
+        int[][] clusterLabels = new int[height][width];
         for (int i = 0, l = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                classLabels[i][j] = y[i*width + j];
+                clusterLabels[i][j] = y[i*width + j];
             }
         }
-        return classLabels;
+        return clusterLabels;
     }
 
     /**
