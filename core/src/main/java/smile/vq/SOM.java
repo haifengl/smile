@@ -395,9 +395,10 @@ public class SOM implements Clustering<double[]> {
      * not been clustered, throws an Illegal State Exception.
      */
     public int[][] getClusterLabel() {
-        if( y == null ){
-            throw new IllegalStateException();
+        if (y == null) {
+           throw new IllegalStateException("Neuron cluster labels are not available. Call partition() first.");
         }
+
         int[][] clusterLabels = new int[height][width];
         for (int i = 0, l = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
