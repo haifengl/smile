@@ -596,10 +596,15 @@ public class LASSO  implements Regression<double[]> {
         }
 
         @Override
+        public double apply(int i, int j) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+/*
+        @Override
         public PCGMatrix set(int i, int j, double x) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
-
+*/
         @Override
         public void axpy(double[] x, double[] y) {
             throw new UnsupportedOperationException("Not supported yet.");
