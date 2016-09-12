@@ -81,7 +81,7 @@ public class CholeskyDecomposition {
      * @throws IllegalArgumentException if the matrix is not positive definite.
      */
     public CholeskyDecomposition(double[][] A) {
-        this(A, false);
+        this(new Matrix(A));
     }
 
     /**
@@ -93,23 +93,13 @@ public class CholeskyDecomposition {
      * @param  A   square symmetric matrix. Only the lower triangular part
      * will be used in the decomposition. The user can just store this half part
      * to save space.
-     * @param  overwrite  true if the decomposition will be taken in place.
-     * Otherwise, a new matrix will be allocated to store the decomposition. It
-     * is very useful in practice if the matrix is huge.
      * @throws IllegalArgumentException if the matrix is not positive definite.
      */
-    public CholeskyDecomposition(double[][] A, boolean overwrite) {
-        int n = A.length;
-        if (n != A[n - 1].length) {
-            throw new IllegalArgumentException("The matrix is not square.");
-        }
-
-        L = A;
-        if (!overwrite) {
-            L = new double[n][];
-            for (int i = 0; i < n; i++) {
-                L[i] = new double[i + 1];
-            }
+    public CholeskyDecomposition(DenseMatrix A) {
+        int n = A.nrows();
+        L = new double[n][];
+        for (int i = 0; i < n; i++) {
+            L[i] = new double[i + 1];
         }
 
         // Main loop.
@@ -122,20 +112,16 @@ public class CholeskyDecomposition {
                 for (int i = 0; i < k; i++) {
                     s += Lrowk[i] * Lrowj[i];
                 }
-                Lrowj[k] = s = (A[j][k] - s) / L[k][k];
+                Lrowj[k] = s = (A.get(j, k) - s) / L[k][k];
                 d = d + s * s;
             }
-            d = A[j][j] - d;
+            d = A.get(j, j) - d;
 
             if (d < 0.0) {
                 throw new IllegalArgumentException("The matrix is not positive definite.");
             }
 
             L[j][j] = Math.sqrt(d);
-
-            if (L == A && L[j].length == n) {
-                Arrays.fill(L[j], j+1, n, 0.0);
-            }
         }
     }
 
