@@ -65,7 +65,7 @@ public class CRFTest {
         ArrayList<Integer> label = new ArrayList<>();
 
         int id = 1;
-        try(BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
+        try(BufferedReader input = smile.data.parser.IOUtils.getTestDataReader(resource)) {
             String[] words = input.readLine().split(" ");
             int nseq = Integer.parseInt(words[0]);
             k = Integer.parseInt(words[1]);
@@ -145,7 +145,7 @@ public class CRFTest {
         ArrayList<Integer> label = new ArrayList<>();
 
         int id = 1;
-        try(BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
+        try(BufferedReader input = smile.data.parser.IOUtils.getTestDataReader(resource)) {
             String[] words = input.readLine().split(" ");
             int nseq = Integer.parseInt(words[0]);
             k = Integer.parseInt(words[1]);
@@ -233,6 +233,7 @@ public class CRFTest {
 
     @Before
     public void setUp() {
+        smile.math.Math.setSeed(54217137L);
     }
 
     @After
@@ -245,8 +246,8 @@ public class CRFTest {
     @Test
     public void testLearnProteinSparse() {
         System.out.println("learn protein sparse");
-        IntDataset train = load("/smile/data/sequence/sparse.protein.11.train");
-        IntDataset test = load("/smile/data/sequence/sparse.protein.11.test");
+        IntDataset train = load("sequence/sparse.protein.11.train");
+        IntDataset test = load("sequence/sparse.protein.11.test");
 
         CRF.Trainer trainer = new CRF.Trainer(train.p, train.k);
         trainer.setLearningRate(0.3);
@@ -282,8 +283,8 @@ public class CRFTest {
         System.out.format("Protein error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
         System.out.format("Protein error (Viterbi) is %d of %d%n", viterbiError, n);
         System.out.format("Protein error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
-        assertEquals(1259, error);
-        assertEquals(1377, viterbiError);
+        assertEquals(1234, error);
+        assertEquals(1318, viterbiError);
     }
     
     /**
@@ -292,8 +293,8 @@ public class CRFTest {
     @Test
     public void testLearnHyphenSparse() {
         System.out.println("learn hyphen sparse");
-        IntDataset train = load("/smile/data/sequence/sparse.hyphen.6.train");
-        IntDataset test = load("/smile/data/sequence/sparse.hyphen.6.test");
+        IntDataset train = load("sequence/sparse.hyphen.6.train");
+        IntDataset test = load("sequence/sparse.hyphen.6.test");
 
         CRF.Trainer trainer = new CRF.Trainer(train.p, train.k);
         trainer.setLearningRate(1.0);
@@ -329,8 +330,8 @@ public class CRFTest {
         System.out.format("Hypen error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
         System.out.format("Hypen error (Viterbi) is %d of %d%n", viterbiError, n);
         System.out.format("Hypen error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
-        assertEquals(461, error);
-        assertEquals(462, viterbiError);
+        assertEquals(470, error);
+        assertEquals(478, viterbiError);
     }
 
     /**
@@ -339,8 +340,8 @@ public class CRFTest {
     @Test
     public void testLearnProtein() {
         System.out.println("learn protein");
-        Dataset train = load("/smile/data/sequence/sparse.protein.11.train", null);
-        Dataset test = load("/smile/data/sequence/sparse.protein.11.test", train.attributes);
+        Dataset train = load("sequence/sparse.protein.11.train", null);
+        Dataset test = load("sequence/sparse.protein.11.test", train.attributes);
 
         CRF.Trainer trainer = new CRF.Trainer(train.attributes, train.k);
         trainer.setLearningRate(0.3);
@@ -376,8 +377,8 @@ public class CRFTest {
         System.out.format("Protein error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
         System.out.format("Protein error (Viterbi) is %d of %d%n", viterbiError, n);
         System.out.format("Protein error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
-        assertEquals(1253, error);
-        assertEquals(1412, viterbiError);
+        assertEquals(1270, error);
+        assertEquals(1420, viterbiError);
     }
     
     /**
@@ -386,8 +387,8 @@ public class CRFTest {
     @Test
     public void testLearnHyphen() {
         System.out.println("learn hyphen");
-        Dataset train = load("/smile/data/sequence/sparse.hyphen.6.train", null);
-        Dataset test = load("/smile/data/sequence/sparse.hyphen.6.test", train.attributes);
+        Dataset train = load("sequence/sparse.hyphen.6.train", null);
+        Dataset test = load("sequence/sparse.hyphen.6.test", train.attributes);
 
         CRF.Trainer trainer = new CRF.Trainer(train.attributes, train.k);
         trainer.setLearningRate(1.0);
@@ -423,7 +424,7 @@ public class CRFTest {
         System.out.format("Hypen error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
         System.out.format("Hypen error (Viterbi) is %d of %d%n", viterbiError, n);
         System.out.format("Hypen error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
-        assertEquals(468, error);
-        assertEquals(470, viterbiError);
+        assertEquals(473, error);
+        assertEquals(478, viterbiError);
     }
 }
