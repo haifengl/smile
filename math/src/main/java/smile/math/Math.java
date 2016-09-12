@@ -730,7 +730,7 @@ public class Math {
     /**
      * Initialize the random generator with a seed.
      */
-    public void setSeed(long seed) {
+    public static void setSeed(long seed) {
         random.get().setSeed(seed);
     }
 
