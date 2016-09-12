@@ -114,19 +114,4 @@ public class SparseDatasetTest {
         assertEquals(0.0, sm.get(0, 2), 1E-7);
         assertEquals(0.4, sm.get(0, 1), 1E-7);
     }
-
-    /**
-     * Test of set method, of class SparseMatrix.
-     */
-    @Test
-    public void testSet() {
-        System.out.println("set");
-        sm.set(0, 0, 0.8);
-        assertEquals(0.8, sm.get(0, 0), 1E-7);
-        sm.set(0, 0, 0.9);
-
-        sm.set(2, 2, 0.7);
-        assertEquals(0.7, sm.get(2, 2), 1E-7);
-        sm.set(2, 2, 0.8);
-    }
 }
