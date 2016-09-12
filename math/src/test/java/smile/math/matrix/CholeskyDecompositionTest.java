@@ -87,22 +87,6 @@ public class CholeskyDecompositionTest {
     }
 
     /**
-     * Test of decompose method, of class CholeskyDecomposition.
-     */
-    @Test
-    public void testDecomposeoverwrite() {
-        System.out.println("decompose in place");
-        CholeskyDecomposition result = new CholeskyDecomposition(A, true);
-        assertEquals(L.length, result.getL().length);
-        assertEquals(L[0].length, result.getL()[0].length);
-        for (int i = 0; i < L.length; i++) {
-            for (int j = 0; j < L[i].length; j++) {
-                assertEquals(Math.abs(L[i][j]), Math.abs(result.getL()[i][j]), 1E-7);
-            }
-        }
-    }
-
-    /**
      * Test of solve method, of class CholeskyDecomposition.
      */
     @Test

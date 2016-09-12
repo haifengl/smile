@@ -127,7 +127,7 @@ public class RBFInterpolation1D implements Interpolation {
                 }
             }
 
-            CholeskyDecomposition cholesky = new CholeskyDecomposition(G, true);
+            CholeskyDecomposition cholesky = new CholeskyDecomposition(G);
             cholesky.solve(rhs);
             w = rhs;
         } else {

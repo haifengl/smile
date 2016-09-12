@@ -258,7 +258,7 @@ public class SingularValueDecomposition {
 
         double[][] A = Math.aatmm(VD);
 
-        return new CholeskyDecomposition(A, true);
+        return new CholeskyDecomposition(A);
     }
 
     /**

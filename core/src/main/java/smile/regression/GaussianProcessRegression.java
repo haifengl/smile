@@ -162,7 +162,7 @@ public class GaussianProcessRegression <T> implements Regression<T> {
             K[i][i] += lambda;
         }
 
-        CholeskyDecomposition cholesky = new CholeskyDecomposition(K, true);
+        CholeskyDecomposition cholesky = new CholeskyDecomposition(K);
         cholesky.solve(y, w);
     }
 
