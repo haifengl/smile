@@ -900,8 +900,8 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
 
             if (posteriori != null) {
-                posteriori[0] = f;
-                posteriori[1] = 1.0 - f;
+                posteriori[0] = 1.0 - f;
+                posteriori[1] = f;
             }
 
             if (f < 0.5) {
