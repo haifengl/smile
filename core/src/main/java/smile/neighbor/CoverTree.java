@@ -516,6 +516,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
 
         //if root is the only node
         if (root.children == null) {
+            a1[0] = n1;
             return a1;
         }
 
