@@ -62,6 +62,12 @@ public class Neighbor<K, V> implements Comparable<Neighbor<K,V>> {
 
     @Override
     public int compareTo(Neighbor<K,V> o) {
-        return (int) Math.signum(distance - o.distance);
+        int d = (int) Math.signum(distance - o.distance);
+        // Sometime, the dataset contains duplicate samples.
+        // If the distances are same, we sort by the sample index.
+        if (d == 0)
+            return index - o.index;
+        else
+            return d;
     }
 }
