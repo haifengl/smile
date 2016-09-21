@@ -93,6 +93,7 @@ public class CoverTreeTest {
         for (int i = 0; i < data.length; i++) {
             Neighbor[] n1 = coverTree.knn(data[i], 10);
             Neighbor[] n2 = naive.knn(data[i], 10);
+            assertEquals(n1.length, n2.length);
             for (int j = 0; j < n1.length; j++) {
                 assertEquals(n1[j].index, n2[j].index);
                 assertEquals(n1[j].value, n2[j].value);
