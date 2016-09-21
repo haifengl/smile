@@ -71,7 +71,7 @@ public class DoubleHeapSelect {
         if (n < k) {
             heap[n++] = datum;
             if (n == k) {
-                heapify(heap);
+                sort(heap, k);
             }
         } else {
             n++;
@@ -86,6 +86,7 @@ public class DoubleHeapSelect {
      * Returns the k-<i>th</i> smallest value seen so far.
      */
     public double peek() {
+        if (n < k) sort(heap, n);
         return heap[0];
     }
 
