@@ -18,6 +18,9 @@ package smile.neighbor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.distance.Metric;
 import smile.sort.DoubleHeapSelect;
@@ -53,6 +56,7 @@ import smile.sort.DoubleHeapSelect;
  * @author Haifeng Li
  */
 public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E>, RNNSearch<E, E> {
+    private static final Logger logger = LoggerFactory.getLogger(CoverTree.class);
 
     /**
      * The dataset to build the cover tree.
@@ -579,9 +583,17 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
         }
 
         Neighbor<E, E>[] neighbors = list.toArray(a1);
+        if (neighbors.length < k) {
+            logger.warn(String.format("CoverTree.knn(%d) returns only %d neighbors", k, neighbors.length));
+        }
+
         Arrays.sort(neighbors);
 
         Math.reverse(neighbors);
+
+        if (neighbors.length > k) {
+            neighbors = Arrays.copyOf(neighbors, k);
+        }
 
         return neighbors;
     }
