@@ -131,7 +131,7 @@ public class SparseMatrixTest {
     @Test
     public void testAAT() {
         System.out.println("AAT");
-        SparseMatrix c = SparseMatrix.AAT(sm, sm.transpose());
+        SparseMatrix c = sm.aat();
         assertEquals(c.nrows(), 3);
         assertEquals(c.ncols(), 3);
         assertEquals(c.size(), 9);

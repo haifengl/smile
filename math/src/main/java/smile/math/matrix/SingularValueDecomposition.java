@@ -349,6 +349,21 @@ public class SingularValueDecomposition {
         }
 
         @Override
+        public ATA transpose() {
+            return this;
+        }
+
+        @Override
+        public ATA ata() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ATA aat() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public void ax(double[] x, double[] y) {
             if (A.nrows() >= A.ncols()) {
                 A.ax(x, buf);
