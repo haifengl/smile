@@ -91,6 +91,48 @@ public class RowMajorMatrix implements DenseMatrix {
         return A;
     }
 
+    @Override
+    public RowMajorMatrix transpose() {
+        RowMajorMatrix B = new RowMajorMatrix(ncols, nrows);
+        for (int k = 0; k < A.length; k++) {
+            int i = k / ncols;
+            int j = k % ncols;
+            B.set(j, i, A[k]);
+        }
+
+        return B;
+    }
+
+    @Override
+    public RowMajorMatrix ata() {
+        RowMajorMatrix C = new RowMajorMatrix(ncols, ncols);
+        for (int i = 0; i < ncols; i++) {
+            for (int j = 0; j < ncols; j++) {
+                double v = 0.0;
+                for (int k = 0; k < nrows; k++) {
+                    v += get(k, i) * get(k, j);
+                }
+                C.set(i, j, v);
+            }
+        }
+        return C;
+    }
+
+    @Override
+    public RowMajorMatrix aat() {
+        RowMajorMatrix C = new RowMajorMatrix(nrows, nrows);
+        for (int i = 0; i < nrows; i++) {
+            for (int j = 0; j < nrows; j++) {
+                double v = 0.0;
+                for (int k = 0; k < ncols; k++) {
+                    v += get(i, k) * get(j, k);
+                }
+                C.set(i, j, v);
+            }
+        }
+        return C;
+    }
+
     /**
      * Sets the diagonal to the values of <code>diag</code> as long
      * as possible (i.e while there are elements left in diag or the dim of matrix
@@ -135,25 +177,25 @@ public class RowMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public IMatrix add(int i, int j, double x) {
+    public RowMajorMatrix add(int i, int j, double x) {
         A[i*ncols + j] += x;
         return this;
     }
 
     @Override
-    public IMatrix sub(int i, int j, double x) {
+    public RowMajorMatrix sub(int i, int j, double x) {
         A[i*ncols + j] -= x;
         return this;
     }
 
     @Override
-    public IMatrix mul(int i, int j, double x) {
+    public RowMajorMatrix mul(int i, int j, double x) {
         A[i*ncols + j] *= x;
         return this;
     }
 
     @Override
-    public IMatrix div(int i, int j, double x) {
+    public RowMajorMatrix div(int i, int j, double x) {
         A[i*ncols + j] /= x;
         return this;
     }

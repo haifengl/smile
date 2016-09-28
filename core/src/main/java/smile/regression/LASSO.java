@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.matrix.IMatrix;
+import smile.math.matrix.ColumnMajorMatrix;
 import smile.math.special.Beta;
 
 /**
@@ -203,29 +204,69 @@ public class LASSO  implements Regression<double[]> {
         public LASSO train(double[][] x, double[] y) {
             return new LASSO(x, y, lambda, tol, maxIter);
         }
+
+        public LASSO train(IMatrix x, double[] y) {
+            return new LASSO(x, y, lambda, tol, maxIter);
+        }
     }
-    
+
     /**
      * Constructor. Learn the L1-regularized least squares model.
      * @param x a matrix containing the explanatory variables.
+     *          NO NEED to include a constant column of 1s for bias.
      * @param y the response values.
      * @param lambda the shrinkage/regularization parameter.
      */
     public LASSO(double[][] x, double[] y, double lambda) {
         this(x, y, lambda, 1E-4, 1000);
     }
-    
+
     /**
      * Constructor. Learn the L1-regularized least squares model.
-     * @param x a matrix containing the explanatory variables. NO NEED to include a constant column of 1s for bias.
+     * @param x a matrix containing the explanatory variables.
+     *          NO NEED to include a constant column of 1s for bias.
      * @param y the response values.
      * @param lambda the shrinkage/regularization parameter.
      * @param tol the tolerance for stopping iterations (relative target duality gap).
-     * @param maxIter the maximum number of iterations.
+     * @param maxIter the maximum number of IPM (Newton) iterations.
      */
     public LASSO(double[][] x, double[] y, double lambda, double tol, int maxIter) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
+        this(new ColumnMajorMatrix(x), y, lambda, tol, maxIter);
+
+        int p = x[0].length;
+
+        for (int j = 0; j < p; j++) {
+            if (!Math.isZero(scale[j])) {
+                w[j] /= scale[j];
+            }
+        }
+
+        b = ym - Math.dot(w, center);
+    }
+
+    /**
+     * Constructor. Learn the L1-regularized least squares model.
+     * @param x a matrix containing the explanatory variables. The variables should be
+     *          centered and standardized. NO NEED to include a constant column of 1s for bias.
+     * @param y the response values.
+     * @param lambda the shrinkage/regularization parameter.
+     */
+    public LASSO(IMatrix x, double[] y, double lambda) {
+        this(x, y, lambda, 1E-4, 1000);
+    }
+    
+    /**
+     * Constructor. Learn the L1-regularized least squares model.
+     * @param x a matrix containing the explanatory variables. The variables should be
+     *          centered and standardized. NO NEED to include a constant column of 1s for bias.
+     * @param y the response values.
+     * @param lambda the shrinkage/regularization parameter.
+     * @param tol the tolerance for stopping iterations (relative target duality gap).
+     * @param maxIter the maximum number of IPM (Newton) iterations.
+     */
+    public LASSO(IMatrix x, double[] y, double lambda, double tol, int maxIter) {
+        if (x.nrows() != y.length) {
+            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.nrows(), y.length));
         }
 
         if (lambda <= 0.0) {
@@ -252,41 +293,13 @@ public class LASSO  implements Regression<double[]> {
         final double eta = 1E-3;  // tolerance for PCG termination
 
         int pitr = 0;         
-        int n = x.length;
-        p = x[0].length;        
+        int n = x.nrows();
+        p = x.ncols();
         
-        double[][] X = x;
-        double[] Y = y;
-        if (n > p) {
-            center = Math.colMean(x);
-            X = new double[n][p];
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < p; j++) {
-                    X[i][j] = x[i][j] - center[j];
-                }
-            }
-
-            scale = new double[p];
-            for (int j = 0; j < p; j++) {
-                for (int i = 0; i < n; i++) {
-                    scale[j] += Math.sqr(X[i][j]);
-                }
-                scale[j] = Math.sqrt(scale[j] / n);
-            }
-
-            for (int j = 0; j < p; j++) {
-                if (!Math.isZero(scale[j])) {
-                    for (int i = 0; i < n; i++) {
-                        X[i][j] /= scale[j];
-                    }
-                }
-            }
-
-            Y = new double[n];
-            ym = Math.mean(y);
-            for (int i = 0; i < n; i++) {
-                Y[i] = y[i] - ym;
-            }
+        double[] Y = new double[n];
+        ym = Math.mean(y);
+        for (int i = 0; i < n; i++) {
+            Y[i] = y[i] - ym;
         }
 
         double t = Math.min(Math.max(1.0, 1.0 / lambda), 2 * p / 1e-3);
@@ -333,19 +346,19 @@ public class LASSO  implements Regression<double[]> {
         double[] prb = new double[p];
         double[] prs = new double[p];
 
-        IMatrix pcg = new PCGMatrix(X, d1, d2, prb, prs);
+        IMatrix pcg = new PCGMatrix(x, d1, d2, prb, prs);
                 
         // MAIN LOOP
         int ntiter = 0;
         for (; ntiter <= maxIter; ntiter++) {
-            Math.ax(X, w, z);
+            x.ax(w, z);
             for (int i = 0; i < n; i++) {
                 z[i] -= Y[i];
                 nu[i] = 2 * z[i];
             }
 
             // CALCULATE DUALITY GAP
-            Math.atx(X, nu, xnu);
+            x.atx(nu, xnu);
             double maxXnu = Math.normInf(xnu);
             if (maxXnu > lambda) {
                 double lnu = lambda / maxXnu;
@@ -383,7 +396,7 @@ public class LASSO  implements Regression<double[]> {
             }
 
             // calculate gradient
-            Math.atx(X, z, gradphi[0]);
+            x.atx(z, gradphi[0]);
             for (int i = 0; i < p; i++) {
                 gradphi[0][i] = 2 * gradphi[0][i] - (q1[i] - q2[i]) / t;
                 gradphi[1][i] = lambda - (q1[i] + q2[i]) / t;
@@ -430,7 +443,7 @@ public class LASSO  implements Regression<double[]> {
                 }
 
                 if (Math.max(newf) < 0.0) {
-                    Math.ax(X, neww, newz);
+                    x.ax(neww, newz);
                     for (int i = 0; i < n; i++) {
                         newz[i] -= Y[i];
                     }
@@ -457,18 +470,9 @@ public class LASSO  implements Regression<double[]> {
         if (ntiter == maxIter) {
             logger.error("LASSO: Too many iterations.");
         }
-        
-        if (n > p) {
-            for (int j = 0; j < p; j++) {
-                if (!Math.isZero(scale[j])) {
-                    w[j] /= scale[j];
-                }
-            }
-            b = ym - Math.dot(w, center);
-        }
 
         double[] yhat = new double[n];
-        Math.ax(x, w, yhat);
+        x.ax(w, yhat);
 
         double TSS = 0.0;
         RSS = 0.0;
@@ -514,7 +518,8 @@ public class LASSO  implements Regression<double[]> {
     
     class PCGMatrix implements IMatrix {
 
-        double[][] A;
+        IMatrix A;
+        IMatrix At;
         double[] d1;
         double[] d2;
         double[] prb;
@@ -522,14 +527,15 @@ public class LASSO  implements Regression<double[]> {
         double[] ax;
         double[] atax;
 
-        PCGMatrix(double[][] A, double[] d1, double[] d2, double[] prb, double[] prs) {
+        PCGMatrix(IMatrix A, double[] d1, double[] d2, double[] prb, double[] prs) {
             this.A = A;
+            this.At = A.transpose();
             this.d1 = d1;
             this.d2 = d2;
             this.prb = prb;
             this.prs = prs;
             
-            int n = A.length;
+            int n = A.nrows();
             ax = new double[n];
             atax = new double[p];
         }
@@ -552,27 +558,13 @@ public class LASSO  implements Regression<double[]> {
             // 
             // where hessphi = [A'*A*2+D1 , D2;
             //                  D2        , D1];
-            ax(A, x, ax);
-            Math.atx(A, ax, atax);
+            A.ax(x, ax);
+            At.ax(ax, atax);
             for (int i = 0; i < p; i++) {
                 y[i]     = 2 * atax[i] + d1[i] * x[i] + d2[i] * x[i + p];
-                y[i + p] =              d2[i] * x[i] + d1[i] * x[i + p];
+                y[i + p] =               d2[i] * x[i] + d1[i] * x[i + p];
             }
         }
-        
-        /**
-         * Product of a matrix and a vector y = A * x according to the rules
-         * of linear algebra. No size check.
-         */
-        public void ax(double[][] A, double[] x, double[] y) {
-            Arrays.fill(y, 0.0);
-            for (int i = 0; i < y.length; i++) {
-                for (int k = 0; k < A[i].length; k++) {
-                    y[i] += A[i][k] * x[k];
-                }
-            }
-        }
-
 
         @Override
         public void atx(double[] x, double[] y) {
@@ -591,6 +583,21 @@ public class LASSO  implements Regression<double[]> {
         }
 
         @Override
+        public IMatrix transpose() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public IMatrix aat() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public IMatrix ata() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
         public double get(int i, int j) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
@@ -599,12 +606,7 @@ public class LASSO  implements Regression<double[]> {
         public double apply(int i, int j) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
-/*
-        @Override
-        public PCGMatrix set(int i, int j, double x) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-*/
+
         @Override
         public void axpy(double[] x, double[] y) {
             throw new UnsupportedOperationException("Not supported yet.");

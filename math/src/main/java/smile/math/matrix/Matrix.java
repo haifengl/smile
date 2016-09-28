@@ -228,27 +228,37 @@ public class Matrix implements DenseMatrix {
     }
 
     @Override
-    public IMatrix add(int i, int j, double x) {
+    public Matrix add(int i, int j, double x) {
         A[i][j] += x;
         return this;
     }
 
     @Override
-    public IMatrix sub(int i, int j, double x) {
+    public Matrix sub(int i, int j, double x) {
         A[i][j] -= x;
         return this;
     }
 
     @Override
-    public IMatrix mul(int i, int j, double x) {
+    public Matrix mul(int i, int j, double x) {
         A[i][j] *= x;
         return this;
     }
 
     @Override
-    public IMatrix div(int i, int j, double x) {
+    public Matrix div(int i, int j, double x) {
         A[i][j] /= x;
         return this;
+    }
+
+    @Override
+    public Matrix ata() {
+        return new Matrix(Math.atamm(A));
+    }
+
+    @Override
+    public Matrix aat() {
+        return new Matrix(Math.aatmm(A));
     }
 
     @Override
@@ -388,6 +398,7 @@ public class Matrix implements DenseMatrix {
     /**
      * Returns the matrix transpose.
      */
+    @Override
     public Matrix transpose() {
         int m = A.length;
         int n = A[0].length;

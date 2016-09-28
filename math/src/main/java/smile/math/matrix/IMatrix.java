@@ -37,6 +37,11 @@ public interface IMatrix {
     public int ncols();
 
     /**
+     * Returns the matrix transpose.
+     */
+    public IMatrix transpose();
+
+    /**
      * Returns the entry value at row i and column j.
      */
     public double get(int i, int j);
@@ -45,6 +50,16 @@ public interface IMatrix {
      * Returns the entry value at row i and column j. For Scala users.
      */
     public double apply(int i, int j);
+
+    /**
+     * Returns A' * A
+     */
+    public IMatrix ata();
+
+    /**
+     * Returns A * A'
+     */
+    public IMatrix aat();
 
     /**
      * y = A * x
