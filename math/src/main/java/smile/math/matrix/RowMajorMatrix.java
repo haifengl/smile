@@ -202,79 +202,61 @@ public class RowMajorMatrix implements DenseMatrix {
 
     @Override
     public void ax(double[] x, double[] y) {
-        int n = Math.min(nrows, y.length);
-        int p = Math.min(ncols, x.length);
-
         Arrays.fill(y, 0.0);
-        for (int i = 0; i < n; i++) {
-            for (int k = 0; k < p; k++) {
-                y[i] += get(i, k) * x[k];
+        for (int i = 0, j = 0; i < nrows; i++) {
+            for (int k = 0; k < ncols; k++, j++) {
+                y[i] += A[j] * x[k];
             }
         }
     }
 
     @Override
     public void axpy(double[] x, double[] y) {
-        int n = Math.min(nrows, y.length);
-        int p = Math.min(ncols, x.length);
-
-        for (int i = 0; i < n; i++) {
-            for (int k = 0; k < p; k++) {
-                y[i] += get(i, k) * x[k];
+        for (int i = 0, j = 0; i < nrows; i++) {
+            for (int k = 0; k < ncols; k++, j++) {
+                y[i] += A[j] * x[k];
             }
         }
     }
 
     @Override
     public void axpy(double[] x, double[] y, double b) {
-        int n = Math.min(nrows, y.length);
-        int p = Math.min(ncols, x.length);
-
-        for (int i = 0; i < n; i++) {
+        for (int i = 0, j = 0; i < nrows; i++) {
             y[i] *= b;
-            for (int k = 0; k < p; k++) {
-                y[i] += get(i, k) * x[k];
+            for (int k = 0; k < ncols; k++, j++) {
+                y[i] += A[j] * x[k];
             }
         }
     }
 
     @Override
     public void atx(double[] x, double[] y) {
-        int n = Math.min(ncols, y.length);
-        int p = Math.min(nrows, x.length);
-
         Arrays.fill(y, 0.0);
-        for (int k = 0; k < p; k++) {
-            for (int i = 0; i < n; i++) {
-                y[i] += get(k, i) * x[k];
+        for (int k = 0, j = 0; k < nrows; k++) {
+            for (int i = 0; i < ncols; i++, j++) {
+                y[i] += A[j] * x[k];
             }
         }
     }
 
     @Override
     public void atxpy(double[] x, double[] y) {
-        int n = Math.min(ncols, y.length);
-        int p = Math.min(nrows, x.length);
-
-        for (int k = 0; k < p; k++) {
-            for (int i = 0; i < n; i++) {
-                y[i] += get(k, i) * x[k];
+        for (int k = 0, j = 0; k < nrows; k++) {
+            for (int i = 0; i < ncols; i++, j++) {
+                y[i] += A[j] * x[k];
             }
         }
     }
 
     @Override
     public void atxpy(double[] x, double[] y, double b) {
-        int n = Math.min(ncols, y.length);
-        int p = Math.min(nrows, x.length);
-
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < y.length; i++) {
             y[i] *= b;
         }
 
-        for (int k = 0; k < p; k++) {
-            for (int i = 0; i < n; i++) {
-                y[i] += get(k, i) * x[k];
+        for (int k = 0, j = 0; k < nrows; k++) {
+            for (int i = 0; i < ncols; i++, j++) {
+                y[i] += A[j] * x[k];
             }
         }
     }
