@@ -199,8 +199,7 @@ public class LLE {
 
         // This is actually the transpose of W in the paper.
         SparseMatrix W = new SparseMatrix(n, n, w, rowIndex, colIndex);
-        SparseMatrix Wt = W.transpose();
-        SparseMatrix M = SparseMatrix.AAT(W, Wt);
+        SparseMatrix M = W.aat();
 
         EigenValueDecomposition eigen = EigenValueDecomposition.decompose(M, n);
 
