@@ -134,15 +134,17 @@ trait Operators {
     }
 
     val (pred, prob) = results.unzip
+    val prediction = pred.toArray
+    val probability = prob.toArray
 
-    println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
-    println("Sensitivity/Recall = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
-    println("Specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
-    println("Precision = %.2f%%" format (100.0 * new Precision().measure(testy, pred)))
-    println("F1-Score = %.2f%%" format (100.0 * new FMeasure().measure(testy, pred)))
-    println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, pred)))
-    println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, pred)))
-    println("AUC = %.2f%%" format (100.0 * AUC.measure(testy, prob)))
+    println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, prediction)))
+    println("Sensitivity/Recall = %.2f%%" format (100.0 * new Sensitivity().measure(testy, prediction)))
+    println("Specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, prediction)))
+    println("Precision = %.2f%%" format (100.0 * new Precision().measure(testy, prediction)))
+    println("F1-Score = %.2f%%" format (100.0 * new FMeasure().measure(testy, prediction)))
+    println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, prediction)))
+    println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, prediction)))
+    println("AUC = %.2f%%" format (100.0 * AUC.measure(testy, probability)))
 
     classifier
   }
