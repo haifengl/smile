@@ -74,7 +74,7 @@ public class ExponentialFamilyMixture extends Mixture {
      * @return log Likelihood
      */
     double EM(List<Component> mixture, double[] x) {
-        return EM(mixture, x, 0.2);
+        return EM(mixture, x, 0.0);
     }
 
     /**
@@ -83,7 +83,10 @@ public class ExponentialFamilyMixture extends Mixture {
      *
      * @param mixture the initial configuration.
      * @param x the input data.
-     * @param gamma the regularization parameter.
+     * @param gamma the regularization parameter. Although regularization works
+     *              well for high dimensional data, it often reduces the model
+     *              to too few components. For one-dimensional data, gamma should
+     *              be 0 in general.
      * @return log Likelihood
      */
 
@@ -97,13 +100,16 @@ public class ExponentialFamilyMixture extends Mixture {
      *
      * @param components the initial configuration.
      * @param x the input data.
-     * @param gamma the regularization parameter.
+     * @param gamma the regularization parameter. Although regularization works
+     *              well for high dimensional data, it often reduces the model
+     *              to too few components. For one-dimensional data, gamma should
+     *              be 0 in general.
      * @param maxIter the maximum number of iterations.
      * @return log Likelihood
      */
     double EM(List<Component> components, double[] x , double gamma, int maxIter) {
         if (x.length < components.size() / 2)
-                throw new IllegalArgumentException("Too many components");
+            throw new IllegalArgumentException("Too many components");
 
         if (gamma < 0.0 || gamma > 0.2)
             throw new IllegalArgumentException("Invalid regularization factor gamma.");
