@@ -32,9 +32,9 @@ import smile.sort.QuickSort;
  * <p>
  * AUC is quite noisy as a classification measure and has some other
  * significant problems in model comparison.
- *<p>
- * We calculate AUC based on Mann–Whitney U test
- * (https://en.wikipedia.org/wiki/Mann–Whitney_U_test).
+ * <p>
+ * We calculate AUC based on Mann-Whitney U test
+ * (https://en.wikipedia.org/wiki/Mann-Whitney_U_test).
  *
  * @author Haifeng Li
  */
