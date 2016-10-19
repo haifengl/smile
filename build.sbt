@@ -7,7 +7,7 @@ lazy val commonSettings = Seq(
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
   version := "1.2.1",
-  javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-g:lines,vars,source", "-Xlint:unchecked"),
+  javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF8", "-g:lines,vars,source", "-Xlint:unchecked"),
   javacOptions in (Compile, doc) ++= Seq("-Xdoclint:none"),
   javaOptions in test += "-Dsmile.threads=1",
   libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.21" % "test",
