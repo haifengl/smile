@@ -18,6 +18,7 @@ package smile.nlp.stemmer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import org.slf4j.Logger;
@@ -42,23 +43,21 @@ public class LancasterStemmer implements Stemmer {
     /**
      * Array of rules
      */
-    private static final ArrayList<String> RULES;
+    private ArrayList<String> rules = new ArrayList<>();
     /**
      * ruleIndex is set up to provide faster access to relevant rules.
      */
-    private static final int[] INDEX;
+    private int[] index = new int[26];
     /**
      * Strip prefix if true.
      */
     private boolean stripPrefix;
 
-    static {
+    private void readRules(InputStream is, ArrayList<String> rules, int[] index) {
         /**
          * Load rules from Lancaster_rules.txt
          */
-        RULES = new ArrayList<>();
-
-        try (BufferedReader input = new BufferedReader(new InputStreamReader(LancasterStemmer.class.getResourceAsStream("/smile/nlp/stemmer/Lancaster_rules.txt")))) {
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(is))) {
             String line = null;
             while ((line = input.readLine()) != null) {
                 String rule = line.trim();
@@ -67,7 +66,7 @@ public class LancasterStemmer implements Stemmer {
                     if (j != -1) {
                         rule = rule.substring(0, j);
                     }
-                    RULES.add(rule);
+                    rules.add(rule);
                 }
             }
         } catch (IOException ex) {
@@ -77,12 +76,11 @@ public class LancasterStemmer implements Stemmer {
         // Now assign the number of the first rule that starts with each letter
         // (if any) to an alphabetic array to facilitate selection of sections
         char ch = 'a';
-        INDEX = new int[26];
 
-        for (int j = 0; j < RULES.size(); j++) {
-            while (RULES.get(j).charAt(0) != ch) {
+        for (int j = 0; j < rules.size(); j++) {
+            while (rules.get(j).charAt(0) != ch) {
                 ch++;
-                INDEX[charCode(ch)] = j;
+                index[charCode(ch)] = j;
             }
         }
     }
@@ -102,6 +100,31 @@ public class LancasterStemmer implements Stemmer {
      */
     public LancasterStemmer(boolean stripPrefix) {
         this.stripPrefix = stripPrefix;
+        readRules(LancasterStemmer.class.getResourceAsStream("/smile/nlp/stemmer/Lancaster_rules.txt"), rules, index);
+    }
+
+
+    /**
+     * Constructor. By default, the stemmer will not strip prefix from words.
+     * @param customizedRules an input stream to read additional rules. Note that the
+     *                        default rules remains.
+     */
+    public LancasterStemmer(InputStream customizedRules) {
+        this(customizedRules, false);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param customizedRules an input stream to read additional rules. Note that the
+     *                        default rules remains.
+     * @param stripPrefix true if the stemmer will strip prefix such as kilo,
+     * micro, milli, intra, ultra, mega, nano, pico, pseudo.
+     */
+    public LancasterStemmer(InputStream customizedRules, boolean stripPrefix) {
+        this.stripPrefix = stripPrefix;
+        readRules(LancasterStemmer.class.getResourceAsStream("/smile/nlp/stemmer/Lancaster_rules.txt"), rules, index);
+        readRules(customizedRules, rules, index);
     }
 
     /**
@@ -180,7 +203,7 @@ public class LancasterStemmer implements Stemmer {
             //last letter
             //Check to see if there are any possible rules for stemming
             if ((ll >= 'a') && (ll <= 'z')) {
-                prt = INDEX[charCode(ll)];
+                prt = index[charCode(ll)];
                 //pointer into rule-table
             } else {
                 prt = -1;
@@ -194,7 +217,7 @@ public class LancasterStemmer implements Stemmer {
 
             if (Continue == 0) {
                 // THERE IS A POSSIBLE RULE (OR RULES) : SEE IF ONE WORKS
-                rule = RULES.get(prt);
+                rule = rules.get(prt);
                 // Take first rule
                 while (Continue == 0) {
                     ruleok = 0;
@@ -289,10 +312,10 @@ public class LancasterStemmer implements Stemmer {
                         //if rule did not match then look for another
                         prt = prt + 1;
                         // move to next rule in RULETABLE
-                        if (prt >= RULES.size()) {
+                        if (prt >= rules.size()) {
                             Continue = -1;                        	
                         } else {
-                            rule = RULES.get(prt);
+                            rule = rules.get(prt);
                             if (rule.charAt(0) != ll) {
                                 //rule-letter changes
                                 Continue = -1;
