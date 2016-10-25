@@ -672,4 +672,11 @@ public class GradientTreeBoost implements Regression<double[]> {
         }
         return results;
     }
+
+    /**
+     * Returns the regression trees.
+     */
+    public RegressionTree[] getTrees() {
+        return trees;
+    }
 }
