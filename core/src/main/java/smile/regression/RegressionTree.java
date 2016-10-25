@@ -1134,4 +1134,27 @@ public class RegressionTree implements Regression<double[]> {
     public double predict(int[] x) {
         return root.predict(x);
     }
+
+    /**
+     * Returns the maximum depth" of the tree -- the number of
+     * nodes along the longest path from the root node
+     * down to the farthest leaf node.*/
+    public int maxDepth() {
+        return maxDepth(root);
+    }
+
+    private int maxDepth(Node node) {
+        if (node == null)
+            return 0;
+
+        // compute the depth of each subtree
+        int lDepth = maxDepth(node.trueChild);
+        int rDepth = maxDepth(node.falseChild);
+
+        // use the larger one
+        if (lDepth > rDepth)
+            return (lDepth + 1);
+        else
+            return (rDepth + 1);
+    }
 }
