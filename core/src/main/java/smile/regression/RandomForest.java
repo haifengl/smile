@@ -623,4 +623,11 @@ public class RandomForest implements Regression<double[]> {
         }
         return results;
     }
+
+    /**
+     * Returns the regression trees.
+     */
+    public RegressionTree[] getTrees() {
+        return trees.toArray(new RegressionTree[trees.size()]);
+    }
 }

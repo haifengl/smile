@@ -770,4 +770,15 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
         }
         return results;
     }
+
+    /**
+     * Returns the decision trees.
+     */
+    public DecisionTree[] getTrees() {
+        DecisionTree[] forest = new DecisionTree[trees.size()];
+        for (int i = 0; i < forest.length; i++)
+            forest[i] = trees.get(i).tree;
+
+        return forest;
+    }
 }
