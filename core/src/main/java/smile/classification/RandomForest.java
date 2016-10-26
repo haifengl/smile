@@ -285,11 +285,11 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
         /**
          * The minimum size of leaf nodes.
          */
-        int nodeSize;
+        int nodeSize = 5;
         /**
          * The maximum number of leaf nodes in the tree.
          */
-        int maxNodes;
+        int maxNodes = 100;
         /**
          * The sampling rate.
          */
@@ -461,7 +461,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
      * generally good performance, where dim is the number of variables.
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int mtry) {
-        this(attributes, x, y, ntrees, x.length, 1, mtry, 1.0);
+        this(attributes, x, y, ntrees, 100, 5, mtry, 1.0);
 
     }
 
@@ -481,7 +481,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
      *                  sampling without replacement.
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample) {
-        this(attributes, x, y, ntrees, x.length, 1, mtry, subsample, DecisionTree.SplitRule.GINI);
+        this(attributes, x, y, ntrees, 100, 5, mtry, subsample, DecisionTree.SplitRule.GINI);
     }
 
     /**
@@ -501,7 +501,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
      * @param rule Decision tree split rule.
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample, DecisionTree.SplitRule rule) {
-        this(attributes, x, y, ntrees, x.length, 1, mtry, subsample, rule, null);
+        this(attributes, x, y, ntrees, maxNodes, nodeSize, mtry, subsample, rule, null);
     }
 
     /**
