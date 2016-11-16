@@ -79,7 +79,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
      * tree on the OOB samples, which can be used when aggregating
      * tree votes.
      */
-    static class Tree {
+    static class Tree implements Serializable {
         DecisionTree tree;
         double weight;
         Tree(DecisionTree tree, double weight) {
