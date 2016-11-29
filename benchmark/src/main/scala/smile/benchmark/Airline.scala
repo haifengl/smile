@@ -83,6 +83,10 @@ object Airline {
       randomForest(x, y, attributes, 500, 85, 50, 2, 0.632, DecisionTree.SplitRule.ENTROPY, classWeight)
     }
 
+    val depth = forest.getTrees.map(_.maxDepth.toDouble)
+    println("Tree Depth:")
+    summary(depth)
+
     println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
     for (i <- 0 until attributes.length) {
       println(s"importance of ${attributes(i).getName} = ${forest.importance()(i)}")
