@@ -16,10 +16,11 @@
 
 package smile
 
+import smile.math.Math
+
 import scala.language.implicitConversions
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
-import smile.math.matrix.Matrix
 
 /** Data manipulation functions.
   *
@@ -32,6 +33,17 @@ package object data {
   implicit def pimpDIntArray(data: Array[Int]) = new PimpedArray[Int](data)
   implicit def pimpDoubleArray(data: Array[Double]) = new PimpedArray[Double](data)
   implicit def pimpArray2D(data: Array[Array[Double]]) = new PimpedArray2D(data)
+
+  def summary(x: Array[Double]): Unit = {
+    println("min\tq1\tmedian\tmean\tq3\tmax")
+    val min = Math.min(x)
+    val q1 = Math.q1(x)
+    val median = Math.median(x)
+    val mean = Math.mean(x)
+    val q3 = Math.q3(x)
+    val max = Math.max(x)
+    println(f"$min%1.5f\t$q1%1.5f\t$median%1.5f\t$mean%1.5f\t$q3%1.5f\t$max%1.5f")
+  }
 }
 
 package data {
@@ -197,7 +209,7 @@ private[data] class PimpedArray2D(data: Array[Array[Double]]) {
 
   /** Returns a column. */
   def \(col: Int): Array[Double] = {
-    data.map(_(col)).toArray
+    data.map(_(col))
   }
 
   /** Returns multiple rows. */
@@ -210,14 +222,14 @@ private[data] class PimpedArray2D(data: Array[Array[Double]]) {
   def col(j: Int*): Array[Array[Double]] = {
     data.map { x =>
       j.map { col => x(col) }.toArray
-    }.toArray
+    }
   }
 
   /** Returns a range of columns. */
   def col(j: Range): Array[Array[Double]] = {
     data.map { x =>
       j.map { col => x(col) }.toArray
-    }.toArray
+    }
   }
 
   /** Sampling the data.
