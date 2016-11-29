@@ -103,14 +103,27 @@ public class RowMajorMatrix implements DenseMatrix {
         return B;
     }
 
+    public ColumnMajorMatrix toColumnMajor() {
+        ColumnMajorMatrix B = new ColumnMajorMatrix(nrows, ncols);
+        for (int k = 0; k < A.length; k++) {
+            int i = k / ncols;
+            int j = k % ncols;
+            B.set(i, j, A[k]);
+        }
+
+        return B;
+    }
+
     @Override
     public RowMajorMatrix ata() {
+        RowMajorMatrix at = transpose();
+        ColumnMajorMatrix column = toColumnMajor();
         RowMajorMatrix C = new RowMajorMatrix(ncols, ncols);
         for (int i = 0; i < ncols; i++) {
             for (int j = 0; j < ncols; j++) {
                 double v = 0.0;
                 for (int k = 0; k < nrows; k++) {
-                    v += get(k, i) * get(k, j);
+                    v += at.get(i, k) * column.get(k, j);
                 }
                 C.set(i, j, v);
             }
