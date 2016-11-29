@@ -24,7 +24,6 @@ import smile.data.Attribute;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
 import smile.math.Math;
-import smile.math.Random;
 import smile.sort.QuickSort;
 import smile.util.MulticoreExecutor;
 
