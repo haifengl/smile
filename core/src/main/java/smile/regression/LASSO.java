@@ -19,7 +19,7 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
-import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.SparseMatrix;
 import smile.math.matrix.IMatrix;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.RowMajorMatrix;
@@ -557,6 +557,7 @@ public class LASSO  implements Regression<double[]> {
     class PCGMatrix implements IMatrix {
 
         IMatrix A;
+        IMatrix AtA;
         double[] d1;
         double[] d2;
         double[] prb;
@@ -574,6 +575,9 @@ public class LASSO  implements Regression<double[]> {
             int n = A.nrows();
             ax = new double[n];
             atax = new double[p];
+
+            if ((A.ncols() < 10000) && !(A instanceof SparseMatrix))
+                AtA = A.ata();
         }
 
         @Override
@@ -594,8 +598,13 @@ public class LASSO  implements Regression<double[]> {
             // 
             // where hessphi = [A'*A*2+D1 , D2;
             //                  D2        , D1];
-            A.ax(x, ax);
-            A.atx(ax, atax);
+            if (AtA != null) {
+                AtA.ax(x, atax);
+            } else {
+                A.ax(x, ax);
+                A.atx(ax, atax);
+            }
+
             for (int i = 0; i < p; i++) {
                 y[i]     = 2 * atax[i] + d1[i] * x[i] + d2[i] * x[i + p];
                 y[i + p] =               d2[i] * x[i] + d1[i] * x[i + p];
