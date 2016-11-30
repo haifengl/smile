@@ -20,7 +20,8 @@ import smile.data.Attribute;
 import smile.data.NominalAttribute;
 
 /**
- * Nominal variables to sparse binary representation convertor. Here we assume
+ * Nominal variables to sparse binary representation converter.
+ * This is also called one-hot encoding. Here we assume
  * that all variables are nominal attributes and will be converted to binary
  * dummy variables in a compact representation in which only indices of nonzero
  * elements are stored in an integer array. In Maximum Entropy Classifier, 
