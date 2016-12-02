@@ -21,7 +21,8 @@ import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
 
 /**
- * Nominal variable to binary dummy variables feature generator. Although some
+ * Nominal variable to binary dummy variables feature generator.
+ * This is also called one-hot encoding. Although some
  * method such as decision trees can handle nominal variable directly, other
  * methods generally require nominal variables converted to multiple binary
  * dummy variables to indicate the presence or absence of a characteristic.

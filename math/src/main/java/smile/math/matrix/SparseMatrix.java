@@ -263,6 +263,7 @@ public class SparseMatrix implements IMatrix {
     /**
      * Returns the matrix transpose.
      */
+    @Override
     public SparseMatrix transpose() {
         int m = nrows, n = ncols;
         SparseMatrix at = new SparseMatrix(n, m, x.length);
@@ -374,15 +375,20 @@ public class SparseMatrix implements IMatrix {
         return nz;
     }
 
-    /**
-     * Returns A * A<sup>T</sup>.
-     */
-    public static SparseMatrix AAT(SparseMatrix A, SparseMatrix AT) {
-        if (A.ncols != AT.nrows) {
-            throw new IllegalArgumentException(String.format("Matrix dimensions do not match for matrix multiplication: %d x %d vs %d x %d", A.nrows(), A.ncols(), AT.nrows(), AT.ncols()));
-        }
+    @Override
+    public SparseMatrix ata() {
+        SparseMatrix AT = transpose();
+        return AT.aat(this);
+    }
 
-        int m = AT.ncols;
+    @Override
+    public SparseMatrix aat() {
+        SparseMatrix AT = transpose();
+        return aat(AT);
+    }
+
+    private SparseMatrix aat(SparseMatrix AT) {
+        int m = nrows;
         int[] done = new int[m];
         for (int i = 0; i < m; i++) {
             done[i] = -1;
@@ -394,8 +400,8 @@ public class SparseMatrix implements IMatrix {
         for (int j = 0; j < m; j++) {
             for (int i = AT.colIndex[j]; i < AT.colIndex[j + 1]; i++) {
                 int k = AT.rowIndex[i];
-                for (int l = A.colIndex[k]; l < A.colIndex[k + 1]; l++) {
-                    int h = A.rowIndex[l];
+                for (int l = colIndex[k]; l < colIndex[k + 1]; l++) {
+                    int h = rowIndex[l];
                     // Test if contribution already included.
                     if (done[h] != j) {
                         done[h] = j;
@@ -412,14 +418,14 @@ public class SparseMatrix implements IMatrix {
             done[i] = -1;
         }
 
-        // Second pass determines columns of adat. Code is identical to first
+        // Second pass determines columns of aat. Code is identical to first
         // pass except colIndex and rowIndex get assigned at appropriate places.
         for (int j = 0; j < m; j++) {
             aat.colIndex[j] = nvals;
             for (int i = AT.colIndex[j]; i < AT.colIndex[j + 1]; i++) {
                 int k = AT.rowIndex[i];
-                for (int l = A.colIndex[k]; l < A.colIndex[k + 1]; l++) {
-                    int h = A.rowIndex[l];
+                for (int l = colIndex[k]; l < colIndex[k + 1]; l++) {
+                    int h = rowIndex[l];
                     if (done[h] != j) {
                         done[h] = j;
                         aat.rowIndex[nvals] = h;
@@ -443,9 +449,9 @@ public class SparseMatrix implements IMatrix {
         for (int i = 0; i < m; i++) {
             for (int j = AT.colIndex[i]; j < AT.colIndex[i + 1]; j++) {
                 int k = AT.rowIndex[j];
-                for (int l = A.colIndex[k]; l < A.colIndex[k + 1]; l++) {
-                    int h = A.rowIndex[l];
-                    temp[h] += AT.x[j] * A.x[l];
+                for (int l = colIndex[k]; l < colIndex[k + 1]; l++) {
+                    int h = rowIndex[l];
+                    temp[h] += AT.x[j] * x[l];
                 }
             }
 

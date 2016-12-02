@@ -355,7 +355,7 @@ public class RandomForest implements Regression<double[]> {
      * @param ntrees the number of trees.
      */
     public RandomForest(Attribute[] attributes, double[][] x, double[] y, int ntrees) {
-        this(attributes, x, y, ntrees, x.length);
+        this(attributes, x, y, ntrees, 100);
     }
 
     /**
@@ -622,5 +622,12 @@ public class RandomForest implements Regression<double[]> {
             }
         }
         return results;
+    }
+
+    /**
+     * Returns the regression trees.
+     */
+    public RegressionTree[] getTrees() {
+        return trees.toArray(new RegressionTree[trees.size()]);
     }
 }
