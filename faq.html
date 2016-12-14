@@ -114,7 +114,7 @@
     <p>The following example shows how to save a plot in the headless mode.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val toy = readTable("data/classification/toy/toy-train.txt", Some((new NominalAttribute("class"), 0)))
+    val toy = read.table("data/classification/toy/toy-train.txt", Some((new NominalAttribute("class"), 0)))
     val (x, y) = toy.unzipInt
 
     val canvas = ScatterPlot.plot(x, y, '*', Array(Color.RED, Color.BLUE))

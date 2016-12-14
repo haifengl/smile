@@ -116,7 +116,7 @@
         the shortest path for all samples, the example uses only the first 2,000 samples.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val swissroll = readTable("data/manifold/swissroll.txt").unzip
+    val swissroll = read.table("data/manifold/swissroll.txt").unzip
     plot(swissroll, '.', Color.BLUE)
 
     val map = isomap(swissroll.slice(0, 2000), 2, 7)

@@ -103,7 +103,7 @@
     <p>It is straightforward to fit an OLS model.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val planes = readArff("data/weka/regression/2dplanes.arff", 10)
+    val planes = read.arff("data/weka/regression/2dplanes.arff", 10)
     val (x, y) = planes.unzipDouble
     val model = ols(x, y)
     </code></pre>
@@ -318,7 +318,7 @@
         The data used in the below example has 64 columns that consists of basic
         data plus certain interactions.</p>
     <pre class="prettyprint lang-scala"><code>
-    val diabetes = readCsv("data/regression/diabetes.csv", Some((new NumericAttribute("y"), 0)), header = true)
+    val diabetes = read.csv("data/regression/diabetes.csv", Some((new NumericAttribute("y"), 0)), header = true)
     val (x, y) = diabetes.unzipDouble
     println(lasso(x, y, 10))
     println(lasso(x, y, 100))
@@ -385,7 +385,7 @@
         increases).</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val diabetes = readCsv("data/regression/diabetes.csv", Some((new NumericAttribute("y"), 0)), header=true)
+    val diabetes = read.csv("data/regression/diabetes.csv", Some((new NumericAttribute("y"), 0)), header=true)
     val (data, y) = diabetes.unzipDouble
     val x = data.map(_.slice(0, 10)) // use only the primary attributes
     cv(x, y, 10) { case (x, y) =>

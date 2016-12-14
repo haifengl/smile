@@ -84,7 +84,7 @@
         can rotate the view by dragging mouse.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val iris = readArff("data/weka/iris.arff", 4)
+    val iris = read.arff("data/weka/iris.arff", 4)
     val (x, y) = iris.unzipInt
     val x2 = x.map(_.slice(0,2)) // take first two columns
     val window = plot(x2, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
@@ -167,7 +167,7 @@
         create a box plot.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val iris = readArff("data/weka/iris.arff", 4)
+    val iris = read.arff("data/weka/iris.arff", 4)
     val (x, y) = iris.unzipInt
     val groups = (x.map(_(0)) zip y.map("class %d" format _)).groupBy(_._2)
     val labels = groups.keys.toArray
@@ -205,7 +205,7 @@
         of guesses was 1,287 pounds, which is pretty close to Penelope's weight 1,355 pounds. </p>
 
     <pre class="prettyprint lang-scala"><code>
-    val cow = readTable("data/npr/cow.txt").unzip.map(_(0))
+    val cow = read.table("data/npr/cow.txt").unzip.map(_(0))
     val window = hist(cow, 50)
     window.canvas.setAxisLabels("Weight", "Probability")
     </code></pre>
@@ -339,7 +339,7 @@
     <p>The structure of sparse matrix is critical in solving linear systems.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val sparse = readSparseMatrix("data/matrix/mesh2em5.txt")
+    val sparse = read.hb("data/matrix/mesh2em5.txt")
     val window = spy(sparse)
     window.canvas.setTitle("mesh2em5")
     </code></pre>
@@ -371,7 +371,7 @@
 
     <pre class="prettyprint lang-scala"><code>
     val label = new NominalAttribute("class")
-    val usps = readTable2("data/usps/zip.train", label, 0)
+    val usps = read.table("data/usps/zip.train", label, 0)
     val umatrix = som(usps.unzip, 30, 30).umatrix
     hexmap(umatrix, Palette.heat(256))
     </code></pre>
@@ -456,7 +456,7 @@
         vertex indices of two end points of each edge.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val (vertices, edges) = readWavefrontObj("data/wireframe/teapot.obj")
+    val (vertices, edges) = read.wavefront("data/wireframe/teapot.obj")
     wireframe(vertices, edges)
     </code></pre>
 

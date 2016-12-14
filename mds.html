@@ -93,7 +93,7 @@
         representing the objects.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val eurodist = readTable("data/projection/eurodist.txt", delimiter = "\\t+", header = true, rowNames = true)
+    val eurodist = read.table("data/projection/eurodist.txt", delimiter = "\\t+", header = true, rowNames = true)
     val dist = eurodist.unzip
     val labels = eurodist.attributes.map(_.getName).toArray
     val x = mds(dist, 2).getCoordinates
