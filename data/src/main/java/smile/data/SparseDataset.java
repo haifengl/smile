@@ -112,6 +112,17 @@ public class SparseDataset implements Iterable<Datum<SparseArray>> {
     }
 
     /**
+     * Constructor.
+     * @param ncols the number of columns in the matrix.
+     * @param response the attribute type of response variable.
+     */
+    public SparseDataset(int ncols, Attribute response) {
+        this.numColumns = ncols;
+        this.colSize = new int[ncols];
+        this.response = response; 
+    }
+
+    /**
      * Returns the dataset name.
      */
     public String getName() {
