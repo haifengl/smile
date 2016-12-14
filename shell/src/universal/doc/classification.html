@@ -191,7 +191,7 @@
         Iris datset, the accuracy of 10-fold cross validation is 96% for <code>k = 3</code>.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val iris = readArff("data/weka/iris.arff", 4)
+    val iris = read.arff("data/weka/iris.arff", 4)
     val (x, y) = iris.unzipInt
     cv(x, y, 10) { case (x, y) => knn(x, y, 3) }
     </code></pre>
@@ -244,7 +244,7 @@
         <code>k</code>, the smoother the boundary.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val toy = readTable("data/classification/toy/toy-train.txt", Some((new NominalAttribute("class"), 0)))
+    val toy = read.table("data/classification/toy/toy-train.txt", Some((new NominalAttribute("class"), 0)))
     val (x, y) = toy.unzipInt
     plot(x, y, knn(x, y, 3))
     </code></pre>

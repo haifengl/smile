@@ -155,7 +155,7 @@
         sum squares ratios (about 16 and 13 in contrast to 1.6 and 0.6 of the first two variables).</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val iris = readArff("data/weka/iris.arff", 4)
+    val iris = read.arff("data/weka/iris.arff", 4)
     val (x, y) = iris.unzipInt
     sumSquaresRatio(x, y)
 
@@ -233,7 +233,7 @@
         as the classifier, the accuracy of 5-fold cross validation as the fitness measure.</p>
 
     <pre class="prettyprint lang-java"><code>
-    val data = readArff("data/weka/segment-test.arff", 19)
+    val data = read.arff("data/weka/segment-test.arff", 19)
     val (x, y) = data.unzipInt
 
     val trainer = new GradientTreeBoost.Trainer(100)
@@ -293,7 +293,7 @@
         The correlation matrix is recommended when variables are measured in different scales.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val pendigits = readTable("data/classification/pendigits.txt", Some((new NominalAttribute("class"), 16)))
+    val pendigits = read.table("data/classification/pendigits.txt", Some((new NominalAttribute("class"), 16)))
     val (x, y) = pendigits.unzipInt
     val pc = pca(x)
     screeplot(pc)

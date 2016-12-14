@@ -116,7 +116,7 @@
         neurons.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = readTable("shell/src/universal/data/clustering/chameleon/t4.8k.txt").unzip
+    val x = read.table("data/clustering/chameleon/t4.8k.txt").unzip
     val map = som(x, 30, 30)
     hexmap(map.umatrix, Palette.jet(256))
     </code></pre>

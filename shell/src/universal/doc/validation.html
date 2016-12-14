@@ -173,7 +173,7 @@
         for classification or regression, respectively.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val data = readArff("data/weka/iris.arff", 4)
+    val data = read.arff("data/weka/iris.arff", 4)
     val (x, y) = data.unzipInt
     cv(x, y, 10) { case (x, y) => lda(x, y) }
     </code></pre>

@@ -226,10 +226,10 @@
     def read.csv(file: String, response: Option[(Attribute, Int)] = None, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
     </code></pre>
 
-    <p>By default, the parser <code>readTable</code> expects a white-space-separated-values file.
+    <p>By default, the parser <code>read.table</code> expects a white-space-separated-values file.
         Each line in the file corresponds to a row in the table. Within a line,
         fields are separated by white spaces, each field belonging to one table column.
-        The function <code>readCsv</code> is a shortcut to <code>readTable</code> with comma ',' as the delimiter
+        The function <code>read.csv</code> is a shortcut to <code>read.table</code> with comma ',' as the delimiter
         character. The file may contain comment lines (starting with '%') and missing values
         (indicated by placeholder '?'), which both can be parameterized. Optionally, the file may also have
         a header (e.g. the first row is column names) and the first column may be row id/names.</p>
@@ -262,7 +262,7 @@
 
     <h3 id="sparse-format">Coordinate Triple Tuple List</h3>
 
-    <p>The function <code>readSparseData</code> can read sparse data in coordinate triple tuple list format.</p>
+    <p>The function <code>read.coo</code> can read sparse data in coordinate triple tuple list format.</p>
 
     <pre class="prettyprint lang-scala"><code>
     def read.coo(file: String, arrayIndexOrigin: Int = 0): SparseDataset
@@ -312,7 +312,7 @@
 
     <h3 id="Harwell-Boeing">Harwell-Boeing Column-Compressed Sparse Matrix</h3>
 
-    <p>The function <code>readSparseMatrix</code> can read sparse matrix in Harwell-Boeing column-compressed format.</p>
+    <p>The function <code>read.hb</code> can read sparse matrix in Harwell-Boeing column-compressed format.</p>
 
     <pre class="prettyprint lang-scala"><code>
     def read.hb(file: String): SparseMatrix
