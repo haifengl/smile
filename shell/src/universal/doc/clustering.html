@@ -170,7 +170,7 @@
         distributions, each 300 samples.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = readTable("data/clustering/gaussian/six.txt").unzip
+    val x = read.table("data/clustering/gaussian/six.txt").unzip
     val clusters = hclust(pdist(x), "complete")
     dendrogram(clusters)
     </code></pre>
@@ -257,7 +257,7 @@
     <p>If the clusters are elongated, however, the results may be far from optimal.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = readTable("data/clustering/gaussian/elongate.txt").unzip
+    val x = read.table("data/clustering/gaussian/elongate.txt").unzip
     val clusters = kmeans(x, 2, runs = 20)
     val y = clusters.getClusterLabel
     plot(x, y, '.', Palette.COLORS)
@@ -454,7 +454,7 @@
         clusters it into 20 clusters.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val data = readLibsvm("data/libsvm/news20.dat")
+    val data = read.libsvm("data/libsvm/news20.dat")
     val clusters = sib(train, 20, 100, 8)
     </code></pre>
 
@@ -595,7 +595,7 @@
         in <code>O(log n)</code>, an overall runtime complexity of <code>O(n log n)</code> is obtained.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = readTable("data/clustering/chameleon/t4.8k.txt").unzip
+    val x = read.table("data/clustering/chameleon/t4.8k.txt").unzip
     val clusters = dbscan(x, 20, 10)
     val y = clusters.getClusterLabel
     plot(x, y, '.', Palette.COLORS)
@@ -714,7 +714,7 @@
         random samples.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = readTable("data/clustering/nonconvex/sincos.txt").unzip
+    val x = read.table("data/clustering/nonconvex/sincos.txt").unzip
     val clusters = specc(x, 2, 0.2)
     val y = clusters.getClusterLabel
     plot(x, y, 'o', Palette.COLORS)
@@ -759,7 +759,7 @@
         etc. Note that a random initialization is NOT appropriate.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = readTable("data/clustering/gaussian/six.txt").unzip
+    val x = read.table("data/clustering/gaussian/six.txt").unzip
     val clusters = mec(x, 20, 2.0)
     val y = clusters.getClusterLabel
     plot(x, y, '.', Palette.COLORS)
