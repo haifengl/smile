@@ -53,7 +53,7 @@ public class LancasterStemmer implements Stemmer {
      */
     private boolean stripPrefix;
 
-    private void readRules(InputStream is, ArrayList<String> rules, int[] index) {
+    private void readRules(InputStream is) {
         /**
          * Load rules from Lancaster_rules.txt
          */
@@ -86,45 +86,42 @@ public class LancasterStemmer implements Stemmer {
     }
 
     /**
-     * Constructor. By default, the stemmer will not strip prefix from words.
+     * Constructor with default rules. By default, the stemmer will not strip prefix from words.
      */
     public LancasterStemmer() {
         this(false);
     }
 
     /**
-     * Constructor.
+     * Constructor with default rules.
      * 
      * @param stripPrefix true if the stemmer will strip prefix such as kilo,
      * micro, milli, intra, ultra, mega, nano, pico, pseudo.
      */
     public LancasterStemmer(boolean stripPrefix) {
         this.stripPrefix = stripPrefix;
-        readRules(LancasterStemmer.class.getResourceAsStream("/smile/nlp/stemmer/Lancaster_rules.txt"), rules, index);
+        readRules(LancasterStemmer.class.getResourceAsStream("/smile/nlp/stemmer/Lancaster_rules.txt"));
     }
 
 
     /**
-     * Constructor. By default, the stemmer will not strip prefix from words.
-     * @param customizedRules an input stream to read additional rules. Note that the
-     *                        default rules remains.
+     * Constructor with customized rules. By default, the stemmer will not strip prefix from words.
+     * @param customizedRules an input stream to read customized rules.
      */
     public LancasterStemmer(InputStream customizedRules) {
         this(customizedRules, false);
     }
 
     /**
-     * Constructor.
+     * Constructor with customized rules.
      *
-     * @param customizedRules an input stream to read additional rules. Note that the
-     *                        default rules remains.
+     * @param customizedRules an input stream to read customized rules.
      * @param stripPrefix true if the stemmer will strip prefix such as kilo,
      * micro, milli, intra, ultra, mega, nano, pico, pseudo.
      */
     public LancasterStemmer(InputStream customizedRules, boolean stripPrefix) {
         this.stripPrefix = stripPrefix;
-        readRules(LancasterStemmer.class.getResourceAsStream("/smile/nlp/stemmer/Lancaster_rules.txt"), rules, index);
-        readRules(customizedRules, rules, index);
+        readRules(customizedRules);
     }
 
     /**
