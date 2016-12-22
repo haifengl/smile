@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.clustering;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -71,7 +72,8 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class KMeans extends PartitionClustering<double[]> {
+public class KMeans extends PartitionClustering<double[]> implements Serializable {
+    private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(KMeans.class);
 
     /**

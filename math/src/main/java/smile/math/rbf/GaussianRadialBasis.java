@@ -16,6 +16,7 @@
 
 package smile.math.rbf;
 
+import java.io.Serializable;
 import smile.math.Math;
 
 /**
@@ -42,7 +43,8 @@ import smile.math.Math;
  * 
  * @author Haifeng Li
  */
-public class GaussianRadialBasis implements RadialBasisFunction {
+public class GaussianRadialBasis implements RadialBasisFunction, Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The scale factor.

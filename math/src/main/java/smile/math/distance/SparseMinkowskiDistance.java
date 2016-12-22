@@ -16,8 +16,8 @@
 
 package smile.math.distance;
 
+import java.io.Serializable;
 import java.util.Iterator;
-
 import smile.math.SparseArray;
 
 /**
@@ -29,7 +29,8 @@ import smile.math.SparseArray;
  *
  * @author Haifeng Li
  */
-public class SparseMinkowskiDistance implements Metric<SparseArray> {
+public class SparseMinkowskiDistance implements Metric<SparseArray>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The order of Minkowski distance.

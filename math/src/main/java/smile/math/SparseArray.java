@@ -63,8 +63,6 @@ public class SparseArray implements Iterable<SparseArray.Entry> {
     /**
      * Constructor.
      * @param initialCapacity the number of rows in the matrix.
-     * @param ncols the number of columns in the matrix.
-     * @param size the number of nonzero entries in the matrix.
      */
     private SparseArray(int initialCapacity) {
         array = new ArrayList<>(initialCapacity);
