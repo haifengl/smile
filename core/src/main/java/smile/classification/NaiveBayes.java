@@ -18,6 +18,7 @@ package smile.classification;
 import smile.stat.distribution.Distribution;
 
 import java.io.Serializable;
+import smile.math.SparseArray;
 
 /**
  * Naive Bayes classifier. A naive Bayes classifier is a simple probabilistic
@@ -157,11 +158,11 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
      */
     private int[] nc;
     /**
-     * The number of terms in each class.
+     * The number of terms of each class.
      */
     private int[] nt;
     /**
-     * The number of terms in each class.
+     * The number of each term in each class.
      */
     private int[][] ntc;
     /**
@@ -490,6 +491,37 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
     }
 
     /**
+     * Online learning of naive Bayes classifier on a sequence,
+     * which is modeled as a bag of words. Note that this method is NOT
+     * applicable for naive Bayes classifier with general generation model.
+     *
+     * @param x training instance in sparse format.
+     * @param y training label in [0, k), where k is the number of classes.
+     */
+    public void learn(SparseArray x, int y) {
+        if (model == Model.GENERAL) {
+            throw new UnsupportedOperationException("General-mode Naive Bayes classifier doesn't support online learning.");
+        }
+
+        if (model == Model.MULTINOMIAL) {
+            for (SparseArray.Entry e : x) {
+                ntc[y][e.i] += e.x;
+                nt[y] += e.x;
+            }
+        } else {
+            for (SparseArray.Entry e : x) {
+                if (e.x > 0) {
+                    ntc[y][e.i]++;
+                }
+            }
+        }
+
+        n++;
+        nc[y]++;
+        update();
+    }
+
+    /**
      * Online learning of naive Bayes classifier on sequences,
      * which are modeled as a bag of words. Note that this method is NOT
      * applicable for naive Bayes classifier with general generation model.
@@ -614,6 +646,83 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
                             any = true;
                         } else {
                             logprob += Math.log(1.0 - condprob[i][j]);
+                        }
+                        break;
+                }
+            }
+
+            if (logprob > max && any) {
+                max = logprob;
+                label = i;
+            }
+
+            if (posteriori != null) {
+                posteriori[i] = logprob;
+            }
+        }
+
+        if (posteriori != null && any) {
+            double Z = 0.0;
+            for (int i = 0; i < k; i++) {
+                posteriori[i] = Math.exp(posteriori[i] - max);
+                Z += posteriori[i];
+            }
+
+            for (int i = 0; i < k; i++) {
+                posteriori[i] /= Z;
+            }
+        }
+
+        return label;
+    }
+
+    /**
+     * Predict the class of an instance.
+     *
+     * @param x the instance to be classified.
+     * @return the predicted class label. For MULTINOMIAL and BERNOULLI models,
+     * returns -1 if the instance does not contain any feature words.
+     */
+    public int predict(SparseArray x) {
+        return predict(x, null);
+    }
+
+    /**
+     * Predict the class of an instance.
+     *
+     * @param x the instance to be classified.
+     * @param posteriori the array to store a posteriori probabilities on output.
+     * @return the predicted class label. For MULTINOMIAL and BERNOULLI models,
+     * returns -1 if the instance does not contain any feature words.
+     */
+    public int predict(SparseArray x, double[] posteriori) {
+        if (posteriori != null && posteriori.length != k) {
+            throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
+        }
+
+        int label = -1;
+        double max = Double.NEGATIVE_INFINITY;
+        boolean any = model == Model.GENERAL ? true : false;
+        for (int i = 0; i < k; i++) {
+            double logprob = Math.log(priori[i]);
+
+            for (SparseArray.Entry e : x) {
+                switch (model) {
+                    case GENERAL:
+                        logprob += prob[i][e.i].logp(e.x);
+                        break;
+                    case MULTINOMIAL:
+                        if (e.x > 0) {
+                            logprob += e.x * Math.log(condprob[i][e.i]);
+                            any = true;
+                        }
+                        break;
+                    case BERNOULLI:
+                        if (e.x > 0) {
+                            logprob += Math.log(condprob[i][e.i]);
+                            any = true;
+                        } else {
+                            logprob += Math.log(1.0 - condprob[i][e.i]);
                         }
                         break;
                 }
