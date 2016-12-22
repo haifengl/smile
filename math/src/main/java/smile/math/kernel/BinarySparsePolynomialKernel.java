@@ -16,7 +16,8 @@
 
 package smile.math.kernel;
 
-import smile.math.Math;
+import java.lang.Math;
+import java.io.Serializable;
 
 /**
  * The polynomial kernel. k(u, v) = (&gamma; u<sup>T</sup>v - &lambda;)<sup>d</sup>,
@@ -27,7 +28,8 @@ import smile.math.Math;
  * 
  * @author Haifeng Li
  */
-public class BinarySparsePolynomialKernel implements MercerKernel<int[]> {
+public class BinarySparsePolynomialKernel implements MercerKernel<int[]>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     private int degree;
     private double scale;

@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.clustering;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,8 @@ import smile.sort.QuickSort;
  * 
  * @author Haifeng Li
  */
-public class XMeans extends KMeans {
+public class XMeans extends KMeans implements Serializable {
+    private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(XMeans.class);
 
     private static final double LOG2PI = Math.log(Math.PI * 2.0);

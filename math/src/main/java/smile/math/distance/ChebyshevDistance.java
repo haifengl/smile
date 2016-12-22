@@ -16,6 +16,8 @@
 
 package smile.math.distance;
 
+import java.io.Serializable;
+
 /**
  * Chebyshev distance (or Tchebychev distance), or L<sub>&infin;</sub> metric
  * is a metric defined on a vector space where the distance between two vectors
@@ -23,7 +25,8 @@ package smile.math.distance;
  * 
  * @author Haifeng Li
  */
-public class ChebyshevDistance implements Metric<double[]> {
+public class ChebyshevDistance implements Metric<double[]>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * Constructor.

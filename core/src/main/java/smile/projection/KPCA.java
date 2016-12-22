@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.projection;
 
+import java.io.Serializable;
 import smile.math.Math;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.EigenValueDecomposition;
@@ -52,7 +53,8 @@ import smile.math.matrix.EigenValueDecomposition;
  *
  * @author Haifeng Li
  */
-public class KPCA<T> implements Projection<T> {
+public class KPCA<T> implements Projection<T>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The dimension of feature space.

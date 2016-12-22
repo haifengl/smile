@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.regression;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import smile.data.Attribute;
@@ -98,7 +99,8 @@ import smile.validation.RegressionMeasure;
  * 
  * @author Haifeng Li
  */
-public class GradientTreeBoost implements Regression<double[]> {
+public class GradientTreeBoost implements Regression<double[]>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * Regression loss function.

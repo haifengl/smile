@@ -16,6 +16,7 @@
 
 package smile.math.kernel;
 
+import java.io.Serializable;
 import java.util.Iterator;
 
 import smile.math.Math;
@@ -27,7 +28,8 @@ import smile.math.SparseArray;
  * 
  * @author Haifeng Li
  */
-public class SparseThinPlateSplineKernel implements MercerKernel<SparseArray> {
+public class SparseThinPlateSplineKernel implements MercerKernel<SparseArray>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The width of the kernel.

@@ -16,6 +16,7 @@
 
 package smile.math.kernel;
 
+import java.io.Serializable;
 import smile.math.Math;
 import smile.math.SparseArray;
 
@@ -37,7 +38,8 @@ import smile.math.SparseArray;
  *
  * @author Haifeng Li
  */
-public class SparseHyperbolicTangentKernel implements MercerKernel<SparseArray> {
+public class SparseHyperbolicTangentKernel implements MercerKernel<SparseArray>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     private double scale;
     private double offset;

@@ -16,6 +16,8 @@
 
 package smile.math.distance;
 
+import java.io.Serializable;
+
 /**
  * In coding theory, the Lee distance is a distance between two strings
  * x<sub>1</sub>x<sub>2</sub>...x<sub>n</sub> and y<sub>1</sub>y<sub>2</sub>...y<sub>n</sub>
@@ -26,7 +28,8 @@ package smile.math.distance;
  * If q = 2 or q = 3 the Lee distance coincides with the Hamming distance.
  * @author Haifeng Li
  */
-public class LeeDistance implements Metric<int[]> {
+public class LeeDistance implements Metric<int[]>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     private int q;
 
