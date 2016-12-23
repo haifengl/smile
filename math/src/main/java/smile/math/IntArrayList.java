@@ -16,13 +16,16 @@
 
 package smile.math;
 
+import java.io.Serializable;
+
 /**
  * A resizeable, array-backed list of integer primitives.
  *
  * @author Haifeng Li
  */
 
-public final class IntArrayList {
+public final class IntArrayList implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The data of the list.

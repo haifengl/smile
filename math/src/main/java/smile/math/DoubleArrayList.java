@@ -16,13 +16,16 @@
 
 package smile.math;
 
+import java.io.Serializable;
+
 /**
  * A resizeable, array-backed list of double primitives.
  *
  * @author Haifeng Li
  */
 
-public final class DoubleArrayList {
+public final class DoubleArrayList implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The data of the list.
