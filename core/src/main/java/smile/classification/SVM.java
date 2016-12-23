@@ -333,7 +333,9 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
         /**
          * Support vector.
          */
-        class SupportVector {
+        class SupportVector implements Serializable {
+            private static final long serialVersionUID = 1L;
+
             /**
              * Support vector.
              */
