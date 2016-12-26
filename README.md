@@ -44,7 +44,7 @@ You can use the libraries through Maven central repository by adding the followi
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>1.2.1</version>
+      <version>1.2.2</version>
     </dependency>
 ```
 For NLP, use the artifactId smile-nlp.
@@ -54,7 +54,7 @@ For Scala API, please use
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-scala_2.11</artifactId>
-      <version>1.2.1</version>
+      <version>1.2.2</version>
     </dependency>
 ```
 
@@ -131,7 +131,7 @@ To use SmilePlot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>1.2.1</version>
+      <version>1.2.2</version>
     </dependency>
 ```
 
