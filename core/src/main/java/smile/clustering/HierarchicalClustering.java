@@ -16,6 +16,7 @@
 
 package smile.clustering;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Queue;
 import smile.clustering.linkage.Linkage;
@@ -51,7 +52,8 @@ import smile.sort.IntHeapSelect;
  * 
  * @author Haifeng Li
  */
-public class HierarchicalClustering {
+public class HierarchicalClustering implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * An n-1 by 2 matrix of which row i describes the merging of clusters at

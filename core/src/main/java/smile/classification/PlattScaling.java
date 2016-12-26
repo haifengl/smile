@@ -16,9 +16,10 @@
 
 package smile.classification;
 
+import java.io.Serializable;
+import static java.lang.Math.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static java.lang.Math.*;
 
 /**
  * Platt scaling or Platt calibration is a way of transforming the outputs
@@ -34,7 +35,9 @@ import static java.lang.Math.*;
  *
  * @author Haifeng Li
  */
-public class PlattScaling {
+public class PlattScaling implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     /** The scalar parameters to be learned by the algorithm. */
     private double alpha;
     private double beta;

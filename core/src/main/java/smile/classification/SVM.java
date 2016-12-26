@@ -327,12 +327,15 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
     /**
      * Online Two-class SVM.
      */
-    final class LASVM {
+    final class LASVM implements Serializable {
+        private static final long serialVersionUID = 1L;
 
         /**
          * Support vector.
          */
-        class SupportVector {
+        class SupportVector implements Serializable {
+            private static final long serialVersionUID = 1L;
+
             /**
              * Support vector.
              */

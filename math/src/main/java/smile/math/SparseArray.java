@@ -16,6 +16,7 @@
 
 package smile.math;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -25,7 +26,9 @@ import java.util.List;
  * @author Haifeng Li
  *
  */
-public class SparseArray implements Iterable<SparseArray.Entry> {
+public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
+    private static final long serialVersionUID = 1L;
+
     /**
      * The entry in a sparse array of double values.
      */
@@ -63,8 +66,6 @@ public class SparseArray implements Iterable<SparseArray.Entry> {
     /**
      * Constructor.
      * @param initialCapacity the number of rows in the matrix.
-     * @param ncols the number of columns in the matrix.
-     * @param size the number of nonzero entries in the matrix.
      */
     private SparseArray(int initialCapacity) {
         array = new ArrayList<>(initialCapacity);
