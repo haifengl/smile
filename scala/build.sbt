@@ -1,6 +1,6 @@
 name := "smile-scala"
 
-crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0")
+crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1")
 
 // Parent project disables Scala as most libraries are in Java.
 // Enable it as this is a Scala project.

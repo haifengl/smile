@@ -34,5 +34,5 @@ fi
 
 #sbt publish-signed
 #sbt ++2.10.6 scala/publish-signed
-#sbt ++2.12.0 scala/publish-signed
+#sbt ++2.12.1 scala/publish-signed
 #check_error "Publishing"
