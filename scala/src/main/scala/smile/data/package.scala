@@ -60,7 +60,7 @@ private[data] class PimpedDataset(data: AttributeDataset) extends Iterable[Datum
 
   /** Returns the columns names. */
   def colnames: Array[String] = {
-    data.attributes().map(_.getName).toArray
+    data.attributes().map(_.getName)
   }
 
   /** Returns the columns names. */
