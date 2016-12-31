@@ -69,7 +69,7 @@ private[data] class PimpedDataset(data: AttributeDataset) extends Iterable[Datum
   def summary: Unit = {
     println(" \tmin\tq1\tmedian\tmean\tq3\tmax")
     val matrix = unzip
-    for (i <- 0 until colnames.length) {
+    for (i <- colnames.indices) {
       val x = matrix \ i
       val min = Math.min(x)
       val q1 = Math.q1(x)
@@ -151,53 +151,43 @@ private[data] class PimpedSparseDataset(data: SparseDataset) extends Iterable[Da
   }
 }
 
-private[data] class PimpedArray[T](data: Array[T])(implicit tag: ClassTag[T]) {
+abstract class PimpedArrayLike[T: ClassTag] {
+
+  val data: Array[T]
+
   /** Get an element */
-  def apply(rows: Int*): Array[T] = {
-    rows.map { row => data(row) }.toArray
-  }
+  def apply(rows: Int*): Array[T] = rows.map(row => data(row)).toArray
 
   /** Get a range of array */
-  def apply(rows: Range): Array[T] = {
-    rows.map { row => data(row) }.toArray
-  }
+  def apply(rows: Range): Array[T] = rows.map(row => data(row)).toArray
 
   /** Sampling the data.
     * @param n the number of samples.
     * @return samples
     */
   def sample(n: Int): Array[T] = {
-    val perm = (0 until data.length).toArray
+    val perm = data.indices.toArray
     Math.permutate(perm)
-    (0 until n).map{ i => data(perm(i)) }.toArray
+    (0 until n).map(i => data(perm(i))).toArray
   }
 
   /** Sampling the data.
     * @param f the fraction of samples.
     * @return samples
     */
-  def sample(f: Double): Array[T] = {
-    val perm = (0 until data.length).toArray
-    Math.permutate(perm)
-    val n = Math.round(data.length * f).toInt
-    (0 until n).map{ i => data(perm(i)) }.toArray
-  }
+  def sample(f: Double): Array[T] = sample(Math.round(data.length * f).toInt)
+
 }
 
-private[data] class PimpedArray2D(data: Array[Array[Double]]) {
+private[data] class PimpedArray[T](val data: Array[T])(implicit val tag: ClassTag[T])
+  extends PimpedArrayLike[T]
+
+private[data] class PimpedArray2D(val data: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]])
+  extends PimpedArrayLike[Array[Double]] {
+
   def nrows: Int = data.length
 
   def ncols: Int = data(0).length
-
-  /** Returns multiple rows. */
-  def apply(rows: Int*): Array[Array[Double]] = {
-    rows.map { row => data(row) }.toArray
-  }
-
-  /** Returns a range of rows. */
-  def apply(rows: Range): Array[Array[Double]] = {
-    rows.map { row => data(row) }.toArray
-  }
 
   /** Returns a submatrix. */
   def apply(rows: Range, cols: Range): Array[Array[Double]] = {
@@ -232,25 +222,5 @@ private[data] class PimpedArray2D(data: Array[Array[Double]]) {
     }
   }
 
-  /** Sampling the data.
-    * @param n the number of samples.
-    * @return samples
-    */
-  def sample(n: Int): Array[Array[Double]] = {
-    val perm = (0 to data.length).toArray
-    Math.permutate(perm)
-    (0 until n).map{ i => data(perm(i)) }.toArray
-  }
-
-  /** Sampling the data.
-    * @param f the fraction of samples.
-    * @return samples
-    */
-  def sample(f: Double): Array[Array[Double]] = {
-    val perm = (0 to data.length).toArray
-    Math.permutate(perm)
-    val n = Math.round(nrows * f).toInt
-    (0 until n).map{ i => data(perm(i)) }.toArray
-  }
 }
 }
