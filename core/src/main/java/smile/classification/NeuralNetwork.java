@@ -343,7 +343,7 @@ public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier
          */
         public Trainer setWeightDecay(double lambda) {
             if (lambda < 0.0 || lambda > 0.1) {
-                throw new IllegalArgumentException("Invalid momentum factor: " + alpha);
+                throw new IllegalArgumentException("Invalid weight decay factor: " + lambda);
             }
 
             this.lambda = lambda;
@@ -569,7 +569,7 @@ public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier
      */
     public void setWeightDecay(double lambda) {
         if (lambda < 0.0 || lambda > 0.1) {
-            throw new IllegalArgumentException("Invalid momentum factor: " + alpha);
+            throw new IllegalArgumentException("Invalid weight decay factor: " + lambda);
         }
 
         this.lambda = lambda;
