@@ -45,15 +45,16 @@ package object data {
     println(f"$min%1.5f\t$q1%1.5f\t$median%1.5f\t$mean%1.5f\t$q3%1.5f\t$max%1.5f")
   }
 
-  def default(attributes: Array[Attribute], x: Array[Array[Double]]): Array[Attribute] = {
-    val p = x(0).length
-    if (attributes == null) {
-      val attr = new Array[Attribute](p)
-      for (i <- 0 until p) attr(i) = new NumericAttribute(s"V$i")
-      attr
-    } else attributes
+  /** Returns an array of NumericAttribute objects
+    *
+    * @param n the number of attributes.
+    */
+  def numericAttributes(n: Int): Array[Attribute] = {
+    val attr = new Array[Attribute](n)
+    for (i <- 0 until n)
+      attr(i) = new NumericAttribute(s"V$i")
+    attr
   }
-
 }
 
 package data {

@@ -580,7 +580,7 @@ trait Operators {
     * @return Decision tree model.
     */
   def cart(x: Array[Array[Double]], y: Array[Int], maxNodes: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
-    val attr = default(attributes, x)
+    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
     time {
       new DecisionTree(attr, x, y, maxNodes, splitRule)
     }
@@ -640,7 +640,7 @@ trait Operators {
     * @return Random forest classification model.
     */
   def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 1, mtry: Int = -1, subsample: Double = 1.0, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
-    val attr = default(attributes, x)
+    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
 
     val p = x(0).length
 
@@ -732,7 +732,7 @@ trait Operators {
     * @return Gradient boosted trees.
     */
   def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
-    val attr = default(attributes, x)
+    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
 
     time {
       new GradientTreeBoost(attr, x, y, ntrees, maxNodes, shrinkage, subsample)
