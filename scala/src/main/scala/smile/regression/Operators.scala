@@ -251,7 +251,7 @@ trait Operators {
     * @return Regression tree model.
     */
   def cart(x: Array[Array[Double]], y: Array[Double], maxNodes: Int, attributes: Array[Attribute] = null): RegressionTree = {
-    val attr = default(attributes, x)
+    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
 
     time {
       new RegressionTree(attr, x, y, maxNodes)
@@ -313,7 +313,7 @@ trait Operators {
   def randomForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 5, mtry: Int = -1, subsample: Double = 1.0): RandomForest = {
     val p = x(0).length
 
-    val attr = default(attributes, x)
+    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
 
     val m = if (mtry <= 0) p / 3 else mtry
 
@@ -403,7 +403,7 @@ trait Operators {
     */
   def gbm(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
 
-    val attr = default(attributes, x)
+    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
 
     time {
       new GradientTreeBoost(attr, x, y, loss, ntrees, maxNodes, shrinkage, subsample)
