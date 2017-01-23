@@ -44,6 +44,16 @@ package object data {
     val max = Math.max(x)
     println(f"$min%1.5f\t$q1%1.5f\t$median%1.5f\t$mean%1.5f\t$q3%1.5f\t$max%1.5f")
   }
+
+  def default(attributes: Array[Attribute], x: Array[Array[Double]]): Array[Attribute] = {
+    val p = x(0).length
+    if (attributes == null) {
+      val attr = new Array[Attribute](p)
+      for (i <- 0 until p) attr(i) = new NumericAttribute(s"V$i")
+      attr
+    } else attributes
+  }
+
 }
 
 package data {
