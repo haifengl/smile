@@ -29,9 +29,9 @@ public class D4Wavelet extends Wavelet {
      * Wavelet coefficients.
      */
     private static final double C0 =  0.4829629131445341;
-    private static final double C1 =  0.8365163037378077;
+    private static final double C1 =  0.8365163037378079;
     private static final double C2 =  0.2241438680420134;
-    private static final double C3 = -0.1294095225512603;
+    private static final double C3 = -0.1294095225512604;
 
     /**
      * Workspace.
@@ -42,7 +42,7 @@ public class D4Wavelet extends Wavelet {
      * Constructor.
      */
     public D4Wavelet() {
-        super(null);
+        super(new double[]{0.4829629131445341, 0.8365163037378079, 0.2241438680420134, -0.1294095225512604});
     }
 
     @Override
