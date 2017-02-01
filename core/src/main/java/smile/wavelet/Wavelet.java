@@ -55,20 +55,18 @@ public class Wavelet {
      * Constructor. Create a wavelet with given coefficients.
      */
     public Wavelet(double[] coefficients) {
-        if (coefficients != null) {
-            ncof = coefficients.length;
+        ncof = coefficients.length;
 
-            ioff = joff = -(ncof >> 1);
-            // ioff = -2; joff = -ncof + 2; // Alternative centering, used by D4.
+        ioff = joff = -(ncof >> 1);
+        // ioff = -2; joff = -ncof + 2; // Alternative centering, used by D4.
 
-            cc = coefficients;
+        cc = coefficients;
 
-            double sig = -1.0;
-            cr = new double[ncof];
-            for (int i = 0; i < ncof; i++) {
-                cr[ncof - 1 - i] = sig * cc[i];
-                sig = -sig;
-            }
+        double sig = -1.0;
+        cr = new double[ncof];
+        for (int i = 0; i < ncof; i++) {
+            cr[ncof - 1 - i] = sig * cc[i];
+            sig = -sig;
         }
     }
 
