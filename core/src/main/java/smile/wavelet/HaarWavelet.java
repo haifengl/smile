@@ -44,7 +44,7 @@ public class HaarWavelet extends Wavelet {
      * Constructor.
      */
     public HaarWavelet() {
-        super(null);
+        super(new double[]{C, C});
     }
 
     @Override
