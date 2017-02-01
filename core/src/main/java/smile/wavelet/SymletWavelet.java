@@ -17,12 +17,12 @@
 package smile.wavelet;
 
 /**
- * Symmlet wavelets. The symmlets have compact support and were constructed to
+ * Symlet wavelets. The symlets have compact support and were constructed to
  * be as nearly symmetric (least asymmetric) as possible.
  *
  * @author Haifeng Li
  */
-public class SymmletWavelet extends Wavelet {
+public class SymletWavelet extends Wavelet {
     /**
      * S8 coefficients
      */
