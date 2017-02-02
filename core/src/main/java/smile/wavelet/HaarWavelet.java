@@ -49,7 +49,7 @@ public class HaarWavelet extends Wavelet {
 
     @Override
     void forward(double[] a, int n) {
-        if (n < 4) {
+        if (n < 2) {
             return;
         }
 
@@ -57,23 +57,20 @@ public class HaarWavelet extends Wavelet {
             workspace = new double[n];
         }
 
-        int i, j;
         int n1 = n - 1;
         int nh = n >> 1;
         
-        for (i = 0, j = 1; j < n1; j+=2, i++) {
-            workspace[i] = C * (a[j] + a[j + 1]);
+        for (int i = 0, j = 0; j < n1; j+=2, i++) {
+            workspace[i]      = C * (a[j] + a[j + 1]);
             workspace[i + nh] = C * (a[j] - a[j + 1]);
         }
-        workspace[i] = C * (a[n - 1] + a[0]);
-        workspace[i + nh] = C * (a[n - 1] - a[0]);
 
         System.arraycopy(workspace, 0, a, 0, n);
     }
 
     @Override
     void backward(double[] a, int n) {
-        if (n < 4) {
+        if (n < 2) {
             return;
         }
 
@@ -81,13 +78,12 @@ public class HaarWavelet extends Wavelet {
             workspace = new double[n];
         }
 
+        int n1 = n - 1;
         int nh = n >> 1;
-        int nh1 = nh - 1;
-        workspace[0] = C * (a[nh1] - a[n - 1]);
-        workspace[n - 1] = C * (a[nh1] + a[n - 1]);
-        for (int i = 0, j = 1; i < nh1; i++) {
-            workspace[j++] = C * (a[i] + a[i + nh]);
-            workspace[j++] = C * (a[i] - a[i + nh]);
+
+        for (int i = 0, j = 0; j < n1; j+=2, i++) {
+            workspace[j]     = C * (a[i] + a[i + nh]);
+            workspace[j + 1] = C * (a[i] - a[i + nh]);
         }
 
         System.arraycopy(workspace, 0, a, 0, n);
