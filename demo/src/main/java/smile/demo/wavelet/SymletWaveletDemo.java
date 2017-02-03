@@ -24,7 +24,7 @@ import javax.swing.JPanel;
 
 import smile.plot.LinePlot;
 import smile.plot.PlotCanvas;
-import smile.wavelet.SymmletWavelet;
+import smile.wavelet.SymletWavelet;
 import smile.wavelet.Wavelet;
 import smile.wavelet.WaveletShrinkage;
 
@@ -33,8 +33,8 @@ import smile.wavelet.WaveletShrinkage;
  * @author Haifeng Li
  */
 @SuppressWarnings("serial")
-public class SymmletWaveletDemo extends JPanel {
-    public SymmletWaveletDemo() {
+public class SymletWaveletDemo extends JPanel {
+    public SymletWaveletDemo() {
         super(new GridLayout(3,3));
         setBackground(Color.WHITE);
 
@@ -42,7 +42,7 @@ public class SymmletWaveletDemo extends JPanel {
             double[] x = new double[1024];
             x[3] = 1.0;
 
-            Wavelet wavelet = new SymmletWavelet(i);
+            Wavelet wavelet = new SymletWavelet(i);
             wavelet.inverse(x);
 
             PlotCanvas canvas = LinePlot.plot(x);
@@ -92,14 +92,14 @@ public class SymmletWaveletDemo extends JPanel {
 
         PlotCanvas canvas = LinePlot.plot(sp500);
         double[] smooth = sp500.clone();
-        WaveletShrinkage.denoise(smooth, new SymmletWavelet(8));
+        WaveletShrinkage.denoise(smooth, new SymletWavelet(8));
         canvas.line(smooth, Color.BLUE);
         canvas.setTitle("S&P 500 (S8, Hard)");
         add(canvas);
 
         canvas = LinePlot.plot(sp500);
         smooth = sp500.clone();
-        WaveletShrinkage.denoise(smooth, new SymmletWavelet(8), true);
+        WaveletShrinkage.denoise(smooth, new SymletWavelet(8), true);
         canvas.line(smooth, Color.BLUE);
         canvas.setTitle("S&P 500 (S8, Soft)");
         add(canvas);
@@ -114,7 +114,7 @@ public class SymmletWaveletDemo extends JPanel {
         JFrame frame = new JFrame("Least Asymmetric Wavelet");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
-        frame.add(new SymmletWaveletDemo());
+        frame.add(new SymletWaveletDemo());
         frame.setVisible(true);
     }
 }

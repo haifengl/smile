@@ -122,7 +122,7 @@ import smile.demo.wavelet.CoifletWaveletDemo;
 import smile.demo.wavelet.D4WaveletDemo;
 import smile.demo.wavelet.DaubechiesWaveletDemo;
 import smile.demo.wavelet.HaarWaveletDemo;
-import smile.demo.wavelet.SymmletWaveletDemo;
+import smile.demo.wavelet.SymletWaveletDemo;
 
 @SuppressWarnings("serial")
 public class SmileDemo extends JPanel implements TreeSelectionListener {
@@ -448,7 +448,7 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         algorithm = new DefaultMutableTreeNode(new CoifletWaveletDemo());
         category.add(algorithm);
 
-        algorithm = new DefaultMutableTreeNode(new SymmletWaveletDemo());
+        algorithm = new DefaultMutableTreeNode(new SymletWaveletDemo());
         category.add(algorithm);
 
         algorithm = new DefaultMutableTreeNode(new BestLocalizedWaveletDemo());
