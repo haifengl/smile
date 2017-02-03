@@ -78,11 +78,11 @@ public class WaveletShrinkage {
         double lambda = error * Math.sqrt(2 * Math.log(n));
 
         if (soft) {
-            for (int i = 4; i < n; i++) {
+            for (int i = 2; i < n; i++) {
                 t[i] = Math.signum(t[i]) * Math.max(Math.abs(t[i]) - lambda, 0.0);
             }
         } else {
-            for (int i = 4; i < n; i++) {
+            for (int i = 2; i < n; i++) {
                 if (Math.abs(t[i]) < lambda) {
                     t[i] = 0.0;
                 }
