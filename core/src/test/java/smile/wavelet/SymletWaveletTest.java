@@ -27,9 +27,9 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class SymmletWaveletTest {
+public class SymletWaveletTest {
 
-    public SymmletWaveletTest() {
+    public SymletWaveletTest() {
     }
 
     @BeforeClass
