@@ -57,13 +57,6 @@ package smile.wavelet;
  */
 public class DaubechiesWavelet extends Wavelet {
     /**
-     * D2 coefficients
-     */
-    private static final double[] c2 = {
-        0.7071067811865475,  0.7071067811865475
-    };
-
-    /**
      * D4 coefficients
      */
     private static final double[] c4 = {
@@ -158,12 +151,11 @@ public class DaubechiesWavelet extends Wavelet {
 
     /**
      * Constructor. Create a Daubechies wavelet with n coefficients.
-     * n = 2, 4, 6, 8, 10, 12, 14, 16, 18, or 20 are supported. For n = 2 or 4,
-     * HaarWavelet and D4Wavelet can be used instead, correspondingly.
+     * n = 4, 6, 8, 10, 12, 14, 16, 18, or 20 are supported. For n = 4,
+     * D4Wavelet can be used instead.
      */
     public DaubechiesWavelet(int n) {
-        super(n == 2 ? c2 :
-              n == 4 ? c4 :
+        super(n == 4 ? c4 :
               n == 6 ? c6 :
               n == 8 ? c8 :
               n == 10 ? c10 :
@@ -174,7 +166,7 @@ public class DaubechiesWavelet extends Wavelet {
               n == 20 ? c20 : null
             );
 
-        if ( n < 2 || n > 20 || n % 2 != 0) {
+        if ( n < 4 || n > 20 || n % 2 != 0) {
             throw new IllegalArgumentException(String.format("n = %d not yet implemented.", n));
         }
     }
