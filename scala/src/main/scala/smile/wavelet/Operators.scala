@@ -27,7 +27,7 @@ trait Operators {
     * d, la, bl and c, respectively. Following the prefix, the filter name consists of an integer indicating length.
     * Supported lengths are as follows:
     *
-    * '''Daubechies''' 2,4,6,8,10,12,14,16,18,20.
+    * '''Daubechies''' 4,6,8,10,12,14,16,18,20.
     *
     * '''Least Asymetric''' 8,10,12,14,16,18,20.
     *
@@ -35,8 +35,7 @@ trait Operators {
     *
     * '''Coiflet''' 6,12,18,24,30.
     *
-    * Additionally "haar" is supported for Haar wavelet. Although Haar wavelet is a special case of
-    * the Daubechies wavelet transform filter of length 2, the implementation of "haar" is different from "d2".
+    * Additionally "haar" is supported for Haar wavelet.
     *
     * Besides, "d4", the simplest and most localized wavelet, uses a different centering method
     * from other Daubechies wavelet.
@@ -63,13 +62,13 @@ trait Operators {
       case "d16"  => new DaubechiesWavelet(16)
       case "d18"  => new DaubechiesWavelet(18)
       case "d20"  => new DaubechiesWavelet(20)
-      case "la8"  => new SymmletWavelet(8)
-      case "la10" => new SymmletWavelet(10)
-      case "la12" => new SymmletWavelet(12)
-      case "la14" => new SymmletWavelet(14)
-      case "la16" => new SymmletWavelet(16)
-      case "la18" => new SymmletWavelet(18)
-      case "la20" => new SymmletWavelet(20)
+      case "la8"  => new SymletWavelet(8)
+      case "la10" => new SymletWavelet(10)
+      case "la12" => new SymletWavelet(12)
+      case "la14" => new SymletWavelet(14)
+      case "la16" => new SymletWavelet(16)
+      case "la18" => new SymletWavelet(18)
+      case "la20" => new SymletWavelet(20)
     }
   }
 
