@@ -58,7 +58,6 @@ public class Wavelet {
         ncof = coefficients.length;
 
         ioff = joff = -(ncof >> 1);
-        // ioff = -2; joff = -ncof + 2; // Alternative centering, used by D4.
 
         cc = coefficients;
 
@@ -74,7 +73,7 @@ public class Wavelet {
      * Applies the wavelet filter to a data vector a[0, n-1].
      */
     void forward(double[] a, int n) {
-        if (n < 4) {
+        if (n < ncof) {
             return;
         }
 
@@ -106,7 +105,7 @@ public class Wavelet {
      * Applies the inverse wavelet filter to a data vector a[0, n-1].
      */
     void backward(double[] a, int n) {
-        if (n < 4) {
+        if (n < ncof) {
             return;
         }
 
@@ -146,11 +145,11 @@ public class Wavelet {
             throw new IllegalArgumentException("The data vector size is not a power of 2.");
         }
 
-        if (n < 4) {
-            throw new IllegalArgumentException("The data vector size is less than 4.");
+        if (n < ncof) {
+            throw new IllegalArgumentException("The data vector size is less than wavelet coefficient size.");
         }
 
-        for (int nn = n; nn >= 4; nn >>= 1) {
+        for (int nn = n; nn >= ncof; nn >>= 1) {
             forward(a, nn);
         }
     }
@@ -165,11 +164,12 @@ public class Wavelet {
             throw new IllegalArgumentException("The data vector size is not a power of 2.");
         }
 
-        if (n < 4) {
-            throw new IllegalArgumentException("The data vector size is less than 4.");
+        if (n < ncof) {
+            throw new IllegalArgumentException("The data vector size is less than wavelet coefficient size.");
         }
 
-        for (int nn = 4; nn <= n; nn <<= 1) {
+        int start = n >> (int) Math.floor(Math.log2(n/(ncof-1)));
+        for (int nn = start; nn <= n; nn <<= 1) {
             backward(a, nn);
         }
     }
