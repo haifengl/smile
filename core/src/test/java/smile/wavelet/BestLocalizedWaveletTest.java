@@ -54,7 +54,10 @@ public class BestLocalizedWaveletTest {
         int[] order = {14, 18, 20};
         for (int p : order) {
             System.out.format("p = %d%n", p);
-            double[] a = {.2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3};
+            double[] a = {
+                    .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3,
+                    .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3
+            };
             double[] b = a.clone();
             Wavelet instance = new BestLocalizedWavelet(p);
             instance.transform(a);
