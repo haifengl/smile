@@ -706,6 +706,7 @@ public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier
             } else if (errorFunction == ErrorFunction.CROSS_ENTROPY) {
                 if (activationFunction == ActivationFunction.SOFTMAX) {
                     error -= output[i] * log(out);
+                    g *= -1.0;
                 } else if (activationFunction == ActivationFunction.LOGISTIC_SIGMOID) {
                     error = -output[i] * log(out) - (1.0 - output[i]) * log(1.0 - out);
                 }
