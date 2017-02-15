@@ -307,4 +307,22 @@ public class SimpleTokenizerTest {
         }
     }
 
+    /**
+     * Test of split method, of class TreebankWordTokenizer.
+     */
+    @Test
+    public void testTokenizeToC() {
+        System.out.println("tokenize 1.2 Interpretation.....................................................................................................................3");
+        // No-break space and em-space
+        String text = "1.2 Interpretation.....................................................................................................................3";
+        String[] expResult = {"1.2", "Interpretation", ".....................................................................................................................", "3"};
+
+        SimpleTokenizer instance = new SimpleTokenizer();
+        String[] result = instance.split(text);
+
+        assertEquals(expResult.length, result.length);
+        for (int i = 0; i < result.length; i++) {
+            assertEquals(expResult[i], result[i]);
+        }
+    }
 }

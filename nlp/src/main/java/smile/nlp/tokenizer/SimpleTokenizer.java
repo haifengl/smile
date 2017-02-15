@@ -91,7 +91,10 @@ public class SimpleTokenizer implements Tokenizer {
         // Separate single quotes if they're followed by a space.
         Pattern.compile("(?U)('\\s)"),
         // Separate periods that come before newline or end of string.
-        Pattern.compile("(?U)\\. *(\\n|$)")
+        Pattern.compile("(?U)\\. *(\\n|$)"),
+        // Separate continuous periods such as ... in ToC.
+        Pattern.compile("(?U)(\\.{3,})")
+
     };
 
     private static final Pattern WHITESPACE = Pattern.compile("(?U)\\s+");
@@ -136,6 +139,7 @@ public class SimpleTokenizer implements Tokenizer {
         text = DELIMITERS[1].matcher(text).replaceAll(" $1");
         text = DELIMITERS[2].matcher(text).replaceAll(" $1");
         text = DELIMITERS[3].matcher(text).replaceAll(" . ");
+        text = DELIMITERS[4].matcher(text).replaceAll(" $1 ");
 
         String[] words = WHITESPACE.split(text);
         if (words.length > 1 && words[words.length-1].equals(".")) {
