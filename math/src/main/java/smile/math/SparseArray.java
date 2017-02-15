@@ -32,7 +32,8 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
     /**
      * The entry in a sparse array of double values.
      */
-    public class Entry implements Serializable{
+    public static class Entry implements Serializable {
+        private static final long serialVersionUID = 1L;
 
         /**
          * The index of entry.
