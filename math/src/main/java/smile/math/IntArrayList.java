@@ -38,15 +38,10 @@ public final class IntArrayList implements Serializable {
     private int size;
 
     /**
-     * The default capacity for new lists.
-     */
-    private static final int DEFAULT_CAPACITY = 10;
-
-    /**
      * Constructs an empty list.
      */
     public IntArrayList() {
-        this(DEFAULT_CAPACITY);
+        this(10);
     }
 
     /**
@@ -65,7 +60,7 @@ public final class IntArrayList implements Serializable {
      * @param values the initial values of array list.
      */
     public IntArrayList(int[] values) {
-        this(Math.max(values.length, DEFAULT_CAPACITY));
+        this(Math.max(values.length, 10));
         add(values);
     }
 
