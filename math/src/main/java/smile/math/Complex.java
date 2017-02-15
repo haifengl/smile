@@ -15,13 +15,16 @@
  *******************************************************************************/
 package smile.math;
 
+import java.io.Serializable;
+
 /**
  * Complex number. The object is immutable so once you create and initialize
  * a Complex object, you cannot modify it.
  *
  * @author Haifeng Li
  */
-public class Complex {
+public class Complex implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The real part.
