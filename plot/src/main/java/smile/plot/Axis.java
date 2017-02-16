@@ -198,7 +198,7 @@ public class Axis {
             }
         }
 
-        int decimal = 0;
+        int decimal;
         String label;
 
         gridLabels = new Label[labelsSlicing.length];

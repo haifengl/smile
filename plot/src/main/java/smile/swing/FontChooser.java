@@ -422,7 +422,6 @@ public class FontChooser extends JComponent {
 
         dialog.setVisible(true);
         dialog.dispose();
-        dialog = null;
 
         return dialogResultValue;
     }

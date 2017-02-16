@@ -2059,7 +2059,7 @@ public class EigenValueDecomposition {
      * Sort eigenvalues.
      */
     private static void sort(double[] d, double[] e) {
-        int i = 0;
+        int i;
         int n = d.length;
         for (int j = 1; j < n; j++) {
             double real = d[j];
@@ -2080,7 +2080,7 @@ public class EigenValueDecomposition {
      * Sort eigenvalues and eigenvectors.
      */
     private static void sort(double[] d, double[] e, double[][] V) {
-        int i = 0;
+        int i;
         int n = d.length;
         double[] temp = new double[n];
         for (int j = 1; j < n; j++) {
