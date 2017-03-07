@@ -481,7 +481,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
      *                  sampling without replacement.
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample) {
-        this(attributes, x, y, ntrees, 100, 5, mtry, subsample, DecisionTree.SplitRule.GINI);
+        this(attributes, x, y, ntrees, maxNodes, nodeSize, mtry, subsample, DecisionTree.SplitRule.GINI);
     }
 
     /**
