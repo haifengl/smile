@@ -21,9 +21,9 @@ import java.util.Iterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.matrix.EigenValueDecomposition;
-import smile.math.matrix.IMatrix;
-import smile.math.matrix.LUDecomposition;
 import smile.math.matrix.Matrix;
+import smile.math.matrix.RowMajorMatrix;
+import smile.math.matrix.LUDecomposition;
 import smile.math.matrix.QRDecomposition;
 import smile.math.matrix.SingularValueDecomposition;
 import smile.sort.QuickSelect;
@@ -4261,7 +4261,7 @@ public class Math {
      * @return the largest eigen value.
      */
     public static double eigen(double[][] A, double[] v) {
-        return EigenValueDecomposition.eigen(new Matrix(A), v);
+        return EigenValueDecomposition.eigen(new RowMajorMatrix(A), v);
     }
 
     /**
@@ -4276,7 +4276,7 @@ public class Math {
      * @return the largest eigen value.
      */
     public static double eigen(double[][] A, double[] v, double tol) {
-        return EigenValueDecomposition.eigen(new Matrix(A), v, tol);
+        return EigenValueDecomposition.eigen(new RowMajorMatrix(A), v, tol);
     }
 
     /**
@@ -4289,7 +4289,7 @@ public class Math {
      * On output, it is the eigen vector corresponding largest eigen value.
      * @return the largest eigen value.
      */
-    public static double eigen(IMatrix A, double[] v) {
+    public static double eigen(Matrix A, double[] v) {
         return EigenValueDecomposition.eigen(A, v);
     }
 
@@ -4304,7 +4304,7 @@ public class Math {
      * @param tol the desired convergence tolerance.
      * @return the largest eigen value.
      */
-    public static double eigen(IMatrix A, double[] v, double tol) {
+    public static double eigen(Matrix A, double[] v, double tol) {
         return EigenValueDecomposition.eigen(A, v, tol);
     }
 
@@ -4313,7 +4313,7 @@ public class Math {
      * iterative Lanczos algorithm.
      */
     public static EigenValueDecomposition eigen(double[][] A, int k) {
-        return EigenValueDecomposition.decompose(new Matrix(A), k);
+        return EigenValueDecomposition.decompose(new RowMajorMatrix(A), k);
     }
 
     /**
@@ -4437,278 +4437,6 @@ public class Math {
         }
 
         return u;
-    }
-
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @return the estimated error.
-     */
-    public static double solve(IMatrix A, double[] b, double[] x) {
-        return solve(A, A, b, x);
-    }
-
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @param Ap the preconditioned matrix of A.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @return the estimated error.
-     */
-    public static double solve(IMatrix A, IMatrix Ap, double[] b, double[] x) {
-        return solve(A, Ap, b, x, 1E-10);
-    }
-
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @param tol the desired convergence tolerance.
-     * @return the estimated error.
-     */
-    public static double solve(IMatrix A, double[] b, double[] x, double tol) {
-        return solve(A, A, b, x, tol);
-    }
-
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @param Ap the preconditioned matrix of A.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @param tol the desired convergence tolerance.
-     * @return the estimated error.
-     */
-    public static double solve(IMatrix A, IMatrix Ap, double[] b, double[] x, double tol) {
-        return solve(A, Ap, b, x, tol, 1);
-    }
-
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @param itol specify which convergence test is applied. If itol = 1,
-     * iteration stops when |Ax - b| / |b| is less than the parameter tolerance.
-     * If itol = 2, the stop criterion is
-     * |A<sup>-1</sup> (Ax - b)| / |A<sup>-1</sup>b| is less than tolerance.
-     * If tol = 3, |x<sub>k+1</sub> - x<sub>k</sub>|<sub>2</sub> is less than
-     * tolerance. The setting of tol = 4 is same as tol = 3 except that the
-     * L<sub>&infin;</sub> norm instead of L<sub>2</sub>.
-     * @param tol the desired convergence tolerance.
-     * @return the estimated error.
-     */
-    public static double solve(IMatrix A, double[] b, double[] x, double tol, int itol) {
-        return solve(A, A, b, x, tol, itol);
-    }
-
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @param Ap the preconditioned matrix of A.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @param itol specify which convergence test is applied. If itol = 1,
-     * iteration stops when |Ax - b| / |b| is less than the parameter tolerance.
-     * If itol = 2, the stop criterion is
-     * |A<sup>-1</sup> (Ax - b)| / |A<sup>-1</sup>b| is less than tolerance.
-     * If tol = 3, |x<sub>k+1</sub> - x<sub>k</sub>|<sub>2</sub> is less than
-     * tolerance. The setting of tol = 4 is same as tol = 3 except that the
-     * L<sub>&infin;</sub> norm instead of L<sub>2</sub>.
-     * @param tol the desired convergence tolerance.
-     * @return the estimated error.
-     */
-    public static double solve(IMatrix A, IMatrix Ap, double[] b, double[] x, double tol, int itol) {
-        return solve(A, Ap, b, x, tol, itol, 2 * Math.max(A.nrows(), A.ncols()));
-    }
-
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * This method can be called repeatedly, with maxIter &lt; n, to monitor how
-     * error decreases.
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @param itol specify which convergence test is applied. If itol = 1,
-     * iteration stops when |Ax - b| / |b| is less than the parameter tolerance.
-     * If itol = 2, the stop criterion is
-     * |A<sup>-1</sup> (Ax - b)| / |A<sup>-1</sup>b| is less than tolerance.
-     * If tol = 3, |x<sub>k+1</sub> - x<sub>k</sub>|<sub>2</sub> is less than
-     * tolerance. The setting of tol = 4 is same as tol = 3 except that the
-     * L<sub>&infin;</sub> norm instead of L<sub>2</sub>.
-     * @param tol the desired convergence tolerance.
-     * @param maxIter the maximum number of allowed iterations.
-     * @return the estimated error.
-     */
-    public static double solve(IMatrix A, double[] b, double[] x, double tol, int itol, int maxIter) {
-        return solve(A, A, b, x, tol, itol, maxIter);
-    }
-    
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * This method can be called repeatedly, with maxIter &lt; n, to monitor how
-     * error decreases.
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @param Ap the preconditioned matrix of A.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @param itol specify which convergence test is applied. If itol = 1,
-     * iteration stops when |Ax - b| / |b| is less than the parameter tolerance.
-     * If itol = 2, the stop criterion is
-     * |A<sup>-1</sup> (Ax - b)| / |A<sup>-1</sup>b| is less than tolerance.
-     * If tol = 3, |x<sub>k+1</sub> - x<sub>k</sub>|<sub>2</sub> is less than
-     * tolerance. The setting of tol = 4 is same as tol = 3 except that the
-     * L<sub>&infin;</sub> norm instead of L<sub>2</sub>.
-     * @param tol the desired convergence tolerance.
-     * @param maxIter the maximum number of allowed iterations.
-     * @return the estimated error.
-     */
-    public static double solve(IMatrix A, IMatrix Ap, double[] b, double[] x, double tol, int itol, int maxIter) {
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);            
-        }
-        
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);            
-        }
-        
-        if (itol < 1 || itol > 4) {
-            throw new IllegalArgumentException(String.format("Illegal itol: %d", itol));
-        }
-
-        double err = 0.0;
-        double ak, akden, bk, bkden = 1.0, bknum, bnrm, dxnrm, xnrm, zm1nrm, znrm = 0.0;
-        int j, n = b.length;
-
-        double[] p = new double[n];
-        double[] pp = new double[n];
-        double[] r = new double[n];
-        double[] rr = new double[n];
-        double[] z = new double[n];
-        double[] zz = new double[n];
-
-        A.ax(x, r);
-        for (j = 0; j < n; j++) {
-            r[j] = b[j] - r[j];
-            rr[j] = r[j];
-        }
-
-        if (itol == 1) {
-            bnrm = snorm(b, itol);
-            Ap.asolve(r, z);
-        } else if (itol == 2) {
-            Ap.asolve(b, z);
-            bnrm = snorm(z, itol);
-            Ap.asolve(r, z);
-        } else if (itol == 3 || itol == 4) {
-            Ap.asolve(b, z);
-            bnrm = snorm(z, itol);
-            Ap.asolve(r, z);
-            znrm = snorm(z, itol);
-        } else {
-            throw new IllegalArgumentException(String.format("Illegal itol: %d", itol));
-        }
-
-        for (int iter = 1; iter <= maxIter; iter++) {
-            Ap.asolve(rr, zz);
-            for (bknum = 0.0, j = 0; j < n; j++) {
-                bknum += z[j] * rr[j];
-            }
-            if (iter == 1) {
-                for (j = 0; j < n; j++) {
-                    p[j] = z[j];
-                    pp[j] = zz[j];
-                }
-            } else {
-                bk = bknum / bkden;
-                for (j = 0; j < n; j++) {
-                    p[j] = bk * p[j] + z[j];
-                    pp[j] = bk * pp[j] + zz[j];
-                }
-            }
-            bkden = bknum;
-            A.ax(p, z);
-            for (akden = 0.0, j = 0; j < n; j++) {
-                akden += z[j] * pp[j];
-            }
-            ak = bknum / akden;
-            A.atx(pp, zz);
-            for (j = 0; j < n; j++) {
-                x[j] += ak * p[j];
-                r[j] -= ak * z[j];
-                rr[j] -= ak * zz[j];
-            }
-            Ap.asolve(r, z);
-            if (itol == 1) {
-                err = snorm(r, itol) / bnrm;
-            } else if (itol == 2) {
-                err = snorm(z, itol) / bnrm;
-            } else if (itol == 3 || itol == 4) {
-                zm1nrm = znrm;
-                znrm = snorm(z, itol);
-                if (Math.abs(zm1nrm - znrm) > EPSILON * znrm) {
-                    dxnrm = Math.abs(ak) * snorm(p, itol);
-                    err = znrm / Math.abs(zm1nrm - znrm) * dxnrm;
-                } else {
-                    err = znrm / bnrm;
-                    continue;
-                }
-                xnrm = snorm(x, itol);
-                if (err <= 0.5 * xnrm) {
-                    err /= xnrm;
-                } else {
-                    err = znrm / bnrm;
-                    continue;
-                }
-            }
-
-            if (iter % 10 == 0) {
-                logger.info(String.format("BCG: the error after %3d iterations: %.5g", iter, err));
-            }
-
-            if (err <= tol) {
-                logger.info(String.format("BCG: the error after %3d iterations: %.5g", iter, err));
-                break;
-            }
-        }
-
-        return err;
-    }
-
-    /**
-     * Compute L2 or L-infinity norms for a vector x, as signaled by itol.
-     */
-    private static double snorm(double[] x, int itol) {
-        int n = x.length;
-
-        if (itol <= 3) {
-            double ans = 0.0;
-            for (int i = 0; i < n; i++) {
-                ans += x[i] * x[i];
-            }
-            return Math.sqrt(ans);
-        } else {
-            int isamax = 0;
-            for (int i = 0; i < n; i++) {
-                if (Math.abs(x[i]) > Math.abs(x[isamax])) {
-                    isamax = i;
-                }
-            }
-
-            return Math.abs(x[isamax]);
-        }
     }
 
     /**

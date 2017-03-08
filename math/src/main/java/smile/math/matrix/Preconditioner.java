@@ -16,41 +16,18 @@
 
 package smile.math.matrix;
 
-import smile.math.*;
-
 /**
- * An abstract interface of dense matrix.
+ * The preconditioner matrix in the biconjugate gradient method.
  *
  * @author Haifeng Li
  */
-public interface DenseMatrix extends Matrix {
+public interface Preconditioner {
     /**
-     * Set the entry value at row i and column j.
+     * Solve A<sub>d</sub> * x = b for the preconditioner matrix A<sub>d</sub>.
+     * The preconditioner matrix A<sub>d</sub> is close to A and should be
+     * easy to solve for linear systems. This method is useful for preconditioned
+     * conjugate gradient method. The preconditioner matrix could be as simple
+     * as the trivial diagonal part of A in some cases.
      */
-    public DenseMatrix set(int i, int j, double x);
-
-    /**
-     * Set the entry value at row i and column j. For Scala users.
-     */
-    public DenseMatrix update(int i, int j, double x);
-
-    /**
-     * A[i][j] += x
-     */
-    public DenseMatrix add(int i, int j, double x);
-
-    /**
-     * A[i][j] -= x
-     */
-    public DenseMatrix sub(int i, int j, double x);
-
-    /**
-     * A[i][j] *= x
-     */
-    public DenseMatrix mul(int i, int j, double x);
-
-    /**
-     * A[i][j] /= x
-     */
-    public DenseMatrix div(int i, int j, double x);
+    public void asolve(double[] b, double[] x);
 }

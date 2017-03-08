@@ -16,41 +16,28 @@
 
 package smile.math.matrix;
 
-import smile.math.*;
-
 /**
- * An abstract interface of dense matrix.
+ * The interface of the solver of linear system.
  *
  * @author Haifeng Li
  */
-public interface DenseMatrix extends Matrix {
+public interface LinearSolver {
     /**
-     * Set the entry value at row i and column j.
+     * Solve A*x = b. b will be overwritten with the solution vector on output.
+     * @param b   a vector with as many rows as A.
+     * @return optional estimated error (e.g. biconjugate gradient algorithm).
+     * @throws RuntimeException if matrix is singular.
      */
-    public DenseMatrix set(int i, int j, double x);
+    default public double solve(double[] b) {
+        return solve(b, b);
+    }
 
     /**
-     * Set the entry value at row i and column j. For Scala users.
+     * Solve A*x = b.
+     * @param b   a vector with as many rows as A.
+     * @param x   is output vector so that L*U*X = b(piv,:)
+     * @return optional estimated error (e.g. biconjugate gradient algorithm).
+     * @throws RuntimeException if matrix is singular.
      */
-    public DenseMatrix update(int i, int j, double x);
-
-    /**
-     * A[i][j] += x
-     */
-    public DenseMatrix add(int i, int j, double x);
-
-    /**
-     * A[i][j] -= x
-     */
-    public DenseMatrix sub(int i, int j, double x);
-
-    /**
-     * A[i][j] *= x
-     */
-    public DenseMatrix mul(int i, int j, double x);
-
-    /**
-     * A[i][j] /= x
-     */
-    public DenseMatrix div(int i, int j, double x);
+    public double solve(double[] b, double[] x);
 }

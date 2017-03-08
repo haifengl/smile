@@ -320,12 +320,12 @@ public class SingularValueDecomposition {
         }
     }
 
-    private static class ATA implements IMatrix {
+    private static class ATA implements Matrix {
 
-        IMatrix A;
+        Matrix A;
         double[] buf;
 
-        public ATA(IMatrix A) {
+        public ATA(Matrix A) {
             this.A = A;
             if (A.nrows() >= A.ncols()) {
                 buf = new double[A.nrows()];
@@ -400,11 +400,6 @@ public class SingularValueDecomposition {
         }
 
         @Override
-        public void asolve(double[] b, double[] x) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public void atxpy(double[] x, double[] y) {
             throw new UnsupportedOperationException();
         }
@@ -423,7 +418,7 @@ public class SingularValueDecomposition {
      * @param k the number of singular triples we wish to compute for the input matrix.
      * This number cannot exceed the size of A.
      */
-    public static SingularValueDecomposition decompose(IMatrix A, int k) {
+    public static SingularValueDecomposition decompose(Matrix A, int k) {
         return decompose(A, k, 1.0E-6);
     }
 
@@ -436,7 +431,7 @@ public class SingularValueDecomposition {
      * This number cannot exceed the size of A.
      * @param kappa relative accuracy of ritz values acceptable as singular values.
      */
-    public static SingularValueDecomposition decompose(IMatrix A, int k, double kappa) {
+    public static SingularValueDecomposition decompose(Matrix A, int k, double kappa) {
         ATA B = new ATA(A);
         EigenValueDecomposition eigen = EigenValueDecomposition.decompose(B, k, kappa);
 

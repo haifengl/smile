@@ -39,7 +39,7 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public class SparseMatrix implements IMatrix {
+public class SparseMatrix implements Matrix {
     /**
      * The number of rows.
      */
@@ -180,23 +180,6 @@ public class SparseMatrix implements IMatrix {
         return get(i, j);
     }
 
-/*
-    @Override
-    public SparseMatrix set(int i, int j, double x) {
-        if (i < 0 || i >= nrows || j < 0 || j >= ncols) {
-            throw new IllegalArgumentException("i = " + i + " j = " + j);
-        }
-
-        for (int k = colIndex[j]; k < colIndex[j + 1]; k++) {
-            if (rowIndex[k] == i) {
-                this.x[k] = x;
-                return this;
-            }
-        }
-
-        throw new IllegalArgumentException("SparseMatrix does not support changing zero values to non-zeros.");
-    }
-*/
     @Override
     public void ax(double[] x, double[] y) {
         Arrays.fill(y, 0.0);
@@ -260,9 +243,6 @@ public class SparseMatrix implements IMatrix {
         }
     }
 
-    /**
-     * Returns the matrix transpose.
-     */
     @Override
     public SparseMatrix transpose() {
         int m = nrows, n = ncols;
@@ -495,16 +475,19 @@ public class SparseMatrix implements IMatrix {
     }
 
     @Override
-    public void asolve(double[] b, double[] x) {
-        for (int i = 0; i < nrows; i++) {
-            double diag = 0.0;
+    public double[] diag() {
+        int n = smile.math.Math.min(nrows(), ncols());
+        double[] d = new double[n];
+
+        for (int i = 0; i < n; i++) {
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
                 if (rowIndex[j] == i) {
-                    diag = this.x[j];
+                    d[i] = x[j];
                     break;
                 }
             }
-            x[i] = diag != 0.0 ? b[i] / diag : b[i];
         }
+
+        return d;
     }
 }

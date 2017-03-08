@@ -17,7 +17,7 @@
 package smile.math
 
 import scala.language.implicitConversions
-import smile.math.matrix.Matrix
+import smile.math.matrix.RowMajorMatrix
 import smile.math.special._
 import smile.stat.hypothesis._
 import smile.stat.distribution.Distribution
@@ -27,7 +27,7 @@ import smile.stat.distribution.Distribution
   * @author Haifeng Li
   */
 trait Operators {
-  implicit def array2Matrix(matrix: Array[Array[Double]]) = new Matrix(matrix)
+  implicit def array2Matrix(matrix: Array[Array[Double]]) = new RowMajorMatrix(matrix)
 
   /** The beta function, also called the Euler integral of the first kind.
     *
