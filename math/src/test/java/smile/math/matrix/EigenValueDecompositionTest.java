@@ -136,7 +136,7 @@ public class EigenValueDecompositionTest {
     @Test
     public void testLanczos() {
         System.out.println("Lanczos");
-        EigenValueDecomposition result = EigenValueDecomposition.decompose(new Matrix(A), 3);
+        EigenValueDecomposition result = EigenValueDecomposition.decompose(new RowMajorMatrix(A), 3);
         assertTrue(Math.equals(eigenValues, result.getEigenValues(), 1E-7));
 
         assertEquals(eigenVectors.length,    result.getEigenVectors().length);
@@ -154,7 +154,7 @@ public class EigenValueDecompositionTest {
     @Test
     public void testLanczos1() {
         System.out.println("Lanczos1");
-        EigenValueDecomposition result = EigenValueDecomposition.decompose(new Matrix(A), 1);
+        EigenValueDecomposition result = EigenValueDecomposition.decompose(new RowMajorMatrix(A), 1);
         assertEquals(eigenValues[0], result.getEigenValues()[0], 1E-4);
 
         for (int i = 0; i < 3; i++) {
@@ -172,7 +172,7 @@ public class EigenValueDecompositionTest {
         A[0][0] = A[1][1] = A[2][2] = A[3][3] = 2.0;
         for (int i = 4; i < 500; i++)
             A[i][i] = (500 - i) / 500.0;
-        EigenValueDecomposition result = EigenValueDecomposition.decompose(new Matrix(A), 6);
+        EigenValueDecomposition result = EigenValueDecomposition.decompose(new RowMajorMatrix(A), 6);
         assertEquals(2.0, result.getEigenValues()[0], 1E-4);
         assertEquals(2.0, result.getEigenValues()[1], 1E-4);
         assertEquals(2.0, result.getEigenValues()[2], 1E-4);
@@ -191,7 +191,7 @@ public class EigenValueDecompositionTest {
         for (int i = 0; i < v.length; i++)
             v[i] = 1.0;
 
-        double eigenvalue = EigenValueDecomposition.eigen(new Matrix(A), v, 1E-6);
+        double eigenvalue = EigenValueDecomposition.eigen(new RowMajorMatrix(A), v, 1E-6);
         assertEquals(eigenValues[0], eigenvalue, 1E-4);
 
         double ratio = Math.abs(eigenVectors[0][0]/v[0]);
@@ -207,7 +207,7 @@ public class EigenValueDecompositionTest {
         for (int i = 0; i < v.length; i++)
             v[i] = 1.0;
 
-        eigenvalue = EigenValueDecomposition.eigen(new Matrix(A), v, 0.22, 1E-4, 4);
+        eigenvalue = EigenValueDecomposition.eigen(new RowMajorMatrix(A), v, 0.22, 1E-4, 4);
         assertEquals(-eigenValues[0], eigenvalue, 1E-3);
 
         ratio = Math.abs(eigenVectors[0][0]/v[0]);

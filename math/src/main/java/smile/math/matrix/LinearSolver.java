@@ -23,16 +23,6 @@ package smile.math.matrix;
  */
 public interface LinearSolver {
     /**
-     * Solve A*x = b. b will be overwritten with the solution vector on output.
-     * @param b   a vector with as many rows as A.
-     * @return optional estimated error (e.g. biconjugate gradient algorithm).
-     * @throws RuntimeException if matrix is singular.
-     */
-    default public double solve(double[] b) {
-        return solve(b, b);
-    }
-
-    /**
      * Solve A*x = b.
      * @param b   a vector with as many rows as A.
      * @param x   is output vector so that L*U*X = b(piv,:)

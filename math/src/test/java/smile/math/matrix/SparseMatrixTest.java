@@ -114,7 +114,7 @@ public class SparseMatrixTest {
     @Test
     public void testTimes() {
         System.out.println("times");
-        SparseMatrix c = sm.times(sm);
+        SparseMatrix c = sm.mm(sm);
         assertEquals(c.nrows(), 3);
         assertEquals(c.ncols(), 3);
         assertEquals(c.size(), 9);
