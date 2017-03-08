@@ -39,7 +39,7 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public class SparseMatrix implements Matrix {
+public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, SparseMatrix> {
     /**
      * The number of rows.
      */
@@ -277,7 +277,8 @@ public class SparseMatrix implements Matrix {
     /**
      * Returns the matrix multiplication C = A * B.
      */
-    public SparseMatrix times(SparseMatrix B) {
+    @Override
+    public SparseMatrix mm(SparseMatrix B) {
         if (ncols != B.nrows) {
             throw new IllegalArgumentException(String.format("Matrix dimensions do not match for matrix multiplication: %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
         }

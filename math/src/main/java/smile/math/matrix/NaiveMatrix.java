@@ -30,7 +30,7 @@ import smile.stat.distribution.GaussianDistribution;
  * 
  * @author Haifeng Li
  */
-public class NaiveMatrix implements DenseMatrix {
+public class NaiveMatrix implements DenseMatrix, MatrixMultiplication<NaiveMatrix, NaiveMatrix> {
 
     /**
      * The original matrix.
@@ -258,6 +258,11 @@ public class NaiveMatrix implements DenseMatrix {
     @Override
     public void atxpy(double[] x, double[] y, double b) {
         Math.atxpy(A, x, y, b);
+    }
+
+    @Override
+    public NaiveMatrix mm(NaiveMatrix b) {
+        return new NaiveMatrix(Math.abmm(A, b.A));
     }
 
     /**
