@@ -180,7 +180,7 @@ public class EigenValueDecomposition {
      * On output, it is the eigen vector corresponding largest eigen value.
      * @return the largest eigen value.
      */
-    public static double eigen(IMatrix A, double[] v) {
+    public static double eigen(Matrix A, double[] v) {
         return eigen(A, v, Math.max(1.0E-10, A.nrows() * Math.EPSILON));
     }
 
@@ -196,7 +196,7 @@ public class EigenValueDecomposition {
      * @param tol the desired convergence tolerance.
      * @return the largest eigen value.
      */
-    public static double eigen(IMatrix A, double[] v, double tol) {
+    public static double eigen(Matrix A, double[] v, double tol) {
         return eigen(A, v, 0.0, tol);
     }
 
@@ -214,7 +214,7 @@ public class EigenValueDecomposition {
      * does not converge.
      * @return the largest eigen value.
      */
-    public static double eigen(IMatrix A, double[] v, double tol, int maxIter) {
+    public static double eigen(Matrix A, double[] v, double tol, int maxIter) {
         return eigen(A, v, 0.0, tol, maxIter);
     }
 
@@ -240,7 +240,7 @@ public class EigenValueDecomposition {
      * @param tol the desired convergence tolerance.
      * @return the largest eigen value.
      */
-    public static double eigen(IMatrix A, double[] v, double p, double tol) {
+    public static double eigen(Matrix A, double[] v, double p, double tol) {
         return eigen(A, v, p, tol, Math.max(20, 2 * A.nrows()));
     }
 
@@ -268,7 +268,7 @@ public class EigenValueDecomposition {
      * does not converge.
      * @return the largest eigen value.
      */
-    public static double eigen(IMatrix A, double[] v, double p, double tol, int maxIter) {
+    public static double eigen(Matrix A, double[] v, double p, double tol, int maxIter) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }
@@ -312,7 +312,7 @@ public class EigenValueDecomposition {
      * @param A the matrix supporting matrix vector multiplication operation.
      * @return the page rank vector.
      */
-    public static double[] pagerank(IMatrix A) {
+    public static double[] pagerank(Matrix A) {
     	int n = A.nrows();    	
     	double[] v = new double[n];
     	Arrays.fill(v,  1.0 / n);
@@ -325,7 +325,7 @@ public class EigenValueDecomposition {
      * @param v the teleportation vector.
      * @return the page rank vector.
      */
-    public static double[] pagerank(IMatrix A, double[] v) {
+    public static double[] pagerank(Matrix A, double[] v) {
     	return pagerank(A, v, 0.85, 1E-7, 57);
     }
     
@@ -339,7 +339,7 @@ public class EigenValueDecomposition {
      * does not converge.
      * @return the page rank vector.
      */
-    public static double[] pagerank(IMatrix A, double[] v, double damping, double tol, int maxIter) {
+    public static double[] pagerank(Matrix A, double[] v, double damping, double tol, int maxIter) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }
@@ -387,7 +387,7 @@ public class EigenValueDecomposition {
      * Calculate and normalize y = (A - pI) x.
      * Returns the largest element of y in magnitude.
      */
-    private static double ax(IMatrix A, double[] x, double[] y, double p) {
+    private static double ax(Matrix A, double[] x, double[] y, double p) {
         A.ax(x, y);
 
         if (p != 0.0) {
@@ -418,7 +418,7 @@ public class EigenValueDecomposition {
      * @param k the number of eigenvalues we wish to compute for the input matrix.
      * This number cannot exceed the size of A.
      */
-    public static EigenValueDecomposition decompose(IMatrix A, int k) {
+    public static EigenValueDecomposition decompose(Matrix A, int k) {
         return decompose(A, k, 1.0E-6);
     }
 
@@ -431,7 +431,7 @@ public class EigenValueDecomposition {
      * This number cannot exceed the size of A.
      * @param kappa relative accuracy of ritz values acceptable as eigenvalues.
      */
-    public static EigenValueDecomposition decompose(IMatrix A, int k, double kappa) {
+    public static EigenValueDecomposition decompose(Matrix A, int k, double kappa) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }
@@ -677,7 +677,7 @@ public class EigenValueDecomposition {
      * of operator can be found.
      * @param step   starting index for a Lanczos run
      */
-    private static double startv(IMatrix A, double[][] q, double[][] wptr, int step) {
+    private static double startv(Matrix A, double[][] q, double[][] wptr, int step) {
         // get initial vector; default is random
         double rnm = Math.dot(wptr[0], wptr[0]);
         double[] r = wptr[0];

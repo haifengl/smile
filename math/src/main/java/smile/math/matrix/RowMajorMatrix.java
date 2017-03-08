@@ -273,16 +273,4 @@ public class RowMajorMatrix implements DenseMatrix {
             }
         }
     }
-
-    @Override
-    public void asolve(double[] b, double[] x) {
-        if (nrows != ncols) {
-            throw new IllegalStateException("Matrix is not square.");
-        }
-
-        for (int i = 0; i < nrows; i++) {
-            double Aii = get(i, i);
-            x[i] = Aii != 0.0 ? b[i] / Aii : b[i];
-        }
-    }
 }

@@ -16,39 +16,41 @@
 
 package smile.math.matrix;
 
+import smile.math.*;
+
 /**
  * An abstract interface of dense matrix.
  *
  * @author Haifeng Li
  */
-public interface DenseMatrix extends IMatrix {
+public interface DenseMatrix extends Matrix {
     /**
      * Set the entry value at row i and column j.
      */
-    public IMatrix set(int i, int j, double x);
+    public DenseMatrix set(int i, int j, double x);
 
     /**
      * Set the entry value at row i and column j. For Scala users.
      */
-    public IMatrix update(int i, int j, double x);
+    public DenseMatrix update(int i, int j, double x);
 
     /**
      * A[i][j] += x
      */
-    public IMatrix add(int i, int j, double x);
+    public DenseMatrix add(int i, int j, double x);
 
     /**
      * A[i][j] -= x
      */
-    public IMatrix sub(int i, int j, double x);
+    public DenseMatrix sub(int i, int j, double x);
 
     /**
      * A[i][j] *= x
      */
-    public IMatrix mul(int i, int j, double x);
+    public DenseMatrix mul(int i, int j, double x);
 
     /**
      * A[i][j] /= x
      */
-    public IMatrix div(int i, int j, double x);
+    public DenseMatrix div(int i, int j, double x);
 }
