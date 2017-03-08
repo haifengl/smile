@@ -457,7 +457,7 @@ public class LASSO  implements Regression<double[]>, Serializable {
             }
 
             // preconditioned conjugate gradient
-            double error = pcg.solve(pcg, grad, dxu, pcgtol, 1, pcgmaxi);
+            double error = BiconjugateGradient.solve(pcg, pcg, grad, dxu, pcgtol, 1, pcgmaxi);
             if (error > pcgtol) {
                 pitr = pcgmaxi;
             }
@@ -558,7 +558,7 @@ public class LASSO  implements Regression<double[]>, Serializable {
         return sum;
     }
 
-    class PCGMatrix implements Matrix, Preconditioner, BiconjugateGradient {
+    class PCGMatrix implements Matrix, Preconditioner {
 
         Matrix A;
         Matrix AtA;

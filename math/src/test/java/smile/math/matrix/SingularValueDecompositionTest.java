@@ -635,7 +635,7 @@ public class SingularValueDecompositionTest {
             {-0.5156083, -0.36573746, -0.47613340, 0.41342817, -0.2659765, 0.1654796, -0.32346758}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(new Matrix(A), 7);
+        SingularValueDecomposition result = SingularValueDecomposition.decompose(new RowMajorMatrix(A), 7);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().length);
@@ -686,7 +686,7 @@ public class SingularValueDecompositionTest {
             {0.32967585, 0.18412070, -0.02567023, 0.2254902}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(new Matrix(A), 4);
+        SingularValueDecomposition result = SingularValueDecomposition.decompose(new RowMajorMatrix(A), 4);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-6));
 
         assertEquals(U.length, result.getU().length);

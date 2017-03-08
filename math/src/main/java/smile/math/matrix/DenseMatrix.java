@@ -16,14 +16,12 @@
 
 package smile.math.matrix;
 
-import smile.math.*;
-
 /**
  * An abstract interface of dense matrix.
  *
  * @author Haifeng Li
  */
-public interface DenseMatrix extends Matrix {
+public interface DenseMatrix extends Matrix, LinearSolver {
     /**
      * Set the entry value at row i and column j.
      */
@@ -53,4 +51,11 @@ public interface DenseMatrix extends Matrix {
      * A[i][j] /= x
      */
     public DenseMatrix div(int i, int j, double x);
+
+    @Override
+    default public double solve(double[] b, double[] x) {
+        LUDecomposition lu = new LUDecomposition(this);
+        lu.solve(b, x);
+        return 0.0;
+    }
 }

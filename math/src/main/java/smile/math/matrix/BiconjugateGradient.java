@@ -26,13 +26,13 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public interface BiconjugateGradient extends Matrix, LinearSolver {
-    final Logger logger = LoggerFactory.getLogger(BiconjugateGradient.class);
+public class BiconjugateGradient {
+    private static final Logger logger = LoggerFactory.getLogger(BiconjugateGradient.class);
 
     /** Returns a simple preconditioner matrix that is the
      * trivial diagonal part of A in some cases.
      */
-    default Preconditioner diagonalPreconditioner(Matrix A) {
+    private static Preconditioner diagonalPreconditioner(Matrix A) {
         return new Preconditioner() {
             public void asolve(double[] b, double[] x) {
                 double[] diag = A.diag();
@@ -52,8 +52,8 @@ public interface BiconjugateGradient extends Matrix, LinearSolver {
      * (or all zeros). On output, x is reset to the improved solution.
      * @return the estimated error.
      */
-    default public double solve(double[] b, double[] x) {
-        return solve(diagonalPreconditioner(this), b, x);
+    public static double solve(Matrix A, double[] b, double[] x) {
+        return solve(A, diagonalPreconditioner(A), b, x);
     }
 
     /**
@@ -64,8 +64,8 @@ public interface BiconjugateGradient extends Matrix, LinearSolver {
      * (or all zeros). On output, x is reset to the improved solution.
      * @return the estimated error.
      */
-    default public double solve(Preconditioner Ap, double[] b, double[] x) {
-        return solve(Ap, b, x, 1E-10);
+    public static double solve(Matrix A, Preconditioner Ap, double[] b, double[] x) {
+        return solve(A, Ap, b, x, 1E-10);
     }
 
     /**
@@ -76,8 +76,8 @@ public interface BiconjugateGradient extends Matrix, LinearSolver {
      * @param tol the desired convergence tolerance.
      * @return the estimated error.
      */
-    default public double solve(double[] b, double[] x, double tol) {
-        return solve(diagonalPreconditioner(this), b, x, tol);
+    public static double solve(Matrix A, double[] b, double[] x, double tol) {
+        return solve(A, diagonalPreconditioner(A), b, x, tol);
     }
 
     /**
@@ -89,8 +89,8 @@ public interface BiconjugateGradient extends Matrix, LinearSolver {
      * @param tol the desired convergence tolerance.
      * @return the estimated error.
      */
-    default public double solve(Preconditioner Ap, double[] b, double[] x, double tol) {
-        return solve(Ap, b, x, tol, 1);
+    public static double solve(Matrix A, Preconditioner Ap, double[] b, double[] x, double tol) {
+        return solve(A, Ap, b, x, tol, 1);
     }
 
     /**
@@ -108,8 +108,8 @@ public interface BiconjugateGradient extends Matrix, LinearSolver {
      * @param tol the desired convergence tolerance.
      * @return the estimated error.
      */
-    default public double solve(double[] b, double[] x, double tol, int itol) {
-        return solve(diagonalPreconditioner(this), b, x, tol, itol);
+    public static double solve(Matrix A, double[] b, double[] x, double tol, int itol) {
+        return solve(A, diagonalPreconditioner(A), b, x, tol, itol);
     }
 
     /**
@@ -128,8 +128,8 @@ public interface BiconjugateGradient extends Matrix, LinearSolver {
      * @param tol the desired convergence tolerance.
      * @return the estimated error.
      */
-    default public double solve(Preconditioner Ap, double[] b, double[] x, double tol, int itol) {
-        return solve(Ap, b, x, tol, itol, 2 * Math.max(nrows(), ncols()));
+    public static double solve(Matrix A, Preconditioner Ap, double[] b, double[] x, double tol, int itol) {
+        return solve(A, Ap, b, x, tol, itol, 2 * Math.max(A.nrows(), A.ncols()));
     }
 
     /**
@@ -150,8 +150,8 @@ public interface BiconjugateGradient extends Matrix, LinearSolver {
      * @param maxIter the maximum number of allowed iterations.
      * @return the estimated error.
      */
-    default public double solve(double[] b, double[] x, double tol, int itol, int maxIter) {
-        return solve(diagonalPreconditioner(this), b, x, tol, itol, maxIter);
+    public static double solve(Matrix A, double[] b, double[] x, double tol, int itol, int maxIter) {
+        return solve(A, diagonalPreconditioner(A), b, x, tol, itol, maxIter);
     }
 
     /**
@@ -173,7 +173,7 @@ public interface BiconjugateGradient extends Matrix, LinearSolver {
      * @param maxIter the maximum number of allowed iterations.
      * @return the estimated error.
      */
-    default public double solve(Preconditioner Ap, double[] b, double[] x, double tol, int itol, int maxIter) {
+    public static double solve(Matrix A, Preconditioner Ap, double[] b, double[] x, double tol, int itol, int maxIter) {
         if (tol <= 0.0) {
             throw new IllegalArgumentException("Invalid tolerance: " + tol);
         }
@@ -197,7 +197,7 @@ public interface BiconjugateGradient extends Matrix, LinearSolver {
         double[] z = new double[n];
         double[] zz = new double[n];
 
-        ax(x, r);
+        A.ax(x, r);
         for (j = 0; j < n; j++) {
             r[j] = b[j] - r[j];
             rr[j] = r[j];
@@ -237,12 +237,12 @@ public interface BiconjugateGradient extends Matrix, LinearSolver {
                 }
             }
             bkden = bknum;
-            ax(p, z);
+            A.ax(p, z);
             for (akden = 0.0, j = 0; j < n; j++) {
                 akden += z[j] * pp[j];
             }
             ak = bknum / akden;
-            atx(pp, zz);
+            A.atx(pp, zz);
             for (j = 0; j < n; j++) {
                 x[j] += ak * p[j];
                 r[j] -= ak * z[j];
@@ -288,7 +288,7 @@ public interface BiconjugateGradient extends Matrix, LinearSolver {
     /**
      * Compute L2 or L-infinity norms for a vector x, as signaled by itol.
      */
-    default double snorm(double[] x, int itol) {
+    private static double snorm(double[] x, int itol) {
         int n = x.length;
 
         if (itol <= 3) {

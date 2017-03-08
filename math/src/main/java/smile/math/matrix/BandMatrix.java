@@ -489,7 +489,7 @@ public class BandMatrix implements Matrix, LinearSolver {
         axpy(x, r, -1.0);
 
         // Solve for the error term.
-        solve(r);
+        solve(r, r);
 
         // Subtract the error from the old solution.
         for (int i = 0; i < n; i++) {

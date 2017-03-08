@@ -20,13 +20,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.matrix.BandMatrix;
-import smile.math.matrix.EigenValueDecomposition;
-import smile.math.matrix.LUDecomposition;
-import smile.math.matrix.Matrix;
+import smile.math.matrix.*;
+
 import static org.junit.Assert.*;
-import smile.math.matrix.SingularValueDecomposition;
-import smile.math.matrix.SparseMatrix;
 
 /**
  *
@@ -1013,7 +1009,7 @@ public class MathTest {
             v[i] = 1 + Math.random();
         }
 
-        eigenvalue = EigenValueDecomposition.eigen(new Matrix(A), v, 1E-6);
+        eigenvalue = EigenValueDecomposition.eigen(new ColumnMajorMatrix(A), v, 1E-6);
         assertEquals(-eigenValues[0], eigenvalue, 1E-3);
 
         ratio = Math.abs(eigenVectors[0][0] / v[0]);
@@ -1210,62 +1206,6 @@ public class MathTest {
         double[] b = {0.9, 0.5, 0.8};
         double[] c = {0.4, 0.3, 0.0};
         double[] result = Math.solve(a, b, c, r);
-
-        assertEquals(result.length, x.length);
-        for (int i = 0; i < x.length; i++) {
-            assertEquals(result[i], x[i], 1E-7);
-        }
-    }
-
-    /**
-     * Test of solve method, of class Math.
-     */
-    @Test
-    public void testSolve() {
-        System.out.println("solve");
-        double[][] A = {
-            {0.9000, 0.4000, 0.0000},
-            {0.4000, 0.5000, 0.3000},
-            {0.0000, 0.3000, 0.8000}
-        };
-        double[] b = {0.5, 0.5, 0.5};
-
-        LUDecomposition lu = new LUDecomposition(A);
-        double[] x = new double[b.length];
-        lu.solve(b, x);
-
-        double[] result = new double[3];
-        Math.solve(new Matrix(A), b, result);
-
-        assertEquals(result.length, x.length);
-        for (int i = 0; i < x.length; i++) {
-            assertEquals(result[i], x[i], 1E-7);
-        }
-
-        BandMatrix band = new BandMatrix(3, 1, 1);
-        for (int i = 0; i < A.length; i++) {
-            for (int j = 0; j < A[i].length; j++) {
-                if (A[i][j] != 0.0) {
-                    band.set(i, j, A[i][j]);
-                }
-            }
-        }
-
-        result = new double[3];
-        Math.solve(band, b, result);
-
-        assertEquals(result.length, x.length);
-        for (int i = 0; i < x.length; i++) {
-            assertEquals(result[i], x[i], 1E-7);
-        }
-
-        int[] rowIndex = {0, 1, 0, 1, 2, 1, 2};
-        int[] colIndex = {0, 2, 5, 7};
-        double[] val = {0.9, 0.4, 0.4, 0.5, 0.3, 0.3, 0.8};
-        SparseMatrix sparse = new SparseMatrix(3, 3, val, rowIndex, colIndex);
-
-        result = new double[3];
-        Math.solve(sparse, b, result);
 
         assertEquals(result.length, x.length);
         for (int i = 0; i < x.length; i++) {
