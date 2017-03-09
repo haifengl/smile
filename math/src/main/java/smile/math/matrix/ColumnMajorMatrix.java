@@ -137,14 +137,6 @@ public class ColumnMajorMatrix extends DenseMatrix implements MatrixMultiplicati
         return B;
     }
 
-    /**
-     * Return the one-dimensional array of matrix.
-     * @return the one-dimensional array of matrix.
-     */
-    public double[] array() {
-        return A;
-    }
-
     @Override
     public int nrows() {
         return nrows;
