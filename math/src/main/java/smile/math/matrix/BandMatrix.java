@@ -180,7 +180,7 @@ public class BandMatrix implements Matrix, LinearSolver {
         if (m1 !=  m2) {
             throw new UnsupportedOperationException("The matrix is not square.");
         }
-        return EigenValueDecomposition.decompose(this, k);
+        return Lanczos.eigen(this, k);
     }
 
     /**
