@@ -442,24 +442,6 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     }
 
     /**
-     * Returns the largest eigen pair of matrix with the power iteration
-     * under the assumptions A has an eigenvalue that is strictly greater
-     * in magnitude than its other its other eigenvalues and the starting
-     * vectorhas a nonzero component in the direction of an eigenvector
-     * associated with the dominant eigenvalue.
-     * @param v on input, it is the non-zero initial guess of the eigen vector.
-     * On output, it is the eigen vector corresponding largest eigen value.
-     * @return the largest eigen value.
-     */
-    public double eigen(double[] v) {
-        if (nrows != ncols) {
-            throw new UnsupportedOperationException("The matrix is not square.");
-        }
-
-        return EigenValueDecomposition.eigen(this, v);
-    }
-
-    /**
      * Returns the k largest eigen pairs. Only works for symmetric matrix.
      */
     public EigenValueDecomposition eigen(int k) {
