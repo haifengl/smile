@@ -24,7 +24,7 @@ import smile.stat.distribution.GaussianDistribution;
  * A dense matrix whose data is stored in a single 1D array of
  * doubles in column major order.
  */
-public class ColumnMajorMatrix implements DenseMatrix {
+public class ColumnMajorMatrix extends DenseMatrix implements MatrixMultiplication<ColumnMajorMatrix, ColumnMajorMatrix> {
 
     /**
      * The original matrix.
@@ -44,7 +44,38 @@ public class ColumnMajorMatrix implements DenseMatrix {
      * @param A the array of matrix.
      */
     public ColumnMajorMatrix(double[][] A) {
-        this(A.length, A[0].length);
+        this(A, false);
+    }
+
+    /**
+     * Constructor.
+     * If the matrix is updated, no check on if the matrix is symmetric.
+     * @param A the array of matrix.
+     * @param symmetric true if the matrix is symmetric.
+     */
+    public ColumnMajorMatrix(double[][] A, boolean symmetric) {
+        this(A, symmetric, false);
+    }
+
+    /**
+     * Constructor.
+     * If the matrix is updated, no check on if the matrix is symmetric
+     * and/or positive definite. The symmetric and positive definite
+     * properties are intended for read-only matrices.
+     * @param A the array of matrix.
+     * @param symmetric true if the matrix is symmetric.
+     * @param positive true if the matrix is positive definite.
+     */
+    public ColumnMajorMatrix(double[][] A, boolean symmetric, boolean positive) {
+        super(symmetric, positive);
+
+        if (symmetric && A.length != A[0].length) {
+            throw new IllegalArgumentException("A is not square");
+        }
+
+        this.nrows = A.length;
+        this.ncols = A[0].length;
+        this.A = new double[nrows*ncols];
 
         for (int i = 0; i < nrows; i++) {
             for (int j = 0; j < ncols; j++) {
@@ -106,6 +137,59 @@ public class ColumnMajorMatrix implements DenseMatrix {
         return B;
     }
 
+    /**
+     * Return the one-dimensional array of matrix.
+     * @return the one-dimensional array of matrix.
+     */
+    public double[] array() {
+        return A;
+    }
+
+    @Override
+    public int nrows() {
+        return nrows;
+    }
+
+    @Override
+    public int ncols() {
+        return ncols;
+    }
+
+    @Override
+    public double get(int i, int j) {
+        return A[j*nrows + i];
+    }
+
+    @Override
+    public ColumnMajorMatrix set(int i, int j, double x) {
+        A[j*nrows + i] = x;
+        return this;
+    }
+
+    @Override
+    public ColumnMajorMatrix add(int i, int j, double x) {
+        A[j*nrows + i] += x;
+        return this;
+    }
+
+    @Override
+    public ColumnMajorMatrix sub(int i, int j, double x) {
+        A[j*nrows + i] -= x;
+        return this;
+    }
+
+    @Override
+    public ColumnMajorMatrix mul(int i, int j, double x) {
+        A[j*nrows + i] *= x;
+        return this;
+    }
+
+    @Override
+    public ColumnMajorMatrix div(int i, int j, double x) {
+        A[j*nrows + i] /= x;
+        return this;
+    }
+
     @Override
     public ColumnMajorMatrix ata() {
         ColumnMajorMatrix C = new ColumnMajorMatrix(ncols, ncols);
@@ -136,81 +220,6 @@ public class ColumnMajorMatrix implements DenseMatrix {
             }
         }
         return C;
-    }
-
-    /**
-     * Return the one-dimensional array of matrix.
-     * @return the one-dimensional array of matrix.
-     */
-    public double[] array() {
-        return A;
-    }
-
-    /**
-     * Sets the diagonal to the values of <code>diag</code> as long
-     * as possible (i.e while there are elements left in diag or the dim of matrix
-     * is not big enough.
-     */
-    public void setDiag(double[] diag) {
-        for (int i = 0; i < ncols && i < nrows && i < diag.length; i++) {
-            set(i, i, diag[i]);
-        }
-    }
-
-    @Override
-    public int nrows() {
-        return nrows;
-    }
-
-    @Override
-    public int ncols() {
-        return ncols;
-    }
-
-    @Override
-    public double get(int i, int j) {
-        return A[j*nrows + i];
-    }
-
-    @Override
-    public double apply(int i, int j) {
-        return A[j*nrows + i];
-    }
-
-    @Override
-    public ColumnMajorMatrix set(int i, int j, double x) {
-        A[j*nrows + i] = x;
-        return this;
-    }
-
-    @Override
-    public ColumnMajorMatrix update(int i, int j, double x) {
-        A[j*nrows + i] = x;
-        return this;
-    }
-
-    @Override
-    public ColumnMajorMatrix add(int i, int j, double x) {
-        A[j*nrows + i] += x;
-        return this;
-    }
-
-    @Override
-    public ColumnMajorMatrix sub(int i, int j, double x) {
-        A[j*nrows + i] -= x;
-        return this;
-    }
-
-    @Override
-    public ColumnMajorMatrix mul(int i, int j, double x) {
-        A[j*nrows + i] *= x;
-        return this;
-    }
-
-    @Override
-    public ColumnMajorMatrix div(int i, int j, double x) {
-        A[j*nrows + i] /= x;
-        return this;
     }
 
     @Override
@@ -290,5 +299,24 @@ public class ColumnMajorMatrix implements DenseMatrix {
                 y[i] += get(k, i) * x[k];
             }
         }
+    }
+
+    @Override
+    public ColumnMajorMatrix mm(ColumnMajorMatrix B) {
+        if (ncols() != B.nrows()) {
+            throw new IllegalArgumentException(String.format("Matrix multiplication A * B: %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
+        }
+
+        ColumnMajorMatrix C = new ColumnMajorMatrix(nrows, B.ncols());
+        for (int i = 0; i < nrows; i++) {
+            for (int j = 0; j < B.ncols(); j++) {
+                double v = 0.0;
+                for (int k = 0; k < ncols; k++) {
+                    v += get(i, k) * B.get(k, j);
+                }
+                C.set(i, j, v);
+            }
+        }
+        return C;
     }
 }
