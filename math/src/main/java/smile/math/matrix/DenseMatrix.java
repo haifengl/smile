@@ -542,7 +542,7 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
             // Solve for the error term.
             cholesky.solve(r);
 
-            // Subtract the error from the old soluiton.
+            // Subtract the error from the old solution.
             for (int i = 0; i < n; i++) {
                 x[i] -= r[i];
             }
@@ -561,7 +561,7 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
             // Solve for the error term.
             lu.solve(r);
 
-            // Subtract the error from the old soluiton.
+            // Subtract the error from the old solution.
             for (int i = 0; i < n; i++) {
                 x[i] -= r[i];
             }

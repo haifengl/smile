@@ -20,12 +20,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.matrix.EigenValueDecomposition;
-import smile.math.matrix.Matrix;
-import smile.math.matrix.RowMajorMatrix;
-import smile.math.matrix.LUDecomposition;
-import smile.math.matrix.QRDecomposition;
-import smile.math.matrix.SingularValueDecomposition;
+import smile.math.matrix.*;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.SortUtils;
@@ -4261,7 +4256,7 @@ public class Math {
      * @return the largest eigen value.
      */
     public static double eigen(double[][] A, double[] v) {
-        return EigenValueDecomposition.eigen(new RowMajorMatrix(A), v);
+        return PowerIteration.eigen(new RowMajorMatrix(A), v);
     }
 
     /**
@@ -4276,7 +4271,7 @@ public class Math {
      * @return the largest eigen value.
      */
     public static double eigen(double[][] A, double[] v, double tol) {
-        return EigenValueDecomposition.eigen(new RowMajorMatrix(A), v, tol);
+        return PowerIteration.eigen(new RowMajorMatrix(A), v, tol);
     }
 
     /**
@@ -4290,7 +4285,7 @@ public class Math {
      * @return the largest eigen value.
      */
     public static double eigen(Matrix A, double[] v) {
-        return EigenValueDecomposition.eigen(A, v);
+        return PowerIteration.eigen(A, v);
     }
 
     /**
@@ -4305,7 +4300,7 @@ public class Math {
      * @return the largest eigen value.
      */
     public static double eigen(Matrix A, double[] v, double tol) {
-        return EigenValueDecomposition.eigen(A, v, tol);
+        return PowerIteration.eigen(A, v, tol);
     }
 
     /**
