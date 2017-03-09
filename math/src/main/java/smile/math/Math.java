@@ -20,7 +20,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.matrix.*;
+import smile.math.matrix.Matrix;
+import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.LUDecomposition;
+import smile.math.matrix.QRDecomposition;
+import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.SingularValueDecomposition;
+import smile.math.matrix.Lanczos;
+import smile.math.matrix.PowerIteration;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.SortUtils;
@@ -4256,7 +4263,7 @@ public class Math {
      * @return the largest eigen value.
      */
     public static double eigen(double[][] A, double[] v) {
-        return PowerIteration.eigen(new RowMajorMatrix(A), v);
+        return PowerIteration.eigen(new ColumnMajorMatrix(A), v);
     }
 
     /**
@@ -4271,7 +4278,7 @@ public class Math {
      * @return the largest eigen value.
      */
     public static double eigen(double[][] A, double[] v, double tol) {
-        return PowerIteration.eigen(new RowMajorMatrix(A), v, tol);
+        return PowerIteration.eigen(new ColumnMajorMatrix(A), v, tol);
     }
 
     /**
@@ -4308,7 +4315,15 @@ public class Math {
      * iterative Lanczos algorithm.
      */
     public static EigenValueDecomposition eigen(double[][] A, int k) {
-        return EigenValueDecomposition.decompose(new RowMajorMatrix(A), k);
+        return Lanczos.eigen(new ColumnMajorMatrix(A), k);
+    }
+
+    /**
+     * Find k largest approximate eigen pairs of a symmetric matrix by an
+     * iterative Lanczos algorithm.
+     */
+    public static EigenValueDecomposition eigen(Matrix A, int k) {
+        return Lanczos.eigen(A, k);
     }
 
     /**

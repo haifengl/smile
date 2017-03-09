@@ -411,7 +411,7 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
         }
 
         if (eigen == null || eigen.getEigenVectors().length != k) {
-            eigen = EigenValueDecomposition.decompose(this, k);
+            eigen = Lanczos.eigen(this, k);
         }
 
         return eigen;

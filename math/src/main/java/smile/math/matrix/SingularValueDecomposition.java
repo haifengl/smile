@@ -83,7 +83,7 @@ public class SingularValueDecomposition {
      * Private constructor. Use factory method decompose() to get
      * the decomposition.
      */
-    private SingularValueDecomposition(double[][] U, double[][] V, double[] s) {
+    SingularValueDecomposition(double[][] U, double[][] V, double[] s) {
         this(U, V, s, true);
     }
 
@@ -91,7 +91,7 @@ public class SingularValueDecomposition {
      * Private constructor. Use factory method decompose() to get
      * the decomposition.
      */
-    private SingularValueDecomposition(double[][] U, double[][] V, double[] s, boolean full) {
+    SingularValueDecomposition(double[][] U, double[][] V, double[] s, boolean full) {
         this.U = U;
         this.V = V;
         this.s = s;
@@ -317,170 +317,6 @@ public class SingularValueDecomposition {
             for (int i = 0; i < n; i++) {
                 X[i][j] = xx[i];
             }
-        }
-    }
-
-    private static class ATA implements Matrix {
-
-        Matrix A;
-        double[] buf;
-
-        public ATA(Matrix A) {
-            this.A = A;
-            if (A.nrows() >= A.ncols()) {
-                buf = new double[A.nrows()];
-            } else {
-                buf = new double[A.ncols()];
-            }
-        }
-
-        @Override
-        public int nrows() {
-            if (A.nrows() >= A.ncols()) {
-                return A.ncols();
-            } else {
-                return A.nrows();
-            }
-        }
-
-        @Override
-        public int ncols() {
-            return nrows();
-        }
-
-        @Override
-        public ATA transpose() {
-            return this;
-        }
-
-        @Override
-        public ATA ata() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ATA aat() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void ax(double[] x, double[] y) {
-            if (A.nrows() >= A.ncols()) {
-                A.ax(x, buf);
-                A.atx(buf, y);
-            } else {
-                A.atx(x, buf);
-                A.ax(buf, y);
-            }
-        }
-
-        @Override
-        public void atx(double[] x, double[] y) {
-            ax(x, y);
-        }
-
-        @Override
-        public void axpy(double[] x, double[] y) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void axpy(double[] x, double[] y, double b) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double get(int i, int j) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double apply(int i, int j) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void atxpy(double[] x, double[] y) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void atxpy(double[] x, double[] y, double b) {
-            throw new UnsupportedOperationException();
-        }
-    };
-
-    /**
-     * Find k largest approximate singular triples of a matrix by the
-     * Lanczos algorithm.
-     *
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @param k the number of singular triples we wish to compute for the input matrix.
-     * This number cannot exceed the size of A.
-     */
-    public static SingularValueDecomposition decompose(Matrix A, int k) {
-        return decompose(A, k, 1.0E-6);
-    }
-
-    /**
-     * Find k largest approximate singular triples of a matrix by the
-     * Lanczos algorithm.
-     *
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @param k the number of singular triples we wish to compute for the input matrix.
-     * This number cannot exceed the size of A.
-     * @param kappa relative accuracy of ritz values acceptable as singular values.
-     */
-    public static SingularValueDecomposition decompose(Matrix A, int k, double kappa) {
-        ATA B = new ATA(A);
-        EigenValueDecomposition eigen = EigenValueDecomposition.decompose(B, k, kappa);
-
-        double[] s = eigen.getEigenValues();
-        for (int i = 0; i < s.length; i++) {
-            s[i] = Math.sqrt(s[i]);
-        }
-
-        if (A.nrows() >= A.ncols()) {
-
-            double[][] V = eigen.getEigenVectors();
-
-            double[] tmp = new double[A.nrows()];
-            double[] vi = new double[A.ncols()];
-            double[][] U = new double[A.nrows()][s.length];
-            for (int i = 0; i < s.length; i++) {
-                for (int j = 0; j < A.ncols(); j++) {
-                    vi[j] = V[j][i];
-                }
-
-                A.ax(vi, tmp);
-
-                for (int j = 0; j < A.nrows(); j++) {
-                    U[j][i] = tmp[j] / s[i];
-                }
-            }
-
-            return new SingularValueDecomposition(U, V, s, false);
-
-        } else {
-
-            double[][] U = eigen.getEigenVectors();
-
-            double[] tmp = new double[A.ncols()];
-            double[] ui = new double[A.nrows()];
-            double[][] V = new double[A.ncols()][s.length];
-            for (int i = 0; i < s.length; i++) {
-                for (int j = 0; j < A.nrows(); j++) {
-                    ui[j] = U[j][i];
-                }
-
-                A.atx(ui, tmp);
-
-                for (int j = 0; j < A.ncols(); j++) {
-                    V[j][i] = tmp[j] / s[i];
-                }
-            }
-
-            return new SingularValueDecomposition(U, V, s, false);
         }
     }
 
