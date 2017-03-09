@@ -416,7 +416,7 @@ public class BandMatrix implements Matrix, LinearSolver {
      * @param x   is output vector so that L*U*X = b(piv,:)
      * @throws RuntimeException if matrix is singular.
      */
-    public double solve(double[] b, double[] x) {
+    public void solve(double[] b, double[] x) {
         if (b.length != n) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but b is %d x 1", n, n, b.length));
         }
@@ -463,8 +463,6 @@ public class BandMatrix implements Matrix, LinearSolver {
                 l++;
             }
         }
-
-        return 0.0;
     }
 
     /**

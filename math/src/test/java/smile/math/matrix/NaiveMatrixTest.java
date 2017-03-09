@@ -29,7 +29,7 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class RowMajorMatrixTest {
+public class NaiveMatrixTest {
 
     double[][] A = {
             {0.9000, 0.4000, 0.0000},
@@ -43,7 +43,7 @@ public class RowMajorMatrixTest {
             {0.12, 0.39, 0.73}
     };
 
-    RowMajorMatrix matrix = new RowMajorMatrix(A);
+    NaiveMatrix matrix = new NaiveMatrix(A);
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -62,7 +62,7 @@ public class RowMajorMatrixTest {
     }
 
     /**
-     * Test of nrows method, of class RowMajorMatrix.
+     * Test of nrows method, of class NaiveMatrix.
      */
     @Test
     public void testNrows() {
@@ -71,7 +71,7 @@ public class RowMajorMatrixTest {
     }
 
     /**
-     * Test of ncols method, of class RowMajorMatrix.
+     * Test of ncols method, of class NaiveMatrix.
      */
     @Test
     public void testNcols() {
@@ -80,7 +80,7 @@ public class RowMajorMatrixTest {
     }
 
     /**
-     * Test of get method, of class RowMajorMatrix.
+     * Test of get method, of class NaiveMatrix.
      */
     @Test
     public void testGet() {
@@ -94,7 +94,7 @@ public class RowMajorMatrixTest {
     }
 
     /**
-     * Test of ax method, of class RowMajorMatrix.
+     * Test of ax method, of class NaiveMatrix.
      */
     @Test
     public void testAx() {
@@ -107,7 +107,7 @@ public class RowMajorMatrixTest {
     }
 
     /**
-     * Test of atx method, of class RowMajorMatrix.
+     * Test of atx method, of class NaiveMatrix.
      */
     @Test
     public void testAtx() {
@@ -120,12 +120,12 @@ public class RowMajorMatrixTest {
     }
 
     /**
-     * Test of AAT method, of class RowMajorMatrix.
+     * Test of AAT method, of class NaiveMatrix.
      */
     @Test
     public void testAAT() {
         System.out.println("AAT");
-        RowMajorMatrix c = matrix.aat();
+        NaiveMatrix c = matrix.aat();
         assertEquals(c.nrows(), 3);
         assertEquals(c.ncols(), 3);
         for (int i = 0; i < C.length; i++) {
@@ -136,7 +136,7 @@ public class RowMajorMatrixTest {
     }
 
     /**
-     * Test of mm method, of class RowMajorMatrix.
+     * Test of mm method, of class NaiveMatrix.
      */
     @Test
     public void testMm() {
@@ -157,9 +157,9 @@ public class RowMajorMatrixTest {
                 {0.1159052, 0.1652528, -0.97941688}
         };
 
-        RowMajorMatrix a = new RowMajorMatrix(A);
-        RowMajorMatrix b = new RowMajorMatrix(B);
-        RowMajorMatrix c = new RowMajorMatrix(C);
+        NaiveMatrix a = new NaiveMatrix(A);
+        NaiveMatrix b = new NaiveMatrix(B);
+        NaiveMatrix c = new NaiveMatrix(C);
         assertTrue(Math.equals(a.mm(b).array(), c.array(), 1E-7));
     }
 }
