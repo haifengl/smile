@@ -88,7 +88,9 @@ public interface Matrix {
     /**
      * Returns the entry value at row i and column j. For Scala users.
      */
-    public double apply(int i, int j);
+    default public double apply(int i, int j) {
+        return get(i, j);
+    }
 
     /**
      * Returns the diagonal elements.

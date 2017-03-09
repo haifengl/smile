@@ -22,6 +22,7 @@ package smile.math.matrix;
  * @author Haifeng Li
  */
 public interface DenseMatrix extends Matrix, LinearSolver {
+    
     /**
      * Set the entry value at row i and column j.
      */
@@ -30,7 +31,9 @@ public interface DenseMatrix extends Matrix, LinearSolver {
     /**
      * Set the entry value at row i and column j. For Scala users.
      */
-    public DenseMatrix update(int i, int j, double x);
+    default public DenseMatrix update(int i, int j, double x) {
+        return set(i, j, x);
+    }
 
     /**
      * A[i][j] += x
