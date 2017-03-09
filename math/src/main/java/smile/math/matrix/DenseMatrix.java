@@ -300,6 +300,20 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
     }
 
     /**
+     * Return the two-dimensional array of matrix.
+     * @return the two-dimensional array of matrix.
+     */
+    public double[][] array() {
+        double[][] V = new double[nrows()][ncols()];
+        for (int i = 0; i < nrows(); i++) {
+            for (int j = 0; j < ncols(); j++) {
+                V[i][j] = get(i, j);
+            }
+        }
+        return V;
+    }
+
+    /**
      * Returns the matrix transpose.
      */
     public abstract DenseMatrix transpose();
@@ -369,14 +383,7 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
 
         int n = nrows();
         if (eigen == null || eigen.getEigenVectors().length != n) {
-            double[][] V = new double[n][n];
-
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) {
-                    V[i][j] = get(i, j);
-                }
-            }
-
+            double[][] V = array();
             eigen = EigenValueDecomposition.decompose(V, symmetric);
 
             positive = true;
@@ -415,16 +422,7 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
      */
     public SingularValueDecomposition svd() {
         if (svd != null) {
-            int m = nrows();
-            int n = ncols();
-            double[][] V = new double[m][n];
-
-            for (int i = 0; i < m; i++) {
-                for (int j = 0; j < n; j++) {
-                    V[i][j] = get(i, j);
-                }
-            }
-
+            double[][] V = array();
             svd = SingularValueDecomposition.decompose(V);
             rank = svd.rank();
         }

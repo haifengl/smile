@@ -110,12 +110,13 @@ public class NaiveMatrix extends DenseMatrix implements MatrixMultiplication<Nai
         }
     }
 
-    /**
-     * Return the two-dimensional array of matrix.
-     * @return the two-dimensional array of matrix.
-     */
+    @Override
     public double[][] array() {
-        return A;
+        double[][] B = new double[nrows()][ncols()];
+        for (int i = 0; i < nrows(); i++) {
+            System.arraycopy(A[i], 0, B[i], 0, ncols());
+        }
+        return B;
     }
 
     public RowMajorMatrix toRowMajor() {

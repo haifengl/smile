@@ -114,14 +114,6 @@ public class RowMajorMatrix extends DenseMatrix implements MatrixMultiplication<
         }
     }
 
-    /**
-     * Return the one-dimensional array of matrix.
-     * @return the one-dimensional array of matrix.
-     */
-    public double[] array() {
-        return A;
-    }
-
     @Override
     public int nrows() {
         return nrows;
