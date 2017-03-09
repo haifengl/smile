@@ -180,18 +180,7 @@ public class NaiveMatrix implements DenseMatrix, MatrixMultiplication<NaiveMatri
     }
 
     @Override
-    public double apply(int i, int j) {
-        return A[i][j];
-    }
-
-    @Override
     public NaiveMatrix set(int i, int j, double x) {
-        A[i][j] = x;
-        return this;
-    }
-
-    @Override
-    public NaiveMatrix update(int i, int j, double x) {
         A[i][j] = x;
         return this;
     }

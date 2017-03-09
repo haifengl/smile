@@ -140,11 +140,6 @@ public class BandMatrix implements Matrix, LinearSolver {
         return A[i][j-i+m1];
     }
 
-    @Override
-    public double apply(int i, int j) {
-        return A[i][j-i+m1];
-    }
-
     public BandMatrix set(int i, int j, double x) {
         A[i][j-i+m1] = x;
         return this;

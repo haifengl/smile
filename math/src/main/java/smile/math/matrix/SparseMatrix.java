@@ -176,11 +176,6 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     }
 
     @Override
-    public double apply(int i, int j) {
-        return get(i, j);
-    }
-
-    @Override
     public void ax(double[] x, double[] y) {
         Arrays.fill(y, 0.0);
 
