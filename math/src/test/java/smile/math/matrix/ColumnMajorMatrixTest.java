@@ -158,7 +158,10 @@ public class ColumnMajorMatrixTest {
 
         ColumnMajorMatrix a = new ColumnMajorMatrix(A);
         ColumnMajorMatrix b = new ColumnMajorMatrix(B);
-        ColumnMajorMatrix c = new ColumnMajorMatrix(C);
-        assertTrue(smile.math.Math.equals(a.mm(b).array(), c.array(), 1E-7));
+        assertTrue(Math.equals(a.abmm(b).array(), C, 1E-7));
+        Math.abtmm(A, B, C);
+        assertTrue(Math.equals(a.abtmm(b).array(), C, 1E-7));
+        Math.atbmm(A, B, C);
+        assertTrue(Math.equals(a.atbmm(b).array(), C, 1E-7));
     }
 }

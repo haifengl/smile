@@ -19,6 +19,8 @@ package smile.classification;
 import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.Math;
+import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
 
 /**
@@ -82,7 +84,7 @@ public class LDA implements SoftClassifier<double[]>, Serializable {
      * to discriminant functions, normalized so that common covariance
      * matrix is spherical.
      */
-    private final double[][] scaling;
+    private final DenseMatrix scaling;
     /**
      * Eigen values of common variance matrix.
      */
@@ -240,7 +242,8 @@ public class LDA implements SoftClassifier<double[]>, Serializable {
         // Common mean vector.
         double[] mean = Math.colMean(x);
         // Common covariance.
-        double[][] C = new double[p][p];
+        DenseMatrix C = new ColumnMajorMatrix(p, p);
+        C.setSymmetric(true);
         // Class mean vectors.
         mu = new double[k][p];
 
@@ -274,7 +277,7 @@ public class LDA implements SoftClassifier<double[]>, Serializable {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
                 for (int l = 0; l <= j; l++) {
-                    C[j][l] += (x[i][j] - mean[j]) * (x[i][l] - mean[l]);
+                    C.add(j, l, (x[i][j] - mean[j]) * (x[i][l] - mean[l]));
                 }
             }
         }
@@ -282,16 +285,16 @@ public class LDA implements SoftClassifier<double[]>, Serializable {
         tol = tol * tol;
         for (int j = 0; j < p; j++) {
             for (int l = 0; l <= j; l++) {
-                C[j][l] /= (n - k);
-                C[l][j] = C[j][l];
+                C.div(j, l, (n - k));
+                C.set(l, j, C.get(j, l));
             }
 
-            if (C[j][j] < tol) {
+            if (C.get(j, j) < tol) {
                 throw new IllegalArgumentException(String.format("Covariance matrix (variable %d) is close to singular.", j));
             }
         }
 
-        EigenValueDecomposition evd = EigenValueDecomposition.decompose(C, true);
+        EigenValueDecomposition evd = new EigenValueDecomposition(C);
 
         for (double s : evd.getEigenValues()) {
             if (s < tol) {
@@ -336,7 +339,7 @@ public class LDA implements SoftClassifier<double[]>, Serializable {
                 d[j] = x[j] - mu[i][j];
             }
 
-            Math.atx(scaling, d, ux);
+            scaling.atx(d, ux);
 
             double f = 0.0;
             for (int j = 0; j < p; j++) {

@@ -22,7 +22,10 @@ import smile.graph.Graph;
 import smile.graph.Graph.Edge;
 import smile.math.distance.EuclideanDistance;
 import smile.math.Math;
+import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.Lanczos;
 import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
 import smile.neighbor.KNNSearch;
@@ -168,15 +171,16 @@ public class IsoMap {
         double[] mean = Math.rowMean(D);
         double mu = Math.mean(mean);
 
-        double[][] B = new double[n][n];
+        DenseMatrix B = new ColumnMajorMatrix(n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
-                B[i][j] = D[i][j] - mean[i] - mean[j] + mu;
-                B[j][i] = B[i][j];
+                double b = D[i][j] - mean[i] - mean[j] + mu;
+                B.set(i, j, b);
+                B.set(j, i, b);
             }
         }
 
-        EigenValueDecomposition eigen = Math.eigen(B, d);
+        EigenValueDecomposition eigen = Lanczos.eigen(B, d);
         coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
             if (eigen.getEigenValues()[j] < 0) {
@@ -185,7 +189,7 @@ public class IsoMap {
 
             double scale = Math.sqrt(eigen.getEigenValues()[j]);
             for (int i = 0; i < n; i++) {
-                coordinates[i][j] = eigen.getEigenVectors()[i][j] * scale;
+                coordinates[i][j] = eigen.getEigenVectors().get(i, j) * scale;
             }
         }        
     }

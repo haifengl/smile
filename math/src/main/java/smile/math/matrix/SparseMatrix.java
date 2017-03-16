@@ -273,7 +273,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      * Returns the matrix multiplication C = A * B.
      */
     @Override
-    public SparseMatrix mm(SparseMatrix B) {
+    public SparseMatrix abmm(SparseMatrix B) {
         if (ncols != B.nrows) {
             throw new IllegalArgumentException(String.format("Matrix dimensions do not match for matrix multiplication: %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
         }
@@ -349,6 +349,17 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         }
 
         return nz;
+    }
+    @Override
+    public SparseMatrix abtmm(SparseMatrix B) {
+        SparseMatrix BT = B.transpose();
+        return abmm(BT);
+    }
+
+    @Override
+    public SparseMatrix atbmm(SparseMatrix B) {
+        SparseMatrix AT = transpose();
+        return AT.abmm(B);
     }
 
     @Override

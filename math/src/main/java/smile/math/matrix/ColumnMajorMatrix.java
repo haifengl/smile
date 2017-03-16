@@ -24,7 +24,7 @@ import smile.stat.distribution.GaussianDistribution;
  * A dense matrix whose data is stored in a single 1D array of
  * doubles in column major order.
  */
-public class ColumnMajorMatrix extends DenseMatrix implements MatrixMultiplication<ColumnMajorMatrix, ColumnMajorMatrix> {
+public class ColumnMajorMatrix extends DenseMatrix {
 
     /**
      * The original matrix.
@@ -102,6 +102,15 @@ public class ColumnMajorMatrix extends DenseMatrix implements MatrixMultiplicati
     }
 
     /**
+     * Constructor.
+     */
+    ColumnMajorMatrix(int rows, int cols, double[] value) {
+        this.nrows = rows;
+        this.ncols = cols;
+        this.A = value;
+    }
+
+    /**
      * Constructor of matrix with normal random values with given mean and standard dev.
      */
     public ColumnMajorMatrix(int rows, int cols, double mu, double sigma) {
@@ -114,6 +123,26 @@ public class ColumnMajorMatrix extends DenseMatrix implements MatrixMultiplicati
         }
     }
 
+    /**
+     * Returns an n-by-n identity matrix with ones on the main diagonal and zeros elsewhere.
+     */
+    public static ColumnMajorMatrix eye(int n) {
+        return eye(n, n);
+    }
+
+    /**
+     * Returns an n-by-n identity matrix with ones on the main diagonal and zeros elsewhere.
+     */
+    public static ColumnMajorMatrix eye(int m, int n) {
+        ColumnMajorMatrix matrix = new ColumnMajorMatrix(m, n);
+        int l = Math.min(m, n);
+        for (int i = 0; i < l; i++) {
+            matrix.set(i, i, 1.0);
+        }
+
+        return matrix;
+    }
+
     @Override
     public ColumnMajorMatrix transpose() {
         ColumnMajorMatrix B = new ColumnMajorMatrix(ncols, nrows);
@@ -124,6 +153,10 @@ public class ColumnMajorMatrix extends DenseMatrix implements MatrixMultiplicati
         }
 
         return B;
+    }
+
+    public RowMajorMatrix transposeToRowMajor() {
+        return new RowMajorMatrix(ncols, nrows, A);
     }
 
     public RowMajorMatrix toRowMajor() {
@@ -294,7 +327,7 @@ public class ColumnMajorMatrix extends DenseMatrix implements MatrixMultiplicati
     }
 
     @Override
-    public ColumnMajorMatrix mm(ColumnMajorMatrix B) {
+    public ColumnMajorMatrix abmm(DenseMatrix B) {
         if (ncols() != B.nrows()) {
             throw new IllegalArgumentException(String.format("Matrix multiplication A * B: %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
         }
@@ -305,6 +338,42 @@ public class ColumnMajorMatrix extends DenseMatrix implements MatrixMultiplicati
                 double v = 0.0;
                 for (int k = 0; k < ncols; k++) {
                     v += get(i, k) * B.get(k, j);
+                }
+                C.set(i, j, v);
+            }
+        }
+        return C;
+    }
+
+    @Override
+    public ColumnMajorMatrix abtmm(DenseMatrix B) {
+        if (ncols() != B.ncols()) {
+            throw new IllegalArgumentException(String.format("Matrix multiplication A * B': %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
+        }
+
+        ColumnMajorMatrix C = new ColumnMajorMatrix(nrows, B.ncols());
+        for (int k = 0; k < ncols; k++) {
+            for (int i = 0; i < nrows; i++) {
+                for (int j = 0; j < B.nrows(); j++) {
+                    C.add(i, j, get(i, k) * B.get(j, k));
+                }
+            }
+        }
+        return C;
+    }
+
+    @Override
+    public ColumnMajorMatrix atbmm(DenseMatrix B) {
+        if (nrows() != B.nrows()) {
+            throw new IllegalArgumentException(String.format("Matrix multiplication A' * B: %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
+        }
+
+        ColumnMajorMatrix C = new ColumnMajorMatrix(nrows, B.ncols());
+        for (int i = 0; i < ncols; i++) {
+            for (int j = 0; j < B.ncols(); j++) {
+                double v = 0.0;
+                for (int k = 0; k < nrows; k++) {
+                    v += get(k, i) * B.get(k, j);
                 }
                 C.set(i, j, v);
             }

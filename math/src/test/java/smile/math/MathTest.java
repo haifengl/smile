@@ -936,8 +936,12 @@ public class MathTest {
             {-0.2648886, -0.89044952, 0.3700456},
             {-0.6391588, 0.44947578, 0.6240573}
         };
-        double[][] B = Math.inverse(A);
-        assertTrue(Math.equals(B, Math.transpose(A), 1E-7));
+        DenseMatrix B = Math.inverse(A);
+        for (int i = 0; i < A.length; i++) {
+            for (int j = 0; j < A[i].length; j++) {
+                assertEquals(A[j][i], B.get(i, j), 1E-7);
+            }
+        }
     }
 
     /**
@@ -1009,41 +1013,12 @@ public class MathTest {
             v[i] = 1 + Math.random();
         }
 
-        eigenvalue = EigenValueDecomposition.eigen(new ColumnMajorMatrix(A), v, 1E-6);
+        eigenvalue = PowerIteration.eigen(new ColumnMajorMatrix(A), v, 1E-6);
         assertEquals(-eigenValues[0], eigenvalue, 1E-3);
 
         ratio = Math.abs(eigenVectors[0][0] / v[0]);
         for (int i = 1; i < 3; i++) {
             assertEquals(ratio, Math.abs(eigenVectors[i][0] / v[i]), 1E-3);
-        }
-    }
-
-    /**
-     * Test of eigen method, of class Math.
-     */
-    @Test
-    public void testEigen_doubleArrArr() {
-        System.out.println("eigen");
-        double[][] A = {
-            {0.9000, 0.4000, 0.7000},
-            {0.4000, 0.5000, 0.3000},
-            {0.7000, 0.3000, 0.8000}
-        };
-        double[][] eigenVectors = {
-            {0.6881997, -0.07121225, 0.7220180},
-            {0.3700456, 0.89044952, -0.2648886},
-            {0.6240573, -0.44947578, -0.6391588}
-        };
-        double[] eigenValues = {1.7498382, 0.3165784, 0.1335834};
-        EigenValueDecomposition result = Math.eigen(A, true);
-        assertTrue(Math.equals(eigenValues, result.getEigenValues(), 1E-7));
-
-        assertEquals(eigenVectors.length, result.getEigenVectors().length);
-        assertEquals(eigenVectors[0].length, result.getEigenVectors()[0].length);
-        for (int i = 0; i < eigenVectors.length; i++) {
-            for (int j = 0; j < eigenVectors[i].length; j++) {
-                assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(result.getEigenVectors()[i][j]), 1E-7);
-            }
         }
     }
 
@@ -1067,11 +1042,11 @@ public class MathTest {
         EigenValueDecomposition result = Math.eigen(A, 3);
         assertTrue(Math.equals(eigenValues, result.getEigenValues(), 1E-7));
 
-        assertEquals(eigenVectors.length, result.getEigenVectors().length);
-        assertEquals(eigenVectors[0].length, result.getEigenVectors()[0].length);
+        assertEquals(eigenVectors.length, result.getEigenVectors().nrows());
+        assertEquals(eigenVectors[0].length, result.getEigenVectors().ncols());
         for (int i = 0; i < eigenVectors.length; i++) {
             for (int j = 0; j < eigenVectors[i].length; j++) {
-                assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(result.getEigenVectors()[i][j]), 1E-7);
+                assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(result.getEigenVectors().get(i, j)), 1E-7);
             }
         }
     }
@@ -1117,19 +1092,19 @@ public class MathTest {
         SingularValueDecomposition result = Math.svd(A);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
-        assertEquals(U.length, result.getU().length);
-        assertEquals(U[0].length, result.getU()[0].length);
+        assertEquals(U.length, result.getU().nrows());
+        assertEquals(U[0].length, result.getU().ncols());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU()[i][j]), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().length);
-        assertEquals(V[0].length, result.getV()[0].length);
+        assertEquals(V.length, result.getV().nrows());
+        assertEquals(V[0].length, result.getV().ncols());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV()[i][j]), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
             }
         }
     }
@@ -1175,12 +1150,12 @@ public class MathTest {
             {0.8783784, 2.2297297},
             {0.4729730, 0.6621622}
         };
-        double[][] x = Math.solve(A, B2);
-        assertEquals(X2.length, x.length);
-        assertEquals(X2[0].length, x[0].length);
+        DenseMatrix x = Math.solve(A, B2);
+        assertEquals(X2.length, x.nrows());
+        assertEquals(X2[0].length, x.ncols());
         for (int i = 0; i < X2.length; i++) {
             for (int j = 0; j < X2[i].length; j++) {
-                assertEquals(X2[i][j], x[i][j], 1E-7);
+                assertEquals(X2[i][j], x.get(i, j), 1E-7);
             }
         }
     }

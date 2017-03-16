@@ -157,20 +157,20 @@ public class Lanczos {
 
         if (A.nrows() >= A.ncols()) {
 
-            double[][] V = eigen.getEigenVectors();
+            DenseMatrix V = eigen.getEigenVectors();
 
             double[] tmp = new double[A.nrows()];
             double[] vi = new double[A.ncols()];
-            double[][] U = new double[A.nrows()][s.length];
+            DenseMatrix U = new ColumnMajorMatrix(A.nrows(), s.length);
             for (int i = 0; i < s.length; i++) {
                 for (int j = 0; j < A.ncols(); j++) {
-                    vi[j] = V[j][i];
+                    vi[j] = V.get(j, i);
                 }
 
                 A.ax(vi, tmp);
 
                 for (int j = 0; j < A.nrows(); j++) {
-                    U[j][i] = tmp[j] / s[i];
+                    U.set(j, i, tmp[j] / s[i]);
                 }
             }
 
@@ -178,20 +178,20 @@ public class Lanczos {
 
         } else {
 
-            double[][] U = eigen.getEigenVectors();
+            DenseMatrix U = eigen.getEigenVectors();
 
             double[] tmp = new double[A.ncols()];
             double[] ui = new double[A.nrows()];
-            double[][] V = new double[A.ncols()][s.length];
+            DenseMatrix V = new ColumnMajorMatrix(A.ncols(), s.length);
             for (int i = 0; i < s.length; i++) {
                 for (int j = 0; j < A.nrows(); j++) {
-                    ui[j] = U[j][i];
+                    ui[j] = U.get(j, i);
                 }
 
                 A.atx(ui, tmp);
 
                 for (int j = 0; j < A.ncols(); j++) {
-                    V[j][i] = tmp[j] / s[i];
+                    V.set(j, i, tmp[j] / s[i]);
                 }
             }
 
@@ -267,7 +267,7 @@ public class Lanczos {
         // arrays used in the QL decomposition
         double[] ritz = new double[n + 1];
         // eigenvectors calculated in the QL decomposition
-        double[][] z = null;
+        ColumnMajorMatrix z = null;
 
         // First step of the Lanczos algorithm. It also does a step of extended
         // local re-orthogonalization.
@@ -408,9 +408,9 @@ public class Lanczos {
             System.arraycopy(alf, 0, ritz, 0, j + 1);
             System.arraycopy(bet, 0, wptr[5], 0, j + 1);
 
-            z = new double[j + 1][j + 1];
+            z = new ColumnMajorMatrix(j + 1, j + 1);
             for (int i = 0; i <= j; i++) {
-                z[i][i] = 1.0;
+                z.set(i, i, 1.0);
             }
 
             // compute the eigenvalues and eigenvectors of the
@@ -418,7 +418,7 @@ public class Lanczos {
             EigenValueDecomposition.tql2(z, ritz, wptr[5], j + 1);
 
             for (int i = 0; i <= j; i++) {
-                bnd[i] = rnm * Math.abs(z[j][i]);
+                bnd[i] = rnm * Math.abs(z.get(j, i));
             }
 
             // massage error bounds for very close ritz values
@@ -445,12 +445,12 @@ public class Lanczos {
         k = Math.min(k, neig);
 
         double[] eigenvalues = new double[k];
-        double[][] eigenvectors = new double[n][k];
+        ColumnMajorMatrix eigenvectors = new ColumnMajorMatrix(n, k);
         for (int i = 0, index = 0; i <= j && index < k; i++) {
             if (bnd[i] <= kappa * Math.abs(ritz[i])) {
                 for (int row = 0; row < n; row++) {
                     for (int l = 0; l <= j; l++) {
-                        eigenvectors[row][index] += q[l][row] * z[l][i];
+                        eigenvectors.add(row, index, q[l][row] * z.get(l, i));
                     }
                 }
                 eigenvalues[index++] = ritz[i];

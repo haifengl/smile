@@ -78,14 +78,14 @@ public class EigenValueDecompositionTest {
     @Test
     public void testDecompose() {
         System.out.println("decompose");
-        EigenValueDecomposition result = EigenValueDecomposition.decompose(A, true);
+        EigenValueDecomposition result = new EigenValueDecomposition(new ColumnMajorMatrix(A, true));
         assertTrue(Math.equals(eigenValues, result.getEigenValues(), 1E-7));
 
-        assertEquals(eigenVectors.length,    result.getEigenVectors().length);
-        assertEquals(eigenVectors[0].length, result.getEigenVectors()[0].length);
+        assertEquals(eigenVectors.length,    result.getEigenVectors().nrows());
+        assertEquals(eigenVectors[0].length, result.getEigenVectors().ncols());
         for (int i = 0; i < eigenVectors.length; i++) {
             for (int j = 0; j < eigenVectors[i].length; j++) {
-                assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(result.getEigenVectors()[i][j]), 1E-7);
+                assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(result.getEigenVectors().get(i, j)), 1E-7);
             }
         }
     }
@@ -96,7 +96,7 @@ public class EigenValueDecompositionTest {
     @Test
     public void testDecompose2() {
         System.out.println("decompose");
-        EigenValueDecomposition result = EigenValueDecomposition.decompose(A, true, true);
+        EigenValueDecomposition result = new EigenValueDecomposition(new ColumnMajorMatrix(A, true), true);
         assertTrue(Math.equals(eigenValues, result.getEigenValues(), 1E-7));
         assertTrue(null == result.getEigenVectors());
     }
@@ -107,14 +107,14 @@ public class EigenValueDecompositionTest {
     @Test
     public void testDecompose3() {
         System.out.println("decompose");
-        EigenValueDecomposition result = EigenValueDecomposition.decompose(A2, false);
+        EigenValueDecomposition result = new EigenValueDecomposition(A2);
         assertTrue(Math.equals(eigenValues2, result.getEigenValues(), 1E-7));
 
-        assertEquals(eigenVectors2.length,    result.getEigenVectors().length);
-        assertEquals(eigenVectors2[0].length, result.getEigenVectors()[0].length);
+        assertEquals(eigenVectors2.length,    result.getEigenVectors().nrows());
+        assertEquals(eigenVectors2[0].length, result.getEigenVectors().ncols());
         for (int i = 0; i < eigenVectors2.length; i++) {
             for (int j = 0; j < eigenVectors2[i].length; j++) {
-                assertEquals(Math.abs(eigenVectors2[i][j]), Math.abs(result.getEigenVectors()[i][j]), 1E-7);
+                assertEquals(Math.abs(eigenVectors2[i][j]), Math.abs(result.getEigenVectors().get(i, j)), 1E-7);
             }
         }
     }
@@ -125,7 +125,7 @@ public class EigenValueDecompositionTest {
     @Test
     public void testDecompose4() {
         System.out.println("decompose");
-        EigenValueDecomposition result = EigenValueDecomposition.decompose(A2, false, true);
+        EigenValueDecomposition result = new EigenValueDecomposition(A2, true);
         assertTrue(Math.equals(eigenValues2, result.getEigenValues(), 1E-7));
         assertTrue(null == result.getEigenVectors());
     }
@@ -136,14 +136,14 @@ public class EigenValueDecompositionTest {
     @Test
     public void testLanczos() {
         System.out.println("Lanczos");
-        EigenValueDecomposition result = EigenValueDecomposition.decompose(new RowMajorMatrix(A), 3);
+        EigenValueDecomposition result = Lanczos.eigen(new RowMajorMatrix(A), 3);
         assertTrue(Math.equals(eigenValues, result.getEigenValues(), 1E-7));
 
-        assertEquals(eigenVectors.length,    result.getEigenVectors().length);
-        assertEquals(eigenVectors[0].length, result.getEigenVectors()[0].length);
+        assertEquals(eigenVectors.length,    result.getEigenVectors().nrows());
+        assertEquals(eigenVectors[0].length, result.getEigenVectors().ncols());
         for (int i = 0; i < eigenVectors.length; i++) {
             for (int j = 0; j < eigenVectors[i].length; j++) {
-                assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(result.getEigenVectors()[i][j]), 1E-7);
+                assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(result.getEigenVectors().get(i, j)), 1E-7);
             }
         }
     }
@@ -154,11 +154,11 @@ public class EigenValueDecompositionTest {
     @Test
     public void testLanczos1() {
         System.out.println("Lanczos1");
-        EigenValueDecomposition result = EigenValueDecomposition.decompose(new RowMajorMatrix(A), 1);
+        EigenValueDecomposition result = Lanczos.eigen(new RowMajorMatrix(A), 1);
         assertEquals(eigenValues[0], result.getEigenValues()[0], 1E-4);
 
         for (int i = 0; i < 3; i++) {
-            assertEquals(Math.abs(eigenVectors[i][0]), Math.abs(result.getEigenVectors()[i][0]), 1E-4);
+            assertEquals(Math.abs(eigenVectors[i][0]), Math.abs(result.getEigenVectors().get(i, 0)), 1E-4);
         }
     }
 
@@ -172,7 +172,7 @@ public class EigenValueDecompositionTest {
         A[0][0] = A[1][1] = A[2][2] = A[3][3] = 2.0;
         for (int i = 4; i < 500; i++)
             A[i][i] = (500 - i) / 500.0;
-        EigenValueDecomposition result = EigenValueDecomposition.decompose(new RowMajorMatrix(A), 6);
+        EigenValueDecomposition result = Lanczos.eigen(new RowMajorMatrix(A), 6);
         assertEquals(2.0, result.getEigenValues()[0], 1E-4);
         assertEquals(2.0, result.getEigenValues()[1], 1E-4);
         assertEquals(2.0, result.getEigenValues()[2], 1E-4);
@@ -191,7 +191,7 @@ public class EigenValueDecompositionTest {
         for (int i = 0; i < v.length; i++)
             v[i] = 1.0;
 
-        double eigenvalue = EigenValueDecomposition.eigen(new RowMajorMatrix(A), v, 1E-6);
+        double eigenvalue = PowerIteration.eigen(new RowMajorMatrix(A), v, 1E-6);
         assertEquals(eigenValues[0], eigenvalue, 1E-4);
 
         double ratio = Math.abs(eigenVectors[0][0]/v[0]);
@@ -207,7 +207,7 @@ public class EigenValueDecompositionTest {
         for (int i = 0; i < v.length; i++)
             v[i] = 1.0;
 
-        eigenvalue = EigenValueDecomposition.eigen(new RowMajorMatrix(A), v, 0.22, 1E-4, 4);
+        eigenvalue = PowerIteration.eigen(new RowMajorMatrix(A), v, 0.22, 1E-4, 4);
         assertEquals(-eigenValues[0], eigenvalue, 1E-3);
 
         ratio = Math.abs(eigenVectors[0][0]/v[0]);

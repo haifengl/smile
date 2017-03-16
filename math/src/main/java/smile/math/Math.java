@@ -20,14 +20,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.matrix.Matrix;
-import smile.math.matrix.ColumnMajorMatrix;
-import smile.math.matrix.LUDecomposition;
-import smile.math.matrix.QRDecomposition;
-import smile.math.matrix.EigenValueDecomposition;
-import smile.math.matrix.SingularValueDecomposition;
-import smile.math.matrix.Lanczos;
-import smile.math.matrix.PowerIteration;
+import smile.math.matrix.*;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.SortUtils;
@@ -2896,7 +2889,7 @@ public class Math {
      * L2 matrix norm. Maximum singular value.
      */
     public static double norm2(double[][] x) {
-        return SingularValueDecomposition.decompose(x).norm();
+        return new SingularValueDecomposition(x).norm();
     }
 
     /**
@@ -4218,18 +4211,14 @@ public class Math {
      * Returns the matrix inverse or pseudo inverse.
      * @return  matrix inverse if A is square, pseudo inverse otherwise.
      */
-    public static double[][] inverse(double[][] A) {
-        double[][] inv = eye(A[0].length, A.length);
-
+    public static DenseMatrix inverse(double[][] A) {
         if (A.length == A[0].length) {
             LUDecomposition lu = new LUDecomposition(A);
-            lu.solve(inv);
+            return lu.inverse();
         } else {
             QRDecomposition qr = new QRDecomposition(A);
-            qr.solve(inv);
+            return qr.inverse();
         }
-
-        return inv;
     }
 
     /**
@@ -4249,7 +4238,7 @@ public class Math {
      * @return  Effective numerical rank.
      */
     public static int rank(double[][] A) {
-        return SingularValueDecomposition.decompose(A).rank();
+        return new SingularValueDecomposition(A).rank();
     }
 
     /**
@@ -4332,28 +4321,17 @@ public class Math {
      * @param A    square matrix which will be altered after decomposition.
      */
     public static EigenValueDecomposition eigen(double[][] A) {
-        return EigenValueDecomposition.decompose(A);
+        return new EigenValueDecomposition(A);
     }
 
     /**
      * Returns the eigen value decomposition of a square matrix. Note that the input
      * matrix will be altered during decomposition.
      * @param A    square matrix which will be altered after decomposition.
-     * @param symmetric true if the matrix is assumed to be symmetric.
-     */
-    public static EigenValueDecomposition eigen(double[][] A, boolean symmetric) {
-        return EigenValueDecomposition.decompose(A, symmetric);
-    }
-
-    /**
-     * Returns the eigen value decomposition of a square matrix. Note that the input
-     * matrix will be altered during decomposition.
-     * @param A    square matrix which will be altered after decomposition.
-     * @param symmetric true if the matrix is assumed to be symmetric.
      * @param onlyValues true if only compute eigenvalues; the default is to compute eigenvectors also.
      */
-    public static EigenValueDecomposition eigen(double[][] A, boolean symmetric, boolean onlyValues) {
-        return EigenValueDecomposition.decompose(A, symmetric, onlyValues);
+    public static EigenValueDecomposition eigen(double[][] A, boolean onlyValues) {
+        return new EigenValueDecomposition(A, onlyValues);
     }
 
     /**
@@ -4361,7 +4339,7 @@ public class Math {
      * will be altered after decomposition.
      */
     public static SingularValueDecomposition svd(double[][] A) {
-        return SingularValueDecomposition.decompose(A);
+        return new SingularValueDecomposition(A);
     }
 
     /**
@@ -4387,19 +4365,20 @@ public class Math {
      * Solve A*X = B (exact solution if A is square, least squares
      * solution otherwise), which means the LU or QR decomposition will take
      * place in A and the results will be stored in B.
-     * @return the solution, which is actually the matrix B in case of exact solution.
+     * @return the solution.
      */
-    public static double[][] solve(double[][] A, double[][] B) {
+    public static DenseMatrix solve(double[][] A, double[][] B) {
+        DenseMatrix b = new ColumnMajorMatrix(B);
+        DenseMatrix X = new ColumnMajorMatrix(A[0].length, B[0].length);
         if (A.length == A[0].length) {
             LUDecomposition lu = new LUDecomposition(A);
-            lu.solve(B);
-            return B;
+            lu.solve(b, X);
         } else {
-            double[][] X = new double[A[0].length][B[0].length];
             QRDecomposition qr = new QRDecomposition(A);
-            qr.solve(B, X);
-            return X;
+            qr.solve(b, X);
         }
+
+        return X;
     }
 
     /**

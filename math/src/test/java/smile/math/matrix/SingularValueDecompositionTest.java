@@ -74,22 +74,22 @@ public class SingularValueDecompositionTest {
             {0.6240573, -0.44947578, -0.6391588}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(A);
+        SingularValueDecomposition result = new SingularValueDecomposition(A);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
-        assertEquals(U.length, result.getU().length);
-        assertEquals(U[0].length, result.getU()[0].length);
+        assertEquals(U.length, result.getU().nrows());
+        assertEquals(U[0].length, result.getU().ncols());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU()[i][j]), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().length);
-        assertEquals(V[0].length, result.getV()[0].length);
+        assertEquals(V.length, result.getV().nrows());
+        assertEquals(V[0].length, result.getV().ncols());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV()[i][j]), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
             }
         }
     }
@@ -132,22 +132,22 @@ public class SingularValueDecompositionTest {
             {-0.5156083, -0.36573746, -0.47613340, 0.41342817, -0.2659765, 0.1654796, -0.32346758}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(A);
+        SingularValueDecomposition result = new SingularValueDecomposition(A);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
-        assertEquals(U.length, result.getU().length);
-        assertEquals(U[0].length, result.getU()[0].length);
+        assertEquals(U.length, result.getU().nrows());
+        assertEquals(U[0].length, result.getU().ncols());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU()[i][j]), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().length);
-        assertEquals(V[0].length, result.getV()[0].length);
+        assertEquals(V.length, result.getV().nrows());
+        assertEquals(V[0].length, result.getV().ncols());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV()[i][j]), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
             }
         }
     }
@@ -189,22 +189,22 @@ public class SingularValueDecompositionTest {
             {0.06127719, 0.230326187, 0.04693098, -0.3300697, 0.825499232, -0.3880689}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(A);
+        SingularValueDecomposition result = new SingularValueDecomposition(A);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
-        assertEquals(U.length, result.getU().length);
-        assertEquals(U[0].length, result.getU()[0].length);
+        assertEquals(U.length, result.getU().nrows());
+        assertEquals(U[0].length, result.getU().ncols());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU()[i][j]), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().length);
-        assertEquals(V[0].length, result.getV()[0].length);
+        assertEquals(V.length, result.getV().nrows());
+        assertEquals(V[0].length, result.getV().ncols());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV()[i][j]), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
             }
         }
     }
@@ -245,22 +245,22 @@ public class SingularValueDecompositionTest {
             {0.82502638, -0.400562630, 0.30810911, -0.1797507, 0.1778750}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(A);
+        SingularValueDecomposition result = new SingularValueDecomposition(A);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
-        assertEquals(U.length, result.getU().length);
-        assertEquals(U[0].length, result.getU()[0].length);
+        assertEquals(U.length, result.getU().nrows());
+        assertEquals(U[0].length, result.getU().ncols());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU()[i][j]), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().length);
-        assertEquals(V[0].length, result.getV()[0].length);
+        assertEquals(V.length, result.getV().nrows());
+        assertEquals(V[0].length, result.getV().ncols());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV()[i][j]), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
             }
         }
     }
@@ -300,22 +300,22 @@ public class SingularValueDecompositionTest {
             {0.1873664, -0.7026270, -0.07117046, 0.6827473}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(A);
+        SingularValueDecomposition result = new SingularValueDecomposition(A);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
-        assertEquals(U.length, result.getU().length);
-        assertEquals(U[0].length, result.getU()[0].length);
+        assertEquals(U.length, result.getU().nrows());
+        assertEquals(U[0].length, result.getU().ncols());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU()[i][j]), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().length);
-        assertEquals(V[0].length, result.getV()[0].length);
+        assertEquals(V.length, result.getV().nrows());
+        assertEquals(V[0].length, result.getV().ncols());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV()[i][j]), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
             }
         }
     }
@@ -355,20 +355,20 @@ public class SingularValueDecompositionTest {
             {-0.5443460, 0.37590198, 0.55072289, -0.2115256, -0.2675392, -0.003003781}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(A);
+        SingularValueDecomposition result = new SingularValueDecomposition(A);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
-        assertEquals(U.length, result.getU().length);
+        assertEquals(U.length, result.getU().nrows());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU()[i][j]), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().length);
+        assertEquals(V.length, result.getV().nrows());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV()[i][j]), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
             }
         }
     }
@@ -406,20 +406,20 @@ public class SingularValueDecompositionTest {
             {-0.4720051, -0.2247534, 0.42477493, -0.36219292, -0.4534882}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(A);
+        SingularValueDecomposition result = new SingularValueDecomposition(A);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
-        assertEquals(U.length, result.getU().length);
+        assertEquals(U.length, result.getU().nrows());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU()[i][j]), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().length);
+        assertEquals(V.length, result.getV().nrows());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV()[i][j]), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
             }
         }
     }
@@ -455,20 +455,20 @@ public class SingularValueDecompositionTest {
             {0.32967585, 0.18412070, -0.02567023, 0.2254902}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(A);
+        SingularValueDecomposition result = new SingularValueDecomposition(A);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-6));
 
-        assertEquals(U.length, result.getU().length);
+        assertEquals(U.length, result.getU().nrows());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU()[i][j]), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().length);
+        assertEquals(V.length, result.getV().nrows());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV()[i][j]), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
             }
         }
     }
@@ -520,22 +520,22 @@ public class SingularValueDecompositionTest {
             {-0.406678, -0.10893, 0.492444, 0.0123293, 0.270696, -0.0538747, -0.0538747, -0.165339, -0.579426, -0.225424, 0.231961, 0.182535}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(A);
+        SingularValueDecomposition result = new SingularValueDecomposition(A);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-5));
 
-        assertEquals(Ut[0].length, result.getU().length);
-        assertEquals(Ut.length, result.getU()[0].length);
+        assertEquals(Ut[0].length, result.getU().nrows());
+        assertEquals(Ut.length, result.getU().ncols());
         for (int i = 0; i < Ut.length; i++) {
             for (int j = 0; j < Ut[i].length; j++) {
-                assertEquals(Math.abs(Ut[i][j]), Math.abs(result.getU()[j][i]), 1E-5);
+                assertEquals(Math.abs(Ut[i][j]), Math.abs(result.getU().get(j, i)), 1E-5);
             }
         }
 
-        assertEquals(Vt[0].length, result.getV().length);
-        assertEquals(Vt.length, result.getV()[0].length);
+        assertEquals(Vt[0].length, result.getV().nrows());
+        assertEquals(Vt.length, result.getV().ncols());
         for (int i = 0; i < Vt.length; i++) {
             for (int j = 0; j < Vt[i].length; j++) {
-                assertEquals(Math.abs(Vt[i][j]), Math.abs(result.getV()[j][i]), 1E-5);
+                assertEquals(Math.abs(Vt[i][j]), Math.abs(result.getV().get(j, i)), 1E-5);
             }
         }
     }
@@ -554,7 +554,7 @@ public class SingularValueDecompositionTest {
         double[] B = {0.5, 0.5, 0.5};
         double[] X = {-0.2027027, 0.8783784, 0.4729730};
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(A);
+        SingularValueDecomposition result = new SingularValueDecomposition(A);
         double[] x = new double[B.length];
         result.solve(B, x);
         assertEquals(X.length, x.length);
@@ -585,7 +585,7 @@ public class SingularValueDecompositionTest {
             {0.4729730, 0.6621622}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(A);
+        SingularValueDecomposition result = new SingularValueDecomposition(A);
         double[][] x = new double[B2.length][B2[0].length];
         result.solve(B2, x);
         assertEquals(X2.length, x.length);
@@ -635,22 +635,22 @@ public class SingularValueDecompositionTest {
             {-0.5156083, -0.36573746, -0.47613340, 0.41342817, -0.2659765, 0.1654796, -0.32346758}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(new RowMajorMatrix(A), 7);
+        SingularValueDecomposition result = Lanczos.svd(new RowMajorMatrix(A), 7);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
-        assertEquals(U.length, result.getU().length);
-        assertEquals(U[0].length, result.getU()[0].length);
+        assertEquals(U.length, result.getU().nrows());
+        assertEquals(U[0].length, result.getU().ncols());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU()[i][j]), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().length);
-        assertEquals(V[0].length, result.getV()[0].length);
+        assertEquals(V.length, result.getV().nrows());
+        assertEquals(V[0].length, result.getV().ncols());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV()[i][j]), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
             }
         }
     }
@@ -686,20 +686,22 @@ public class SingularValueDecompositionTest {
             {0.32967585, 0.18412070, -0.02567023, 0.2254902}
         };
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(new RowMajorMatrix(A), 4);
+        SingularValueDecomposition result = Lanczos.svd(new RowMajorMatrix(A), 4);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-6));
 
-        assertEquals(U.length, result.getU().length);
+        assertEquals(U.length, result.getU().nrows());
+        assertEquals(U[0].length, result.getU().ncols());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU()[i][j]), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().length);
+        assertEquals(V.length, result.getV().nrows());
+        assertEquals(V[0].length, result.getV().ncols());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV()[i][j]), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
             }
         }
     }
@@ -752,20 +754,22 @@ public class SingularValueDecompositionTest {
 
         double[][] V = Math.transpose(Vt);
 
-        SingularValueDecomposition result = SingularValueDecomposition.decompose(new SparseMatrix(A), 9);
+        SingularValueDecomposition result = Lanczos.svd(new SparseMatrix(A), 9);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-5));
 
-        assertEquals(U.length, result.getU().length);
+        assertEquals(U.length, result.getU().nrows());
+        assertEquals(U[0].length, result.getU().ncols());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU()[i][j]), 1E-5);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-5);
             }
         }
 
-        assertEquals(V.length, result.getV().length);
+        assertEquals(V.length, result.getV().nrows());
+        assertEquals(V[0].length, result.getV().ncols());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV()[i][j]), 1E-5);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-5);
             }
         }
     }
