@@ -26,6 +26,7 @@ import smile.math.Math;
 import smile.math.SparseArray;
 import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.Lanczos;
 import smile.math.matrix.SparseMatrix;
 import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
@@ -197,13 +198,13 @@ public class LaplacianEigenmap {
         }
 
         L = W.toSparseMatrix();
-        EigenValueDecomposition eigen = EigenValueDecomposition.decompose(L, d + 1);
+        EigenValueDecomposition eigen = Lanczos.eigen(L, d + 1);
 
         coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
             double norm = 0.0;
             for (int i = 0; i < n; i++) {
-                coordinates[i][j] = eigen.getEigenVectors()[i][j + 1] * D[i];
+                coordinates[i][j] = eigen.getEigenVectors().get(i, j + 1) * D[i];
                 norm += coordinates[i][j] * coordinates[i][j];
             }
 

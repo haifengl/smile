@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.math.matrix;
 
-import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Complex;
@@ -94,14 +93,14 @@ public class EigenValueDecomposition {
     /**
      * Array of eigen vectors.
      */
-    private double[][] V;
+    private DenseMatrix V;
 
     /**
      * Private constructor.
      * @param V eigenvectors.
      * @param d eigenvalues.
      */
-    EigenValueDecomposition(double[][] V, double[] d) {
+    EigenValueDecomposition(DenseMatrix V, double[] d) {
         this.V = V;
         this.d = d;
     }
@@ -112,7 +111,7 @@ public class EigenValueDecomposition {
      * @param d real part of eigenvalues.
      * @param e imaginary part of eigenvalues.
      */
-    EigenValueDecomposition(double[][] V, double[] d, double[] e) {
+    EigenValueDecomposition(DenseMatrix V, double[] d, double[] e) {
         this.V = V;
         this.d = d;
         this.e = e;
@@ -121,7 +120,7 @@ public class EigenValueDecomposition {
     /**
      * Returns the eigenvector matrix, ordered by eigen values from largest to smallest.
      */
-    public double[][] getEigenVectors() {
+    public DenseMatrix getEigenVectors() {
         return V;
     }
 
@@ -153,16 +152,16 @@ public class EigenValueDecomposition {
      * part of eigenvalues, lower subdiagonal are positive imaginary parts, and
      * upper subdiagonal are negative imaginary parts.
      */
-    public double[][] getD() {
-        int n = V.length;
-        double[][] D = new double[n][n];
+    public DenseMatrix getD() {
+        int n = V.nrows();
+        DenseMatrix D = new ColumnMajorMatrix(n, n);
         for (int i = 0; i < n; i++) {
-            D[i][i] = d[i];
+            D.set(i, i, d[i]);
             if (e != null) {
                 if (e[i] > 0) {
-                    D[i][i + 1] = e[i];
+                    D.set(i, i + 1, e[i]);
                 } else if (e[i] < 0) {
-                    D[i][i - 1] = e[i];
+                    D.set(i, i - 1, e[i]);
                 }
             }
         }
@@ -174,64 +173,58 @@ public class EigenValueDecomposition {
      * matrix will be altered during decomposition.
      * @param A    square matrix which will be altered during decomposition.
      */
-    public static EigenValueDecomposition decompose(double[][] A) {
-        if (A.length != A[0].length) {
-            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.length, A[0].length));
-        }
-
-        int n = A.length;
-        double tol = 100 * Math.EPSILON;
-        boolean symmetric = true;
-        for (int i = 0; (i < n) && symmetric; i++) {
-            for (int j = 0; (j < n) && symmetric; j++) {
-                symmetric = Math.abs(A[i][j] - A[j][i]) < tol;
-            }
-        }
-
-        return decompose(A, symmetric);
+    public EigenValueDecomposition(double[][] A) {
+        this(A, false);
     }
 
     /**
      * Full eigen value decomposition of a square matrix. Note that the input
      * matrix will be altered during decomposition.
      * @param A    square matrix which will be altered during decomposition.
-     * @param symmetric if true, the matrix is assumed to be symmetric.
-     */
-    public static EigenValueDecomposition decompose(double[][] A, boolean symmetric) {
-        return decompose(A, symmetric, false);
-    }
-
-    /**
-     * Full eigen value decomposition of a square matrix. Note that the input
-     * matrix will be altered during decomposition.
-     * @param A    square matrix which will be altered during decomposition.
-     * @param symmetric if true, the matrix is assumed to be symmetric.
      * @param onlyValues if true, only compute eigenvalues; the default is to compute eigenvectors also.
      */
-    public static EigenValueDecomposition decompose(double[][] A, boolean symmetric, boolean onlyValues) {
-        if (A.length != A[0].length) {
-            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.length, A[0].length));
+    public EigenValueDecomposition(double[][] A, boolean onlyValues) {
+        this(new ColumnMajorMatrix(A), onlyValues);
+    }
+
+    /**
+     * Full eigen value decomposition of a square matrix. Note that the input
+     * matrix will be altered during decomposition.
+     * @param A    square matrix which will be altered during decomposition.
+     */
+    public EigenValueDecomposition(DenseMatrix A) {
+        this(A, false);
+    }
+
+    /**
+     * Full eigen value decomposition of a square matrix. Note that the input
+     * matrix will be altered during decomposition.
+     * @param A    square matrix which will be altered during decomposition.
+     * @param onlyValues if true, only compute eigenvalues; the default is to compute eigenvectors also.
+     */
+    public EigenValueDecomposition(DenseMatrix A,  boolean onlyValues) {
+        if (A.nrows() != A.ncols()) {
+            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
         }
 
-        int n = A.length;
-        double[] d = new double[n];
-        double[] e = new double[n];
+        int n = A.nrows();
+        d = new double[n];
+        e = new double[n];
 
-        if (symmetric) {
-            double[][] V = A;
+        if (A.isSymmetric()) {
+            V = A;
 
             if (onlyValues) {
                 // Tridiagonalize.
                 tred(V, d, e);
                 // Diagonalize.
                 tql(d, e, n);
-                return new EigenValueDecomposition(null, d);
+                V = null;
             } else {
                 // Tridiagonalize.
                 tred2(V, d, e);
                 // Diagonalize.
                 tql2(V, d, e, n);
-                return new EigenValueDecomposition(V, d);
             }
 
         } else {
@@ -240,11 +233,11 @@ public class EigenValueDecomposition {
             if (onlyValues) {
                 hqr(A, d, e);
                 sort(d, e);
-                return new EigenValueDecomposition(null, d, e);
+                V = null;
             } else {
-                double[][] V = new double[n][n];
+                V = new ColumnMajorMatrix(n, n);
                 for (int i = 0; i < n; i++) {
-                    V[i][i] = 1.0;
+                    V.set(i, i, 1.0);
                 }
 
                 eltran(A, V, perm);
@@ -252,7 +245,6 @@ public class EigenValueDecomposition {
                 hqr2(A, V, d, e);
                 balbak(V, scale);
                 sort(d, e, V);
-                return new EigenValueDecomposition(V, d, e);
             }
         }
     }
@@ -260,9 +252,11 @@ public class EigenValueDecomposition {
     /**
      * Symmetric Householder reduction to tridiagonal form.
      */
-    private static void tred(double[][] V, double[] d, double[] e) {
-        int n = V.length;
-        System.arraycopy(V[n - 1], 0, d, 0, n);
+    private static void tred(DenseMatrix V, double[] d, double[] e) {
+        int n = V.nrows();
+        for (int i = 0; i < n; i++) {
+            d[i] = V.get(n - 1, i);
+        }
 
         // Householder reduction to tridiagonal form.
         for (int i = n - 1; i > 0; i--) {
@@ -276,9 +270,9 @@ public class EigenValueDecomposition {
             if (scale == 0.0) {
                 e[i] = d[i - 1];
                 for (int j = 0; j < i; j++) {
-                    d[j] = V[i - 1][j];
-                    V[i][j] = 0.0;
-                    V[j][i] = 0.0;
+                    d[j] = V.get(i - 1, j);
+                    V.set(i, j, 0.0);
+                    V.set(j, i, 0.0);
                 }
             } else {
 
@@ -302,11 +296,11 @@ public class EigenValueDecomposition {
                 // Apply similarity transformation to remaining columns.
                 for (int j = 0; j < i; j++) {
                     f = d[j];
-                    V[j][i] = f;
-                    g = e[j] + V[j][j] * f;
+                    V.set(j, i, f);
+                    g = e[j] + V.get(j, j) * f;
                     for (int k = j + 1; k <= i - 1; k++) {
-                        g += V[k][j] * d[k];
-                        e[k] += V[k][j] * f;
+                        g += V.get(k, j) * d[k];
+                        e[k] += V.get(k, j) * f;
                     }
                     e[j] = g;
                 }
@@ -323,17 +317,17 @@ public class EigenValueDecomposition {
                     f = d[j];
                     g = e[j];
                     for (int k = j; k <= i - 1; k++) {
-                        V[k][j] -= (f * e[k] + g * d[k]);
+                        V.sub(k, j, (f * e[k] + g * d[k]));
                     }
-                    d[j] = V[i - 1][j];
-                    V[i][j] = 0.0;
+                    d[j] = V.get(i - 1, j);
+                    V.set(i, j, 0.0);
                 }
             }
             d[i] = h;
         }
 
         for (int j = 0; j < n; j++) {
-            d[j] = V[j][j];
+            d[j] = V.get(j, j);
         }
         e[0] = 0.0;
     }
@@ -341,9 +335,11 @@ public class EigenValueDecomposition {
     /**
      * Symmetric Householder reduction to tridiagonal form.
      */
-    private static void tred2(double[][] V, double[] d, double[] e) {
-        int n = V.length;
-        System.arraycopy(V[n - 1], 0, d, 0, n);
+    private static void tred2(DenseMatrix V, double[] d, double[] e) {
+        int n = V.nrows();
+        for (int i = 0; i < n; i++) {
+            d[i] = V.get(n - 1, i);
+        }
 
         // Householder reduction to tridiagonal form.
         for (int i = n - 1; i > 0; i--) {
@@ -357,9 +353,9 @@ public class EigenValueDecomposition {
             if (scale == 0.0) {
                 e[i] = d[i - 1];
                 for (int j = 0; j < i; j++) {
-                    d[j] = V[i - 1][j];
-                    V[i][j] = 0.0;
-                    V[j][i] = 0.0;
+                    d[j] = V.get(i - 1, j);
+                    V.set(i, j, 0.0);
+                    V.set(j, i, 0.0);
                 }
             } else {
 
@@ -383,11 +379,11 @@ public class EigenValueDecomposition {
                 // Apply similarity transformation to remaining columns.
                 for (int j = 0; j < i; j++) {
                     f = d[j];
-                    V[j][i] = f;
-                    g = e[j] + V[j][j] * f;
+                    V.set(j, i, f);
+                    g = e[j] + V.get(j, j) * f;
                     for (int k = j + 1; k <= i - 1; k++) {
-                        g += V[k][j] * d[k];
-                        e[k] += V[k][j] * f;
+                        g += V.get(k, j) * d[k];
+                        e[k] += V.get(k, j) * f;
                     }
                     e[j] = g;
                 }
@@ -404,10 +400,10 @@ public class EigenValueDecomposition {
                     f = d[j];
                     g = e[j];
                     for (int k = j; k <= i - 1; k++) {
-                        V[k][j] -= (f * e[k] + g * d[k]);
+                        V.sub(k, j, (f * e[k] + g * d[k]));
                     }
-                    d[j] = V[i - 1][j];
-                    V[i][j] = 0.0;
+                    d[j] = V.get(i - 1, j);
+                    V.set(i, j, 0.0);
                 }
             }
             d[i] = h;
@@ -415,32 +411,32 @@ public class EigenValueDecomposition {
 
         // Accumulate transformations.
         for (int i = 0; i < n - 1; i++) {
-            V[n - 1][i] = V[i][i];
-            V[i][i] = 1.0;
+            V.set(n - 1, i, V.get(i, i));
+            V.set(i, i, 1.0);
             double h = d[i + 1];
             if (h != 0.0) {
                 for (int k = 0; k <= i; k++) {
-                    d[k] = V[k][i + 1] / h;
+                    d[k] = V.get(k, i + 1) / h;
                 }
                 for (int j = 0; j <= i; j++) {
                     double g = 0.0;
                     for (int k = 0; k <= i; k++) {
-                        g += V[k][i + 1] * V[k][j];
+                        g += V.get(k, i + 1) * V.get(k, j);
                     }
                     for (int k = 0; k <= i; k++) {
-                        V[k][j] -= g * d[k];
+                        V.sub(k, j,  g * d[k]);
                     }
                 }
             }
             for (int k = 0; k <= i; k++) {
-                V[k][i + 1] = 0.0;
+                V.set(k, i + 1, 0.0);
             }
         }
         for (int j = 0; j < n; j++) {
-            d[j] = V[n - 1][j];
-            V[n - 1][j] = 0.0;
+            d[j] = V.get(n - 1, j);
+            V.set(n - 1, j, 0.0);
         }
-        V[n - 1][n - 1] = 1.0;
+        V.set(n - 1, n - 1, 1.0);
         e[0] = 0.0;
     }
 
@@ -575,7 +571,7 @@ public class EigenValueDecomposition {
      * matrix, with e[0] arbitrary. On output, its contents are destroyed.
      * @param n the size of all parameter arrays.
      */
-    static void tql2(double[][] V, double[] d, double[] e, int n) {
+    static void tql2(DenseMatrix V, double[] d, double[] e, int n) {
         for (int i = 1; i < n; i++) {
             e[i - 1] = e[i];
         }
@@ -642,9 +638,9 @@ public class EigenValueDecomposition {
 
                         // Accumulate transformation.
                         for (int k = 0; k < n; k++) {
-                            h = V[k][i + 1];
-                            V[k][i + 1] = s * V[k][i] + c * h;
-                            V[k][i] = c * V[k][i] - s * h;
+                            h = V.get(k, i + 1);
+                            V.set(k, i + 1, s * V.get(k, i) + c * h);
+                            V.set(k, i,     c * V.get(k, i) - s * h);
                         }
                     }
                     p = -s * s2 * c3 * el1 * e[l] / dl1;
@@ -672,9 +668,9 @@ public class EigenValueDecomposition {
                 d[k] = d[i];
                 d[i] = p;
                 for (int j = 0; j < n; j++) {
-                    p = V[j][i];
-                    V[j][i] = V[j][k];
-                    V[j][k] = p;
+                    p = V.get(j, i);
+                    V.set(j, i, V.get(j, k));
+                    V.set(j, k, p);
                 }
             }
         }
@@ -685,10 +681,10 @@ public class EigenValueDecomposition {
      * identical eigenvalues. A symmetric matrix is already balanced and is
      * unaffected by this procedure.
      */
-    private static double[] balance(double[][] A) {
+    private static double[] balance(DenseMatrix A) {
         double sqrdx = Math.RADIX * Math.RADIX;
 
-        int n = A.length;
+        int n = A.nrows();
 
         double[] scale = new double[n];
         for (int i = 0; i < n; i++) {
@@ -702,8 +698,8 @@ public class EigenValueDecomposition {
                 double r = 0.0, c = 0.0;
                 for (int j = 0; j < n; j++) {
                     if (j != i) {
-                        c += Math.abs(A[j][i]);
-                        r += Math.abs(A[i][j]);
+                        c += Math.abs(A.get(j, i));
+                        r += Math.abs(A.get(i, j));
                     }
                 }
                 if (c != 0.0 && r != 0.0) {
@@ -724,10 +720,10 @@ public class EigenValueDecomposition {
                         g = 1.0 / f;
                         scale[i] *= f;
                         for (int j = 0; j < n; j++) {
-                            A[i][j] *= g;
+                            A.mul(i, j, g);
                         }
                         for (int j = 0; j < n; j++) {
-                            A[j][i] *= f;
+                            A.mul(j, i, f);
                         }
                     }
                 }
@@ -741,11 +737,11 @@ public class EigenValueDecomposition {
      * Form the eigenvectors of a real nonsymmetric matrix by back transforming
      * those of the corresponding balanced matrix determined by balance.
      */
-    private static void balbak(double[][] V, double[] scale) {
-        int n = V.length;
+    private static void balbak(DenseMatrix V, double[] scale) {
+        int n = V.nrows();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                V[i][j] *= scale[i];
+                V.mul(i, j, scale[i]);
             }
         }
     }
@@ -753,43 +749,43 @@ public class EigenValueDecomposition {
     /**
      * Reduce a real nonsymmetric matrix to upper Hessenberg form.
      */
-    private static int[] elmhes(double[][] A) {
-        int n = A.length;
+    private static int[] elmhes(DenseMatrix A) {
+        int n = A.nrows();
         int[] perm = new int[n];
 
         for (int m = 1; m < n - 1; m++) {
             double x = 0.0;
             int i = m;
             for (int j = m; j < n; j++) {
-                if (Math.abs(A[j][m - 1]) > Math.abs(x)) {
-                    x = A[j][m - 1];
+                if (Math.abs(A.get(j, m - 1)) > Math.abs(x)) {
+                    x = A.get(j, m - 1);
                     i = j;
                 }
             }
             perm[m] = i;
             if (i != m) {
                 for (int j = m - 1; j < n; j++) {
-                    double swap = A[i][j];
-                    A[i][j] = A[m][j];
-                    A[m][j] = swap;
+                    double swap = A.get(i, j);
+                    A.set(i, j, A.get(m, j));
+                    A.set(m, j, swap);
                 }
                 for (int j = 0; j < n; j++) {
-                    double swap = A[j][i];
-                    A[j][i] = A[j][m];
-                    A[j][m] = swap;
+                    double swap = A.get(j, i);
+                    A.set(j, i, A.get(j, m));
+                    A.set(j, m, swap);
                 }
             }
             if (x != 0.0) {
                 for (i = m + 1; i < n; i++) {
-                    double y = A[i][m - 1];
+                    double y = A.get(i, m - 1);
                     if (y != 0.0) {
                         y /= x;
-                        A[i][m - 1] = y;
+                        A.set(i, m - 1, y);
                         for (int j = m; j < n; j++) {
-                            A[i][j] -= y * A[m][j];
+                            A.sub(i, j, y * A.get(m, j));
                         }
                         for (int j = 0; j < n; j++) {
-                            A[j][m] += y * A[j][i];
+                            A.add(j, m, y * A.get(j, i));
                         }
                     }
                 }
@@ -803,19 +799,19 @@ public class EigenValueDecomposition {
      * Accumulate the stabilized elementary similarity transformations used
      * in the reduction of a real nonsymmetric matrix to upper Hessenberg form by elmhes.
      */
-    private static void eltran(double[][] A, double[][] V, int[] perm) {
-        int n = A.length;
+    private static void eltran(DenseMatrix A, DenseMatrix V, int[] perm) {
+        int n = A.nrows();
         for (int mp = n - 2; mp > 0; mp--) {
             for (int k = mp + 1; k < n; k++) {
-                V[k][mp] = A[k][mp - 1];
+                V.set(k, mp, A.get(k, mp - 1));
             }
             int i = perm[mp];
             if (i != mp) {
                 for (int j = mp; j < n; j++) {
-                    V[mp][j] = V[i][j];
-                    V[i][j] = 0.0;
+                    V.set(mp, j, V.get(i, j));
+                    V.set(i, j, 0.0);
                 }
-                V[i][mp] = 1.0;
+                V.set(i, mp, 1.0);
             }
         }
     }
@@ -824,14 +820,14 @@ public class EigenValueDecomposition {
      * Find all eigenvalues of an upper Hessenberg matrix. On input, A can be
      * exactly as output from elmhes. On output, it is destroyed.
      */
-    private static void hqr(double[][] A, double[] d, double[] e) {
-        int n = A.length;
+    private static void hqr(DenseMatrix A, double[] d, double[] e) {
+        int n = A.nrows();
         int nn, m, l, k, j, its, i, mmin;
         double z, y, x, w, v, u, t, s, r = 0.0, q = 0.0, p = 0.0, anorm = 0.0;
 
         for (i = 0; i < n; i++) {
             for (j = Math.max(i - 1, 0); j < n; j++) {
-                anorm += Math.abs(A[i][j]);
+                anorm += Math.abs(A.get(i, j));
             }
         }
         nn = n - 1;
@@ -840,21 +836,21 @@ public class EigenValueDecomposition {
             its = 0;
             do {
                 for (l = nn; l > 0; l--) {
-                    s = Math.abs(A[l - 1][l - 1]) + Math.abs(A[l][l]);
+                    s = Math.abs(A.get(l - 1, l - 1) + Math.abs(A.get(l, l)));
                     if (s == 0.0) {
                         s = anorm;
                     }
-                    if (Math.abs(A[l][l - 1]) <= Math.EPSILON * s) {
-                        A[l][l - 1] = 0.0;
+                    if (Math.abs(A.get(l, l - 1)) <= Math.EPSILON * s) {
+                        A.set(l, l - 1, 0.0);
                         break;
                     }
                 }
-                x = A[nn][nn];
+                x = A.get(nn, nn);
                 if (l == nn) {
                     d[nn--] = x + t;
                 } else {
-                    y = A[nn - 1][nn - 1];
-                    w = A[nn][nn - 1] * A[nn - 1][nn];
+                    y = A.get(nn - 1, nn - 1);
+                    w = A.get(nn, nn - 1) * A.get(nn - 1, nn);
                     if (l == nn - 1) {
                         p = 0.5 * (y - x);
                         q = p * p + w;
@@ -880,20 +876,20 @@ public class EigenValueDecomposition {
                         if (its == 10 || its == 20) {
                             t += x;
                             for (i = 0; i < nn + 1; i++) {
-                                A[i][i] -= x;
+                                A.sub(i, i, x);
                             }
-                            s = Math.abs(A[nn][nn - 1]) + Math.abs(A[nn - 1][nn - 2]);
+                            s = Math.abs(A.get(nn, nn - 1)) + Math.abs(A.get(nn - 1, nn - 2));
                             y = x = 0.75 * s;
                             w = -0.4375 * s * s;
                         }
                         ++its;
                         for (m = nn - 2; m >= l; m--) {
-                            z = A[m][m];
+                            z = A.get(m, m);
                             r = x - z;
                             s = y - z;
-                            p = (r * s - w) / A[m + 1][m] + A[m][m + 1];
-                            q = A[m + 1][m + 1] - z - r - s;
-                            r = A[m + 2][m + 1];
+                            p = (r * s - w) / A.get(m + 1, m) + A.get(m, m + 1);
+                            q = A.get(m + 1, m + 1) - z - r - s;
+                            r = A.get(m + 2, m + 1);
                             s = Math.abs(p) + Math.abs(q) + Math.abs(r);
                             p /= s;
                             q /= s;
@@ -901,25 +897,25 @@ public class EigenValueDecomposition {
                             if (m == l) {
                                 break;
                             }
-                            u = Math.abs(A[m][m - 1]) * (Math.abs(q) + Math.abs(r));
-                            v = Math.abs(p) * (Math.abs(A[m - 1][m - 1]) + Math.abs(z) + Math.abs(A[m + 1][m + 1]));
+                            u = Math.abs(A.get(m, m - 1)) * (Math.abs(q) + Math.abs(r));
+                            v = Math.abs(p) * (Math.abs(A.get(m - 1, m - 1)) + Math.abs(z) + Math.abs(A.get(m + 1, m + 1)));
                             if (u <= Math.EPSILON * v) {
                                 break;
                             }
                         }
                         for (i = m; i < nn - 1; i++) {
-                            A[i + 2][i] = 0.0;
+                            A.set(i + 2, i, 0.0);
                             if (i != m) {
-                                A[i + 2][i - 1] = 0.0;
+                                A.set(i + 2, i - 1, 0.0);
                             }
                         }
                         for (k = m; k < nn; k++) {
                             if (k != m) {
-                                p = A[k][k - 1];
-                                q = A[k + 1][k - 1];
+                                p = A.get(k, k - 1);
+                                q = A.get(k + 1, k - 1);
                                 r = 0.0;
                                 if (k + 1 != nn) {
-                                    r = A[k + 2][k - 1];
+                                    r = A.get(k + 2, k - 1);
                                 }
                                 if ((x = Math.abs(p) + Math.abs(q) + Math.abs(r)) != 0.0) {
                                     p /= x;
@@ -930,10 +926,10 @@ public class EigenValueDecomposition {
                             if ((s = Math.copySign(Math.sqrt(p * p + q * q + r * r), p)) != 0.0) {
                                 if (k == m) {
                                     if (l != m) {
-                                        A[k][k - 1] = -A[k][k - 1];
+                                        A.set(k, k - 1, -A.get(k, k - 1));
                                     }
                                 } else {
-                                    A[k][k - 1] = -s * x;
+                                    A.set(k, k - 1, -s * x);
                                 }
                                 p += s;
                                 x = p / s;
@@ -942,23 +938,23 @@ public class EigenValueDecomposition {
                                 q /= p;
                                 r /= p;
                                 for (j = k; j < nn + 1; j++) {
-                                    p = A[k][j] + q * A[k + 1][j];
+                                    p = A.get(k, j) + q * A.get(k + 1, j);
                                     if (k + 1 != nn) {
-                                        p += r * A[k + 2][j];
-                                        A[k + 2][j] -= p * z;
+                                        p += r * A.get(k + 2, j);
+                                        A.sub(k + 2, j, p * z);
                                     }
-                                    A[k + 1][j] -= p * y;
-                                    A[k][j] -= p * x;
+                                    A.sub(k + 1, j, p * y);
+                                    A.sub(k, j, p * x);
                                 }
                                 mmin = nn < k + 3 ? nn : k + 3;
                                 for (i = l; i < mmin + 1; i++) {
-                                    p = x * A[i][k] + y * A[i][k + 1];
+                                    p = x * A.get(i, k) + y * A.get(i, k + 1);
                                     if (k + 1 != nn) {
-                                        p += z * A[i][k + 2];
-                                        A[i][k + 2] -= p * r;
+                                        p += z * A.get(i, k + 2);
+                                        A.sub(i, k + 2, p * r);
                                     }
-                                    A[i][k + 1] -= p * q;
-                                    A[i][k] -= p;
+                                    A.sub(i, k + 1, p * q);
+                                    A.sub(i, k, p);
                                 }
                             }
                         }
@@ -979,14 +975,14 @@ public class EigenValueDecomposition {
      * is stored, with real part in V[0..n-1][i] and imaginary part in V[0..n-1][i+1].
      * The eigenvectors are not normalized.
      */
-    private static void hqr2(double[][] A, double[][] V, double[] d, double[] e) {
-        int n = A.length;
+    private static void hqr2(DenseMatrix A, DenseMatrix V, double[] d, double[] e) {
+        int n = A.nrows();
         int nn, m, l, k, j, its, i, mmin, na;
         double z = 0.0, y, x, w, v, u, t, s = 0.0, r = 0.0, q = 0.0, p = 0.0, anorm = 0.0, ra, sa, vr, vi;
 
         for (i = 0; i < n; i++) {
             for (j = Math.max(i - 1, 0); j < n; j++) {
-                anorm += Math.abs(A[i][j]);
+                anorm += Math.abs(A.get(i, j));
             }
         }
         nn = n - 1;
@@ -995,36 +991,37 @@ public class EigenValueDecomposition {
             its = 0;
             do {
                 for (l = nn; l > 0; l--) {
-                    s = Math.abs(A[l - 1][l - 1]) + Math.abs(A[l][l]);
+                    s = Math.abs(A.get(l - 1, l - 1)) + Math.abs(A.get(l, l));
                     if (s == 0.0) {
                         s = anorm;
                     }
-                    if (Math.abs(A[l][l - 1]) <= Math.EPSILON * s) {
-                        A[l][l - 1] = 0.0;
+                    if (Math.abs(A.get(l, l - 1)) <= Math.EPSILON * s) {
+                        A.set(l, l - 1, 0.0);
                         break;
                     }
                 }
-                x = A[nn][nn];
+                x = A.get(nn, nn);
                 if (l == nn) {
-                    d[nn] = A[nn][nn] = x + t;
+                    d[nn] = x + t;
+                    A.set(nn, nn, x + t);
                     nn--;
                 } else {
-                    y = A[nn - 1][nn - 1];
-                    w = A[nn][nn - 1] * A[nn - 1][nn];
+                    y = A.get(nn - 1, nn - 1);
+                    w = A.get(nn, nn - 1) * A.get(nn - 1, nn);
                     if (l == nn - 1) {
                         p = 0.5 * (y - x);
                         q = p * p + w;
                         z = Math.sqrt(Math.abs(q));
                         x += t;
-                        A[nn][nn] = x;
-                        A[nn - 1][nn - 1] = y + t;
+                        A.set(nn, nn, x );
+                        A.set(nn - 1, nn - 1, y + t);
                         if (q >= 0.0) {
                             z = p + Math.copySign(z, p);
                             d[nn - 1] = d[nn] = x + z;
                             if (z != 0.0) {
                                 d[nn] = x - w / z;
                             }
-                            x = A[nn][nn - 1];
+                            x = A.get(nn, nn - 1);
                             s = Math.abs(x) + Math.abs(z);
                             p = x / s;
                             q = z / s;
@@ -1032,19 +1029,19 @@ public class EigenValueDecomposition {
                             p /= r;
                             q /= r;
                             for (j = nn - 1; j < n; j++) {
-                                z = A[nn - 1][j];
-                                A[nn - 1][j] = q * z + p * A[nn][j];
-                                A[nn][j] = q * A[nn][j] - p * z;
+                                z = A.get(nn - 1, j);
+                                A.set(nn - 1, j, q * z + p * A.get(nn, j));
+                                A.set(nn, j, q * A.get(nn, j) - p * z);
                             }
                             for (i = 0; i <= nn; i++) {
-                                z = A[i][nn - 1];
-                                A[i][nn - 1] = q * z + p * A[i][nn];
-                                A[i][nn] = q * A[i][nn] - p * z;
+                                z = A.get(i, nn - 1);
+                                A.set(i, nn - 1, q * z + p * A.get(i, nn));
+                                A.set(i, nn, q * A.get(i, nn) - p * z);
                             }
                             for (i = 0; i < n; i++) {
-                                z = V[i][nn - 1];
-                                V[i][nn - 1] = q * z + p * V[i][nn];
-                                V[i][nn] = q * V[i][nn] - p * z;
+                                z = V.get(i, nn - 1);
+                                V.set(i, nn - 1, q * z + p * V.get(i, nn));
+                                V.set(i, nn, q * V.get(i, nn) - p * z);
                             }
                         } else {
                             d[nn] = x + p;
@@ -1060,20 +1057,20 @@ public class EigenValueDecomposition {
                         if (its == 10 || its == 20) {
                             t += x;
                             for (i = 0; i < nn + 1; i++) {
-                                A[i][i] -= x;
+                                A.sub(i, i, x);
                             }
-                            s = Math.abs(A[nn][nn - 1]) + Math.abs(A[nn - 1][nn - 2]);
+                            s = Math.abs(A.get(nn, nn - 1)) + Math.abs(A.get(nn - 1, nn - 2));
                             y = x = 0.75 * s;
                             w = -0.4375 * s * s;
                         }
                         ++its;
                         for (m = nn - 2; m >= l; m--) {
-                            z = A[m][m];
+                            z = A.get(m, m);
                             r = x - z;
                             s = y - z;
-                            p = (r * s - w) / A[m + 1][m] + A[m][m + 1];
-                            q = A[m + 1][m + 1] - z - r - s;
-                            r = A[m + 2][m + 1];
+                            p = (r * s - w) / A.get(m + 1, m) + A.get(m, m + 1);
+                            q = A.get(m + 1, m + 1) - z - r - s;
+                            r = A.get(m + 2, m + 1);
                             s = Math.abs(p) + Math.abs(q) + Math.abs(r);
                             p /= s;
                             q /= s;
@@ -1081,25 +1078,25 @@ public class EigenValueDecomposition {
                             if (m == l) {
                                 break;
                             }
-                            u = Math.abs(A[m][m - 1]) * (Math.abs(q) + Math.abs(r));
-                            v = Math.abs(p) * (Math.abs(A[m - 1][m - 1]) + Math.abs(z) + Math.abs(A[m + 1][m + 1]));
+                            u = Math.abs(A.get(m, m - 1)) * (Math.abs(q) + Math.abs(r));
+                            v = Math.abs(p) * (Math.abs(A.get(m - 1, m - 1)) + Math.abs(z) + Math.abs(A.get(m + 1, m + 1)));
                             if (u <= Math.EPSILON * v) {
                                 break;
                             }
                         }
                         for (i = m; i < nn - 1; i++) {
-                            A[i + 2][i] = 0.0;
+                            A.set(i + 2, i , 0.0);
                             if (i != m) {
-                                A[i + 2][i - 1] = 0.0;
+                                A.set(i + 2, i - 1, 0.0);
                             }
                         }
                         for (k = m; k < nn; k++) {
                             if (k != m) {
-                                p = A[k][k - 1];
-                                q = A[k + 1][k - 1];
+                                p = A.get(k, k - 1);
+                                q = A.get(k + 1, k - 1);
                                 r = 0.0;
                                 if (k + 1 != nn) {
-                                    r = A[k + 2][k - 1];
+                                    r = A.get(k + 2, k - 1);
                                 }
                                 if ((x = Math.abs(p) + Math.abs(q) + Math.abs(r)) != 0.0) {
                                     p /= x;
@@ -1110,10 +1107,10 @@ public class EigenValueDecomposition {
                             if ((s = Math.copySign(Math.sqrt(p * p + q * q + r * r), p)) != 0.0) {
                                 if (k == m) {
                                     if (l != m) {
-                                        A[k][k - 1] = -A[k][k - 1];
+                                        A.set(k, k - 1, -A.get(k, k - 1));
                                     }
                                 } else {
-                                    A[k][k - 1] = -s * x;
+                                    A.set(k, k - 1, -s * x);
                                 }
                                 p += s;
                                 x = p / s;
@@ -1122,32 +1119,32 @@ public class EigenValueDecomposition {
                                 q /= p;
                                 r /= p;
                                 for (j = k; j < n; j++) {
-                                    p = A[k][j] + q * A[k + 1][j];
+                                    p = A.get(k, j) + q * A.get(k + 1, j);
                                     if (k + 1 != nn) {
-                                        p += r * A[k + 2][j];
-                                        A[k + 2][j] -= p * z;
+                                        p += r * A.get(k + 2, j);
+                                        A.sub(k + 2, j, p * z);
                                     }
-                                    A[k + 1][j] -= p * y;
-                                    A[k][j] -= p * x;
+                                    A.sub(k + 1, j, p * y);
+                                    A.sub(k, j, p * x);
                                 }
                                 mmin = nn < k + 3 ? nn : k + 3;
                                 for (i = 0; i < mmin + 1; i++) {
-                                    p = x * A[i][k] + y * A[i][k + 1];
+                                    p = x * A.get(i, k) + y * A.get(i, k + 1);
                                     if (k + 1 != nn) {
-                                        p += z * A[i][k + 2];
-                                        A[i][k + 2] -= p * r;
+                                        p += z * A.get(i, k + 2);
+                                        A.sub(i, k + 2, p * r);
                                     }
-                                    A[i][k + 1] -= p * q;
-                                    A[i][k] -= p;
+                                    A.sub(i, k + 1, p * q);
+                                    A.sub(i, k, p);
                                 }
                                 for (i = 0; i < n; i++) {
-                                    p = x * V[i][k] + y * V[i][k + 1];
+                                    p = x * V.get(i, k) + y * V.get(i, k + 1);
                                     if (k + 1 != nn) {
-                                        p += z * V[i][k + 2];
-                                        V[i][k + 2] -= p * r;
+                                        p += z * V.get(i, k + 2);
+                                        V.sub(i, k + 2, p * r);
                                     }
-                                    V[i][k + 1] -= p * q;
-                                    V[i][k] -= p;
+                                    V.sub(i, k + 1, p * q);
+                                    V.sub(i, k, p);
                                 }
                             }
                         }
@@ -1163,12 +1160,12 @@ public class EigenValueDecomposition {
                 na = nn - 1;
                 if (q == 0.0) {
                     m = nn;
-                    A[nn][nn] = 1.0;
+                    A.set(nn, nn, 1.0);
                     for (i = nn - 1; i >= 0; i--) {
-                        w = A[i][i] - p;
+                        w = A.get(i, i) - p;
                         r = 0.0;
                         for (j = m; j <= nn; j++) {
-                            r += A[i][j] * A[j][nn];
+                            r += A.get(i, j) * A.get(j, nn);
                         }
                         if (e[i] < 0.0) {
                             z = w;
@@ -1181,45 +1178,45 @@ public class EigenValueDecomposition {
                                 if (t == 0.0) {
                                     t = Math.EPSILON * anorm;
                                 }
-                                A[i][nn] = -r / t;
+                                A.set(i, nn, -r / t);
                             } else {
-                                x = A[i][i + 1];
-                                y = A[i + 1][i];
+                                x = A.get(i, i + 1);
+                                y = A.get(i + 1, i);
                                 q = Math.sqr(d[i] - p) + Math.sqr(e[i]);
                                 t = (x * s - z * r) / q;
-                                A[i][nn] = t;
+                                A.set(i, nn, t);
                                 if (Math.abs(x) > Math.abs(z)) {
-                                    A[i + 1][nn] = (-r - w * t) / x;
+                                    A.set(i + 1, nn, (-r - w * t) / x);
                                 } else {
-                                    A[i + 1][nn] = (-s - y * t) / z;
+                                    A.set(i + 1, nn, (-s - y * t) / z);
                                 }
                             }
-                            t = Math.abs(A[i][nn]);
+                            t = Math.abs(A.get(i, nn));
                             if (Math.EPSILON * t * t > 1) {
                                 for (j = i; j <= nn; j++) {
-                                    A[j][nn] /= t;
+                                    A.div(j, nn, t);
                                 }
                             }
                         }
                     }
                 } else if (q < 0.0) {
                     m = na;
-                    if (Math.abs(A[nn][na]) > Math.abs(A[na][nn])) {
-                        A[na][na] = q / A[nn][na];
-                        A[na][nn] = -(A[nn][nn] - p) / A[nn][na];
+                    if (Math.abs(A.get(nn, na)) > Math.abs(A.get(na, nn))) {
+                        A.set(na, na, q / A.get(nn, na));
+                        A.set(na, nn, -(A.get(nn, nn) - p) / A.get(nn, na));
                     } else {
-                        Complex temp = cdiv(0.0, -A[na][nn], A[na][na] - p, q);
-                        A[na][na] = temp.re();
-                        A[na][nn] = temp.im();
+                        Complex temp = cdiv(0.0, -A.get(na, nn), A.get(na, na) - p, q);
+                        A.set(na, na, temp.re());
+                        A.set(na, nn, temp.im());
                     }
-                    A[nn][na] = 0.0;
-                    A[nn][nn] = 1.0;
+                    A.set(nn, na, 0.0);
+                    A.set(nn, nn, 1.0);
                     for (i = nn - 2; i >= 0; i--) {
-                        w = A[i][i] - p;
+                        w = A.get(i, i) - p;
                         ra = sa = 0.0;
                         for (j = m; j <= nn; j++) {
-                            ra += A[i][j] * A[j][na];
-                            sa += A[i][j] * A[j][nn];
+                            ra += A.get(i, j) * A.get(j, na);
+                            sa += A.get(i, j) * A.get(j, nn);
                         }
                         if (e[i] < 0.0) {
                             z = w;
@@ -1229,34 +1226,34 @@ public class EigenValueDecomposition {
                             m = i;
                             if (e[i] == 0.0) {
                                 Complex temp = cdiv(-ra, -sa, w, q);
-                                A[i][na] = temp.re();
-                                A[i][nn] = temp.im();
+                                A.set(i, na, temp.re());
+                                A.set(i, nn, temp.im());
                             } else {
-                                x = A[i][i + 1];
-                                y = A[i + 1][i];
+                                x = A.get(i, i + 1);
+                                y = A.get(i + 1, i);
                                 vr = Math.sqr(d[i] - p) + Math.sqr(e[i]) - q * q;
                                 vi = 2.0 * q * (d[i] - p);
                                 if (vr == 0.0 && vi == 0.0) {
                                     vr = Math.EPSILON * anorm * (Math.abs(w) + Math.abs(q) + Math.abs(x) + Math.abs(y) + Math.abs(z));
                                 }
                                 Complex temp = cdiv(x * r - z * ra + q * sa, x * s - z * sa - q * ra, vr, vi);
-                                A[i][na] = temp.re();
-                                A[i][nn] = temp.im();
+                                A.set(i, na, temp.re());
+                                A.set(i, nn, temp.im());
                                 if (Math.abs(x) > Math.abs(z) + Math.abs(q)) {
-                                    A[i + 1][na] = (-ra - w * A[i][na] + q * A[i][nn]) / x;
-                                    A[i + 1][nn] = (-sa - w * A[i][nn] - q * A[i][na]) / x;
+                                    A.set(i + 1, na, (-ra - w * A.get(i, na) + q * A.get(i, nn)) / x);
+                                    A.set(i + 1, nn, (-sa - w * A.get(i, nn) - q * A.get(i, na)) / x);
                                 } else {
-                                    temp = cdiv(-r - y * A[i][na], -s - y * A[i][nn], z, q);
-                                    A[i + 1][na] = temp.re();
-                                    A[i + 1][nn] = temp.im();
+                                    temp = cdiv(-r - y * A.get(i, na), -s - y * A.get(i, nn), z, q);
+                                    A.set(i + 1, na, temp.re());
+                                    A.set(i + 1, nn, temp.im());
                                 }
                             }
                         }
-                        t = Math.max(Math.abs(A[i][na]), Math.abs(A[i][nn]));
+                        t = Math.max(Math.abs(A.get(i, na)), Math.abs(A.get(i, nn)));
                         if (Math.EPSILON * t * t > 1) {
                             for (j = i; j <= nn; j++) {
-                                A[j][na] /= t;
-                                A[j][nn] /= t;
+                                A.div(j, na, t);
+                                A.div(j, nn, t);
                             }
                         }
                     }
@@ -1267,9 +1264,9 @@ public class EigenValueDecomposition {
                 for (i = 0; i < n; i++) {
                     z = 0.0;
                     for (k = 0; k <= j; k++) {
-                        z += V[i][k] * A[k][j];
+                        z += V.get(i, k) * A.get(k, j);
                     }
-                    V[i][j] = z;
+                    V.set(i, j, z);
                 }
             }
         }
@@ -1320,7 +1317,7 @@ public class EigenValueDecomposition {
     /**
      * Sort eigenvalues and eigenvectors.
      */
-    private static void sort(double[] d, double[] e, double[][] V) {
+    private static void sort(double[] d, double[] e, DenseMatrix V) {
         int i = 0;
         int n = d.length;
         double[] temp = new double[n];
@@ -1328,7 +1325,7 @@ public class EigenValueDecomposition {
             double real = d[j];
             double img = e[j];
             for (int k = 0; k < n; k++) {
-                temp[k] = V[k][j];
+                temp[k] = V.get(k, j);
             }
             for (i = j - 1; i >= 0; i--) {
                 if (d[i] >= d[j]) {
@@ -1337,13 +1334,13 @@ public class EigenValueDecomposition {
                 d[i + 1] = d[i];
                 e[i + 1] = e[i];
                 for (int k = 0; k < n; k++) {
-                    V[k][i + 1] = V[k][i];
+                    V.set(k, i + 1, V.get(k, i));
                 }
             }
             d[i + 1] = real;
             e[i + 1] = img;
             for (int k = 0; k < n; k++) {
-                V[k][i + 1] = temp[k];
+                V.set(k, i + 1, temp[k]);
             }
         }
     }

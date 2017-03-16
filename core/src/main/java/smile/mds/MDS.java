@@ -162,7 +162,7 @@ public class MDS {
                 }
             }
 
-            EigenValueDecomposition eigen = Math.eigen(Z, false, true);
+            EigenValueDecomposition eigen = new EigenValueDecomposition(Z, true);
             double c = Math.max(eigen.getEigenValues());
 
             for (int i = 0; i < n; i++) {
@@ -184,7 +184,7 @@ public class MDS {
 
             double scale = Math.sqrt(eigen.getEigenValues()[j]);
             for (int i = 0; i < n; i++) {
-                coordinates[i][j] = eigen.getEigenVectors()[i][j] * scale;
+                coordinates[i][j] = eigen.getEigenVectors().get(i, j) * scale;
             }
         }
 

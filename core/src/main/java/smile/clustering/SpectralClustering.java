@@ -19,7 +19,10 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
+import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.Lanczos;
 
 /**
  * Spectral Clustering. Given a set of data points, the similarity matrix may
@@ -112,16 +115,17 @@ public class SpectralClustering implements Serializable {
             D[i] = 1.0 / Math.sqrt(D[i]);
         }
 
-        double[][] L = new double[n][n];
+        DenseMatrix L = new ColumnMajorMatrix(n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
-                L[i][j] = D[i] * W[i][j] * D[j];
-                L[j][i] = L[i][j];
+                double l = D[i] * W[i][j] * D[j];
+                L.set(i, j, l);
+                L.set(j, i, l);
             }
         }
         
-        EigenValueDecomposition eigen = Math.eigen(L, k);
-        double[][] Y = eigen.getEigenVectors();
+        EigenValueDecomposition eigen = Lanczos.eigen(L, k);
+        double[][] Y = eigen.getEigenVectors().array();
         for (int i = 0; i < n; i++) {
             Math.unitize2(Y[i]);
         }
@@ -156,18 +160,19 @@ public class SpectralClustering implements Serializable {
         int n = data.length;
         double gamma = -0.5 / (sigma * sigma);
 
-        double[][] W = new double[n][n];
+        DenseMatrix W = new ColumnMajorMatrix(n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
-                W[i][j] = Math.exp(gamma * Math.squaredDistance(data[i], data[j]));
-                W[j][i] = W[i][j];
+                double w = Math.exp(gamma * Math.squaredDistance(data[i], data[j]));
+                W.set(i, j, w);
+                W.set(j, i, w);
             }
         }
         
         double[] D = new double[n];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                D[i] += W[i][j];
+                D[i] += W.get(i, j);
             }
 
             if (D[i] < 1E-5) {
@@ -177,16 +182,17 @@ public class SpectralClustering implements Serializable {
             D[i] = 1.0 / Math.sqrt(D[i]);
         }
 
-        double[][] L = W;
+        DenseMatrix L = W;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
-                L[i][j] = D[i] * W[i][j] * D[j];
-                L[j][i] = L[i][j];
+                double l = D[i] * W.get(i, j) * D[j];
+                L.set(i, j, l);
+                L.set(j, i, l);
             }
         }
 
-        EigenValueDecomposition eigen = Math.eigen(L, k);
-        double[][] Y = eigen.getEigenVectors();
+        EigenValueDecomposition eigen = Lanczos.eigen(L, k);
+        double[][] Y = eigen.getEigenVectors().array();
         for (int i = 0; i < n; i++) {
             Math.unitize2(Y[i]);
         }
@@ -233,7 +239,7 @@ public class SpectralClustering implements Serializable {
         }
         data = x;
         
-        double[][] C = new double[n][l];
+        DenseMatrix C = new ColumnMajorMatrix(n, l);
         double[] D = new double[n];
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
@@ -242,7 +248,7 @@ public class SpectralClustering implements Serializable {
                     double w = Math.exp(gamma * Math.squaredDistance(data[i], data[j]));
                     sum += w;
                     if (j < l) {
-                        C[i][j] = w;
+                        C.set(i, j, w);
                     }
                 }
             }
@@ -256,16 +262,18 @@ public class SpectralClustering implements Serializable {
         
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < l; j++) {
-                C[i][j] = D[i] * C[i][j] * D[j];
+                C.set(i, j, D[i] * C.get(i, j) * D[j]);
             }
         }
 
-        double[][] W = new double[l][l];
+        DenseMatrix W = new ColumnMajorMatrix(l, l);
         for (int i = 0; i < l; i++) {
-            System.arraycopy(C[i], 0, W[i], 0, l);
+            for (int j = 0; j < l; j++) {
+                W.set(i, j, C.get(i, j));
+            }
         }
         
-        EigenValueDecomposition eigen = Math.eigen(W, k);
+        EigenValueDecomposition eigen = Lanczos.eigen(W, k);
         double[] e = eigen.getEigenValues();
         double scale = Math.sqrt((double)l / n);
         for (int i = 0; i < k; i++) {
@@ -276,14 +284,14 @@ public class SpectralClustering implements Serializable {
             e[i] = scale / e[i];
         }
         
-        double[][] U = eigen.getEigenVectors();
+        DenseMatrix U = eigen.getEigenVectors();
         for (int i = 0; i < l; i++) {
             for (int j = 0; j < k; j++) {
-                U[i][j] *= e[j];
+                U.mul(i, j, e[j]);
             }
         }
         
-        double[][] Y = Math.abmm(C, U);
+        double[][] Y = C.abmm(U).array();
         for (int i = 0; i < n; i++) {
             Math.unitize2(Y[i]);
         }

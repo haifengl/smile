@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.math.matrix;
 
-import java.util.Arrays;
 import smile.math.Math;
 
 /**
@@ -147,10 +146,11 @@ public class CholeskyDecomposition {
     /**
      * Returns the matrix inverse.
      */
-    public double[][] inverse() {
-        double[][] I = Math.eye(L.length);
-        solve(I);
-        return I;
+    public DenseMatrix inverse() {
+        int n = L.length;
+        DenseMatrix inv = ColumnMajorMatrix.eye(n);
+        solve(inv);
+        return inv;
     }
 
     /**
@@ -205,7 +205,7 @@ public class CholeskyDecomposition {
      * the solution matrix.
      * @param  B   the right hand side of linear systems.
      */
-    public void solve(double[][] B) {
+    public void solve(DenseMatrix B) {
         solve(B, B);
     }
 
@@ -214,21 +214,23 @@ public class CholeskyDecomposition {
      * @param  B   the right hand side of linear systems.
      * @param  X   the solution matrix.
      */
-    public void solve(double[][] B, double[][] X) {
-        if (B.length != L.length) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", L.length, L.length, B.length, B[0].length));
+    public void solve(DenseMatrix B, DenseMatrix X) {
+        if (B.nrows() != L.length) {
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", L.length, L.length, B.nrows(), B.ncols()));
         }
 
-        if (X.length != B.length || X[0].length != B[0].length) {
+        if (X.nrows() != B.nrows() || X.ncols() != B.ncols()) {
             throw new IllegalArgumentException("B and X dimensions do not agree.");
         }
 
-        int n = B.length;
-        int nx = B[0].length;
+        int n = B.nrows();
+        int nx = B.ncols();
 
         if (X != B) {
             for (int i = 0; i < n; i++) {
-                System.arraycopy(B[i], 0, X[i], 0, nx);
+                for (int j = 0; j < nx; j++) {
+                    X.set(i, j, B.get(i, j));
+                }
             }
         }
 
@@ -236,9 +238,9 @@ public class CholeskyDecomposition {
         for (int k = 0; k < n; k++) {
             for (int j = 0; j < nx; j++) {
                 for (int i = 0; i < k; i++) {
-                    X[k][j] -= X[i][j] * L[k][i];
+                    X.sub(k, j, X.get(i, j) * L[k][i]);
                 }
-                X[k][j] /= L[k][k];
+                X.div(k, j, L[k][k]);
             }
         }
 
@@ -246,9 +248,9 @@ public class CholeskyDecomposition {
         for (int k = n - 1; k >= 0; k--) {
             for (int j = 0; j < nx; j++) {
                 for (int i = k + 1; i < n; i++) {
-                    X[k][j] -= X[i][j] * L[i][k];
+                    X.sub(k, j, X.get(i, j) * L[i][k]);
                 }
-                X[k][j] /= L[k][k];
+                X.div(k, j, L[k][k]);
             }
         }
     }

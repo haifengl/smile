@@ -23,7 +23,7 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public abstract class DenseMatrix implements Matrix, LinearSolver {
+public abstract class DenseMatrix implements Matrix, LinearSolver, MatrixMultiplication<DenseMatrix, DenseMatrix> {
     /**
      * True if the matrix is symmetric.
      */
@@ -60,7 +60,6 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
      * The rank of Matrix
      */
     private int rank;
-
 
     /**
      * Constructor.
@@ -108,6 +107,20 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
     }
 
     /**
+     * Sets if the matrix is symmetric.
+     */
+    public void setSymmetric(boolean symmetric) {
+        this.symmetric = symmetric;
+    }
+
+    /**
+     * Sets if the matrix is positive definite.
+     */
+    public void setPositive(boolean positive) {
+        this.positive = positive;
+    }
+
+    /**
      * Set the entry value at row i and column j.
      */
     public abstract DenseMatrix set(int i, int j, double x);
@@ -130,6 +143,12 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
         }
     }
 
+    @Override
+    public abstract DenseMatrix ata();
+
+    @Override
+    public abstract DenseMatrix aat();
+
     /**
      * A[i][j] += x
      */
@@ -149,6 +168,15 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
      * A[i][j] /= x
      */
     public abstract DenseMatrix div(int i, int j, double x);
+
+    @Override
+    public abstract DenseMatrix abmm(DenseMatrix B);
+
+    @Override
+    public abstract DenseMatrix abtmm(DenseMatrix B);
+
+    @Override
+    public abstract DenseMatrix atbmm(DenseMatrix B);
 
     /**
      * A = A + B
@@ -323,14 +351,10 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
      * @return inverse of A if A is square, pseudo inverse otherwise.
      */
     public DenseMatrix inverse() {
-        double[][] I = Math.eye(ncols(), nrows());
-        solve(I, I);
-        if (this instanceof RowMajorMatrix)
-            return new RowMajorMatrix(I);
-        else if (this instanceof ColumnMajorMatrix)
-            return new ColumnMajorMatrix(I);
+        if (nrows() == ncols())
+            return lu().inverse();
         else
-            return new NaiveMatrix(I);
+            return qr().inverse();
     }
 
     /**
@@ -382,9 +406,8 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
         }
 
         int n = nrows();
-        if (eigen == null || eigen.getEigenVectors().length != n) {
-            double[][] V = array();
-            eigen = EigenValueDecomposition.decompose(V, symmetric);
+        if (eigen == null || eigen.getEigenVectors().nrows() != n) {
+            eigen = new EigenValueDecomposition(this);
 
             positive = true;
             for (int i = 0; i < n; i++) {
@@ -407,10 +430,10 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
         }
 
         if (!symmetric) {
-            throw new UnsupportedOperationException("The current implementation of eigen value decomposition only works for symmetric matrices");
+            throw new UnsupportedOperationException("The Lanczos algorithm of eigen value decomposition only works for symmetric matrices");
         }
 
-        if (eigen == null || eigen.getEigenVectors().length != k) {
+        if (eigen == null || eigen.getEigenVectors().nrows() != k) {
             eigen = Lanczos.eigen(this, k);
         }
 
@@ -422,8 +445,7 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
      */
     public SingularValueDecomposition svd() {
         if (svd != null) {
-            double[][] V = array();
-            svd = SingularValueDecomposition.decompose(V);
+            svd = new SingularValueDecomposition(this);
             rank = svd.rank();
         }
 
@@ -498,7 +520,7 @@ public abstract class DenseMatrix implements Matrix, LinearSolver {
      * solution otherwise), which means the results will be stored in B.
      * @return the solution matrix, actually X.
      */
-    public void solve(double[][] B, double[][] X) {
+    public void solve(DenseMatrix B, DenseMatrix X) {
         if (nrows() == ncols()) {
             if (symmetric && positive) {
                 cholesky().solve(B, X);

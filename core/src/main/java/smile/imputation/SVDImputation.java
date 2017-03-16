@@ -16,6 +16,8 @@
 package smile.imputation;
 
 import smile.math.Math;
+import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.SingularValueDecomposition;
 
 /**
@@ -118,7 +120,7 @@ public class SVDImputation implements MissingValueImputation {
      * @param data the data with current imputations.
      */
     private void svdImpute(double[][] raw, double[][] data) {
-        SingularValueDecomposition svd = SingularValueDecomposition.decompose(data);
+        SingularValueDecomposition svd = new SingularValueDecomposition(data);
 
         int d = data[0].length;
 
@@ -136,23 +138,26 @@ public class SVDImputation implements MissingValueImputation {
                 continue;
             }
 
-            double[][] A = new double[d - missing][k];
-            double[] B = new double[d - missing];
+            DenseMatrix A = new ColumnMajorMatrix(d - missing, k);
+            double[] b = new double[d - missing];
 
             for (int j = 0, m = 0; j < d; j++) {
                 if (!Double.isNaN(raw[i][j])) {
-                    System.arraycopy(svd.getV()[j], 0, A[m], 0, k);
-                    B[m++] = raw[i][j];
+                    for (int l = 0; l < k; l++) {
+                        A.set(m, l, svd.getV().get(j, l));
+                    }
+                    b[m++] = raw[i][j];
                 }
             }
 
-            double[] s = Math.solve(A, B);
+            double[] s = new double[k];
+            A.solve(b, s);
 
             for (int j = 0; j < d; j++) {
                 if (Double.isNaN(raw[i][j])) {
                     data[i][j] = 0;
                     for (int l = 0; l < k; l++) {
-                        data[i][j] += s[l] * svd.getV()[j][l];
+                        data[i][j] += s[l] * svd.getV().get(j, l);
                     }
                 }
             }

@@ -201,12 +201,12 @@ public class LLE {
         SparseMatrix W = new SparseMatrix(n, n, w, rowIndex, colIndex);
         SparseMatrix M = W.aat();
 
-        EigenValueDecomposition eigen = EigenValueDecomposition.decompose(M, n);
+        EigenValueDecomposition eigen = Lanczos.eigen(M, n);
 
         coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
             for (int i = 0; i < n; i++) {
-                coordinates[i][j] = eigen.getEigenVectors()[i][n-j-2];
+                coordinates[i][j] = eigen.getEigenVectors().get(i, n-j-2);
             }
         }
     }

@@ -159,7 +159,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
     private void init() {
         dim = mu.length;
         CholeskyDecomposition cholesky = new CholeskyDecomposition(sigma);
-        sigmaInv = cholesky.inverse();
+        sigmaInv = cholesky.inverse().array();
         sigmaDet = cholesky.det();
         sigmaL = cholesky.getL();
         pdfConstant = (dim * Math.log(2 * Math.PI) + Math.log(sigmaDet)) / 2.0;

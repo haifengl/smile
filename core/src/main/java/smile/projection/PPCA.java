@@ -17,6 +17,8 @@ package smile.projection;
 
 import java.io.Serializable;
 import smile.math.Math;
+import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
 import smile.math.matrix.LUDecomposition;
 
@@ -59,17 +61,17 @@ public class PPCA implements Projection<double[]>, Serializable {
     /**
      * Loading matrix.
      */
-    private double[][] loading;
+    private DenseMatrix loading;
     /**
      * Projection matrix.
      */
-    private double[][] projection;
+    private DenseMatrix projection;
 
     /**
      * Returns the variable loading matrix, ordered from largest to smallest
      * by corresponding eigenvalues.
      */
-    public double[][] getLoadings() {
+    public DenseMatrix getLoadings() {
         return loading;
     }
 
@@ -91,7 +93,7 @@ public class PPCA implements Projection<double[]>, Serializable {
      * Returns the projection matrix. Note that this is not the matrix W in the
      * latent model.
      */
-    public double[][] getProjection() {
+    public DenseMatrix getProjection() {
         return projection;
     }
 
@@ -101,8 +103,8 @@ public class PPCA implements Projection<double[]>, Serializable {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, mu.length));
         }
 
-        double[] y = new double[projection.length];
-        Math.ax(projection, x, y);
+        double[] y = new double[projection.nrows()];
+        projection.ax(x, y);
         Math.minus(y, pmu);
         return y;
     }
@@ -113,9 +115,9 @@ public class PPCA implements Projection<double[]>, Serializable {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x[0].length, mu.length));
         }
 
-        double[][] y = new double[x.length][projection.length];
+        double[][] y = new double[x.length][projection.nrows()];
         for (int i = 0; i < x.length; i++) {
-            Math.ax(projection, x[i], y[i]);
+            projection.ax(x[i], y[i]);
             Math.minus(y[i], pmu);
         }
         return y;
@@ -131,26 +133,26 @@ public class PPCA implements Projection<double[]>, Serializable {
         int n = data[0].length;
 
         mu = Math.colMean(data);
-        double[][] cov = new double[n][n];
+        DenseMatrix cov = new ColumnMajorMatrix(n, n);
         for (int l = 0; l < m; l++) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
-                    cov[i][j] += (data[l][i] - mu[i]) * (data[l][j] - mu[j]);
+                    cov.add(i, j, (data[l][i] - mu[i]) * (data[l][j] - mu[j]));
                 }
             }
         }
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
-                cov[i][j] /= m;
-                cov[j][i] = cov[i][j];
+                cov.div(i, j, m);
+                cov.set(j, i, cov.get(i, j));
             }
         }
 
 
-        EigenValueDecomposition eigen = EigenValueDecomposition.decompose(cov, true);
+        EigenValueDecomposition eigen = new EigenValueDecomposition(cov);
         double[] evalues = eigen.getEigenValues();
-        double[][] evectors = eigen.getEigenVectors();
+        DenseMatrix evectors = eigen.getEigenVectors();
 
         noise = 0.0;
         for (int i = k; i < n; i++) {
@@ -158,23 +160,22 @@ public class PPCA implements Projection<double[]>, Serializable {
         }
         noise /= (n - k);
 
-        loading = new double[n][k];
+        loading = new ColumnMajorMatrix(n, k);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < k; j++) {
-                loading[i][j] = evectors[i][j] * Math.sqrt(evalues[j] - noise);
+                loading.set(i, j, evectors.get(i, j) * Math.sqrt(evalues[j] - noise));
             }
         }
 
-        double[][] M = Math.atamm(loading);
+        DenseMatrix M = loading.ata();
         for (int i = 0; i < k; i++) {
-            M[i][i] += noise;
+            M.add(i, i, noise);
         }
 
-        LUDecomposition lu = new LUDecomposition(M);
-        double[][] Mi = lu.inverse();
-        projection = Math.abtmm(Mi, loading);
+        DenseMatrix Mi = M.inverse();
+        projection = Mi.abtmm(loading);
 
-        pmu = new double[projection.length];
-        Math.ax(projection, mu, pmu);
+        pmu = new double[projection.nrows()];
+        projection.ax(mu, pmu);
     }
 }

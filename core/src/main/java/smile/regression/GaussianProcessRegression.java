@@ -19,9 +19,7 @@ package smile.regression;
 import java.io.Serializable;
 import smile.math.Math;
 import smile.math.kernel.MercerKernel;
-import smile.math.matrix.CholeskyDecomposition;
-import smile.math.matrix.EigenValueDecomposition;
-import smile.math.matrix.LUDecomposition;
+import smile.math.matrix.*;
 
 /**
  * Gaussian Process for Regression. A Gaussian process is a stochastic process
@@ -246,42 +244,44 @@ public class GaussianProcessRegression <T> implements Regression<T>, Serializabl
         int n = x.length;
         int m = t.length;
 
-        double[][] E = new double[n][m];
+        DenseMatrix E = new ColumnMajorMatrix(n, m);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                E[i][j] = kernel.k(x[i], t[j]);
+                E.set(i, j, kernel.k(x[i], t[j]));
             }
         }
 
-        double[][] W = new double[m][m];
+        ColumnMajorMatrix W = new ColumnMajorMatrix(m, m);
+        W.setSymmetric(true);
         for (int i = 0; i < m; i++) {
             for (int j = 0; j <= i; j++) {
-                W[i][j] = kernel.k(t[i], t[j]);
-                W[j][i] = W[i][j];
+                double k = kernel.k(t[i], t[j]);
+                W.set(i, j, k);
+                W.set(j, i, k);
             }
         }
 
-        EigenValueDecomposition eigen = EigenValueDecomposition.decompose(W);
-        double[][] U = eigen.getEigenVectors();
-        double[][] D = eigen.getD();
+        EigenValueDecomposition eigen = new EigenValueDecomposition(W);
+        DenseMatrix U = eigen.getEigenVectors();
+        DenseMatrix D = eigen.getD();
         for (int i = 0; i < m; i++) {
-            D[i][i] = 1.0 / Math.sqrt(D[i][i]);
+            D.set(i, i, 1.0 / Math.sqrt(D.get(i, i)));
+        }
+
+        DenseMatrix UD = U.abmm(D);
+        DenseMatrix UDUt = UD.abtmm(U);
+        DenseMatrix L = E.abmm(UDUt);
+        
+        DenseMatrix LtL = L.ata();
+        for (int i = 0; i < m; i++) {
+            LtL.add(i, i, lambda);
         }
         
-        double[][] UD = Math.abmm(U, D);
-        double[][] UDUt = Math.abtmm(UD, U);
-        double[][] L = Math.abmm(E, UDUt);
-        
-        double[][] LtL = Math.atamm(L);
-        for (int i = 0; i < m; i++) {
-            LtL[i][i] += lambda;
-        }
-        
-        double[][] invLtL = Math.inverse(LtL);
-        double[][] K = Math.abtmm(Math.abmm(L, invLtL), L);
+        DenseMatrix invLtL = LtL.inverse();
+        DenseMatrix K = L.abmm(invLtL).abtmm(L);
         
         w = new double[n];
-        Math.atx(K, y, w);
+        K.atx(y, w);
         
         for (int i = 0; i < n; i++) {
             w[i] = (y[i] - w[i]) / lambda;
