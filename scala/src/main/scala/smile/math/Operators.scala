@@ -17,7 +17,7 @@
 package smile.math
 
 import scala.language.implicitConversions
-import smile.math.matrix.RowMajorMatrix
+import smile.math.matrix.{DenseMatrix, ColumnMajorMatrix}
 import smile.math.special._
 import smile.stat.hypothesis._
 import smile.stat.distribution.Distribution
@@ -27,7 +27,12 @@ import smile.stat.distribution.Distribution
   * @author Haifeng Li
   */
 trait Operators {
-  implicit def array2Matrix(matrix: Array[Array[Double]]) = new RowMajorMatrix(matrix)
+  implicit def array2Matrix(matrix: Array[Array[Double]]) = new ColumnMajorMatrix(matrix)
+
+  implicit def pimpDataset(matrix: DenseMatrix): PimpedMatrix = new PimpedMatrix(matrix)
+
+  implicit def Ax2Array(ax: Ax): Array[Double] = ax.toArray
+  implicit def Atx2Array(atx: Atx): Array[Double] = atx.toArray
 
   /** The beta function, also called the Euler integral of the first kind.
     *
@@ -162,4 +167,74 @@ trait Operators {
     * calculated as Cramer's V.
     */
   def chisqtest(table: Array[Array[Int]]): CorTest = CorTest.chisq(table)
+}
+
+private[math] case class By(b: Double, y: Array[Double])
+
+private[math] class PimpedDouble(b: Double) {
+  def * (y: Array[Double]): By = By(b, y)
+}
+
+private[math] class PimpedDoubleArray(y: Array[Double]) {
+  def * (b: Double): By = By(b, y)
+}
+
+private[math] case class Ax(A: DenseMatrix, x: Array[Double]) {
+  def toArray: Array[Double] = {
+    val y = new Array[Double](x.length)
+    A.ax(x, y)
+  }
+
+  def + (y: Array[Double]): Array[Double] = A.axpy(x, y)
+
+  def + (by: By): Array[Double] = A.axpy(x, by.y, by.b)
+}
+
+private[math] case class Atx(A: DenseMatrix, x: Array[Double]) {
+  def toArray: Array[Double] = {
+    val y = new Array[Double](x.length)
+    A.atx(x, y)
+  }
+
+  def + (y: Array[Double]): Array[Double] = A.atxpy(x, y)
+
+  def + (by: By): Array[Double] = A.axpy(x, by.y, by.b)
+}
+
+private[math] case class Transpose(a: DenseMatrix) {
+  def * (x: Array[Double]): Atx = Atx(a, x)
+  def * (b: DenseMatrix): DenseMatrix = a.atbmm(b)
+}
+
+private[math] class PimpedMatrix(a: DenseMatrix) {
+  def += (i: Int, j: Int, x: Double): Double = a.add(i, j, x)
+  def -= (i: Int, j: Int, x: Double): Double = a.sub(i, j, x)
+  def *= (i: Int, j: Int, x: Double): Double = a.mul(i, j, x)
+  def /= (i: Int, j: Int, x: Double): Double = a.div(i, j, x)
+
+  def += (b: Double) = a.add(b)
+  def -= (b: Double) = a.sub(b)
+  def *= (b: Double) = a.mul(b)
+  def /= (b: Double) = a.div(b)
+
+  def += (b: DenseMatrix) = a.add(b)
+  def -= (b: DenseMatrix) = a.sub(b)
+  /** Element-wise multiplication */
+  def *= (b: DenseMatrix) = a.mul(b)
+  /** Element-wise division */
+  def /= (b: DenseMatrix) = a.div(b)
+
+  def * (b: DenseMatrix) = a.abmm(b)
+  def * (b: Transpose) = a.abtmm(b.a)
+  def / (b: DenseMatrix) = a.abmm(b.inverse())
+
+  def * (x: Array[Double]): Ax = Ax(a, x)
+
+  def t: Transpose = new Transpose(a)
+
+  /** Solves A * x = b */
+  def \ (b: Array[Double]): Array[Double] = {
+    val x = new Array[Double](b.length)
+    a.solve(b, x)
+  }
 }
