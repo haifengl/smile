@@ -476,7 +476,7 @@ public abstract class DenseMatrix implements Matrix, LinearSolver, MatrixMultipl
      * Returns the singular value decomposition.
      */
     public SingularValueDecomposition svd() {
-        if (svd != null) {
+        if (svd == null) {
             svd = new SingularValueDecomposition(this);
             rank = svd.rank();
         }
@@ -627,14 +627,15 @@ public abstract class DenseMatrix implements Matrix, LinearSolver, MatrixMultipl
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        int m = Math.min(10, nrows());
-        int n = Math.min(10, ncols());
+        final int fields = 7;
+        int m = Math.min(fields, nrows());
+        int n = Math.min(fields, ncols());
 
         String newline = n < ncols() ? "...\n" : "\n";
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
-                sb.append(String.format("%.5f\t", get(i, j)));
+                sb.append(String.format("%8.4f  ", get(i, j)));
             }
             sb.append(newline);
         }
