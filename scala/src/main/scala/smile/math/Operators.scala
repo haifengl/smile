@@ -29,15 +29,19 @@ import scala.reflect.ClassTag
   * @author Haifeng Li
   */
 trait Operators {
-  implicit def pimpDouble(x: Double): PimpedDouble = new PimpedDouble(x)
-  implicit def pimpIntArray(data: Array[Int]): PimpedArray[Int] = new PimpedArray[Int](data)
-  implicit def pimpDoubleArray(data: Array[Double]): PimpedDoubleArray = new PimpedDoubleArray(data)
-  implicit def pimpArray2D(data: Array[Array[Double]]): PimpedArray2D = new PimpedArray2D(data)
-  implicit def pimpMatrix(matrix: DenseMatrix): PimpedMatrix = new PimpedMatrix(matrix)
+  implicit def pimpDouble(x: Double) = new PimpedDouble(x)
+  implicit def pimpIntArray(data: Array[Int]) = new PimpedArray[Int](data)
+  implicit def pimpDoubleArray(data: Array[Double]) = new PimpedDoubleArray(data)
+  implicit def pimpArray2D(data: Array[Array[Double]]) = new PimpedArray2D(data)
+  implicit def pimpMatrix(matrix: DenseMatrix) = new PimpedMatrix(matrix)
 
-  implicit def Ax2Array(ax: Ax): Array[Double] = ax.toArray
-  implicit def Atx2Array(atx: Atx): Array[Double] = atx.toArray
-  implicit def By2Array(by: By): Array[Double] = by.toArray
+  implicit def Ax2Array(ax: Ax) = ax.toArray
+  implicit def Atx2Array(atx: Atx) = atx.toArray
+  implicit def By2Array(by: By) = by.toArray
+
+  implicit def Ax2PimpedArray(ax: Ax) = new PimpedDoubleArray(ax.toArray)
+  implicit def AtxPimped2Array(atx: Atx) = new PimpedDoubleArray(atx.toArray)
+  implicit def By2PimpedArray(by: By) = new PimpedDoubleArray(by.toArray)
 
   /** The beta function, also called the Euler integral of the first kind.
     *
