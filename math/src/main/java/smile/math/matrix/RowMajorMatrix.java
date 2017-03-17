@@ -144,51 +144,6 @@ public class RowMajorMatrix extends DenseMatrix {
     }
 
     @Override
-    public int nrows() {
-        return nrows;
-    }
-
-    @Override
-    public int ncols() {
-        return ncols;
-    }
-
-    @Override
-    public double get(int i, int j) {
-        return A[i*ncols + j];
-    }
-
-    @Override
-    public RowMajorMatrix set(int i, int j, double x) {
-        A[i*ncols + j] = x;
-        return this;
-    }
-
-    @Override
-    public RowMajorMatrix add(int i, int j, double x) {
-        A[i*ncols + j] += x;
-        return this;
-    }
-
-    @Override
-    public RowMajorMatrix sub(int i, int j, double x) {
-        A[i*ncols + j] -= x;
-        return this;
-    }
-
-    @Override
-    public RowMajorMatrix mul(int i, int j, double x) {
-        A[i*ncols + j] *= x;
-        return this;
-    }
-
-    @Override
-    public RowMajorMatrix div(int i, int j, double x) {
-        A[i*ncols + j] /= x;
-        return this;
-    }
-
-    @Override
     public RowMajorMatrix transpose() {
         RowMajorMatrix B = new RowMajorMatrix(ncols, nrows);
         for (int k = 0; k < A.length; k++) {
@@ -213,6 +168,147 @@ public class RowMajorMatrix extends DenseMatrix {
         }
 
         return B;
+    }
+
+    @Override
+    public int nrows() {
+        return nrows;
+    }
+
+    @Override
+    public int ncols() {
+        return ncols;
+    }
+
+    @Override
+    public double get(int i, int j) {
+        return A[i*ncols + j];
+    }
+
+    @Override
+    public double set(int i, int j, double x) {
+        return A[i*ncols + j] = x;
+    }
+
+    @Override
+    public double add(int i, int j, double x) {
+        return A[i*ncols + j] += x;
+    }
+
+    @Override
+    public double sub(int i, int j, double x) {
+        return A[i*ncols + j] -= x;
+    }
+
+    @Override
+    public double mul(int i, int j, double x) {
+        return A[i*ncols + j] *= x;
+    }
+
+    @Override
+    public double div(int i, int j, double x) {
+        return A[i*ncols + j] /= x;
+    }
+
+    public RowMajorMatrix add(RowMajorMatrix b) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int i = 0; i < A.length; i++) {
+            A[i] += b.A[i];
+        }
+        return this;
+    }
+
+    public RowMajorMatrix sub(RowMajorMatrix b) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int i = 0; i < A.length; i++) {
+            A[i] -= b.A[i];
+        }
+        return this;
+    }
+
+    public RowMajorMatrix mul(RowMajorMatrix b) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int i = 0; i < A.length; i++) {
+            A[i] *= b.A[i];
+        }
+        return this;
+    }
+
+    public RowMajorMatrix div(RowMajorMatrix b) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int i = 0; i < A.length; i++) {
+            A[i] /= b.A[i];
+        }
+        return this;
+    }
+
+    @Override
+    public RowMajorMatrix add(double x) {
+        for (int i = 0; i < A.length; i++) {
+            A[i] += x;
+        }
+
+        return this;
+    }
+
+    @Override
+    public RowMajorMatrix sub(double x) {
+        for (int i = 0; i < A.length; i++) {
+            A[i] -= x;
+        }
+
+        return this;
+    }
+
+    @Override
+    public RowMajorMatrix mul(double x) {
+        for (int i = 0; i < A.length; i++) {
+            A[i] *= x;
+        }
+
+        return this;
+    }
+
+    @Override
+    public RowMajorMatrix div(double x) {
+        for (int i = 0; i < A.length; i++) {
+            A[i] /= x;
+        }
+
+        return this;
+    }
+
+    @Override
+    public RowMajorMatrix replaceNaN(double x) {
+        for (int i = 0; i < A.length; i++) {
+            if (Double.isNaN(A[i])) {
+                A[i] = x;
+            }
+        }
+
+        return this;
+    }
+
+    @Override
+    public double sum() {
+        double s = 0.0;
+        for (int i = 0; i < A.length; i++) {
+            s += A[i];
+        }
+
+        return s;
     }
 
     @Override
@@ -248,55 +344,65 @@ public class RowMajorMatrix extends DenseMatrix {
     }
 
     @Override
-    public void ax(double[] x, double[] y) {
+    public double[] ax(double[] x, double[] y) {
         Arrays.fill(y, 0.0);
         for (int i = 0, j = 0; i < nrows; i++) {
             for (int k = 0; k < ncols; k++, j++) {
                 y[i] += A[j] * x[k];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void axpy(double[] x, double[] y) {
+    public double[] axpy(double[] x, double[] y) {
         for (int i = 0, j = 0; i < nrows; i++) {
             for (int k = 0; k < ncols; k++, j++) {
                 y[i] += A[j] * x[k];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void axpy(double[] x, double[] y, double b) {
+    public double[] axpy(double[] x, double[] y, double b) {
         for (int i = 0, j = 0; i < nrows; i++) {
             y[i] *= b;
             for (int k = 0; k < ncols; k++, j++) {
                 y[i] += A[j] * x[k];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void atx(double[] x, double[] y) {
+    public double[] atx(double[] x, double[] y) {
         Arrays.fill(y, 0.0);
         for (int k = 0, j = 0; k < nrows; k++) {
             for (int i = 0; i < ncols; i++, j++) {
                 y[i] += A[j] * x[k];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void atxpy(double[] x, double[] y) {
+    public double[] atxpy(double[] x, double[] y) {
         for (int k = 0, j = 0; k < nrows; k++) {
             for (int i = 0; i < ncols; i++, j++) {
                 y[i] += A[j] * x[k];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void atxpy(double[] x, double[] y, double b) {
+    public double[] atxpy(double[] x, double[] y, double b) {
         for (int i = 0; i < y.length; i++) {
             y[i] *= b;
         }
@@ -306,6 +412,8 @@ public class RowMajorMatrix extends DenseMatrix {
                 y[i] += A[j] * x[k];
             }
         }
+
+        return y;
     }
 
     @Override

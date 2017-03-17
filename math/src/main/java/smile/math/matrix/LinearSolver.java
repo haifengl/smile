@@ -25,8 +25,9 @@ public interface LinearSolver {
     /**
      * Solve A*x = b.
      * @param b   a vector with as many rows as A.
-     * @param x   is output vector so that L*U*X = b(piv,:)
+     * @param x   is output vector so that A*x = b
+     * @return the solution vector x
      * @throws RuntimeException if matrix is singular.
      */
-    public void solve(double[] b, double[] x);
+    public double[] solve(double[] b, double[] x);
 }

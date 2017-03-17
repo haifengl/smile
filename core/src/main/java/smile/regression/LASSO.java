@@ -595,7 +595,7 @@ public class LASSO  implements Regression<double[]>, Serializable {
         }
 
         @Override
-        public void ax(double[] x, double[] y) {
+        public double[] ax(double[] x, double[] y) {
             // COMPUTE AX (PCG)
             // 
             // y = hessphi * x,
@@ -613,11 +613,13 @@ public class LASSO  implements Regression<double[]>, Serializable {
                 y[i]     = 2 * atax[i] + d1[i] * x[i] + d2[i] * x[i + p];
                 y[i + p] =               d2[i] * x[i] + d1[i] * x[i + p];
             }
+
+            return y;
         }
 
         @Override
-        public void atx(double[] x, double[] y) {
-            ax(x, y);
+        public double[] atx(double[] x, double[] y) {
+            return ax(x, y);
         }
 
         @Override
@@ -657,22 +659,22 @@ public class LASSO  implements Regression<double[]>, Serializable {
         }
 
         @Override
-        public void axpy(double[] x, double[] y) {
+        public double[] axpy(double[] x, double[] y) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
-        public void axpy(double[] x, double[] y, double b) {
+        public double[] axpy(double[] x, double[] y, double b) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
-        public void atxpy(double[] x, double[] y) {
+        public double[] atxpy(double[] x, double[] y) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
-        public void atxpy(double[] x, double[] y, double b) {
+        public double[] atxpy(double[] x, double[] y, double b) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
     }
