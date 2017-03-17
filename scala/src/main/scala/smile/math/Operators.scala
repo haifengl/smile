@@ -22,15 +22,17 @@ import smile.math.special._
 import smile.stat.hypothesis._
 import smile.stat.distribution.Distribution
 
+import scala.reflect.ClassTag
+
 /** High level feature selection operators.
   *
   * @author Haifeng Li
   */
 trait Operators {
-  implicit def array2Matrix(matrix: Array[Array[Double]]) = new ColumnMajorMatrix(matrix)
-
   implicit def pimpDouble(x: Double): PimpedDouble = new PimpedDouble(x)
-  implicit def pimpDoubleArray(x: Array[Double]): PimpedDoubleArray = new PimpedDoubleArray(x)
+  implicit def pimpIntArray(data: Array[Int]): PimpedArray[Int] = new PimpedArray[Int](data)
+  implicit def pimpDoubleArray(data: Array[Double]): PimpedArray[Double] = new PimpedArray[Double](data)
+  implicit def pimpArray2D(data: Array[Array[Double]]): PimpedArray2D = new PimpedArray2D(data)
   implicit def pimpMatrix(matrix: DenseMatrix): PimpedMatrix = new PimpedMatrix(matrix)
 
   implicit def Ax2Array(ax: Ax): Array[Double] = ax.toArray
@@ -171,16 +173,168 @@ trait Operators {
   def chisqtest(table: Array[Array[Int]]): CorTest = CorTest.chisq(table)
 }
 
+
+abstract class PimpedArrayLike[T: ClassTag] {
+
+  val data: Array[T]
+
+  /** Get an element */
+  def apply(rows: Int*): Array[T] = rows.map(row => data(row)).toArray
+
+  /** Get a range of array */
+  def apply(rows: Range): Array[T] = rows.map(row => data(row)).toArray
+
+  /** Sampling the data.
+    * @param n the number of samples.
+    * @return samples
+    */
+  def sample(n: Int): Array[T] = {
+    val perm = data.indices.toArray
+    Math.permutate(perm)
+    (0 until n).map(i => data(perm(i))).toArray
+  }
+
+  /** Sampling the data.
+    * @param f the fraction of samples.
+    * @return samples
+    */
+  def sample(f: Double): Array[T] = sample(Math.round(data.length * f).toInt)
+}
+
+private[math] class PimpedArray[T](val data: Array[T])(implicit val tag: ClassTag[T])
+  extends PimpedArrayLike[T]
+
+private[math] class PimpedArray2D(val data: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]])
+  extends PimpedArrayLike[Array[Double]] {
+
+  def nrows: Int = data.length
+
+  def ncols: Int = data(0).length
+
+  /** Returns a submatrix. */
+  def apply(rows: Range, cols: Range): Array[Array[Double]] = rows.map { row =>
+    val x = data(row)
+    cols.map { col => x(col) }.toArray
+  }.toArray
+
+  /** Returns a column. */
+  def $(col: Int): Array[Double] = data.map(_(col))
+
+  /** Returns multiple rows. */
+  def row(i: Int*): Array[Array[Double]] = apply(i: _*)
+
+  /** Returns a range of rows. */
+  def row(i: Range): Array[Array[Double]] = apply(i)
+
+  /** Returns multiple columns. */
+  def col(j: Int*): Array[Array[Double]] = data.map { x =>
+    j.map { col => x(col) }.toArray
+  }
+
+  /** Returns a range of columns. */
+  def col(j: Range): Array[Array[Double]] = data.map { x =>
+    j.map { col => x(col) }.toArray
+  }
+}
+
+object Matrix {
+  def apply(matrix: Array[Array[Double]]) = new ColumnMajorMatrix(matrix)
+}
+
 private[math] case class Scale(b: Double, y: Array[Double]) {
   def toArray: Array[Double] = y.map(_ * b)
 }
 
-private[math] class PimpedDouble(b: Double) {
-  def * (y: Array[Double]): Scale = Scale(b, y)
+private[math] class PimpedDouble(a: Double) {
+  //def * (y: Array[Double]): Scale = Scale(a, y)
+
+  def + (b: Array[Double]): Array[Double] = b.map(a + _)
+  def - (b: Array[Double]): Array[Double] = b.map(a - _)
+  def * (b: Array[Double]): Array[Double] = b.map(a * _)
+  def / (b: Array[Double]): Array[Double] = b.map(a / _)
+  def ^ (b: Array[Double]): Array[Double] = b.map(math.pow(a, _))
+
+  def + (b: DenseMatrix): ColumnMajorMatrix = {
+    val c = new ColumnMajorMatrix(b.nrows, b.ncols)
+    for (j <- 0 until b.ncols)
+      for (i <- 0 until b.nrows)
+        c(i, j) = a + b(i, j)
+    c
+  }
+
+  def - (b: DenseMatrix): ColumnMajorMatrix = {
+    val c = new ColumnMajorMatrix(b.nrows, b.ncols)
+    for (j <- 0 until b.ncols)
+      for (i <- 0 until b.nrows)
+        c(i, j) = a - b(i, j)
+    c
+  }
+
+  def * (b: DenseMatrix): ColumnMajorMatrix = {
+    val c = new ColumnMajorMatrix(b.nrows, b.ncols)
+    for (j <- 0 until b.ncols)
+      for (i <- 0 until b.nrows)
+        c(i, j) = a * b(i, j)
+    c
+  }
+
+  def / (b: DenseMatrix): ColumnMajorMatrix = {
+    val c = new ColumnMajorMatrix(b.nrows, b.ncols)
+    for (j <- 0 until b.ncols)
+      for (i <- 0 until b.nrows)
+        c(i, j) = a / b(i, j)
+    c
+  }
+
+  def ^ (b: DenseMatrix): ColumnMajorMatrix = {
+    val c = new ColumnMajorMatrix(b.nrows, b.ncols)
+    for (j <- 0 until b.ncols)
+      for (i <- 0 until b.nrows)
+        c(i, j) = math.pow(a, b(i, j))
+    c
+  }
 }
 
-private[math] class PimpedDoubleArray(y: Array[Double]) {
-  def * (b: Double): Scale = Scale(b, y)
+private[math] class PimpedDoubleArray(a: Array[Double]) extends PimpedArray[Double](a) {
+  //def * (b: Double): Scale = Scale(b, a)
+  def + (b: Double): Array[Double] = a.map(_ + b)
+  def - (b: Double): Array[Double] = a.map(_ - b)
+  def * (b: Double): Array[Double] = a.map(_ * b)
+  def / (b: Double): Array[Double] = a.map(_ / b)
+  def ^ (b: Double): Array[Double] = a.map(math.pow(_, b))
+
+  def += (b: Double): Array[Double] = { a.transform(_ + b); a }
+  def -= (b: Double): Array[Double] = { a.transform(_ - b); a }
+  def *= (b: Double): Array[Double] = { a.transform(_ * b); a }
+  def /= (b: Double): Array[Double] = { a.transform(_ / b); a }
+  def ^= (b: Double): Array[Double] = { a.transform(math.pow(_, b)); a }
+
+  def + (b: Array[Double]): Array[Double] = a.zip(b).map(x => x._1 + x._2)
+  def - (b: Array[Double]): Array[Double] = a.zip(b).map(x => x._1 - x._2)
+  def * (b: Array[Double]): Array[Double] = a.zip(b).map(x => x._1 * x._2)
+  def / (b: Array[Double]): Array[Double] = a.zip(b).map(x => x._1 / x._2)
+  def ^ (b: Array[Double]): Array[Double] = a.zip(b).map(x => math.pow(x._1, x._2))
+
+  def += (b: Array[Double]): Array[Double] = {
+    for (i <- 0 until a.length) a(i) += b(i)
+    a
+  }
+  def -= (b: Array[Double]): Array[Double] = {
+    for (i <- 0 until a.length) a(i) -= b(i)
+    a
+  }
+  def *= (b: Array[Double]): Array[Double] = {
+    for (i <- 0 until a.length) a(i) *= b(i)
+    a
+  }
+  def /= (b: Array[Double]): Array[Double] = {
+    for (i <- 0 until a.length) a(i) /= b(i)
+    a
+  }
+  def ^= (b: Array[Double]): Array[Double] = {
+    for (i <- 0 until a.length) a(i) = math.pow(a(i), b(i))
+    a
+  }
 }
 
 private[math] case class Ax(A: DenseMatrix, x: Array[Double]) {
@@ -242,7 +396,7 @@ private[math] class PimpedMatrix(a: DenseMatrix) {
     a.solve(b, x)
   }
 
-  def + (b: Double): DenseMatrix = {
+  def + (b: Double): ColumnMajorMatrix = {
     val c = new ColumnMajorMatrix(a.nrows, a.ncols)
     for (j <- 0 until a.ncols)
       for (i <- 0 until a.nrows)
@@ -250,7 +404,7 @@ private[math] class PimpedMatrix(a: DenseMatrix) {
     c
   }
 
-  def - (b: Double): DenseMatrix = {
+  def - (b: Double): ColumnMajorMatrix = {
     val c = new ColumnMajorMatrix(a.nrows, a.ncols)
     for (j <- 0 until a.ncols)
       for (i <- 0 until a.nrows)
@@ -258,7 +412,7 @@ private[math] class PimpedMatrix(a: DenseMatrix) {
     c
   }
 
-  def * (b: Double): DenseMatrix = {
+  def * (b: Double): ColumnMajorMatrix = {
     val c = new ColumnMajorMatrix(a.nrows, a.ncols)
     for (j <- 0 until a.ncols)
       for (i <- 0 until a.nrows)
@@ -266,7 +420,7 @@ private[math] class PimpedMatrix(a: DenseMatrix) {
     c
   }
 
-  def / (b: Double): DenseMatrix = {
+  def / (b: Double): ColumnMajorMatrix = {
     val c = new ColumnMajorMatrix(a.nrows, a.ncols)
     for (j <- 0 until a.ncols)
       for (i <- 0 until a.nrows)
@@ -274,7 +428,7 @@ private[math] class PimpedMatrix(a: DenseMatrix) {
     c
   }
 
-  def + (b: DenseMatrix): DenseMatrix = {
+  def + (b: DenseMatrix): ColumnMajorMatrix = {
     val c = new ColumnMajorMatrix(a.nrows, a.ncols)
     for (j <- 0 until a.ncols)
       for (i <- 0 until a.nrows)
@@ -282,7 +436,7 @@ private[math] class PimpedMatrix(a: DenseMatrix) {
     c
   }
 
-  def - (b: DenseMatrix): DenseMatrix = {
+  def - (b: DenseMatrix): ColumnMajorMatrix = {
     val c = new ColumnMajorMatrix(a.nrows, a.ncols)
     for (j <- 0 until a.ncols)
       for (i <- 0 until a.nrows)
@@ -291,7 +445,7 @@ private[math] class PimpedMatrix(a: DenseMatrix) {
   }
 
   /** Element-wise multiplication */
-  def *~ (b: DenseMatrix): DenseMatrix = {
+  def *~ (b: DenseMatrix): ColumnMajorMatrix = {
     val c = new ColumnMajorMatrix(a.nrows, a.ncols)
     for (j <- 0 until a.ncols)
       for (i <- 0 until a.nrows)
@@ -300,7 +454,7 @@ private[math] class PimpedMatrix(a: DenseMatrix) {
   }
 
   /** Element-wise division */
-  def /~ (b: DenseMatrix): DenseMatrix = {
+  def /~ (b: DenseMatrix): ColumnMajorMatrix = {
     val c = new ColumnMajorMatrix(a.nrows, a.ncols)
     for (j <- 0 until a.ncols)
       for (i <- 0 until a.nrows)

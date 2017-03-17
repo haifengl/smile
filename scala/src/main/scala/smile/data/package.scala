@@ -20,7 +20,6 @@ import smile.math.Math
 
 import scala.language.implicitConversions
 import scala.collection.JavaConverters._
-import scala.reflect.ClassTag
 
 /** Data manipulation functions.
   *
@@ -30,9 +29,6 @@ package object data {
 
   implicit def pimpDataset(data: AttributeDataset): PimpedDataset = new PimpedDataset(data)
   implicit def pimpSparseDataset(data: SparseDataset): PimpedSparseDataset = new PimpedSparseDataset(data)
-  implicit def pimpDIntArray(data: Array[Int]): PimpedArray[Int] = new PimpedArray[Int](data)
-  implicit def pimpDoubleArray(data: Array[Double]): PimpedArray[Double] = new PimpedArray[Double](data)
-  implicit def pimpArray2D(data: Array[Array[Double]]): PimpedArray2D = new PimpedArray2D(data)
 
   def summary(x: Array[Double]): Unit = {
     println("min\tq1\tmedian\tmean\tq3\tmax")
@@ -77,7 +73,7 @@ package data {
       println(" \tmin\tq1\tmedian\tmean\tq3\tmax")
       val matrix = unzip
       for (i <- colnames.indices) {
-        val x = matrix \ i
+        val x = matrix.map(_(i))
         val min = Math.min(x)
         val q1 = Math.q1(x)
         val median = Math.median(x)
@@ -150,70 +146,5 @@ package data {
       val y = data.toArray(new Array[Double](data.size))
       (x, y)
     }
-  }
-
-  abstract class PimpedArrayLike[T: ClassTag] {
-
-    val data: Array[T]
-
-    /** Get an element */
-    def apply(rows: Int*): Array[T] = rows.map(row => data(row)).toArray
-
-    /** Get a range of array */
-    def apply(rows: Range): Array[T] = rows.map(row => data(row)).toArray
-
-    /** Sampling the data.
-      * @param n the number of samples.
-      * @return samples
-      */
-    def sample(n: Int): Array[T] = {
-      val perm = data.indices.toArray
-      Math.permutate(perm)
-      (0 until n).map(i => data(perm(i))).toArray
-    }
-
-    /** Sampling the data.
-      * @param f the fraction of samples.
-      * @return samples
-      */
-    def sample(f: Double): Array[T] = sample(Math.round(data.length * f).toInt)
-
-  }
-
-  private[data] class PimpedArray[T](val data: Array[T])(implicit val tag: ClassTag[T])
-    extends PimpedArrayLike[T]
-
-  private[data] class PimpedArray2D(val data: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]])
-    extends PimpedArrayLike[Array[Double]] {
-
-    def nrows: Int = data.length
-
-    def ncols: Int = data(0).length
-
-    /** Returns a submatrix. */
-    def apply(rows: Range, cols: Range): Array[Array[Double]] = rows.map { row =>
-      val x = data(row)
-      cols.map { col => x(col) }.toArray
-    }.toArray
-
-    /** Returns a column. */
-    def \(col: Int): Array[Double] = data.map(_(col))
-
-    /** Returns multiple rows. */
-    def row(i: Int*): Array[Array[Double]] = apply(i: _*)
-
-    /** Returns a range of rows. */
-    def row(i: Range): Array[Array[Double]] = apply(i)
-
-    /** Returns multiple columns. */
-    def col(j: Int*): Array[Array[Double]] = data.map { x =>
-      j.map { col => x(col) }.toArray
-    }
-
-    /** Returns a range of columns. */
-    def col(j: Range): Array[Array[Double]] = data.map { x =>
-      j.map { col => x(col) }.toArray
-    }
-
   }
 }
