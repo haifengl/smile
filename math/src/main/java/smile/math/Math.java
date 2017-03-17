@@ -3721,7 +3721,7 @@ public class Math {
     /**
      * Update an array by adding a multiple of another array y = a * x + y.
      */
-    public static void axpy(double a, double[] x, double[] y) {
+    public static double[] axpy(double a, double[] x, double[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
         }
@@ -3729,6 +3729,8 @@ public class Math {
         for (int i = 0; i < x.length; i++) {
             y[i] += a * x[i];
         }
+
+        return y;
     }
 
     /**
@@ -3736,7 +3738,7 @@ public class Math {
      * The left upper submatrix of A is used in the computation based
      * on the size of x and y.
      */
-    public static void ax(double[][] A, double[] x, double[] y) {
+    public static double[] ax(double[][] A, double[] x, double[] y) {
         int n = min(A.length, y.length);
         int p = min(A[0].length, x.length);
 
@@ -3746,6 +3748,8 @@ public class Math {
                 y[i] += A[i][k] * x[k];
             }
         }
+
+        return y;
     }
 
     /**
@@ -3753,7 +3757,7 @@ public class Math {
      * The left upper submatrix of A is used in the computation based
      * on the size of x and y.
      */
-    public static void axpy(double[][] A, double[] x, double[] y) {
+    public static double[] axpy(double[][] A, double[] x, double[] y) {
         int n = min(A.length, y.length);
         int p = min(A[0].length, x.length);
 
@@ -3762,6 +3766,8 @@ public class Math {
                 y[i] += A[i][k] * x[k];
             }
         }
+
+        return y;
     }
 
     /**
@@ -3769,7 +3775,7 @@ public class Math {
      * The left upper submatrix of A is used in the computation based
      * on the size of x and y.
      */
-    public static void axpy(double[][] A, double[] x, double[] y, double b) {
+    public static double[] axpy(double[][] A, double[] x, double[] y, double b) {
         int n = min(A.length, y.length);
         int p = min(A[0].length, x.length);
 
@@ -3779,6 +3785,8 @@ public class Math {
                 y[i] += A[i][k] * x[k];
             }
         }
+
+        return y;
     }
 
     /**
@@ -3786,7 +3794,7 @@ public class Math {
      * The left upper submatrix of A is used in the computation based
      * on the size of x and y.
      */
-    public static void atx(double[][] A, double[] x, double[] y) {
+    public static double[] atx(double[][] A, double[] x, double[] y) {
         int n = min(A[0].length, y.length);
         int p = min(A.length, x.length);
 
@@ -3796,6 +3804,8 @@ public class Math {
                 y[i] += x[k] * A[k][i];
             }
         }
+
+        return y;
     }
 
     /**
@@ -3803,7 +3813,7 @@ public class Math {
      * The left upper submatrix of A is used in the computation based
      * on the size of x and y.
      */
-    public static void atxpy(double[][] A, double[] x, double[] y) {
+    public static double[] atxpy(double[][] A, double[] x, double[] y) {
         int n = min(A[0].length, y.length);
         int p = min(A.length, x.length);
 
@@ -3812,6 +3822,8 @@ public class Math {
                 y[i] += x[k] * A[k][i];
             }
         }
+
+        return y;
     }
 
     /**
@@ -3819,7 +3831,7 @@ public class Math {
      * The left upper submatrix of A is used in the computation based
      * on the size of x and y.
      */
-    public static void atxpy(double[][] A, double[] x, double[] y, double b) {
+    public static double[] atxpy(double[][] A, double[] x, double[] y, double b) {
         int n = min(A[0].length, y.length);
         int p = min(A.length, x.length);
 
@@ -3829,6 +3841,8 @@ public class Math {
                 y[i] += x[k] * A[k][i];
             }
         }
+
+        return y;
     }
 
     /**

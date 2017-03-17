@@ -186,33 +186,197 @@ public class ColumnMajorMatrix extends DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix set(int i, int j, double x) {
-        A[j*nrows + i] = x;
+    public double set(int i, int j, double x) {
+        return A[j*nrows + i] = x;
+    }
+
+    @Override
+    public double add(int i, int j, double x) {
+        return A[j*nrows + i] += x;
+    }
+
+    @Override
+    public double sub(int i, int j, double x) {
+        return A[j*nrows + i] -= x;
+    }
+
+    @Override
+    public double mul(int i, int j, double x) {
+        return A[j*nrows + i] *= x;
+    }
+
+    @Override
+    public double div(int i, int j, double x) {
+        return A[j*nrows + i] /= x;
+    }
+
+    @Override
+    public ColumnMajorMatrix add(DenseMatrix b) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                add(i, j, b.get(i, j));
+            }
+        }
         return this;
     }
 
     @Override
-    public ColumnMajorMatrix add(int i, int j, double x) {
-        A[j*nrows + i] += x;
+    public ColumnMajorMatrix sub(DenseMatrix b) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                sub(i, j, b.get(i, j));
+            }
+        }
         return this;
     }
 
     @Override
-    public ColumnMajorMatrix sub(int i, int j, double x) {
-        A[j*nrows + i] -= x;
+    public ColumnMajorMatrix mul(DenseMatrix b) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                mul(i, j, b.get(i, j));
+            }
+        }
         return this;
     }
 
     @Override
-    public ColumnMajorMatrix mul(int i, int j, double x) {
-        A[j*nrows + i] *= x;
+    public ColumnMajorMatrix div(DenseMatrix b) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                div(i, j, b.get(i, j));
+            }
+        }
+        return this;
+    }
+
+    public ColumnMajorMatrix add(ColumnMajorMatrix b) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int i = 0; i < A.length; i++) {
+            A[i] += b.A[i];
+        }
+        return this;
+    }
+
+    public ColumnMajorMatrix sub(ColumnMajorMatrix b) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int i = 0; i < A.length; i++) {
+            A[i] -= b.A[i];
+        }
+        return this;
+    }
+
+    public ColumnMajorMatrix mul(ColumnMajorMatrix b) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int i = 0; i < A.length; i++) {
+            A[i] *= b.A[i];
+        }
+        return this;
+    }
+
+    public ColumnMajorMatrix div(ColumnMajorMatrix b) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int i = 0; i < A.length; i++) {
+            A[i] /= b.A[i];
+        }
         return this;
     }
 
     @Override
-    public ColumnMajorMatrix div(int i, int j, double x) {
-        A[j*nrows + i] /= x;
+    public ColumnMajorMatrix add(double x) {
+        for (int i = 0; i < A.length; i++) {
+            A[i] += x;
+        }
+
         return this;
+    }
+
+    @Override
+    public ColumnMajorMatrix sub(double x) {
+        for (int i = 0; i < A.length; i++) {
+            A[i] -= x;
+        }
+
+        return this;
+    }
+
+    @Override
+    public ColumnMajorMatrix mul(double x) {
+        for (int i = 0; i < A.length; i++) {
+            A[i] *= x;
+        }
+
+        return this;
+    }
+
+    @Override
+    public ColumnMajorMatrix div(double x) {
+        for (int i = 0; i < A.length; i++) {
+            A[i] /= x;
+        }
+
+        return this;
+    }
+
+    @Override
+    public ColumnMajorMatrix replaceNaN(double x) {
+        for (int i = 0; i < A.length; i++) {
+            if (Double.isNaN(A[i])) {
+                A[i] = x;
+            }
+        }
+
+        return this;
+    }
+
+    @Override
+    public double sum() {
+        double s = 0.0;
+        for (int i = 0; i < A.length; i++) {
+            s += A[i];
+        }
+
+        return s;
     }
 
     @Override
@@ -248,7 +412,7 @@ public class ColumnMajorMatrix extends DenseMatrix {
     }
 
     @Override
-    public void ax(double[] x, double[] y) {
+    public double[] ax(double[] x, double[] y) {
         int n = Math.min(nrows, y.length);
         int p = Math.min(ncols, x.length);
 
@@ -258,10 +422,12 @@ public class ColumnMajorMatrix extends DenseMatrix {
                 y[i] += get(i, k) * x[k];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void axpy(double[] x, double[] y) {
+    public double[] axpy(double[] x, double[] y) {
         int n = Math.min(nrows, y.length);
         int p = Math.min(ncols, x.length);
 
@@ -270,10 +436,12 @@ public class ColumnMajorMatrix extends DenseMatrix {
                 y[i] += get(i, k) * x[k];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void axpy(double[] x, double[] y, double b) {
+    public double[] axpy(double[] x, double[] y, double b) {
         int n = Math.min(nrows, y.length);
         int p = Math.min(ncols, x.length);
 
@@ -286,10 +454,12 @@ public class ColumnMajorMatrix extends DenseMatrix {
                 y[i] += get(i, k) * x[k];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void atx(double[] x, double[] y) {
+    public double[] atx(double[] x, double[] y) {
         int n = Math.min(ncols, y.length);
         int p = Math.min(nrows, x.length);
 
@@ -299,10 +469,12 @@ public class ColumnMajorMatrix extends DenseMatrix {
                 y[i] += get(k, i) * x[k];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void atxpy(double[] x, double[] y) {
+    public double[] atxpy(double[] x, double[] y) {
         int n = Math.min(ncols, y.length);
         int p = Math.min(nrows, x.length);
 
@@ -311,10 +483,12 @@ public class ColumnMajorMatrix extends DenseMatrix {
                 y[i] += get(k, i) * x[k];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void atxpy(double[] x, double[] y, double b) {
+    public double[] atxpy(double[] x, double[] y, double b) {
         int n = Math.min(ncols, y.length);
         int p = Math.min(nrows, x.length);
 
@@ -324,6 +498,8 @@ public class ColumnMajorMatrix extends DenseMatrix {
                 y[i] += get(k, i) * x[k];
             }
         }
+
+        return y;
     }
 
     @Override

@@ -119,31 +119,37 @@ public interface Matrix {
 
     /**
      * y = A * x
+     * @return y
      */
-    public void ax(double[] x, double[] y);
+    public double[] ax(double[] x, double[] y);
 
     /**
      * y = A * x + y
+     * @return y
      */
-    public void axpy(double[] x, double[] y);
+    public double[] axpy(double[] x, double[] y);
 
     /**
      * y = A * x + b * y
+     * @return y
      */
-    public void axpy(double[] x, double[] y, double b);
+    public double[] axpy(double[] x, double[] y, double b);
 
     /**
      * y = A' * x
+     * @return y
      */
-    public void atx(double[] x, double[] y);
+    public double[] atx(double[] x, double[] y);
 
     /**
      * y = A' * x + y
+     * @return y
      */
-    public void atxpy(double[] x, double[] y);
+    public double[] atxpy(double[] x, double[] y);
 
     /**
      * y = A' * x + b * y
+     * @return y
      */
-    public void atxpy(double[] x, double[] y, double b);
+    public double[] atxpy(double[] x, double[] y, double b);
 }

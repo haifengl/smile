@@ -176,7 +176,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     }
 
     @Override
-    public void ax(double[] x, double[] y) {
+    public double[] ax(double[] x, double[] y) {
         Arrays.fill(y, 0.0);
 
         for (int j = 0; j < ncols; j++) {
@@ -184,19 +184,23 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
                 y[rowIndex[i]] += this.x[i] * x[j];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void axpy(double[] x, double[] y) {
+    public double[] axpy(double[] x, double[] y) {
         for (int j = 0; j < ncols; j++) {
             for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
                 y[rowIndex[i]] += this.x[i] * x[j];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void axpy(double[] x, double[] y, double b) {
+    public double[] axpy(double[] x, double[] y, double b) {
         for (int i = 0; i < y.length; i++) {
             y[i] *= b;
         }
@@ -206,36 +210,44 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
                 y[rowIndex[i]] += this.x[i] * x[j];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void atx(double[] x, double[] y) {
+    public double[] atx(double[] x, double[] y) {
         Arrays.fill(y, 0.0);
         for (int i = 0; i < ncols; i++) {
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
                 y[i] += this.x[j] * x[rowIndex[j]];
             }
         }
+
+        return y;
     }
 
 
     @Override
-    public void atxpy(double[] x, double[] y) {
+    public double[] atxpy(double[] x, double[] y) {
         for (int i = 0; i < ncols; i++) {
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
                 y[i] += this.x[j] * x[rowIndex[j]];
             }
         }
+
+        return y;
     }
 
     @Override
-    public void atxpy(double[] x, double[] y, double b) {
+    public double[] atxpy(double[] x, double[] y, double b) {
         for (int i = 0; i < ncols; i++) {
             y[i] *= b;
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
                 y[i] += this.x[j] * x[rowIndex[j]];
             }
         }
+
+        return y;
     }
 
     @Override
