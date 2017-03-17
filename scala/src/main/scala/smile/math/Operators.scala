@@ -31,12 +31,13 @@ import scala.reflect.ClassTag
 trait Operators {
   implicit def pimpDouble(x: Double): PimpedDouble = new PimpedDouble(x)
   implicit def pimpIntArray(data: Array[Int]): PimpedArray[Int] = new PimpedArray[Int](data)
-  implicit def pimpDoubleArray(data: Array[Double]): PimpedArray[Double] = new PimpedArray[Double](data)
+  implicit def pimpDoubleArray(data: Array[Double]): PimpedDoubleArray = new PimpedDoubleArray(data)
   implicit def pimpArray2D(data: Array[Array[Double]]): PimpedArray2D = new PimpedArray2D(data)
   implicit def pimpMatrix(matrix: DenseMatrix): PimpedMatrix = new PimpedMatrix(matrix)
 
   implicit def Ax2Array(ax: Ax): Array[Double] = ax.toArray
   implicit def Atx2Array(atx: Atx): Array[Double] = atx.toArray
+  implicit def By2Array(by: By): Array[Double] = by.toArray
 
   /** The beta function, also called the Euler integral of the first kind.
     *
@@ -174,51 +175,53 @@ trait Operators {
 }
 
 
-abstract class PimpedArrayLike[T: ClassTag] {
+private[math] abstract class PimpedArrayLike[T: ClassTag] {
 
-  val data: Array[T]
+  val a: Array[T]
 
   /** Get an element */
-  def apply(rows: Int*): Array[T] = rows.map(row => data(row)).toArray
+  def apply(rows: Int*): Array[T] = rows.map(row => a(row)).toArray
 
   /** Get a range of array */
-  def apply(rows: Range): Array[T] = rows.map(row => data(row)).toArray
+  def apply(rows: Range): Array[T] = rows.map(row => a(row)).toArray
 
   /** Sampling the data.
     * @param n the number of samples.
     * @return samples
     */
   def sample(n: Int): Array[T] = {
-    val perm = data.indices.toArray
+    val perm = a.indices.toArray
     Math.permutate(perm)
-    (0 until n).map(i => data(perm(i))).toArray
+    (0 until n).map(i => a(perm(i))).toArray
   }
 
   /** Sampling the data.
     * @param f the fraction of samples.
     * @return samples
     */
-  def sample(f: Double): Array[T] = sample(Math.round(data.length * f).toInt)
+  def sample(f: Double): Array[T] = sample(Math.round(a.length * f).toInt)
 }
 
-private[math] class PimpedArray[T](val data: Array[T])(implicit val tag: ClassTag[T])
+private[math] class PimpedArray[T](override val a: Array[T])(implicit val tag: ClassTag[T])
   extends PimpedArrayLike[T]
 
-private[math] class PimpedArray2D(val data: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]])
+private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]])
   extends PimpedArrayLike[Array[Double]] {
 
-  def nrows: Int = data.length
+  def unary_~ = new ColumnMajorMatrix(a)
 
-  def ncols: Int = data(0).length
+  def nrows: Int = a.length
+
+  def ncols: Int = a(0).length
 
   /** Returns a submatrix. */
   def apply(rows: Range, cols: Range): Array[Array[Double]] = rows.map { row =>
-    val x = data(row)
+    val x = a(row)
     cols.map { col => x(col) }.toArray
   }.toArray
 
   /** Returns a column. */
-  def $(col: Int): Array[Double] = data.map(_(col))
+  def $(col: Int): Array[Double] = a.map(_(col))
 
   /** Returns multiple rows. */
   def row(i: Int*): Array[Array[Double]] = apply(i: _*)
@@ -227,30 +230,27 @@ private[math] class PimpedArray2D(val data: Array[Array[Double]])(implicit val t
   def row(i: Range): Array[Array[Double]] = apply(i)
 
   /** Returns multiple columns. */
-  def col(j: Int*): Array[Array[Double]] = data.map { x =>
+  def col(j: Int*): Array[Array[Double]] = a.map { x =>
     j.map { col => x(col) }.toArray
   }
 
   /** Returns a range of columns. */
-  def col(j: Range): Array[Array[Double]] = data.map { x =>
+  def col(j: Range): Array[Array[Double]] = a.map { x =>
     j.map { col => x(col) }.toArray
   }
 }
 
-object Matrix {
-  def apply(matrix: Array[Array[Double]]) = new ColumnMajorMatrix(matrix)
+private[math] case class By(b: Double, y: Array[Double]) {
+  override def toString = runtime.ScalaRunTime.stringOf(toArray())
+  def toArray(): Array[Double] = y.map(_ * b)
 }
 
-private[math] case class Scale(b: Double, y: Array[Double]) {
-  def toArray: Array[Double] = y.map(_ * b)
-}
-
-private[math] class PimpedDouble(a: Double) {
-  //def * (y: Array[Double]): Scale = Scale(a, y)
+private[math] case class PimpedDouble(a: Double) {
+  def * (y: Array[Double]): By = By(a, y)
 
   def + (b: Array[Double]): Array[Double] = b.map(a + _)
   def - (b: Array[Double]): Array[Double] = b.map(a - _)
-  def * (b: Array[Double]): Array[Double] = b.map(a * _)
+  //def * (b: Array[Double]): Array[Double] = b.map(a * _)
   def / (b: Array[Double]): Array[Double] = b.map(a / _)
   def ^ (b: Array[Double]): Array[Double] = b.map(math.pow(a, _))
 
@@ -295,11 +295,12 @@ private[math] class PimpedDouble(a: Double) {
   }
 }
 
-private[math] class PimpedDoubleArray(a: Array[Double]) extends PimpedArray[Double](a) {
-  //def * (b: Double): Scale = Scale(b, a)
+private[math] class PimpedDoubleArray(override val a: Array[Double]) extends PimpedArray[Double](a) {
+  def * (b: Double): By = By(b, a)
+
   def + (b: Double): Array[Double] = a.map(_ + b)
   def - (b: Double): Array[Double] = a.map(_ - b)
-  def * (b: Double): Array[Double] = a.map(_ * b)
+  //def * (b: Double): Array[Double] = a.map(_ * b)
   def / (b: Double): Array[Double] = a.map(_ / b)
   def ^ (b: Double): Array[Double] = a.map(math.pow(_, b))
 
@@ -338,28 +339,34 @@ private[math] class PimpedDoubleArray(a: Array[Double]) extends PimpedArray[Doub
 }
 
 private[math] case class Ax(A: DenseMatrix, x: Array[Double]) {
-  def toArray: Array[Double] = {
+  override def toString = runtime.ScalaRunTime.stringOf(toArray())
+
+  def toArray(): Array[Double] = {
     val y = new Array[Double](x.length)
     A.ax(x, y)
   }
 
   def + (y: Array[Double]): Array[Double] = A.axpy(x, y)
 
-  def + (by: Scale): Array[Double] = A.axpy(x, by.y, by.b)
+  def + (by: By): Array[Double] = A.axpy(x, by.y, by.b)
 }
 
 private[math] case class Atx(A: DenseMatrix, x: Array[Double]) {
-  def toArray: Array[Double] = {
+  override def toString = runtime.ScalaRunTime.stringOf(toArray())
+
+  def toArray(): Array[Double] = {
     val y = new Array[Double](x.length)
     A.atx(x, y)
   }
 
   def + (y: Array[Double]): Array[Double] = A.atxpy(x, y)
 
-  def + (by: Scale): Array[Double] = A.axpy(x, by.y, by.b)
+  def + (by: By): Array[Double] = A.axpy(x, by.y, by.b)
 }
 
 private[math] case class Transpose(a: DenseMatrix) {
+  override def toString = runtime.ScalaRunTime.stringOf(a.transpose())
+
   def * (x: Array[Double]): Atx = Atx(a, x)
   def * (b: DenseMatrix): DenseMatrix = a.atbmm(b)
 }
