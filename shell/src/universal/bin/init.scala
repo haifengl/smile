@@ -21,7 +21,9 @@
 
 import smile._
 import smile.util._
-import smile.math._, Math._
+import smile.math._
+import java.lang.Math._
+import smile.math.Math.{log2, logistic, factorial, choose, random, randomInt, permutate, sum, mean, median, q1, q3, sd, mad, cov, cor, spearman, kendall, norm, norm1, norm2, normInf, normFro, standardize, normalize, rescale, unitize, unitize1, unitize2, root}
 import smile.math.distance._
 import smile.math.kernel._
 import smile.math.matrix._
