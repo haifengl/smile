@@ -17,7 +17,7 @@
 package smile.math
 
 import scala.language.implicitConversions
-import smile.math.matrix.{DenseMatrix, ColumnMajorMatrix}
+import smile.math.matrix.{Lanczos, DenseMatrix, ColumnMajorMatrix}
 import smile.math.special._
 import smile.stat.hypothesis._
 import smile.stat.distribution.Distribution
@@ -35,13 +35,11 @@ trait Operators {
   implicit def pimpArray2D(data: Array[Array[Double]]) = new PimpedArray2D(data)
   implicit def pimpMatrix(matrix: DenseMatrix) = new PimpedMatrix(matrix)
 
-  implicit def Ax2Array(ax: Ax) = ax.toArray
-  implicit def Atx2Array(atx: Atx) = atx.toArray
-  implicit def By2Array(by: By) = by.toArray
+  implicit def array2VectorExpression(x: Array[Double]) = VectorLift(x)
+  implicit def vectorExpression2Array(exp: VectorExpression) = exp.toArray
 
-  implicit def Ax2PimpedArray(ax: Ax) = new PimpedDoubleArray(ax.toArray)
-  implicit def AtxPimped2Array(atx: Atx) = new PimpedDoubleArray(atx.toArray)
-  implicit def By2PimpedArray(by: By) = new PimpedDoubleArray(by.toArray)
+  implicit def matrix2MatrixExpression(x: DenseMatrix) = MatrixLift(x)
+  implicit def matrixExpression2Array(exp: MatrixExpression) = exp.toMatrix
 
   /** The beta function, also called the Euler integral of the first kind.
     *
@@ -176,6 +174,59 @@ trait Operators {
     * calculated as Cramer's V.
     */
   def chisqtest(table: Array[Array[Int]]): CorTest = CorTest.chisq(table)
+
+  /** Returns an n-by-n identity matrix */
+  def eye(n: Int) = ColumnMajorMatrix.eye(n)
+  /** Returns an m-by-n identity matrix */
+  def eye(m: Int, n: Int) = ColumnMajorMatrix.eye(m, n)
+  /** Returns the trace of matrix. */
+  def trace(A: DenseMatrix) = A.trace()
+  /** Returns the trace of matrix. */
+  def trace(A: MatrixExpression) = A.toMatrix.trace()
+  /** Returns the determinant of matrix. */
+  def det(A: DenseMatrix) = A.det()
+  /** Returns the determinant of matrix. */
+  def det(A: MatrixExpression) = A.toMatrix.det()
+  /** Returns the rank of matrix. */
+  def rank(A: DenseMatrix) = A.rank()
+  /** Returns the rank of matrix. */
+  def rank(A: MatrixExpression) = A.toMatrix.rank()
+  /** Returns the diagonal elements of matrix. */
+  def diag(A: DenseMatrix) = A.diag()
+  /** Returns the diagonal elements of matrix. */
+  def diag(A: MatrixExpression) = A.toMatrix.diag()
+  /** Returns the inverse of matrix. */
+  def inv(A: DenseMatrix) = A.inverse()
+  /** Returns the inverse of matrix. */
+  def inv(A: MatrixExpression) = A.toMatrix.inverse()
+  /** Returns the eigen decomposition of matrix. */
+  def eigen(A: DenseMatrix) = A.eigen()
+  /** Returns the eigen decomposition of matrix. */
+  def eigen(A: MatrixExpression) = A.toMatrix.eigen()
+  /** Returns the eigen decomposition of matrix. */
+  def eigen(A: DenseMatrix, k: Int) = A.eigen(k)
+  /** Returns the eigen decomposition of matrix. */
+  def eigen(A: MatrixExpression, k: Int) = A.toMatrix.eigen(k)
+  /** Returns the SVD decomposition of matrix. */
+  def svd(A: DenseMatrix) = A.svd()
+  /** Returns the SVD decomposition of matrix. */
+  def svd(A: MatrixExpression) = A.toMatrix.svd()
+  /** Returns the SVD decomposition of matrix. */
+  def svd(A: DenseMatrix, k: Int) = A.svd(k)
+  /** Returns the SVD decomposition of matrix. */
+  def svd(A: MatrixExpression, k: Int) = A.toMatrix.svd(k)
+  /** Returns the LU decomposition of matrix. */
+  def lu(A: DenseMatrix) = A.lu()
+  /** Returns the LU decomposition of matrix. */
+  def lu(A: MatrixExpression) = A.toMatrix.lu()
+  /** Returns the QR decomposition of matrix. */
+  def qr(A: DenseMatrix) = A.qr()
+  /** Returns the QR decomposition of matrix. */
+  def qr(A: MatrixExpression) = A.toMatrix.qr()
+  /** Returns the Cholesky decomposition of matrix. */
+  def cholesky(A: DenseMatrix) = A.cholesky()
+  /** Returns the Cholesky decomposition of matrix. */
+  def cholesky(A: MatrixExpression) = A.toMatrix.cholesky()
 }
 
 
@@ -244,135 +295,51 @@ private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit
   }
 }
 
-private[math] case class By(b: Double, y: Array[Double]) {
-  override def toString = runtime.ScalaRunTime.stringOf(toArray())
-  def toArray(): Array[Double] = y.map(_ * b)
-}
-
 private[math] case class PimpedDouble(a: Double) {
-  def * (y: Array[Double]): By = By(a, y)
+  def + (b: Array[Double]) = ValueAddVector(a, b)
+  def - (b: Array[Double]) = ValueSubVector(a, b)
+  def * (b: Array[Double]) = ValueMulVector(a, b)
+  def / (b: Array[Double]) = ValueDivVector(a, b)
 
-  def + (b: Array[Double]): Array[Double] = b.map(a + _)
-  def - (b: Array[Double]): Array[Double] = b.map(a - _)
-  //def * (b: Array[Double]): Array[Double] = b.map(a * _)
-  def / (b: Array[Double]): Array[Double] = b.map(a / _)
-  def ^ (b: Array[Double]): Array[Double] = b.map(math.pow(a, _))
+  def + (b: VectorExpression) = ValueAddVector(a, b)
+  def - (b: VectorExpression) = ValueSubVector(a, b)
+  def * (b: VectorExpression) = ValueMulVector(a, b)
+  def / (b: VectorExpression) = ValueDivVector(a, b)
 
-  def + (b: DenseMatrix): ColumnMajorMatrix = {
-    val c = new ColumnMajorMatrix(b.nrows, b.ncols)
-    for (j <- 0 until b.ncols)
-      for (i <- 0 until b.nrows)
-        c(i, j) = a + b(i, j)
-    c
-  }
+  def + (b: DenseMatrix) = ValueAddMatrix(a, b)
+  def - (b: DenseMatrix) = ValueSubMatrix(a, b)
+  def * (b: DenseMatrix) = ValueMulMatrix(a, b)
+  def / (b: DenseMatrix) = ValueDivMatrix(a, b)
 
-  def - (b: DenseMatrix): ColumnMajorMatrix = {
-    val c = new ColumnMajorMatrix(b.nrows, b.ncols)
-    for (j <- 0 until b.ncols)
-      for (i <- 0 until b.nrows)
-        c(i, j) = a - b(i, j)
-    c
-  }
-
-  def * (b: DenseMatrix): ColumnMajorMatrix = {
-    val c = new ColumnMajorMatrix(b.nrows, b.ncols)
-    for (j <- 0 until b.ncols)
-      for (i <- 0 until b.nrows)
-        c(i, j) = a * b(i, j)
-    c
-  }
-
-  def / (b: DenseMatrix): ColumnMajorMatrix = {
-    val c = new ColumnMajorMatrix(b.nrows, b.ncols)
-    for (j <- 0 until b.ncols)
-      for (i <- 0 until b.nrows)
-        c(i, j) = a / b(i, j)
-    c
-  }
-
-  def ^ (b: DenseMatrix): ColumnMajorMatrix = {
-    val c = new ColumnMajorMatrix(b.nrows, b.ncols)
-    for (j <- 0 until b.ncols)
-      for (i <- 0 until b.nrows)
-        c(i, j) = math.pow(a, b(i, j))
-    c
-  }
+  def + (b: MatrixExpression) = ValueAddMatrix(a, b)
+  def - (b: MatrixExpression) = ValueSubMatrix(a, b)
+  def * (b: MatrixExpression) = ValueMulMatrix(a, b)
+  def / (b: MatrixExpression) = ValueDivMatrix(a, b)
 }
 
 private[math] class PimpedDoubleArray(override val a: Array[Double]) extends PimpedArray[Double](a) {
-  def * (b: Double): By = By(b, a)
-
-  def + (b: Double): Array[Double] = a.map(_ + b)
-  def - (b: Double): Array[Double] = a.map(_ - b)
-  //def * (b: Double): Array[Double] = a.map(_ * b)
-  def / (b: Double): Array[Double] = a.map(_ / b)
-  def ^ (b: Double): Array[Double] = a.map(math.pow(_, b))
-
   def += (b: Double): Array[Double] = { a.transform(_ + b); a }
   def -= (b: Double): Array[Double] = { a.transform(_ - b); a }
   def *= (b: Double): Array[Double] = { a.transform(_ * b); a }
   def /= (b: Double): Array[Double] = { a.transform(_ / b); a }
   def ^= (b: Double): Array[Double] = { a.transform(math.pow(_, b)); a }
 
-  def + (b: Array[Double]): Array[Double] = a.zip(b).map(x => x._1 + x._2)
-  def - (b: Array[Double]): Array[Double] = a.zip(b).map(x => x._1 - x._2)
-  def * (b: Array[Double]): Array[Double] = a.zip(b).map(x => x._1 * x._2)
-  def / (b: Array[Double]): Array[Double] = a.zip(b).map(x => x._1 / x._2)
-  def ^ (b: Array[Double]): Array[Double] = a.zip(b).map(x => math.pow(x._1, x._2))
-
-  def += (b: Array[Double]): Array[Double] = {
+  def += (b: VectorExpression): Array[Double] = {
     for (i <- 0 until a.length) a(i) += b(i)
     a
   }
-  def -= (b: Array[Double]): Array[Double] = {
+  def -= (b: VectorExpression): Array[Double] = {
     for (i <- 0 until a.length) a(i) -= b(i)
     a
   }
-  def *= (b: Array[Double]): Array[Double] = {
+  def *= (b: VectorExpression): Array[Double] = {
     for (i <- 0 until a.length) a(i) *= b(i)
     a
   }
-  def /= (b: Array[Double]): Array[Double] = {
+  def /= (b: VectorExpression): Array[Double] = {
     for (i <- 0 until a.length) a(i) /= b(i)
     a
   }
-  def ^= (b: Array[Double]): Array[Double] = {
-    for (i <- 0 until a.length) a(i) = math.pow(a(i), b(i))
-    a
-  }
-}
-
-private[math] case class Ax(A: DenseMatrix, x: Array[Double]) {
-  override def toString = runtime.ScalaRunTime.stringOf(toArray())
-
-  def toArray(): Array[Double] = {
-    val y = new Array[Double](x.length)
-    A.ax(x, y)
-  }
-
-  def + (y: Array[Double]): Array[Double] = A.axpy(x, y)
-
-  def + (by: By): Array[Double] = A.axpy(x, by.y, by.b)
-}
-
-private[math] case class Atx(A: DenseMatrix, x: Array[Double]) {
-  override def toString = runtime.ScalaRunTime.stringOf(toArray())
-
-  def toArray(): Array[Double] = {
-    val y = new Array[Double](x.length)
-    A.atx(x, y)
-  }
-
-  def + (y: Array[Double]): Array[Double] = A.atxpy(x, y)
-
-  def + (by: By): Array[Double] = A.axpy(x, by.y, by.b)
-}
-
-private[math] case class Transpose(a: DenseMatrix) {
-  override def toString = runtime.ScalaRunTime.stringOf(a.transpose())
-
-  def * (x: Array[Double]): Atx = Atx(a, x)
-  def * (b: DenseMatrix): DenseMatrix = a.atbmm(b)
 }
 
 private[math] class PimpedMatrix(a: DenseMatrix) {
@@ -393,83 +360,9 @@ private[math] class PimpedMatrix(a: DenseMatrix) {
   /** Element-wise division */
   def /= (b: DenseMatrix): DenseMatrix = a.div(b)
 
-  def * (b: DenseMatrix): DenseMatrix = a.abmm(b)
-  def * (b: Transpose): DenseMatrix = a.abtmm(b.a)
-  def / (b: DenseMatrix): DenseMatrix = a.abmm(b.inverse())
-
-  def * (x: Array[Double]): Ax = Ax(a, x)
-
-  def t: Transpose = new Transpose(a)
-
   /** Solves A * x = b */
   def \ (b: Array[Double]): Array[Double] = {
     val x = new Array[Double](b.length)
     a.solve(b, x)
-  }
-
-  def + (b: Double): ColumnMajorMatrix = {
-    val c = new ColumnMajorMatrix(a.nrows, a.ncols)
-    for (j <- 0 until a.ncols)
-      for (i <- 0 until a.nrows)
-        c(i, j) = a(i, j) + b
-    c
-  }
-
-  def - (b: Double): ColumnMajorMatrix = {
-    val c = new ColumnMajorMatrix(a.nrows, a.ncols)
-    for (j <- 0 until a.ncols)
-      for (i <- 0 until a.nrows)
-        c(i, j) = a(i, j) - b
-    c
-  }
-
-  def * (b: Double): ColumnMajorMatrix = {
-    val c = new ColumnMajorMatrix(a.nrows, a.ncols)
-    for (j <- 0 until a.ncols)
-      for (i <- 0 until a.nrows)
-        c(i, j) = a(i, j) * b
-    c
-  }
-
-  def / (b: Double): ColumnMajorMatrix = {
-    val c = new ColumnMajorMatrix(a.nrows, a.ncols)
-    for (j <- 0 until a.ncols)
-      for (i <- 0 until a.nrows)
-        c(i, j) = a(i, j) / b
-    c
-  }
-
-  def + (b: DenseMatrix): ColumnMajorMatrix = {
-    val c = new ColumnMajorMatrix(a.nrows, a.ncols)
-    for (j <- 0 until a.ncols)
-      for (i <- 0 until a.nrows)
-        c(i, j) = a(i, j) + b(i, j)
-    c
-  }
-
-  def - (b: DenseMatrix): ColumnMajorMatrix = {
-    val c = new ColumnMajorMatrix(a.nrows, a.ncols)
-    for (j <- 0 until a.ncols)
-      for (i <- 0 until a.nrows)
-        c(i, j) = a(i, j) - b(i, j)
-    c
-  }
-
-  /** Element-wise multiplication */
-  def *~ (b: DenseMatrix): ColumnMajorMatrix = {
-    val c = new ColumnMajorMatrix(a.nrows, a.ncols)
-    for (j <- 0 until a.ncols)
-      for (i <- 0 until a.nrows)
-        c(i, j) = a(i, j) * b(i, j)
-    c
-  }
-
-  /** Element-wise division */
-  def /~ (b: DenseMatrix): ColumnMajorMatrix = {
-    val c = new ColumnMajorMatrix(a.nrows, a.ncols)
-    for (j <- 0 until a.ncols)
-      for (i <- 0 until a.nrows)
-        c(i, j) = a(i, j) / b(i, j)
-    c
   }
 }
