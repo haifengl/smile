@@ -17,6 +17,7 @@
 package smile.math
 
 import smile.math.matrix.{ColumnMajorMatrix, DenseMatrix}
+import smile.util.Logging
 
 /**
  * Vector Expression.
@@ -177,8 +178,8 @@ sealed trait MatrixExpression {
   def ~* (b: VectorExpression) = Atx(this, b)
 
   /** Matrix multiplication A * B */
-  def %*% (b: MatrixExpression) = MatrixMultiplicationExp(this, b)
-  /** Out product A * B' */
+  def %*% (b: MatrixExpression) = MatrixMultiplicationExpression(this, b)
+  /** Outer product A * B' */
   def %*~ (b: MatrixExpression) = MatrixOutProduct(this, b)
   /** Cross product A' * B */
   def ~*% (b: MatrixExpression) = MatrixCrossProduct(this, b)
@@ -221,7 +222,7 @@ case class MatrixTranspose(A: MatrixExpression) extends MatrixExpression {
   override def toMatrix: DenseMatrix = A.toMatrix.transpose()
 }
 
-case class MatrixMultiplicationExp(A: MatrixExpression, B: MatrixExpression) extends MatrixExpression {
+case class MatrixMultiplicationExpression(A: MatrixExpression, B: MatrixExpression) extends MatrixExpression {
   override def nrows: Int = A.nrows
   override def ncols: Int = B.ncols
   override def apply(i: Int, j: Int): Double = toMatrix(i, j)
@@ -386,5 +387,62 @@ case class MatrixDivMatrix(A: MatrixExpression, B: MatrixExpression) extends Mat
       for (j <- 0 until nrows)
         z(i, j) = A(i, j) / B(i, j)
     z
+  }
+}
+
+/**
+ * Optimizes the order of matrix multiplication chain.
+ * Matrix multiplication is associative. However, the complexity of
+ * matrix multiplication chain is not associative.
+ * @param dims Matrix A[i] has dimension dims[i-1] x dims[i] for i = 1..n
+ */
+class MatrixOrderOptimization(dims: Array[Int]) extends Logging {
+  val n = dims.length - 1
+
+  // m[i,j] = Minimum number of scalar multiplications (i.e., cost)
+  // needed to compute the matrix A[i]A[i+1]...A[j] = A[i..j]
+  // The cost is zero when multiplying one matrix
+  val m = Array.ofDim[Int](n, n)
+  // Index of the subsequence split that achieved minimal cost
+  val s = Array.ofDim[Int](n, n)
+
+  for (l <- 1 until n) {
+    for (i <- 0 until (n - l)) {
+      val j = i + l
+      m(i)(j) = Int.MaxValue
+      for(k <- i until j) {
+        val cost = m(i)(k) + m(k+1)(j) + dims(i) * dims(k+1) * dims(j+1)
+        if (cost < m(i)(j)) {
+          m(i)(j) = cost
+          s(i)(j) = k
+        }
+      }
+    }
+  }
+
+  logger.info("The minimum cost of matrix multiplication chain: {}", m(0)(n-1))
+
+  override def toString: String = {
+    val sb = new StringBuilder
+    val intermediate = new Array[Boolean](n)
+    toString(sb, 0, n - 1, intermediate)
+    sb.toString
+  }
+
+  private def toString(sb: StringBuilder, i: Int, j: Int, intermediate: Array[Boolean]): Unit = {
+    if (i != j) {
+      sb.append('(')
+      toString(sb, i, s(i)(j), intermediate)
+      if (!intermediate(i)) sb.append(dims(i)).append('x').append(dims(i+1))
+
+      sb.append(" * ")
+
+      toString(sb, s(i)(j) + 1, j, intermediate)
+      if (!intermediate(j)) sb.append(dims(j)).append('x').append(dims(j+1))
+      sb.append(')')
+
+      intermediate(i) = true
+      intermediate(j) = true
+    }
   }
 }
