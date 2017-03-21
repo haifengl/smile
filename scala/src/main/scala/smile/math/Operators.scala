@@ -29,7 +29,6 @@ import scala.reflect.ClassTag
   * @author Haifeng Li
   */
 trait Operators {
-  implicit def pimpInt(n: Int) = new PimpedInt(n)
   implicit def pimpDouble(x: Double) = new PimpedDouble(x)
   implicit def pimpIntArray(data: Array[Int]) = new PimpedArray[Int](data)
   implicit def pimpDoubleArray(data: Array[Double]) = new PimpedDoubleArray(data)
@@ -292,10 +291,6 @@ private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit
   def col(j: Range): Array[Array[Double]] = a.map { x =>
     j.map { col => x(col) }.toArray
   }
-}
-
-private[math] case class PimpedInt(n: Int) {
-  def ! = Math.factorial(n)
 }
 
 private[math] case class PimpedDouble(a: Double) {
