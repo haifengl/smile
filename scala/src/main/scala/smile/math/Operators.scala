@@ -29,6 +29,7 @@ import scala.reflect.ClassTag
   * @author Haifeng Li
   */
 trait Operators {
+  implicit def pimpInt(n: Int) = new PimpedInt(n)
   implicit def pimpDouble(x: Double) = new PimpedDouble(x)
   implicit def pimpIntArray(data: Array[Int]) = new PimpedArray[Int](data)
   implicit def pimpDoubleArray(data: Array[Double]) = new PimpedDoubleArray(data)
@@ -257,11 +258,9 @@ private[math] abstract class PimpedArrayLike[T: ClassTag] {
   def sample(f: Double): Array[T] = sample(Math.round(a.length * f).toInt)
 }
 
-private[math] class PimpedArray[T](override val a: Array[T])(implicit val tag: ClassTag[T])
-  extends PimpedArrayLike[T]
+private[math] class PimpedArray[T](override val a: Array[T])(implicit val tag: ClassTag[T]) extends PimpedArrayLike[T]
 
-private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]])
-  extends PimpedArrayLike[Array[Double]] {
+private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]]) extends PimpedArrayLike[Array[Double]] {
 
   def unary_~ = new ColumnMajorMatrix(a)
 
@@ -293,6 +292,10 @@ private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit
   def col(j: Range): Array[Array[Double]] = a.map { x =>
     j.map { col => x(col) }.toArray
   }
+}
+
+private[math] case class PimpedInt(n: Int) {
+  def ! = Math.factorial(n)
 }
 
 private[math] case class PimpedDouble(a: Double) {
