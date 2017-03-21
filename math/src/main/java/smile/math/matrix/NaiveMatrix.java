@@ -98,6 +98,15 @@ public class NaiveMatrix extends DenseMatrix {
     }
 
     /**
+     * Constructor of a square diagonal matrix with the elements of vector diag on the main diagonal.
+     */
+    public NaiveMatrix(double[] diag) {
+        this(diag.length, diag.length);
+        for (int i = 0; i < diag.length; i++)
+            A[i][i] = diag[i];
+    }
+
+    /**
      * Constructor of matrix with normal random values with given mean and standard dev.
      */
     public NaiveMatrix(int rows, int cols, double mu, double sigma) {
