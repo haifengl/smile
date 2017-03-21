@@ -27,7 +27,7 @@ import smile.stat.distribution.GaussianDistribution;
 public class RowMajorMatrix extends DenseMatrix {
 
     /**
-     * The original matrix.
+     * The matrix storage.
      */
     private double[] A;
     /**
