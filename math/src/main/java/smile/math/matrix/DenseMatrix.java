@@ -652,7 +652,7 @@ public abstract class DenseMatrix implements Matrix, LinearSolver, MatrixMultipl
         }
 
         if (m < nrows()) {
-            sb.append("...\n");
+            sb.append("  ...\n");
         }
 
         return sb.toString();
