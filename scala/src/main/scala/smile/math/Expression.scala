@@ -173,16 +173,10 @@ sealed trait MatrixExpression {
   def t = MatrixTranspose(this)
 
   /** A * x */
-  def  * (b: VectorExpression) = Ax(this, b)
-  /** A' * x */
-  def ~* (b: VectorExpression) = Atx(this, b)
+  def * (b: VectorExpression) = Ax(this, b)
 
   /** Matrix multiplication A * B */
   def %*% (b: MatrixExpression): MatrixExpression = MatrixMultiplicationExpression(this, b)
-  /** Outer product A * B' */
-  def %*! (b: MatrixExpression) = MatrixOutProduct(this, b)
-  /** Cross product A' * B */
-  def !*% (b: MatrixExpression) = MatrixCrossProduct(this, b)
 
   def + (b: Double) = MatrixAddValue(this, b)
   def - (b: Double) = MatrixSubValue(this, b)
@@ -196,15 +190,6 @@ case class Ax(A: MatrixExpression, x: VectorExpression) extends VectorExpression
   override lazy val toArray: Array[Double] = {
     val y = new Array[Double](A.nrows)
     A.toMatrix.ax(x, y)
-  }
-}
-
-case class Atx(A: MatrixExpression, x: VectorExpression) extends VectorExpression {
-  override def length: Int = A.ncols
-  override def apply(i: Int): Double = toArray(i)
-  override lazy val toArray: Array[Double] = {
-    val y = new Array[Double](A.ncols)
-    A.toMatrix.atx(x, y)
   }
 }
 
@@ -228,20 +213,6 @@ case class MatrixMultiplicationExpression(A: MatrixExpression, B: MatrixExpressi
   override def apply(i: Int, j: Int): Double = toMatrix(i, j)
   override lazy val toMatrix: DenseMatrix = A.toMatrix.abmm(B.toMatrix)
   override def %*% (C: MatrixExpression) = MatrixMultiplicationChain(Seq(A, B, C))
-}
-
-case class MatrixCrossProduct(A: MatrixExpression, B: MatrixExpression) extends MatrixExpression {
-  override def nrows: Int = A.ncols
-  override def ncols: Int = B.ncols
-  override def apply(i: Int, j: Int): Double = toMatrix(i, j)
-  override lazy val toMatrix: DenseMatrix = A.toMatrix.atbmm(B.toMatrix)
-}
-
-case class MatrixOutProduct(A: MatrixExpression, B: MatrixExpression) extends MatrixExpression {
-  override def nrows: Int = A.nrows
-  override def ncols: Int = B.nrows
-  override def apply(i: Int, j: Int): Double = toMatrix(i, j)
-  override lazy val toMatrix: DenseMatrix = A.toMatrix.abtmm(B.toMatrix)
 }
 
 case class MatrixMultiplicationChain(A: Seq[MatrixExpression]) extends MatrixExpression {
