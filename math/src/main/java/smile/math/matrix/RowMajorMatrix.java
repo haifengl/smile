@@ -103,11 +103,21 @@ public class RowMajorMatrix extends DenseMatrix {
 
     /**
      * Constructor.
+     * @param value the array of matrix values arranged in row major format
      */
-    RowMajorMatrix(int rows, int cols, double[] value) {
+    public RowMajorMatrix(int rows, int cols, double[] value) {
         this.nrows = rows;
         this.ncols = cols;
         this.A = value;
+    }
+
+    /**
+     * Constructor of a square diagonal matrix with the elements of vector diag on the main diagonal.
+     */
+    public RowMajorMatrix(double[] diag) {
+        this(diag.length, diag.length);
+        for (int i = 0; i < diag.length; i++)
+            set(i, i, diag[i]);
     }
 
     /**
