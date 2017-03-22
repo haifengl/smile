@@ -40,9 +40,16 @@ public class Bagging {
      *
      * @param k the number of classes.
      * @param y class labels.
+     * @param classWeight Priors of the classes. The weight of each class
+     *                    is roughly the ratio of samples in each class.
+     *                    For example, if
+     *                    there are 400 positive samples and 100 negative
+     *                    samples, the classWeight should be [1, 4]
+     *                    (assuming label 0 is of negative, label 1 is of
+     *                    positive).
      * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
      */
-    public Bagging(int k, int[] y, double[] classWeight, double subsample) {
+    public Bagging(int k, int[] y, int[] classWeight, double subsample) {
         int n = y.length;
         int[] sampling = new int[n];
 
@@ -62,8 +69,8 @@ public class Bagging {
 
                 // We used to do up sampling.
                 // But we switch to down sampling, which seems has better performance.
-                nj /= classWeight[l];
-                for (int i = 0; i < nj; i++) {
+                int size = nj / classWeight[l];
+                for (int i = 0; i < size; i++) {
                     int xi = smile.math.Math.randomInt(nj);
                     sampling[cj.get(xi)] += 1;
                 }
