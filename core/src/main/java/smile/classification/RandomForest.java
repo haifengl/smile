@@ -351,8 +351,8 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
 
                     // We used to do up sampling.
                     // But we switch to down sampling, which seems has better performance.
-                    nj /= classWeight[l];
-                    for (int i = 0; i < nj; i++) {
+                    int size = nj / classWeight[l];
+                    for (int i = 0; i < size; i++) {
                         int xi = Math.randomInt(nj);
                         samples[cj.get(xi)] += 1; //classWeight[l];
                     }
