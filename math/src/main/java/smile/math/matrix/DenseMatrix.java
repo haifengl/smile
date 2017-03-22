@@ -169,15 +169,6 @@ public abstract class DenseMatrix implements Matrix, LinearSolver, MatrixMultipl
      */
     public abstract double div(int i, int j, double x);
 
-    @Override
-    public abstract DenseMatrix abmm(DenseMatrix B);
-
-    @Override
-    public abstract DenseMatrix abtmm(DenseMatrix B);
-
-    @Override
-    public abstract DenseMatrix atbmm(DenseMatrix B);
-
     /**
      * A = A + B
      * @return this matrix
@@ -387,20 +378,6 @@ public abstract class DenseMatrix implements Matrix, LinearSolver, MatrixMultipl
             return lu().inverse();
         else
             return qr().inverse();
-    }
-
-    /**
-     * Returns the matrix trace. The sum of the diagonal elements.
-     */
-    public double trace() {
-        int n = Math.min(nrows(), ncols());
-
-        double t = 0.0;
-        for (int i = 0; i < n; i++) {
-            t += get(i, i);
-        }
-
-        return t;
     }
 
     /**

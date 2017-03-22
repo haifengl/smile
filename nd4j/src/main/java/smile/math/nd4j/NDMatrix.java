@@ -477,20 +477,6 @@ public class NDMatrix implements Matrix, MatrixMultiplication<NDMatrix, NDMatrix
         return new NDMatrix(InvertMatrix.invert(A, false));
     }
 
-    /**
-     * Returns the matrix trace. The sum of the diagonal elements.
-     */
-    public double trace() {
-        int n = Math.min(nrows(), ncols());
-
-        double t = 0.0;
-        for (int i = 0; i < n; i++) {
-            t += get(i, i);
-        }
-
-        return t;
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

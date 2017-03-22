@@ -108,6 +108,20 @@ public interface Matrix {
     }
 
     /**
+     * Returns the matrix trace. The sum of the diagonal elements.
+     */
+    default public double trace() {
+        int n = Math.min(nrows(), ncols());
+
+        double t = 0.0;
+        for (int i = 0; i < n; i++) {
+            t += get(i, i);
+        }
+
+        return t;
+    }
+
+    /**
      * Returns A' * A
      */
     public Matrix ata();
