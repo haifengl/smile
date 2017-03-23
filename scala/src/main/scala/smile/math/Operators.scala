@@ -316,6 +316,8 @@ private[math] case class PimpedDouble(a: Double) {
 }
 
 private[math] class PimpedDoubleArray(override val a: Array[Double]) extends PimpedArray[Double](a) {
+  def unary_~ = new ColumnMajorMatrix(a.length, 1, a)
+
   def += (b: Double): Array[Double] = { a.transform(_ + b); a }
   def -= (b: Double): Array[Double] = { a.transform(_ - b); a }
   def *= (b: Double): Array[Double] = { a.transform(_ * b); a }
