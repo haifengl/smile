@@ -1,9 +1,3 @@
-<!-- prettify js and CSS -->
-<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=scala"></script>
-
-<!-- scroll/follow sidebar -->
-<script src="js/follow-sidebar.js" type="text/javascript"></script>
-
 <div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
     <div id="sidebar">
         <div class="sidebar-toc" style="margin-bottom: 20px;">
@@ -40,20 +34,20 @@
     &lt;dependency&gt;
       &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
       &lt;artifactId&gt;smile-core&lt;/artifactId&gt;
-      &lt;version&gt;1.2.3&lt;/version&gt;
+      &lt;version&gt;1.3.0&lt;/version&gt;
     &lt;/dependency&gt;
     </code></pre>
 
     <p>If you're using SBT, add the following line into your build file:</p>
 
     <pre><code>
-    libraryDependencies += "com.github.haifengl" % "smile-core" % "1.2.3"
+    libraryDependencies += "com.github.haifengl" % "smile-core" % "1.3.0"
     </code></pre>
 
     <p>For Scala API,</p>
 
     <pre><code>
-    libraryDependencies += "com.github.haifengl" % "smile-scala_2.11" % "1.2.3"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "1.3.0"
     </code></pre>
 
     <h2 class="question" id="model-serialization">Model serialization</h2>
