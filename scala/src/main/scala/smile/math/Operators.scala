@@ -175,58 +175,42 @@ trait Operators {
     */
   def chisqtest(table: Array[Array[Int]]): CorTest = CorTest.chisq(table)
 
-  /** Returns an n-by-n identity matrix */
+  /** Returns an n-by-n zero matrix. */
+  def zeros(n: Int) = new ColumnMajorMatrix(n, n)
+  /** Returns an m-by-n zero matrix. */
+  def zeros(m: Int, n: Int) = new ColumnMajorMatrix(m, n)
+  /** Returns an n-by-n matrix of all ones. */
+  def ones(n: Int) = new ColumnMajorMatrix(n, n, 1.0)
+  /** Returns an m-by-n matrix of all ones. */
+  def ones(m: Int, n: Int) = new ColumnMajorMatrix(m, n, 1.0)
+  /** Returns an n-by-n identity matrix. */
   def eye(n: Int) = ColumnMajorMatrix.eye(n)
-  /** Returns an m-by-n identity matrix */
+  /** Returns an m-by-n identity matrix. */
   def eye(m: Int, n: Int) = ColumnMajorMatrix.eye(m, n)
   /** Returns the trace of matrix. */
   def trace(A: DenseMatrix) = A.trace()
-  /** Returns the trace of matrix. */
-  def trace(A: MatrixExpression) = A.toMatrix.trace()
   /** Returns the determinant of matrix. */
   def det(A: DenseMatrix) = A.det()
-  /** Returns the determinant of matrix. */
-  def det(A: MatrixExpression) = A.toMatrix.det()
   /** Returns the rank of matrix. */
   def rank(A: DenseMatrix) = A.rank()
-  /** Returns the rank of matrix. */
-  def rank(A: MatrixExpression) = A.toMatrix.rank()
   /** Returns the diagonal elements of matrix. */
   def diag(A: DenseMatrix) = A.diag()
-  /** Returns the diagonal elements of matrix. */
-  def diag(A: MatrixExpression) = A.toMatrix.diag()
   /** Returns the inverse of matrix. */
   def inv(A: DenseMatrix) = A.inverse()
-  /** Returns the inverse of matrix. */
-  def inv(A: MatrixExpression) = A.toMatrix.inverse()
   /** Returns the eigen decomposition of matrix. */
   def eigen(A: DenseMatrix) = A.eigen()
   /** Returns the eigen decomposition of matrix. */
-  def eigen(A: MatrixExpression) = A.toMatrix.eigen()
-  /** Returns the eigen decomposition of matrix. */
   def eigen(A: DenseMatrix, k: Int) = A.eigen(k)
-  /** Returns the eigen decomposition of matrix. */
-  def eigen(A: MatrixExpression, k: Int) = A.toMatrix.eigen(k)
   /** Returns the SVD decomposition of matrix. */
   def svd(A: DenseMatrix) = A.svd()
   /** Returns the SVD decomposition of matrix. */
-  def svd(A: MatrixExpression) = A.toMatrix.svd()
-  /** Returns the SVD decomposition of matrix. */
   def svd(A: DenseMatrix, k: Int) = A.svd(k)
-  /** Returns the SVD decomposition of matrix. */
-  def svd(A: MatrixExpression, k: Int) = A.toMatrix.svd(k)
   /** Returns the LU decomposition of matrix. */
   def lu(A: DenseMatrix) = A.lu()
-  /** Returns the LU decomposition of matrix. */
-  def lu(A: MatrixExpression) = A.toMatrix.lu()
   /** Returns the QR decomposition of matrix. */
   def qr(A: DenseMatrix) = A.qr()
-  /** Returns the QR decomposition of matrix. */
-  def qr(A: MatrixExpression) = A.toMatrix.qr()
   /** Returns the Cholesky decomposition of matrix. */
   def cholesky(A: DenseMatrix) = A.cholesky()
-  /** Returns the Cholesky decomposition of matrix. */
-  def cholesky(A: MatrixExpression) = A.toMatrix.cholesky()
 }
 
 
