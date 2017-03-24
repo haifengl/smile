@@ -53,6 +53,14 @@ public class Mixture extends AbstractDistribution {
          * The priori probability of component.
          */
         public double priori;
+
+        public Component() {
+        }
+
+        public Component(double priori, Distribution distribution) {
+            this.priori = priori;
+            this.distribution = distribution;
+        }
     }
 
     List<Component> components;
