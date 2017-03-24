@@ -243,7 +243,6 @@ public class LDA implements SoftClassifier<double[]>, Serializable {
         double[] mean = Math.colMean(x);
         // Common covariance.
         DenseMatrix C = new ColumnMajorMatrix(p, p);
-        C.setSymmetric(true);
         // Class mean vectors.
         mu = new double[k][p];
 
@@ -294,7 +293,7 @@ public class LDA implements SoftClassifier<double[]>, Serializable {
             }
         }
 
-        EigenValueDecomposition evd = new EigenValueDecomposition(C);
+        EigenValueDecomposition evd = new EigenValueDecomposition(C, true);
 
         for (double s : evd.getEigenValues()) {
             if (s < tol) {

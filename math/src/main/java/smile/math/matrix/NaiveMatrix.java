@@ -30,7 +30,7 @@ import smile.stat.distribution.GaussianDistribution;
  * 
  * @author Haifeng Li
  */
-public class NaiveMatrix extends DenseMatrix {
+public class NaiveMatrix implements DenseMatrix {
 
     /**
      * The original matrix.
@@ -42,41 +42,6 @@ public class NaiveMatrix extends DenseMatrix {
      * @param A the array of matrix.
      */
     public NaiveMatrix(double[][] A) {
-        this.A = A;
-    }
-
-    /**
-     * Constructor. Note that this is a shallow copy of A.
-     * If the matrix is updated, no check on if the matrix is symmetric.
-     * @param A the array of matrix.
-     * @param symmetric true if the matrix is symmetric.
-     */
-    public NaiveMatrix(double[][] A, boolean symmetric) {
-        super(symmetric);
-
-        if (symmetric && A.length != A[0].length) {
-            throw new IllegalArgumentException("A is not square");
-        }
-
-        this.A = A;
-    }
-
-    /**
-     * Constructor. Note that this is a shallow copy of A.
-     * If the matrix is updated, no check on if the matrix is symmetric
-     * and/or positive definite. The symmetric and positive definite
-     * properties are intended for read-only matrices.
-     * @param A the array of matrix.
-     * @param symmetric true if the matrix is symmetric.
-     * @param positive true if the matrix is positive definite.
-     */
-    public NaiveMatrix(double[][] A, boolean symmetric, boolean positive) {
-        super(symmetric, positive);
-
-        if (symmetric && A.length != A[0].length) {
-            throw new IllegalArgumentException("A is not square");
-        }
-
         this.A = A;
     }
 
@@ -140,20 +105,22 @@ public class NaiveMatrix extends DenseMatrix {
     }
 
     @Override
+    public String toString() {
+        return toString(false);
+    }
+
+    @Override
+    public ColumnMajorMatrix copy() {
+        return new ColumnMajorMatrix(A);
+    }
+
+    @Override
     public double[][] array() {
         double[][] B = new double[nrows()][ncols()];
         for (int i = 0; i < nrows(); i++) {
             System.arraycopy(A[i], 0, B[i], 0, ncols());
         }
         return B;
-    }
-
-    public RowMajorMatrix toRowMajor() {
-        return new RowMajorMatrix(A, isSymmetric(), isPositive());
-    }
-
-    public ColumnMajorMatrix toColumnMajor() {
-        return new ColumnMajorMatrix(A, isSymmetric(), isPositive());
     }
 
     @Override

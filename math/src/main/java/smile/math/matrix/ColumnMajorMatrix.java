@@ -24,7 +24,7 @@ import smile.stat.distribution.GaussianDistribution;
  * A dense matrix whose data is stored in a single 1D array of
  * doubles in column major order.
  */
-public class ColumnMajorMatrix extends DenseMatrix {
+public class ColumnMajorMatrix implements DenseMatrix {
 
     /**
      * The matrix storage.
@@ -44,35 +44,6 @@ public class ColumnMajorMatrix extends DenseMatrix {
      * @param A the array of matrix.
      */
     public ColumnMajorMatrix(double[][] A) {
-        this(A, false);
-    }
-
-    /**
-     * Constructor.
-     * If the matrix is updated, no check on if the matrix is symmetric.
-     * @param A the array of matrix.
-     * @param symmetric true if the matrix is symmetric.
-     */
-    public ColumnMajorMatrix(double[][] A, boolean symmetric) {
-        this(A, symmetric, false);
-    }
-
-    /**
-     * Constructor.
-     * If the matrix is updated, no check on if the matrix is symmetric
-     * and/or positive definite. The symmetric and positive definite
-     * properties are intended for read-only matrices.
-     * @param A the array of matrix.
-     * @param symmetric true if the matrix is symmetric.
-     * @param positive true if the matrix is positive definite.
-     */
-    public ColumnMajorMatrix(double[][] A, boolean symmetric, boolean positive) {
-        super(symmetric, positive);
-
-        if (symmetric && A.length != A[0].length) {
-            throw new IllegalArgumentException("A is not square");
-        }
-
         this.nrows = A.length;
         this.ncols = A[0].length;
         this.A = new double[nrows*ncols];
@@ -151,6 +122,16 @@ public class ColumnMajorMatrix extends DenseMatrix {
         }
 
         return matrix;
+    }
+
+    @Override
+    public String toString() {
+        return toString(false);
+    }
+
+    @Override
+    public ColumnMajorMatrix copy() {
+        return new ColumnMajorMatrix(nrows, ncols, A.clone());
     }
 
     /**
@@ -516,7 +497,7 @@ public class ColumnMajorMatrix extends DenseMatrix {
             throw new IllegalArgumentException(String.format("Matrix multiplication A * B': %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
         }
 
-        ColumnMajorMatrix C = new ColumnMajorMatrix(nrows, B.ncols());
+        ColumnMajorMatrix C = new ColumnMajorMatrix(nrows, B.nrows());
         for (int k = 0; k < ncols; k++) {
             for (int i = 0; i < nrows; i++) {
                 for (int j = 0; j < B.nrows(); j++) {
@@ -533,7 +514,7 @@ public class ColumnMajorMatrix extends DenseMatrix {
             throw new IllegalArgumentException(String.format("Matrix multiplication A' * B: %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
         }
 
-        ColumnMajorMatrix C = new ColumnMajorMatrix(nrows, B.ncols());
+        ColumnMajorMatrix C = new ColumnMajorMatrix(ncols, B.ncols());
         for (int i = 0; i < ncols; i++) {
             for (int j = 0; j < B.ncols(); j++) {
                 double v = 0.0;

@@ -17,7 +17,7 @@
 package smile.math.nd4j;
 
 import java.util.Arrays;
-import smile.math.matrix.Matrix;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.MatrixMultiplication;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
@@ -28,19 +28,11 @@ import org.nd4j.linalg.inverse.InvertMatrix;
  *
  * @author Haifeng Li
  */
-public class NDMatrix implements Matrix, MatrixMultiplication<NDMatrix, NDMatrix> {
+public class NDMatrix implements DenseMatrix {
     /**
      * The matrix storage.
      */
     private INDArray A;
-    /**
-     * True if the matrix is symmetric.
-     */
-    private boolean symmetric = false;
-    /**
-     * True if the matrix is positive definite.
-     */
-    private boolean positive = false;
 
     /**
      * Constructor.
@@ -52,28 +44,10 @@ public class NDMatrix implements Matrix, MatrixMultiplication<NDMatrix, NDMatrix
 
     /**
      * Constructor.
-     * If the matrix is updated, no check on if the matrix is symmetric.
-     * @param A the array of matrix.
-     * @param symmetric true if the matrix is symmetric.
+     * @param A the array of column vector.
      */
-    public NDMatrix(double[][] A, boolean symmetric) {
-        this(A);
-        this.symmetric = symmetric;
-    }
-
-    /**
-     * Constructor.
-     * If the matrix is updated, no check on if the matrix is symmetric
-     * and/or positive definite. The symmetric and positive definite
-     * properties are intended for read-only matrices.
-     * @param A the array of matrix.
-     * @param symmetric true if the matrix is symmetric.
-     * @param positive true if the matrix is positive definite.
-     */
-    public NDMatrix(double[][] A, boolean symmetric, boolean positive) {
-        this(A);
-        this.symmetric = symmetric;
-        this.positive = positive;
+    public NDMatrix(double[] A) {
+        this.A = Nd4j.create(A, new int[]{A.length, 1});
     }
 
     /**
@@ -82,32 +56,6 @@ public class NDMatrix implements Matrix, MatrixMultiplication<NDMatrix, NDMatrix
      */
     public NDMatrix(INDArray A) {
         this.A = A;
-    }
-
-    /**
-     * Constructor.
-     * If the matrix is updated, no check on if the matrix is symmetric.
-     * @param A the NDArray of matrix.
-     * @param symmetric true if the matrix is symmetric.
-     */
-    public NDMatrix(INDArray A, boolean symmetric) {
-        this(A);
-        this.symmetric = symmetric;
-    }
-
-    /**
-     * Constructor.
-     * If the matrix is updated, no check on if the matrix is symmetric
-     * and/or positive definite. The symmetric and positive definite
-     * properties are intended for read-only matrices.
-     * @param A the NDArray of matrix.
-     * @param symmetric true if the matrix is symmetric.
-     * @param positive true if the matrix is positive definite.
-     */
-    public NDMatrix(INDArray A, boolean symmetric, boolean positive) {
-        this(A);
-        this.symmetric = symmetric;
-        this.positive = positive;
     }
 
     /**
@@ -121,39 +69,26 @@ public class NDMatrix implements Matrix, MatrixMultiplication<NDMatrix, NDMatrix
      * Constructor. Fill the matrix with given value.
      */
     public NDMatrix(int rows, int cols, double value) {
-        A = Nd4j.zeros(rows, cols).addi(value);
+        if (value == 0.0)
+            A = Nd4j.zeros(rows, cols);
+        else if (value == 1.0)
+            A = Nd4j.ones(rows, cols);
+        else
+            A = Nd4j.zeros(rows, cols).addi(value);
     }
 
     public static NDMatrix eye(int n) {
         return new NDMatrix(Nd4j.eye(n));
     }
 
-    /**
-     * Returns true if the matrix is symmetric.
-     */
-    public boolean isSymmetric() {
-        return symmetric;
+    @Override
+    public String toString() {
+        return toString(false);
     }
 
-    /**
-     * Returns true if the matrix is positive definite.
-     */
-    public boolean isPositive() {
-        return positive;
-    }
-
-    /**
-     * Sets if the matrix is symmetric.
-     */
-    public void setSymmetric(boolean symmetric) {
-        this.symmetric = symmetric;
-    }
-
-    /**
-     * Sets if the matrix is positive definite.
-     */
-    public void setPositive(boolean positive) {
-        this.positive = positive;
+    @Override
+    public NDMatrix copy() {
+        return new NDMatrix(A.dup());
     }
 
     @Override
@@ -320,18 +255,30 @@ public class NDMatrix implements Matrix, MatrixMultiplication<NDMatrix, NDMatrix
     }
 
     @Override
-    public NDMatrix abmm(NDMatrix B) {
-        return new NDMatrix(A.mmul(B.A));
+    public NDMatrix abmm(DenseMatrix B) {
+        if (B instanceof NDMatrix) {
+            return new NDMatrix(A.mmul(((NDMatrix)B).A));
+        }
+
+        throw new IllegalArgumentException("NDMatrix.abmm() parameter must be NDMatrix");
     }
 
     @Override
-    public NDMatrix abtmm(NDMatrix B) {
-        return new NDMatrix(A.mmul(B.A.transpose()));
+    public NDMatrix abtmm(DenseMatrix B) {
+        if (B instanceof NDMatrix) {
+            return new NDMatrix(A.mmul(((NDMatrix)B).A.transpose()));
+        }
+
+        throw new IllegalArgumentException("NDMatrix.abtmm() parameter must be NDMatrix");
     }
 
     @Override
-    public NDMatrix atbmm(NDMatrix B) {
-        return new NDMatrix(A.transpose().mmul(B.A));
+    public NDMatrix atbmm(DenseMatrix B) {
+        if (B instanceof NDMatrix) {
+            return new NDMatrix(A.transpose().mmul(((NDMatrix)B).A));
+        }
+
+        throw new IllegalArgumentException("NDMatrix.atbmm() parameter must be NDMatrix");
     }
 
     /**
@@ -423,43 +370,11 @@ public class NDMatrix implements Matrix, MatrixMultiplication<NDMatrix, NDMatrix
     }
 
     /**
-     * Replaces NaN's with given value.
-     */
-    public NDMatrix replaceNaN(double x) {
-        int m = nrows();
-        int n = ncols();
-
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                if (Double.isNaN(get(i, j))) {
-                    set(i, j, x);
-                }
-            }
-        }
-
-        return this;
-    }
-
-    /**
      * Returns the sum of all elements in the matrix.
      * @return the sum of all elements.
      */
     public double sum() {
         return A.sumNumber().doubleValue();
-    }
-
-    /**
-     * Return the two-dimensional array of matrix.
-     * @return the two-dimensional array of matrix.
-     */
-    public double[][] array() {
-        double[][] V = new double[nrows()][ncols()];
-        for (int i = 0; i < nrows(); i++) {
-            for (int j = 0; j < ncols(); j++) {
-                V[i][j] = get(i, j);
-            }
-        }
-        return V;
     }
 
     /**
@@ -475,28 +390,5 @@ public class NDMatrix implements Matrix, MatrixMultiplication<NDMatrix, NDMatrix
      */
     public NDMatrix inverse() {
         return new NDMatrix(InvertMatrix.invert(A, false));
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        final int fields = 7;
-        int m = Math.min(fields, nrows());
-        int n = Math.min(fields, ncols());
-
-        String newline = n < ncols() ? "...\n" : "\n";
-
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                sb.append(String.format("%8.4f  ", get(i, j)));
-            }
-            sb.append(newline);
-        }
-
-        if (m < nrows()) {
-            sb.append("  ...\n");
-        }
-
-        return sb.toString();
     }
 }

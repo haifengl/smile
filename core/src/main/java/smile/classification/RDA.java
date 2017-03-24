@@ -258,7 +258,6 @@ public class RDA implements SoftClassifier<double[]>, Serializable {
             }
 
             cov[i] = new ColumnMajorMatrix(p, p);
-            cov[i].setSymmetric(true);
 
             for (int j = 0; j < p; j++) {
                 mu[i][j] /= ni[i];
@@ -309,7 +308,7 @@ public class RDA implements SoftClassifier<double[]>, Serializable {
                 }
             }
 
-            EigenValueDecomposition eigen = new EigenValueDecomposition(cov[i]);
+            EigenValueDecomposition eigen = new EigenValueDecomposition(cov[i], true);
 
             for (double s : eigen.getEigenValues()) {
                 if (s < tol) {

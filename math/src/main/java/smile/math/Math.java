@@ -4342,10 +4342,21 @@ public class Math {
      * Returns the eigen value decomposition of a square matrix. Note that the input
      * matrix will be altered during decomposition.
      * @param A    square matrix which will be altered after decomposition.
+     * @param symmetric if the matrix A is symmetric.
+     */
+    public static EigenValueDecomposition eigen(double[][] A, boolean symmetric) {
+        return new EigenValueDecomposition(A, symmetric, false);
+    }
+
+    /**
+     * Returns the eigen value decomposition of a square matrix. Note that the input
+     * matrix will be altered during decomposition.
+     * @param A    square matrix which will be altered after decomposition.
+     * @param symmetric if the matrix A is symmetric.
      * @param onlyValues true if only compute eigenvalues; the default is to compute eigenvectors also.
      */
-    public static EigenValueDecomposition eigen(double[][] A, boolean onlyValues) {
-        return new EigenValueDecomposition(A, onlyValues);
+    public static EigenValueDecomposition eigen(double[][] A, boolean symmetric, boolean onlyValues) {
+        return new EigenValueDecomposition(A, symmetric, onlyValues);
     }
 
     /**
