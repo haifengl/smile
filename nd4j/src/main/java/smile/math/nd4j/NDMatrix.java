@@ -18,7 +18,6 @@ package smile.math.nd4j;
 
 import java.util.Arrays;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.MatrixMultiplication;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.inverse.InvertMatrix;
@@ -106,19 +105,10 @@ public class NDMatrix implements DenseMatrix {
         return A.getDouble(i, j);
     }
 
-    /**
-     * Set the entry value at row i and column j.
-     */
+    @Override
     public double set(int i, int j, double x) {
         A.putScalar(i, j, x);
         return x;
-    }
-
-    /**
-     * Set the entry value at row i and column j. For Scala users.
-     */
-    public double update(int i, int j, double x) {
-        return set(i, j, x);
     }
 
     @Override
@@ -214,41 +204,33 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public NDMatrix ata() {
-        return new NDMatrix(A.transpose().mmul(A));
+        return new NDMatrix(Nd4j.gemm(A, A, true, false));
     }
 
     @Override
     public NDMatrix aat() {
-        return new NDMatrix(A.mmul(A.transpose()));
+        return new NDMatrix(Nd4j.gemm(A, A, false, true));
     }
 
-    /**
-     * A[i][j] += x
-     */
+    @Override
     public double add(int i, int j, double x) {
         double y = get(i, j) + x;
         return set(i, j, y);
     }
 
-    /**
-     * A[i][j] -= x
-     */
+    @Override
     public double sub(int i, int j, double x) {
         double y = get(i, j) - x;
         return set(i, j, y);
     }
 
-    /**
-     * A[i][j] *= x
-     */
+    @Override
     public double mul(int i, int j, double x) {
         double y = get(i, j) * x;
         return set(i, j, y);
     }
 
-    /**
-     * A[i][j] /= x
-     */
+    @Override
     public double div(int i, int j, double x) {
         double y = get(i, j) / x;
         return set(i, j, y);
@@ -257,7 +239,8 @@ public class NDMatrix implements DenseMatrix {
     @Override
     public NDMatrix abmm(DenseMatrix B) {
         if (B instanceof NDMatrix) {
-            return new NDMatrix(A.mmul(((NDMatrix)B).A));
+            NDMatrix b = (NDMatrix) B;
+            return new NDMatrix(Nd4j.gemm(A, b.A, false, false));
         }
 
         throw new IllegalArgumentException("NDMatrix.abmm() parameter must be NDMatrix");
@@ -266,7 +249,8 @@ public class NDMatrix implements DenseMatrix {
     @Override
     public NDMatrix abtmm(DenseMatrix B) {
         if (B instanceof NDMatrix) {
-            return new NDMatrix(A.mmul(((NDMatrix)B).A.transpose()));
+            NDMatrix b = (NDMatrix) B;
+            return new NDMatrix(Nd4j.gemm(A, b.A, false, true));
         }
 
         throw new IllegalArgumentException("NDMatrix.abtmm() parameter must be NDMatrix");
@@ -275,16 +259,23 @@ public class NDMatrix implements DenseMatrix {
     @Override
     public NDMatrix atbmm(DenseMatrix B) {
         if (B instanceof NDMatrix) {
-            return new NDMatrix(A.transpose().mmul(((NDMatrix)B).A));
+            NDMatrix b = (NDMatrix) B;
+            return new NDMatrix(Nd4j.gemm(A, b.A, true, false));
         }
 
-        throw new IllegalArgumentException("NDMatrix.atbmm() parameter must be NDMatrix");
+        throw new IllegalArgumentException("NDMatrix.abtmm() parameter must be NDMatrix");
     }
 
-    /**
-     * A = A + B
-     * @return this matrix
-     */
+    @Override
+    public NDMatrix add(DenseMatrix b) {
+        if (b instanceof NDMatrix)
+            add((NDMatrix) b);
+        else
+            DenseMatrix.super.add(b);
+
+        return this;
+    }
+
     public NDMatrix add(NDMatrix b) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
@@ -294,10 +285,29 @@ public class NDMatrix implements DenseMatrix {
         return this;
     }
 
-    /**
-     * A = A - B
-     * @return this matrix
-     */
+    @Override
+    public DenseMatrix add(DenseMatrix b, DenseMatrix c) {
+        if (b instanceof NDMatrix && c instanceof NDMatrix)
+            return add((NDMatrix) b, (NDMatrix) c);
+        else
+            return DenseMatrix.super.add(b, c);
+    }
+
+    public NDMatrix add(NDMatrix b, NDMatrix c) {
+        A.add(b.A, c.A);
+        return c;
+    }
+
+    @Override
+    public NDMatrix sub(DenseMatrix b) {
+        if (b instanceof NDMatrix)
+            sub((NDMatrix) b);
+        else
+            DenseMatrix.super.sub(b);
+
+        return this;
+    }
+
     public NDMatrix sub(NDMatrix b) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
@@ -307,10 +317,29 @@ public class NDMatrix implements DenseMatrix {
         return this;
     }
 
-    /**
-     * Element-wise multiplication A = A * B
-     * @return this matrix
-     */
+    @Override
+    public DenseMatrix sub(DenseMatrix b, DenseMatrix c) {
+        if (b instanceof NDMatrix && c instanceof NDMatrix)
+            return sub((NDMatrix) b, (NDMatrix) c);
+        else
+            return DenseMatrix.super.sub(b, c);
+    }
+
+    public NDMatrix sub(NDMatrix b, NDMatrix c) {
+        A.sub(b.A, c.A);
+        return c;
+    }
+
+    @Override
+    public NDMatrix mul(DenseMatrix b) {
+        if (b instanceof NDMatrix)
+            mul((NDMatrix) b);
+        else
+            DenseMatrix.super.mul(b);
+
+        return this;
+    }
+
     public NDMatrix mul(NDMatrix b) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
@@ -320,11 +349,29 @@ public class NDMatrix implements DenseMatrix {
         return this;
     }
 
-    /**
-     * Element-wise division A = A / B
-     * A = A - B
-     * @return this matrix
-     */
+    @Override
+    public DenseMatrix mul(DenseMatrix b, DenseMatrix c) {
+        if (b instanceof NDMatrix && c instanceof NDMatrix)
+            return mul((NDMatrix) b, (NDMatrix) c);
+        else
+            return DenseMatrix.super.mul(b, c);
+    }
+
+    public NDMatrix mul(NDMatrix b, NDMatrix c) {
+        A.mul(b.A, c.A);
+        return c;
+    }
+
+    @Override
+    public NDMatrix div(DenseMatrix b) {
+        if (b instanceof NDMatrix)
+            div((NDMatrix) b);
+        else
+            DenseMatrix.super.div(b);
+
+        return this;
+    }
+
     public NDMatrix div(NDMatrix b) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
@@ -334,61 +381,112 @@ public class NDMatrix implements DenseMatrix {
         return this;
     }
 
-    /**
-     * Element-wise addition A = A + x
-     */
+    @Override
+    public DenseMatrix div(DenseMatrix b, DenseMatrix c) {
+        if (b instanceof NDMatrix && c instanceof NDMatrix)
+            return div((NDMatrix) b, (NDMatrix) c);
+        else
+            return DenseMatrix.super.div(b, c);
+    }
+
+    public NDMatrix div(NDMatrix b, NDMatrix c) {
+        A.div(b.A, c.A);
+        return c;
+    }
+
+    @Override
     public NDMatrix add(double x) {
         A.addi(x);
         return this;
     }
 
-    /**
-     * Element-wise subtraction A = A - x
-     */
+    @Override
+    public DenseMatrix add(double x, DenseMatrix c) {
+        if (c instanceof NDMatrix)
+            return add(x, (NDMatrix)c);
+        else
+            return DenseMatrix.super.add(x, c);
+    }
+
+    public NDMatrix add(double x, NDMatrix c) {
+        A.addi(x, c.A);
+        return c;
+    }
+
+    @Override
     public NDMatrix sub(double x) {
         A.subi(x);
         return this;
-
     }
 
-    /**
-     * Element-wise multiplication A = A * x
-     */
+    @Override
+    public DenseMatrix sub(double x, DenseMatrix c) {
+        if (c instanceof NDMatrix)
+            return sub(x, (NDMatrix) c);
+        else
+            return DenseMatrix.super.sub(x, c);
+    }
+
+    public NDMatrix sub(double x, NDMatrix c) {
+        A.subi(x, c.A);
+        return c;
+    }
+
+    @Override
     public NDMatrix mul(double x) {
         A.muli(x);
         return this;
-
     }
 
-    /**
-     * Element-wise division A = A / x
-     */
+    @Override
+    public DenseMatrix mul(double x, DenseMatrix c) {
+        if (c instanceof NDMatrix)
+            return mul(x, (NDMatrix) c);
+        else
+            return DenseMatrix.super.mul(x, c);
+    }
+
+    public NDMatrix mul(double x, NDMatrix c) {
+        A.muli(x, c.A);
+        return c;
+    }
+
+    @Override
     public NDMatrix div(double x) {
         A.divi(x);
         return this;
-
     }
 
-    /**
-     * Returns the sum of all elements in the matrix.
-     * @return the sum of all elements.
-     */
+    @Override
+    public DenseMatrix div(double x, DenseMatrix c) {
+        if (c instanceof NDMatrix)
+            return div(x, (NDMatrix) c);
+        else
+            return DenseMatrix.super.div(x, c);
+    }
+
+    public NDMatrix div(double x, NDMatrix c) {
+        A.divi(x, c.A);
+        return c;
+    }
+
+    @Override
     public double sum() {
         return A.sumNumber().doubleValue();
     }
 
-    /**
-     * Returns the matrix transpose.
-     */
+    @Override
     public NDMatrix transpose() {
         return new NDMatrix(A.transpose());
     }
 
-    /**
-     * Returns the matrix inverse or pseudo inverse.
-     * @return inverse of A if A is square, pseudo inverse otherwise.
-     */
+    @Override
     public NDMatrix inverse() {
         return new NDMatrix(InvertMatrix.invert(A, false));
+    }
+
+    @Override
+    public NDMatrix inverse(boolean inPlace) {
+        return new NDMatrix(InvertMatrix.invert(A, inPlace));
     }
 }

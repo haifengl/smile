@@ -124,7 +124,7 @@ public class RowMajorMatrix implements DenseMatrix {
 
         return matrix;
     }
-    
+
     @Override
     public String toString() {
         return toString(false);

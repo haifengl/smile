@@ -241,9 +241,9 @@ trait Operators {
   /** Returns the rank of matrix. */
   def rank(A: MatrixExpression) = svd(A).rank()
   /** Returns the inverse of matrix. */
-  def inv(A: DenseMatrix) = if (A.nrows == A.ncols) lu(A).inverse() else qr(A).inverse()
+  def inv(A: DenseMatrix) = A.inverse(false)
   /** Returns the inverse of matrix. */
-  def inv(A: MatrixExpression) = if (A.nrows == A.ncols) lu(A).inverse() else qr(A).inverse()
+  def inv(A: MatrixExpression) = A.toMatrix.inverse(true)
 }
 
 
@@ -379,8 +379,11 @@ private[math] class PimpedMatrix(a: DenseMatrix) {
 
   /** Solves A * x = b */
   def \ (b: Array[Double]): Array[Double] = {
-    val x = new Array[Double](b.length)
-    lu(a).solve(b, x)
+    val x = new Array[Double](a.ncols)
+    if (a.nrows == a.ncols)
+      lu(a).solve(b, x)
+    else
+      qr(a).solve(b, x)
     x
   }
 }
