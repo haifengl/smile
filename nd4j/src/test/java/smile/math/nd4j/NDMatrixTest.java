@@ -100,9 +100,9 @@ public class NDMatrixTest {
         System.out.println("ax");
         double[] d = new double[matrix.nrows()];
         matrix.ax(b, d);
-        assertEquals(0.65, d[0], 1E-10);
-        assertEquals(0.60, d[1], 1E-10);
-        assertEquals(0.55, d[2], 1E-10);
+        assertEquals(0.65, d[0], 1E-7);
+        assertEquals(0.60, d[1], 1E-7);
+        assertEquals(0.55, d[2], 1E-7);
     }
 
     /**
@@ -113,9 +113,9 @@ public class NDMatrixTest {
         System.out.println("atx");
         double[] d = new double[matrix.nrows()];
         matrix.atx(b, d);
-        assertEquals(0.65, d[0], 1E-10);
-        assertEquals(0.60, d[1], 1E-10);
-        assertEquals(0.55, d[2], 1E-10);
+        assertEquals(0.65, d[0], 1E-7);
+        assertEquals(0.60, d[1], 1E-7);
+        assertEquals(0.55, d[2], 1E-7);
     }
 
     /**

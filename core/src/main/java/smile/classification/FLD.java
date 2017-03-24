@@ -222,7 +222,6 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
         mean = Math.colMean(x);
         // Common covariance.
         DenseMatrix T = new ColumnMajorMatrix(p, p);
-        T.setSymmetric(true);
         // Class mean vectors.
         mu = new double[k][p];
 
@@ -272,7 +271,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
             }
         }
 
-        EigenValueDecomposition eigen = new EigenValueDecomposition(T);
+        EigenValueDecomposition eigen = new EigenValueDecomposition(T, true);
         
         tol = tol * tol;
         double[] s = eigen.getEigenValues();
@@ -294,9 +293,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
         }
 
         B = U.abmm(UB);
-        B.setSymmetric(true);
-
-        eigen = new EigenValueDecomposition(B);
+        eigen = new EigenValueDecomposition(B, true);
 
         U = eigen.getEigenVectors();
         scaling = new double[p][L];

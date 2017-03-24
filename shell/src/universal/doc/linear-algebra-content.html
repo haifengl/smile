@@ -78,30 +78,31 @@
         The error function and complementary error function are special cases of the
         incomplete gamma function.</p>
 
-    <h2 id="statistics" class="title">Statistics Functions</h2>
-
-    <p>There are also many Statistics functions, e.g. <code>sum</code>, <code>mean</code>,
-        <code>median</code>, <code>q1</code>, <code>q3</code>,
-        <code>variance</code>, <code>sd</code>, <code>mad</code> (median absolute deviation).</p>
-    <pre class="prettyprint lang-scala"><code>
-    smile&gt; mean(Array(1.0, 2.0, 3.0, 4.0))
-    res10: Double = 2.5
-
-    smile&gt; sd(Array(1.0, 2.0, 3.0, 4.0))
-    res11: Double = 1.2909944487358054
-    </code></pre>
-
     <h2 id="vector" class="title">Vector Operations</h2>
 
-    <p>For a vector, there are multiple functions to calculate its norm such as <code>norm</code> (L2 norm), <code>norm1</code> (L1 norm),
-        <code>norm2</code> (L2 norm), <code>normInf</code> (infinity norm), <code>normFro</code> (Frobenius norm).
-        We can also <code>standardize</code> it to mean 0 and variance 1,
-        <code>unitize</code> it so that L2 norm be 1,
-        or <code>unitize1</code> it so that L1 norm be 1.</p>
+    <p>Common arithmetic operations on vectors and scalars are similar as in R and Matlab.</p>
     <pre class="prettyprint lang-scala"><code>
     smile&gt; val x = Array(1.0, 2.0, 3.0, 4.0)
     smile&gt; val y = Array(4.0, 3.0, 2.0, 1.0)
 
+    smile&gt; x + y
+    res22: smile.math.VectorAddVector = Array(1.7302967433402214, 2.547722557505166, 3.3651483716701107, 4.182574185835056)
+
+    smile&gt; 1.5 * x - 3.0 * y
+    res24: smile.math.VectorSubVector = Array(-0.6908902300206643, 1.3568323274845018, 3.404554884989668, 5.452277442494834)
+    </code></pre>
+
+    <p>Note that these operations are lazy. The computation is only performed when
+        the results are needed, e.g. when the expression is used where a vector is expected.
+        In the Shell, the expression is immediately performed because the Shell
+        always prints out the results.</p>
+
+    <p>For a vector, there are multiple functions to calculate its norm such as <code>norm</code> (L2 norm), <code>norm1</code> (L1 norm),
+        <code>norm2</code> (L2 norm), <code>normInf</code> (infinity norm), <code>normFro</code> (Frobenius norm).
+        We can also <code>standardize</code> a vector to mean 0 and variance 1,
+        <code>unitize</code> it so that L2 norm be 1,
+        or <code>unitize1</code> it so that L1 norm be 1.</p>
+    <pre class="prettyprint lang-scala"><code>
     smile&gt; norm(x)
     res13: Double = 5.477225575051661
 
@@ -111,9 +112,9 @@
     </code></pre>
 
     <p>For a pair of vectors, we can calculate the dot product, distance, divergence, covariance,
-        correlation, etc. with <code>dot</code>, <code>distance</code>, <code>kld</code> (Kullback-Leibler Divergence),
-        <code>jsd</code> (Jensen-Shannon Divergence), <code>cov</code>, <code>cor</code>,
-        <code>spearman</code>, <code>kendall</code>.</p>
+        and correlations with <code>dot</code>, <code>distance</code>, <code>kld</code> (Kullback-Leibler Divergence),
+        <code>jsd</code> (Jensen-Shannon Divergence), <code>cov</code>, <code>cor</code> (Pearson Correlation),
+        <code>spearman</code> (Spearman Rank Correlation Coefficient), <code>kendall</code> (Kendall Tau Rank Correlation Coefficient).</p>
     <pre class="prettyprint lang-scala"><code>
     smile&gt; dot(x, y)
     res16: Double = 20.0
@@ -122,20 +123,11 @@
     res17: Double = -1.6666666666666667
     </code></pre>
 
-    <p>In fact, we can use vectors like in Matlab.</p>
-    <pre class="prettyprint lang-scala"><code>
-    smile&gt; x + y
-    res22: smile.math.VectorAddVector = Array(1.7302967433402214, 2.547722557505166, 3.3651483716701107, 4.182574185835056)
-
-    smile&gt; 1.5 * x - 3.0 * y
-    res24: smile.math.VectorSubVector = Array(-0.6908902300206643, 1.3568323274845018, 3.404554884989668, 5.452277442494834)
-    </code></pre>
-
-    <p>More importantly, we can do matrix computation easily.</p>
-
     <h2 id="matrix" class="title">Matrix Operations</h2>
 
-    <p>To create a matrix from 2-dimensional array, we can use the <code>~</code> operator.
+    <p>Like Matlab, we can use <code>eye</code>, <code>zeros</code> and <code>ones</code>
+        to create identity, zero, or all-ones matrix, respectively.
+        To create a matrix from 2-dimensional array, we can use the <code>~</code> operator.
         The <code>~</code> operator can be applied to 1-dimensional array too, which creates
         a single column matrix.</p>
 
@@ -161,7 +153,7 @@
     val c = ~C
     </code></pre>
 
-    <p>Matrix-vector operations are just like math formula.</p>
+    <p>Matrix-vector operations are just like in math formula.</p>
     <pre class="prettyprint lang-scala"><code>
     smile&gt; a * x + y * 1.5
     res26: smile.math.VectorAddVector = Array(4.024486715010331, -0.11406700374225098, 2.6796872175051663)
@@ -185,7 +177,7 @@
        -0.3989   -0.2020   -0.3989
     </code></pre>
 
-    <p>For matrix multipication, the operator is <code>%*%</code>, same as in R</p>
+    <p>For matrix multiplication, the operator is <code>%*%</code>, same as in R</p>
     <pre class="prettyprint lang-scala"><code>
     smile&gt; a %*% b %*% c
     [main] INFO smile.math.MatrixOrderOptimization - The minimum cost of matrix multiplication chain: 54
@@ -214,7 +206,9 @@
 
     <h2 id="decomposition" class="title">Matrix Decomposition</h2>
 
-    <p>A line chart connects points by straight lines.</p>
+    <p>In linear algebra, a matrix decomposition or matrix factorization
+        is a factorization of a matrix into a product of matrices.
+        There are many different matrix decompositions.</p>
 
     <pre class="prettyprint lang-scala"><code>
     def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, legend: Char = ' '): Window

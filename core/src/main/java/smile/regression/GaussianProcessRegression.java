@@ -252,7 +252,6 @@ public class GaussianProcessRegression <T> implements Regression<T>, Serializabl
         }
 
         ColumnMajorMatrix W = new ColumnMajorMatrix(m, m);
-        W.setSymmetric(true);
         for (int i = 0; i < m; i++) {
             for (int j = 0; j <= i; j++) {
                 double k = kernel.k(t[i], t[j]);
@@ -261,7 +260,7 @@ public class GaussianProcessRegression <T> implements Regression<T>, Serializabl
             }
         }
 
-        EigenValueDecomposition eigen = new EigenValueDecomposition(W);
+        EigenValueDecomposition eigen = new EigenValueDecomposition(W, true);
         DenseMatrix U = eigen.getEigenVectors();
         DenseMatrix D = eigen.getD();
         for (int i = 0; i < m; i++) {
@@ -276,8 +275,9 @@ public class GaussianProcessRegression <T> implements Regression<T>, Serializabl
         for (int i = 0; i < m; i++) {
             LtL.add(i, i, lambda);
         }
-        
-        DenseMatrix invLtL = LtL.inverse();
+
+        CholeskyDecomposition chol = new CholeskyDecomposition(LtL);
+        DenseMatrix invLtL = chol.inverse();
         DenseMatrix K = L.abmm(invLtL).abtmm(L);
         
         w = new double[n];

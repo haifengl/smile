@@ -139,7 +139,6 @@ public class PCA implements Projection<double[]>, Serializable {
         } else {
 
             DenseMatrix cov = new ColumnMajorMatrix(n, n);
-            cov.setSymmetric(true);
             for (int k = 0; k < m; k++) {
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j <= i; j++) {
@@ -170,7 +169,7 @@ public class PCA implements Projection<double[]>, Serializable {
                 }
             }
 
-            EigenValueDecomposition eigen = new EigenValueDecomposition(cov);
+            EigenValueDecomposition eigen = new EigenValueDecomposition(cov, true);
 
             DenseMatrix loadings = eigen.getEigenVectors();
             if (cor) {

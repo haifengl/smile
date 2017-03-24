@@ -17,7 +17,7 @@
 package smile.math
 
 import scala.language.implicitConversions
-import smile.math.matrix.{Lanczos, DenseMatrix, ColumnMajorMatrix}
+import smile.math.matrix._
 import smile.math.special._
 import smile.stat.hypothesis._
 import smile.stat.distribution.Distribution
@@ -187,30 +187,63 @@ trait Operators {
   def eye(n: Int) = ColumnMajorMatrix.eye(n)
   /** Returns an m-by-n identity matrix. */
   def eye(m: Int, n: Int) = ColumnMajorMatrix.eye(m, n)
+
   /** Returns the trace of matrix. */
-  def trace(A: DenseMatrix) = A.trace()
-  /** Returns the determinant of matrix. */
-  def det(A: DenseMatrix) = A.det()
-  /** Returns the rank of matrix. */
-  def rank(A: DenseMatrix) = A.rank()
+  def trace(A: Matrix) = A.trace()
   /** Returns the diagonal elements of matrix. */
-  def diag(A: DenseMatrix) = A.diag()
+  def diag(A: Matrix) = A.diag()
+
+  /** LU decomposition. */
+  def lu(A: Array[Array[Double]]) = new LUDecomposition(~A)
+  /** LU decomposition. */
+  def lu(A: DenseMatrix) = new LUDecomposition(A.copy)
+  /** LU decomposition. */
+  def lu(A: MatrixExpression) = new LUDecomposition(A.toMatrix)
+
+  /** QR decomposition. */
+  def qr(A: Array[Array[Double]]) = new QRDecomposition(~A)
+  /** QR decomposition. */
+  def qr(A: DenseMatrix) = new QRDecomposition(A.copy)
+  /** QR decomposition. */
+  def qr(A: MatrixExpression) = new QRDecomposition(A.toMatrix)
+
+  /** Cholesky decomposition. */
+  def cholesky(A: Array[Array[Double]]) = new CholeskyDecomposition(~A)
+  /** Cholesky decomposition. */
+  def cholesky(A: DenseMatrix) = new CholeskyDecomposition(A.copy)
+  /** Cholesky decomposition. */
+  def cholesky(A: MatrixExpression) = new CholeskyDecomposition(A.toMatrix)
+
+  /** Eigen decomposition. */
+  def eigen(A: Array[Array[Double]]) = new EigenValueDecomposition(~A)
+  /** Eigen decomposition. */
+  def eigen(A: DenseMatrix) = new EigenValueDecomposition(A.copy)
+  /** Eigen decomposition. */
+  def eigen(A: MatrixExpression) = new EigenValueDecomposition(A.toMatrix)
+  /** Eigen decomposition. */
+  def eigen(A: DenseMatrix, k: Int) = Lanczos.eigen(A, k)
+
+  /** SVD decomposition. */
+  def svd(A: Array[Array[Double]]) = new SingularValueDecomposition(~A)
+  /** SVD decomposition. */
+  def svd(A: DenseMatrix) = new SingularValueDecomposition(A.copy)
+  /** SVD decomposition. */
+  def svd(A: MatrixExpression) = new SingularValueDecomposition(A.toMatrix)
+  /** SVD decomposition. */
+  def svd(A: DenseMatrix, k: Int) = Lanczos.svd(A, k)
+
+  /** Returns the determinant of matrix. */
+  def det(A: DenseMatrix) = lu(A).det()
+  /** Returns the determinant of matrix. */
+  def det(A: MatrixExpression) = lu(A).det()
+  /** Returns the rank of matrix. */
+  def rank(A: DenseMatrix) = svd(A).rank()
+  /** Returns the rank of matrix. */
+  def rank(A: MatrixExpression) = svd(A).rank()
   /** Returns the inverse of matrix. */
-  def inv(A: DenseMatrix) = A.inverse()
-  /** Returns the eigen decomposition of matrix. */
-  def eigen(A: DenseMatrix) = A.eigen()
-  /** Returns the eigen decomposition of matrix. */
-  def eigen(A: DenseMatrix, k: Int) = A.eigen(k)
-  /** Returns the SVD decomposition of matrix. */
-  def svd(A: DenseMatrix) = A.svd()
-  /** Returns the SVD decomposition of matrix. */
-  def svd(A: DenseMatrix, k: Int) = A.svd(k)
-  /** Returns the LU decomposition of matrix. */
-  def lu(A: DenseMatrix) = A.lu()
-  /** Returns the QR decomposition of matrix. */
-  def qr(A: DenseMatrix) = A.qr()
-  /** Returns the Cholesky decomposition of matrix. */
-  def cholesky(A: DenseMatrix) = A.cholesky()
+  def inv(A: DenseMatrix) = if (A.nrows == A.ncols) lu(A).inverse() else qr(A).inverse()
+  /** Returns the inverse of matrix. */
+  def inv(A: MatrixExpression) = if (A.nrows == A.ncols) lu(A).inverse() else qr(A).inverse()
 }
 
 
@@ -347,6 +380,7 @@ private[math] class PimpedMatrix(a: DenseMatrix) {
   /** Solves A * x = b */
   def \ (b: Array[Double]): Array[Double] = {
     val x = new Array[Double](b.length)
-    a.solve(b, x)
+    lu(a).solve(b, x)
+    x
   }
 }
