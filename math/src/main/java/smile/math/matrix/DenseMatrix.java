@@ -37,23 +37,31 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
-     * Sets the diagonal to the values of <code>diag</code> as long
-     * as possible (i.e while there are elements left in diag or the dim of matrix
-     * is not big enough.
-     */
-    /*
-    default public void setDiag(double[] diag) {
-        for (int i = 0; i < ncols() && i < nrows() && i < diag.length; i++) {
-            set(i, i, diag[i]);
-        }
-    }
-    */
-
-    /**
      * Returns the matrix transpose.
      */
     public DenseMatrix transpose();
 
+    /**
+     * Returns the inverse matrix.
+     */
+    default DenseMatrix inverse() {
+        return inverse(false);
+    }
+
+    /**
+     * Returns the inverse matrix.
+     * @param inPlace if true, this matrix will be used for matrix decomposition.
+     */
+    default DenseMatrix inverse(boolean inPlace) {
+        DenseMatrix a = inPlace ? this : copy();
+        if (nrows() == ncols()) {
+            LUDecomposition lu = new LUDecomposition(a);
+            return lu.inverse();
+        } else {
+            QRDecomposition qr = new QRDecomposition(a);
+            return qr.inverse();
+        }
+    }
     /**
      * Returns a copy of this matrix.
      */
@@ -86,7 +94,31 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     public double div(int i, int j, double x);
 
     /**
-     * A = A + B
+     * C = A + B
+     * @return the result matrix
+     */
+    default public DenseMatrix add(DenseMatrix b, DenseMatrix c) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        if (nrows() != c.nrows() || ncols() != c.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                c.set(i, j, get(i, j) + b.get(i, j));
+            }
+        }
+        return c;
+    }
+
+    /**
+     * In place addition A = A + B
      * @return this matrix
      */
     default public DenseMatrix add(DenseMatrix b) {
@@ -106,7 +138,31 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
-     * A = A - B
+     * C = A - B
+     * @return the result matrix
+     */
+    default public DenseMatrix sub(DenseMatrix b, DenseMatrix c) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        if (nrows() != c.nrows() || ncols() != c.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                c.set(i, j, get(i, j) - b.get(i, j));
+            }
+        }
+        return c;
+    }
+
+    /**
+     * In place subtraction A = A - B
      * @return this matrix
      */
     default public DenseMatrix sub(DenseMatrix b) {
@@ -126,7 +182,31 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
-     * Element-wise multiplication A = A * B
+     * C = A * B
+     * @return the result matrix
+     */
+    default public DenseMatrix mul(DenseMatrix b, DenseMatrix c) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        if (nrows() != c.nrows() || ncols() != c.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                c.set(i, j, get(i, j) * b.get(i, j));
+            }
+        }
+        return c;
+    }
+
+    /**
+     * In place element-wise multiplication A = A * B
      * @return this matrix
      */
     default public DenseMatrix mul(DenseMatrix b) {
@@ -146,7 +226,31 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
-     * Element-wise division A = A / B
+     * C = A / B
+     * @return the result matrix
+     */
+    default public DenseMatrix div(DenseMatrix b, DenseMatrix c) {
+        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        if (nrows() != c.nrows() || ncols() != c.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                c.set(i, j, get(i, j) / b.get(i, j));
+            }
+        }
+        return c;
+    }
+
+    /**
+     * In place element-wise division A = A / B
      * A = A - B
      * @return this matrix
      */
@@ -167,7 +271,27 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
-     * Element-wise addition A = A + x
+     * Element-wise addition C = A + x
+     */
+    default public DenseMatrix add(double x, DenseMatrix c) {
+        if (nrows() != c.nrows() || ncols() != c.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                c.set(i, j, get(i, j) + x);
+            }
+        }
+
+        return c;
+    }
+
+    /**
+     * In place element-wise addition A = A + x
      */
     default public DenseMatrix add(double x) {
         int m = nrows();
@@ -183,7 +307,27 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
-     * Element-wise subtraction A = A - x
+     * Element-wise addition C = A - x
+     */
+    default public DenseMatrix sub(double x, DenseMatrix c) {
+        if (nrows() != c.nrows() || ncols() != c.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                c.set(i, j, get(i, j) - x);
+            }
+        }
+
+        return c;
+    }
+
+    /**
+     * In place element-wise subtraction A = A - x
      */
     default public DenseMatrix sub(double x) {
         int m = nrows();
@@ -199,7 +343,27 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
-     * Element-wise multiplication A = A * x
+     * Element-wise addition C = A * x
+     */
+    default public DenseMatrix mul(double x, DenseMatrix c) {
+        if (nrows() != c.nrows() || ncols() != c.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                c.set(i, j, get(i, j) * x);
+            }
+        }
+
+        return c;
+    }
+
+    /**
+     * In place element-wise multiplication A = A * x
      */
     default public DenseMatrix mul(double x) {
         int m = nrows();
@@ -215,7 +379,27 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
-     * Element-wise division A = A / x
+     * Element-wise addition C = A / x
+     */
+    default public DenseMatrix div(double x, DenseMatrix c) {
+        if (nrows() != c.nrows() || ncols() != c.ncols()) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                c.set(i, j, get(i, j) / x);
+            }
+        }
+
+        return c;
+    }
+
+    /**
+     * In place element-wise division A = A / x
      */
     default public DenseMatrix div(double x) {
         int m = nrows();
