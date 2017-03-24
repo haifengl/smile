@@ -26,7 +26,7 @@
 
     <h1 id="linear-algebra-top" class="title">Linear Algebra</h1>
 
-    <p>Smile Shell privides an Matlab &copy; like environment.
+    <p>Smile Shell provides an Matlab &copy; like environment.
         In the simplest case, you can use it as a calculator.</p>
 
     <pre class="prettyprint lang-scala"><code>
@@ -77,6 +77,14 @@
         denoted <code>erfc</code>, is defined as <code>erfc(x) = 1 - erf(x)</code>.
         The error function and complementary error function are special cases of the
         incomplete gamma function.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; erf(1.0)
+    res0: Double = 0.8427007929497149
+
+    smile&gt; digamma(1.0)
+    res11: Double = -0.5772156649015328
+    </code></pre>
 
     <h2 id="vector" class="title">Vector Operations</h2>
 
@@ -208,16 +216,42 @@
 
     <p>In linear algebra, a matrix decomposition or matrix factorization
         is a factorization of a matrix into a product of matrices.
-        There are many different matrix decompositions.</p>
+        There are many different matrix decompositions. In Smile, we provide
+        LU, QR, Cholesky, eigen, and SVD decomposition by functions
+        <code>lu</code>, <code>qr</code>, <code>cholesky</code>,
+        <code>eigen</code>, and <code>svd</code>, respectively.</p>
+
+    <p>With these decompositions, many important linear algebra operations
+        can be performed such as calculating matrix rank, determinant, solving
+        linear systems, computing inverse matrix, etc.
+        In fact, Smile has functions <code>det</code>,
+        <code>rank</code>, <code>inv</code> and operator <code>\</code>
+        for these common computation.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, legend: Char = ' '): Window
+    smile&gt; val x = Array(1.0, 2.0, 3.0)
+    x: Array[Double] = Array(1.0, 2.0, 3.0)
+
+    smile&gt; a \ x
+    res14: Array[Double] = Array(-1.7252356779053744, -0.3612592362819077, 3.3004624918302046)
+
+    smile&gt; inv(a)
+    res19: smile.math.matrix.DenseMatrix =
+      0.7220   -0.2649   -0.6392
+      0.0712   -0.8904    0.4495
+      0.6882    0.3700    0.6241
+      smile&gt; inv(a) %*% a
+
+    res21: smile.math.MatrixExpression =
+      1.0000    0.0000    0.0000
+     -0.0000    1.0000    0.0000
+     -0.0000    0.0000    1.0000
     </code></pre>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
         <a class="btn-prev-text" href="manifold.html" title="Previous Section: Manifold Learning"><span>Manifold Learning</span></a>
-        <a class="btn-next-text" href="faq.html" title="Next Section: FAQ"><span>FAQ</span></a>
+        <a class="btn-next-text" href="statistics.html" title="Next Section: Statistics"><span>Statistics</span></a>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
