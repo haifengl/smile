@@ -84,6 +84,6 @@ lazy val demo = project.in(file("demo")).settings(nonPubishSettings: _*).depends
 
 lazy val benchmark = project.in(file("benchmark")).settings(nonPubishSettings: _*).dependsOn(core, scala)
 
-lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, nd4j, interpolation, nlp, plot)
+lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, interpolation, nlp, plot)
 
 lazy val shell = project.in(file("shell")).settings(nonPubishSettings: _*).dependsOn(benchmark, demo, scala)
