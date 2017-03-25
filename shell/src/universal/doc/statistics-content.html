@@ -126,6 +126,23 @@
     mixture: smile.stat.distribution.ExponentialFamilyMixture = Mixture[3]:{ (Gaussian Distribution(-2.0135, 0.9953):0.2478) (Exponential Distribution(0.7676):0.2882) (Gamma Distribution(2.7008, 2.4051):0.4640)}
     </code></pre>
 
+    <p>If the distribution family is not known, nonparametric methods such as
+        kernel density estimation can be used. Kernel density estimation
+        is a fundamental data smoothing problem where inferences about the population
+        are made, based on a finite data sample. It is also known as the
+        Parzen window method.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val k = new KernelDensity(data)
+    k: smile.stat.distribution.KernelDensity = smile.stat.distribution.KernelDensity@69724abb
+
+    smile&gt; k.p(1.0)
+    res2: Double = 0.11397721599552492
+
+    smile&gt; mixture.p(1.0)
+    res3: Double = 0.1272572973513569
+    </code></pre>
+
     <h2 id="test" class="title">Hypothesis Test</h2>
 
     <p>A statistical hypothesis test is a method of making decisions using data,
