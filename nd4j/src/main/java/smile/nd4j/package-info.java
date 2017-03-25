@@ -19,4 +19,4 @@
  * 
  * @author Haifeng Li
  */
-package smile.math.nd4j;
+package smile.nd4j;

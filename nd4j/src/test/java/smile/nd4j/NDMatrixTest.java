@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.math.nd4j;
+package smile.nd4j;
 
 import org.junit.After;
 import org.junit.AfterClass;
