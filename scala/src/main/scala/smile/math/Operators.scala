@@ -19,6 +19,7 @@ package smile.math
 import scala.language.implicitConversions
 import smile.math.matrix._
 import smile.math.special._
+import smile.nd4j.NDMatrix
 import smile.stat.hypothesis._
 import smile.stat.distribution.Distribution
 
@@ -279,6 +280,8 @@ private[math] class PimpedArray[T](override val a: Array[T])(implicit val tag: C
 private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]]) extends PimpedArrayLike[Array[Double]] {
 
   def unary_~ = new ColumnMajorMatrix(a)
+
+  def unary_~# = new NDMatrix(a)
 
   def nrows: Int = a.length
 
