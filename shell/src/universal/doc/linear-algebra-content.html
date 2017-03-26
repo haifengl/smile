@@ -195,6 +195,19 @@
        -0.0495   -0.3517    0.9348
     </code></pre>
 
+    <p>The method <code>DenseMatrix.transpose</code> returns the transpose of matrix,
+        which executes immediately. However, the method <code>t</code> is preferred
+        on <code>MatrixExpression</code> as it is lazy.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; a %*% b.t %*% c
+    [main] INFO smile.math.MatrixOrderOptimization - The minimum cost of matrix multiplication chain: 54
+    res30: smile.math.MatrixExpression =
+        0.8978   -0.4369    0.0543
+        0.4189    0.8856    0.2006
+       -0.1357   -0.1574    0.9782
+    </code></pre>
+
     <p>Smile has runtime optimization for matrix multiplication chain, which can greatly
         improve the performance. In the below we generate several random matrices and multiply
         them together.</p>
