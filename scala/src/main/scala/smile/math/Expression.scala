@@ -211,7 +211,15 @@ case class MatrixMultiplicationExpression(A: MatrixExpression, B: MatrixExpressi
   override def nrows: Int = A.nrows
   override def ncols: Int = B.ncols
   override def apply(i: Int, j: Int): Double = toMatrix(i, j)
-  override lazy val toMatrix: DenseMatrix = A.toMatrix.abmm(B.toMatrix)
+  override lazy val toMatrix: DenseMatrix = {
+    (A, B) match {
+      case (MatrixTranspose(A), MatrixTranspose(B)) => B.toMatrix.abmm(A.toMatrix).transpose()
+      case (MatrixTranspose(A), B) => A.toMatrix.atbmm(B.toMatrix)
+      case (A, MatrixTranspose(B)) => A.toMatrix.abtmm(B.toMatrix)
+      case (A, B) => A.toMatrix.abmm(B.toMatrix)
+    }
+  }
+
   override def %*% (C: MatrixExpression) = MatrixMultiplicationChain(Seq(A, B, C))
 }
 
