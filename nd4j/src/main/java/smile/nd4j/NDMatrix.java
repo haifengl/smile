@@ -113,14 +113,11 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] ax(double[] x, double[] y) {
-        int n = Math.min(nrows(), y.length);
-        int p = Math.min(ncols(), x.length);
-
-        Arrays.fill(y, 0.0);
-        for (int k = 0; k < p; k++) {
-            for (int i = 0; i < n; i++) {
-                y[i] += get(i, k) * x[k];
-            }
+        INDArray ndx = Nd4j.create(x, new int[]{x.length, 1});
+        INDArray ndy = Nd4j.gemm(A, ndx, false, false);
+        int n = nrows();
+        for (int i = 0; i < n; i++) {
+            y[i] = ndy.getDouble(i);
         }
 
         return y;
@@ -128,13 +125,11 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] axpy(double[] x, double[] y) {
-        int n = Math.min(nrows(), y.length);
-        int p = Math.min(ncols(), x.length);
-
-        for (int k = 0; k < p; k++) {
-            for (int i = 0; i < n; i++) {
-                y[i] += get(i, k) * x[k];
-            }
+        INDArray ndx = Nd4j.create(x, new int[]{x.length, 1});
+        INDArray ndy = Nd4j.gemm(A, ndx, false, false);
+        int n = nrows();
+        for (int i = 0; i < n; i++) {
+            y[i] += ndy.getDouble(i);
         }
 
         return y;
@@ -142,17 +137,11 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] axpy(double[] x, double[] y, double b) {
-        int n = Math.min(nrows(), y.length);
-        int p = Math.min(ncols(), x.length);
-
+        INDArray ndx = Nd4j.create(x, new int[]{x.length, 1});
+        INDArray ndy = Nd4j.gemm(A, ndx, false, false);
+        int n = nrows();
         for (int i = 0; i < n; i++) {
-            y[i] *= b;
-        }
-
-        for (int k = 0; k < p; k++) {
-            for (int i = 0; i < n; i++) {
-                y[i] += get(i, k) * x[k];
-            }
+            y[i] = y[i] * b + ndy.getDouble(i);
         }
 
         return y;
@@ -160,14 +149,11 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] atx(double[] x, double[] y) {
-        int n = Math.min(ncols(), y.length);
-        int p = Math.min(nrows(), x.length);
-
-        Arrays.fill(y, 0.0);
+        INDArray ndx = Nd4j.create(x, new int[]{x.length, 1});
+        INDArray ndy = Nd4j.gemm(A, ndx, true, false);
+        int n = nrows();
         for (int i = 0; i < n; i++) {
-            for (int k = 0; k < p; k++) {
-                y[i] += get(k, i) * x[k];
-            }
+            y[i] = ndy.getDouble(i);
         }
 
         return y;
@@ -175,13 +161,11 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] atxpy(double[] x, double[] y) {
-        int n = Math.min(ncols(), y.length);
-        int p = Math.min(nrows(), x.length);
-
+        INDArray ndx = Nd4j.create(x, new int[]{x.length, 1});
+        INDArray ndy = Nd4j.gemm(A, ndx, true, false);
+        int n = nrows();
         for (int i = 0; i < n; i++) {
-            for (int k = 0; k < p; k++) {
-                y[i] += get(k, i) * x[k];
-            }
+            y[i] += ndy.getDouble(i);
         }
 
         return y;
@@ -189,14 +173,11 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] atxpy(double[] x, double[] y, double b) {
-        int n = Math.min(ncols(), y.length);
-        int p = Math.min(nrows(), x.length);
-
+        INDArray ndx = Nd4j.create(x, new int[]{x.length, 1});
+        INDArray ndy = Nd4j.gemm(A, ndx, true, false);
+        int n = nrows();
         for (int i = 0; i < n; i++) {
-            y[i] *= b;
-            for (int k = 0; k < p; k++) {
-                y[i] += get(k, i) * x[k];
-            }
+            y[i] = y[i] * b + ndy.getDouble(i);
         }
 
         return y;
