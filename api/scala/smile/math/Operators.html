@@ -199,19 +199,19 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="smile.math.Operators#array2Matrix" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="array2Matrix(matrix:Array[Array[Double]]):smile.math.matrix.Matrix"></a>
-      <a id="array2Matrix(Array[Array[Double]]):Matrix"></a>
+    </li><li name="smile.math.Operators#array2VectorExpression" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="array2VectorExpression(x:Array[Double]):smile.math.VectorLift"></a>
+      <a id="array2VectorExpression(Array[Double]):VectorLift"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">implicit </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">array2Matrix</span><span class="params">(<span name="matrix">matrix: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.Matrix">Matrix</span></span>
+        <span class="name">array2VectorExpression</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>)</span><span class="result">: <a href="VectorLift.html" class="extype" name="smile.math.VectorLift">VectorLift</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.math.Operators@array2Matrix(matrix:Array[Array[Double]]):smile.math.matrix.Matrix" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.Operators@array2VectorExpression(x:Array[Double]):smile.math.VectorLift" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -319,6 +319,57 @@ indicates a significant difference between the distributions.
 sets of binned data, and given one constraint, a small value of
 p-value indicates a significant difference between two distributions.
 </p></div></div>
+    </li><li name="smile.math.Operators#cholesky" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="cholesky(A:smile.math.MatrixExpression):smile.math.matrix.CholeskyDecomposition"></a>
+      <a id="cholesky(MatrixExpression):CholeskyDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cholesky</span><span class="params">(<span name="A">A: <a href="MatrixExpression.html" class="extype" name="smile.math.MatrixExpression">MatrixExpression</a></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.CholeskyDecomposition">CholeskyDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@cholesky(A:smile.math.MatrixExpression):smile.math.matrix.CholeskyDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Cholesky decomposition.</p>
+    </li><li name="smile.math.Operators#cholesky" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="cholesky(A:smile.math.matrix.DenseMatrix):smile.math.matrix.CholeskyDecomposition"></a>
+      <a id="cholesky(DenseMatrix):CholeskyDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cholesky</span><span class="params">(<span name="A">A: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.CholeskyDecomposition">CholeskyDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@cholesky(A:smile.math.matrix.DenseMatrix):smile.math.matrix.CholeskyDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Cholesky decomposition.</p>
+    </li><li name="smile.math.Operators#cholesky" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="cholesky(A:Array[Array[Double]]):smile.math.matrix.CholeskyDecomposition"></a>
+      <a id="cholesky(Array[Array[Double]]):CholeskyDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cholesky</span><span class="params">(<span name="A">A: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.CholeskyDecomposition">CholeskyDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@cholesky(A:Array[Array[Double]]):smile.math.matrix.CholeskyDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Cholesky decomposition.</p>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -342,6 +393,57 @@ p-value indicates a significant difference between two distributions.
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="smile.math.Operators#det" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="det(A:smile.math.MatrixExpression):Double"></a>
+      <a id="det(MatrixExpression):Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">det</span><span class="params">(<span name="A">A: <a href="MatrixExpression.html" class="extype" name="smile.math.MatrixExpression">MatrixExpression</a></span>)</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@det(A:smile.math.MatrixExpression):Double" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns the determinant of matrix.</p>
+    </li><li name="smile.math.Operators#det" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="det(A:smile.math.matrix.DenseMatrix):Double"></a>
+      <a id="det(DenseMatrix):Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">det</span><span class="params">(<span name="A">A: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>)</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@det(A:smile.math.matrix.DenseMatrix):Double" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns the determinant of matrix.</p>
+    </li><li name="smile.math.Operators#diag" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="diag(A:smile.math.matrix.Matrix):Array[Double]"></a>
+      <a id="diag(Matrix):Array[Double]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">diag</span><span class="params">(<span name="A">A: <span class="extype" name="smile.math.matrix.Matrix">Matrix</span></span>)</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@diag(A:smile.math.matrix.Matrix):Array[Double]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns the diagonal elements of matrix.</p>
     </li><li name="smile.math.Operators#digamma" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="digamma(x:Double):Double"></a>
       <a id="digamma(Double):Double"></a>
@@ -359,6 +461,74 @@ p-value indicates a significant difference between two distributions.
       </a>
     </span>
       <p class="shortcomment cmt">The digamma function is defined as the logarithmic derivative of the gamma function.</p>
+    </li><li name="smile.math.Operators#eigen" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="eigen(A:smile.math.matrix.DenseMatrix,k:Int):smile.math.matrix.EigenValueDecomposition"></a>
+      <a id="eigen(DenseMatrix,Int):EigenValueDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eigen</span><span class="params">(<span name="A">A: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>, <span name="k">k: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.EigenValueDecomposition">EigenValueDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@eigen(A:smile.math.matrix.DenseMatrix,k:Int):smile.math.matrix.EigenValueDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Eigen decomposition.</p>
+    </li><li name="smile.math.Operators#eigen" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="eigen(A:smile.math.MatrixExpression):smile.math.matrix.EigenValueDecomposition"></a>
+      <a id="eigen(MatrixExpression):EigenValueDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eigen</span><span class="params">(<span name="A">A: <a href="MatrixExpression.html" class="extype" name="smile.math.MatrixExpression">MatrixExpression</a></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.EigenValueDecomposition">EigenValueDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@eigen(A:smile.math.MatrixExpression):smile.math.matrix.EigenValueDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Eigen decomposition.</p>
+    </li><li name="smile.math.Operators#eigen" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="eigen(A:smile.math.matrix.DenseMatrix):smile.math.matrix.EigenValueDecomposition"></a>
+      <a id="eigen(DenseMatrix):EigenValueDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eigen</span><span class="params">(<span name="A">A: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.EigenValueDecomposition">EigenValueDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@eigen(A:smile.math.matrix.DenseMatrix):smile.math.matrix.EigenValueDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Eigen decomposition.</p>
+    </li><li name="smile.math.Operators#eigen" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="eigen(A:Array[Array[Double]]):smile.math.matrix.EigenValueDecomposition"></a>
+      <a id="eigen(Array[Array[Double]]):EigenValueDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eigen</span><span class="params">(<span name="A">A: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.EigenValueDecomposition">EigenValueDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@eigen(A:Array[Array[Double]]):smile.math.matrix.EigenValueDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Eigen decomposition.</p>
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a>
       <a id="ensuring((Operators)⇒Boolean,⇒Any):Operators"></a>
@@ -538,6 +708,40 @@ incomplete gamma function.
 than 1.2 &times; 10<sup>-7</sup>.</sup></p><div class="fullcomment"><div class="comment cmt"><p>The complementary error function with fractional error everywhere less
 than 1.2 &times; 10<sup>-7</sup>. This concise routine is faster than erfc.
 </p></div></div>
+    </li><li name="smile.math.Operators#eye" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="eye(m:Int,n:Int):smile.math.matrix.ColumnMajorMatrix"></a>
+      <a id="eye(Int,Int):ColumnMajorMatrix"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eye</span><span class="params">(<span name="m">m: <span class="extype" name="scala.Int">Int</span></span>, <span name="n">n: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.ColumnMajorMatrix">ColumnMajorMatrix</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@eye(m:Int,n:Int):smile.math.matrix.ColumnMajorMatrix" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns an m-by-n identity matrix.</p>
+    </li><li name="smile.math.Operators#eye" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="eye(n:Int):smile.math.matrix.ColumnMajorMatrix"></a>
+      <a id="eye(Int):ColumnMajorMatrix"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eye</span><span class="params">(<span name="n">n: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.ColumnMajorMatrix">ColumnMajorMatrix</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@eye(n:Int):smile.math.matrix.ColumnMajorMatrix" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns an n-by-n identity matrix.</p>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -656,6 +860,40 @@ different variances.
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="smile.math.Operators#inv" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="inv(A:smile.math.MatrixExpression):smile.math.matrix.DenseMatrix"></a>
+      <a id="inv(MatrixExpression):DenseMatrix"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">inv</span><span class="params">(<span name="A">A: <a href="MatrixExpression.html" class="extype" name="smile.math.MatrixExpression">MatrixExpression</a></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@inv(A:smile.math.MatrixExpression):smile.math.matrix.DenseMatrix" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns the inverse of matrix.</p>
+    </li><li name="smile.math.Operators#inv" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="inv(A:smile.math.matrix.DenseMatrix):smile.math.matrix.DenseMatrix"></a>
+      <a id="inv(DenseMatrix):DenseMatrix"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">inv</span><span class="params">(<span name="A">A: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@inv(A:smile.math.matrix.DenseMatrix):smile.math.matrix.DenseMatrix" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns the inverse of matrix.</p>
     </li><li name="smile.math.Operators#inverf" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="inverf(p:Double):Double"></a>
       <a id="inverf(Double):Double"></a>
@@ -792,6 +1030,91 @@ ascending order.
       </a>
     </span>
       <p class="shortcomment cmt">log of the Gamma function.</p><div class="fullcomment"><div class="comment cmt"><p>log of the Gamma function. Lanczos approximation (6 terms)</p></div></div>
+    </li><li name="smile.math.Operators#lu" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lu(A:smile.math.MatrixExpression):smile.math.matrix.LUDecomposition"></a>
+      <a id="lu(MatrixExpression):LUDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lu</span><span class="params">(<span name="A">A: <a href="MatrixExpression.html" class="extype" name="smile.math.MatrixExpression">MatrixExpression</a></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.LUDecomposition">LUDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@lu(A:smile.math.MatrixExpression):smile.math.matrix.LUDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">LU decomposition.</p>
+    </li><li name="smile.math.Operators#lu" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lu(A:smile.math.matrix.DenseMatrix):smile.math.matrix.LUDecomposition"></a>
+      <a id="lu(DenseMatrix):LUDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lu</span><span class="params">(<span name="A">A: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.LUDecomposition">LUDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@lu(A:smile.math.matrix.DenseMatrix):smile.math.matrix.LUDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">LU decomposition.</p>
+    </li><li name="smile.math.Operators#lu" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lu(A:Array[Array[Double]]):smile.math.matrix.LUDecomposition"></a>
+      <a id="lu(Array[Array[Double]]):LUDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lu</span><span class="params">(<span name="A">A: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.LUDecomposition">LUDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@lu(A:Array[Array[Double]]):smile.math.matrix.LUDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">LU decomposition.</p>
+    </li><li name="smile.math.Operators#matrix2MatrixExpression" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="matrix2MatrixExpression(x:smile.math.matrix.DenseMatrix):smile.math.MatrixLift"></a>
+      <a id="matrix2MatrixExpression(DenseMatrix):MatrixLift"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">matrix2MatrixExpression</span><span class="params">(<span name="x">x: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>)</span><span class="result">: <a href="MatrixLift.html" class="extype" name="smile.math.MatrixLift">MatrixLift</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@matrix2MatrixExpression(x:smile.math.matrix.DenseMatrix):smile.math.MatrixLift" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="smile.math.Operators#matrixExpression2Array" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="matrixExpression2Array(exp:smile.math.MatrixExpression):smile.math.matrix.DenseMatrix"></a>
+      <a id="matrixExpression2Array(MatrixExpression):DenseMatrix"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">matrixExpression2Array</span><span class="params">(<span name="exp">exp: <a href="MatrixExpression.html" class="extype" name="smile.math.MatrixExpression">MatrixExpression</a></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@matrixExpression2Array(exp:smile.math.MatrixExpression):smile.math.matrix.DenseMatrix" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
       <a id="ne(AnyRef):Boolean"></a>
@@ -843,6 +1166,40 @@ ascending order.
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="smile.math.Operators#ones" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ones(m:Int,n:Int):smile.math.matrix.ColumnMajorMatrix"></a>
+      <a id="ones(Int,Int):ColumnMajorMatrix"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ones</span><span class="params">(<span name="m">m: <span class="extype" name="scala.Int">Int</span></span>, <span name="n">n: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.ColumnMajorMatrix">ColumnMajorMatrix</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@ones(m:Int,n:Int):smile.math.matrix.ColumnMajorMatrix" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns an m-by-n matrix of all ones.</p>
+    </li><li name="smile.math.Operators#ones" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ones(n:Int):smile.math.matrix.ColumnMajorMatrix"></a>
+      <a id="ones(Int):ColumnMajorMatrix"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ones</span><span class="params">(<span name="n">n: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.ColumnMajorMatrix">ColumnMajorMatrix</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@ones(n:Int):smile.math.matrix.ColumnMajorMatrix" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns an n-by-n matrix of all ones.</p>
     </li><li name="smile.math.Operators#pearsontest" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="pearsontest(x:Array[Double],y:Array[Double]):smile.stat.hypothesis.CorTest"></a>
       <a id="pearsontest(Array[Double],Array[Double]):CorTest"></a>
@@ -860,6 +1217,176 @@ ascending order.
       </a>
     </span>
       <p class="shortcomment cmt">Pearson correlation coefficient test.</p>
+    </li><li name="smile.math.Operators#pimpArray2D" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="pimpArray2D(data:Array[Array[Double]]):smile.math.PimpedArray2D"></a>
+      <a id="pimpArray2D(Array[Array[Double]]):PimpedArray2D"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">pimpArray2D</span><span class="params">(<span name="data">data: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>)</span><span class="result">: <span class="extype" name="smile.math.PimpedArray2D">PimpedArray2D</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@pimpArray2D(data:Array[Array[Double]]):smile.math.PimpedArray2D" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="smile.math.Operators#pimpDouble" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="pimpDouble(x:Double):smile.math.PimpedDouble"></a>
+      <a id="pimpDouble(Double):PimpedDouble"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">pimpDouble</span><span class="params">(<span name="x">x: <span class="extype" name="scala.Double">Double</span></span>)</span><span class="result">: <span class="extype" name="smile.math.PimpedDouble">PimpedDouble</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@pimpDouble(x:Double):smile.math.PimpedDouble" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="smile.math.Operators#pimpDoubleArray" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="pimpDoubleArray(data:Array[Double]):smile.math.PimpedDoubleArray"></a>
+      <a id="pimpDoubleArray(Array[Double]):PimpedDoubleArray"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">pimpDoubleArray</span><span class="params">(<span name="data">data: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>)</span><span class="result">: <span class="extype" name="smile.math.PimpedDoubleArray">PimpedDoubleArray</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@pimpDoubleArray(data:Array[Double]):smile.math.PimpedDoubleArray" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="smile.math.Operators#pimpIntArray" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="pimpIntArray(data:Array[Int]):smile.math.PimpedArray[Int]"></a>
+      <a id="pimpIntArray(Array[Int]):PimpedArray[Int]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">pimpIntArray</span><span class="params">(<span name="data">data: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>)</span><span class="result">: <span class="extype" name="smile.math.PimpedArray">PimpedArray</span>[<span class="extype" name="scala.Int">Int</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@pimpIntArray(data:Array[Int]):smile.math.PimpedArray[Int]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="smile.math.Operators#pimpMatrix" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="pimpMatrix(matrix:smile.math.matrix.DenseMatrix):smile.math.PimpedMatrix"></a>
+      <a id="pimpMatrix(DenseMatrix):PimpedMatrix"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">pimpMatrix</span><span class="params">(<span name="matrix">matrix: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>)</span><span class="result">: <span class="extype" name="smile.math.PimpedMatrix">PimpedMatrix</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@pimpMatrix(matrix:smile.math.matrix.DenseMatrix):smile.math.PimpedMatrix" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="smile.math.Operators#qr" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="qr(A:smile.math.MatrixExpression):smile.math.matrix.QRDecomposition"></a>
+      <a id="qr(MatrixExpression):QRDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">qr</span><span class="params">(<span name="A">A: <a href="MatrixExpression.html" class="extype" name="smile.math.MatrixExpression">MatrixExpression</a></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.QRDecomposition">QRDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@qr(A:smile.math.MatrixExpression):smile.math.matrix.QRDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">QR decomposition.</p>
+    </li><li name="smile.math.Operators#qr" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="qr(A:smile.math.matrix.DenseMatrix):smile.math.matrix.QRDecomposition"></a>
+      <a id="qr(DenseMatrix):QRDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">qr</span><span class="params">(<span name="A">A: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.QRDecomposition">QRDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@qr(A:smile.math.matrix.DenseMatrix):smile.math.matrix.QRDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">QR decomposition.</p>
+    </li><li name="smile.math.Operators#qr" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="qr(A:Array[Array[Double]]):smile.math.matrix.QRDecomposition"></a>
+      <a id="qr(Array[Array[Double]]):QRDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">qr</span><span class="params">(<span name="A">A: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.QRDecomposition">QRDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@qr(A:Array[Array[Double]]):smile.math.matrix.QRDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">QR decomposition.</p>
+    </li><li name="smile.math.Operators#rank" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="rank(A:smile.math.MatrixExpression):Int"></a>
+      <a id="rank(MatrixExpression):Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rank</span><span class="params">(<span name="A">A: <a href="MatrixExpression.html" class="extype" name="smile.math.MatrixExpression">MatrixExpression</a></span>)</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@rank(A:smile.math.MatrixExpression):Int" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns the rank of matrix.</p>
+    </li><li name="smile.math.Operators#rank" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="rank(A:smile.math.matrix.DenseMatrix):Int"></a>
+      <a id="rank(DenseMatrix):Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rank</span><span class="params">(<span name="A">A: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>)</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@rank(A:smile.math.matrix.DenseMatrix):Int" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns the rank of matrix.</p>
     </li><li name="smile.math.Operators#spearmantest" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="spearmantest(x:Array[Double],y:Array[Double]):smile.stat.hypothesis.CorTest"></a>
       <a id="spearmantest(Array[Double],Array[Double]):CorTest"></a>
@@ -882,6 +1409,74 @@ to rankings (ie. when variables are ordinal). It can be used when there
 is non-parametric data and hence Pearson cannot be used.</p><p>The raw scores are converted to ranks and the differences between
 the ranks of each observation on the two variables are calculated.</p><p>The p-value is calculated by approximation, which is good for n &gt; 10.
 </p></div></div>
+    </li><li name="smile.math.Operators#svd" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="svd(A:smile.math.matrix.DenseMatrix,k:Int):smile.math.matrix.SingularValueDecomposition"></a>
+      <a id="svd(DenseMatrix,Int):SingularValueDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">svd</span><span class="params">(<span name="A">A: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>, <span name="k">k: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.SingularValueDecomposition">SingularValueDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@svd(A:smile.math.matrix.DenseMatrix,k:Int):smile.math.matrix.SingularValueDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">SVD decomposition.</p>
+    </li><li name="smile.math.Operators#svd" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="svd(A:smile.math.MatrixExpression):smile.math.matrix.SingularValueDecomposition"></a>
+      <a id="svd(MatrixExpression):SingularValueDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">svd</span><span class="params">(<span name="A">A: <a href="MatrixExpression.html" class="extype" name="smile.math.MatrixExpression">MatrixExpression</a></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.SingularValueDecomposition">SingularValueDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@svd(A:smile.math.MatrixExpression):smile.math.matrix.SingularValueDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">SVD decomposition.</p>
+    </li><li name="smile.math.Operators#svd" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="svd(A:smile.math.matrix.DenseMatrix):smile.math.matrix.SingularValueDecomposition"></a>
+      <a id="svd(DenseMatrix):SingularValueDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">svd</span><span class="params">(<span name="A">A: <span class="extype" name="smile.math.matrix.DenseMatrix">DenseMatrix</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.SingularValueDecomposition">SingularValueDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@svd(A:smile.math.matrix.DenseMatrix):smile.math.matrix.SingularValueDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">SVD decomposition.</p>
+    </li><li name="smile.math.Operators#svd" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="svd(A:Array[Array[Double]]):smile.math.matrix.SingularValueDecomposition"></a>
+      <a id="svd(Array[Array[Double]]):SingularValueDecomposition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">svd</span><span class="params">(<span name="A">A: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.SingularValueDecomposition">SingularValueDecomposition</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@svd(A:Array[Array[Double]]):smile.math.matrix.SingularValueDecomposition" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">SVD decomposition.</p>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
@@ -916,6 +1511,23 @@ the ranks of each observation on the two variables are calculated.</p><p>The p-v
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="smile.math.Operators#trace" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="trace(A:smile.math.matrix.Matrix):Double"></a>
+      <a id="trace(Matrix):Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">trace</span><span class="params">(<span name="A">A: <span class="extype" name="smile.math.matrix.Matrix">Matrix</span></span>)</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@trace(A:smile.math.matrix.Matrix):Double" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns the trace of matrix.</p>
     </li><li name="smile.math.Operators#ttest" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ttest(x:Array[Double],y:Array[Double]):smile.stat.hypothesis.TTest"></a>
       <a id="ttest(Array[Double],Array[Double]):TTest"></a>
@@ -979,6 +1591,23 @@ values of p-value indicate that the two arrays have significantly
 different means.</p></div><dl class="paramcmts block"><dt class="param">equalVariance</dt><dd class="cmt"><p>true if the data arrays are assumed to be
                      drawn from populations with the same true variance. Otherwise, The data
                      arrays are allowed to be drawn from populations with unequal variances.</p></dd></dl></div>
+    </li><li name="smile.math.Operators#vectorExpression2Array" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="vectorExpression2Array(exp:smile.math.VectorExpression):Array[Double]"></a>
+      <a id="vectorExpression2Array(VectorExpression):Array[Double]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">vectorExpression2Array</span><span class="params">(<span name="exp">exp: <a href="VectorExpression.html" class="extype" name="smile.math.VectorExpression">VectorExpression</a></span>)</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@vectorExpression2Array(exp:smile.math.VectorExpression):Array[Double]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -1048,6 +1677,40 @@ different means.</p></div><dl class="paramcmts block"><dt class="param">equalVar
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="smile.math.Operators#zeros" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="zeros(m:Int,n:Int):smile.math.matrix.ColumnMajorMatrix"></a>
+      <a id="zeros(Int,Int):ColumnMajorMatrix"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">zeros</span><span class="params">(<span name="m">m: <span class="extype" name="scala.Int">Int</span></span>, <span name="n">n: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.ColumnMajorMatrix">ColumnMajorMatrix</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@zeros(m:Int,n:Int):smile.math.matrix.ColumnMajorMatrix" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns an m-by-n zero matrix.</p>
+    </li><li name="smile.math.Operators#zeros" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="zeros(n:Int):smile.math.matrix.ColumnMajorMatrix"></a>
+      <a id="zeros(Int):ColumnMajorMatrix"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">zeros</span><span class="params">(<span name="n">n: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="smile.math.matrix.ColumnMajorMatrix">ColumnMajorMatrix</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.Operators@zeros(n:Int):smile.math.matrix.ColumnMajorMatrix" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns an n-by-n zero matrix.</p>
     </li><li name="scala.Predef.ArrowAssoc#→" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="→[B](y:B):(A,B)"></a>
       <a id="→[B](B):(Operators,B)"></a>

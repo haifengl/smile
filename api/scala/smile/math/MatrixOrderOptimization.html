@@ -1,9 +1,9 @@
 <!DOCTYPE html >
 <html>
         <head>
-          <title>Operators - Smile - Statistical Machine Intelligence and Learning Engine - smile.nlp.Operators</title>
-          <meta name="description" content="Operators - Smile - Statistical Machine Intelligence and Learning Engine - smile.nlp.Operators" />
-          <meta name="keywords" content="Operators Smile Statistical Machine Intelligence and Learning Engine smile.nlp.Operators" />
+          <title>MatrixOrderOptimization - Smile - Statistical Machine Intelligence and Learning Engine - smile.math.MatrixOrderOptimization</title>
+          <meta name="description" content="MatrixOrderOptimization - Smile - Statistical Machine Intelligence and Learning Engine - smile.math.MatrixOrderOptimization" />
+          <meta name="keywords" content="MatrixOrderOptimization Smile Statistical Machine Intelligence and Learning Engine smile.math.MatrixOrderOptimization" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
@@ -16,7 +16,7 @@
       <script type="text/javascript">
          if(top === self) {
             var url = '../../index.html';
-            var hash = 'smile.nlp.Operators';
+            var hash = 'smile.math.MatrixOrderOptimization';
             var anchor = window.location.hash;
             var anchor_opt = '';
             if (anchor.length >= 1)
@@ -28,12 +28,12 @@
         </head>
         <body class="type">
       <div id="definition">
-        <img alt="Trait" src="../../lib/trait_big.png" />
-        <p id="owner"><a href="../package.html" class="extype" name="smile">smile</a>.<a href="package.html" class="extype" name="smile.nlp">nlp</a></p>
-        <h1>Operators</h1><h3><span class="morelinks"><div>Related Doc:
-            <a href="package.html" class="extype" name="smile.nlp">package nlp</a>
+        <img alt="Class" src="../../lib/class_big.png" />
+        <p id="owner"><a href="../package.html" class="extype" name="smile">smile</a>.<a href="package.html" class="extype" name="smile.math">math</a></p>
+        <h1>MatrixOrderOptimization</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="smile.math">package math</a>
           </div></span></h3><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -42,20 +42,21 @@
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">trait</span>
+        <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">Operators</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">MatrixOrderOptimization</span><span class="result"> extends <a href="../util/Logging.html" class="extype" name="smile.util.Logging">Logging</a></span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>High level NLP operators.
-</p></div><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Optimizes the order of matrix multiplication chain.
+Matrix multiplication is associative. However, the complexity of
+matrix multiplication chain is not associative.</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><a href="../util/Logging.html" class="extype" name="smile.util.Logging">Logging</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
                 <span class="toggle diagram-link">Type Hierarchy</span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 146.00 120.00" height="120pt" width="146pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 116)" class="graph" id="graph0"><polygon points="-4,4 -4,-116 142,-116 142,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this trait" id="graph1_0"><g id="a_this trait|graph1_0"><a xlink:title="smile.nlp.Operators (this trait)" xlink:href="#inheritance-diagram"><polygon points="113.25,-50 24.75,-50 24.75,-24 113.25,-24 113.25,-50" stroke="#37657d" fill="#498aad"></polygon><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-34.7495" x="56.8794" text-anchor="start">Operators</text></a></g></g><!-- node1 --><g class="node class" id="graph1_1"><g id="a_class|graph1_1"><a xlink:title="scala.AnyRef"><polygon points="107.25,-112 30.75,-112 30.75,-86 107.25,-86 107.25,-112" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../lib/class_diagram.png" y="-105" x="43" preserveAspectRatio="xMinYMin meet" height="12px" width="12px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-96.7495" x="62.7144" text-anchor="start">AnyRef</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="Operators is a subtype of AnyRef"><path d="M69,-80.6826C69,-70.8961 69,-58.9026 69,-50.1238" stroke="#d4d4d4" fill="none"></path><polygon points="67.2501,-80.8581 69,-85.8581 70.7501,-80.8581 67.2501,-80.8581" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
+                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 210.00 120.00" height="120pt" width="210pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 116)" class="graph" id="graph0"><polygon points="-4,4 -4,-116 206,-116 206,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="smile.math.MatrixOrderOptimization (this class)" xlink:href="#inheritance-diagram"><polygon points="177.25,-50 24.75,-50 24.75,-24 177.25,-24 177.25,-50" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../lib/class_diagram.png" y="-43" x="37" preserveAspectRatio="xMinYMin meet" height="12px" width="12px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-34.7495" x="56.9312" text-anchor="start">MatrixOrderOptimization</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="smile.util.Logging" xlink:href="../util/Logging.html#inheritance-diagram"><polygon points="141,-112 61,-112 61,-86 141,-86 141,-112" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../lib/trait_diagram.png" y="-105" x="73" preserveAspectRatio="xMinYMin meet" height="12px" width="12px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-96.7495" x="92.8154" text-anchor="start">Logging</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="MatrixOrderOptimization is a subtype of Logging"><path d="M101,-80.6826C101,-70.8961 101,-58.9026 101,-50.1238" stroke="#d4d4d4" fill="none"></path><polygon points="99.2501,-80.8581 101,-85.8581 102.75,-80.8581 99.2501,-80.8581" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
               </div></div>
         
 
@@ -73,7 +74,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="smile.nlp.Operators"><span>Operators</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="smile.math.MatrixOrderOptimization"><span>MatrixOrderOptimization</span></li><li class="in" name="smile.util.Logging"><span>Logging</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
                 <span class="filtertype">Implicitly<br />
@@ -95,7 +96,27 @@
 
       <div id="template">
         <div id="allMembers">
-        
+        <div id="constructors" class="members">
+              <h3>Instance Constructors</h3>
+              <ol><li name="smile.math.MatrixOrderOptimization#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="&lt;init&gt;(dims:Array[Int]):smile.math.MatrixOrderOptimization"></a>
+      <a id="&lt;init&gt;:MatrixOrderOptimization"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">new</span>
+      </span>
+      <span class="symbol">
+        <span class="name">MatrixOrderOptimization</span><span class="params">(<span name="dims">dims: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@&lt;init&gt;(dims:Array[Int]):smile.math.MatrixOrderOptimization" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">dims</dt><dd class="cmt"><p>Matrix A[i] has dimension dims[i-1] x dims[i] for i = 1..n</p></dd></dl></div>
+    </li></ol>
+            </div>
 
         
 
@@ -115,7 +136,7 @@
         <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@!=(x$1:Any):Boolean" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -132,7 +153,7 @@
         <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@##():Int" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@##():Int" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -149,34 +170,34 @@
         <span title="gt4s: $plus" class="implicit">+</span><span class="params">(<span name="other">other: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@+(other:String):String" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@+(other:String):String" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="smile.nlp.Operators">Operators</a> to
-            <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="smile.nlp.Operators">Operators</a>] performed by method any2stringadd in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a> to
+            <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>] performed by method any2stringadd in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>any2stringadd</dd></dl></div>
     </li><li name="scala.Predef.ArrowAssoc#-&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="-&gt;[B](y:B):(A,B)"></a>
-      <a id="-&gt;[B](B):(Operators,B)"></a>
+      <a id="-&gt;[B](B):(MatrixOrderOptimization,B)"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $minus$greater" class="implicit">-&gt;</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="smile.nlp.Operators">Operators</a>, <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span>)</span>
+        <span title="gt4s: $minus$greater" class="implicit">-&gt;</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>, <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span>)</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@-&gt;[B](y:B):(A,B)" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@-&gt;[B](y:B):(A,B)" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="smile.nlp.Operators">Operators</a> to
-            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="smile.nlp.Operators">Operators</a>] performed by method ArrowAssoc in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a> to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>] performed by method ArrowAssoc in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd><dt>Annotations</dt><dd>
                 <span class="name">@inline</span><span class="args">()</span>
@@ -194,7 +215,7 @@
         <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@==(x$1:Any):Boolean" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@==(x$1:Any):Boolean" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -211,59 +232,11 @@
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@asInstanceOf[T0]:T0" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="smile.nlp.Operators#bigram" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="bigram(p:Double,minFreq:Int,text:String*):Array[smile.nlp.collocation.BigramCollocation]"></a>
-      <a id="bigram(Double,Int,String*):Array[BigramCollocation]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">bigram</span><span class="params">(<span name="p">p: <span class="extype" name="scala.Double">Double</span></span>, <span name="minFreq">minFreq: <span class="extype" name="scala.Int">Int</span></span>, <span name="text">text: <span class="extype" name="scala.Predef.String">String</span>*</span>)</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.nlp.collocation.BigramCollocation">BigramCollocation</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@bigram(p:Double,minFreq:Int,text:String*):Array[smile.nlp.collocation.BigramCollocation]" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Identify bigram collocations whose p-value is less than
-the given threshold.</p><div class="fullcomment"><div class="comment cmt"><p>Identify bigram collocations whose p-value is less than
-the given threshold.
-</p></div><dl class="paramcmts block"><dt class="param">p</dt><dd class="cmt"><p>the p-value threshold</p></dd><dt class="param">minFreq</dt><dd class="cmt"><p>the minimum frequency of collocation.</p></dd><dt class="param">text</dt><dd class="cmt"><p>input text.</p></dd><dt>returns</dt><dd class="cmt"><p>significant bigram collocations in descending order
-        of likelihood ratio.</p></dd></dl></div>
-    </li><li name="smile.nlp.Operators#bigram" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="bigram(k:Int,minFreq:Int,text:String*):Array[smile.nlp.collocation.BigramCollocation]"></a>
-      <a id="bigram(Int,Int,String*):Array[BigramCollocation]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">bigram</span><span class="params">(<span name="k">k: <span class="extype" name="scala.Int">Int</span></span>, <span name="minFreq">minFreq: <span class="extype" name="scala.Int">Int</span></span>, <span name="text">text: <span class="extype" name="scala.Predef.String">String</span>*</span>)</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.nlp.collocation.BigramCollocation">BigramCollocation</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@bigram(k:Int,minFreq:Int,text:String*):Array[smile.nlp.collocation.BigramCollocation]" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Identify bigram collocations (words that often appear consecutively) within
-corpora.</p><div class="fullcomment"><div class="comment cmt"><p>Identify bigram collocations (words that often appear consecutively) within
-corpora. They may also be used to find other associations between word
-occurrences.</p><p>Finding collocations requires first calculating the frequencies of words
-and their appearance in the context of other words. Often the collection
-of words will then requiring filtering to only retain useful content terms.
-Each ngram of words may then be scored according to some association measure,
-in order to determine the relative likelihood of each ngram being a
-collocation.
-</p></div><dl class="paramcmts block"><dt class="param">k</dt><dd class="cmt"><p>finds top k bigram.</p></dd><dt class="param">minFreq</dt><dd class="cmt"><p>the minimum frequency of collocation.</p></dd><dt class="param">text</dt><dd class="cmt"><p>input text.</p></dd><dt>returns</dt><dd class="cmt"><p>significant bigram collocations in descending order
-        of likelihood ratio.</p></dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -276,7 +249,7 @@ collocation.
         <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@clone():Object" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@clone():Object" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -287,106 +260,88 @@ collocation.
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="smile.nlp.Operators#corpus" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="corpus(text:Seq[String]):smile.nlp.SimpleCorpus"></a>
-      <a id="corpus(Seq[String]):SimpleCorpus"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">corpus</span><span class="params">(<span name="text">text: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="smile.nlp.SimpleCorpus">SimpleCorpus</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@corpus(text:Seq[String]):smile.nlp.SimpleCorpus" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Creates an in-memory text corpus.</p><div class="fullcomment"><div class="comment cmt"><p>Creates an in-memory text corpus.
-</p></div><dl class="paramcmts block"><dt class="param">text</dt><dd class="cmt"><p>a set of text.</p></dd></dl></div>
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a>
-      <a id="ensuring((Operators)⇒Boolean,⇒Any):Operators"></a>
+      <a id="ensuring((MatrixOrderOptimization)⇒Boolean,⇒Any):MatrixOrderOptimization"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="smile.nlp.Operators">Operators</a>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>, <span name="msg">msg: ⇒ <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <a href="" class="extype" name="smile.nlp.Operators">Operators</a></span>
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>, <span name="msg">msg: ⇒ <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="smile.nlp.Operators">Operators</a> to
-            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="smile.nlp.Operators">Operators</a>] performed by method Ensuring in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>] performed by method Ensuring in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:A=&gt;Boolean):A"></a>
-      <a id="ensuring((Operators)⇒Boolean):Operators"></a>
+      <a id="ensuring((MatrixOrderOptimization)⇒Boolean):MatrixOrderOptimization"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="smile.nlp.Operators">Operators</a>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <a href="" class="extype" name="smile.nlp.Operators">Operators</a></span>
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@ensuring(cond:A=&gt;Boolean):A" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@ensuring(cond:A=&gt;Boolean):A" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="smile.nlp.Operators">Operators</a> to
-            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="smile.nlp.Operators">Operators</a>] performed by method Ensuring in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>] performed by method Ensuring in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:Boolean,msg:=&gt;Any):A"></a>
-      <a id="ensuring(Boolean,⇒Any):Operators"></a>
+      <a id="ensuring(Boolean,⇒Any):MatrixOrderOptimization"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <span class="extype" name="scala.Boolean">Boolean</span></span>, <span name="msg">msg: ⇒ <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <a href="" class="extype" name="smile.nlp.Operators">Operators</a></span>
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <span class="extype" name="scala.Boolean">Boolean</span></span>, <span name="msg">msg: ⇒ <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@ensuring(cond:Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@ensuring(cond:Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="smile.nlp.Operators">Operators</a> to
-            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="smile.nlp.Operators">Operators</a>] performed by method Ensuring in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>] performed by method Ensuring in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:Boolean):A"></a>
-      <a id="ensuring(Boolean):Operators"></a>
+      <a id="ensuring(Boolean):MatrixOrderOptimization"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <a href="" class="extype" name="smile.nlp.Operators">Operators</a></span>
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@ensuring(cond:Boolean):A" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@ensuring(cond:Boolean):A" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="smile.nlp.Operators">Operators</a> to
-            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="smile.nlp.Operators">Operators</a>] performed by method Ensuring in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>] performed by method Ensuring in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -401,7 +356,7 @@ collocation.
         <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -418,7 +373,7 @@ collocation.
         <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@equals(x$1:Any):Boolean" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -435,7 +390,7 @@ collocation.
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@finalize():Unit" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@finalize():Unit" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -458,13 +413,13 @@ collocation.
         <span class="implicit">formatted</span><span class="params">(<span name="fmtstr">fmtstr: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@formatted(fmtstr:String):String" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@formatted(fmtstr:String):String" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="smile.nlp.Operators">Operators</a> to
-            <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="smile.nlp.Operators">Operators</a>] performed by method StringFormat in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a> to
+            <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>] performed by method StringFormat in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>StringFormat</dd><dt>Annotations</dt><dd>
                 <span class="name">@inline</span><span class="args">()</span>
@@ -482,7 +437,7 @@ collocation.
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@getClass():Class[_]" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@getClass():Class[_]" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -499,7 +454,7 @@ collocation.
         <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@hashCode():Int" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@hashCode():Int" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -516,11 +471,62 @@ collocation.
         <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="smile.util.Logging#logger" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="logger:org.slf4j.Logger"></a>
+      <a id="logger:Logger"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">logger</span><span class="result">: <span class="extype" name="org.slf4j.Logger">Logger</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@logger:org.slf4j.Logger" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../util/Logging.html" class="extype" name="smile.util.Logging">Logging</a></dd></dl></div>
+    </li><li name="smile.math.MatrixOrderOptimization#m" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="m:Array[Array[Int]]"></a>
+      <a id="m:Array[Array[Int]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">m</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@m:Array[Array[Int]]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="smile.math.MatrixOrderOptimization#n" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="n:Int"></a>
+      <a id="n:Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">n</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@n:Int" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
       <a id="ne(AnyRef):Boolean"></a>
@@ -533,29 +539,11 @@ collocation.
         <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="smile.nlp.Operators#ngram" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ngram(maxNGramSize:Int,minFreq:Int,text:String*):Seq[Seq[smile.nlp.NGram]]"></a>
-      <a id="ngram(Int,Int,String*):Seq[Seq[NGram]]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">ngram</span><span class="params">(<span name="maxNGramSize">maxNGramSize: <span class="extype" name="scala.Int">Int</span></span>, <span name="minFreq">minFreq: <span class="extype" name="scala.Int">Int</span></span>, <span name="text">text: <span class="extype" name="scala.Predef.String">String</span>*</span>)</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="smile.nlp.NGram">NGram</span>]]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@ngram(maxNGramSize:Int,minFreq:Int,text:String*):Seq[Seq[smile.nlp.NGram]]" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">An Apiori-like algorithm to extract n-gram phrases.</p><div class="fullcomment"><div class="comment cmt"><p>An Apiori-like algorithm to extract n-gram phrases.
-</p></div><dl class="paramcmts block"><dt class="param">maxNGramSize</dt><dd class="cmt"><p>The maximum length of n-gram</p></dd><dt class="param">minFreq</dt><dd class="cmt"><p>The minimum frequency of n-gram in the sentences.</p></dd><dt class="param">text</dt><dd class="cmt"><p>input text.</p></dd><dt>returns</dt><dd class="cmt"><p>An array of sets of n-grams. The i-th entry is the set of i-grams.</p></dd></dl></div>
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <a id="notify():Unit"></a>
@@ -568,7 +556,7 @@ collocation.
         <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@notify():Unit" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@notify():Unit" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -585,29 +573,28 @@ collocation.
         <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@notifyAll():Unit" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@notifyAll():Unit" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="smile.nlp.Operators#postag" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="postag(sentence:String):Array[smile.nlp.pos.PennTreebankPOS]"></a>
-      <a id="postag(String):Array[PennTreebankPOS]"></a>
+    </li><li name="smile.math.MatrixOrderOptimization#s" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="s:Array[Array[Int]]"></a>
+      <a id="s:Array[Array[Int]]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">def</span>
+        <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">postag</span><span class="params">(<span name="sentence">sentence: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="smile.nlp.pos.PennTreebankPOS">PennTreebankPOS</span>]</span>
+        <span class="name">s</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@postag(sentence:String):Array[smile.nlp.pos.PennTreebankPOS]" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@s:Array[Array[Int]]" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Part-of-speech taggers.</p><div class="fullcomment"><div class="comment cmt"><p>Part-of-speech taggers.
-</p></div><dl class="paramcmts block"><dt class="param">sentence</dt><dd class="cmt"><p>a sentence.</p></dd><dt>returns</dt><dd class="cmt"><p>the pos tags.</p></dd></dl></div>
+      
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
@@ -620,12 +607,12 @@ collocation.
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="smile.math.MatrixOrderOptimization#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <a id="toString():String"></a>
       <h4 class="signature">
@@ -634,14 +621,14 @@ collocation.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@toString():String" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@toString():String" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a> → AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -654,7 +641,7 @@ collocation.
         <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@wait():Unit" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@wait():Unit" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -677,7 +664,7 @@ collocation.
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -700,7 +687,7 @@ collocation.
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@wait(x$1:Long):Unit" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@wait(x$1:Long):Unit" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -713,23 +700,23 @@ collocation.
         </dd></dl></div>
     </li><li name="scala.Predef.ArrowAssoc#→" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="→[B](y:B):(A,B)"></a>
-      <a id="→[B](B):(Operators,B)"></a>
+      <a id="→[B](B):(MatrixOrderOptimization,B)"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $u2192" class="implicit">→</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="smile.nlp.Operators">Operators</a>, <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span>)</span>
+        <span title="gt4s: $u2192" class="implicit">→</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>, <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span>)</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#smile.nlp.Operators@→[B](y:B):(A,B)" title="Permalink" target="_top">
+      <a href="../../index.html#smile.math.MatrixOrderOptimization@→[B](y:B):(A,B)" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="smile.nlp.Operators">Operators</a> to
-            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="smile.nlp.Operators">Operators</a>] performed by method ArrowAssoc in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a> to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>] performed by method ArrowAssoc in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd></dl></div>
     </li></ol>
@@ -741,26 +728,28 @@ collocation.
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.AnyRef">
+        <div class="parent" name="smile.util.Logging">
+              <h3>Inherited from <a href="../util/Logging.html" class="extype" name="smile.util.Logging">Logging</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
             </div>
         <div class="conversion" name="scala.Predef.any2stringadd">
               <h3>Inherited by implicit conversion any2stringadd from
-                <a href="" class="extype" name="smile.nlp.Operators">Operators</a> to <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="smile.nlp.Operators">Operators</a>]
+                <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a> to <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>]
               </h3>
             </div><div class="conversion" name="scala.Predef.StringFormat">
               <h3>Inherited by implicit conversion StringFormat from
-                <a href="" class="extype" name="smile.nlp.Operators">Operators</a> to <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="smile.nlp.Operators">Operators</a>]
+                <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a> to <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>]
               </h3>
             </div><div class="conversion" name="scala.Predef.Ensuring">
               <h3>Inherited by implicit conversion Ensuring from
-                <a href="" class="extype" name="smile.nlp.Operators">Operators</a> to <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="smile.nlp.Operators">Operators</a>]
+                <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a> to <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>]
               </h3>
             </div><div class="conversion" name="scala.Predef.ArrowAssoc">
               <h3>Inherited by implicit conversion ArrowAssoc from
-                <a href="" class="extype" name="smile.nlp.Operators">Operators</a> to <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="smile.nlp.Operators">Operators</a>]
+                <a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a> to <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="smile.math.MatrixOrderOptimization">MatrixOrderOptimization</a>]
               </h3>
             </div>
         </div>
