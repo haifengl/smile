@@ -172,7 +172,7 @@ public class PCATest {
         pca.setProjection(4);
         assertTrue(Math.equals(prop, pca.getVarianceProportion(), 1E-7));
         assertTrue(Math.equals(cumprop, pca.getCumulativeVarianceProportion(), 1E-7));
-        assertTrue(Math.equals(loadings, pca.getLoadings(), 1E-7));
+        assertTrue(Math.equals(loadings, pca.getLoadings().array(), 1E-7));
         assertTrue(Math.equals(points, pca.project(USArrests), 1E-7));
     }
 
@@ -247,7 +247,7 @@ public class PCATest {
         pca.setProjection(4);
         assertTrue(Math.equals(prop, pca.getVarianceProportion(), 1E-7));
         assertTrue(Math.equals(cumprop, pca.getCumulativeVarianceProportion(), 1E-7));
-        assertTrue(Math.equals(loadings, pca.getLoadings(), 1E-7));
+        assertTrue(Math.equals(loadings, pca.getLoadings().array(), 1E-7));
         assertTrue(Math.equals(points, pca.project(USArrests), 1E-7));
     }
 }

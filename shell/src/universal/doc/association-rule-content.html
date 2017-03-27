@@ -1,0 +1,228 @@
+<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+        <div id="search">
+            <script>
+                (function() {
+                    var cx = '010264411143030149390:ajvee_ckdzs';
+                    var gcse = document.createElement('script');
+                    gcse.type = 'text/javascript';
+                    gcse.async = true;
+                    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                            '//cse.google.com/cse.js?cx=' + cx;
+                    var s = document.getElementsByTagName('script')[0];
+                    s.parentNode.insertBefore(gcse, s);
+                })();
+            </script>
+            <gcse:searchbox-only></gcse:searchbox-only>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="association-rule-top" class="title">Association Rule Mining</h1>
+
+    <p>Association rule learning is a popular and well researched method for
+        discovering interesting relations between variables in large databases.
+        Let I = {i<sub>1</sub>, i<sub>2</sub>,..., i<sub>n</sub>} be a set of n
+        binary attributes called items. Let D = {t<sub>1</sub>, t<sub>2</sub>,..., t<sub>m</sub>}
+        be a set of transactions called the database. Each transaction in D has a
+        unique transaction ID and contains a subset of the items in I.
+        An association rule is defined as an implication of the form X &rArr; Y
+        where X, Y &sube; I and X &cap; Y = &Oslash;. The item sets X and Y are called
+        antecedent (left-hand-side or LHS) and consequent (right-hand-side or RHS)
+        of the rule, respectively. The support supp(X) of an item set X is defined as
+        the proportion of transactions in the database which contain the item set.
+        Note that the support of an association rule X &rArr; Y is supp(X &cup; Y).
+        The confidence of a rule is defined conf(X &rArr; Y) = supp(X &cup; Y) / supp(X).
+        Confidence can be interpreted as an estimate of the probability P(Y | X),
+        the probability of finding the RHS of the rule in transactions under the
+        condition that these transactions also contain the LHS.</p>
+
+    <p>For example, the rule {onions, potatoes} &rArr; {burger} found in the sales
+        data of a supermarket would indicate that if a customer buys onions and
+        potatoes together, he or she is likely to also buy burger. Such information
+        can be used as the basis for decisions about marketing activities such as
+        promotional pricing or product placements.</p>
+
+    <p>Association rules are usually required to satisfy a user-specified minimum
+        support and a user-specified minimum confidence at the same time. Association
+        rule generation is usually split up into two separate steps:</p>
+
+    <ul>
+        <li>First, minimum support is applied to find all frequent item sets
+            in a database (i.e. frequent item set mining).
+
+        <li> Second, these frequent item sets and the minimum confidence constraint
+        are used to form rules.
+    </ul>
+
+    <h2 id="fim">Frequent Itemset Mining</h2>
+
+    <p>Finding all frequent item sets in a database is difficult since it involves
+        searching all possible item sets (item combinations). The set of possible
+        item sets is the power set over I (the set of items) and has size 2<sup>n</sup> - 1
+        (excluding the empty set which is not a valid item set). Although the size
+        of the power set grows exponentially in the number of items n in I, efficient
+        search is possible using the downward-closure property of support
+        (also called anti-monotonicity) which guarantees that for a frequent item set
+        also all its subsets are frequent and thus for an infrequent item set, all
+        its supersets must be infrequent.</p>
+
+    <p>In practice, we may only consider the frequent item set that has the maximum
+        number of items bypassing all the sub item sets. An item set is maximal
+        frequent if none of its immediate supersets is frequent.</p>
+
+    <p>For a maximal frequent item set, even though we know that all the sub item
+        sets are frequent, we don't know the actual support of those sub item sets,
+        which are very important to find the association rules within the item sets.
+        If the final goal is association rule mining, we would like to discover
+        closed frequent item sets. An item set is closed if none of its immediate
+        supersets has the same support as the item set.</p>
+
+    <p>Some well known algorithms of frequent item set mining are Apriori,
+        Eclat and FP-Growth. Apriori is the best-known algorithm to mine association
+        rules. It uses a breadth-first search strategy to counting the support of
+        item sets and uses a candidate generation function which exploits the downward
+        closure property of support. Eclat is a depth-first search algorithm using
+        set intersection.</p>
+
+    <p>FP-growth (frequent pattern growth) algorithm employs an extended prefix-tree (FP-tree) structure to
+        store the database in a compressed form. The FP-growth algorithm is
+        currently one of the fastest approaches to discover frequent item sets.
+        FP-growth adopts a divide-and-conquer approach to decompose both the mining
+        tasks and the databases. It uses a pattern fragment growth method to avoid
+        the costly process of candidate generation and testing used by Apriori.</p>
+
+    <p>The basic idea of the FP-growth algorithm can be described as a
+        recursive elimination scheme: in a preprocessing step delete
+        all items from the transactions that are not frequent individually,
+        i.e., do not appear in a user-specified minimum
+        number of transactions. Then select all transactions that
+        contain the least frequent item (least frequent among those
+        that are frequent) and delete this item from them. Recurse
+        to process the obtained reduced (also known as projected)
+        database, remembering that the item sets found in the recursion
+        share the deleted item as a prefix. On return, remove
+        the processed item from the database of all transactions
+        and start over, i.e., process the second frequent item etc. In
+        these processing steps the prefix tree, which is enhanced by
+        links between the branches, is exploited to quickly find the
+        transactions containing a given item and also to remove this
+        item from the transactions after it has been processed.</p>
+
+    <p>When the input itemsets are already in memory, the below methods can be used.
+        The parameter <code>itemsets</code> is the item set database,
+        where each row is a item set, which may have different length.
+        The item identifiers have to be in [0, n), where n is the number of items.
+        Item set should NOT contain duplicated items. Note that it is reordered after the call.
+        The parameter <code>minSupport</code> is the required minimum support of item sets in terms
+        of frequency. The return can be the list of frequent item sets. Often the output
+        is too big to be stored in memory. In that case, the user may provide
+        a <code>PrintStream</code> or file path to save the output. The return number is
+        the number of discovered frequent item sets.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def fpgrowth(itemsets: Array[Array[Int]], minSupport: Int): Buffer[ItemSet]
+    def fpgrowth(itemsets: Array[Array[Int]], minSupport: Int, output: PrintStream): Long
+    def fpgrowth(itemsets: Array[Array[Int]], minSupport: Int, output: String): Long
+    </code></pre>
+
+    <p>In practice, even the raw input is often too big to fit into the memory. To conquer this
+        challenge, the below methods scan the input file twice.
+        We first scan the database to obtains the frequency of
+        single items. Then we scan the data again to construct the FP-Tree, which
+        is a compressed form of data.
+        In this way, we don't need load the whole database into the main memory.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def fpgrowth(file: String, minSupport: Int, output: PrintStream): Long
+    def fpgrowth(file: String, minSupport: Int, output: String): Long
+    </code></pre>
+
+    <p>In the below example, we apply FP-Growth to a toy data.</p>
+    <pre class="prettyprint lang-scala"><code>
+    val itemsets = Array(
+        Array(1, 3),
+        Array(2),
+        Array(4),
+        Array(2, 3, 4),
+        Array(2, 3),
+        Array(2, 3),
+        Array(1, 2, 3, 4),
+        Array(1, 3),
+        Array(1, 2, 3),
+        Array(1, 2, 3)
+    )
+
+    fpgrowth(itemsets, 3, System.out)
+    </code></pre>
+
+    <p>The output will look like</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    3 (8)
+    4 (3)
+    1 (5)
+    2 (7)
+    2 1 (3)
+    3 2 1 (3)
+    3 1 (5)
+    3 2 (6)
+    </code></pre>
+
+    <p>Each row is a frequent item set, ending with the frequency in parenthesis.
+        The sample data directory <code>data/transaction</code> contains a couple of
+        large benchmark datasets.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    fpgrowth("data/transaction/kosarak.dat", 1000, System.out)
+    </code></pre>
+
+    <p>The data <code>kosarak.data</code> has 990,002 transactions.
+        With minimum support 1000, our implementation generates 711,424
+        frequent item sets in about 30 seconds on a modern laptop.</p>
+
+    <h2 id="arm">Association Rules</h2>
+
+    <p>After mining frequent itemsets, it is straightforward to
+        form association rules that meet minimum confidence constraint.
+        Our implementation generates association rules in a storage efficient way
+        by employing the total support tree that is a kind of compressed set enumeration tree.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def arm(itemsets: Array[Array[Int]], minSupport: Int, confidence: Double): Buffer[AssociationRule]
+    def arm(itemsets: Array[Array[Int]], minSupport: Int, confidence: Double, output: PrintStream): Long
+    def arm(itemsets: Array[Array[Int]], minSupport: Int, confidence: Double, output: String): Long
+    def arm(file: String, minSupport: Int, confidence: Double, output: PrintStream): Long
+    def arm(file: String, minSupport: Int, confidence: Double, output: String): Long
+    </code></pre>
+
+    <p>The API is similar to <code>fpgrowth</code> except the additional parameter <code>confidence</code>.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile> arm(itemsets, 3, 0.6, System.out)
+    (3) => (2)	support = 60.00%	confidence = 75.00%
+    (2) => (3)	support = 60.00%	confidence = 85.71%
+    (3) => (1)	support = 50.00%	confidence = 62.50%
+    (1) => (3)	support = 50.00%	confidence = 100.00%
+    (1) => (2)	support = 30.00%	confidence = 60.00%
+    (3, 1) => (2)	support = 30.00%	confidence = 60.00%
+    (2, 1) => (3)	support = 30.00%	confidence = 100.00%
+    (1) => (3, 2)	support = 30.00%	confidence = 60.00%
+    </code></pre>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="vector-quantization.html" title="Previous Section: Vector Quantization"><span>Vector Quantization</span></a>
+        <a class="btn-next-text" href="mds.html" title="Next Section: Multi-Dimensional Scaling"><span>Multi-Dimensional Scaling</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

@@ -1,0 +1,473 @@
+<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+        <div id="search">
+            <script>
+                (function() {
+                    var cx = '010264411143030149390:ajvee_ckdzs';
+                    var gcse = document.createElement('script');
+                    gcse.type = 'text/javascript';
+                    gcse.async = true;
+                    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                            '//cse.google.com/cse.js?cx=' + cx;
+                    var s = document.getElementsByTagName('script')[0];
+                    s.parentNode.insertBefore(gcse, s);
+                })();
+            </script>
+            <gcse:searchbox-only></gcse:searchbox-only>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+
+    <h1 id="visualization-top" class="title">Visualization</h1>
+
+    <p>A picture is worth a thousand words. In machine learning, we usually handle
+        high-dimensional data, which is impossible to draw on display directly. But
+        a variety of statistical plots are tremendously valuable for us to grasp
+        the characteristics of many data points. Smile provides data visualization tools
+        such as plots and maps for researchers to understand information more easily and quickly.</p>
+
+    <h2 id="scatter" class="title">Scatter Plot</h2>
+
+    <p>A scatter plot displays data as a collection of points. The points can be color-coded,
+        which is very useful for classification tasks.
+        The user can use <code>plot</code> functions to draw scatter plot easily.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def plot(data: Array[Array[Double]], legend: Char = '*', color: Color = Color.BLACK): Window
+
+    def plot(data: Array[Array[Double]], labels: Array[String]): Window
+
+    def plot(data: Array[Array[Double]], label: Array[Int], legend: Char, palette: Array[Color]): Window
+
+    def plot(data: Array[Array[Double]], label: Array[Int], legend: Array[Char], palette: Array[Color]): Window
+    </code></pre>
+
+    <p>The legends are as follows.</p>
+    <ul>
+        <li> <code>.</code> : dot
+        <li> <code>+</code> : +
+        <li> <code>-</code> : -
+        <li> <code>|</code> : |
+        <li> <code>*</code> : star
+        <li> <code>x</code> : x
+        <li> <code>o</code> : circle
+        <li> <code>O</code> : large circle
+        <li> <code>@</code> : solid circle
+        <li> <code>#</code> : large solid circle
+        <li> <code>s</code> : square
+        <li> <code>S</code> : large square
+        <li> <code>q</code> : solid square
+        <li> <code>Q</code> : large solid square
+    </ul>
+    <p>For any other char, the data point will be drawn as a dot.</p>
+
+    <p>The functions return a Window object consisting of
+        a JFrame and a PlotCanvas. The PlotCanvas object can be used to control the plot programmatically.
+        The user can also use the popup context menu by right mouse click to print, change the title, axis labels,
+        and font, etc.</p>
+
+    <p>For both 2D and 3D plot, the user can zoom in/out by mouse wheel. For 2D plot,
+        the user can shift the coordinates by moving mouse after double click. The
+        user can also select an area by mouse for detailed view. For 3D plot, the user
+        can rotate the view by dragging mouse.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val iris = read.arff("data/weka/iris.arff", 4)
+    val (x, y) = iris.unzipInt
+    val x2 = x.map(_.slice(0,2)) // take first two columns
+    val window = plot(x2, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
+    window.canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,2): _*)
+    </code></pre>
+
+    <p>In this example, we plot the first two columns of Iris data. We use the class
+        label for legend and color coding.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris2d.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Iris 2D Scatter Plot</div>
+    </div>
+
+    <p>It is also easy to draw a 3D plot.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val x3 = x.map(_.slice(0,3)) // take first three columns
+    val window = plot(x3, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
+    window.canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,3): _*)
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris3d.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Iris 3D Scatter Plot</div>
+    </div>
+
+    <p>However, the Iris data has four attributes. So even 3D plot is not sufficient to see the
+        whole picture. A general practice is plot all the attribute pairs. For example,</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    plot(iris, '*', Array(Color.RED, Color.BLUE, Color.CYAN))
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Iris Plot of All Attribute Pairs</div>
+    </div>
+
+    <h2 id="line" class="title">Line Chart</h2>
+
+    <p>A line chart connects points by straight lines.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, legend: Char = ' '): Window
+    </code></pre>
+
+    <p>Let's draw a heart with it!</p>
+    <pre class="prettyprint lang-scala"><code>
+    val heart = -PI to PI by 0.1 map { t =>
+      val x = 16 * pow(sin(t), 3)
+      val y = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t)
+      Array(x, y)
+    }
+    line(heart.toArray, color = Color.RED)
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/heart.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="box" class="title">Box Plot</h2>
+
+    <p>The box plot is a standardized way of displaying the distribution of data
+        based on the five number summary: minimum, first quartile, median,
+        third quartile, and maximum.</p>
+
+    <p>Box plots can be useful to display differences between populations without
+        making any assumptions of the underlying statistical distribution: they are
+        non-parametric. The spacings between the different parts of the box help
+        indicate the degree of dispersion (spread) and skewness in the data, and
+        identify outliers.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def boxplot(data: Array[Double]*): Window
+    def boxplot(data: Array[Array[Double]], labels: Array[String]): Window
+    </code></pre>
+
+    <p>Note that the parameter <code>data</code> is a matrix of which each row to
+        create a box plot.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val iris = read.arff("data/weka/iris.arff", 4)
+    val (x, y) = iris.unzipInt
+    val groups = (x.map(_(0)) zip y.map("class %d" format _)).groupBy(_._2)
+    val labels = groups.keys.toArray
+    val data = groups.values.map { a => a.map(_._1) }.toArray
+    val window = boxplot(data, labels)
+    window.canvas.setAxisLabels("", iris.attributes()(0).getName)
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris-boxplot.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="historgram" class="title">Histogram</h2>
+
+    <p>A histogram is a graphical representation of the distribution of numerical data.
+        The range of values is divided into a series of consecutive, non-overlapping intervals/bins.
+        The bins must be adjacent, and are usually equal size.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def hist(data: Array[Double]): Window
+    def hist(data: Array[Double], k: Int): Window
+    def hist(data: Array[Double], breaks: Array[Double]): Window
+    </code></pre>
+
+    <p>where <code>k</code> is the number of bins (10 by default), or you can
+        also specify an array of the breakpoints between bins.</p>
+
+    <p>Let's apply the histogram to an interesting data: the wisdom of crowds.
+        The original experiment took place about a hundred years ago at a county fair in England.
+        The fair had a guess the weight of the ox contest. Francis Galton calculated the average
+        of all guesses, which is right to within one pound.</p>
+
+    <p>Recently, NPR Planet Money ran the experiment again. NPR posted a couple of pictures of a cow
+        (named Penelope) and asked people to guess her weight. They got over 17,000 responses. The average
+        of guesses was 1,287 pounds, which is pretty close to Penelope's weight 1,355 pounds. </p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val cow = read.table("data/npr/cow.txt").unzip.map(_(0))
+    val window = hist(cow, 50)
+    window.canvas.setAxisLabels("Weight", "Probability")
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/penelope.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>The histogram gives a rough sense of the distribution of crowd guess, which has a long tail.
+        Filter out the weights over 3500 pounds, the histogram shows more details.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val window = hist(cow.filter(_ <= 3500), 50)
+    window.canvas.setAxisLabels("Weight", "Probability")
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/penelope3500.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>Smile also supports histograms that display the distribution of 2-dimensional data.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def hist(data: Array[Array[Double]]): Window
+    def hist(data: Array[Array[Double]], k: Int): Window
+    def hist(data: Array[Array[Double]], xbins: Int, ybins: Int): Window
+    </code></pre>
+
+    <p>Here we generate a data set from a 2-dimensional Gaussian distribution.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val gauss = new MultivariateGaussianDistribution(Array(0.0, 0.0), Array(Array(1.0, 0.6), Array(0.6, 2.0)))
+    val data = (0 until 10000) map { i: Int => gauss.rand }
+    hist(data.toArray, 50)
+    </code></pre>
+
+    <p>The corresponding histogram looks like</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/histogram3d.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="qq" class="title">Q-Q Plot</h2>
+
+    <p>A Q–Q plot ("Q" stands for quantile) is a probability plot for comparing two probability distributions
+        by plotting their quantiles against each other. A point (x, y) on the plot corresponds to one of
+        the quantiles of the second distribution (y-coordinate) plotted against the same quantile of
+        the first distribution (x-coordinate).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def qqplot(x: Array[Double], d: Distribution): Window
+    def qqplot(x: Array[Double], y: Array[Double]): Window
+
+    def qqplot(x: Array[Int], d: DiscreteDistribution): Window
+    def qqplot(x: Array[Int], y: Array[Int]): Window
+    </code></pre>
+
+    <p>Smile supports the Q-Q plot of samples to a given distribution and also of two sample sets.
+        The second distribution/samples is optional. If missing, we assume it the standard Gaussian distribution.</p>
+
+    <p>In what follows, we generate a random sample set from standard Gaussian distribution and draw its Q-Q plot.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val gauss = GaussianDistribution.getInstance
+    val data = (0 until 1000) map { i: Int => gauss.rand }
+    qqplot(data.toArray)
+    </code></pre>
+
+    <p>In fact, this is also a good visual way to verify the quality of our random number generator.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/qqplot.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="heatmap" class="title">Heatmap</h2>
+
+    <p>A heat map is a graphical representation of data where the values in a matrix are represented as colors.
+        In cluster analysis, researchers often employs the heat map by permuting the rows and the columns
+        of a matrix to place similar values near each other according to the clustering.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def heatmap(z: Array[Array[Double]]): Window
+    def heatmap(z: Array[Array[Double]], palette: Array[Color]): Window
+    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Window
+    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Window
+
+    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): Window
+    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): Window
+    </code></pre>
+
+    <p>where <code>z</code> is the matrix to display and the optional parameters <code>x</code> and <code>y</code>
+        are the coordinates of data matrix cells, which must be in ascending order. Alternatively, one can also
+        provide labels as the coordinates, which is a common practice in cluster analysis.</p>
+
+    <p>In what follows, we display the heat map of a matrix. We starts with a small <code>4 x 4</code> matrix and
+        enlarge it with bicubic interpolation. We also use the helper class <code>Palette</code> to generate the color
+        scheme. This class provides many other color schemes.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    // the matrix to display
+    val z = Array(
+      Array(1.0, 2.0, 4.0, 1.0),
+      Array(6.0, 3.0, 5.0, 2.0),
+      Array(4.0, 2.0, 1.0, 5.0),
+      Array(5.0, 4.0, 2.0, 3.0)
+    )
+
+    // make the matrix larger with bicubic interpolation
+    val x = Array(0.0, 1.0, 2.0, 3.0)
+    val y = Array(0.0, 1.0, 2.0, 3.0)
+    val bicubic = new BicubicInterpolation(x, y, z)
+    val Z = Array.ofDim[Double](101, 101)
+    for (i <- 0 to 100) {
+      for (j <- 0 to 100)
+        Z(i)(j) = bicubic.interpolate(i * 0.03, j * 0.03)
+    }
+
+    heatmap(Z, Palette.jet(256))
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/heatmap.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>A special case of heat map is to draw the sparsity pattern of a matrix.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def spy(matrix: SparseMatrix): Window
+    </code></pre>
+
+    <p>The structure of sparse matrix is critical in solving linear systems.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val sparse = read.hb("data/matrix/mesh2em5.txt")
+    val window = spy(sparse)
+    window.canvas.setTitle("mesh2em5")
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/mesh2em5.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>Another variant is the hex map where hexagon cells replace rectangle cells.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def hexmap(z: Array[Array[Double]]): Window
+    def hexmap(z: Array[Array[Double]], palette: Array[Color]): Window
+    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]]): Window
+    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]], palette: Array[Color]): Window
+    </code></pre>
+
+    <p>In machine learning, the hex map is often used to visualize self-organized map (SOM).
+        An SOM is a type of artificial neural network that is trained using unsupervised learning to
+        produce a low-dimensional (typically two-dimensional), discretized representation of
+        the input space of the training samples. An SOM consists of components called nodes or neurons.
+        Associated with each node are a weight vector of the same dimension as the input data vectors,
+        and a position in the map space. The U-Matrix value of a particular node is the average distance
+        between the node's weight vector and that of its closest neighbors. In practice, researchers
+        often use the hex map to visualize the U-Matrix.</p>
+
+    <p>In the following example, we train and visualize a SOM on the USPS training data set with <code>30 x 30</code>
+        nodes.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val label = new NominalAttribute("class")
+    val usps = read.table("data/usps/zip.train", label, 0)
+    val umatrix = som(usps.unzip, 30, 30).umatrix
+    hexmap(umatrix, Palette.heat(256))
+    </code></pre>
+
+    <p>In the hex map, areas of low neighbour distance indicate groups of nodes that are similar.
+        Areas with large distances indicate the nodes are much more dissimilar, and indicate
+        natural boundaries between node clusters.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/hexmap.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="contour" class="title">Contour</h2>
+
+    <p>A contour plot represents a 3-dimensional surface by plotting constant <code>z</code> slices, called contours,
+        on a 2-dimensional format. That is, given a value for <code>z</code>, lines are drawn for connecting the
+        <code>(x, y)</code> coordinates where that z value occurs.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def contour(z: Array[Array[Double]]): Window
+    def contour(z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): Window
+    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Window
+    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): Window
+    </code></pre>
+
+    <p>Similar to <code>heatmap</code>, the parameters <code>x</code> and <code>y</code>
+        are the coordinates of data matrix cells, which must be in ascending order.
+        The slice values can be automatically determined from the data, or provided through
+        the parameter <code>levels</code>.</p>
+
+    <p>Contours are often jointly used with the heat map. In the following example, we add the contour lines to
+        the previous heat map exampl.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val window = heatmap(Z, Palette.jet(256))
+    window.canvas.add(new Contour(Z))
+    </code></pre>
+
+    <p>This example also shows how to mix multiple plots together. Besides using the plot functions directly,
+        one can also construct plots with Java classes and add them to existing a plot canvas.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/contour.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="surface" class="title">Surface</h2>
+
+    <p>Besides heat map and contour, we can also visualize a matrix with the three-dimensional shaded surface.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def surface(z: Array[Array[Double]]): Window
+    def surface(z: Array[Array[Double]], palette: Array[Color]): Window
+    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Window
+    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Window
+    </code></pre>
+
+    <p>The usage is similar with <code>heatmap</code> and <code>contour</code> functions.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    surface(Z, Palette.jet(256, 1.0f))
+    </code></pre>
+
+    <p>The surface of same example data is shown as</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/surface.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="wireframe" class="title">Wireframe</h2>
+
+    <p>The wireframe model is a visual presentation of a three-dimensional physical object.
+        A wireframe model consists of two tables,
+        the vertex table and the edge table. Each entry of the vertex table records a vertex and its coordinate values,
+        while each entry of the edge table has two components giving the two incident vertices of that edge.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): Window
+    </code></pre>
+
+    <p>where <code>vertices</code> is an <code>n x 2</code> or <code>n x 3</code> array which are coordinates of
+        <code>n</code> vertices, and <code>edges</code> is an <code>m x 2</code> array of which each row is the
+        vertex indices of two end points of each edge.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val (vertices, edges) = read.wavefront("data/wireframe/teapot.obj")
+    wireframe(vertices, edges)
+    </code></pre>
+
+    <p>The above code draws the wireframe of a teapot.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/teapot.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="data.html" title="Previous Section: Data"><span>Data</span></a>
+        <a class="btn-next-text" href="classification.html" title="Next Section: Classification"><span>Classification</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

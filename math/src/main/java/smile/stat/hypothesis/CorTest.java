@@ -38,7 +38,7 @@ import smile.sort.QuickSort;
  *   <tr>
  *     <td align="center" colspan="2" width="100%" bgcolor="#FFFF99">
  *     <p align="left" style="margin-top: 0; margin-bottom: 0">
- *     Parametric? variables follow normal distribution and linear
+ *     Parametric variables follow normal distribution and linear
  *     relationship between x and y)</td>
  *   </tr>
  *   <tr>
@@ -75,7 +75,7 @@ import smile.sort.QuickSort;
  *   </tr>
  * </table>
  * <p>
- * To deal with measures of assocation between nominal variables, we can use Chi-square
+ * To deal with measures of association between nominal variables, we can use Chi-square
  * test for independence. For any pair of nominal variables, the data can be
  * displayed as a contingency table, whose rows are labels by the values of one
  * nominal variable, whose columns are labels by the values of the other nominal

@@ -159,7 +159,7 @@ public class GaussianProcessRegressionTest {
             System.out.println("Sparse (30) 10-CV MSE = " + sparseRSS30 / n);
             System.out.println("Nystrom (30) 10-CV MSE = " + nystromRSS30 / n);
          } catch (Exception ex) {
-             System.err.println(ex);
+            ex.printStackTrace();
          }
     }
     

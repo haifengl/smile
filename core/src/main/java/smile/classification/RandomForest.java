@@ -351,8 +351,8 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
 
                     // We used to do up sampling.
                     // But we switch to down sampling, which seems has better performance.
-                    nj /= classWeight[l];
-                    for (int i = 0; i < nj; i++) {
+                    int size = nj / classWeight[l];
+                    for (int i = 0; i < size; i++) {
                         int xi = Math.randomInt(nj);
                         samples[cj.get(xi)] += 1; //classWeight[l];
                     }
@@ -519,7 +519,13 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
      *                  sampling without replacement.
      * @param rule Decision tree split rule.
-     * @param classWeight Priors of the classes.
+     * @param classWeight Priors of the classes. The weight of each class
+     *                    is roughly the ratio of samples in each class.
+     *                    For example, if
+     *                    there are 400 positive samples and 100 negative
+     *                    samples, the classWeight should be [1, 4]
+     *                    (assuming label 0 is of negative, label 1 is of
+     *                    positive).
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample, DecisionTree.SplitRule rule, int[] classWeight) {
         if (x.length != y.length) {

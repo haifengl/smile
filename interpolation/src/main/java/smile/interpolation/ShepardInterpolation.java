@@ -18,7 +18,7 @@ package smile.interpolation;
 import smile.math.Math;
 
 /**
- * Shepard interplation is a special case of normalized radial basis function
+ * Shepard interpolation is a special case of normalized radial basis function
  * interpolation if the function &phi;(r) goes to infinity as r &rarr; 0, and is
  * finite for r &gt; 0. In this case, the weights w<sub>i</sub> are just equal to
  * the respective function values y<sub>i</sub>. So we need not solve linear
@@ -28,7 +28,7 @@ import smile.math.Math;
  * 1 &lt; p &le; 3.
  * <p>
  * Shepard interpolation is rarely as accurate as the well-tuned application of
- * other radial basis functions. However, it is simple, fast, and often jut the
+ * other radial basis functions. However, it is simple, fast, and often just the
  * thing for quick and dirty applications.
  *
  * @author Haifeng Li
