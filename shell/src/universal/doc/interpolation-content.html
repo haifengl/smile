@@ -1,0 +1,203 @@
+<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+        <div id="search">
+            <script>
+                (function() {
+                    var cx = '010264411143030149390:ajvee_ckdzs';
+                    var gcse = document.createElement('script');
+                    gcse.type = 'text/javascript';
+                    gcse.async = true;
+                    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                            '//cse.google.com/cse.js?cx=' + cx;
+                    var s = document.getElementsByTagName('script')[0];
+                    s.parentNode.insertBefore(gcse, s);
+                })();
+            </script>
+            <gcse:searchbox-only></gcse:searchbox-only>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+
+    <h1 id="interpolation-top" class="title">Interpolation</h1>
+
+    <p>Interpolation is the process of constructing a function that takes on
+        specified values at specified points. In engineering and science, one often
+        has a number of data points, obtained by sampling or experimentation, which
+        represent the values of a function for a limited number of values of the
+        independent variable. It is often required to interpolate (i.e. estimate)
+        the value of that function for an intermediate value of the independent
+        variable.</p>
+
+    <p>Smile package <code>smile.interpolation</code> provides a variety of
+        algorithms on 1d and 2d data. These algorithms implements the interface
+        <code>Interpolation</code> (or <code>Interpolation2D</code> for 2d data),
+        of which the method <code>interpolate</code> takes a value and return
+        an interploated value.</p>
+
+    <h2 id="linear" class="title">Piecewise Linear Interpolation</h2>
+
+    <p><code>LinearInterpolation</code> is quick and easy, but it is not very precise. Another disadvantage
+        is that the interpolant is not differentiable at the control points.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val x = Array(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
+    val y = Array(0.0, 0.8415, 0.9093, 0.1411, -0.7568, -0.9589, -0.2794)
+
+    val linear = new LinearInterpolation(x, y);
+
+    val data = (0 to 60).map { i =>
+      val x = i * 0.1
+      val y = linear.interpolate(x)
+      Array(x, y)
+    }.toArray
+
+    line(data)
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/linear-interpolation.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p><code>BilinearInterpolation</code> is an extension of linear interpolation for
+        interpolating functions of two variables on a
+        regular grid. The key idea is to perform linear interpolation first in one
+        direction, and then again in the other direction.</p>
+
+    <h2 id="cubic" class="title">Cubic Spline Interpolation</h2>
+
+    <p>Spline interpolation uses low-degree polynomials
+        in each of the intervals, and chooses the polynomial pieces such that they
+        fit smoothly together. The resulting function is called a spline.
+        The natural cubic spline is piecewise cubic and twice continuously
+        differentiable. Furthermore, its second derivative is zero at the end
+        points.</p>
+
+    <p>Like polynomial interpolation, spline interpolation incurs a smaller
+        error than linear interpolation and the interpolant is smoother. However,
+        the interpolant is easier to evaluate than the high-degree polynomials
+        used in polynomial interpolation. It also does not suffer from Runge's
+        phenomenon.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/cubic-interpolation.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>For 2d grid, we provide two implementations: <code>CubicSplineInterpolation2D</code> and
+        <code>BicubicInterpolation</code>. <code>CubicSplineInterpolation2D</code> is
+        similar to one-dimensional splines as it guarantees the
+        continuity of the first and second function derivatives. In contrast,
+        <code>BicubicInterpolation</code> guarantees continuity of only
+        gradient and cross-derivative. Second derivatives
+        could be discontinuous.</p>
+
+    <p>In image processing, bicubic interpolation is often chosen over bilinear
+        interpolation or nearest neighbor in image resampling, when speed is not
+        an issue. Images resampled with bicubic interpolation are smoother and
+        have fewer interpolation artifacts.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/grid-interpolation2d.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="kriging" class="title">Kriging Interpolation</h2>
+
+    <p>Kriging interpolation can be used for the data points irregularly distributed in space.
+        Kriging belongs to the family of linear least squares estimation algorithms,
+        also known as Gauss-Markov estimation or Gaussian process regression.
+        We implement ordinary kriging for interpolation with power variogram.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/kriging-interpolation.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="rbf" class="title">RBF Interpolation</h2>
+
+    <p>Radial basis function interpolation is a popular method for the data points are
+        irregularly distributed in space. In its basic form, radial basis function
+        interpolation is in the form
+        <code>y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)</code>,
+        where the approximating function y(x) is represented as a sum of N radial
+        basis functions &phi;, each associated with a different center c<sub>i</sub>, and weighted
+        by an appropriate coefficient w<sub>i</sub>. For distance, one usually chooses
+        euclidean distance. The weights w<sub>i</sub> can
+        be estimated using the matrix methods of linear least squares, because
+        the approximating function is linear in the weights.</p>
+
+    <p>The points c<sub>i</sub> often called the centers or collocation points
+        of the RBF interpolant. Note also that the centers c<sub>i</sub> can be
+        located at arbitrary points in the domain, and do not require a grid.
+        For certain RBF exponential convergence has been shown. Radial basis
+        functions were successfully applied to problems as diverse as computer
+        graphics, neural networks, for the solution of differential equations
+        via collocation methods and many other problems.</p>
+
+    <p>Other popular choices for &phi; comprise the Gaussian function and the so
+        called thin plate splines. Thin plate splines result from the solution of
+        a variational problem. The advantage of the thin plate splines is that
+        their conditioning is invariant under scalings. Gaussians, multi-quadrics
+        and inverse multi-quadrics are infinitely smooth and and involve a scale
+        or shape parameter, r<sub><small>0</small></sub> &gt; 0.
+        Decreasing r<sub><small>0</small></sub> tends to
+        flatten the basis function. For a given function, the quality of
+        approximation may strongly depend on this parameter. In particular,
+        increasing r<sub><small>0</small></sub> has the effect of better conditioning
+        (the separation distance  of the scaled points increases).</p>
+
+    <p>A variant on RBF interpolation is normalized radial basis function (NRBF)
+        interpolation, in which we require the sum of the basis functions to be unity.
+        NRBF arises more naturally from a Bayesian statistical perspective. However,
+        there is no evidence that either the NRBF method is consistently superior
+        to the RBF method, or vice versa.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/rbf-interpolation.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="shepard" class="title">Shepard Interpolation</h2>
+    <p>Shepard interpolation is a special case of normalized radial basis function
+        interpolation if the function &phi;(r) goes to infinity as r &rarr; 0, and is
+        finite for r &gt; 0. In this case, the weights w<sub>i</sub> are just equal to
+        the respective function values y<sub>i</sub>. So we need not solve linear
+        equations and thus it works for very large N. An example of such &phi;
+        is &phi;(r) = r<sup>-p</sup> with (typically) 1 &lt; p &le; 3.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/shepard-interpolation.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>Shepard interpolation is rarely as accurate as the well-tuned application of
+        other radial basis functions. However, it is simple, fast, and often sufficient
+        for quick and dirty applications.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/irregular-interpolation2d.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="laplace" class="title">Laplace Interpolation</h2>
+
+    <p>Laplace interpolation can restore missing or unmeasured values on a 2-dimensional
+        evenly spaced regular grid. In some sense, Laplace interpolation
+        produces the smoothest possible interpolant, which are obtained by solving
+        a very sparse linear equations with biconjugate gradient method.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/laplace-interpolation.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="wavelet.html" title="Previous Section: Wavelet"><span>Wavelet</span></a>
+        <a class="btn-next-text" href="graph.html" title="Next Section: Graph"><span>Graph</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>
