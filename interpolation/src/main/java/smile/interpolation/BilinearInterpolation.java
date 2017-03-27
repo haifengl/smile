@@ -21,7 +21,7 @@ package smile.interpolation;
  * of linear interpolation for interpolating functions of two variables on a
  * regular grid. The key idea is to perform linear interpolation first in one
  * direction, and then again in the other direction.
-
+ *
  * @author Haifeng Li
  */
 public class BilinearInterpolation implements Interpolation2D {
