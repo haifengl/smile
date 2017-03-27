@@ -1,0 +1,92 @@
+<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+        <div id="search">
+            <script>
+                (function() {
+                    var cx = '010264411143030149390:ajvee_ckdzs';
+                    var gcse = document.createElement('script');
+                    gcse.type = 'text/javascript';
+                    gcse.async = true;
+                    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                            '//cse.google.com/cse.js?cx=' + cx;
+                    var s = document.getElementsByTagName('script')[0];
+                    s.parentNode.insertBefore(gcse, s);
+                })();
+            </script>
+            <gcse:searchbox-only></gcse:searchbox-only>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+
+    <h1 id="graph-top" class="title">Graph</h1>
+
+    <p>Many machine learning algorithms (e.g. Isomap) employ graph data structures internally.
+        Graphs are mathematical structures used to model pairwise relations between
+        objects from a certain collection. A graph is an abstract representation of
+        a set of objects where some pairs of the objects are connected by links.
+        The interconnected objects are represented by mathematical abstractions
+        called vertices (also called nodes or points), and the links that connect
+        some pairs of vertices are called edges (also called lines).
+        The edges may be directed (asymmetric) or undirected (symmetric).</p>
+
+    <p>There are different ways to store graphs in a computer system. The data
+        structure used depends on both the graph structure and the algorithm
+        used for manipulating the graph. Theoretically one can distinguish between
+        list and matrix structures but in concrete applications the best structure
+        is often a combination of both. List structures are often preferred for
+        sparse graphs as they have smaller memory requirements. Matrix structures
+        on the other hand provide faster access for some applications but can
+        consume huge amounts of memory. In Smile, we support both adjacency list
+        (class <code>AdjacencyList</code>) and adjacency matrix
+        (class <code>AdjacencyMatrix</code>).</p>
+
+    <p>In adjacency list, each vertex has a list
+      of which vertices it is adjacent to. This causes redundancy in an undirected
+      graph. Adjacency queries are faster, at the cost of extra storage space.</p>
+
+    <p>An adjacency matrix is an n by n matrix A, where n is the number
+      of vertices in the graph. If there is an edge from a vertex x to a vertex y,
+      then the element A(x,y) is 1 (or in general the number of edges or a weight), otherwise
+      it is 0. In computing, this matrix makes it easy to find subgraphs, and to
+      reverse a directed graph.</p>
+
+    <p>Both <code>AdjacencyList</code> and <code>AdjacencyMatrix</code> implement
+        the abstract interface <code>Graph</code>. The basic operation on graph is
+        traversal, i.e. to visit the vertices in some systematic order.
+        Typically, we have breadth first search (BFS) and depth first search (DFS).
+        Both of these construct spanning trees with certain properties useful
+        in other graph algorithms. In <code>Graph</code>, the methods <code>bfs()</code>
+        and <code>dfs()</code> returns the connected components of graph. In addition,
+        the overloaded <code>bfs(Visitor)</code> and <code>dfs(Visitor)</code>
+        can take a user-define <code>Visitor</code> object to perform specific
+        operations when visiting a vertex.</p>
+
+    <p>Graph traversal can be used to compute the topological ordering of graph
+        by the methods <code>sortbfs</code> or <code>sortdfs</code>. The topological
+        ordering of a directed graph to be one in which, whenever we have an edge
+        from <code>x</code> to <code>y</code>, the ordering visits <code>x</code>
+        before <code>y</code>. Note that a graph has a topological ordering if
+        and only if it is a directed acyclic graph.</p>
+
+    <p>With the method <code>dijkstra()</code>, we can calculate the shortest path
+        from a source to all other vertices in the graph by Dijkstra algorithm.
+        Many manifold algorithms employ the shortest path among the samples as
+        a similarity measure instead of pairwise distance.</p>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="interpolation.html" title="Previous Section: Interpolation"><span>Interpolation</span></a>
+        <a class="btn-next-text" href="faq.html" title="Next Section: FAQ"><span>FAQ</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>
