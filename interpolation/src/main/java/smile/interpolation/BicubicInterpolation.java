@@ -17,11 +17,14 @@
 package smile.interpolation;
 
 /**
- * Bicubic interpolation in a two-dimensional regular grid. Bicubic interpolation
- * is an extension of cubic interpolation for interpolating data points on a
- * two dimensional regular grid. The interpolated surface is smoother than
- * corresponding surfaces obtained by bilinear interpolation or nearest-neighbor
- * interpolation.
+ * Bicubic interpolation in a two-dimensional regular grid. Bicubic
+ * spline interpolation guarantees the continuity of the first derivatives,
+ * as well as the continuity of a cross-derivative.
+ * <p>
+ * Note that CubicSplineInterpolation2D guarantees the continuity of the
+ * first and second function derivatives but bicubic spline guarantees
+ * continuity of only gradient and cross-derivative. Second derivatives
+ * could be discontinuous.
  * <p>
  * In image processing, bicubic interpolation is often chosen over bilinear
  * interpolation or nearest neighbor in image resampling, when speed is not
