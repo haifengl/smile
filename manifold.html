@@ -1,216 +1,173 @@
-<!-- prettify js and CSS -->
-<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=scala"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- scroll/follow sidebar -->
-<script src="js/follow-sidebar.js" type="text/javascript"></script>
+  <title>
+     Smile - Statistical Machine Intelligence and Learning Engine
+  </title>
+  
+  <meta name="description" content="Smile is a fast and general machine learning engine for big data processing, with built-in modules for classification, regression, clustering, association rule mining, feature selection, manifold learning, genetic algorithm, missing value imputation, efficient nearest neighbor search, MDS, NLP, linear algebra, hypothesis tests, random number generators, interpolation, wavelet, plot, etc.">
 
-<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
-    <div id="sidebar">
-        <div class="sidebar-toc" style="margin-bottom: 20px;">
-            <p class="toc-header">Contents</p>
-            <div id="toc"></div>
-        </div>
-        <div id="search">
-            <script>
-                (function() {
-                    var cx = '010264411143030149390:ajvee_ckdzs';
-                    var gcse = document.createElement('script');
-                    gcse.type = 'text/javascript';
-                    gcse.async = true;
-                    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
-                            '//cse.google.com/cse.js?cx=' + cx;
-                    var s = document.getElementsByTagName('script')[0];
-                    s.parentNode.insertBefore(gcse, s);
-                })();
-            </script>
-            <gcse:searchbox-only></gcse:searchbox-only>
-        </div>
-    </div>
+  <!-- prettify js and CSS -->
+  <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=scala"></script>
+
+  <!-- Bootstrap core CSS -->
+  <link href="css/cerulean.min.css" rel="stylesheet">
+  <link href="css/custom.css" rel="stylesheet">
+
+  <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!--[if lt IE 9]>
+  <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+  <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+  <![endif]-->
+
+  <script src="https://code.jquery.com/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+  <!-- table of contents auto generator -->
+  <script src="js/toc.js" type="text/javascript"></script>
+
+  <!-- styles for pager and table of contents -->
+  <link rel="stylesheet" href="css/pager.css" type="text/css" />
+  <link rel="stylesheet" href="css/toc.css" type="text/css" />
+
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-52181830-5', 'auto');
+    ga('send', 'pageview');
+  </script>
+
+  <!-- Load static page by jQuery AJAX -->
+  <script type="text/javascript">
+    $(document).ready(function(){
+      function ajaxLoad(page) {
+        $('#content').load(page, function() {
+          // scroll/follow sidebar
+          // #sidebar is defined in the content snippet
+          // This script has to be executed after the snippet loaded.
+          $.getScript("js/follow-sidebar.js");
+        });
+        window.scrollTo(0, 0);
+      }
+
+      function getPageName() {
+        // gets the full url
+        var url = document.location.href;
+        // removes the anchor at the end, if there is one
+        url = url.substring(0, (url.indexOf("#") == -1) ? url.length : url.indexOf("#"));
+        // removes the query after the file name, if there is one
+        url = url.substring(0, (url.indexOf("?") == -1) ? url.length : url.indexOf("?"));
+        // removes everything before the last slash in the path
+        url = url.substring(url.lastIndexOf("/") + 1, url.length);
+        return url;
+      }
+
+      var page = getPageName();
+      if (typeof(page) != 'undefined' && page != null && page != "template.html") {
+        page = page.replace('.html', '-content.html');
+        ajaxLoad(page);
+      }
+    });
+  </script>
+</head>
+
+<body>
+
+<div class="container" style="max-width: 1200px;">
+<header>
+<div class="masthead">
+  <p class="lead">
+    <a href="index.html">
+    <img src="images/smile.jpg" style="height:100px; width:auto; vertical-align: bottom; margin-top: 20px;">
+    <span class="tagline">Smile - Statistical Machine Intelligence and Learning Engine</span>
+    </a>
+  </p>
 </div>
 
-<div class="col-md-9 col-md-pull-3">
-    <h1 id="manifold-top" class="title">Manifold Learning</h1>
+<nav class="navbar navbar-default" role="navigation">
+  <!-- Brand and toggle get grouped for better mobile display -->
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+  </div>
 
-    <p>Manifold learning finds a low-dimensional basis for describing
-        high-dimensional data. Manifold learning is a popular approach to nonlinear
-        dimensionality reduction. Algorithms for this task are based on the idea
-        that the dimensionality of many data sets is only artificially high; though
-        each data point consists of perhaps thousands of features, it may be
-        described as a function of only a few underlying parameters. That is, the
-        data points are actually samples from a low-dimensional manifold that is
-        embedded in a high-dimensional space. Manifold learning algorithms attempt
-        to uncover these parameters in order to find a low-dimensional representation
-        of the data.</p>
+  <!-- Collect the nav links, forms, and other content for toggling -->
+  <div class="collapse navbar-collapse" id="navbar-collapse">
+    <ul class="nav navbar-nav">
+      <li><a href="quickstart.html">Quick Start</a></li>
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+          <li><a href="overview.html">Overview</a></li>
+          <li class="divider"></li>
+          <li><a href="shell.html">Shell</a></li>
+          <li><a href="data.html">Data</a></li>
+          <li><a href="visualization.html">Visualization</a></li>
+          <li class="divider"></li>
+          <li><a href="classification.html">Classification</a></li>
+          <li><a href="regression.html">Regression</a></li>
+          <li><a href="feature.html">Feature Selection and Dimension Reduction</a></li>
+          <li><a href="validation.html">Model Validation</a></li>
+          <li><a href="missing-value-imputation.html">Missing Value Imputation</a></li>
+          <li class="divider"></li>
+          <li><a href="clustering.html">Clustering</a></li>
+          <li><a href="vector-quantization.html">Vector Quantization</a></li>
+          <li><a href="association-rule.html">Association Rule Mining</a></li>
+          <li><a href="mds.html">Multi-Dimensional Scaling</a></li>
+          <li><a href="manifold.html">Manifold Learning</a></li>
+          <li class="divider"></li>
+          <li><a href="linear-algebra.html">Linear Algebra</a></li>
+          <li><a href="statistics.html">Statistics</a></li>
+          <li><a href="wavelet.html">Wavelet</a></li>
+          <li><a href="interpolation.html">Interpolation</a></li>
+          <li><a href="graph.html">Graph</a></li>
+          <li class="divider"></li>
+          <li><a href="http://xyclade.github.io/MachineLearning/">Third-Party Tutorials</a></li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">API Docs <b class="caret"></b>
+        </a>
+        <ul class="dropdown-menu">
+          <li><a href="api/java/index.html">Java</a></li>
+          <li><a href="api/scala/index.html">Scala</a></li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Community <b class="caret"></b>
+        </a>
+        <ul class="dropdown-menu">
+          <li><a href="https://github.com/haifengl/smile/graphs/contributors">Project Contributors</a></li>
+          <li><a href="https://github.com/haifengl/smile/issues">Issue Tracker</a></li>
+        </ul>
+      </li>
+      <li><a href="gallery.html">Gallery</a></li>
+      <li><a href="faq.html">FAQ</a></li>
+    </ul>
+  </div>
+  <!-- /.navbar-collapse -->
+</nav>
+</header>
 
-    <p>Some prominent approaches are locally linear embedding
-        (LLE), Hessian LLE, Laplacian eigenmaps, and LTSA. These techniques
-        construct a low-dimensional data representation using a cost function
-        that retains local properties of the data, and can be viewed as defining
-        a graph-based kernel for Kernel PCA. More recently, techniques have been
-        proposed that, instead of defining a fixed kernel, try to learn the kernel
-        using semidefinite programming. The most prominent example of such a
-        technique is maximum variance unfolding (MVU). The central idea of MVU
-        is to exactly preserve all pairwise distances between nearest neighbors
-        (in the inner product space), while maximizing the distances between points
-        that are not nearest neighbors.</p>
-
-    <p>An alternative approach to neighborhood preservation is through the
-        minimization of a cost function that measures differences between
-        distances in the input and output spaces. Important examples of such
-        techniques include classical multidimensional scaling (which is identical
-        to PCA), Isomap (which uses geodesic distances in the data space), diffusion
-        maps (which uses diffusion distances in the data space), t-SNE (which
-        minimizes the divergence between distributions over pairs of points),
-        and curvilinear component analysis.</p>
-
-    <h2 id="isomap">Isomap</h2>
-
-    <p>Isometric feature mapping (isomap) is a widely used low-dimensional embedding methods,
-        where geodesic distances on a weighted graph are incorporated with the
-        classical multidimensional scaling. Isomap is used for computing a
-        quasi-isometric, low-dimensional embedding of a set of high-dimensional
-        data points. Isomap is highly efficient and generally applicable to a broad
-        range of data sources and dimensionalities.</p>
-
-    <p>To be specific, the classical MDS performs low-dimensional embedding based
-        on the pairwise distance between data points, which is generally measured
-        using straight-line Euclidean distance. Isomap is distinguished by
-        its use of the geodesic distance induced by a neighborhood graph
-        embedded in the classical scaling. This is done to incorporate manifold
-        structure in the resulting embedding. Isomap defines the geodesic distance
-        to be the sum of edge weights along the shortest path between two nodes.
-        The top <code>n</code> eigenvectors of the geodesic distance matrix, represent the
-        coordinates in the new <code>n</code>-dimensional Euclidean space.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    def isomap(data: Array[Array[Double]], d: Int, k: Int, CIsomap: Boolean = true): IsoMap
-    </code></pre>
-
-    <p>The connectivity of each data point in the neighborhood graph is defined
-        as its nearest <code>k</code> Euclidean neighbors in the high-dimensional space. This
-        step is vulnerable to "short-circuit errors" if <code>k</code> is too large with
-        respect to the manifold structure or if noise in the data moves the
-        points slightly off the manifold. Even a single short-circuit error
-        can alter many entries in the geodesic distance matrix, which in turn
-        can lead to a drastically different (and incorrect) low-dimensional
-        embedding. Conversely, if <code>k</code> is too small, the neighborhood graph may
-        become too sparse to approximate geodesic paths accurately.</p>
-
-    <p>When the optional parameter <code>CIsomap</code> is true, the method
-        performs C-Isomap that involves magnifying the regions
-        of high density and shrink the regions of low density of data points
-        in the manifold. Edge weights that are maximized in Multi-Dimensional
-        Scaling(MDS) are modified, with everything else remaining unaffected.</p>
-
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/swissroll.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Swiss Roll</div>
-    </div>
-
-    <p>In the below example, we apply Isomap to the famous
-        <a href="http://people.cs.uchicago.edu/~dinoj/manifold/swissroll.html">swiss roll data</a> as shown above.
-        This data set was created to test out various dimensionality reduction algorithms.
-        The idea was to create several points in 2d, and then map them to 3d with some smooth
-        function, and then to see what the algorithm would find when it mapped the points back to 2d.
-        The data contains 20,000 samples. Because it is computational intensive to calculate
-        the shortest path for all samples, the example uses only the first 2,000 samples.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    val swissroll = read.table("data/manifold/swissroll.txt").unzip
-    plot(swissroll, '.', Color.BLUE)
-
-    val map = isomap(swissroll.slice(0, 2000), 2, 7)
-
-    val x = map.getCoordinates
-    val window = plot(x, '.', Color.BLUE)
-
-    val graph = map.getNearestNeighborGraph
-    for (i <- 0 until x.length)
-      for (j <- 0 until i)
-        if (graph.hasEdge(i, j))
-          window.canvas.line(x(i), x(j))
-    </code></pre>
-
-    <p>In this example, we use <code>k = 7</code> for neighborhood graph. In the mapped
-        2d space, we also plot the connections between neighbor neighbors.</p>
-
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/isomap.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Isomap</div>
-    </div>
-
-    <p>Note that Isomap produces strange holes like in a slice of Swiss cheese :).
-        This issue can be solved by adding to Isomap a vector quantization step.</p>
-
-    <h2 id="lle">LLE</h2>
-
-    <p>Locally Linear Embedding (LLE) has several advantages over Isomap, including
-        faster optimization when implemented to take advantage of sparse matrix
-        algorithms, and better results with many problems. LLE also begins by
-        finding a set of the nearest neighbors of each point. It then computes
-        a set of weights for each point that best describe the point as a linear
-        combination of its neighbors. Finally, it uses an eigenvector-based
-        optimization technique to find the low-dimensional embedding of points,
-        such that each point is still described with the same linear combination
-        of its neighbors. LLE tends to handle non-uniform sample densities poorly
-        because there is no fixed unit to prevent the weights from drifting as
-        various regions differ in sample densities.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    def lle(data: Array[Array[Double]], d: Int, k: Int): LLE
-    </code></pre>
-
-    <p>The LLE using 8 neighbors on the swiss roll data is as follows.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    val map = lle(swissroll.slice(0, 2000), 2, 8)
-    </code></pre>
-
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/lle.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">LLE</div>
-    </div>
-
-    <h2 id="laplacian">Laplacian Eigenmap</h2>
-
-    <p>Using the notion of the Laplacian of the nearest
-        neighbor adjacency graph, Laplacian Eigenmap computes a low dimensional
-        representation of the dataset that optimally preserves local neighborhood
-        information in a certain sense. The representation map generated by the
-        algorithm may be viewed as a discrete approximation to a continuous map
-        that naturally arises from the geometry of the manifold.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    def laplacian(data: Array[Array[Double]], d: Int, k: Int, t: Double = -1): LaplacianEigenmap
-    </code></pre>
-
-    <p>where <code>t</code> is the smooth/width parameter of heat kernel
-        <code>e<sup>-||x-y||<sup>2</sup>/t</sup></code>.
-        Non-positive <code>t</code> means discrete weights.</p>
-
-    <p>The locality preserving character of the Laplacian Eigenmap algorithm makes
-        it relatively insensitive to outliers and noise. It is also not prone to
-        "short circuiting" as only the local distances are used.</p>
-
-    <p>The Laplacian Eigenmap on the swiss roll data is as follows.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    val map = laplacian(swissroll.slice(0, 1000), 2, 10, 25.0)
-    </code></pre>
-
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/laplacian.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Scree Plot</div>
-    </div>
-
-    <div id="btnv">
-        <span class="btn-arrow-left">&larr; &nbsp;</span>
-        <a class="btn-prev-text" id="mds" href="#" title="Previous Section: Multi-Dimensional Scaling"><span>Multi-Dimensional Scaling</span></a>
-        <a class="btn-next-text" id="faq" href="#" title="Next Section: FAQ"><span>FAQ</span></a>
-        <span class="btn-arrow-right">&nbsp;&rarr;</span>
-    </div>
+<div id="content" class="row">
+</div>
 </div>
 
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>
+<a href=https://github.com/haifengl/smile><img style="position: fixed; top: 0; left: 0; border: 0" src=https://s3.amazonaws.com/github/ribbons/forkme_left_orange_ff7600.png alt="Fork me on GitHub"></a>
+
+<!-- Place this tag right after the last button or just before your close body tag. -->
+<script async defer id="github-bjs" src="https://buttons.github.io/buttons.js"></script>
+</body>
+</html>

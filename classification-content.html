@@ -1,0 +1,1011 @@
+<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+        <div id="search">
+            <script>
+                (function() {
+                    var cx = '010264411143030149390:ajvee_ckdzs';
+                    var gcse = document.createElement('script');
+                    gcse.type = 'text/javascript';
+                    gcse.async = true;
+                    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                            '//cse.google.com/cse.js?cx=' + cx;
+                    var s = document.getElementsByTagName('script')[0];
+                    s.parentNode.insertBefore(gcse, s);
+                })();
+            </script>
+            <gcse:searchbox-only></gcse:searchbox-only>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="classification-top" class="title">Classification</h1>
+
+    <p>Smile's classification algorithms are in the package
+        <a href="api/java/smile/classification/package-summary.html"><code>smile.classification</code></a>
+        and all algorithms implement the interface
+        <a href="api/java/smile/classification/Classifier.html"><code>Classifier</code></a>
+        that has a method <code>predict</code> to predict the class label of an instance.
+        An overloaded version in <a href="api/java/smile/classification/SoftClassifier.html"><code>SoftClassifier</code></a>
+        can also calculate the <i>a posteriori</i>
+        probabilities besides the class label.
+        For all algorithms, the model can be trained through
+        the constructor. Meanwhile, each algorithm has a <code>Trainer</code> companion
+        class that can hold model hyper-parameters and be applied to multiple training
+        datasets.</p>
+
+    <p>Some algorithms with online learning capability also implement the interface
+        <a href="api/java/smile/classification/OnlineClassifier.html"><code>OnlineClassifier</code></a>.
+        Online learning is a model of induction that learns one instance at a time.
+        The method <code>learn</code> updates the model with a new instance.</p>
+
+    <p>The high-level operators are defined in Scala trait
+        <a href="api/scala/index.html#smile.classification.Operators"><code>smile.classification.Operators</code></a>
+        and also in the package object of <a href="api/scala/index.html#smile.classification.package"><code>smile.classification</code></a>.</p>
+
+    <p>In what follows, we will discuss each algorithm, their high-level
+        Scala API, and examples.</p>
+
+    <h2 id="introduction">Introduction</h2>
+
+    <p>In machine learning and pattern recognition,
+        classification refers to an algorithmic procedure for assigning a given
+        input object into one of a given number of categories. The input
+        object is formally termed an instance, and the categories are termed classes.</p>
+        
+    <p>The instance is usually described by a vector of features, which together
+        constitute a description of all known characteristics of the instance.
+        Typically, features are either categorical (also known as nominal, i.e.
+        consisting of one of a set of unordered items, such as a gender of "male"
+        or "female", or a blood type of "A", "B", "AB" or "O"), ordinal (consisting
+        of one of a set of ordered items, e.g. "large", "medium" or "small"),
+        integer-valued (e.g. a count of the number of occurrences of a particular
+        word in an email) or real-valued (e.g. a measurement of blood pressure).</p>
+        
+    <p>Classification normally refers to a supervised procedure, i.e. a procedure
+        that produces an inferred function to predict the output value of new
+        instances based on a training set of pairs consisting of an input object
+        and a desired output value. The inferred function is called a classifier
+        if the output is discrete or a regression function if the output is
+        continuous.</p>
+        
+    <p>The inferred function should predict the correct output value for any valid
+        input object. This requires the learning algorithm to generalize from the
+        training data to unseen situations in a "reasonable" way.</p>
+        
+    <p>A wide range of supervised learning algorithms is available, each with
+        its strengths and weaknesses. There is no single learning algorithm that
+        works best on all supervised learning problems. The most widely used
+        learning algorithms are AdaBoost and gradient boosting, support vector
+        machines, linear regression, linear discriminant analysis, logistic
+        regression, naive Bayes, decision trees, k-nearest neighbor algorithm,
+        and neural networks (multilayer perceptron).</p>
+        
+    <p>If the feature vectors include features of many different kinds (discrete,
+        discrete ordered, counts, continuous values), some algorithms cannot be
+        easily applied. Many algorithms, including linear regression, logistic
+        regression, neural networks, and nearest neighbor methods, require that
+        the input features be numerical and scaled to similar ranges (e.g., to
+        the [-1,1] interval). Methods that employ a distance function, such as
+        nearest neighbor methods and support vector machines with Gaussian kernels,
+        are particularly sensitive to this. An advantage of decision trees (and
+        boosting algorithms based on decision trees) is that they easily handle
+        heterogeneous data.</p>
+        
+    <p>If the input features contain redundant information (e.g., highly correlated
+        features), some learning algorithms (e.g., linear regression, logistic
+        regression, and distance based methods) will perform poorly because of
+        numerical instabilities. These problems can often be solved by imposing
+        some form of regularization.</p>
+        
+    <p>If each of the features makes an independent contribution to the output,
+        then algorithms based on linear functions (e.g., linear regression,
+        logistic regression, linear support vector machines, naive Bayes) generally
+        perform well. However, if there are complex interactions among features,
+        then algorithms such as nonlinear support vector machines, decision trees
+        and neural networks work better. Linear methods can also be applied, but
+        the engineer must manually specify the interactions when using them.</p>
+        
+    <p>There are several major issues to consider in supervised learning:</p>
+    <dl>
+        <dt>Features</dt>
+        <dd><p>The accuracy of the inferred function depends strongly on how the input
+            object is represented. Typically, the input object is transformed into
+            a feature vector, which contains a number of features that are descriptive
+            of the object. The number of features should not be too large, because of
+            the curse of dimensionality; but should contain enough information to
+            accurately predict the output.</p>
+
+            <p>There are many algorithms for feature selection that seek to identify
+            the relevant features and discard the irrelevant ones. More generally,
+            dimensionality reduction may seek to map the input data into a lower
+            dimensional space prior to running the supervised learning algorithm.</p>
+        </dd>
+        <dt>Overfitting</dt>
+        <dd><p>Overfitting occurs when a statistical model describes random error
+            or noise instead of the underlying relationship. Overfitting generally
+            occurs when a model is excessively complex, such as having too many
+            parameters relative to the number of observations. A model which has
+            been overfit will generally have poor predictive performance, as it can
+            exaggerate minor fluctuations in the data.</p>
+
+            <p>The potential for overfitting depends not only on the number of parameters
+            and data but also the conformability of the model structure with the data
+            shape, and the magnitude of model error compared to the expected level
+            of noise or error in the data.</p>
+
+            <p>In order to avoid overfitting, it is necessary to use additional techniques
+            (e.g. cross-validation, regularization, early stopping, pruning, Bayesian
+            priors on parameters or model comparison), that can indicate when further
+            training is not resulting in better generalization. The basis of some
+            techniques is either (1) to explicitly penalize overly complex models,
+            or (2) to test the model's ability to generalize by evaluating its
+            performance on a set of data not used for training, which is assumed to
+            approximate the typical unseen data that a model will encounter.</p>
+        </dd>
+        <dt>Regularization</dt>
+        <dd><p>Regularization involves introducing additional information in order
+            to solve an ill-posed problem or to prevent over-fitting. This information
+            is usually of the form of a penalty for complexity, such as restrictions
+            for smoothness or bounds on the vector space norm.
+            A theoretical justification for regularization is that it attempts to impose
+            Occam's razor on the solution. From a Bayesian point of view, many
+            regularization techniques correspond to imposing certain prior distributions
+            on model parameters.</p>
+        </dd>
+        <dt>Bias-variance tradeoff</dt>
+        <dd><p>Mean squared error (MSE) can be broken down into two components:
+            variance and squared bias, known as the bias-variance decomposition.
+            Thus in order to minimize the MSE, we need to minimize both the bias and
+            the variance. However, this is not trivial. Therefore, there is a tradeoff
+            between bias and variance.</p>
+        </dd>
+    </dl>
+
+    <h2 id="knn">K-Nearest Neighbor</h2>
+
+    <p>The k-nearest neighbor algorithm (k-NN) is
+        a method for classifying objects by a majority vote of its neighbors,
+        with the object being assigned to the class most common amongst its k
+        nearest neighbors (k is typically small).
+        k-NN is a type of instance-based learning, or lazy learning where the
+        function is only approximated locally and all computation
+        is deferred until classification.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]]
+    </code></pre>
+
+    <p>The simplest k-NN method takes a data set of feature vectors and labels
+        with Euclidean distance as the similarity measure. When applied to the
+        Iris datset, the accuracy of 10-fold cross validation is 96% for <code>k = 3</code>.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val iris = read.arff("data/weka/iris.arff", 4)
+    val (x, y) = iris.unzipInt
+    cv(x, y, 10) { case (x, y) => knn(x, y, 3) }
+    </code></pre>
+
+    <p>The best choice of k depends upon the data; generally, larger values of
+        k reduce the effect of noise on the classification, but make boundaries
+        between classes less distinct. A good k can be selected by various
+        heuristic techniques, e.g. cross-validation. In binary problems, it is
+        helpful to choose k to be an odd number as this avoids tied votes.</p>
+
+    <p>The nearest neighbor algorithm has some strong consistency results. As
+        the amount of data approaches infinity, the algorithm is guaranteed to
+        yield an error rate no worse than twice the Bayes error rate (the minimum
+        achievable error rate given the distribution of the data). k-NN is
+        guaranteed to approach the Bayes error rate, for some value of k (where k
+        increases as a function of the number of data points).</p>
+
+    <p>The user can also provide a customized distance function.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def knn[T](x: Array[T], y: Array[Int], distance: Distance[T], k: Int): KNN[T]
+    </code></pre>
+
+    <p>Often, the classification accuracy of k-NN can be improved significantly
+        if the distance metric is learned with specialized algorithms such as
+        Large Margin Nearest Neighbor or Neighborhood Components Analysis.</p>
+        
+    <p>Alternatively, the user may provide a k-nearest neighbor search data
+        structure. Besides the simple linear search, Smile provides KD-Tree,
+        Cover Tree, and LSH (Locality-Sensitive Hashing) for efficient
+        k-nearest neighbor search.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def knn[T](x: KNNSearch[T, T], y: Array[Int], k: Int): KNN[T]
+    </code></pre>
+
+    <p>A KD-tree (short for k-dimensional tree) is a space-partitioning dataset
+        structure for organizing points in a k-dimensional space. Cover tree
+        is a data structure for generic nearest neighbor search (with a metric),
+        which is especially efficient in spaces with small intrinsic dimension.
+        The cover tree has a theoretical bound that is based on the dataset's
+        doubling constant. LSH is an efficient algorithm for approximate nearest
+        neighbor search in high dimensional spaces by performing probabilistic
+        dimension reduction of data.</p>
+
+    <p>Nearest neighbor rules in effect compute the decision boundary in an
+        implicit manner. In the following example, we show the implicit decision
+        boundary of k-NN on a 2-dimensional toy data. Please try different <code>k</code>,
+        and you will observe the change of decision boundary. In general, the larger
+        <code>k</code>, the smoother the boundary.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val toy = read.table("data/classification/toy/toy-train.txt", Some((new NominalAttribute("class"), 0)))
+    val (x, y) = toy.unzipInt
+    plot(x, y, knn(x, y, 3))
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/knn.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>In what follows, we will discuss the classification
+        methods that compute the decision boundary explicitly.
+        The computational complexity in the prediction phase
+        is therefore a function of the boundary complexity.
+        We will start with the simplest linear decision functions.</p>
+
+    <h2 id="lda">Linear Discriminant Analysis</h2>
+
+    <p>Linear discriminant analysis (LDA) is based on the Bayes decision theory
+        and assumes that the conditional probability density functions are normally
+        distributed. LDA also makes the simplifying homoscedastic assumption (i.e.
+        that the class covariances are identical) and that the covariances have full
+        rank. With these assumptions, the discriminant function of an input being
+        in a class is purely a function of this linear combination of independent
+        variables.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def lda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): LDA
+    </code></pre>
+
+    <p>The parameter <code>priori</code> is the priori probability of each class. If null, it will be
+        estimated from the training data. The parameter <code>tol</code> is a tolerance to decide
+        if a covariance matrix is singular. The function will reject variables whose variance is
+        less than tol<sup>2</sup>.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/lda.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>As shown in the plot of toy data, the decision boundary of LDA is linear. Note that
+        the decision boundary in the plot is the estimated contour on the testing grid (small dots)
+        rather than the exact decision function. Therefore, there are the artifacts caused by
+        discretized grid.</p>
+
+    <p>LDA is closely related to ANOVA (analysis of variance) and linear regression
+        analysis, which also attempt to express one dependent variable as a
+        linear combination of other features or measurements. In the other two
+        methods, however, the dependent variable is a numerical quantity, while
+        for LDA it is a categorical variable (i.e. the class label). Logistic
+        regression and probit regression are more similar to LDA, as they also
+        explain a categorical variable. These other methods are preferable in
+        applications where it is not reasonable to assume that the independent
+        variables are normally distributed, which is a fundamental assumption
+        of the LDA method.</p>
+
+    <p>One complication in applying LDA (and Fisher's discriminant) to real data
+        occurs when the number of variables/features does not exceed
+        the number of samples. In this case, the covariance estimates do not have
+        full rank, and so cannot be inverted. This is known as small sample size
+        problem.</p>
+
+    <h2 id="fld">Fisher's Linear Discriminant</h2>
+
+    <p>Fisher's linear discriminant (FLD) is another popular linear classifier.
+        Fisher defined the separation between two
+        distributions to be the ratio of the variance between the classes to
+        the variance within the classes, which is, in some sense, a measure
+        of the signal-to-noise ratio for the class labeling. FLD finds a linear
+        combination of features which maximizes the separation after the projection.
+        The resulting combination may be used for dimensionality reduction
+        before later classification.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def fisher(x: Array[Array[Double]], y: Array[Int], L: Int = -1, tol: Double = 0.0001): FLD
+    </code></pre>
+
+    <p>The parameter <code>L</code> is the dimensionality of mapped space.
+        The default value is the number of classes - 1.</p>
+
+    <p>In FLD, the features are mapped to the subspace spanned by the eigenvectors
+        corresponding to the <code>C − 1</code> largest eigenvalues of
+        <code>&Sigma;<sup>-1</sup>&Sigma;<sub>b</sub></code>,
+        where <code>&Sigma;</code> is the covariance matrix,
+        <code>&Sigma;<sub>b</sub></code> is the scatter matrix between class means,
+        and <code>C</code> is the number of classes.</p>
+
+    <p>The terms Fisher's linear discriminant and LDA are often used
+        interchangeably, although FLD actually describes a slightly different
+        discriminant, which does not make some of the assumptions of LDA such
+        as normally distributed classes or equal class covariances.
+        When the assumptions of LDA are satisfied, FLD is equivalent to LDA.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/fld.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>FLD is also closely related to principal component analysis (PCA), which also
+        looks for linear combinations of variables which best explain the data.
+        As a supervised method, FLD explicitly attempts to model the
+        difference between the classes of data. On the other hand, PCA is a
+        unsupervised method and does not take into account any difference in class.</p>
+
+    <p>One complication in applying FLD (and LDA) to real data
+        occurs when the number of variables/features does not exceed
+        the number of samples. In this case, the covariance estimates do not have
+        full rank, and so cannot be inverted. This is known as small sample size
+        problem.</p>
+
+    <h2 id="qda">Quadratic Discriminant analysis</h2>
+
+    <p>Quadratic discriminant analysis (QDA) is closely related to LDA.
+        Like LDA, QDA models the conditional probability density
+        functions as a Gaussian distribution, then uses the posterior distributions
+        to estimate the class for a given test data.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def qda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): QDA
+    </code></pre>
+
+    <p>Unlike LDA, however, in QDA there is no assumption that the covariance of each of the classes
+        is identical. Therefore, the resulting separating surface between
+        the classes is quadratic.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/qda.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>The Gaussian parameters for each class can be estimated from training data
+        with maximum likelihood (ML) estimation. However, when the number of
+        training instances is small compared to the dimension of input space,
+        the ML covariance estimation can be ill-posed. One approach to resolve
+        the ill-posed estimation is to regularize the covariance estimation
+        as in regularized discriminant analysis.</p>
+
+    <h2 id="rda">Regularized Discriminant Analysis</h2>
+
+    <p>In LDA and FLD, the eigenvectors corresponding to the smaller eigenvalues will
+        tend to be very sensitive to the exact choice of training data, and it is often
+        necessary to use regularization. In the regularized discriminant analysis (RDA),
+        the regularized covariance matrices of each class is
+        &Sigma;<sub>k</sub>(&alpha;) = &alpha; &Sigma;<sub>k</sub> + (1 - &alpha;) &Sigma;.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def rda(x: Array[Array[Double]], y: Array[Int], alpha: Double, priori: Array[Double] = null, tol: Double = 0.0001): RDA
+    </code></pre>
+
+    <p>where the parameter <code>alpha</code> is the regularization factor in <code>[0, 1]</code>.</p>
+
+    <p>RDA is a compromise between LDA and QDA, which allows one to shrink the separate covariances of QDA toward a common
+        variance as in LDA. This method is very similar in flavor to ridge regression.
+        The quadratic discriminant function is defined using the shrunken covariance
+        matrices &Sigma;<sub>k</sub>(&alpha;). The parameter &alpha; in [0, 1]
+        controls the complexity of the model. When &alpha; is one, RDA becomes QDA.
+        While &alpha; is zero, RDA is equivalent to LDA. Therefore, the
+        regularization factor &alpha; allows a continuum of models between LDA and QDA.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/rda.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="logit">Logistic Regression</h2>
+
+    <p>Logistic regression (logit model) is a generalized
+        linear model used for binomial regression. Logistic regression applies
+        maximum likelihood estimation after transforming the dependent into
+        a logit variable. A logit is the natural log of the odds of the dependent
+        equaling a certain value or not (usually 1 in binary logistic models,
+        the highest value in multinomial models). In this way, logistic regression
+        estimates the odds of a certain event (value) occurring.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def logit(x: Array[Array[Double]], y: Array[Int], lambda: Double = 0.0, tol: Double = 1E-5, maxIter: Int = 500): LogisticRegression
+    </code></pre>
+
+    <p>where the parameter <code>lambda (&gt; 0)</code> gives a "regularized" estimate of linear
+        weights which often has superior generalization performance, especially
+        when the dimensionality is high.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/logit.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>Logistic regression has many analogies to ordinary least squares (OLS)
+        regression. Unlike OLS regression, however, logistic regression does not
+        assume linearity of relationship between the raw values of the independent
+        variables and the dependent, does not require normally distributed variables,
+        does not assume homoscedasticity, and in general has less stringent
+        requirements.</p>
+
+    <p>Compared with linear discriminant analysis, logistic regression has several
+        advantages:</p>
+
+    <ul>
+        <li>It is more robust: the independent variables don't have to be normally
+            distributed, or have equal variance in each group</li>
+
+        <li>It does not assume a linear relationship between the independent
+            variables and dependent variable.</li>
+
+        <li>It may handle nonlinear effects since one can add explicit interaction
+            and power terms.</li>
+    </ul>
+
+    <p>However, it requires much more data to achieve stable, meaningful results.</p>
+
+    <p>Logistic regression also has strong connections with neural network and
+         maximum entropy modeling. For example, binary logistic regression is
+         equivalent to a one-layer, single-output neural network with a logistic
+         activation function trained under log loss. Similarly, multinomial logistic
+         regression is equivalent to a one-layer, softmax-output neural network.</p>
+
+    <p>Logistic regression estimation also obeys the maximum entropy principle, and
+         thus logistic regression is sometimes called "maximum entropy modeling",
+         and the resulting classifier the "maximum entropy classifier".</p>
+
+    <h2 id="maxent">Maximum Entropy Classifier</h2>
+
+    <p>Maximum entropy is a technique for learning
+        probability distributions from data. In maximum entropy models, the
+        observed data itself is assumed to be the testable information. Maximum
+        entropy models don't assume anything about the probability distribution
+        other than what have been observed and always choose the most uniform
+        distribution subject to the observed constraints.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent
+    </code></pre>
+
+    <p>where <code>x</code> is the sparse training samples. Each sample is represented by a set of sparse
+        binary features. The features are stored in an integer array, of which
+        are the indices of nonzero features.
+        The parameter <code>p</code> is the dimension of feature space, and <code>lambda</code>
+        is the regularization factor.</p>
+
+    <p>Basically, maximum entropy classifier is another name of multinomial logistic
+        regression applied to categorical independent variables, which are
+        converted to binary dummy variables. Maximum entropy models are widely
+        used in natural language processing. Therefore, our implementation
+        assumes that binary features are stored in a sparse array, of which
+        entries are the indices of nonzero features.</p>
+
+    <h2 id="neural-network">Multilayer Perceptron Neural Network</h2>
+
+    <p>A multilayer perceptron neural network consists of several layers of nodes, interconnected through weighted
+        acyclic arcs from each preceding layer to the following, without lateral or
+        feedback connections. Each node calculates a transformed weighted linear
+        combination of its inputs (output activations from the preceding layer), with
+        one of the weights acting as a trainable bias connected to a constant input.
+        The transformation, called activation function, is a bounded non-decreasing
+        (non-linear) function, such as the sigmoid functions (ranges from 0 to 1).
+        Another popular activation function is hyperbolic tangent which is actually
+        equivalent to the sigmoid function in shape but ranges from -1 to 1.
+        More specialized activation functions include radial basis functions which
+        are used in RBF networks.</p>
+
+    <p>For neural networks, the input patterns usually should be scaled/standardized.
+        Commonly, each input variable is scaled into interval [0, 1] or to have
+        mean 0 and standard deviation 1.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def mlp(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, activation: NeuralNetwork.ActivationFunction, epochs: Int = 25, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork
+    </code></pre>
+
+    <p>where <code>numUnits</code> is the number of units in each layer, <code>error</code>
+        is the error function, <code>activation</code> is the activation function of output layer,
+        <code>epochs</code> is the number of epochs of stochastic learning,
+        <code>eta</code> is the learning rate,
+        <code>alpha</code> is the momentum factor,
+        and <code>lambda</code> is the weight decay for regularization.
+        The meaning of these parameters will be clear in the following discussion.</p>
+
+    <p>For error/penalty functions and output units, the following natural pairings are
+        recommended:</p>
+
+    <ul>
+        <li>linear output units and a least squares penalty function.</li>
+
+        <li>a two-class cross-entropy penalty function and a logistic
+            activation function.</li>
+
+        <li>a multi-class cross-entropy penalty function and a softmax
+            activation function.</li>
+    </ul>
+
+    <p>By assigning a softmax activation function on the output layer of
+        the neural network for categorical target variables, the outputs
+        can be interpreted as posterior probabilities, which are very useful.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/neural-network.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>The representational capabilities of a neural network are determined by the range of
+        mappings it may implement through weight variation. Single layer perceptrons
+        are capable of solving only linearly separable problems. With the sigmoid
+        function as activation function, the single-layer network is identical
+        to the logistic regression model.</p>
+
+    <p>The universal approximation theorem for neural networks states that every
+        continuous function that maps intervals of real numbers to some output
+        interval of real numbers can be approximated arbitrarily closely by a
+        multi-layer perceptron with just one hidden layer. This result holds only
+        for restricted classes of activation functions, which are extremely complex
+        and NOT smooth for subtle mathematical reasons. On the other hand, smoothness
+        is important for gradient descent learning. Besides, the proof is not
+        constructive regarding the number of neurons required or the settings of
+        the weights. Therefore, complex systems will have more layers of neurons
+        with some having increased layers of input neurons and output neurons
+        in practice. The extra layers enable composition of features from lower layers,
+        giving the potential of modeling complex data with fewer units than a similarly
+        performing shallow network. But many issues can arise with deep neural networks
+        if they are naively trained. Two common issues are overfitting and computation time.</p>
+
+    <p>The most popular algorithm to train neural networks is back-propagation, which is a
+        gradient descent method. Based on chain rule, the algorithm propagates the
+        error back through the network and adjusts the weights of each connection in
+        order to reduce the value of the error function by some small amount.
+        For this reason, back-propagation can only be applied on networks with
+        differentiable activation functions.</p>
+
+    <p>During error back propagation, we usually times the gradient with a small
+        number &eta;, called learning rate, which is carefully selected to ensure
+        that the network converges to a local minimum of the error function
+        fast enough, without producing oscillations. One way to avoid oscillation
+        at large &eta;, is to make the change in weight dependent on the past weight
+        change by adding a momentum term.</p>
+
+    <p>Although the back-propagation algorithm may performs gradient
+        descent on the total error of all instances in a batch way,
+        the learning rule is often applied to each instance separately in an online
+        way or stochastic way. There exists empirical indication that the stochastic
+        way results in faster convergence.</p>
+
+    <p>In practice, the problem of over-fitting has emerged. This arises in
+        convoluted or over-specified systems when the capacity of the network
+        significantly exceeds the needed free parameters. There are two general
+        approaches for avoiding this problem: The first is to use cross-validation
+        and similar techniques to check for the presence of over-fitting and
+        optimally select hyper-parameters such as to minimize the generalization
+        error. The second is to use some form of regularization, which emerges
+        naturally in a Bayesian framework, where the regularization can be
+        performed by selecting a larger prior probability over simpler models;
+        but also in statistical learning theory, where the goal is to minimize over
+        the "empirical risk" and the "structural risk".</p>
+
+    <h2 id="rbf-network">Radial Basis Function Networks</h2>
+
+    <p>A radial basis function network is an
+        artificial neural network that uses radial basis functions as activation
+        functions. It is a linear combination of radial basis functions. They are
+        used in function approximation, time series prediction, and control.</p>
+
+    <p>In its basic form, radial basis function network is in the form</p>
+
+    <pre class="prettyprint lang-html"><code>
+    y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
+    </code></pre>
+
+    <p>where the approximating function y(x) is represented as a sum of N radial
+        basis functions &phi;, each associated with a different center c<sub>i</sub>,
+        and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
+        one usually chooses Euclidean distance. The weights w<sub>i</sub> can
+        be estimated using the matrix methods of linear least squares, because
+        the approximating function is linear in the weights.</p>
+
+    <p>RBF networks are typically trained by a two-step algorithm.
+        In the first step, the center vectors <code>c<sub>i</sub></code>
+        of the RBF functions in the hidden layer are chosen.
+        This step can be performed in several ways; centers can be randomly
+        sampled from some set of examples, or they can be determined
+        using k-means clustering. Note that this step is unsupervised.</p>
+
+    <p>The second step simply fits a linear model with coefficients <code>w<sub>i</sub></code> to
+        the hidden layer's outputs with respect to some objective function.
+        A common objective function, at least for regression/function estimation,
+        is the least squares function.</p>
+
+    <p>A optional third backpropagation step can be performed to fine-tune all of the RBF
+        network's parameters.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def rbfnet[T](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T]
+
+    def rbfnet[T](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T]
+
+    def nrbfnet[T](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T]
+
+    def nrbfnet[T](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T]
+    </code></pre>
+
+    <p>The popular choices for &phi; comprise the Gaussian function and the so
+        called thin plate splines. The advantage of the thin plate splines is that
+        their conditioning is invariant under scalings. Gaussian, multi-quadric
+        and inverse multi-quadric are infinitely smooth and and involve a scale
+        or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
+        r<sub><small>0</small></sub> tends to flatten the basis function. For a
+        given function, the quality of approximation may strongly depend on this
+        parameter. In particular, increasing r<sub><small>0</small></sub> has the
+        effect of better conditioning (the separation distance of the scaled points
+        increases).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val centers = new Array[Array[Double]](50)
+    val basis = gaussrbf(x, centers)
+    val classifier = rbfnet(x, y, new EuclideanDistance, basis, centers)
+    plot(x, y, classifier)
+    </code></pre>
+
+    <p>After running the above example, you may notice that the decision boundary
+        may be very different from the below picture. It is because the centers
+        learn from <code>gaussrbf</code>, employing K-Means in this example,
+        are different every time, a nature of stochastic algorithm like K-Means.
+        This also shows that the decision boundary of RBF network is very sensistive
+        to the chosen centers.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/rbf-network-classification.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>A variant on RBF networks is normalized radial basis function (NRBF)
+        networks, in which we require the sum of the basis functions to be unity.
+        NRBF arises more naturally from a Bayesian statistical perspective. However,
+        there is no evidence that either the NRBF method is consistently superior
+        to the RBF method, or vice versa.</p>
+
+    <h2 id="svm">Support Vector Machines</h2>
+
+    <p>The basic support vector machine (SVM)
+        is a binary linear classifier which chooses the hyperplane that represents
+        the largest separation, or margin, between the two classes. If such a
+        hyperplane exists, it is known as the maximum-margin hyperplane and the
+        linear classifier it defines is known as a maximum margin classifier.</p>
+
+    <p>If there exists no hyperplane that can perfectly split the positive and
+        negative instances, the soft margin method will choose a hyperplane
+        that splits the instances as cleanly as possible, while still maximizing
+        the distance to the nearest cleanly split instances.</p>
+
+    <p>The nonlinear SVMs are created by applying the kernel trick to
+        maximum-margin hyperplanes. The resulting algorithm is formally similar,
+        except that every dot product is replaced by a nonlinear kernel function.
+        This allows the algorithm to fit the maximum-margin hyperplane in a
+        transformed feature space. The transformation may be nonlinear and
+        the transformed space be high dimensional. For example, the feature space
+        corresponding Gaussian kernel is a Hilbert space of infinite dimension.
+        Thus though the classifier is a hyperplane in the high-dimensional feature
+        space, it may be nonlinear in the original input space. Maximum margin
+        classifiers are well regularized, so the infinite dimension does not spoil
+        the results.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def svm[T](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, strategy: SVM.Multiclass = SVM.Multiclass.ONE_VS_ONE, epoch: Int = 1): SVM[T]
+    </code></pre>
+
+    <p>The effectiveness of SVM depends on the selection of kernel, the kernel's
+        parameters, and soft margin parameter <code>C</code>. Given a kernel, best combination
+        of <code>C</code> and kernel's parameters is often selected by a grid-search with
+        cross validation.</p>
+
+    <p>The dominant approach for creating multi-class SVMs is to reduce the
+        single multi-class problem into multiple binary classification problems.
+        Common methods for such reduction is to build binary classifiers which
+        distinguish between (i) one of the labels to the rest (one-versus-all)
+        or (ii) between every pair of classes (one-versus-one). Classification
+        of new instances for one-versus-all case is done by a winner-takes-all
+        strategy, in which the classifier with the highest output function assigns
+        the class. For the one-versus-one approach, classification
+        is done by a max-wins voting strategy, in which every classifier assigns
+        the instance to one of the two classes, then the vote for the assigned
+        class is increased by one vote, and finally the class with most votes
+        determines the instance classification.</p>
+
+    <p>With a Gaussian kernel of <code>&gamma; = 1.0</code> and <code>C = 10</code>,
+        the decission boundary of SVM on the toy data is shown as following.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/svm.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>Most machine learning libraries implement SVM with a batch learning algorithm.
+        Smile employs an advanced online learning algorithm, which is very efficient
+        and can update the model with new data easily.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    // model is an existing SVM model.
+    // update the model with new data.
+    model.learn(x, y)
+    // polish the model
+    model.finish
+    </code></pre>
+
+    <p>SVMs with Gaussian kernel have similar structure as RBF networks with
+        Gaussian radial basis functions. However, the SVM approach "automatically"
+        solves the network complexity problem since the size of the hidden layer
+        is obtained as the result of the quadratic programming procedure. Hidden neurons and
+        support vectors correspond to each other, so the center problems of
+        the RBF network is also solved, as the support vectors serve as the
+        basis function centers. It was reported that with similar number of support
+        vectors/centers, SVM shows better generalization performance than RBF
+        network when the training data size is relatively small. On the other hand,
+        RBF network gives better generalization performance than SVM on large
+        training data.</p>
+
+    <h2 id="cart">Decision Trees</h2>
+
+    <p>A decision tree can be learned by splitting the training set into subsets based on an attribute value
+        test. This process is repeated on each derived subset in a recursive
+        manner called recursive partitioning. The recursion is completed when
+        the subset at a node all has the same value of the target variable,
+        or when splitting no longer adds value to the predictions.</p>
+
+    <p>The algorithms that are used for constructing decision trees usually
+        work top-down by choosing a variable at each step that is the next best
+        variable to use in splitting the set of items. "Best" is defined by how
+        well the variable splits the set into homogeneous subsets that have
+        the same value of the target variable. Different algorithms use different
+        formulae for measuring "best". Used by the CART (Classification and Regression Tree) algorithm, Gini impurity
+        is a measure of how often a randomly chosen element from the set would
+        be incorrectly labeled if it were randomly labeled according to the
+        distribution of labels in the subset. Gini impurity can be computed by
+        summing the probability of each item being chosen times the probability
+        of a mistake in categorizing that item. It reaches its minimum (zero) when
+        all cases in the node fall into a single target category. Information gain
+        is another popular measure, used by the ID3, C4.5 and C5.0 algorithms.
+        Information gain is based on the concept of entropy used in information
+        theory. For categorical variables with different number of levels, however,
+        information gain are biased in favor of those attributes with more levels.
+        Instead, one may employ the information gain ratio, which solves the drawback
+        of information gain.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def cart(x: Array[Array[Double]], y: Array[Int], maxNodes: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree
+    </code></pre>
+
+    <p>where <code>maxNodes</code> is the maximum number of leaf nodes in the tree as
+        a regularization control.
+        The parameter <code>attributes</code> provides
+        the attribute properties so that the algorithm can chooses the proper split
+        value for attributes. If not provided, all attributes are assumed real-valued.</p>
+
+    <p>The following picture is the decision boundary of decision tree with 200 nodes
+        on the toy data.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/decision-tree.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>Decision tree techniques have a number of advantages
+        over many of those alternative techniques.</p>
+    <dl>
+        <dt>Simple to understand and interpret:</dt>
+        <dd><p>In most cases, the interpretation of results summarized in a tree is
+         very simple. This simplicity is useful not only for purposes of rapid
+         classification of new observations, but can also often yield a much simpler
+         "model" for explaining why observations are classified or predicted in a
+         particular manner.</p></dd>
+
+        <dt>Able to handle both numerical and categorical data:</dt>
+        <dd><p>Other techniques are usually specialized in analyzing datasets that
+         have only one type of variable.</p></dd>
+
+        <dt>Nonparametric and nonlinear:</dt>
+        <dd><p>The final results of using tree methods for classification or regression
+         can be summarized in a series of (usually few) logical if-then conditions
+         (tree nodes). Therefore, there is no implicit assumption that the underlying
+         relationships between the predictor variables and the dependent variable
+         are linear, follow some specific non-linear link function, or that they
+         are even monotonic in nature. Thus, tree methods are particularly well
+         suited for data mining tasks, where there is often little a priori
+         knowledge nor any coherent set of theories or predictions regarding which
+         variables are related and how. In those types of data analytics, tree
+         methods can often reveal simple relationships between just a few variables
+         that could have easily gone unnoticed using other analytic techniques.</p></dd>
+    </dl>
+
+    <p>One major problem with classification and regression trees is their high
+        variance. Often a small change in the data can result in a very different
+        series of splits, making interpretation somewhat precarious. Besides,
+        decision-tree learners can create over-complex trees that cause over-fitting.
+        Mechanisms such as pruning are necessary to avoid this problem.
+        Another limitation of trees is the lack of smoothness of the prediction
+        surface.</p>
+
+    <p>Some techniques such as bagging, boosting, and random forest use more than
+        one decision tree for their analysis.</p>
+
+    <h2 id="random-forest">Random Forest</h2>
+
+    <p>Random forest is an ensemble classifier that consists of many decision trees and outputs the majority vote of
+        individual trees. The method combines bagging idea and the random
+        selection of features.</p>
+
+    <p>Each tree is constructed using the following algorithm:</p>
+    <ol>
+        <li>If the number of cases in the training set is N, randomly sample N cases
+         with replacement from the original data. This sample will
+         be the training set for growing the tree.</li>
+
+        <li>If there are M input variables, a number m &lt;&lt; M is specified such
+         that at each node, m variables are selected at random out of the M and
+         the best split on these m is used to split the node. The value of m is
+         held constant during the forest growing.</li>
+
+        <li>Each tree is grown to the largest extent possible. There is no pruning.</li>
+    </ol>
+
+    <pre class="prettyprint lang-scala"><code>
+    def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 1, mtry: Int = -1, subsample: Double = 1.0, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest
+    </code></pre>
+
+    <p>where <code>ntrees</code> is the number of trees, and <code>mtry</code> is the number
+        of attributed randomly selected at each node to choose the best split.
+        Although the original random forest algorithm trains each tree fully without pruning,
+        it is useful to control the tree size some times, which can be achieved by the
+        parameter <code>maxNodes</code>. The tree can also be regularized by
+        limiting the minimum number of observations in trees' terminal nodes with the
+        parameter <code>nodeSize</code>.
+        When <code>subsample = 1.0</code>, we use the sampling with replacement to train
+        each tree as described above. If <code>subsample < 1.0</code>, we instead select
+        a subset of samples (without replacement) to train each tree. If the classes are
+        not balanced, the user should provide the <code>classWeight</code> (proportional
+        to the class priori) so that the sampling is done in stratified  way. Otherwise,
+        small classes may be not sampled sufficiently.</p>
+
+    <p>The following picture is the decision boundary of random forest of 100 decision trees with 200 nodes
+        on the toy data.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/random-forest-classification.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>The advantages of random forest are:</p>
+    <ul>
+        <li>For many data sets, it produces a highly accurate classifier.</li>
+        <li>It runs efficiently on large data sets.</li>
+        <li>It can handle thousands of input variables without variable deletion.</li>
+        <li>It gives estimates of what variables are important in the classification.</li>
+        <li>It generates an internal unbiased estimate of the generalization error as the forest building progresses.</li>
+        <li>It has an effective method for estimating missing data and maintains accuracy when a large proportion of the data are missing.</li>
+    </ul>
+
+    <p>The disadvantages are</p>
+    <ul>
+        <li>Random forests are prone to over-fitting for some datasets. This is
+            even more pronounced on noisy data.</li>
+        <li>For data including categorical variables with different number of
+            levels, random forests are biased in favor of those attributes with more
+            levels. Therefore, the variable importance scores from random forest are
+            not reliable for this type of data.</li>
+    </ul>
+
+    <h2 id="gbm">Gradient Boosted Trees</h2>
+
+    <p>The idea of gradient boosting originated in the observation that boosting can be
+        interpreted as an optimization algorithm on a suitable cost function.
+        In particular, the boosting algorithms can be abstracted as iterative functional gradient descent
+        algorithms. That is, algorithms that optimize a cost function over function space
+        by iteratively choosing a function (weak hypothesis) that points in the negative
+        gradient direction
+        Gradient boosting is typically used with CART regression trees of a fixed size as
+        base learners.</p>
+
+    <p>Generic gradient boosting at the t-th step would fit a regression tree to
+        pseudo-residuals. Let J be the number of its leaves. The tree partitions
+        the input space into J disjoint regions and predicts a constant value in
+        each region. The parameter J controls the maximum allowed
+        level of interaction between variables in the model. With J = 2 (decision
+        stumps), no interaction between variables is allowed. With J = 3 the model
+        may include effects of the interaction between up to two variables, and
+        so on. Hastie et al. comment that typically 4 &le; J &le; 8 work well
+        for boosting and results are fairly insensitive to the choice of in
+        this range, J = 2 is insufficient for many applications, and J &gt; 10 is
+        unlikely to be required.</p>
+
+    <p>Fitting the training set too closely can lead to degradation of the model's
+        generalization ability. Several so-called regularization techniques reduce
+        this over-fitting effect by constraining the fitting procedure.
+        One natural regularization parameter is the number of gradient boosting
+        iterations T (i.e. the number of trees in the model when the base learner
+        is a decision tree). Increasing T reduces the error on training set,
+        but setting it too high may lead to over-fitting. An optimal value of T
+        is often selected by monitoring prediction error on a separate validation
+        data set.</p>
+
+    <p>Another regularization approach is the shrinkage which times a parameter
+        &eta; (called the "learning rate") to update term.
+        Empirically it has been found that using small learning rates (such as
+        &eta; &lt; 0.1) yields dramatic improvements in model's generalization ability
+        over gradient boosting without shrinking (&eta; = 1). However, it comes at
+        the price of increasing computational time both during training and
+        prediction: lower learning rate requires more iterations.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost
+    </code></pre>
+
+    <p>where <code>ntrees</code> is the number of trees or iterations and <code>shrinkage</code>
+        is the learning rate.</p>
+
+    <p>The following picture is the decision boundary of gradient boosted trees of 100 iterations
+        on the toy data.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/gradient-boosting-classification.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>Soon after the introduction of gradient boosting Friedman proposed a
+        minor modification to the algorithm, motivated by Breiman's bagging method.
+        Specifically, he proposed that at each iteration of the algorithm, a base
+        learner should be fit on a subsample of the training set drawn at random
+        without replacement. Friedman observed a substantial improvement in
+        gradient boosting's accuracy with this modification.</p>
+
+    <p>Subsample size is some constant fraction f of the size of the training set.
+        When f = 1, the algorithm is deterministic and identical to the one
+        described above. Smaller values of f introduce randomness into the
+        algorithm and help prevent over-fitting, acting as a kind of regularization.
+        The algorithm also becomes faster, because regression trees have to be fit
+        to smaller datasets at each iteration. Typically, f is set to 0.5, meaning
+        that one half of the training set is used to build each base learner.</p>
+
+    <p>Also, like in bagging, sub-sampling allows one to define an out-of-bag
+        estimate of the prediction performance improvement by evaluating predictions
+        on those observations which were not used in the building of the next
+        base learner. Out-of-bag estimates help avoid the need for an independent
+        validation dataset, but often underestimate actual performance improvement
+        and the optimal number of iterations.</p>
+
+    <h2 id="adaboost">AdaBoost</h2>
+
+    <p>In principle, AdaBoost (Adaptive Boosting) is a meta-algorithm, and can be used in conjunction with many other
+        learning algorithms to improve their performance. In practice, AdaBoost with
+        decision trees is probably the most popular combination. AdaBoost is adaptive
+        in the sense that subsequent classifiers built are tweaked in favor of those
+        instances misclassified by previous classifiers. AdaBoost is sensitive to
+        noisy data and outliers. However in some problems it can be less susceptible
+        to the over-fitting problem than most learning algorithms.</p>
+
+    <p>AdaBoost calls a weak classifier repeatedly in a series of rounds from
+        total T classifiers. For each call a distribution of weights is updated
+        that indicates the importance of examples in the data set for the
+        classification. On each round, the weights of each incorrectly classified
+        example are increased (or alternatively, the weights of each correctly
+        classified example are decreased), so that the new classifier focuses more
+        on those examples.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def adaboost(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 2): AdaBoost
+    </code></pre>
+
+    <p>The following picture is the decision boundary of AdaBoost of 100 trees on the toy data.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/adaboost.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>The basic AdaBoost algorithm is only for binary classification problem.
+        For multi-class classification, a common approach is reducing the
+        multi-class classification problem to multiple two-class problems.
+        Smile implements a multi-class AdaBoost without such reductions.</p>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="visualization.html" title="Previous Section: Visualization"><span>Visualization</span></a>
+        <a class="btn-next-text" href="regression.html" title="Next Section: Regression"><span>Regression</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

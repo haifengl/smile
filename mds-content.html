@@ -1,0 +1,177 @@
+<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+        <div id="search">
+            <script>
+                (function() {
+                    var cx = '010264411143030149390:ajvee_ckdzs';
+                    var gcse = document.createElement('script');
+                    gcse.type = 'text/javascript';
+                    gcse.async = true;
+                    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                            '//cse.google.com/cse.js?cx=' + cx;
+                    var s = document.getElementsByTagName('script')[0];
+                    s.parentNode.insertBefore(gcse, s);
+                })();
+            </script>
+            <gcse:searchbox-only></gcse:searchbox-only>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="mds-top" class="title">Multi-Dimensional Scaling</h1>
+
+    <p>Multidimensional scaling is a set of related statistical techniques
+        often used in information visualization for exploring similarities or
+        dissimilarities in data. An MDS algorithm starts with a matrix of item-item
+        similarities, then assigns a location to each item in low-dimensional space.
+        For sufficiently low dimension, the resulting locations may be displayed in a
+        graph or 3D visualization.</p>
+
+    <p>The major types of MDS algorithms include:</p>
+    <dl>
+     <dt>Classical multi-dimensional scaling</dt>
+     <dd><p>It takes an input matrix giving dissimilarities between pairs of items and
+     outputs a coordinate matrix whose configuration minimizes a loss function
+     called strain.</p></dd>
+     <dt>Metric multi-dimensional scaling</dt>
+     <dd><p>A superset of classical MDS that generalizes the optimization procedure
+     to a variety of loss functions and input matrices of known distances with
+     weights and so on. A useful loss function in this context is called stress
+     which is often minimized using a procedure called stress majorization.</p></dd>
+     <dt>Non-metric multi-dimensional scaling</dt>
+     <dd><p>In contrast to metric MDS, non-metric MDS finds both a non-parametric
+     monotonic relationship between the dissimilarities in the item-item matrix
+     and the Euclidean distances between items, and the location of each item in
+     the low-dimensional space. The relationship is typically found using isotonic
+     regression.</p></dd>
+     <dt>Generalized multi-dimensional scaling</dt>
+     <dd><p>An extension of metric multidimensional scaling, in which the target
+     space is an arbitrary smooth non-Euclidean space. In case when the
+     dissimilarities are distances on a surface and the target space is another
+     surface, GMDS allows finding the minimum-distortion embedding of one surface
+     into another.</p></dd>
+    </dl>
+
+    <h2 id="classical">Classical Multi-dimensional Scaling</h2>
+
+    <p>Classical multidimensional scaling is also known as principal coordinates
+        analysis. Given a matrix <code>A</code> of dissimilarities (e.g. pairwise distances), MDS
+        finds a set of points in low dimensional space that well-approximates the
+        dissimilarities in <code>A</code>. We are not restricted to using a Euclidean
+        distance metric. However, when Euclidean distances are used, classical MDS is
+        equivalent to PCA.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def mds(proximity: Array[Array[Double]], k: Int, add: Boolean = false): MDS
+    </code></pre>
+
+    <p>where <code>proximity</code> is the nonnegative proximity matrix of dissimilarities.
+        The diagonal should be zero and all other elements should be positive and
+        symmetric. For pairwise distances matrix, it should be just the plain
+        distance, not squared.
+        The parameter <code>k</code> is the dimension of output space.
+        If the parameter <code>add</code> is true, the method estimates an appropriate constant to be added
+        to all the dissimilarities, apart from the self-dissimilarities, that
+        makes the learning matrix positive semi-definite. The other formulation of
+        the additive constant problem is as follows. If the proximity is
+        measured in an interval scale, where there is no natural origin, then there
+        is not a sympathy of the dissimilarities to the distances in the Euclidean
+        space used to represent the objects. In this case, we can estimate a constant c
+        such that proximity + c may be taken as ratio data, and also possibly
+        to minimize the dimensionality of the Euclidean space required for
+        representing the objects.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val eurodist = read.table("data/projection/eurodist.txt", delimiter = "\\t+", header = true, rowNames = true)
+    val dist = eurodist.unzip
+    val labels = eurodist.attributes.map(_.getName).toArray
+    val x = mds(dist, 2).getCoordinates
+    plot(x, labels)
+    </code></pre>
+
+    <p>In the above example, we apply MDS to a distance matrix of some European cities.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/mds.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">MDS</div>
+    </div>
+
+    <h2 id="kruskal">Kruskal's Nonmetric MDS</h2>
+
+    <p>Kruskal's nonmetric MDS. In non-metric MDS, only the rank order of entries
+        in the proximity matrix (not the actual dissimilarities) is assumed to
+        contain the significant information. Hence, the distances of the final
+        configuration should as far as possible be in the same rank order as the
+        original data. Note that a perfect ordinal re-scaling of the data into
+        distances is usually not possible. The relationship is typically found
+        using isotonic regression.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def isomds(proximity: Array[Array[Double]], k: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS
+    </code></pre>
+
+    <p>where <code>tol</code> is the tolerance for stopping iterations, and
+        <code>maxIter</code> is the maximum number of iterations.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/isomds.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Kruskal's Nonmetric MDS</div>
+    </div>
+
+    <h2 id="sammon">Sammon's Mapping</h2>
+
+    <p>Sammon's mapping is an iterative technique for making interpoint
+        distances in the low-dimensional projection as close as possible to the
+        interpoint distances in the high-dimensional object. Two points close
+        together in the high-dimensional space should appear close together in the
+        projection, while two points far apart in the high dimensional space should
+        appear far apart in the projection. The Sammon's mapping is a special case of
+        metric least-square multidimensional scaling.</p>
+
+    <p>Ideally when we project from a high dimensional space to a low dimensional
+        space the image would be geometrically congruent to the original figure.
+        This is called an isometric projection. Unfortunately it is rarely possible
+        to isometrically project objects down into lower dimensional spaces. Instead of
+        trying to achieve equality between corresponding inter-point distances we
+        can minimize the difference between corresponding inter-point distances.
+        This is one goal of the Sammon's mapping algorithm. A second goal of the Sammon's
+        mapping algorithm is to preserve the topology as best as possible by giving
+        greater emphasize to smaller interpoint distances. The Sammon's mapping
+        algorithm has the advantage that whenever it is possible to isometrically
+        project an object into a lower dimensional space it will be isometrically
+        projected into the lower dimensional space. But whenever an object cannot
+        be projected down isometrically the Sammon's mapping projects it down to reduce
+        the distortion in interpoint distances and to limit the change in the
+        topology of the object.</p>
+
+    <p>The projection cannot be solved in a closed form and may be found by an
+        iterative algorithm such as gradient descent suggested by Sammon. Kohonen
+        also provides a heuristic that is simple and works reasonably well.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def sammon(proximity: Array[Array[Double]], k: Int, lambda: Double = 0.2, tol: Double = 0.0001, maxIter: Int = 100): SammonMapping
+    </code></pre>
+
+    <p>where <code>lambda</code> is the initial value of the step size constant in diagonal Newton method.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/sammon.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Sammon's Mapping</div>
+    </div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="association-rule.html" title="Previous Section: Association Rule Mining"><span>Association Rule Mining</span></a>
+        <a class="btn-next-text" href="manifold.html" title="Next Section: Manifold Learning"><span>Manifold Learning</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

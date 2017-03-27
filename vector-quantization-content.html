@@ -1,0 +1,343 @@
+<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+        <div id="search">
+            <script>
+                (function() {
+                    var cx = '010264411143030149390:ajvee_ckdzs';
+                    var gcse = document.createElement('script');
+                    gcse.type = 'text/javascript';
+                    gcse.async = true;
+                    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                            '//cse.google.com/cse.js?cx=' + cx;
+                    var s = document.getElementsByTagName('script')[0];
+                    s.parentNode.insertBefore(gcse, s);
+                })();
+            </script>
+            <gcse:searchbox-only></gcse:searchbox-only>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="vector-quantization-top" class="title">Vector Quantization</h1>
+
+    <p>Originally used for data compression, Vector quantization (VQ)
+        allows the modeling of probability density functions by
+        the distribution of prototype vectors. It works by dividing a large set of points
+        (vectors) into groups having approximately the same number of
+        points closest to them. Each group is represented by its centroid
+        point, as in K-Means and some other clustering algorithms.
+        Because of this reason, the algorithm discussed in this section are
+        in the same package of clustering algorithms.</p>
+
+    <p>Vector quantization is is based on the competitive learning paradigm,
+        and also closely related to sparse coding models
+        used in deep learning algorithms such as autoencoder.</p>
+
+    <h2 id="som">Self-Organizing Map</h2>
+
+    <p>A Self-Organizing Map (SOM) is a unsupervised learning method to produce
+        a low-dimensional (typically two-dimensional) discretized representation
+        (called a map) of the input space of the training samples. The model was
+        first described as an artificial neural network by Teuvo Kohonen, and is
+        sometimes called a Kohonen map.</p>
+
+    <p>While it is typical to consider SOMs as related to feed-forward networks where
+        the nodes are visualized as being attached, this type of architecture is
+        fundamentally different in arrangement and motivation because SOMs use a
+        neighborhood function to preserve the topological properties of the input
+        space. This makes SOMs useful for visualizing low-dimensional views of
+        high-dimensional data, akin to multi-dimensional scaling.</p>
+
+    <p>An SOM consists of components called nodes or neurons.
+        Associated with each node is a weight vector of the same dimension as
+        the input data vectors and a position in the map space. The usual arrangement
+        of nodes is a regular spacing in a hexagonal or rectangular grid. During the (iterative) learning,
+        the input vectors are compared to the weight vector of each neuron. Neurons
+        who most closely match the input are known as the best match unit (BMU) of
+        the system. The weight vector of the BMU and those of nearby neurons are
+        adjusted to be closer to the input vector by a certain step size.</p>
+
+    <p>There are two ways to interpret a SOM. Because in the training phase weights
+        of the whole neighborhood are moved in the same direction, similar items
+        tend to excite adjacent neurons. Therefore, SOM forms a semantic map where
+        similar samples are mapped close together and dissimilar apart.
+        The other way is to think of neuronal weights as pointers to the input space.
+        They form a discrete approximation of the distribution of training samples.
+        More neurons point to regions with high training sample concentration and
+        fewer where the samples are scarce.</p>
+
+    <p>SOM may be considered a nonlinear generalization of PCA.
+        It has been shown, using both artificial and real
+        geophysical data, that SOM has many advantages over the conventional feature
+        extraction methods such as Empirical Orthogonal Functions (EOF) or PCA.</p>
+
+    <p>It has been shown that while SOMs with a small number of nodes behave in a
+        way that is similar to K-means. However, larger SOMs rearrange data
+        in a way that is fundamentally topological in character and display properties
+        which are emergent. Therefore, large maps are preferable to smaller ones.
+        In maps consisting of thousands of nodes, it is possible to perform cluster
+        operations on the map itself.</p>
+
+    <p>A common way to display SOMs is the heat map of U-matrix. The U-matrix value
+        of a particular node is the minimum/maximum/average distance between the node
+        and its closest neighbors. In a rectangular grid for instance, we might
+        consider the closest 4 or 8 nodes.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def som(data: Array[Array[Double]], width: Int, height: Int): SOM
+    </code></pre>
+
+    <p>It is common to use the U-Matrix to visualize an SOM.
+        The U-Matrix value of a particular node is the average
+        distance between the node's weight vector and that of
+        its closest neighbors. In a square grid, for instance,
+        we might consider the closest 4 or 8 nodes
+        (the Von Neumann and Moore neighborhoods, respectively),
+        or six nodes in a hexagonal grid.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/t4.8k.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Chameleon t4.8k</div>
+    </div>
+
+    <p>In what follows, we apply SOM to a complicated data from Chameleon
+        data set, as shown in the above. The SOM has <code>20 x 20</code>
+        neurons.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val x = read.table("data/clustering/chameleon/t4.8k.txt").unzip
+    val map = som(x, 30, 30)
+    hexmap(map.umatrix, Palette.jet(256))
+    </code></pre>
+
+    <p>The U-Matrix is visualized with a hexmap, where a dark red coloring between
+        the neurons corresponds to a large distance and thus a gap between
+        the codebook values in the input space. A dark blue coloring between
+        the neurons signifies that the codebook vectors are close to each other
+        in the input space. The blueish areas can be thought as clusters and
+        reddish areas as cluster separators. This can be a helpful presentation
+        when one tries to find clusters in the input data without having any
+        <i>a priori</i> information about the clusters.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/som-umatrix-hexmap.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">SOM U-Matrix</div>
+    </div>
+
+    <p>One may also fit a Gaussian mixture model on the U-Matrix values.
+        Our implementation of EM algorithm to fix mixture models can automatically
+        determine the number of components in the mixture. The distribution
+        information can be used in other algorithms such as Guassian kernel smooth
+        parameters, nearest neighbor range, etc.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val dist = map.umatrix.flatten
+    val win = hist(dist, 100)
+
+    val mixture = new GaussianMixture(dist)
+
+    val minDist = min(dist: _*)
+    val w = (max(dist: _*) - minDist) / 50
+    val pdf = (0 to 50).map {i =>
+      val x = minDist + i * w
+      val y = mixture.p(x) * w
+      Array(x, y)
+    }.toArray
+
+    win.canvas.line(pdf, Color.RED)
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/som-umatrix-hist.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">SOM U-Matrix Value Distribution</div>
+    </div>
+
+    <p>It is also common to visualize an SOM by mapping the neuron
+        codebook vectors to a lower dimensional space (e.g. by Sammon's mapping).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val nodes = 30
+    val map = som(x, nodes, nodes)
+    val codebook = map.map.flatten
+    val codebook2d = sammon(pdist(codebook, false), 2).getCoordinates
+    val neurons = (0 until nodes).map { i => codebook2d.slice(nodes*i, nodes*(i+1)) }.toArray
+    grid(neurons)
+    </code></pre>
+
+    <p>Because this artificial data is 2-dimensional, it is not necessary
+        to map the neurons in the SOM to a lower dimensional space.
+        For demonstration, we still go through the whole process with a Sammon's mapping.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/som-sammon.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">SOM Neuron Grid after Sammon's Mapping</div>
+    </div>
+
+    <h2 id="neural-gas">Neural Gas</h2>
+
+    <p>The Neural Gas algorithm is inspired
+        by the SOM for finding optimal data representations based on
+        feature vectors. The algorithm was coined "Neural Gas" because of the
+        dynamics of the feature vectors during the adaptation process, which
+        distribute themselves like a gas within the data space. Although it is mainly
+        applied where data compression or vector quantization is an issue,
+        it is also used for cluster analysis as a robustly converging alternative to
+        the k-means clustering.</p>
+
+    <p>Compared to SOM, neural gas has no topology of a fixed dimensionality
+        (in fact, no topology at all). For each input signal during learning, the
+        neural gas algorithm sorts the neurons of the network according to the
+        distance of their reference vectors to the input signal. Based on this
+        "rank order", neurons are adapted based on the adaptation strength that are
+       decreased according to a fixed schedule.</p>
+
+    <p>The adaptation step of the Neural Gas can be interpreted as gradient descent
+        on a cost function. By adapting not only the closest feature vector but all
+        of them with a step size decreasing with increasing distance order,
+        compared to k-means clustering, a much more robust convergence of the
+        algorithm can be achieved.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def neuralgas(data: Array[Array[Double]], k: Int, lambda_i: Double, lambda_f: Double = 0.01, eps_i: Double = 0.5, eps_f: Double = 0.005, steps: Int = 25): NeuralGas
+    </code></pre>
+
+    <p>The parameter <code>maxIter</code> specifies the maximum number of iterations.
+        If the output of K-Means is used to initialize other algorithms, a small number (says 20)
+        is usually sufficient. In practice, we often run the K-Means multiple times
+        and choose the best one. To do that, set the parameter <code>runs &gt; 1</code>
+        (e.g. 10 ~ 20).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val gas = neuralgas(x, 200, 0.1)
+    val win = plot(x, '.')
+    win.canvas.points(gas.neurons, '#', Color.BLUE)
+    </code></pre>
+
+    <p>In the plot, we draw the neurons as big blue dots.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/neural-gas.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Neural Gas</div>
+    </div>
+
+    <h2 id="growing-neural-gas">Growing Neural Gas</h2>
+
+    <p>A prominent extension is the Growing Neural Gas (GNG).
+        GNG can add and delete nodes during algorithm execution.
+        The growth mechanism is based on growing cell structures
+        and competitive Hebbian learning.</p>
+
+    <p>Compared to Neural Gas, GNG has the following distinctions:</p>
+    <ul>
+        <li>The system has the ability to add and delete nodes.</li>
+
+        <li>Local Error measurements are noted at each step helping it to locally
+            insert/delete nodes.</li>
+
+        <li>Edges are connected between nodes, so a sufficiently old edges is
+            deleted. Such edges are intended place holders for localized
+            data distribution.</li>
+
+        <li>Such edges also help to locate distinct clusters (those clusters are
+            not connected by edges).</li>
+    </ul>
+
+    <pre class="prettyprint lang-scala"><code>
+    def gng(data: Array[Array[Double]], epochs: Int = 25, epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, maxEdgeAge: Int = 88, lambda: Int = 300, alpha: Double = 0.5, beta: Double = 0.9995): GrowingNeuralGas
+    </code></pre>
+
+    <p>where <code>epochs</code> is the number of epochs of learning as GNG is an online
+        learning algorithm. The parameter <code>epsBest</code> is the fraction to update nearest neuron,
+        <code>epsNeighbor</code> is the fraction to update neighbors of nearest neuron,
+        <code>maxEdgeAge</code> is the maximum age of edges.
+        If the number of input signals so far is an integer multiple
+        of <code>lambda</code>, insert a new neuron.
+        When inserting a new neuron, we decrease error variables by multiplying them with <code>alpha</code>.
+        We also decrease all error variables by multiply them with <code>beta</code>.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val gas = gng(x)
+
+    val neurons = gas.neurons
+    val win = plot(x, '.')
+    win.canvas.points(neurons.map(_.w).toArray, '@', Color.BLUE)
+
+    for (i <- 0 until neurons.length) {
+      val neighbors = neurons(i).neighbors
+      for (j <- 0 until neighbors.length) {
+        val edge = Array(neurons(i).w, neighbors(j).w)
+        win.canvas.line(edge, Color.BLUE)
+      }
+    }
+    </code></pre>
+
+    <p>As shown in the plot, GNG nicely capture the structure of data.
+        However, there are also neurons fitting noises and connecting
+        clusters that should be separated. A further graph cut/clustering
+        may help removing these neurons of noise.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/growing-neural-gas.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Growing Neural Gas</div>
+    </div>
+
+    <h2 id="neural-map">Neural Map</h2>
+
+    <p>Neural Map is an efficient competitive learning algorithm inspired by growing
+        neural gas and BIRCH. Like growing neural gas, Neural Map has the ability to
+        add and delete neurons with competitive Hebbian learning. Edges exist between
+        neurons close to each other. Such edges are intended place holders for
+        localized data distribution. Such edges also help to locate distinct clusters
+        (those clusters are not connected by edges). Neural Map employs Locality-Sensitive
+        Hashing to speedup the learning while BIRCH uses balanced CF trees.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def neuralmap(data: Array[Array[Double]], radius: Double, L: Int, k: Int, epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, epochs: Int = 5): NeuralMap
+    </code></pre>
+
+    <p>where <code>radius</code> is the distance radius to activate
+        a neuron for a given signal, <code>L</code> is the number of hash tables,
+        <code>k</code> is the number of random projection hash functions,
+        <code>epsBest</code> is the fraction to update activated neuron,
+        and <code>epsNeighbor</code> is the fraction to update neighbors of activated neuron.
+        </p>
+    <pre class="prettyprint lang-scala"><code>
+    val cortex = neuralmap(x, 10, 5, 3)
+    // neurons will be removed if the number of its points is less than 6.
+    cortex.purge(6)
+
+    import scala.collection.JavaConverters._
+    val neurons = cortex.neurons.asScala
+    val win = plot(x, '.')
+    win.canvas.points(neurons.map(_.w).toArray, '@', Color.BLUE)
+
+    for (i <- 0 until neurons.size) {
+      val neighbors = neurons(i).neighbors.asScala
+      for (j <- 0 until neighbors.size) {
+        val edge = Array(neurons(i).w, neighbors(j).w)
+        win.canvas.line(edge, Color.BLUE)
+      }
+    }
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/neural-map.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Neural Map</div>
+    </div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="clustering.html" title="Previous Section: Clustering"><span>Clustering</span></a>
+        <a class="btn-next-text" href="association-rule.html" title="Next Section: Association Rule Mining"><span>Association Rule Mining</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

@@ -1,0 +1,302 @@
+<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+        <div id="search">
+            <script>
+                (function() {
+                    var cx = '010264411143030149390:ajvee_ckdzs';
+                    var gcse = document.createElement('script');
+                    gcse.type = 'text/javascript';
+                    gcse.async = true;
+                    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                            '//cse.google.com/cse.js?cx=' + cx;
+                    var s = document.getElementsByTagName('script')[0];
+                    s.parentNode.insertBefore(gcse, s);
+                })();
+            </script>
+            <gcse:searchbox-only></gcse:searchbox-only>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+
+    <h1 id="statistics-top" class="title">Statistics</h1>
+
+    <p>In Smile, there are many statistical functions to describe and analyze data.</p>
+
+    <h2 id="basic" class="title">Basic Statistic Functions</h2>
+
+    <p>Use the following functions to calculate the descriptive statistics for your data:
+        <code>sum</code>, <code>mean</code>,
+        <code>median</code>, <code>q1</code>, <code>q3</code>,
+        <code>variance</code>, <code>sd</code>, <code>mad</code> (median absolute deviation),
+        <code>min</code>, <code>max</code>, <code>whichMin</code>, <code>whichMax</code>, etc.</p>
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; mean(Array(1.0, 2.0, 3.0, 4.0))
+    res10: Double = 2.5
+
+    smile&gt; sd(Array(1.0, 2.0, 3.0, 4.0))
+    res11: Double = 1.2909944487358054
+    </code></pre>
+
+    <h2 id="distribution" class="title">Distributions</h2>
+
+    <p>Probability distributions are theoretical distributions based on assumptions
+        about a source population. The distributions assign probability to the event
+        that a random variable has a specific, discrete value, or falls within a
+        specified range of continuous values.</p>
+
+    <p>All univariate distributions in Smile implements the interface <code>smile.math.stat.distribution.Distribution</code>.
+        We support Bernoulli, beta, binomial, &chi;<sup>2</sup>, exponential, F, gamma, Gaussian, geometric,
+        hyper geometric, logistic, log normal, negative binomial, Possion, shift geometric, t, and Weibull distribution.
+        In additional, multivariate Gaussian distribution is supported. In fact, we also support finite mixture models
+        and can estimate the exponential family mixture models from data.</p>
+
+    <p>A <code>Distribution</code> object can be created with given parameters. Meanwhile they can be created by estimating parameters
+        from a given data set. With a <code>Distribution</code> object, we may access its distribution parameter(s), mean,
+        variance, standard deviation, entropy, generates a random number following the distribution,
+        call its probability density function (the method <code>p</code> or cumulative distribution function (<code>cdf</code>).
+        The reserve function of <code>cdf</code> is <code>quantile</code>. We can also calculate the likelihood or
+        log likelihood of a sample set.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val e = new ExponentialDistribution(1.0)
+    e: smile.stat.distribution.ExponentialDistribution = Exponential Distribution(1.0000)
+
+    smile&gt; e.mean
+    res3: Double = 1.0
+
+    smile&gt; e.`var`
+    res4: Double = 1.0
+
+    smile&gt; e.sd
+    res5: Double = 1.0
+
+    smile&gt; e.entropy
+    res6: Double = 1.0
+
+    // generate a random number
+    smile&gt; e.rand
+    res7: Double = 0.3155668608029686
+
+    // PDF
+    smile&gt; e.p(2.0)
+    res8: Double = 0.1353352832366127
+
+    smile&gt; e.cdf(2.0)
+    res9: Double = 0.8646647167633873
+
+    smile&gt; e.quantile(0.1)
+    res10: Double = 0.10536051565782628
+
+    smile&gt; e.logLikelihood(Array(1.0, 1.1, 0.9, 1.5))
+    res12: Double = -4.5
+
+    // estimate a distribution from data
+    smile&gt; val e = new ExponentialDistribution(Array(1.0, 1.1, 0.9, 1.5, 1.8, 1.9, 2.0, 0.5))
+    e: smile.stat.distribution.ExponentialDistribution = Exponential Distribution(0.7477)
+    </code></pre>
+
+    <p>Note that <code>var</code> is a keyword in Scala. So we have to use <code>`var`</code> to access the variance
+        method.</p>
+
+    <p>The below is a more advanced example of estimating a mixture model of Gaussian, exponential and gamma distribution.
+        The result is quite accurate for this complicated case.</p>
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val gaussian = new GaussianDistribution(-2.0, 1.0)
+    smile&gt; val exp = new ExponentialDistribution(0.8)
+    smile&gt; val gamma = new GammaDistribution(2.0, 3.0)
+
+    // generate the samples
+    smile&gt; val data = Array.fill(500)(gaussian.rand()) ++ Array.fill(500)(exp.rand()) ++ Array.fill(1000)(gamma.rand())
+
+    // define the initial guess of the components in the mixture model
+    smile&gt; val a = new Mixture.Component(0.3, new GaussianDistribution(0.0, 1.0))
+    smile&gt; val b = new Mixture.Component(0.3, new ExponentialDistribution(1.0))
+    smile&gt; val c = new Mixture.Component(0.4, new GammaDistribution(1.0, 2.0))
+
+    smile&gt; import collection.JavaConverters._
+
+    // estimate the model
+    smile&gt; val mixture = new ExponentialFamilyMixture(List(a, b, c).asJava, data)
+    mixture: smile.stat.distribution.ExponentialFamilyMixture = Mixture[3]:{ (Gaussian Distribution(-2.0135, 0.9953):0.2478) (Exponential Distribution(0.7676):0.2882) (Gamma Distribution(2.7008, 2.4051):0.4640)}
+    </code></pre>
+
+    <p>If the distribution family is not known, nonparametric methods such as
+        kernel density estimation can be used. Kernel density estimation
+        is a fundamental data smoothing problem where inferences about the population
+        are made, based on a finite data sample. It is also known as the
+        Parzen window method.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val k = new KernelDensity(data)
+    k: smile.stat.distribution.KernelDensity = smile.stat.distribution.KernelDensity@69724abb
+
+    smile&gt; k.p(1.0)
+    res2: Double = 0.11397721599552492
+
+    smile&gt; mixture.p(1.0)
+    res3: Double = 0.1272572973513569
+    </code></pre>
+
+    <h2 id="test" class="title">Hypothesis Test</h2>
+
+    <p>A statistical hypothesis test is a method of making decisions using data,
+        whether from a controlled experiment or an observational study (not controlled).
+        In statistics, a result is called statistically significant if it is unlikely
+        to have occurred by chance alone, according to a pre-determined threshold
+        probability, the significance level.</p>
+
+    <h3 id="chisq-test" class="title">&chi;<sup>2</sup> Test</h3>
+
+    <h4 class="title">One-Sample Test</h4>
+    <p>Given the array x containing the observed numbers of events,
+        and an array prob containing the expected probabilities of events, and given
+        the number of constraints (normally one), a small value of p-value
+        indicates a significant difference between the distributions.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def chisqtest(x: Array[Int], prob: Array[Double], constraints: Int = 1): ChiSqTest
+    </code></pre>
+
+    <h4 class="title">Two-Sample Test</h4>
+    <p>Two-sample chisq test. Given the arrays x and y, containing two
+        sets of binned data, and given one constraint, a small value of
+        p-value indicates a significant difference between two distributions.</p>
+    <pre class="prettyprint lang-scala"><code>
+    def chisqtest2(x: Array[Int], y: Array[Int], constraints: Int = 1): ChiSqTest
+    </code></pre>
+
+    <h4 class="title">Independence Test</h4>
+
+    <p>Independence test on a two-dimensional contingency table in the form of an array of
+        integers. The rows of contingency table
+        are labels by the values of one nominal variable, the columns are labels
+        by the values of the other nominal variable, and whose entries are
+        non-negative integers giving the number of observed events for each
+        combination of row and column. Continuity correction
+        will be applied when computing the test statistic for 2x2 tables: one half
+        is subtracted from all |O-E| differences. The correlation coefficient is
+        calculated as Cramer's V.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+        def chisqtest(table: Array[Array[Int]]): CorTest
+    </code></pre>
+
+    <h3 id="f-test" class="title">F Test</h3>
+
+    <p>Test if the arrays x and y have significantly different variances.
+        Small values of p-value indicate that the two arrays have significantly
+        different variances.</p>
+    <pre class="prettyprint lang-scala"><code>
+    def ftest(x: Array[Double], y: Array[Double]): FTest
+    </code></pre>
+
+    <h3 id="t-test" class="title">t Test</h3>
+
+    <h4 class="title">One-Sample Test</h4>
+    <p>Independent one-sample t-test whether the mean of a normally distributed
+        population has a value specified in a null hypothesis. Small values of
+        p-value indicate that the array has significantly different mean.</p>
+    <pre class="prettyprint lang-scala"><code>
+    def ttest(x: Array[Double], mean: Double): TTest
+    </code></pre>
+
+    <h4 class="title">Paired Two-Sample Test</h4>
+    <p>Given the paired arrays x and y, test if they have significantly
+        different means. Small values of p-value indicate that the two arrays
+        have significantly different means.</p>
+    <pre class="prettyprint lang-scala"><code>
+    def ttest(x: Array[Double], y: Array[Double]): TTest
+    </code></pre>
+
+    <h4 class="title">Independent (Unpaired) Two-Sample Test</h4>
+    <p>Test if the arrays x and y have significantly different means. Small
+     values of p-value indicate that the two arrays have significantly
+      different means. If the parameter equalVariance is true, the data arrays are assumed to be
+      drawn from populations with the same true variance. Otherwise, The data
+      arrays are allowed to be drawn from populations with unequal variances.</p>
+    <pre class="prettyprint lang-scala"><code>
+    def ttest2(x: Array[Double], y: Array[Double], equalVariance: Boolean = false): TTest
+    </code></pre>
+
+    <h3 id="ks-test" class="title">Kolmogorov–Smirnov Test</h3>
+
+    <h4 class="title">One-Sample Test</h4>
+    <p>The one-sample K-S test for the null hypothesis that the data set x
+        is drawn from the given distribution. Small values of p-value show that
+        the cumulative distribution function of x is significantly different from
+        the given distribution. The array x is modified by being sorted into
+        ascending order.</p>
+    <pre class="prettyprint lang-scala"><code>
+    def kstest(x: Array[Double], y: Distribution): KSTest
+    </code></pre>
+
+    <h4 class="title">One-Sample Test</h4>
+    <p>The two-sample K–S for the null hypothesis that the data sets
+        are drawn from the same distribution. Small values of p-value show that
+        the cumulative distribution function of x is significantly different from
+        that of y. The arrays x and y are modified by being sorted into
+        ascending order.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def kstest(x: Array[Double], y: Array[Double]): KSTest
+    </code></pre>
+
+    <h3 id="correlation-test" class="title">Correlation Test</h3>
+
+    <h4 class="title">Pearson Correlation</h4>
+
+    <p>The t-test is used to establish if the correlation coefficient is
+        significantly different from zero, and, hence that there is evidence
+        of an association between the two variables. There is then the
+        underlying assumption that the data is from a normal distribution
+        sampled randomly. If this is not true, then it is better to use
+        Spearman's coefficient of rank correlation (for non-parametric variables).</p>
+    <pre class="prettyprint lang-scala"><code>
+    def pearsontest(x: Array[Double], y: Array[Double]): CorTest
+    </code></pre>
+
+    <h4 id="spearman-test" class="title">Spearman Rank Correlation</h4>
+
+    <p>The Spearman Rank Correlation
+        Coefficient is a form of the Pearson coefficient with the data converted
+        to rankings (i.e. when variables are ordinal). It can be used when there
+        is non-parametric data and hence Pearson cannot be used.</p>
+
+    <p>The raw scores are converted to ranks and the differences between
+        the ranks of each observation on the two variables are calculated.</p>
+
+    <p>The p-value is calculated by approximation, which is good for n &gt; 10.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def spearmantest(x: Array[Double], y: Array[Double]): CorTest
+    </code></pre>
+
+    <h4 id="kendall-test" class="title">Kendall Rank Correlation</h4>
+
+    <p>The Kendall Tau Rank Correlation
+        Coefficient is used to measure the degree of correspondence
+        between sets of rankings where the measures are not equidistant.
+        It is used with non-parametric data. The p-value is calculated by
+        approximation, which is good for n &gt; 10.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def kendalltest(x: Array[Double], y: Array[Double]): CorTest
+    </code></pre>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="linear-algebra.html" title="Previous Section: Linear Algebra"><span>Linear Algebra</span></a>
+        <a class="btn-next-text" href="wavelet.html" title="Next Section: Wavelet"><span>Wavelet</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

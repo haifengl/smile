@@ -1,0 +1,211 @@
+<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+        <div id="search">
+            <script>
+                (function() {
+                    var cx = '010264411143030149390:ajvee_ckdzs';
+                    var gcse = document.createElement('script');
+                    gcse.type = 'text/javascript';
+                    gcse.async = true;
+                    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                            '//cse.google.com/cse.js?cx=' + cx;
+                    var s = document.getElementsByTagName('script')[0];
+                    s.parentNode.insertBefore(gcse, s);
+                })();
+            </script>
+            <gcse:searchbox-only></gcse:searchbox-only>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="overview-top" class="title">Overview</h1>
+
+    <p>In this section, we will review the important concepts of machine learning.
+        Machine learning is a type of artificial intelligence that provides computers with the ability
+        to learn without being explicitly programmed. Machine learning algorithms can make
+        predictions on data by building a model from example inputs.</p>
+
+    <p>A core objective of machine learning is to generalize from its experience.
+        Generalization is the ability of a learning machine to perform accurately
+        on new, unseen examples/tasks after having experienced a training data set.
+        The training examples come from some generally unknown probability distribution
+        and the learner has to build a general model about this space that enables it
+        to produce sufficiently accurate predictions in new cases.</p>
+
+    <p>Machine learning tasks are typically classified into three broad categories, depending
+        on the nature of the learning &quot;signal&quot; or &quot;feedback&quot; available to a learning system.</p>
+
+      <dl>
+        <dt>Supervised learning</dt>
+        <dd><p>The computer is presented with example inputs and their desired outputs,
+            given by a &quot;teacher&quot;, and the goal is to learn a general rule that maps inputs to outputs.</p>
+        </dd>
+        <dt>Unsupervised learning</dt>
+        <dd><p>No labels are given to the learning algorithm, leaving it on its own to find structure in
+            its input. Unsupervised learning can be a goal in itself (discovering hidden patterns in data)
+            or a means towards an end (feature learning).</p>
+        </dd>
+        <dt>Reinforcement learning</dt>
+        <dd><p>A computer program interacts with a dynamic environment in which it must perform a certain goal,
+            without a teacher explicitly telling it whether it has come close to
+            its goal.</p>
+        </dd>
+      </dl>
+
+    <p>Between supervised and unsupervised learning is semi-supervised learning, where the teacher gives an
+        incomplete training signal: a training set with some (often many) of the target outputs missing.</p>
+
+    <h2 id="features">Features</h2>
+
+    <p>A feature is an individual measurable property of a phenomenon being observed.
+        Features are also called explanatory variables, independent variables, predictors, regressors, etc.
+        Any attribute could be a feature, but choosing informative, discriminating and
+        independent features is a crucial step for effective algorithms in machine learning.
+        Features are usually numeric and a set of numeric features can be conveniently
+        described by a feature vector. Structural features such as strings, sequences and
+        graphs are also used in areas such as natural language processing, computational biology, etc.</p>
+
+    <p>Feature engineering is the process of using domain knowledge of the data to create features that make
+        machine learning algorithms work. Feature engineering is fundamental to the application of machine
+        learning, and is both difficult and expensive. It requires the experimentation of multiple
+        possibilities and the combination of automated
+        techniques with the intuition and knowledge of the domain expert.</p>
+
+    <p>The initial set of raw features can be redundant and too large to be managed. Therefore,
+        a preliminary step in many applications consists of selecting a subset of features,
+        or constructing a new and reduced set of features to facilitate learning, and
+        to improve generalization and interpretability.</p>
+
+    <h2 id="supervised-learning">Supervised Learning</h2>
+
+    <p>In supervised learning, each example is a pair consisting of an input object (typically a feature vector)
+        and a desired output value (also called the response variable or dependent variable).
+        Supervised learning algorithms try to learn a function (often called hypothesis) from input object to the output value.
+        By analyzing the training data, it produces an inferred function
+        (referred as a model), which can be used for mapping new examples.</p>
+
+    <p>Supervised learning problems are often solved by optimizating the loss functions that
+        represent the price paid for inaccuracy of predictions. The risk associated with hypothesis
+        is then defined as the expectation of the loss function. In general, the risk cannot be computed
+        because the underlying distribution is unknown. However, we can compute an approximation,
+        called empirical risk, by averaging the loss function on the training set.</p>
+
+    <p>Empirical risk minimization principle states that the learning algorithm should choose
+        a hypothesis which minimizes the empirical risk.</p>
+
+    <p>Batch learning algorithms generate the model by learning on the entire training data set at once.
+        In contrast, online learning methods update the model with new data in a sequential order.
+        Online learning is a common technique on big data where
+        it is computationally infeasible to train over the entire dataset.
+        It is also used when the data itself is generated over the time.</p>
+
+    <p>If the response variable is of category values, supervised learning problems are called classification.
+        While the response variable is of real values, it is referred as regression.</p>
+
+    <h3 id="overfitting">Overfitting</h3>
+
+    <p>When a model describes random error or noise instead of the underlying relationship, it is called overfitting.
+        Overfitting generally occurs when a model is excessively complex, such as having too many parameters
+        relative to the number of observations. A overfit model will generally have poor generalization
+        performance, as it can exaggerate minor fluctuations in the data.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/Overfitting.svg" width="600px">
+        <div class="caption" style="min-width: 480px;">The overfit model in green makes no
+            errors on the trainning data. But it is over complex and describes random noise.</div>
+    </div>
+
+    <h3 id="model-validation">Model Validation</h3>
+
+    <p>To assess if the model be not overfit and can generalize to an independent data set,
+        out-of-sample evaluation is generally employed. If the model has been estimated over some, but not all,
+        of the available data, then the model using the estimated parameters can be used to predict the
+        held-back data.</p>
+
+    <p>A popular model validation technique is cross-validation. One round of cross-validation involves
+        partitioning a sample of data into complementary subsets, performing the analysis on one subset
+        (called the training set), and validating the analysis on the other subset (called the testing set).
+        To reduce variability, multiple rounds of cross-validation are performed using different partitions,
+        and the validation results are averaged over the rounds.</p>
+
+    <h3 id="regularization">Regularization</h3>
+
+    <p>Regularization refers to a process of introducing additional information in order to prevent overfitting
+        (or to solve an ill-posed problem). In general, a regularization term, typically a penalty on the complexity of
+        hypothesis, is introduced to a general loss function with a parameter controlling the importance of
+        the regularization term. For example, regularization term may be restrictions for smoothness
+        or bounds on the vector space norm.</p>
+
+    <p>Regularization can be used to learn simpler models, induce models to be sparse, introduce group structure
+        into the learning problem, and more.</p>
+
+    <p>A theoretical justification for regularization is that it attempts to impose Occam's razor on the solution.
+        From a Bayesian point of view, many regularization techniques correspond to imposing certain prior
+        distributions on model parameters.</p>
+
+
+    <h2 id="unsupervised-learning">Unsupervised Learning</h2>
+
+    <p>Unsupervised learning tries to infer a function to describe hidden structure from unlabeled data.
+        Since the examples given to the learner are unlabeled, there is no error or reward signal
+        to evaluate a potential solution.</p>
+
+    <p>Unsupervised learning is closely related to the problem of density estimation in statistics.
+        However unsupervised learning also encompasses many other techniques that seek to summarize
+        and explain key features of the data.</p>
+
+    <h3 id="clustering">Clustering</h3>
+    <p>Cluster analysis or clustering is the task of grouping a set of objects such that objects
+        in the same group (called a cluster) are more similar to each other than to those in other groups.</p>
+
+    <h3 id="latent-variable-models">Latent Variable Models </h3>
+    <p>In statistics, latent variables are variables that are not directly observed but are rather inferred
+        from other observed variables. Mathematical models that aim to explain observed variables in terms
+        of latent variables are called latent variable models.</p>
+
+    <h3 id="association-rules">Association Rules</h3>
+    <p>Association rule mining is to identify strong and interesting relations between variables in large databases.
+        Introduced by Rakesh Agrawal et al., a typical use case is to discover regularities between products
+        in large-scale transaction data recorded by point-of-sale systems in supermarkets. For example,
+        the rule \{\mathrm{onions, potatoes}\} \Rightarrow \{\mathrm{burger}\} found in the sales data of
+        a supermarket would indicate that if a customer buys onions and potatoes together, they are likely to also
+        buy hamburger meat. Such information can be used as the basis for decisions about marketing activities
+        (e.g., promotional pricing or product placements).</p>
+
+    <h2 id="semi-supervised-learning">Semi-supervised Learning</h2>
+
+    <p>The acquisition of labeled data for a learning problem is usually labor intensive, time consuming, and
+        of high cost. On the other hand, acquisition of unlabeled data is relatively inexpensive.
+        Researchers have found that unlabeled data, when used in conjunction with a small amount of labeled data,
+        can produce considerable improvement in model accuracy.
+        Semi-supervised learning is a class of supervised learning tasks and techniques that make use of
+        both a large amount of unlabeled data and a small amount of labeled data.</p>
+
+    <h2 id="reinforcement-learning">Reinforcement Learning</h2>
+
+    <p>Reinforcement learning is about a learning agent interacting with its environment
+        to achieve a goal. The learning agent has to map situations to actions to maximize
+        a numerical reward signal. Different from supervised learning, the learner is not told which actions
+        to take but instead must discover which actions yield the most reward by trying them. Moreover,
+        actions may affect not only the immediate reward but also all subsequent rewards.
+        Trial-and-error search and delayed reward are the most important features of reinforcement learning.</p>
+
+    <p>Markov decision processes (MDPs) provide a mathematical framework for modeling decision making
+        in situations where outcomes are partly random and partly under the control of a decision maker.</p>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="quickstart.html" title="Previous Section: Quick Start"><span>Quick Start</span></a>
+        <a class="btn-next-text" href="shell.html" title="Next Section: Shell"><span>Shell</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>
