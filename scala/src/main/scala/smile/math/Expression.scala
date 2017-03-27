@@ -214,9 +214,9 @@ case class MatrixMultiplicationExpression(A: MatrixExpression, B: MatrixExpressi
   override lazy val toMatrix: DenseMatrix = {
     (A, B) match {
       case (MatrixTranspose(A), MatrixTranspose(B)) => B.toMatrix.abmm(A.toMatrix).transpose()
-      case (MatrixTranspose(A), B) => A.toMatrix.atbmm(B.toMatrix)
-      case (A, MatrixTranspose(B)) => A.toMatrix.abtmm(B.toMatrix)
-      case (A, B) => A.toMatrix.abmm(B.toMatrix)
+      case (MatrixTranspose(A), _) => A.toMatrix.atbmm(B.toMatrix)
+      case (_, MatrixTranspose(B)) => A.toMatrix.abtmm(B.toMatrix)
+      case (_, _) => A.toMatrix.abmm(B.toMatrix)
     }
   }
 
