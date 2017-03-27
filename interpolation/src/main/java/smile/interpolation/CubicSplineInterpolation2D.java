@@ -17,14 +17,11 @@
 package smile.interpolation;
 
 /**
- * Bicubic spline interpolation in a two-dimensional regular grid. Bicubic
- * spline interpolation guarantees the continuity of the first derivatives,
- * as well as the continuity of a cross-derivative.
- * <p>
- * It is similar to one-dimensional splines, but there are some differences.
- * The cubic spline guarantees the continuity of the first and second function
- * derivatives. Bicubic spline guarantees continuity of only gradient and
- * cross-derivative. Second derivatives could be discontinuous.
+ * Cubic spline interpolation in a two-dimensional regular grid.
+ * It is similar to one-dimensional splines as it guarantees the
+ * continuity of the first and second function
+ * derivatives. Note that bicubic spline guarantees continuity of only gradient and
+ * cross-derivative.
  *
  * @author Haifeng Li
  */
