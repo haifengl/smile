@@ -1286,6 +1286,14 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
     }
 
     /**
+     * indicates if platt scaling is available     *
+     * @return true if Platt Scaling is available
+     */
+    public boolean hasPlattScaling(){
+        return (svm.platt != null);
+    }
+
+    /**
      * After calling finish, the user should call this method
      * to train Platt Scaling to estimate posteriori probabilities.
      *
