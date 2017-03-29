@@ -105,7 +105,9 @@ public class SVMTest {
             svm.learn(x, y);
             svm.learn(x, y);
             svm.finish();
+            assertTrue(!svm.hasPlattScaling());
             svm.trainPlattScaling(x, y);
+            assertTrue(svm.hasPlattScaling());
 
             error = 0;
             for (int i = 0; i < x.length; i++) {
