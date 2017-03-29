@@ -72,7 +72,8 @@
 
       var page = getPageName();
       if (typeof(page) != 'undefined' && page != null && page != "template.html") {
-        page = page.replace('.html', '-content.html');
+        if (page == "") page = "index-content.html";
+        else page = page.replace('.html', '-content.html');
         ajaxLoad(page);
       }
     });
