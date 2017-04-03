@@ -170,7 +170,7 @@ public class NominalAttribute extends Attribute {
                 map.put(s, i);
                 values.add(s);
             } else {
-                throw new IllegalArgumentException("Invalid string value: " + s);
+                throw new ParseException("Invalid string value: " + s, 0);
             }
         }
         
