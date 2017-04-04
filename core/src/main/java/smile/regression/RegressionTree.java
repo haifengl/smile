@@ -604,7 +604,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             if (attributes[node.splitFeature].getType() == Attribute.Type.NOMINAL) {
                 for (int i = 0; i < n; i++) {
                     if (samples[i] > 0) {
-                        if (x[i][node.splitFeature] == node.splitValue) {
+                        if (Math.equals(x[i][node.splitFeature], node.splitValue)) {
                             trueSamples[i] = samples[i];
                             tc += trueSamples[i];
                             samples[i] = 0;
