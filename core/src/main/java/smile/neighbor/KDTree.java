@@ -354,9 +354,9 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
                     continue;
                 }
 
-                double distance = Math.distance(q, keys[index[idx]]);
+                double distance = Math.squaredDistance(q, keys[index[idx]]);
                 if (distance <= radius) {
-                    neighbors.add(new Neighbor<>(keys[index[idx]], data[index[idx]], index[idx], distance));
+                    neighbors.add(new Neighbor<>(keys[index[idx]], data[index[idx]], index[idx], Math.sqrt(distance)));
                 }
             }
         } else {
@@ -421,6 +421,6 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
 
-        search(q, root, radius, neighbors);
+        search(q, root, radius * radius, neighbors);
     }
 }
