@@ -16,10 +16,11 @@
 package smile.neighbor;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.LinkedHashSet;
+
 import smile.math.IntArrayList;
 import smile.math.Math;
 import smile.sort.HeapSelect;
@@ -474,7 +475,7 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
     /**
      * Set if exclude query object self from the neighborhood.
      */
-    public LSH setIdenticalExcluded(boolean excluded) {
+    public LSH<E> setIdenticalExcluded(boolean excluded) {
         identicalExcluded = excluded;
         return this;
     }

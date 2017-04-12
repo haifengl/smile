@@ -17,6 +17,7 @@
 package smile.neighbor;
 
 import java.util.List;
+
 import smile.math.distance.Distance;
 import smile.sort.HeapSelect;
 
@@ -77,7 +78,7 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
     /**
      * Set if exclude query object self from the neighborhood.
      */
-    public LinearSearch setIdenticalExcluded(boolean excluded) {
+    public LinearSearch<T> setIdenticalExcluded(boolean excluded) {
         identicalExcluded = excluded;
         return this;
     }
