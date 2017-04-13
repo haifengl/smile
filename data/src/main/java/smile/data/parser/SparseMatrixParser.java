@@ -17,12 +17,12 @@ package smile.data.parser;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Scanner;
+
 import smile.math.matrix.SparseMatrix;
 
 /**
