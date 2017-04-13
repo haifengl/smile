@@ -27,6 +27,9 @@ package smile.sort;
  * @author Haifeng Li
  */
 public class HeapSort {
+    private HeapSort() {
+    }
+
     /**
      * Sorts the specified array into ascending numerical order.
      */

@@ -27,6 +27,9 @@ import java.util.Arrays;
  */
 public class LaplaceInterpolation {
 
+    private LaplaceInterpolation() {
+    }
+
     /**
      * Laplace interpolation.
      * @param matrix on input, values of NaN are deemed to be missing data.

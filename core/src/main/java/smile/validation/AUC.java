@@ -40,7 +40,7 @@ import smile.sort.QuickSort;
  */
 public class AUC {
 
-    public AUC() {
+    private AUC() {
     }
 
     /**

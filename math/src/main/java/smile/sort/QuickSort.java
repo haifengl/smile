@@ -56,6 +56,9 @@ public class QuickSort {
     private static final int M = 7;
     private static final int NSTACK = 64;
 
+    private QuickSort() {
+    }
+
     /**
      * Sorts the specified array into ascending numerical order.
      * @return the original index of elements after sorting in range [0, n).

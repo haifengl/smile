@@ -23,6 +23,9 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class MathDemo {
+    private MathDemo() {
+    }
+
     public static void main(String[] args) {
         int[] x = Math.permutate(10);
         for (int i = 0; i < x.length; i++) {

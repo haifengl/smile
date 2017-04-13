@@ -38,6 +38,9 @@ package smile.stat.distribution;
  */
 public class BIC {
 
+    private BIC() {
+    }
+
     /**
      * Returns the BIC score of an estimated model.
      * @param L the log-likelihood of estimated model.

@@ -43,6 +43,9 @@ package smile.sort;
  */
 public class ShellSort {
 
+    private ShellSort() {
+    }
+
     /**
      * Sorts the specified array into ascending numerical order.
      */

@@ -28,6 +28,9 @@ package smile.sort;
  * @author Haifeng Li
  */
 public class QuickSelect {
+    private QuickSelect() {
+    }
+
     /**
      * Given k in [0, n-1], returns an array value from arr such that k array
      * values are less than or equal to the one returned. The input array will

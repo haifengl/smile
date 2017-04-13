@@ -52,6 +52,9 @@ public class Gamma {
      */
     private static final double INCOMPLETE_GAMMA_EPSILON = 1.0E-8;
 
+    private Gamma() {
+    }
+
     /**
      * Gamma function. Lanczos approximation (6 terms).
      */
