@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.regression;
 
-import java.io.Serializable;
 import smile.data.Attribute;
 
 /**
