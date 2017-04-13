@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.imputation;
 
-import smile.math.Math;
 import smile.math.matrix.ColumnMajorMatrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QRDecomposition;

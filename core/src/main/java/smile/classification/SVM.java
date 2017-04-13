@@ -20,13 +20,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import smile.math.DoubleArrayList;
 import smile.math.Math;
 import smile.math.SparseArray;
-import smile.math.kernel.MercerKernel;
 import smile.math.kernel.LinearKernel;
+import smile.math.kernel.MercerKernel;
 import smile.util.MulticoreExecutor;
 
 /**
@@ -267,7 +269,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
          * 
          * @param tol the tolerance of convergence test.
          */
-        public Trainer setTolerance(double tol) {
+        public Trainer<T> setTolerance(double tol) {
             if (tol <= 0.0) {
                 throw new IllegalArgumentException("Invalid tolerance of convergence test:" + tol);
             }
@@ -280,7 +282,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
          * Sets the number of epochs of stochastic learning.
          * @param epochs the number of epochs of stochastic learning.
          */
-        public Trainer setNumEpochs(int epochs) {
+        public Trainer<T> setNumEpochs(int epochs) {
             if (epochs < 1) {
                 throw new IllegalArgumentException("Invalid numer of epochs of stochastic learning:" + epochs);
             }
@@ -1068,7 +1070,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
      * 
      * @param tol the tolerance of convergence test.
      */
-    public SVM setTolerance(double tol) {
+    public SVM<T> setTolerance(double tol) {
         if (tol <= 0.0) {
             throw new IllegalArgumentException("Invalid tolerance of convergence test:" + tol);
         }

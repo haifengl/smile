@@ -21,10 +21,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+
 import smile.math.DoubleArrayList;
+import smile.math.Math;
 import smile.math.kernel.MercerKernel;
 import smile.util.MulticoreExecutor;
 
@@ -181,7 +183,7 @@ public class SVR<T> implements Regression<T>, Serializable {
          * 
          * @param tol the tolerance of convergence test.
          */
-        public Trainer setTolerance(double tol) {
+        public Trainer<T> setTolerance(double tol) {
             if (tol <= 0.0) {
                 throw new IllegalArgumentException("Invalid tolerance of convergence test:" + tol);
             }
