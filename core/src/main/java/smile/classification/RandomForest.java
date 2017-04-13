@@ -688,10 +688,10 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
     
     @Override
     public int predict(double[] x) {
-        double[] y = new double[k];
+        int[] y = new int[k];
         
         for (Tree tree : trees) {
-            y[tree.tree.predict(x)] += tree.weight;
+            y[tree.tree.predict(x)]++;
         }
         
         return Math.whichMax(y);
