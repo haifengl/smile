@@ -18,7 +18,7 @@ package smile.stat.distribution;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

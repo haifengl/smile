@@ -18,7 +18,6 @@ package smile.mds;
 import smile.math.Math;
 import smile.math.matrix.ColumnMajorMatrix;
 import smile.math.matrix.EigenValueDecomposition;
-import smile.math.matrix.Lanczos;
 
 /**
  * Classical multidimensional scaling, also known as principal coordinates
