@@ -343,10 +343,10 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
      *
      * @param q    the query key.
      * @param node      the root of subtree.
-     * @param radius	the radius of search range from target.
+     * @param radiusSquared	the square of radius of search range from target.
      * @param neighbors the list of found neighbors in the range.
      */
-    private void search(double[] q, Node node, double radius, List<Neighbor<double[], E>> neighbors) {
+    private void search(double[] q, Node node, double radiusSquared, List<Neighbor<double[], E>> neighbors) {
         if (node.isLeaf()) {
             // look at all the instances in this leaf
             for (int idx = node.index; idx < node.index + node.count; idx++) {
@@ -355,7 +355,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
                 }
 
                 double distance = Math.squaredDistance(q, keys[index[idx]]);
-                if (distance <= radius) {
+                if (distance <= radiusSquared) {
                     neighbors.add(new Neighbor<>(keys[index[idx]], data[index[idx]], index[idx], Math.sqrt(distance)));
                 }
             }
@@ -370,11 +370,11 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
                 further = node.lower;
             }
 
-            search(q, nearer, radius, neighbors);
+            search(q, nearer, radiusSquared, neighbors);
 
             // now look in further half
-            if (radius >= diff * diff) {
-                search(q, further, radius, neighbors);
+            if (radiusSquared >= diff * diff) {
+                search(q, further, radiusSquared, neighbors);
             }
         }
     }
