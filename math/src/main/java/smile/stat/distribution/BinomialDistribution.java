@@ -15,8 +15,8 @@
  *******************************************************************************/
 package smile.stat.distribution;
 
-import smile.math.special.Beta;
 import smile.math.Math;
+import smile.math.special.Beta;
 
 /**
  * The binomial distribution is the discrete probability distribution of

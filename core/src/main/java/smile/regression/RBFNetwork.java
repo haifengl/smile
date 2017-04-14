@@ -137,7 +137,7 @@ public class RBFNetwork<T> implements Regression<T>, Serializable {
          * @param rbf the radial basis function.
          * @param m the number of basis functions.
          */
-        public Trainer setRBF(RadialBasisFunction rbf, int m) {
+        public Trainer<T> setRBF(RadialBasisFunction rbf, int m) {
             this.m = m;
             this.rbf = rep(rbf, m);
             return this;
@@ -147,7 +147,7 @@ public class RBFNetwork<T> implements Regression<T>, Serializable {
          * Sets the radial basis functions.
          * @param rbf the radial basis functions.
          */
-        public Trainer setRBF(RadialBasisFunction[] rbf) {
+        public Trainer<T> setRBF(RadialBasisFunction[] rbf) {
             this.m = rbf.length;
             this.rbf = rbf;
             return this;
@@ -157,7 +157,7 @@ public class RBFNetwork<T> implements Regression<T>, Serializable {
          * Sets the number of centers.
          * @param m the number of centers.
          */
-        public Trainer setNumCenters(int m) {
+        public Trainer<T> setNumCenters(int m) {
             this.m = m;
             return this;
         }
@@ -166,7 +166,7 @@ public class RBFNetwork<T> implements Regression<T>, Serializable {
          * Sets true to learn normalized RBF network.
          * @param normalized true to learn normalized RBF network.
          */
-        public Trainer setNormalized(boolean normalized) {
+        public Trainer<T> setNormalized(boolean normalized) {
             this.normalized = normalized;
             return this;
         }

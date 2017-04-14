@@ -16,9 +16,10 @@
 
 package smile.nlp.collocation;
 
+import static org.junit.Assert.*;
+
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Scanner;
 
 import org.junit.After;
@@ -27,7 +28,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
 import smile.nlp.NGram;
 import smile.nlp.stemmer.PorterStemmer;
 import smile.nlp.tokenizer.SimpleParagraphSplitter;

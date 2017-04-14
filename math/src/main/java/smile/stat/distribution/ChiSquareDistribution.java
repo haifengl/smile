@@ -15,8 +15,8 @@
  *******************************************************************************/
 package smile.stat.distribution;
 
-import smile.math.special.Gamma;
 import smile.math.Math;
+import smile.math.special.Gamma;
 
 /**
  * Chi-square (or chi-squared) distribution with k degrees of freedom is the

@@ -15,9 +15,9 @@
  *******************************************************************************/
 package smile.stat.distribution;
 
+import smile.math.Math;
 import smile.math.special.Beta;
 import smile.math.special.Gamma;
-import smile.math.Math;
 
 /**
  * The beta distribution is defined on the interval [0, 1] parameterized by
