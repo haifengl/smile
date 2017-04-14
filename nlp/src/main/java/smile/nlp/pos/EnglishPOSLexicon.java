@@ -29,6 +29,11 @@ import org.slf4j.LoggerFactory;
  * @author Haifeng Li
  */
 public class EnglishPOSLexicon {
+    /** Utility classes should not have public constructors. */
+    private EnglishPOSLexicon() {
+
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(EnglishPOSLexicon.class);
 
     /**

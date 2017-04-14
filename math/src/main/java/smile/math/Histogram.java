@@ -36,6 +36,11 @@ import java.util.Arrays;
  * @author Haifeng Li
  */
 public class Histogram {
+    /** Utility classes should not have public constructors. */
+    private Histogram() {
+
+    }
+
     /**
      * Generate the histogram of given data. The number of bins k is decided by
      * square-root choice.

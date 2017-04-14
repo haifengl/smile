@@ -32,6 +32,11 @@ import smile.sort.QuickSort;
  * @author Haifeng Li
  */
 public class SmileUtils {
+    /** Utility classes should not have public constructors. */
+    private SmileUtils() {
+
+    }
+
     /**
      * Sorts each variable and returns the index of values in ascending order.
      * Only numeric attributes will be sorted. Note that the order of original

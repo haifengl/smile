@@ -23,6 +23,10 @@ import java.awt.Color;
  * @author Haifeng Li
  */
 public class Palette {
+    /** Utility classes should not have public constructors. */
+    private Palette() {
+
+    }
 
     public static final Color WHITE = Color.WHITE;
     public static final Color BLACK = Color.BLACK;

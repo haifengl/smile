@@ -27,6 +27,11 @@ import smile.math.Math;
 public class Gamma {
     private static final Logger logger = LoggerFactory.getLogger(Gamma.class);
 
+    /** Utility classes should not have public constructors. */
+    private Gamma() {
+
+    }
+
     /**
      *  A small number close to the smallest representable floating point number.
      */

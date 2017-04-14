@@ -52,6 +52,10 @@ import java.util.Comparator;
  * @author Haifeng Li
  */
 public class QuickSort {
+    /** Utility classes should not have public constructors. */
+    private QuickSort() {
+
+    }
 
     private static final int M = 7;
     private static final int NSTACK = 64;

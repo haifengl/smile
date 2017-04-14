@@ -34,6 +34,11 @@ import org.slf4j.LoggerFactory;
 public class MulticoreExecutor {
     private static final Logger logger = LoggerFactory.getLogger(MulticoreExecutor.class);
 
+    /** Utility classes should not have public constructors. */
+    private MulticoreExecutor() {
+
+    }
+
     /**
      * The number of processors.
      */
