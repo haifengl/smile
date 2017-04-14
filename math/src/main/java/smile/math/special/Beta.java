@@ -31,6 +31,11 @@ import smile.math.Math;
 public class Beta {
     private static final Logger logger = LoggerFactory.getLogger(Beta.class);
 
+    /** Utility classes should not have public constructors. */
+    private Beta() {
+
+    }
+
     /**
      *  A small number close to the smallest representable floating point number.
      */

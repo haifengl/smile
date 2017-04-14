@@ -23,6 +23,11 @@ package smile.sort;
  * @author Haifeng Li
  */
 public class SortUtils {
+    /** Utility classes should not have public constructors. */
+    private SortUtils() {
+
+    }
+
     /**
      * Swap two positions.
      */

@@ -32,6 +32,11 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class Erf {
+    /** Utility classes should not have public constructors. */
+    private Erf() {
+
+    }
+
     private static final double[] cof = {
         -1.3026537197817094, 6.4196979235649026e-1,
         1.9476473204185836e-2, -9.561514786808631e-3, -9.46595344482036e-4,

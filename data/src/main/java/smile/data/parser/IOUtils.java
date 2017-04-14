@@ -26,6 +26,11 @@ import java.util.List;
  * @author Haifeng Li
  */
 public class IOUtils {
+    /** Utility classes should not have public constructors. */
+    private IOUtils() {
+
+    }
+
     private static String home = System.getProperty("smile.home", "shell/src/universal/bin");
 
     /** Get the file path of sample dataset. */
