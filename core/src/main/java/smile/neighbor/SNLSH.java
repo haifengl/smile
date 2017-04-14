@@ -29,8 +29,6 @@ import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.HashSet;
 
-import static smile.neighbor.SNLSH.SimHash.simhash64;
-
 /**
  * Locality-Sensitive Hashing for Signatures.
  * LSH is an efficient algorithm for approximate nearest neighbor search
@@ -211,36 +209,33 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         return candidates;
     }
 
-    public static class SimHash {
-        private static final long seed = 0; //do not change seed
-
-        public static long simhash64(List<String> tokens) {
-            final int BITS = 64;
-            if (tokens == null || tokens.isEmpty()) {
-                return 0;
-            }
-            int[] bits = new int[BITS];
-            for (String s : tokens) {
-                ByteBuffer buffer = ByteBuffer.wrap(s.getBytes());
-                long hc = MurmurHash.hash2_64(buffer, 0, buffer.array().length, seed);
-                for (int i = 0; i < BITS; i++) {
-                    if (((hc >>> i) & 1) == 1) {
-                        bits[i]++;
-                    } else {
-                        bits[i]--;
-                    }
-                }
-            }
-            long hash = 0;
-            long one = 1;
-            for (int i = 0; i < BITS; i++) {
-                if (bits[i] >= 0) {
-                    hash |= one;
-                }
-                one <<= 1;
-            }
-            return hash;
+    private static long simhash64(List<String> tokens) {
+        final long seed = 0; //do not change seed
+        final int BITS = 64;
+        if (tokens == null || tokens.isEmpty()) {
+            return 0;
         }
+        int[] bits = new int[BITS];
+        for (String s : tokens) {
+            ByteBuffer buffer = ByteBuffer.wrap(s.getBytes());
+            long hc = MurmurHash.hash2_64(buffer, 0, buffer.array().length, seed);
+            for (int i = 0; i < BITS; i++) {
+                if (((hc >>> i) & 1) == 1) {
+                    bits[i]++;
+                } else {
+                    bits[i]--;
+                }
+            }
+        }
+        long hash = 0;
+        long one = 1;
+        for (int i = 0; i < BITS; i++) {
+            if (bits[i] >= 0) {
+                hash |= one;
+            }
+            one <<= 1;
+        }
+        return hash;
     }
 
     public static abstract class AbstractSentence {
