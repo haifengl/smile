@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 import smile.data.parser.IOUtils;
-import static smile.neighbor.SNLSH.SimHash.simhash64;
+import static smile.neighbor.SNLSH.simhash64;
 
 /**
  * Test data set: http://research.microsoft.com/en-us/downloads/607d14d9-20cd-47e3-85bc-a2f65cd28042/
