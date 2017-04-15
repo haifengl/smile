@@ -79,7 +79,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
      * tree on the OOB samples, which can be used when aggregating
      * tree votes.
      */
-    static class Tree implements Serializable {
+    static class Tree {
         DecisionTree tree;
         double weight;
         Tree(DecisionTree tree, double weight) {
@@ -285,11 +285,11 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
         /**
          * The minimum size of leaf nodes.
          */
-        int nodeSize = 5;
+        int nodeSize;
         /**
          * The maximum number of leaf nodes in the tree.
          */
-        int maxNodes = 100;
+        int maxNodes;
         /**
          * The sampling rate.
          */
@@ -351,8 +351,8 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
 
                     // We used to do up sampling.
                     // But we switch to down sampling, which seems has better performance.
-                    int size = nj / classWeight[l];
-                    for (int i = 0; i < size; i++) {
+                    nj /= classWeight[l];
+                    for (int i = 0; i < nj; i++) {
                         int xi = Math.randomInt(nj);
                         samples[cj.get(xi)] += 1; //classWeight[l];
                     }
@@ -461,7 +461,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
      * generally good performance, where dim is the number of variables.
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int mtry) {
-        this(attributes, x, y, ntrees, 100, 5, mtry, 1.0);
+        this(attributes, x, y, ntrees, x.length, 1, mtry, 1.0);
 
     }
 
@@ -481,7 +481,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
      *                  sampling without replacement.
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample) {
-        this(attributes, x, y, ntrees, maxNodes, nodeSize, mtry, subsample, DecisionTree.SplitRule.GINI);
+        this(attributes, x, y, ntrees, x.length, 1, mtry, subsample, DecisionTree.SplitRule.GINI);
     }
 
     /**
@@ -501,7 +501,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
      * @param rule Decision tree split rule.
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample, DecisionTree.SplitRule rule) {
-        this(attributes, x, y, ntrees, maxNodes, nodeSize, mtry, subsample, rule, null);
+        this(attributes, x, y, ntrees, x.length, 1, mtry, subsample, rule, null);
     }
 
     /**
@@ -519,13 +519,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
      *                  sampling without replacement.
      * @param rule Decision tree split rule.
-     * @param classWeight Priors of the classes. The weight of each class
-     *                    is roughly the ratio of samples in each class.
-     *                    For example, if
-     *                    there are 400 positive samples and 100 negative
-     *                    samples, the classWeight should be [1, 4]
-     *                    (assuming label 0 is of negative, label 1 is of
-     *                    positive).
+     * @param classWeight Priors of the classes.
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample, DecisionTree.SplitRule rule, int[] classWeight) {
         if (x.length != y.length) {
@@ -775,16 +769,5 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
             }
         }
         return results;
-    }
-
-    /**
-     * Returns the decision trees.
-     */
-    public DecisionTree[] getTrees() {
-        DecisionTree[] forest = new DecisionTree[trees.size()];
-        for (int i = 0; i < forest.length; i++)
-            forest[i] = trees.get(i).tree;
-
-        return forest;
     }
 }

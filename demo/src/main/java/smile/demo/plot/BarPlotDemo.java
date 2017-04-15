@@ -30,9 +30,6 @@ import smile.plot.PlotCanvas;
  */
 @SuppressWarnings("serial")
 public class BarPlotDemo extends JPanel {
-
-    private static final String BAR_PLOT = "Bar Plot";
-
     public BarPlotDemo() {
         super(new GridLayout(1,1));
 
@@ -43,17 +40,17 @@ public class BarPlotDemo extends JPanel {
             data[j] = Math.random() - 0.5;
         }
         PlotCanvas canvas = BarPlot.plot(data, labels);
-        canvas.setTitle(BAR_PLOT);
+        canvas.setTitle("Bar Plot");
         add(canvas);
     }
 
     @Override
     public String toString() {
-        return BAR_PLOT;
+        return "Bar Plot";
     }
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame(BAR_PLOT);
+        JFrame frame = new JFrame("Bar Plot");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().add(new BarPlotDemo());

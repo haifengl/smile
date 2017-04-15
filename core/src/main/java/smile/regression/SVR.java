@@ -16,7 +16,6 @@
 
 package smile.regression;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -48,8 +47,7 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class SVR<T> implements Regression<T>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class SVR<T> implements Regression<T> {
     private static final Logger logger = LoggerFactory.getLogger(SVR.class);
 
     /**
@@ -106,8 +104,7 @@ public class SVR<T> implements Regression<T>, Serializable {
     /**
      * Support vector.
      */
-    class SupportVector implements Serializable {
-        private static final long serialVersionUID = 1L;
+    class SupportVector {
 
         /**
          * Support vector.

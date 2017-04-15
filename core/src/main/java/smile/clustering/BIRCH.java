@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.clustering;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -55,8 +54,7 @@ import smile.math.Math;
  * 
  * @author Haifeng Li
  */
-public class BIRCH implements Clustering<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class BIRCH implements Clustering<double[]> {
 
     /**
      * Branching factor. Maximum number of children nodes.

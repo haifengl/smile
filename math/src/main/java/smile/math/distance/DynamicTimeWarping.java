@@ -16,8 +16,6 @@
 
 package smile.math.distance;
 
-import java.io.Serializable;
-
 /**
  * Dynamic time warping is an algorithm for measuring similarity between two
  * sequences which may vary in time or speed. DTW has been applied to video,
@@ -47,8 +45,7 @@ import java.io.Serializable;
  * 
  * @author Haifeng Li
  */
-public class DynamicTimeWarping<T> implements Distance<T[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class DynamicTimeWarping<T> implements Distance<T[]> {
 
     private Distance<T> distance;
     private double width = 1;

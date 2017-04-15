@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.math.kernel;
 
-import java.io.Serializable;
 import smile.math.Math;
 
 /**
@@ -24,8 +23,7 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public class LinearKernel implements MercerKernel<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class LinearKernel implements MercerKernel<double[]> {
 
     /**
      * Constructor.

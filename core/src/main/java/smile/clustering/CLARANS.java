@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.clustering;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -54,8 +53,7 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class CLARANS <T> extends PartitionClustering<T> implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class CLARANS <T> extends PartitionClustering<T> {
     private static final Logger logger = LoggerFactory.getLogger(CLARANS.class);
 
     /**

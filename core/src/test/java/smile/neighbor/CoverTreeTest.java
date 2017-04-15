@@ -93,29 +93,12 @@ public class CoverTreeTest {
         for (int i = 0; i < data.length; i++) {
             Neighbor[] n1 = coverTree.knn(data[i], 10);
             Neighbor[] n2 = naive.knn(data[i], 10);
-            assertEquals(n1.length, n2.length);
             for (int j = 0; j < n1.length; j++) {
                 assertEquals(n1[j].index, n2[j].index);
                 assertEquals(n1[j].value, n2[j].value);
                 assertEquals(n1[j].distance, n2[j].distance, 1E-7);
             }
         }
-    }
-
-    /**
-     * Test of knn method, of class CoverTree. The data has only one elements
-     */
-    @Test
-    public void testKnn1() {
-        System.out.println("knn1");
-        double[][] data1 = {data[0]};
-        EuclideanDistance d = new EuclideanDistance();
-        coverTree = new CoverTree<>(data1, d);
-        Neighbor[] n1 = coverTree.knn(data[1], 1);
-        assertEquals(1, n1.length);
-        assertEquals(0, n1[0].index);
-        assertEquals(data[0], n1[0].value);
-        assertEquals(d.d(data[0], data[1]), n1[0].distance, 1E-7);
     }
 
     /**

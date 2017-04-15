@@ -16,7 +16,6 @@
 
 package smile.math.distance;
 
-import java.io.Serializable;
 import smile.math.Math;
 
 /**
@@ -39,8 +38,7 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public class EditDistance implements Metric<String>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class EditDistance implements Metric<String> {
 
     /**
      * Weight matrix for weighted Levenshtein distance.

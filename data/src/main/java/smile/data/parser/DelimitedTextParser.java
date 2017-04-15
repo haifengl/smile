@@ -223,9 +223,9 @@ public class DelimitedTextParser {
     /**
      * Parse a dataset from given file.
      * @param file the file of data source.
-     * @throws java.io.IOException
+     * @throws java.io.FileNotFoundException
      */
-    public AttributeDataset parse(String name, File file) throws IOException, ParseException {
+    public AttributeDataset parse(String name, File file) throws FileNotFoundException, IOException, ParseException {
         return parse(name, new FileInputStream(file));
     }
 
@@ -233,7 +233,7 @@ public class DelimitedTextParser {
      * Parse a dataset from given file.
      * @param file the file of data source.
      * @param attributes the list attributes of data in proper order.
-     * @throws java.io.IOException
+     * @throws java.io.FileNotFoundException
      */
     public AttributeDataset parse(Attribute[] attributes, File file) throws IOException, ParseException {
         String name = file.getPath();

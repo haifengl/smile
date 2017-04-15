@@ -19,8 +19,6 @@ package smile.classification;
 import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.Math;
-import smile.math.matrix.ColumnMajorMatrix;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
 
 /**
@@ -73,7 +71,7 @@ public class QDA implements SoftClassifier<double[]>, Serializable {
      * to discriminant functions, normalized so that within groups covariance
      * matrix is spherical.
      */
-    private final DenseMatrix[] scaling;
+    private final double[][][] scaling;
     /**
      * Eigen values of each covariance matrix.
      */
@@ -232,7 +230,7 @@ public class QDA implements SoftClassifier<double[]>, Serializable {
         // Class mean vectors.
         mu = new double[k][p];
         // Class covarainces.
-        DenseMatrix[] cov = new DenseMatrix[k];
+        double[][][] cov = new double[k][p][p];
 
         for (int i = 0; i < n; i++) {
             int c = y[i];
@@ -246,8 +244,6 @@ public class QDA implements SoftClassifier<double[]>, Serializable {
             if (ni[i] <= 1) {
                 throw new IllegalArgumentException(String.format("Class %d has only one sample.", i));
             }
-
-            cov[i] = new ColumnMajorMatrix(p, p);
 
             for (int j = 0; j < p; j++) {
                 mu[i][j] /= ni[i];
@@ -266,7 +262,7 @@ public class QDA implements SoftClassifier<double[]>, Serializable {
             int c = y[i];
             for (int j = 0; j < p; j++) {
                 for (int l = 0; l <= j; l++) {
-                    cov[c].add(j, l, (x[i][j] - mu[c][j]) * (x[i][l] - mu[c][l]));
+                    cov[c][j][l] += (x[i][j] - mu[c][j]) * (x[i][l] - mu[c][l]);
                 }
             }
         }
@@ -276,16 +272,16 @@ public class QDA implements SoftClassifier<double[]>, Serializable {
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < p; j++) {
                 for (int l = 0; l <= j; l++) {
-                    cov[i].div(j, l, (ni[i] - 1));
-                    cov[i].set(l, j, cov[i].get(j, l));
+                    cov[i][j][l] /= (ni[i] - 1);
+                    cov[i][l][j] = cov[i][j][l];
                 }
 
-                if (cov[i].get(j, j) < tol) {
+                if (cov[i][j][j] < tol) {
                     throw new IllegalArgumentException(String.format("Class %d covariance matrix (variable %d) is close to singular.", i, j));
                 }
             }
 
-            EigenValueDecomposition eigen = new EigenValueDecomposition(cov[i], true);
+            EigenValueDecomposition eigen = EigenValueDecomposition.decompose(cov[i], true);
 
             for (double s : eigen.getEigenValues()) {
                 if (s < tol) {
@@ -342,7 +338,7 @@ public class QDA implements SoftClassifier<double[]>, Serializable {
                 d[j] = x[j] - mu[i][j];
             }
 
-            scaling[i].atx(d, ux);
+            Math.atx(scaling[i], d, ux);
 
             double f = 0.0;
             for (int j = 0; j < p; j++) {

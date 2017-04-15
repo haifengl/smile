@@ -41,7 +41,7 @@ public class UniversalGenerator implements RandomNumberGenerator {
      * with any regular period.
      * <CODE>BIG_PRIME = 899999963</CODE>
      */
-    static final int BIG_PRIME = 899999963;
+    private static final int BIG_PRIME = 899999963;
     private double c, cd, cm, u[];
     private int i97, j97;
 
@@ -49,28 +49,29 @@ public class UniversalGenerator implements RandomNumberGenerator {
      * Initialize Random with default seed.
      */
     public UniversalGenerator() {
-        setSeed(DEFAULT_RANDOM_SEED);
+        srand(DEFAULT_RANDOM_SEED);
     }
 
     /**
      * Initialize Random with a specified integer seed
      */
     public UniversalGenerator(int seed) {
-        setSeed(seed);
+        srand(Math.abs(seed % BIG_PRIME));
     }
 
     /**
      * Initialize Random with a specified long seed
      */
     public UniversalGenerator(long seed) {
-        setSeed(seed);
+        srand(Math.abs((int) (seed % BIG_PRIME)));
     }
 
-    @Override
-    public void setSeed(long seed) {
+    /**
+     * Initialize the random generator with a seed.
+     */
+    private void srand(int ijkl) {
         u = new double[97];
 
-        int ijkl = Math.abs((int) (seed % BIG_PRIME));
         int ij = ijkl / 30082;
         int kl = ijkl % 30082;
 

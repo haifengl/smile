@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.data;
 
-import java.io.Serializable;
 import java.text.ParseException;
 
 /**
@@ -23,7 +22,7 @@ import java.text.ParseException;
  *
  * @author Haifeng Li
  */
-public abstract class Attribute implements Serializable {
+public abstract class Attribute {
     /**
      * The type of attributes.
      */

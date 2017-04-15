@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.projection;
 
-import java.io.Serializable;
 import smile.math.Math;
 import smile.stat.distribution.GaussianDistribution;
 
@@ -50,8 +49,7 @@ import smile.stat.distribution.GaussianDistribution;
  *
  * @author Haifeng Li
  */
-public class RandomProjection implements Projection<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class RandomProjection implements Projection<double[]> {
 
     /**
      * Probability distribution to generate random projection.

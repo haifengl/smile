@@ -16,12 +16,9 @@
 
 package smile.regression;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
 import smile.math.distance.Metric;
-import smile.math.matrix.ColumnMajorMatrix;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QRDecomposition;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.math.rbf.RadialBasisFunction;
@@ -78,8 +75,7 @@ import smile.util.SmileUtils;
  * 
  * @author Haifeng Li
  */
-public class RBFNetwork<T> implements Regression<T>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class RBFNetwork<T> implements Regression<T> {
 
     /**
      * The centers of RBF functions.
@@ -271,15 +267,14 @@ public class RBFNetwork<T> implements Regression<T>, Serializable {
         int n = x.length;
         int m = rbf.length;
 
-        DenseMatrix G = new ColumnMajorMatrix(n, m);
+        double[][] G = new double[n][m];
         double[] b = new double[n];
         w = new double[m];
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
             for (int j = 0; j < m; j++) {
-                double r = rbf[j].f(distance.d(x[i], centers[j]));
-                G.set(i, j, r);
-                sum += r;
+                G[i][j] = rbf[j].f(distance.d(x[i], centers[j]));
+                sum += G[i][j];
             }
 
             if (normalized) {
@@ -289,7 +284,7 @@ public class RBFNetwork<T> implements Regression<T>, Serializable {
             }
         }
 
-        QRDecomposition qr = new QRDecomposition(G);
+        QRDecomposition qr = new QRDecomposition(G, true);
         qr.solve(b, w);
     }
 

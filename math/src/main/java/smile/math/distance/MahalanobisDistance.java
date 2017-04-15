@@ -16,7 +16,6 @@
 
 package smile.math.distance;
 
-import java.io.Serializable;
 import smile.math.Math;
 
 /**
@@ -29,8 +28,7 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public class MahalanobisDistance implements Metric<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class MahalanobisDistance implements Metric<double[]> {
 
     private double[][] sigma;
     private double[][] sigmaInv;
@@ -44,7 +42,7 @@ public class MahalanobisDistance implements Metric<double[]>, Serializable {
             System.arraycopy(cov[i], 0, sigma[i], 0, cov.length);
         }
 
-        sigmaInv = Math.inverse(sigma).array();
+        sigmaInv = Math.inverse(sigma);
     }
 
     @Override

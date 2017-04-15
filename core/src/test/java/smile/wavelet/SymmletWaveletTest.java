@@ -27,9 +27,9 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class CoifletWaveletTest {
+public class SymmletWaveletTest {
 
-    public CoifletWaveletTest() {
+    public SymmletWaveletTest() {
     }
 
     @BeforeClass
@@ -51,15 +51,15 @@ public class CoifletWaveletTest {
     @Test
     public void testFilter() {
         System.out.println("filter");
-        for (int p = 6; p <= 30; p += 6) {
+        for (int p = 8; p <= 20; p += 2) {
             System.out.format("p = %d%n", p);
             double[] a = {.2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3};
             double[] b = a.clone();
-            Wavelet instance = new CoifletWavelet(p);
+            Wavelet instance = new SymmletWavelet(p);
             instance.transform(a);
             instance.inverse(a);
             for (int i = 0; i < a.length; i++) {
-                assertEquals(b[i], a[i], 1E-6);
+                assertEquals(b[i], a[i], 1E-7);
             }
         }
     }

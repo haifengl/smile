@@ -21,11 +21,7 @@ package smile.math.random;
  * @author Haifeng Li
  */
 public interface RandomNumberGenerator {
-    /**
-     * Initialize the random generator with a seed.
-     */
-    public void setSeed(long seed);
-
+    
     /**
      * Returns up to 32 random bits.
      */

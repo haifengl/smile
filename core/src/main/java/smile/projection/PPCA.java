@@ -15,9 +15,9 @@
  *******************************************************************************/
 package smile.projection;
 
-import java.io.Serializable;
 import smile.math.Math;
-import smile.math.matrix.*;
+import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.LUDecomposition;
 
 /**
  * Probabilistic principal component analysis. PPCA is a simplified factor analysis
@@ -40,8 +40,7 @@ import smile.math.matrix.*;
  *
  * @author Haifeng Li
  */
-public class PPCA implements Projection<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class PPCA implements Projection<double[]> {
 
     /**
      * The sample mean.
@@ -58,17 +57,17 @@ public class PPCA implements Projection<double[]>, Serializable {
     /**
      * Loading matrix.
      */
-    private DenseMatrix loading;
+    private double[][] loading;
     /**
      * Projection matrix.
      */
-    private DenseMatrix projection;
+    private double[][] projection;
 
     /**
      * Returns the variable loading matrix, ordered from largest to smallest
      * by corresponding eigenvalues.
      */
-    public DenseMatrix getLoadings() {
+    public double[][] getLoadings() {
         return loading;
     }
 
@@ -90,7 +89,7 @@ public class PPCA implements Projection<double[]>, Serializable {
      * Returns the projection matrix. Note that this is not the matrix W in the
      * latent model.
      */
-    public DenseMatrix getProjection() {
+    public double[][] getProjection() {
         return projection;
     }
 
@@ -100,8 +99,8 @@ public class PPCA implements Projection<double[]>, Serializable {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, mu.length));
         }
 
-        double[] y = new double[projection.nrows()];
-        projection.ax(x, y);
+        double[] y = new double[projection.length];
+        Math.ax(projection, x, y);
         Math.minus(y, pmu);
         return y;
     }
@@ -112,9 +111,9 @@ public class PPCA implements Projection<double[]>, Serializable {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x[0].length, mu.length));
         }
 
-        double[][] y = new double[x.length][projection.nrows()];
+        double[][] y = new double[x.length][projection.length];
         for (int i = 0; i < x.length; i++) {
-            projection.ax(x[i], y[i]);
+            Math.ax(projection, x[i], y[i]);
             Math.minus(y[i], pmu);
         }
         return y;
@@ -130,26 +129,26 @@ public class PPCA implements Projection<double[]>, Serializable {
         int n = data[0].length;
 
         mu = Math.colMean(data);
-        DenseMatrix cov = new ColumnMajorMatrix(n, n);
+        double[][] cov = new double[n][n];
         for (int l = 0; l < m; l++) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
-                    cov.add(i, j, (data[l][i] - mu[i]) * (data[l][j] - mu[j]));
+                    cov[i][j] += (data[l][i] - mu[i]) * (data[l][j] - mu[j]);
                 }
             }
         }
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
-                cov.div(i, j, m);
-                cov.set(j, i, cov.get(i, j));
+                cov[i][j] /= m;
+                cov[j][i] = cov[i][j];
             }
         }
 
 
-        EigenValueDecomposition eigen = new EigenValueDecomposition(cov);
+        EigenValueDecomposition eigen = EigenValueDecomposition.decompose(cov, true);
         double[] evalues = eigen.getEigenValues();
-        DenseMatrix evectors = eigen.getEigenVectors();
+        double[][] evectors = eigen.getEigenVectors();
 
         noise = 0.0;
         for (int i = k; i < n; i++) {
@@ -157,23 +156,23 @@ public class PPCA implements Projection<double[]>, Serializable {
         }
         noise /= (n - k);
 
-        loading = new ColumnMajorMatrix(n, k);
+        loading = new double[n][k];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < k; j++) {
-                loading.set(i, j, evectors.get(i, j) * Math.sqrt(evalues[j] - noise));
+                loading[i][j] = evectors[i][j] * Math.sqrt(evalues[j] - noise);
             }
         }
 
-        DenseMatrix M = loading.ata();
+        double[][] M = Math.atamm(loading);
         for (int i = 0; i < k; i++) {
-            M.add(i, i, noise);
+            M[i][i] += noise;
         }
 
-        CholeskyDecomposition chol = new CholeskyDecomposition(M);
-        DenseMatrix Mi = chol.inverse();
-        projection = Mi.abtmm(loading);
+        LUDecomposition lu = new LUDecomposition(M, true);
+        double[][] Mi = lu.inverse();
+        projection = Math.abtmm(Mi, loading);
 
-        pmu = new double[projection.nrows()];
-        projection.ax(mu, pmu);
+        pmu = new double[projection.length];
+        Math.ax(projection, mu, pmu);
     }
 }

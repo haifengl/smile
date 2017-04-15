@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.regression;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -25,6 +24,7 @@ import smile.data.Attribute;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
 import smile.math.Math;
+import smile.math.Random;
 import smile.sort.QuickSort;
 import smile.util.MulticoreExecutor;
 
@@ -75,9 +75,7 @@ import smile.util.MulticoreExecutor;
  *  
  * @author Haifeng Li
  */
-public class RegressionTree implements Regression<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class RegressionTree implements Regression<double[]> {
     /**
      * The attributes of independent variable.
      */
@@ -599,17 +597,16 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             int tc = 0;
             int fc = 0;
             int[] trueSamples = new int[n];
-            //int[] falseSamples = new int[n];
+            int[] falseSamples = new int[n];
 
             if (attributes[node.splitFeature].getType() == Attribute.Type.NOMINAL) {
                 for (int i = 0; i < n; i++) {
                     if (samples[i] > 0) {
                         if (x[i][node.splitFeature] == node.splitValue) {
                             trueSamples[i] = samples[i];
-                            tc += trueSamples[i];
-                            samples[i] = 0;
+                            tc += samples[i];
                         } else {
-                            //falseSamples[i] = samples[i];
+                            falseSamples[i] = samples[i];                            
                             fc += samples[i];
                         }
                     }
@@ -619,10 +616,9 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                     if (samples[i] > 0) {
                         if (x[i][node.splitFeature] <= node.splitValue) {
                             trueSamples[i] = samples[i];
-                            tc += trueSamples[i];
-                            samples[i] = 0;
+                            tc += samples[i];
                         } else {
-                            //falseSamples[i] = samples[i];
+                            falseSamples[i] = samples[i];                            
                             fc += samples[i];
                         }
                     }
@@ -650,7 +646,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 }
             }
 
-            falseChild = new TrainNode(node.falseChild, x, y, samples);
+            falseChild = new TrainNode(node.falseChild, x, y, falseSamples);
             if (fc > nodeSize && falseChild.findBestSplit()) {
                 if (nextSplits != null) {
                     nextSplits.add(falseChild);
@@ -799,16 +795,15 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             int tc = 0;
             int fc = 0;
             int[] trueSamples = new int[n];
-            //int[] falseSamples = new int[n];
+            int[] falseSamples = new int[n];
 
             for (int i = 0; i < n; i++) {
                 if (samples[i] > 0) {
                     if (x[i][node.splitFeature] == (int) node.splitValue) {
                         trueSamples[i] = samples[i];
-                        tc += trueSamples[i];
-                        samples[i] = 0;
+                        tc += samples[i];
                     } else {
-                        //falseSamples[i] = samples[i];
+                        falseSamples[i] = samples[i];
                         fc += samples[i];
                     }
                 }
@@ -826,7 +821,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 }
             }
 
-            falseChild = new SparseBinaryTrainNode(node.falseChild, x, y, samples);
+            falseChild = new SparseBinaryTrainNode(node.falseChild, x, y, falseSamples);
             if (fc > nodeSize && falseChild.findBestSplit()) {
                 if (nextSplits != null) {
                     nextSplits.add(falseChild);
@@ -1135,28 +1130,5 @@ public class RegressionTree implements Regression<double[]>, Serializable {
      */
     public double predict(int[] x) {
         return root.predict(x);
-    }
-
-    /**
-     * Returns the maximum depth" of the tree -- the number of
-     * nodes along the longest path from the root node
-     * down to the farthest leaf node.*/
-    public int maxDepth() {
-        return maxDepth(root);
-    }
-
-    private int maxDepth(Node node) {
-        if (node == null)
-            return 0;
-
-        // compute the depth of each subtree
-        int lDepth = maxDepth(node.trueChild);
-        int rDepth = maxDepth(node.falseChild);
-
-        // use the larger one
-        if (lDepth > rDepth)
-            return (lDepth + 1);
-        else
-            return (rDepth + 1);
     }
 }

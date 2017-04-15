@@ -16,8 +16,6 @@
 
 package smile.math.distance;
 
-import java.io.Serializable;
-
 /**
  * Minkowski distance of order p or L<sub>p</sub>-norm, is a generalization of
  * Euclidean distance that is actually L<sub>2</sub>-norm. You may also provide
@@ -27,8 +25,7 @@ import java.io.Serializable;
  *
  * @author Haifeng Li
  */
-public class MinkowskiDistance implements Metric<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class MinkowskiDistance implements Metric<double[]> {
 
     /**
      * The order of Minkowski distance.

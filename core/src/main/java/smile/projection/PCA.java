@@ -15,10 +15,7 @@
  *******************************************************************************/
 package smile.projection;
 
-import java.io.Serializable;
 import smile.math.Math;
-import smile.math.matrix.ColumnMajorMatrix;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
 import smile.math.matrix.SingularValueDecomposition;
 
@@ -60,8 +57,7 @@ import smile.math.matrix.SingularValueDecomposition;
  * 
  * @author Haifeng Li
  */
-public class PCA implements Projection<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class PCA implements Projection<double[]> {
 
     /**
      * The dimension of feature space.
@@ -82,7 +78,7 @@ public class PCA implements Projection<double[]>, Serializable {
     /**
      * The matrix of variable loadings, whose columns contain the eigenvectors.
      */
-    private DenseMatrix eigvectors;
+    private double[][] eigvectors;
     /**
      * Eigenvalues of principal components.
      */
@@ -98,7 +94,7 @@ public class PCA implements Projection<double[]>, Serializable {
     /**
      * Projection matrix.
      */
-    private DenseMatrix projection;
+    private double[][] projection;
 
     /**
      * Constructor. Learn principal component analysis with covariance matrix.
@@ -128,7 +124,7 @@ public class PCA implements Projection<double[]>, Serializable {
         }
 
         if (m > n && !cor) {
-            SingularValueDecomposition svd = new SingularValueDecomposition(x);
+            SingularValueDecomposition svd = SingularValueDecomposition.decompose(x);
             eigvalues = svd.getSingularValues();
             for (int i = 0; i < eigvalues.length; i++) {
                 eigvalues[i] *= eigvalues[i];
@@ -138,19 +134,19 @@ public class PCA implements Projection<double[]>, Serializable {
 
         } else {
 
-            DenseMatrix cov = new ColumnMajorMatrix(n, n);
+            double[][] cov = new double[n][n];
             for (int k = 0; k < m; k++) {
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j <= i; j++) {
-                        cov.add(i, j, x[k][i] * x[k][j]);
+                        cov[i][j] += x[k][i] * x[k][j];
                     }
                 }
             }
 
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
-                    cov.div(i, j, m); // divide m instead of m-1 for S-PLUS compatibilit
-                    cov.set(j, i, cov.get(i, j));
+                    cov[i][j] /= m; // divide m instead of m-1 for S-PLUS compatibilit
+                    cov[j][i] = cov[i][j];
                 }
             }
 
@@ -158,24 +154,24 @@ public class PCA implements Projection<double[]>, Serializable {
             if (cor) {
                 sd = new double[n];
                 for (int i = 0; i < n; i++) {
-                    sd[i] = Math.sqrt(cov.get(i, i));
+                    sd[i] = Math.sqrt(cov[i][i]);
                 }
 
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j <= i; j++) {
-                        cov.div(i, j, sd[i] * sd[j]);
-                        cov.set(j, i, cov.get(i, j));
+                        cov[i][j] /= sd[i] * sd[j];
+                        cov[j][i] = cov[i][j];
                     }
                 }
             }
 
-            EigenValueDecomposition eigen = new EigenValueDecomposition(cov, true);
+            EigenValueDecomposition eigen = EigenValueDecomposition.decompose(cov, true);
 
-            DenseMatrix loadings = eigen.getEigenVectors();
+            double[][] loadings = eigen.getEigenVectors();
             if (cor) {
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j < n; j++) {
-                        loadings.div(i, j, sd[i]);
+                        loadings[i][j] /= sd[i];
                     }
                 }
             }
@@ -207,7 +203,7 @@ public class PCA implements Projection<double[]>, Serializable {
      * Returns the variable loading matrix, ordered from largest to smallest
      * by corresponding eigenvalues. The matrix columns contain the eigenvectors.
      */
-    public DenseMatrix getLoadings() {
+    public double[][] getLoadings() {
         return eigvectors;
     }
 
@@ -239,7 +235,7 @@ public class PCA implements Projection<double[]>, Serializable {
      * Returns the projection matrix W. The dimension reduced data can be obtained
      * by y = W' * x.
      */
-    public DenseMatrix getProjection() {
+    public double[][] getProjection() {
         return projection;
     }
 
@@ -253,15 +249,15 @@ public class PCA implements Projection<double[]>, Serializable {
         }
 
         this.p = p;
-        projection = new ColumnMajorMatrix(p, n);
+        projection = new double[p][n];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
-                projection.set(j, i, eigvectors.get(i, j));
+                projection[j][i] = eigvectors[i][j];
             }
         }
 
         pmu = new double[p];
-        projection.ax(mu, pmu);
+        Math.ax(projection, mu, pmu);
 
         return this;
     }
@@ -293,7 +289,7 @@ public class PCA implements Projection<double[]>, Serializable {
         }
 
         double[] y = new double[p];
-        projection.ax(x, y);
+        Math.ax(projection, x, y);
         Math.minus(y, pmu);
         return y;
     }
@@ -306,7 +302,7 @@ public class PCA implements Projection<double[]>, Serializable {
 
         double[][] y = new double[x.length][p];
         for (int i = 0; i < x.length; i++) {
-            projection.ax(x[i], y[i]);
+            Math.ax(projection, x[i], y[i]);
             Math.minus(y[i], pmu);
         }
         return y;

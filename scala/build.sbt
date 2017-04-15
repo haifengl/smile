@@ -1,7 +1,5 @@
 name := "smile-scala"
 
-crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1")
-
 // Parent project disables Scala as most libraries are in Java.
 // Enable it as this is a Scala project.
 crossPaths := true
@@ -14,6 +12,6 @@ scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value
 
 scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Smile - Statistical Machine Intelligence and Learning Engine")
 
-target in Compile in doc := baseDirectory.value / "../api/scala"
+target in Compile in doc := baseDirectory.value / "../shell/src/universal/doc/api/scala"
 
 libraryDependencies += "com.thoughtworks.xstream" % "xstream" % "1.4.8"

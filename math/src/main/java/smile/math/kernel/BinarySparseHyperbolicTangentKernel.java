@@ -17,7 +17,6 @@
 package smile.math.kernel;
 
 import java.lang.Math;
-import java.io.Serializable;
 
 /**
  * The hyperbolic tangent kernel.
@@ -40,8 +39,7 @@ import java.io.Serializable;
  *
  * @author Haifeng Li
  */
-public class BinarySparseHyperbolicTangentKernel implements MercerKernel<int[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class BinarySparseHyperbolicTangentKernel implements MercerKernel<int[]> {
 
     private double scale;
     private double offset;

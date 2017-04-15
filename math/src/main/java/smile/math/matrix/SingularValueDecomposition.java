@@ -53,11 +53,11 @@ public class SingularValueDecomposition {
     /**
      * Arrays for internal storage of left singular vectors U.
      */
-    private DenseMatrix U;
+    private double[][] U;
     /**
      * Arrays for internal storage of right singular vectors V.
      */
-    private DenseMatrix V;
+    private double[][] V;
     /**
      * Array for internal storage of singular values.
      */
@@ -80,37 +80,39 @@ public class SingularValueDecomposition {
     private double tol;
 
     /**
-     * Private constructor.
+     * Private constructor. Use factory method decompose() to get
+     * the decomposition.
      */
-    SingularValueDecomposition(DenseMatrix U, DenseMatrix V, double[] s) {
+    private SingularValueDecomposition(double[][] U, double[][] V, double[] s) {
         this(U, V, s, true);
     }
 
     /**
-     * Private constructor.
+     * Private constructor. Use factory method decompose() to get
+     * the decomposition.
      */
-    SingularValueDecomposition(DenseMatrix U, DenseMatrix V, double[] s, boolean full) {
+    private SingularValueDecomposition(double[][] U, double[][] V, double[] s, boolean full) {
         this.U = U;
         this.V = V;
         this.s = s;
         this.full = full;
 
-        m = U.nrows();
-        n = V.ncols();
-        tol = 0.5 * Math.sqrt(m + n + 1.0) * s[0] * Math.EPSILON;
+        m = U.length;
+        n = V.length;
+        tol = 0.5 * Math.sqrt(U.length + V.length + 1.0) * s[0] * Math.EPSILON;
     }
 
     /**
      * Returns the left singular vectors
      */
-    public DenseMatrix getU() {
+    public double[][] getU() {
         return U;
     }
 
     /**
      * Returns the right singular vectors
      */
-    public DenseMatrix getV() {
+    public double[][] getV() {
         return V;
     }
 
@@ -125,11 +127,11 @@ public class SingularValueDecomposition {
     /**
      * Returns the diagonal matrix of singular values
      */
-    public DenseMatrix getS() {
-        DenseMatrix S = new ColumnMajorMatrix(U.nrows(), V.nrows());
+    public double[][] getS() {
+        double[][] S = new double[V.length][V.length];
 
         for (int i = 0; i < s.length; i++) {
-            S.set(i, i, s[i]);
+            S[i][i] = s[i];
         }
 
         return S;
@@ -204,17 +206,17 @@ public class SingularValueDecomposition {
     /**
      * Returns a matrix of which columns give an orthonormal basis for the range space.
      */
-    public DenseMatrix range() {
+    public double[][] range() {
         if (!full) {
             throw new IllegalStateException("This is not a FULL singular value decomposition.");
         }
 
         int nr = 0;
-        DenseMatrix rnge = new ColumnMajorMatrix(m, rank());
+        double[][] rnge = new double[m][rank()];
         for (int j = 0; j < n; j++) {
             if (s[j] > tol) {
                 for (int i = 0; i < m; i++) {
-                    rnge.set(i, nr, U.get(i, j));
+                    rnge[i][nr] = U[i][j];
                 }
                 nr++;
             }
@@ -225,17 +227,17 @@ public class SingularValueDecomposition {
     /**
      * Returns a matrix of which columns give an orthonormal basis for the null space.
      */
-    public DenseMatrix nullspace() {
+    public double[][] nullspace() {
         if (!full) {
             throw new IllegalStateException("This is not a FULL singular value decomposition.");
         }
 
         int nn = 0;
-        DenseMatrix nullsp = new ColumnMajorMatrix(n, nullity());
+        double[][] nullsp = new double[n][nullity()];
         for (int j = 0; j < n; j++) {
             if (s[j] <= tol) {
                 for (int jj = 0; jj < n; jj++) {
-                    nullsp.set(jj, nn, V.get(jj, j));
+                    nullsp[jj][nn] = V[jj][j];
                 }
                 nn++;
             }
@@ -247,14 +249,16 @@ public class SingularValueDecomposition {
      * Returns the Cholesky decomposition of A'A.
      */
     public CholeskyDecomposition toCholesky() {
-        DenseMatrix VD = new ColumnMajorMatrix(V.nrows(), V.ncols());
-        for (int i = 0; i < V.nrows(); i++) {
-            for (int j = 0; j < V.ncols(); j++) {
-                VD.set(i, j, V.get(i, j) * s[j]);
+        double[][] VD = new double[V.length][V[0].length];
+        for (int i = 0; i < V.length; i++) {
+            for (int j = 0; j < V[i].length; j++) {
+                VD[i][j] = V[i][j] * s[j];
             }
         }
 
-        return new CholeskyDecomposition(VD.aat());
+        double[][] A = Math.aatmm(VD);
+
+        return new CholeskyDecomposition(A, true);
     }
 
     /**
@@ -274,7 +278,7 @@ public class SingularValueDecomposition {
             double r = 0.0;
             if (s[j] > tol) {
                 for (int i = 0; i < m; i++) {
-                    r += U.get(i, j) * b[i];
+                    r += U[i][j] * b[i];
                 }
                 r /= s[j];
             }
@@ -284,7 +288,7 @@ public class SingularValueDecomposition {
         for (int j = 0; j < n; j++) {
             double r = 0.0;
             for (int jj = 0; jj < n; jj++) {
-                r += V.get(j, jj) * tmp[jj];
+                r += V[j][jj] * tmp[jj];
             }
             x[j] = r;
         }
@@ -316,13 +320,158 @@ public class SingularValueDecomposition {
         }
     }
 
+    private static class ATA implements IMatrix {
+
+        IMatrix A;
+        double[] buf;
+
+        public ATA(IMatrix A) {
+            this.A = A;
+            if (A.nrows() >= A.ncols()) {
+                buf = new double[A.nrows()];
+            } else {
+                buf = new double[A.ncols()];
+            }
+        }
+
+        @Override
+        public int nrows() {
+            if (A.nrows() >= A.ncols()) {
+                return A.ncols();
+            } else {
+                return A.nrows();
+            }
+        }
+
+        @Override
+        public int ncols() {
+            return nrows();
+        }
+
+        @Override
+        public void ax(double[] x, double[] y) {
+            if (A.nrows() >= A.ncols()) {
+                A.ax(x, buf);
+                A.atx(buf, y);
+            } else {
+                A.atx(x, buf);
+                A.ax(buf, y);
+            }
+        }
+
+        @Override
+        public void atx(double[] x, double[] y) {
+            ax(x, y);
+        }
+
+        @Override
+        public void axpy(double[] x, double[] y) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void axpy(double[] x, double[] y, double b) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double get(int i, int j) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ATA set(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void asolve(double[] b, double[] x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void atxpy(double[] x, double[] y) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void atxpy(double[] x, double[] y, double b) {
+            throw new UnsupportedOperationException();
+        }
+    };
+
     /**
-     * Constructor. The decomposition will be stored in a new create
-     * matrix. The input matrix will not be modified.
-     * @param A    input matrix
+     * Find k largest approximate singular triples of a matrix by the
+     * Lanczos algorithm.
+     *
+     * @param A the matrix supporting matrix vector multiplication operation.
+     * @param k the number of singular triples we wish to compute for the input matrix.
+     * This number cannot exceed the size of A.
      */
-    public SingularValueDecomposition(double[][] A) {
-        this(new ColumnMajorMatrix(A));
+    public static SingularValueDecomposition decompose(IMatrix A, int k) {
+        return decompose(A, k, 1.0E-6);
+    }
+
+    /**
+     * Find k largest approximate singular triples of a matrix by the
+     * Lanczos algorithm.
+     *
+     * @param A the matrix supporting matrix vector multiplication operation.
+     * @param k the number of singular triples we wish to compute for the input matrix.
+     * This number cannot exceed the size of A.
+     * @param kappa relative accuracy of ritz values acceptable as singular values.
+     */
+    public static SingularValueDecomposition decompose(IMatrix A, int k, double kappa) {
+        ATA B = new ATA(A);
+        EigenValueDecomposition eigen = EigenValueDecomposition.decompose(B, k, kappa);
+
+        double[] s = eigen.getEigenValues();
+        for (int i = 0; i < s.length; i++) {
+            s[i] = Math.sqrt(s[i]);
+        }
+
+        if (A.nrows() >= A.ncols()) {
+
+            double[][] V = eigen.getEigenVectors();
+
+            double[] tmp = new double[A.nrows()];
+            double[] vi = new double[A.ncols()];
+            double[][] U = new double[A.nrows()][s.length];
+            for (int i = 0; i < s.length; i++) {
+                for (int j = 0; j < A.ncols(); j++) {
+                    vi[j] = V[j][i];
+                }
+
+                A.ax(vi, tmp);
+
+                for (int j = 0; j < A.nrows(); j++) {
+                    U[j][i] = tmp[j] / s[i];
+                }
+            }
+
+            return new SingularValueDecomposition(U, V, s, false);
+
+        } else {
+
+            double[][] U = eigen.getEigenVectors();
+
+            double[] tmp = new double[A.ncols()];
+            double[] ui = new double[A.nrows()];
+            double[][] V = new double[A.ncols()][s.length];
+            for (int i = 0; i < s.length; i++) {
+                for (int j = 0; j < A.nrows(); j++) {
+                    ui[j] = U[j][i];
+                }
+
+                A.atx(ui, tmp);
+
+                for (int j = 0; j < A.ncols(); j++) {
+                    V[j][i] = tmp[j] / s[i];
+                }
+            }
+
+            return new SingularValueDecomposition(U, V, s, false);
+        }
     }
 
     /**
@@ -331,17 +480,17 @@ public class SingularValueDecomposition {
      * @param A  rectangular matrix. Row number should be equal to or larger
      * than column number for current implementation.
      */
-    public SingularValueDecomposition(DenseMatrix A) {
-        int m = A.nrows();
-        int n = A.ncols();
+    public static SingularValueDecomposition decompose(double[][] A) {
+        int m = A.length;
+        int n = A[0].length;
 
         boolean flag;
         int i, its, j, jj, k, l = 0, nm = 0;
         double anorm, c, f, g, h, s, scale, x, y, z;
         g = scale = anorm = 0.0;
 
-        U = A;
-        V = new ColumnMajorMatrix(n, n);
+        double[][] u = A;
+        double[][] v = new double[n][n];
         double[] w = new double[n];
         double[] rv1 = new double[n];
 
@@ -352,30 +501,30 @@ public class SingularValueDecomposition {
 
             if (i < m) {
                 for (k = i; k < m; k++) {
-                    scale += Math.abs(U.get(k, i));
+                    scale += Math.abs(u[k][i]);
                 }
 
                 if (scale != 0.0) {
                     for (k = i; k < m; k++) {
-                        U.div(k, i, scale);
-                        s += U.get(k, i) * U.get(k, i);
+                        u[k][i] /= scale;
+                        s += u[k][i] * u[k][i];
                     }
 
-                    f = U.get(i, i);
+                    f = u[i][i];
                     g = -Math.copySign(Math.sqrt(s), f);
                     h = f * g - s;
-                    U.set(i, i, f - g);
+                    u[i][i] = f - g;
                     for (j = l - 1; j < n; j++) {
                         for (s = 0.0, k = i; k < m; k++) {
-                            s += U.get(k, i) * U.get(k, j);
+                            s += u[k][i] * u[k][j];
                         }
                         f = s / h;
                         for (k = i; k < m; k++) {
-                            U.add(k, j, f * U.get(k, i));
+                            u[k][j] += f * u[k][i];
                         }
                     }
                     for (k = i; k < m; k++) {
-                        U.mul(k, i, scale);
+                        u[k][i] *= scale;
                     }
                 }
             }
@@ -385,36 +534,36 @@ public class SingularValueDecomposition {
 
             if (i + 1 <= m && i + 1 != n) {
                 for (k = l - 1; k < n; k++) {
-                    scale += Math.abs(U.get(i, k));
+                    scale += Math.abs(u[i][k]);
                 }
 
                 if (scale != 0.0) {
                     for (k = l - 1; k < n; k++) {
-                        U.div(i, k, scale);
-                        s += U.get(i, k) * U.get(i, k);
+                        u[i][k] /= scale;
+                        s += u[i][k] * u[i][k];
                     }
 
-                    f = U.get(i, l - 1);
+                    f = u[i][l - 1];
                     g = -Math.copySign(Math.sqrt(s), f);
                     h = f * g - s;
-                    U.set(i, l - 1, f - g);
+                    u[i][l - 1] = f - g;
 
                     for (k = l - 1; k < n; k++) {
-                        rv1[k] = U.get(i, k) / h;
+                        rv1[k] = u[i][k] / h;
                     }
 
                     for (j = l - 1; j < m; j++) {
                         for (s = 0.0, k = l - 1; k < n; k++) {
-                            s += U.get(j, k) * U.get(i, k);
+                            s += u[j][k] * u[i][k];
                         }
 
                         for (k = l - 1; k < n; k++) {
-                            U.add(j, k, s * rv1[k]);
+                            u[j][k] += s * rv1[k];
                         }
                     }
 
                     for (k = l - 1; k < n; k++) {
-                        U.mul(i, k, scale);
+                        u[i][k] *= scale;
                     }
                 }
             }
@@ -426,23 +575,22 @@ public class SingularValueDecomposition {
             if (i < n - 1) {
                 if (g != 0.0) {
                     for (j = l; j < n; j++) {
-                        V.set(j, i, (U.get(i, j) / U.get(i, l)) / g);
+                        v[j][i] = (u[i][j] / u[i][l]) / g;
                     }
                     for (j = l; j < n; j++) {
                         for (s = 0.0, k = l; k < n; k++) {
-                            s += U.get(i, k) * V.get(k, j);
+                            s += u[i][k] * v[k][j];
                         }
                         for (k = l; k < n; k++) {
-                            V.add(k, j, s * V.get(k, i));
+                            v[k][j] += s * v[k][i];
                         }
                     }
                 }
                 for (j = l; j < n; j++) {
-                    V.set(i, j, 0.0);
-                    V.set(j, i, 0.0);
+                    v[i][j] = v[j][i] = 0.0;
                 }
             }
-            V.set(i, i, 1.0);
+            v[i][i] = 1.0;
             g = rv1[i];
             l = i;
         }
@@ -451,30 +599,30 @@ public class SingularValueDecomposition {
             l = i + 1;
             g = w[i];
             for (j = l; j < n; j++) {
-                U.set(i, j, 0.0);
+                u[i][j] = 0.0;
             }
 
             if (g != 0.0) {
                 g = 1.0 / g;
                 for (j = l; j < n; j++) {
                     for (s = 0.0, k = l; k < m; k++) {
-                        s += U.get(k, i) * U.get(k, j);
+                        s += u[k][i] * u[k][j];
                     }
-                    f = (s / U.get(i, i)) * g;
+                    f = (s / u[i][i]) * g;
                     for (k = i; k < m; k++) {
-                        U.add(k, j, f * U.get(k, i));
+                        u[k][j] += f * u[k][i];
                     }
                 }
                 for (j = i; j < m; j++) {
-                    U.mul(j, i, g);
+                    u[j][i] *= g;
                 }
             } else {
                 for (j = i; j < m; j++) {
-                    U.set(j, i, 0.0);
+                    u[j][i] = 0.0;
                 }
             }
 
-            U.add(i, i, 1.0);
+            ++u[i][i];
         }
 
         for (k = n - 1; k >= 0; k--) {
@@ -507,10 +655,10 @@ public class SingularValueDecomposition {
                         c = g * h;
                         s = -f * h;
                         for (j = 0; j < m; j++) {
-                            y = U.get(j, nm);
-                            z = U.get(j, i);
-                            U.set(j, nm, y * c + z * s);
-                            U.set(j,  i, z * c - y * s);
+                            y = u[j][nm];
+                            z = u[j][i];
+                            u[j][nm] = y * c + z * s;
+                            u[j][i] = z * c - y * s;
                         }
                     }
                 }
@@ -520,7 +668,7 @@ public class SingularValueDecomposition {
                     if (z < 0.0) {
                         w[k] = -z;
                         for (j = 0; j < n; j++) {
-                            V.set(j, k, -V.get(j, k));
+                            v[j][k] = -v[j][k];
                         }
                     }
                     break;
@@ -556,10 +704,10 @@ public class SingularValueDecomposition {
                     y *= c;
 
                     for (jj = 0; jj < n; jj++) {
-                        x = V.get(jj, j);
-                        z = V.get(jj, i);
-                        V.set(jj, j, x * c + z * s);
-                        V.set(jj, i, z * c - x * s);
+                        x = v[jj][j];
+                        z = v[jj][i];
+                        v[jj][j] = x * c + z * s;
+                        v[jj][i] = z * c - x * s;
                     }
 
                     z = Math.hypot(f, h);
@@ -573,10 +721,10 @@ public class SingularValueDecomposition {
                     f = c * g + s * y;
                     x = c * y - s * g;
                     for (jj = 0; jj < m; jj++) {
-                        y = U.get(jj, j);
-                        z = U.get(jj, i);
-                        U.set(jj, j, y * c + z * s);
-                        U.set(jj, i, z * c - y * s);
+                        y = u[jj][j];
+                        z = u[jj][i];
+                        u[jj][j] = y * c + z * s;
+                        u[jj][i] = z * c - y * s;
                     }
                 }
 
@@ -601,19 +749,19 @@ public class SingularValueDecomposition {
             for (i = inc; i < n; i++) {
                 sw = w[i];
                 for (k = 0; k < m; k++) {
-                    su[k] = U.get(k, i);
+                    su[k] = u[k][i];
                 }
                 for (k = 0; k < n; k++) {
-                    sv[k] = V.get(k, i);
+                    sv[k] = v[k][i];
                 }
                 j = i;
                 while (w[j - inc] < sw) {
                     w[j] = w[j - inc];
                     for (k = 0; k < m; k++) {
-                        U.set(k, j, U.get(k, j - inc));
+                        u[k][j] = u[k][j - inc];
                     }
                     for (k = 0; k < n; k++) {
-                        V.set(k, j, V.get(k, j - inc));
+                        v[k][j] = v[k][j - inc];
                     }
                     j -= inc;
                     if (j < inc) {
@@ -622,10 +770,10 @@ public class SingularValueDecomposition {
                 }
                 w[j] = sw;
                 for (k = 0; k < m; k++) {
-                    U.set(k, j, su[k]);
+                    u[k][j] = su[k];
                 }
                 for (k = 0; k < n; k++) {
-                    V.set(k, j, sv[k]);
+                    v[k][j] = sv[k];
                 }
 
             }
@@ -634,29 +782,25 @@ public class SingularValueDecomposition {
         for (k = 0; k < n; k++) {
             s = 0;
             for (i = 0; i < m; i++) {
-                if (U.get(i, k) < 0.) {
+                if (u[i][k] < 0.) {
                     s++;
                 }
             }
             for (j = 0; j < n; j++) {
-                if (V.get(j, k) < 0.) {
+                if (v[j][k] < 0.) {
                     s++;
                 }
             }
             if (s > (m + n) / 2) {
                 for (i = 0; i < m; i++) {
-                    U.set(i, k, -U.get(i, k));
+                    u[i][k] = -u[i][k];
                 }
                 for (j = 0; j < n; j++) {
-                    V.set(j, k, -V.get(j, k));
+                    v[j][k] = -v[j][k];
                 }
             }
         }
 
-        this.s = w;
-        this.full = true;
-        this.m = A.nrows();
-        this.n = A.ncols();
-        this.tol = 0.5 * Math.sqrt(m + n + 1.0) * this.s[0] * Math.EPSILON;
+        return new SingularValueDecomposition(u, v, w);
     }
 }

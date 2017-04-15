@@ -16,10 +16,8 @@
 
 package smile.regression;
 
-import java.io.Serializable;
 import smile.math.Math;
 import smile.math.matrix.CholeskyDecomposition;
-import smile.math.matrix.DenseMatrix;
 import smile.math.special.Beta;
 
 /**
@@ -63,8 +61,7 @@ import smile.math.special.Beta;
  *
  * @author Haifeng Li
  */
-public class RidgeRegression implements Regression<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class RidgeRegression implements Regression<double[]> {
 
     /**
      * The dimensionality.
@@ -192,11 +189,6 @@ public class RidgeRegression implements Regression<double[]>, Serializable {
 
         int n = x.length;
         p = x[0].length;
-
-        if (n <= p) {
-            throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
-        }
-
         ym = Math.mean(y);                
         center = Math.colMean(x); 
         
@@ -266,12 +258,12 @@ public class RidgeRegression implements Regression<double[]>, Serializable {
         int df2 = n - p - 1;
         pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
 
-        DenseMatrix inv = cholesky.inverse();
+        double[][] inv = cholesky.inverse();
 
         coefficients = new double[p][4];
         for (int i = 0; i < p; i++) {
             coefficients[i][0] = w[i];
-            double se = error * Math.sqrt(inv.get(i, i));
+            double se = error * Math.sqrt(inv[i][i]);
             coefficients[i][1] = se;
             double t = w[i] / se;
             coefficients[i][2] = t;

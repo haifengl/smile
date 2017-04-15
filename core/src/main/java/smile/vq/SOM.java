@@ -24,8 +24,6 @@ import smile.clustering.BBDTree;
 import smile.clustering.linkage.Linkage;
 import smile.clustering.linkage.UPGMALinkage;
 import smile.math.Math;
-import smile.math.matrix.ColumnMajorMatrix;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
 
 /**
@@ -219,21 +217,21 @@ public class SOM implements Clustering<double[]> {
             mu[i] /= n;
         }
 
-        DenseMatrix D = new ColumnMajorMatrix(n, d);
+        double[][] D = new double[n][d];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < d; j++) {
-                D.set(i, j, data[i][j] - mu[j]);
+                D[i][j] = data[i][j] - mu[j];
             }
         }
 
-        DenseMatrix V = new ColumnMajorMatrix(d, d);
+        double[][] V = new double[d][d];
         for (int i = 0; i < d; i++) {
             for (int j = i; j < d; j++) {
                 for (int k = 0; k < n; k++) {
-                    V.add(i, j, D.get(k, i) * D.get(k, j));
+                    V[i][j] += D[k][i] * D[k][j];
                 }
-                V.div(i, j, n);
-                V.set(j, i, V.get(i, j));
+                V[i][j] /= n;
+                V[j][i] = V[i][j];
             }
         }
 
@@ -241,8 +239,8 @@ public class SOM implements Clustering<double[]> {
         double[] v1 = new double[d];
         double[] v2 = new double[d];
         for (int i = 0; i < d; i++) {
-            v1[i] = eigen.getEigenVectors().get(i, 0);
-            v2[i] = eigen.getEigenVectors().get(i, 1);
+            v1[i] = eigen.getEigenVectors()[i][0];
+            v2[i] = eigen.getEigenVectors()[i][1];
         }
 
         for (int i = 0; i < height; i++) {
@@ -390,24 +388,6 @@ public class SOM implements Clustering<double[]> {
      */
     public int[][] size() {
         return voronoi;
-    }
-
-    /**
-     * Returns the cluster labels for each neuron.  If the neurons have
-     * not been clustered, throws an Illegal State Exception.
-     */
-    public int[][] getClusterLabel() {
-        if (y == null) {
-           throw new IllegalStateException("Neuron cluster labels are not available. Call partition() first.");
-        }
-
-        int[][] clusterLabels = new int[height][width];
-        for (int i = 0, l = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                clusterLabels[i][j] = y[i*width + j];
-            }
-        }
-        return clusterLabels;
     }
 
     /**

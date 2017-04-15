@@ -812,11 +812,4 @@ public class GradientTreeBoost implements SoftClassifier<double[]>, Serializable
         
         return results;
     }
-
-    /**
-     * Returns the regression trees.
-     */
-    public RegressionTree[] getTrees() {
-        return trees;
-    }
 }

@@ -16,8 +16,6 @@
 
 package smile.math.rbf;
 
-import java.io.Serializable;
-
 /**
  * Inverse multiquadric RBF. &phi;(r) = (r<sup>2</sup> + r<sup>2</sup><sub>0</sub>)<sup>-1/2</sup>
  * where r<sub>0</sub> is a scale factor. Although it sounds odd, the inverse
@@ -39,10 +37,8 @@ import java.io.Serializable;
  *
  * @author Haifeng Li
  */
-public class InverseMultiquadricRadialBasis implements RadialBasisFunction, Serializable {
-    private static final long serialVersionUID = 1L;
-
-    private double r02;
+public class InverseMultiquadricRadialBasis implements RadialBasisFunction {
+	private double r02;
 
     public InverseMultiquadricRadialBasis() {
         this(1.0);

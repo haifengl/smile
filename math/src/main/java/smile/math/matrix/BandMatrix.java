@@ -58,7 +58,7 @@ import java.util.Arrays;
  * 
  * @author Haifeng Li
  */
-public class BandMatrix implements Matrix, LinearSolver {
+public class BandMatrix implements IMatrix {
     /**
      * Compact store of band matrix as A[0, n-1][0, m1+m2].
      */
@@ -140,6 +140,7 @@ public class BandMatrix implements Matrix, LinearSolver {
         return A[i][j-i+m1];
     }
 
+    @Override
     public BandMatrix set(int i, int j, double x) {
         A[i][j-i+m1] = x;
         return this;
@@ -149,13 +150,12 @@ public class BandMatrix implements Matrix, LinearSolver {
      * Returns the matrix transpose.
      * @return the transpose of matrix.
      */
-    @Override
     public BandMatrix transpose() {
         BandMatrix at = new BandMatrix(n, m2, m1);
         for (int i = 0; i < n; i++) {
             for (int j = i-m2; j <= i+m1; j++) {
                 if (j >= 0 && j < n) {
-                    at.set(i, j, get(j, i));
+                    at.set(i, j, get(j,i));
                 }
             }
         }
@@ -163,14 +163,21 @@ public class BandMatrix implements Matrix, LinearSolver {
         return at;
     }
 
-    @Override
-    public BandMatrix ata() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public BandMatrix aat() {
-        throw new UnsupportedOperationException();
+    /**
+     * Returns the largest eigen pair of matrix with the power iteration
+     * under the assumptions A has an eigenvalue that is strictly greater
+     * in magnitude than its other its other eigenvalues and the starting
+     * vector has a nonzero component in the direction of an eigenvector
+     * associated with the dominant eigenvalue.
+     * @param v is the non-zero initial guess of the eigen vector on input.
+     * On output, it is the eigen vector corresponding largest eigen value.
+     * @return the largest eigen value.
+     */
+    public double eigen(double[] v) {
+        if (m1 !=  m2) {
+            throw new UnsupportedOperationException("The matrix is not square.");
+        }
+        return EigenValueDecomposition.eigen(this, v);
     }
 
     /**
@@ -180,7 +187,7 @@ public class BandMatrix implements Matrix, LinearSolver {
         if (m1 !=  m2) {
             throw new UnsupportedOperationException("The matrix is not square.");
         }
-        return Lanczos.eigen(this, k);
+        return EigenValueDecomposition.decompose(this, k);
     }
 
     /**
@@ -266,7 +273,7 @@ public class BandMatrix implements Matrix, LinearSolver {
     }
 
     @Override
-    public double[] ax(double[] x, double[] y) {
+    public void ax(double[] x, double[] y) {
         if (x.length != n) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but x is %d x 1", n, n, x.length));
         }
@@ -283,12 +290,10 @@ public class BandMatrix implements Matrix, LinearSolver {
                 y[i] += A[i][j] * x[j + k];
             }
         }
-
-        return y;
     }
 
     @Override
-    public double[] axpy(double[] x, double[] y) {
+    public void axpy(double[] x, double[] y) {
         if (x.length != n) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but x is %d x 1", n, n, x.length));
         }
@@ -304,12 +309,10 @@ public class BandMatrix implements Matrix, LinearSolver {
                 y[i] += A[i][j] * x[j + k];
             }
         }
-
-        return y;
     }
 
     @Override
-    public double[] axpy(double[] x, double[] y, double b) {
+    public void axpy(double[] x, double[] y, double b) {
         if (x.length != n) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but x is %d x 1", n, n, x.length));
         }
@@ -326,12 +329,10 @@ public class BandMatrix implements Matrix, LinearSolver {
                 y[i] += A[i][j] * x[j + k];
             }
         }
-
-        return y;
     }
 
     @Override
-    public double[] atx(double[] x, double[] y) {
+    public void atx(double[] x, double[] y) {
         if (x.length != n) {
             throw new IllegalArgumentException(String.format("Column dimensions do not agree: A is %d x %d, but x is 1 x %d", n, n, x.length));
         }
@@ -348,12 +349,10 @@ public class BandMatrix implements Matrix, LinearSolver {
                 }
             }
         }
-
-        return y;
     }
 
     @Override
-    public double[] atxpy(double[] x, double[] y) {
+    public void atxpy(double[] x, double[] y) {
         if (x.length != n) {
             throw new IllegalArgumentException(String.format("Column dimensions do not agree: A is %d x %d, but x is 1 x %d", n, n, x.length));
         }
@@ -369,12 +368,10 @@ public class BandMatrix implements Matrix, LinearSolver {
                 }
             }
         }
-
-        return y;
     }
 
     @Override
-    public double[] atxpy(double[] x, double[] y, double b) {
+    public void atxpy(double[] x, double[] y, double b) {
         if (x.length != n) {
             throw new IllegalArgumentException(String.format("Column dimensions do not agree: A is %d x %d, but x is 1 x %d", n, n, x.length));
         }
@@ -391,18 +388,22 @@ public class BandMatrix implements Matrix, LinearSolver {
                 }
             }
         }
-
-        return y;
     }
 
     @Override
-    public double[] diag() {
-        double[] d = new double[n];
+    public void asolve(double[] b, double[] x) {
         for (int i = 0; i < n; i++) {
-            d[i] = A[i][m1];
+            x[i] = A[i][m1] != 0.0 ? b[i] / A[i][m1] : b[i];
         }
+    }
 
-        return d;
+    /**
+     * Solve A*x = b. b will be overwritten with the solution vector on output.
+     * @param b   a vector with as many rows as A.
+     * @throws RuntimeException if matrix is singular.
+     */
+    public void solve(double[] b) {
+        solve(b, b);
     }
 
     /**
@@ -411,7 +412,7 @@ public class BandMatrix implements Matrix, LinearSolver {
      * @param x   is output vector so that L*U*X = b(piv,:)
      * @throws RuntimeException if matrix is singular.
      */
-    public double[] solve(double[] b, double[] x) {
+    public void solve(double[] b, double[] x) {
         if (b.length != n) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but b is %d x 1", n, n, b.length));
         }
@@ -458,8 +459,6 @@ public class BandMatrix implements Matrix, LinearSolver {
                 l++;
             }
         }
-
-        return x;
     }
 
     /**
@@ -479,9 +478,9 @@ public class BandMatrix implements Matrix, LinearSolver {
         axpy(x, r, -1.0);
 
         // Solve for the error term.
-        solve(r, r);
+        solve(r);
 
-        // Subtract the error from the old solution.
+        // Subtract the error from the old soluiton.
         for (int i = 0; i < n; i++) {
             x[i] -= r[i];
         }

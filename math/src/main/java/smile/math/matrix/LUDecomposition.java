@@ -36,7 +36,7 @@ public class LUDecomposition {
     /**
      * Array for internal storage of decomposition.
      */
-    private DenseMatrix LU;
+    private double[][] LU;
 
     /**
      * pivot sign.
@@ -51,22 +51,33 @@ public class LUDecomposition {
     /**
      * Constructor. The decomposition will be stored in a new create
      * matrix. The input matrix will not be modified.
-     * @param A    input matrix
+     * @param A    rectangular matrix
      */
     public LUDecomposition(double[][] A) {
-        this(new ColumnMajorMatrix(A));
+        this(A, false);
     }
 
     /**
-     * Constructor. The decomposition will be stored in the input matrix.
-     * @param  A   input matrix
+     * Constructor. The user can specify if the decomposition takes in
+     * place, i.e. if the decomposition will be stored in the input matrix.
+     * Otherwise, a new matrix will be allocated to store the decomposition.
+     * @param  A   rectangular matrix
+     * @param  overwrite  if the decomposition will be taken in place. If true,
+     * the decomposition will be stored in the input matrix to save space. It
+     * is very useful in practice if the matrix is huge. Otherwise, a new
+     * matrix will created to store the decomposition.
      */
-    public LUDecomposition(DenseMatrix A) {
+    public LUDecomposition(double[][] A, boolean overwrite) {
         // Use a "left-looking", dot-product, Crout/Doolittle algorithm.
-        int m = A.nrows();
-        int n = A.ncols();
+        int m = A.length;
+        int n = A[0].length;
 
         LU = A;
+        if (!overwrite) {
+            LU = new double[m][n];
+            for (int i = 0; i < m; i++)
+                System.arraycopy(A[i], 0, LU[i], 0, n);
+        }
 
         piv = new int[m];
         for (int i = 0; i < m; i++) {
@@ -74,27 +85,29 @@ public class LUDecomposition {
         }
 
         pivsign = 1;
+        double[] LUrowi;
         double[] LUcolj = new double[m];
 
         for (int j = 0; j < n; j++) {
 
             // Make a copy of the j-th column to localize references.
             for (int i = 0; i < m; i++) {
-                LUcolj[i] = LU.get(i, j);
+                LUcolj[i] = LU[i][j];
             }
 
             // Apply previous transformations.
             for (int i = 0; i < m; i++) {
+                LUrowi = LU[i];
+
                 // Most of the time is spent in the following dot product.
 
                 int kmax = Math.min(i, j);
                 double s = 0.0;
                 for (int k = 0; k < kmax; k++) {
-                    s += LU.get(i, k) * LUcolj[k];
+                    s += LUrowi[k] * LUcolj[k];
                 }
 
-                LUcolj[i] -= s;
-                LU.set(i, j, LUcolj[i]);
+                LUrowi[j] = LUcolj[i] -= s;
             }
 
             // Find pivot and exchange if necessary.
@@ -106,9 +119,9 @@ public class LUDecomposition {
             }
             if (p != j) {
                 for (int k = 0; k < n; k++) {
-                    double t = LU.get(p, k);
-                    LU.set(p, k, LU.get(j, k));
-                    LU.set(j, k, t);
+                    double t = LU[p][k];
+                    LU[p][k] = LU[j][k];
+                    LU[j][k] = t;
                 }
                 int k = piv[p];
                 piv[p] = piv[j];
@@ -117,9 +130,9 @@ public class LUDecomposition {
             }
 
             // Compute multipliers.
-            if (j < m & LU.get(j, j) != 0.0) {
+            if (j < m & LU[j][j] != 0.0) {
                 for (int i = j + 1; i < m; i++) {
-                    LU.div(i, j, LU.get(j, j));
+                    LU[i][j] /= LU[j][j];
                 }
             }
         }
@@ -129,9 +142,9 @@ public class LUDecomposition {
      * Returns true if the matrix is singular or false otherwise.
      */
     public boolean isSingular() {
-        int n = LU.ncols();
+        int n = LU[0].length;
         for (int j = 0; j < n; j++) {
-            if (LU.get(j, j) == 0) {
+            if (LU[j][j] == 0) {
                 return true;
             }
         }
@@ -141,14 +154,19 @@ public class LUDecomposition {
     /**
      * Returns the lower triangular factor.
      */
-    public DenseMatrix getL() {
-        int m = LU.nrows();
-        int n = LU.ncols();
-        DenseMatrix L = new ColumnMajorMatrix(m, n);
+    public double[][] getL() {
+        int m = LU.length;
+        int n = LU[0].length;
+        double[][] L = new double[m][n];
         for (int i = 0; i < m; i++) {
-            L.set(i, i, 1.0);
-            for (int j = 0; j < i; j++) {
-                L.set(i, j, LU.get(i, j));
+            for (int j = 0; j < n; j++) {
+                if (i > j) {
+                    L[i][j] = LU[i][j];
+                } else if (i == j) {
+                    L[i][j] = 1.0;
+                } else {
+                    L[i][j] = 0.0;
+                }
             }
         }
         return L;
@@ -157,12 +175,17 @@ public class LUDecomposition {
     /**
      * Returns the upper triangular factor.
      */
-    public DenseMatrix getU() {
-        int n = LU.ncols();
-        DenseMatrix U = new ColumnMajorMatrix(n, n);
+    public double[][] getU() {
+        int m = LU.length;
+        int n = LU[0].length;
+        double[][] U = new double[m][n];
         for (int i = 0; i < n; i++) {
-            for (int j = i; j < n; j++) {
-                U.set(i, j, LU.get(i, j));
+            for (int j = 0; j < n; j++) {
+                if (i <= j) {
+                    U[i][j] = LU[i][j];
+                } else {
+                    U[i][j] = 0.0;
+                }
             }
         }
         return U;
@@ -179,15 +202,15 @@ public class LUDecomposition {
      * Returns the matrix determinant
      */
     public double det() {
-        int m = LU.nrows();
-        int n = LU.ncols();
+        int m = LU.length;
+        int n = LU[0].length;
 
         if (m != n)
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", m, n));
 
         double d = (double) pivsign;
         for (int j = 0; j < n; j++) {
-            d *= LU.get(j, j);
+            d *= LU[j][j];
         }
         
         return d;
@@ -196,20 +219,16 @@ public class LUDecomposition {
     /**
      * Returns the matrix inverse. For pseudo inverse, use QRDecomposition.
      */
-    public DenseMatrix inverse() {
-        int m = LU.nrows();
-        int n = LU.ncols();
+    public double[][] inverse() {
+        int m = LU.length;
+        int n = LU[0].length;
 
         if (m != n)
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", m, n));
 
-        DenseMatrix inv = new ColumnMajorMatrix(n, n);
-        for (int i = 0; i < n; i++) {
-            inv.set(i, piv[i], 1.0);
-        }
-
-        solve(inv);
-        return inv;
+        double[][] I = Math.eye(n);
+        solve(I);
+        return I;
     }
 
     /**
@@ -229,15 +248,15 @@ public class LUDecomposition {
      * @exception  RuntimeException  if matrix is singular.
      */
     public void solve(double[] b, double[] x) {
-        int m = LU.nrows();
-        int n = LU.ncols();
+        int m = LU.length;
+        int n = LU[0].length;
 
         if (m != n) {
             throw new UnsupportedOperationException("The matrix is not square.");
         }
 
         if (b.length != m) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but b is %d x 1", LU.nrows(), LU.ncols(), b.length));
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but b is %d x 1", LU.length, LU[0].length, b.length));
         }
         
         if (b.length != x.length) {
@@ -256,18 +275,28 @@ public class LUDecomposition {
         // Solve L*Y = B(piv,:)
         for (int k = 0; k < n; k++) {
             for (int i = k + 1; i < n; i++) {
-                x[i] -= x[k] * LU.get(i, k);
+                x[i] -= x[k] * LU[i][k];
             }
         }
 
         // Solve U*X = Y;
         for (int k = n - 1; k >= 0; k--) {
-            x[k] /= LU.get(k, k);
+            x[k] /= LU[k][k];
 
             for (int i = 0; i < k; i++) {
-                x[i] -= x[k] * LU.get(i, k);
+                x[i] -= x[k] * LU[i][k];
             }
         }
+    }
+
+    /**
+     * Solve A * X = B. B will be overwritten with the solution matrix on output.
+     * @param B  right hand side of linear system. On output, B will be
+     * overwritten with the solution matrix.
+     * @throws  RuntimeException  if matrix is singular.
+     */
+    public void solve(double[][] B) {
+        solve(B, B);
     }
 
     /**
@@ -276,53 +305,40 @@ public class LUDecomposition {
      * @param X   the solution matrix.
      * @throws  RuntimeException  if matrix is singular.
      */
-    public void solve(DenseMatrix B, DenseMatrix X) {
-        int m = LU.nrows();
-        int n = LU.ncols();
+    public void solve(double[][] B, double[][] X) {
+        int m = LU.length;
+        int n = LU[0].length;
 
-        if (X == B) {
-            throw new IllegalArgumentException("B and X should not be the same object.");
+        if (B.length != m)
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", LU.length, LU[0].length, B.length, B[0].length));
+
+        if (isSingular()) {
+            throw new RuntimeException("Matrix is singular.");
         }
 
-        if (X.nrows() != B.nrows() || X.ncols() != B.ncols()) {
+        if (X.length != B.length || X[0].length != B[0].length) {
             throw new IllegalArgumentException("B and X dimensions do not agree.");
         }
 
         // Copy right hand side with pivoting
-        int nx = B.ncols();
-        for (int j = 0; j < nx; j++) {
+        int nx = B[0].length;
+        if (X == B) {
+            double[][] x = new double[m][];
             for (int i = 0; i < m; i++) {
-                X.set(i, j, B.get(piv[i], j));
+                x[i] = B[piv[i]];
             }
-        }
-
-        solve(X);
-    }
-
-    /**
-     * Solve A * X = B. B will be overwritten with the solution matrix on output.
-     * @param X  right hand side of linear system. On input, it's rows are
-     *           already reordered with pivoting. On output, X will be
-     *           overwritten with the solution matrix.
-     * @throws  RuntimeException  if matrix is singular.
-     */
-    private void solve(DenseMatrix X) {
-        int m = LU.nrows();
-        int n = LU.ncols();
-        int nx = X.ncols();
-
-        if (X.nrows() != m)
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", LU.nrows(), LU.ncols(), X.nrows(), X.ncols()));
-
-        if (isSingular()) {
-            throw new RuntimeException("Matrix is singular.");
+            System.arraycopy(x, 0, X, 0, m);
+        } else {
+            for (int i = 0; i < m; i++) {
+                System.arraycopy(B[piv[i]], 0, X[i], 0, nx);
+            }
         }
 
         // Solve L*Y = B(piv,:)
         for (int k = 0; k < n; k++) {
             for (int i = k + 1; i < n; i++) {
                 for (int j = 0; j < nx; j++) {
-                    X.sub(i, j, X.get(k, j) * LU.get(i, k));
+                    X[i][j] -= X[k][j] * LU[i][k];
                 }
             }
         }
@@ -330,12 +346,12 @@ public class LUDecomposition {
         // Solve U*X = Y;
         for (int k = n - 1; k >= 0; k--) {
             for (int j = 0; j < nx; j++) {
-                X.div(k, j, LU.get(k, k));
+                X[k][j] /= LU[k][k];
             }
             
             for (int i = 0; i < k; i++) {
                 for (int j = 0; j < nx; j++) {
-                    X.sub(i, j, X.get(k, j) * LU.get(i, k));
+                    X[i][j] -= X[k][j] * LU[i][k];
                 }
             }
         }

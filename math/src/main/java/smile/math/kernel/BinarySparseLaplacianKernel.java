@@ -16,8 +16,7 @@
 
 package smile.math.kernel;
 
-import java.lang.Math;
-import java.io.Serializable;
+import smile.math.Math;
 
 /**
  * The Laplacian Kernel. k(u, v) = e<sup>-||u-v|| / &sigma;</sup>,
@@ -26,8 +25,7 @@ import java.io.Serializable;
 
  * @author Haifeng Li
  */
-public class BinarySparseLaplacianKernel implements MercerKernel<int[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class BinarySparseLaplacianKernel implements MercerKernel<int[]> {
 
     /**
      * The width of the kernel.

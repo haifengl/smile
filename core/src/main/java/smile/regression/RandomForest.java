@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.regression;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -67,9 +66,7 @@ import smile.validation.RegressionMeasure;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements Regression<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class RandomForest implements Regression<double[]> {
     /**
      * Forest of regression trees.
      */
@@ -358,7 +355,7 @@ public class RandomForest implements Regression<double[]>, Serializable {
      * @param ntrees the number of trees.
      */
     public RandomForest(Attribute[] attributes, double[][] x, double[] y, int ntrees) {
-        this(attributes, x, y, ntrees, 100);
+        this(attributes, x, y, ntrees, x.length);
     }
 
     /**
@@ -625,12 +622,5 @@ public class RandomForest implements Regression<double[]>, Serializable {
             }
         }
         return results;
-    }
-
-    /**
-     * Returns the regression trees.
-     */
-    public RegressionTree[] getTrees() {
-        return trees.toArray(new RegressionTree[trees.size()]);
     }
 }

@@ -57,7 +57,7 @@ public class NGram implements Comparable<NGram> {
 
     @Override
     public String toString() {
-    	StringBuilder sb = new StringBuilder();
+    	StringBuffer sb = new StringBuffer();
     	sb.append('(')
           .append(Arrays.toString(words))
           .append(", ")

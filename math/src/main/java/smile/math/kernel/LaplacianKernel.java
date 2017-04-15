@@ -16,7 +16,6 @@
 
 package smile.math.kernel;
 
-import java.io.Serializable;
 import smile.math.Math;
 
 /**
@@ -25,8 +24,7 @@ import smile.math.Math;
 
  * @author Haifeng Li
  */
-public class LaplacianKernel implements MercerKernel<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class LaplacianKernel implements MercerKernel<double[]> {
 
     /**
      * The width of the kernel.

@@ -16,8 +16,6 @@
 
 package smile.math.distance;
 
-import java.io.Serializable;
-
 /**
  * Euclidean distance. Use getInstance() to get the standard unweighted
  * Euclidean distance. Or create an instance with a specified
@@ -27,8 +25,7 @@ import java.io.Serializable;
  *
  * @author Haifeng Li
  */
-public class EuclideanDistance implements Metric<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class EuclideanDistance implements Metric<double[]> {
 
     /**
      * The weights used in weighted distance.

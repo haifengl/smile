@@ -26,7 +26,6 @@ import smile.math.Math;
 import smile.math.SparseArray;
 import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.EigenValueDecomposition;
-import smile.math.matrix.Lanczos;
 import smile.math.matrix.SparseMatrix;
 import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
@@ -175,14 +174,15 @@ public class LaplacianEigenmap {
             }
         }
 
+        SparseMatrix L = W.toSparseMatrix();
         for (int i = 0; i < n; i++) {
             SparseArray edges = W.get(i).x;
             for (SparseArray.Entry edge : edges) {
                 int j = edge.i;
                 double s = D[i] * edge.x * D[j];
-                W.set(i, j, s);
+                L.set(i, j, s);
             }
-            W.set(i, i, -1.0);
+            L.set(i, i, -1.0);
         }
 
         double[] v = new double[n];
@@ -191,20 +191,18 @@ public class LaplacianEigenmap {
         }
 
         // Largest eigenvalue.
-        SparseMatrix L = W.toSparseMatrix();
         double lambda = -Math.eigen(L, v, 1E-6);
         for (int i = 0; i < n; i++) {
-            W.set(i, i, lambda - 1.0);
+            L.set(i, i, lambda - 1.0);
         }
 
-        L = W.toSparseMatrix();
-        EigenValueDecomposition eigen = Lanczos.eigen(L, d + 1);
+        EigenValueDecomposition eigen = EigenValueDecomposition.decompose(L, d + 1);
 
         coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
             double norm = 0.0;
             for (int i = 0; i < n; i++) {
-                coordinates[i][j] = eigen.getEigenVectors().get(i, j + 1) * D[i];
+                coordinates[i][j] = eigen.getEigenVectors()[i][j + 1] * D[i];
                 norm += coordinates[i][j] * coordinates[i][j];
             }
 

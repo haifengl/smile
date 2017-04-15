@@ -28,9 +28,6 @@ import java.util.List;
  * @author Haifeng Li
  */
 public class Dataset<E> implements Iterable<Datum<E>> {
-    private static final String DATASET_HAS_NO_RESPONSE = "The dataset has no response values.";
-    private static final String RESPONSE_NOT_NOMINAL = "The response variable is not nominal.";
-    private static final String RESPONSE_NOT_NUMERIC = "The response variable is not numeric.";
     /**
      * The name of dataset.
      */
@@ -149,11 +146,11 @@ public class Dataset<E> implements Iterable<Datum<E>> {
      */
     public void add(E x, int y) {
         if (response == null) {
-            throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
+            throw new IllegalArgumentException("The dataset has no response values.");            
         }
         
         if (response.getType() != Attribute.Type.NOMINAL) {
-            throw new IllegalArgumentException(RESPONSE_NOT_NOMINAL);
+            throw new IllegalArgumentException("The response variable is not nominal.");
         }
         
         add(new Datum<>(x, y));
@@ -170,11 +167,11 @@ public class Dataset<E> implements Iterable<Datum<E>> {
      */
     public void add(E x, int y, double weight) {
         if (response == null) {
-            throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
+            throw new IllegalArgumentException("The dataset has no response values.");            
         }
         
         if (response.getType() != Attribute.Type.NOMINAL) {
-            throw new IllegalArgumentException(RESPONSE_NOT_NOMINAL);
+            throw new IllegalArgumentException("The response variable is not nominal.");
         }
         
         add(new Datum<>(x, y, weight));
@@ -187,11 +184,11 @@ public class Dataset<E> implements Iterable<Datum<E>> {
      */
     public void add(E x, double y) {
         if (response == null) {
-            throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
+            throw new IllegalArgumentException("The dataset has no response values.");            
         }
         
         if (response.getType() != Attribute.Type.NUMERIC) {
-            throw new IllegalArgumentException(RESPONSE_NOT_NUMERIC);
+            throw new IllegalArgumentException("The response variable is not numeric.");
         }
         
         add(new Datum<>(x, y));
@@ -207,11 +204,11 @@ public class Dataset<E> implements Iterable<Datum<E>> {
      */
     public void add(E x, double y, double weight) {
         if (response == null) {
-            throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
+            throw new IllegalArgumentException("The dataset has no response values.");            
         }
         
         if (response.getType() != Attribute.Type.NUMERIC) {
-            throw new IllegalArgumentException(RESPONSE_NOT_NUMERIC);
+            throw new IllegalArgumentException("The response variable is not numeric.");
         }
         
         add(new Datum<>(x, y, weight));
@@ -317,11 +314,11 @@ public class Dataset<E> implements Iterable<Datum<E>> {
      */
     public int[] toArray(int[] a) {
         if (response == null) {
-            throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
+            throw new IllegalArgumentException("The dataset has no response values.");            
         }
         
         if (response.getType() != Attribute.Type.NOMINAL) {
-            throw new IllegalArgumentException(RESPONSE_NOT_NOMINAL);
+            throw new IllegalArgumentException("The response variable is not nominal.");
         }
         
         int n = data.size();
@@ -362,11 +359,11 @@ public class Dataset<E> implements Iterable<Datum<E>> {
      */
     public double[] toArray(double[] a) {
         if (response == null) {
-            throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
+            throw new IllegalArgumentException("The dataset has no response values.");            
         }
         
         if (response.getType() != Attribute.Type.NUMERIC) {
-            throw new IllegalArgumentException(RESPONSE_NOT_NUMERIC);
+            throw new IllegalArgumentException("The response variable is not numeric.");
         }
         
         int n = data.size();

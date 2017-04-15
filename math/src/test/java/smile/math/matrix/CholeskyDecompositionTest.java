@@ -87,6 +87,22 @@ public class CholeskyDecompositionTest {
     }
 
     /**
+     * Test of decompose method, of class CholeskyDecomposition.
+     */
+    @Test
+    public void testDecomposeoverwrite() {
+        System.out.println("decompose in place");
+        CholeskyDecomposition result = new CholeskyDecomposition(A, true);
+        assertEquals(L.length, result.getL().length);
+        assertEquals(L[0].length, result.getL()[0].length);
+        for (int i = 0; i < L.length; i++) {
+            for (int j = 0; j < L[i].length; j++) {
+                assertEquals(Math.abs(L[i][j]), Math.abs(result.getL()[i][j]), 1E-7);
+            }
+        }
+    }
+
+    /**
      * Test of solve method, of class CholeskyDecomposition.
      */
     @Test
@@ -123,13 +139,13 @@ public class CholeskyDecompositionTest {
     public void testSolveMatrix() {
         System.out.println("solve");
         CholeskyDecomposition result = new CholeskyDecomposition(A);
-        DenseMatrix x = new ColumnMajorMatrix(B2.length, B2[0].length);
-        result.solve(new ColumnMajorMatrix(B2), x);
-        assertEquals(X.length, x.nrows());
-        assertEquals(X2[0].length, x.ncols());
+        double[][] x = new double[B2.length][B2[0].length];
+        result.solve(B2, x);
+        assertEquals(X.length, x.length);
+        assertEquals(X2[0].length, x[0].length);
         for (int i = 0; i < X2.length; i++) {
             for (int j = 0; j < X2[i].length; j++) {
-                assertEquals(X2[i][j], x.get(i, j), 1E-7);
+                assertEquals(X2[i][j], x[i][j], 1E-7);
             }
         }
     }
@@ -141,13 +157,13 @@ public class CholeskyDecompositionTest {
     public void testSolveMatrixOverwrite() {
         System.out.println("solve in place");
         CholeskyDecomposition result = new CholeskyDecomposition(A);
-        DenseMatrix x = new ColumnMajorMatrix(B2);
-        result.solve(x, x);
-        assertEquals(X2.length, x.nrows());
-        assertEquals(X2[0].length, x.ncols());
+        double[][] x = B2;
+        result.solve(B2, x);
+        assertEquals(X2.length, x.length);
+        assertEquals(X2[0].length, x[0].length);
         for (int i = 0; i < X2.length; i++) {
             for (int j = 0; j < X2[i].length; j++) {
-                assertEquals(X2[i][j], x.get(i, j), 1E-7);
+                assertEquals(X2[i][j], x[i][j], 1E-7);
             }
         }
     }

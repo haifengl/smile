@@ -149,7 +149,8 @@ public class TotalSupportTreeTest {
         List<int[]> dataList = new ArrayList<>(1000);
 
         try {
-            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("transaction/pima.D38.N768.C2");
+            InputStream stream = getClass().getResourceAsStream("/smile/data/transaction/pima.D38.N768.C2");
+            BufferedReader input = new BufferedReader(new InputStreamReader(stream));
 
             String line;
             for (int nrow = 0; (line = input.readLine()) != null; nrow++) {
@@ -201,7 +202,8 @@ public class TotalSupportTreeTest {
         List<int[]> dataList = new ArrayList<>(1000);
 
         try {
-            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("transaction/kosarak.dat");
+            InputStream stream = getClass().getResourceAsStream("/smile/data/transaction/kosarak.dat");
+            BufferedReader input = new BufferedReader(new InputStreamReader(stream));
 
             String line;
             for (int nrow = 0; (line = input.readLine()) != null; nrow++) {

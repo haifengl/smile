@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.clustering;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -88,8 +87,7 @@ import smile.math.distance.Metric;
  * 
  * @author Haifeng Li
  */
-public class DBScan <T> extends PartitionClustering<T> implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class DBScan <T> extends PartitionClustering<T> {
 
     /**
      * Label for unclassified data samples.

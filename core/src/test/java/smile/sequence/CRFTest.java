@@ -65,23 +65,23 @@ public class CRFTest {
         ArrayList<Integer> label = new ArrayList<>();
 
         int id = 1;
-        try(BufferedReader input = smile.data.parser.IOUtils.getTestDataReader(resource)) {
+        try(BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
             String[] words = input.readLine().split(" ");
-            int nseq = Integer.parseInt(words[0]);
-            k = Integer.parseInt(words[1]);
-            p = Integer.parseInt(words[2]);
+            int nseq = Integer.valueOf(words[0]);
+            k = Integer.valueOf(words[1]);
+            p = Integer.valueOf(words[2]);
 
             String line = null;
             while ((line = input.readLine()) != null) {
                 words = line.split(" ");
-                int seqid = Integer.parseInt(words[0]);
-                int pos = Integer.parseInt(words[1]);
-                int len = Integer.parseInt(words[2]);
+                int seqid = Integer.valueOf(words[0]);
+                int pos = Integer.valueOf(words[1]);
+                int len = Integer.valueOf(words[2]);
                 
                 int[] feature = new int[len];
                 for (int i = 0; i < len; i++) {
                     try {
-                        feature[i] = Integer.parseInt(words[i+3]);
+                        feature[i] = Integer.valueOf(words[i+3]);
                     } catch (Exception ex) {
                         System.err.println(ex);
                     }
@@ -145,18 +145,18 @@ public class CRFTest {
         ArrayList<Integer> label = new ArrayList<>();
 
         int id = 1;
-        try(BufferedReader input = smile.data.parser.IOUtils.getTestDataReader(resource)) {
+        try(BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
             String[] words = input.readLine().split(" ");
-            int nseq = Integer.parseInt(words[0]);
-            k = Integer.parseInt(words[1]);
-            p = Integer.parseInt(words[2]);
+            int nseq = Integer.valueOf(words[0]);
+            k = Integer.valueOf(words[1]);
+            p = Integer.valueOf(words[2]);
 
             String line = null;
             while ((line = input.readLine()) != null) {
                 words = line.split(" ");
-                int seqid = Integer.parseInt(words[0]);
-                int pos = Integer.parseInt(words[1]);
-                int len = Integer.parseInt(words[2]);
+                int seqid = Integer.valueOf(words[0]);
+                int pos = Integer.valueOf(words[1]);
+                int len = Integer.valueOf(words[2]);
                 
                 if (dataset.attributes == null) {
                     dataset.attributes = new Attribute[len];
@@ -233,7 +233,6 @@ public class CRFTest {
 
     @Before
     public void setUp() {
-        smile.math.Math.setSeed(54217137L);
     }
 
     @After
@@ -246,8 +245,8 @@ public class CRFTest {
     @Test
     public void testLearnProteinSparse() {
         System.out.println("learn protein sparse");
-        IntDataset train = load("sequence/sparse.protein.11.train");
-        IntDataset test = load("sequence/sparse.protein.11.test");
+        IntDataset train = load("/smile/data/sequence/sparse.protein.11.train");
+        IntDataset test = load("/smile/data/sequence/sparse.protein.11.test");
 
         CRF.Trainer trainer = new CRF.Trainer(train.p, train.k);
         trainer.setLearningRate(0.3);
@@ -283,8 +282,8 @@ public class CRFTest {
         System.out.format("Protein error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
         System.out.format("Protein error (Viterbi) is %d of %d%n", viterbiError, n);
         System.out.format("Protein error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
-        assertEquals(1234, error);
-        assertEquals(1318, viterbiError);
+        assertEquals(1259, error);
+        assertEquals(1377, viterbiError);
     }
     
     /**
@@ -293,8 +292,8 @@ public class CRFTest {
     @Test
     public void testLearnHyphenSparse() {
         System.out.println("learn hyphen sparse");
-        IntDataset train = load("sequence/sparse.hyphen.6.train");
-        IntDataset test = load("sequence/sparse.hyphen.6.test");
+        IntDataset train = load("/smile/data/sequence/sparse.hyphen.6.train");
+        IntDataset test = load("/smile/data/sequence/sparse.hyphen.6.test");
 
         CRF.Trainer trainer = new CRF.Trainer(train.p, train.k);
         trainer.setLearningRate(1.0);
@@ -330,8 +329,8 @@ public class CRFTest {
         System.out.format("Hypen error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
         System.out.format("Hypen error (Viterbi) is %d of %d%n", viterbiError, n);
         System.out.format("Hypen error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
-        assertEquals(470, error);
-        assertEquals(478, viterbiError);
+        assertEquals(461, error);
+        assertEquals(462, viterbiError);
     }
 
     /**
@@ -340,8 +339,8 @@ public class CRFTest {
     @Test
     public void testLearnProtein() {
         System.out.println("learn protein");
-        Dataset train = load("sequence/sparse.protein.11.train", null);
-        Dataset test = load("sequence/sparse.protein.11.test", train.attributes);
+        Dataset train = load("/smile/data/sequence/sparse.protein.11.train", null);
+        Dataset test = load("/smile/data/sequence/sparse.protein.11.test", train.attributes);
 
         CRF.Trainer trainer = new CRF.Trainer(train.attributes, train.k);
         trainer.setLearningRate(0.3);
@@ -377,8 +376,8 @@ public class CRFTest {
         System.out.format("Protein error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
         System.out.format("Protein error (Viterbi) is %d of %d%n", viterbiError, n);
         System.out.format("Protein error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
-        assertEquals(1270, error);
-        assertEquals(1420, viterbiError);
+        assertEquals(1253, error);
+        assertEquals(1412, viterbiError);
     }
     
     /**
@@ -387,8 +386,8 @@ public class CRFTest {
     @Test
     public void testLearnHyphen() {
         System.out.println("learn hyphen");
-        Dataset train = load("sequence/sparse.hyphen.6.train", null);
-        Dataset test = load("sequence/sparse.hyphen.6.test", train.attributes);
+        Dataset train = load("/smile/data/sequence/sparse.hyphen.6.train", null);
+        Dataset test = load("/smile/data/sequence/sparse.hyphen.6.test", train.attributes);
 
         CRF.Trainer trainer = new CRF.Trainer(train.attributes, train.k);
         trainer.setLearningRate(1.0);
@@ -424,7 +423,7 @@ public class CRFTest {
         System.out.format("Hypen error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
         System.out.format("Hypen error (Viterbi) is %d of %d%n", viterbiError, n);
         System.out.format("Hypen error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
-        assertEquals(473, error);
-        assertEquals(478, viterbiError);
+        assertEquals(468, error);
+        assertEquals(470, viterbiError);
     }
 }

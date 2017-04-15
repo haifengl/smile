@@ -16,10 +16,11 @@
 
 package smile.regression;
 
-import java.io.Serializable;
 import smile.math.Math;
 import smile.math.kernel.MercerKernel;
-import smile.math.matrix.*;
+import smile.math.matrix.CholeskyDecomposition;
+import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.LUDecomposition;
 
 /**
  * Gaussian Process for Regression. A Gaussian process is a stochastic process
@@ -65,8 +66,7 @@ import smile.math.matrix.*;
  * </ol>
  * @author Haifeng Li
  */
-public class GaussianProcessRegression <T> implements Regression<T>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class GaussianProcessRegression <T> implements Regression<T> {
 
     /**
      * The control points in the regression.
@@ -162,7 +162,7 @@ public class GaussianProcessRegression <T> implements Regression<T>, Serializabl
             K[i][i] += lambda;
         }
 
-        CholeskyDecomposition cholesky = new CholeskyDecomposition(K);
+        CholeskyDecomposition cholesky = new CholeskyDecomposition(K, true);
         cholesky.solve(y, w);
     }
 
@@ -212,7 +212,7 @@ public class GaussianProcessRegression <T> implements Regression<T>, Serializabl
         w = new double[m];
         Math.atx(G, y, b);
 
-        LUDecomposition lu = new LUDecomposition(K);
+        LUDecomposition lu = new LUDecomposition(K, true);
         lu.solve(b, w);
     }
 
@@ -244,44 +244,42 @@ public class GaussianProcessRegression <T> implements Regression<T>, Serializabl
         int n = x.length;
         int m = t.length;
 
-        DenseMatrix E = new ColumnMajorMatrix(n, m);
+        double[][] E = new double[n][m];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                E.set(i, j, kernel.k(x[i], t[j]));
+                E[i][j] = kernel.k(x[i], t[j]);
             }
         }
 
-        ColumnMajorMatrix W = new ColumnMajorMatrix(m, m);
+        double[][] W = new double[m][m];
         for (int i = 0; i < m; i++) {
             for (int j = 0; j <= i; j++) {
-                double k = kernel.k(t[i], t[j]);
-                W.set(i, j, k);
-                W.set(j, i, k);
+                W[i][j] = kernel.k(t[i], t[j]);
+                W[j][i] = W[i][j];
             }
         }
 
-        EigenValueDecomposition eigen = new EigenValueDecomposition(W, true);
-        DenseMatrix U = eigen.getEigenVectors();
-        DenseMatrix D = eigen.getD();
+        EigenValueDecomposition eigen = EigenValueDecomposition.decompose(W);
+        double[][] U = eigen.getEigenVectors();
+        double[][] D = eigen.getD();
         for (int i = 0; i < m; i++) {
-            D.set(i, i, 1.0 / Math.sqrt(D.get(i, i)));
+            D[i][i] = 1.0 / Math.sqrt(D[i][i]);
         }
-
-        DenseMatrix UD = U.abmm(D);
-        DenseMatrix UDUt = UD.abtmm(U);
-        DenseMatrix L = E.abmm(UDUt);
         
-        DenseMatrix LtL = L.ata();
+        double[][] UD = Math.abmm(U, D);
+        double[][] UDUt = Math.abtmm(UD, U);
+        double[][] L = Math.abmm(E, UDUt);
+        
+        double[][] LtL = Math.atamm(L);
         for (int i = 0; i < m; i++) {
-            LtL.add(i, i, lambda);
+            LtL[i][i] += lambda;
         }
-
-        CholeskyDecomposition chol = new CholeskyDecomposition(LtL);
-        DenseMatrix invLtL = chol.inverse();
-        DenseMatrix K = L.abmm(invLtL).abtmm(L);
+        
+        double[][] invLtL = Math.inverse(LtL);
+        double[][] K = Math.abtmm(Math.abmm(L, invLtL), L);
         
         w = new double[n];
-        K.atx(y, w);
+        Math.atx(K, y, w);
         
         for (int i = 0; i < n; i++) {
             w[i] = (y[i] - w[i]) / lambda;

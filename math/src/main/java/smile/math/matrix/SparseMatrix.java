@@ -39,7 +39,7 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, SparseMatrix> {
+public class SparseMatrix implements IMatrix {
     /**
      * The number of rows.
      */
@@ -176,7 +176,23 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     }
 
     @Override
-    public double[] ax(double[] x, double[] y) {
+    public SparseMatrix set(int i, int j, double x) {
+        if (i < 0 || i >= nrows || j < 0 || j >= ncols) {
+            throw new IllegalArgumentException("i = " + i + " j = " + j);
+        }
+
+        for (int k = colIndex[j]; k < colIndex[j + 1]; k++) {
+            if (rowIndex[k] == i) {
+                this.x[k] = x;
+                return this;
+            }
+        }
+
+        throw new IllegalArgumentException("SparseMatrix does not support changing zero values to non-zeros.");
+    }
+
+    @Override
+    public void ax(double[] x, double[] y) {
         Arrays.fill(y, 0.0);
 
         for (int j = 0; j < ncols; j++) {
@@ -184,23 +200,19 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
                 y[rowIndex[i]] += this.x[i] * x[j];
             }
         }
-
-        return y;
     }
 
     @Override
-    public double[] axpy(double[] x, double[] y) {
+    public void axpy(double[] x, double[] y) {
         for (int j = 0; j < ncols; j++) {
             for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
                 y[rowIndex[i]] += this.x[i] * x[j];
             }
         }
-
-        return y;
     }
 
     @Override
-    public double[] axpy(double[] x, double[] y, double b) {
+    public void axpy(double[] x, double[] y, double b) {
         for (int i = 0; i < y.length; i++) {
             y[i] *= b;
         }
@@ -210,47 +222,41 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
                 y[rowIndex[i]] += this.x[i] * x[j];
             }
         }
-
-        return y;
     }
 
     @Override
-    public double[] atx(double[] x, double[] y) {
+    public void atx(double[] x, double[] y) {
         Arrays.fill(y, 0.0);
         for (int i = 0; i < ncols; i++) {
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
                 y[i] += this.x[j] * x[rowIndex[j]];
             }
         }
-
-        return y;
     }
 
 
     @Override
-    public double[] atxpy(double[] x, double[] y) {
+    public void atxpy(double[] x, double[] y) {
         for (int i = 0; i < ncols; i++) {
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
                 y[i] += this.x[j] * x[rowIndex[j]];
             }
         }
-
-        return y;
     }
 
     @Override
-    public double[] atxpy(double[] x, double[] y, double b) {
+    public void atxpy(double[] x, double[] y, double b) {
         for (int i = 0; i < ncols; i++) {
             y[i] *= b;
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
                 y[i] += this.x[j] * x[rowIndex[j]];
             }
         }
-
-        return y;
     }
 
-    @Override
+    /**
+     * Returns the matrix transpose.
+     */
     public SparseMatrix transpose() {
         int m = nrows, n = ncols;
         SparseMatrix at = new SparseMatrix(n, m, x.length);
@@ -284,8 +290,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     /**
      * Returns the matrix multiplication C = A * B.
      */
-    @Override
-    public SparseMatrix abmm(SparseMatrix B) {
+    public SparseMatrix times(SparseMatrix B) {
         if (ncols != B.nrows) {
             throw new IllegalArgumentException(String.format("Matrix dimensions do not match for matrix multiplication: %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
         }
@@ -362,32 +367,16 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
 
         return nz;
     }
-    @Override
-    public SparseMatrix abtmm(SparseMatrix B) {
-        SparseMatrix BT = B.transpose();
-        return abmm(BT);
-    }
 
-    @Override
-    public SparseMatrix atbmm(SparseMatrix B) {
-        SparseMatrix AT = transpose();
-        return AT.abmm(B);
-    }
+    /**
+     * Returns A * A<sup>T</sup>.
+     */
+    public static SparseMatrix AAT(SparseMatrix A, SparseMatrix AT) {
+        if (A.ncols != AT.nrows) {
+            throw new IllegalArgumentException(String.format("Matrix dimensions do not match for matrix multiplication: %d x %d vs %d x %d", A.nrows(), A.ncols(), AT.nrows(), AT.ncols()));
+        }
 
-    @Override
-    public SparseMatrix ata() {
-        SparseMatrix AT = transpose();
-        return AT.aat(this);
-    }
-
-    @Override
-    public SparseMatrix aat() {
-        SparseMatrix AT = transpose();
-        return aat(AT);
-    }
-
-    private SparseMatrix aat(SparseMatrix AT) {
-        int m = nrows;
+        int m = AT.ncols;
         int[] done = new int[m];
         for (int i = 0; i < m; i++) {
             done[i] = -1;
@@ -399,8 +388,8 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         for (int j = 0; j < m; j++) {
             for (int i = AT.colIndex[j]; i < AT.colIndex[j + 1]; i++) {
                 int k = AT.rowIndex[i];
-                for (int l = colIndex[k]; l < colIndex[k + 1]; l++) {
-                    int h = rowIndex[l];
+                for (int l = A.colIndex[k]; l < A.colIndex[k + 1]; l++) {
+                    int h = A.rowIndex[l];
                     // Test if contribution already included.
                     if (done[h] != j) {
                         done[h] = j;
@@ -417,14 +406,14 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
             done[i] = -1;
         }
 
-        // Second pass determines columns of aat. Code is identical to first
+        // Second pass determines columns of adat. Code is identical to first
         // pass except colIndex and rowIndex get assigned at appropriate places.
         for (int j = 0; j < m; j++) {
             aat.colIndex[j] = nvals;
             for (int i = AT.colIndex[j]; i < AT.colIndex[j + 1]; i++) {
                 int k = AT.rowIndex[i];
-                for (int l = colIndex[k]; l < colIndex[k + 1]; l++) {
-                    int h = rowIndex[l];
+                for (int l = A.colIndex[k]; l < A.colIndex[k + 1]; l++) {
+                    int h = A.rowIndex[l];
                     if (done[h] != j) {
                         done[h] = j;
                         aat.rowIndex[nvals] = h;
@@ -448,9 +437,9 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         for (int i = 0; i < m; i++) {
             for (int j = AT.colIndex[i]; j < AT.colIndex[i + 1]; j++) {
                 int k = AT.rowIndex[j];
-                for (int l = colIndex[k]; l < colIndex[k + 1]; l++) {
-                    int h = rowIndex[l];
-                    temp[h] += AT.x[j] * x[l];
+                for (int l = A.colIndex[k]; l < A.colIndex[k + 1]; l++) {
+                    int h = A.rowIndex[l];
+                    temp[h] += AT.x[j] * A.x[l];
                 }
             }
 
@@ -465,6 +454,24 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     }
 
     /**
+     * Returns the largest eigen pair of matrix with the power iteration
+     * under the assumptions A has an eigenvalue that is strictly greater
+     * in magnitude than its other its other eigenvalues and the starting
+     * vectorhas a nonzero component in the direction of an eigenvector
+     * associated with the dominant eigenvalue.
+     * @param v on input, it is the non-zero initial guess of the eigen vector.
+     * On output, it is the eigen vector corresponding largest eigen value.
+     * @return the largest eigen value.
+     */
+    public double eigen(double[] v) {
+        if (nrows != ncols) {
+            throw new UnsupportedOperationException("The matrix is not square.");
+        }
+
+        return EigenValueDecomposition.eigen(this, v);
+    }
+
+    /**
      * Returns the k largest eigen pairs. Only works for symmetric matrix.
      */
     public EigenValueDecomposition eigen(int k) {
@@ -472,23 +479,20 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
             throw new UnsupportedOperationException("The matrix is not square.");
         }
 
-        return Lanczos.eigen(this, k);
+        return EigenValueDecomposition.decompose(this, k);
     }
 
     @Override
-    public double[] diag() {
-        int n = smile.math.Math.min(nrows(), ncols());
-        double[] d = new double[n];
-
-        for (int i = 0; i < n; i++) {
+    public void asolve(double[] b, double[] x) {
+        for (int i = 0; i < nrows; i++) {
+            double diag = 0.0;
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
                 if (rowIndex[j] == i) {
-                    d[i] = x[j];
+                    diag = this.x[j];
                     break;
                 }
             }
+            x[i] = diag != 0.0 ? b[i] / diag : b[i];
         }
-
-        return d;
     }
 }

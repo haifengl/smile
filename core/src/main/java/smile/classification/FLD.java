@@ -19,8 +19,6 @@ package smile.classification;
 import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.Math;
-import smile.math.matrix.ColumnMajorMatrix;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
 import smile.projection.Projection;
 
@@ -221,7 +219,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
         // Common mean vector.
         mean = Math.colMean(x);
         // Common covariance.
-        DenseMatrix T = new ColumnMajorMatrix(p, p);
+        double[][] T = new double[p][p];
         // Class mean vectors.
         mu = new double[k][p];
 
@@ -242,36 +240,36 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
                 for (int l = 0; l <= j; l++) {
-                    T.add(j, l, (x[i][j] - mean[j]) * (x[i][l] - mean[l]));
+                    T[j][l] += (x[i][j] - mean[j]) * (x[i][l] - mean[l]);
                 }
             }
         }
 
         for (int j = 0; j < p; j++) {
             for (int l = 0; l <= j; l++) {
-                T.div(j, l, n);
-                T.set(l, j, T.get(j, l));
+                T[j][l] /= n;
+                T[l][j] = T[j][l];
             }
         }
 
         // Between class scatter
-        DenseMatrix B = new ColumnMajorMatrix(p, p);
+        double[][] B = new double[p][p];
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < p; j++) {
                 for (int l = 0; l <= j; l++) {
-                    B.add(j, l, mu[i][j] * mu[i][l]);
+                    B[j][l] += mu[i][j] * mu[i][l];
                 }
             }
         }
 
         for (int j = 0; j < p; j++) {
             for (int l = 0; l <= j; l++) {
-                B.div(j, l, k);
-                B.set(l, j, B.get(j, l));
+                B[j][l] /= k;
+                B[l][j] = B[j][l];
             }
         }
 
-        EigenValueDecomposition eigen = new EigenValueDecomposition(T, true);
+        EigenValueDecomposition eigen = EigenValueDecomposition.decompose(T, true);
         
         tol = tol * tol;
         double[] s = eigen.getEigenValues();
@@ -283,24 +281,23 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
             s[i] = 1.0 / s[i];
         }
 
-        DenseMatrix U = eigen.getEigenVectors();
-        DenseMatrix UB = U.atbmm(B);
+        double[][] U = eigen.getEigenVectors();
+        double[][] UB = Math.atbmm(U, B);
 
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < p; j++) {
-                UB.mul(i, j, s[j]);
+                UB[i][j] *= s[j];
             }
         }
 
-        B = U.abmm(UB);
-        eigen = new EigenValueDecomposition(B, true);
+        Math.abmm(U, UB, B);
+
+        eigen = EigenValueDecomposition.decompose(B, true);
 
         U = eigen.getEigenVectors();
         scaling = new double[p][L];
         for (int i = 0; i < p; i++) {
-            for (int j = 0; j < L; j++) {
-                scaling[i][j] = U.get(i, j);
-            }
+            System.arraycopy(U[i], 0, scaling[i], 0, L);
         }
         
         smean = new double[L];

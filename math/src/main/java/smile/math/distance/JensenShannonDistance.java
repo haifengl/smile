@@ -16,7 +16,6 @@
 
 package smile.math.distance;
 
-import java.io.Serializable;
 import smile.math.Math;
 
 /**
@@ -37,8 +36,7 @@ import smile.math.Math;
  * 
  * @author Haifeng Li
  */
-public class JensenShannonDistance implements Metric<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class JensenShannonDistance implements Metric<double[]> {
 
     /**
      * Constructor.

@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.projection;
 
-import java.io.Serializable;
 import smile.math.Math;
 
 /**
@@ -52,8 +51,7 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public class GHA implements Projection<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class GHA implements Projection<double[]> {
 
     /**
      * The dimension of feature space.

@@ -16,7 +16,6 @@
 
 package smile.math.kernel;
 
-import java.io.Serializable;
 import smile.math.SparseArray;
 import smile.math.Math;
 
@@ -29,8 +28,7 @@ import smile.math.Math;
 
  * @author Haifeng Li
  */
-public class SparseGaussianKernel implements MercerKernel<SparseArray>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class SparseGaussianKernel implements MercerKernel<SparseArray> {
 
     /**
      * The width of the kernel.

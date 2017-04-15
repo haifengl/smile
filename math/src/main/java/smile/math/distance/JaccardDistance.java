@@ -16,7 +16,6 @@
 
 package smile.math.distance;
 
-import java.io.Serializable;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -36,8 +35,7 @@ import java.util.HashSet;
  *
  * @author Haifeng Li
  */
-public class JaccardDistance<T> implements Distance<T[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class JaccardDistance<T> implements Distance<T[]> {
 
     /**
      * Constructor.

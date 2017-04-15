@@ -21,8 +21,6 @@ import java.util.Arrays;
 
 import smile.math.Math;
 import smile.math.distance.Metric;
-import smile.math.matrix.ColumnMajorMatrix;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QRDecomposition;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.math.rbf.RadialBasisFunction;
@@ -107,7 +105,7 @@ public class RBFNetwork<T> implements Classifier<T>, Serializable {
     /**
      * The linear weights.
      */
-    private DenseMatrix w;
+    private double[][] w;
     /**
      * The distance metric functor.
      */
@@ -305,27 +303,26 @@ public class RBFNetwork<T> implements Classifier<T>, Serializable {
         int n = x.length;
         int m = rbf.length;
 
-        w = new ColumnMajorMatrix(m+1, k);
-        DenseMatrix G = new ColumnMajorMatrix(n, m+1);
-        DenseMatrix b = new ColumnMajorMatrix(n, k);
+        w = new double[m+1][k];
+        double[][] G = new double[n][m+1];
+        double[][] b = new double[n][k];
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
             for (int j = 0; j < m; j++) {
-                double r = rbf[j].f(distance.d(x[i], centers[j]));
-                G.set(i, j, r);
-                sum += r;
+                G[i][j] = rbf[j].f(distance.d(x[i], centers[j]));
+                sum += G[i][j];
             }
 
-            G.set(i, m, 1);
+            G[i][m] = 1;
 
             if (normalized) {
-                b.set(i, y[i], sum);
+                b[i][y[i]] = sum;
             } else {
-                b.set(i, y[i], 1);
+                b[i][y[i]] = 1;
             }
         }
 
-        QRDecomposition qr = new QRDecomposition(G);
+        QRDecomposition qr = new QRDecomposition(G, true);
         qr.solve(b, w);
     }
 
@@ -338,17 +335,17 @@ public class RBFNetwork<T> implements Classifier<T>, Serializable {
             double f = rbf[i].f(distance.d(x, centers[i]));
             sum += f;
             for (int j = 0; j < k; j++) {
-                sumw[j] += w.get(i, j) * f;
+                sumw[j] += w[i][j] * f;
             }
         }
 
         if (normalized) {
             for (int j = 0; j < k; j++) {
-                sumw[j] = (sumw[j] + w.get(centers.length, j)) / sum;
+                sumw[j] = (sumw[j] + w[centers.length][j]) / sum;
             }
         } else {
             for (int j = 0; j < k; j++) {
-                sumw[j] += w.get(centers.length, j);
+                sumw[j] += w[centers.length][j];
             }
         }
 
