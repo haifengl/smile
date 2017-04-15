@@ -209,7 +209,7 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         return candidates;
     }
 
-    private static long simhash64(List<String> tokens) {
+    protected static long simhash64(List<String> tokens) {
         final long seed = 0; //do not change seed
         final int BITS = 64;
         if (tokens == null || tokens.isEmpty()) {
