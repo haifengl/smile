@@ -8,7 +8,7 @@ crossPaths := true
 
 autoScalaLibrary := true
 
-scalacOptions in (Compile, doc) ++= Seq("-diagrams", "-groups", "-implicits")
+scalacOptions in (Compile, doc) ++= Seq("-groups", "-implicits")
 
 scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt")
 
