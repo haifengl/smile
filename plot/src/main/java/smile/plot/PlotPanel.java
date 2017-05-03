@@ -229,7 +229,7 @@ public class PlotPanel extends JPanel implements ActionListener, Printable {
         fc.setFileFilter(FileChooser.SimpleFileFilter.getWritableImageFIlter());
         fc.setAcceptAllFileFilterUsed(false);
         fc.setSelectedFiles(new File[0]);
-        int returnVal = fc.showOpenDialog(this);
+        int returnVal = fc.showSaveDialog(this);
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
