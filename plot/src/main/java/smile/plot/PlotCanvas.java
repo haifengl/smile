@@ -1049,7 +1049,7 @@ public class PlotCanvas extends JPanel {
         chooser.setFileFilter(filter);
         chooser.setAcceptAllFileFilterUsed(false);
         chooser.setSelectedFiles(new File[0]);
-        int returnVal = chooser.showOpenDialog(null);
+        int returnVal = chooser.showSaveDialog(null);
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = chooser.getSelectedFile();
