@@ -122,6 +122,8 @@ public class FileChooser extends JFileChooser {
                 return;
             }
 
+            if (!file.exists()) return;
+
             if (SimpleFileFilter.readableImageFilter.accept(file)) {
                 try {
                     img = ImageIO.read(file);
