@@ -3441,22 +3441,22 @@ public class Math {
 
     /** Tests if a floating number is zero. */
     public static boolean isZero(float x) {
-        return isZero(x, Float.MIN_VALUE);
+        return isZero(x, EPSILON);
     }
 
     /** Tests if a floating number is zero with given epsilon. */
     public static boolean isZero(float x, float epsilon) {
-        return abs(x) < 2*epsilon;
+        return abs(x) < epsilon;
     }
 
     /** Tests if a floating number is zero. */
     public static boolean isZero(double x) {
-        return isZero(x, Double.MIN_VALUE);
+        return isZero(x, EPSILON);
     }
 
     /** Tests if a floating number is zero with given epsilon. */
     public static boolean isZero(double x, double epsilon) {
-        return abs(x) < 2*epsilon;
+        return abs(x) < epsilon;
     }
 
     /**
