@@ -49,6 +49,15 @@ public class MathTest {
     public void tearDown() {
     }
 
+    @Test
+    public void testIsZero() {
+        System.out.println("isZero");
+        assertEquals(true, Math.isZero(0.0));
+        assertEquals(true, Math.isZero(Double.MIN_VALUE));
+        assertEquals(true, Math.isZero(Double.MIN_NORMAL));
+        assertEquals(false, Math.isZero(Math.EPSILON));
+    }
+
     /**
      * Test of isPower2 method, of class Math.
      */
