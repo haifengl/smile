@@ -403,7 +403,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
             double accuracy = 1.0;
             if (oob != 0) {
                 accuracy = (double) correct / oob;
-                logger.info("Random forest tree OOB accuracy: {}", String.format("%.2f%%", 100 * accuracy));
+                logger.info("Random forest tree OOB size: {}, accuracy: {}", oob, String.format("%.2f%%", 100 * accuracy));
             } else {
                 logger.error("Random forest has a tree trained without OOB samples.");
             }
@@ -688,10 +688,10 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
     
     @Override
     public int predict(double[] x) {
-        double[] y = new double[k];
+        int[] y = new int[k];
         
         for (Tree tree : trees) {
-            y[tree.tree.predict(x)] += tree.weight;
+            y[tree.tree.predict(x)]++;
         }
         
         return Math.whichMax(y);
@@ -705,10 +705,10 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
 
         Arrays.fill(posteriori, 0.0);
 
-        double[] y = new double[k];
+        int[] y = new int[k];
         double[] pos = new double[k];
         for (Tree tree : trees) {
-            y[tree.tree.predict(x, pos)] += tree.weight;
+            y[tree.tree.predict(x, pos)]++;
             for (int i = 0; i < k; i++) {
                 posteriori[i] += tree.weight * pos[i];
             }

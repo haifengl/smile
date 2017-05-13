@@ -16,7 +16,6 @@
 
 package smile.nd4j;
 
-import java.util.Arrays;
 import smile.math.matrix.DenseMatrix;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
@@ -113,10 +112,13 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] ax(double[] x, double[] y) {
-        INDArray ndx = Nd4j.create(x, new int[]{x.length, 1});
+        // Nd4j.getBlasWrapper().level2().gemv() crashes.
+        // Use gemm for now.
+        int m = nrows();
+        int n = ncols();
+        INDArray ndx = Nd4j.create(x, new int[]{n, 1});
         INDArray ndy = Nd4j.gemm(A, ndx, false, false);
-        int n = nrows();
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < m; i++) {
             y[i] = ndy.getDouble(i);
         }
 
@@ -125,10 +127,13 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] axpy(double[] x, double[] y) {
-        INDArray ndx = Nd4j.create(x, new int[]{x.length, 1});
+        // Nd4j.getBlasWrapper().level2().gemv() crashes.
+        // Use gemm for now.
+        int m = nrows();
+        int n = ncols();
+        INDArray ndx = Nd4j.create(x, new int[]{n, 1});
         INDArray ndy = Nd4j.gemm(A, ndx, false, false);
-        int n = nrows();
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < m; i++) {
             y[i] += ndy.getDouble(i);
         }
 
@@ -137,11 +142,14 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] axpy(double[] x, double[] y, double b) {
-        INDArray ndx = Nd4j.create(x, new int[]{x.length, 1});
+        // Nd4j.getBlasWrapper().level2().gemv() crashes.
+        // Use gemm for now.
+        int m = nrows();
+        int n = ncols();
+        INDArray ndx = Nd4j.create(x, new int[]{n, 1});
         INDArray ndy = Nd4j.gemm(A, ndx, false, false);
-        int n = nrows();
-        for (int i = 0; i < n; i++) {
-            y[i] = y[i] * b + ndy.getDouble(i);
+        for (int i = 0; i < m; i++) {
+            y[i] = b * y[i] + ndy.getDouble(i);
         }
 
         return y;
@@ -149,9 +157,12 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] atx(double[] x, double[] y) {
-        INDArray ndx = Nd4j.create(x, new int[]{x.length, 1});
+        // Nd4j.getBlasWrapper().level2().gemv() crashes.
+        // Use gemm for now.
+        int m = nrows();
+        int n = ncols();
+        INDArray ndx = Nd4j.create(x, new int[]{m, 1});
         INDArray ndy = Nd4j.gemm(A, ndx, true, false);
-        int n = nrows();
         for (int i = 0; i < n; i++) {
             y[i] = ndy.getDouble(i);
         }
@@ -161,9 +172,12 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] atxpy(double[] x, double[] y) {
-        INDArray ndx = Nd4j.create(x, new int[]{x.length, 1});
+        // Nd4j.getBlasWrapper().level2().gemv() crashes.
+        // Use gemm for now.
+        int m = nrows();
+        int n = ncols();
+        INDArray ndx = Nd4j.create(x, new int[]{m, 1});
         INDArray ndy = Nd4j.gemm(A, ndx, true, false);
-        int n = nrows();
         for (int i = 0; i < n; i++) {
             y[i] += ndy.getDouble(i);
         }
@@ -173,11 +187,14 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] atxpy(double[] x, double[] y, double b) {
-        INDArray ndx = Nd4j.create(x, new int[]{x.length, 1});
+        // Nd4j.getBlasWrapper().level2().gemv() crashes.
+        // Use gemm for now.
+        int m = nrows();
+        int n = ncols();
+        INDArray ndx = Nd4j.create(x, new int[]{m, 1});
         INDArray ndy = Nd4j.gemm(A, ndx, true, false);
-        int n = nrows();
         for (int i = 0; i < n; i++) {
-            y[i] = y[i] * b + ndy.getDouble(i);
+            y[i] = b * y[i] + ndy.getDouble(i);
         }
 
         return y;

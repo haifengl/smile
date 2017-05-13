@@ -42,6 +42,10 @@ package smile.sort;
  * @author Haifeng Li
  */
 public class ShellSort {
+    /** Utility classes should not have public constructors. */
+    private ShellSort() {
+
+    }
 
     /**
      * Sorts the specified array into ascending numerical order.

@@ -1934,6 +1934,43 @@ public class Math {
     }
 
     /**
+     * Pairwise distance between pairs of objects.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @return a full pairwise distance matrix.
+     */
+    public static double[][] pdist(double[][] x) {
+        int n = x.length;
+
+        double[][] proximity = new double[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                proximity[i][j] = distance(x[i], x[j]);
+            }
+        }
+
+        return proximity;
+    }
+
+    /**
+     * Pairwise distance between pairs of objects. Only the lower half is stored to save space.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @return the lower half of pairwise distance matrix.
+     */
+    public static double[][] proximity(double[][] x) {
+        int n = x.length;
+
+        double[][] proximity = new double[n][];
+        for (int i = 0; i < n; i++) {
+            proximity[i] = new double[i + 1];
+            for (int j = 0; j < i; j++) {
+                proximity[i][j] = distance(x[i], x[j]);
+            }
+        }
+
+        return proximity;
+    }
+
+    /**
      * The squared Euclidean distance.
      */
     public static double squaredDistance(int[] x, int[] y) {
@@ -3404,22 +3441,22 @@ public class Math {
 
     /** Tests if a floating number is zero. */
     public static boolean isZero(float x) {
-        return isZero(x, Float.MIN_VALUE);
+        return isZero(x, EPSILON);
     }
 
     /** Tests if a floating number is zero with given epsilon. */
     public static boolean isZero(float x, float epsilon) {
-        return abs(x) < 2*epsilon;
+        return abs(x) < epsilon;
     }
 
     /** Tests if a floating number is zero. */
     public static boolean isZero(double x) {
-        return isZero(x, Double.MIN_VALUE);
+        return isZero(x, EPSILON);
     }
 
     /** Tests if a floating number is zero with given epsilon. */
     public static boolean isZero(double x, double epsilon) {
-        return abs(x) < 2*epsilon;
+        return abs(x) < epsilon;
     }
 
     /**

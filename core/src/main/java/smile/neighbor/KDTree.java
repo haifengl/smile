@@ -16,6 +16,7 @@
 package smile.neighbor;
 
 import java.util.List;
+
 import smile.math.Math;
 import smile.sort.HeapSelect;
 
@@ -234,7 +235,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
     /**
      * Set if exclude query object self from the neighborhood.
      */
-    public KDTree setIdenticalExcluded(boolean excluded) {
+    public KDTree<E> setIdenticalExcluded(boolean excluded) {
         identicalExcluded = excluded;
         return this;
     }
@@ -373,7 +374,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             search(q, nearer, radius, neighbors);
 
             // now look in further half
-            if (radius >= diff * diff) {
+            if (radius >= Math.abs(diff)) {
                 search(q, further, radius, neighbors);
             }
         }

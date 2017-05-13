@@ -24,6 +24,10 @@ import java.util.regex.Pattern;
  * @author Haifeng Li
  */
 class RegexPOSTagger {
+    /** Utility classes should not have public constructors. */
+    private RegexPOSTagger() {
+
+    }
 
     /**
      * Tagging words based on regular expressions over word strings.

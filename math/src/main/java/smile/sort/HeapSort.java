@@ -27,6 +27,11 @@ package smile.sort;
  * @author Haifeng Li
  */
 public class HeapSort {
+    /** Utility classes should not have public constructors. */
+    private HeapSort() {
+
+    }
+
     /**
      * Sorts the specified array into ascending numerical order.
      */

@@ -16,9 +16,10 @@
 
 package smile.neighbor;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+
 import smile.math.distance.Metric;
 
 /**
@@ -179,7 +180,7 @@ public class BKTree<E> implements RNNSearch<E, E> {
     /**
      * Set if exclude query object self from the neighborhood.
      */
-    public BKTree setIdenticalExcluded(boolean excluded) {
+    public BKTree<E> setIdenticalExcluded(boolean excluded) {
         identicalExcluded = excluded;
         return this;
     }
