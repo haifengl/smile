@@ -54,7 +54,7 @@ public class CooccurrenceKeywordExtractor {
      * @param text A single document.
      * @return The top 10 keywords.
      */
-    public ArrayList<NGram> extract(String text) {
+    public static ArrayList<NGram> extract(String text) {
         return extract(text, 10);
     }
     
@@ -63,7 +63,7 @@ public class CooccurrenceKeywordExtractor {
      * @param text A single document.
      * @return The top keywords.
      */
-    public ArrayList<NGram> extract(String text, int maxNumKeywords) {
+    public static ArrayList<NGram> extract(String text, int maxNumKeywords) {
         ArrayList<String[]> sentences = new ArrayList<>();
         
         SimpleTokenizer tokenizer = new SimpleTokenizer();

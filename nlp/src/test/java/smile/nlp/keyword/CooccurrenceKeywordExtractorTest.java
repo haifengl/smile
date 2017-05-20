@@ -64,8 +64,7 @@ public class CooccurrenceKeywordExtractorTest {
         String text = scanner.useDelimiter("\\Z").next();
         scanner.close();
 
-        CooccurrenceKeywordExtractor instance = new CooccurrenceKeywordExtractor();
-        ArrayList<NGram> result = instance.extract(text);
+        ArrayList<NGram> result = CooccurrenceKeywordExtractor.extract(text);
         
         assertEquals(10, result.size());
         for (NGram ngram : result) {
