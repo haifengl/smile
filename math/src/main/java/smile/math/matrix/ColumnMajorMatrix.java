@@ -134,13 +134,18 @@ public class ColumnMajorMatrix implements DenseMatrix {
         return new ColumnMajorMatrix(nrows, ncols, A.clone());
     }
 
+    /** Returns the data array. */
+    public double[] data() {
+        return A;
+    }
+
     /**
      * Returns the transpose that shares the same underlying array
      * with this matrix. The result matrix should only be used for
      * read only operations, which is the typical cases in linear algebra.
      */
     @Override
-    public RowMajorMatrix transpose() {
+    public DenseMatrix transpose() {
         return new RowMajorMatrix(ncols, nrows, A);
     }
 
