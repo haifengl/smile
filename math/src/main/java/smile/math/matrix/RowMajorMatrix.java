@@ -141,7 +141,7 @@ public class RowMajorMatrix implements DenseMatrix {
      * read only operations, which is the typical cases in linear algebra.
      */
     @Override
-    public ColumnMajorMatrix transpose() {
+    public DenseMatrix transpose() {
         return new ColumnMajorMatrix(ncols, nrows, A);
     }
 
