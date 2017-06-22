@@ -14,21 +14,26 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.symbolic.mathematicsTest;
+package smile.symbolic;
 
 import java.util.ArrayList;
-import smile.symbolic.BaseTest;
-import smile.symbolic.InvalidExpressionException;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Ernest DeFoy
  */
-public class ExpressionTreeTest extends BaseTest {
+public class ExpressionTreeTest {
+    private ExpressionParser parser = new ExpressionParser();
+    private ExpressionTree expressionTree = new ExpressionTree();
 
     @Test
-    void constructTree() throws InvalidExpressionException {
+    public void constructTree() throws InvalidExpressionException {
 
         parser.parse("sin(x) / 5*x");
         final ArrayList<String> QUERY = parser.getTokens();
@@ -36,11 +41,11 @@ public class ExpressionTreeTest extends BaseTest {
         final String EXPECTED = "x";
         final String actual = expressionTree.getRoot().getLeftChild().getRightChild().getType();
 
-        Assertions.assertEquals(EXPECTED, actual);
+        assertEquals(EXPECTED, actual);
     }
 
     @Test
-    void constructTree2() throws InvalidExpressionException {
+    public void constructTree2() throws InvalidExpressionException {
 
         parser.parse("sin(x) / (5+x)");
         final ArrayList<String> QUERY = parser.getTokens();
@@ -48,15 +53,15 @@ public class ExpressionTreeTest extends BaseTest {
         final String EXPECTED = "+";
         final String actual = expressionTree.getRoot().getRightChild().getType();
 
-        Assertions.assertEquals(EXPECTED, actual);
+        assertEquals(EXPECTED, actual);
     }
 
     @Test
-    void treeToString() {
+    public void treeToString() {
     }
 
     @Test
-    void createInfix() throws InvalidExpressionException {
+    public void createInfix() throws InvalidExpressionException {
 
         final String QUERY = "sin(x) / 5*x";
         final String EXPECTED = "sin(x)/5*x";
@@ -64,11 +69,11 @@ public class ExpressionTreeTest extends BaseTest {
         expressionTree.init(parser.getVar(), parser.getTokens());
         final String actual = expressionTree.toString();
 
-        Assertions.assertEquals(EXPECTED, actual);
+        assertEquals(EXPECTED, actual);
     }
 
     @Test
-    void createInfix2() throws InvalidExpressionException {
+    public void createInfix2() throws InvalidExpressionException {
 
         final String QUERY = "sin(x) / (5+x)";
         final String EXPECTED = "sin(x)/(5+x)";
@@ -76,6 +81,6 @@ public class ExpressionTreeTest extends BaseTest {
         expressionTree.init(parser.getVar(), parser.getTokens());
         final String actual = expressionTree.toString();
 
-        Assertions.assertEquals(EXPECTED, actual);
+        assertEquals(EXPECTED, actual);
     }
 }

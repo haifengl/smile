@@ -14,48 +14,53 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.symbolic.mathematicsTest;
+package smile.symbolic;
 
-import smile.symbolic.BaseTest;
-import smile.symbolic.InvalidExpressionException;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assertions;
+import java.util.ArrayList;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Ernest DeFoy
  */
-public class ExpressionParserTest extends BaseTest {
+public class ExpressionParserTest {
+    private ExpressionParser parser = new ExpressionParser();
 
     @Test
-    void testParse() throws InvalidExpressionException {
+    public void testParse() throws InvalidExpressionException {
 
         final String QUERY = "-5 + 7((x^2) + ((sin(x))";
         final String EXPECTED = "$5+7*((x^2)+((sin(x))))";
         parser.parse(QUERY);
         String actual = parser.getExpression();
 
-        Assertions.assertEquals(EXPECTED, actual);
+        assertEquals(EXPECTED, actual);
     }
 
     @Test
-    void testTokenize() throws InvalidExpressionException {
+    public void testTokenize() throws InvalidExpressionException {
 
         final String QUERY = "(5+x) / sin(x)";
         final String[] EXPECTED = {"5", "x", "+", "x", "sin", "/"};
         parser.parse(QUERY);
         final String[] actual = parser.getTokens().toArray(new String[parser.getTokens().size()]);
 
-        Assertions.assertArrayEquals(EXPECTED, actual);
+        assertArrayEquals(EXPECTED, actual);
     }
 
     @Test
-    void testFormat() throws InvalidExpressionException {
+    public void testFormat() throws InvalidExpressionException {
 
         final String QUERY = "5x + 7*x^2";
         final String EXPECTED = "5x + 7x^2";
         parser.parse(QUERY);
         String actual = parser.format(QUERY);
 
-        Assertions.assertEquals(EXPECTED, actual);
+        assertEquals(EXPECTED, actual);
     }
 }

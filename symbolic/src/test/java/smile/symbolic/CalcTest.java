@@ -14,18 +14,22 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.symbolic.mathematicsTest;
+package smile.symbolic;
 
-import smile.symbolic.Calculus;
-import smile.symbolic.InvalidExpressionException;
-import smile.symbolic.BaseTest;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assertions;
+import java.util.ArrayList;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Ernest DeFoy
  */
-public class CalcTest extends BaseTest {
+public class CalcTest {
+    private Calculus calculus = new Calculus();
 
     @Test
     void diffReadable() throws InvalidExpressionException {
@@ -34,7 +38,7 @@ public class CalcTest extends BaseTest {
         final String EXPECTED = "4*x+x^2*cot(x^3)";
         String actual = Calculus.diffReadable(QUERY);
 
-        Assertions.assertEquals(EXPECTED, actual);
+        assertEquals(EXPECTED, actual);
     }
 
     @Test
@@ -43,7 +47,7 @@ public class CalcTest extends BaseTest {
         final String EXPECTED = "4*x+x^2*cot(x^3)";
         String actual = Calculus.rewrite(QUERY);
 
-        Assertions.assertEquals(EXPECTED, actual);
+        assertEquals(EXPECTED, actual);
     }
 
     //rewrite SOMETHING
@@ -54,7 +58,7 @@ public class CalcTest extends BaseTest {
         final String EXPECTED = "20*x";
         String actual = Calculus.rewrite(QUERY);
 
-        Assertions.assertEquals(EXPECTED, actual);
+        assertEquals(EXPECTED, actual);
     }
 
     // Power Rule
@@ -65,7 +69,7 @@ public class CalcTest extends BaseTest {
         final String EXPECTED = "8*x";
         String actual = Calculus.diff(QUERY);
 
-        Assertions.assertEquals(EXPECTED, actual);
+        assertEquals(EXPECTED, actual);
     }
 
     // Cosecant Identity & Chain Rule
@@ -76,7 +80,7 @@ public class CalcTest extends BaseTest {
         final String EXPECTED = "3*x^2*cot(x^3)*csc(x^3)";
         String actual = Calculus.diff(QUERY);
 
-        Assertions.assertEquals(EXPECTED, actual);
+        assertEquals(EXPECTED, actual);
     }
 
     // Negative Exponent
@@ -87,7 +91,7 @@ public class CalcTest extends BaseTest {
         final String EXPECTED = "-1/(x+2)(x+2)";
         String actual = calculus.diff(QUERY);
 
-        Assertions.assertEquals(EXPECTED, actual);
+        assertEquals(EXPECTED, actual);
     }
 
     // Negative Exponent
@@ -98,7 +102,7 @@ public class CalcTest extends BaseTest {
         final String EXPECTED = "-2/x^3";
         String actual = calculus.diff(QUERY);
 
-        Assertions.assertEquals(EXPECTED, actual);
+        assertEquals(EXPECTED, actual);
     }
 
     @Test
