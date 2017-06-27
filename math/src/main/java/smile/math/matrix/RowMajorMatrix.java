@@ -156,6 +156,11 @@ public class RowMajorMatrix implements DenseMatrix {
     }
 
     @Override
+    public int ld() {
+        return ncols;
+    }
+
+    @Override
     public double get(int i, int j) {
         return A[i*ncols + j];
     }

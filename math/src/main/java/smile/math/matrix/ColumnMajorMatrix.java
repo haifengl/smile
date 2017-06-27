@@ -160,6 +160,11 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
+    public int ld() {
+        return nrows;
+    }
+
+    @Override
     public double get(int i, int j) {
         return A[j*nrows + i];
     }

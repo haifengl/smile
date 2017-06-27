@@ -134,6 +134,11 @@ public class NaiveMatrix implements DenseMatrix {
     }
 
     @Override
+    public int ld() {
+        throw new IllegalStateException("NaiveMatrix doesn't store matrix in one-dimensional array");
+    }
+
+    @Override
     public double get(int i, int j) {
         return A[i][j];
     }

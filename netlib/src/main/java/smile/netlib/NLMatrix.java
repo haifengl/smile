@@ -84,37 +84,37 @@ public class NLMatrix extends ColumnMajorMatrix {
 
     @Override
     public double[] ax(double[] x, double[] y) {
-        BLAS.getInstance().dgemv(NoTranspose, nrows(), ncols(), 1.0, data(), nrows(), x, 1, 0.0, y, 1);
+        BLAS.getInstance().dgemv(NoTranspose, nrows(), ncols(), 1.0, data(), ld(), x, 1, 0.0, y, 1);
         return y;
     }
 
     @Override
     public double[] axpy(double[] x, double[] y) {
-        BLAS.getInstance().dgemv(NoTranspose, nrows(), ncols(), 1.0, data(), nrows(), x, 1, 1.0, y, 1);
+        BLAS.getInstance().dgemv(NoTranspose, nrows(), ncols(), 1.0, data(), ld(), x, 1, 1.0, y, 1);
         return y;
     }
 
     @Override
     public double[] axpy(double[] x, double[] y, double b) {
-        BLAS.getInstance().dgemv(NoTranspose, nrows(), ncols(), 1.0, data(), nrows(), x, 1, b, y, 1);
+        BLAS.getInstance().dgemv(NoTranspose, nrows(), ncols(), 1.0, data(), ld(), x, 1, b, y, 1);
         return y;
     }
 
     @Override
     public double[] atx(double[] x, double[] y) {
-        BLAS.getInstance().dgemv(Transpose, nrows(), ncols(), 1.0, data(), nrows(), x, 1, 0.0, y, 1);
+        BLAS.getInstance().dgemv(Transpose, nrows(), ncols(), 1.0, data(), ld(), x, 1, 0.0, y, 1);
         return y;
     }
 
     @Override
     public double[] atxpy(double[] x, double[] y) {
-        BLAS.getInstance().dgemv(Transpose, nrows(), ncols(), 1.0, data(), nrows(), x, 1, 1.0, y, 1);
+        BLAS.getInstance().dgemv(Transpose, nrows(), ncols(), 1.0, data(), ld(), x, 1, 1.0, y, 1);
         return y;
     }
 
     @Override
     public double[] atxpy(double[] x, double[] y, double b) {
-        BLAS.getInstance().dgemv(Transpose, nrows(), ncols(), 1.0, data(), nrows(), x, 1, b, y, 1);
+        BLAS.getInstance().dgemv(Transpose, nrows(), ncols(), 1.0, data(), ld(), x, 1, b, y, 1);
         return y;
     }
 
@@ -133,8 +133,8 @@ public class NLMatrix extends ColumnMajorMatrix {
         if (B instanceof ColumnMajorMatrix) {
             NLMatrix C = new NLMatrix(nrows(), B.ncols());
             BLAS.getInstance().dgemm(NoTranspose, NoTranspose,
-                    nrows(), B.ncols(), ncols(), 1.0, data(), nrows(), ((ColumnMajorMatrix) B).data(),
-                    B.nrows(), 1, C.data(), C.nrows());
+                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), ((ColumnMajorMatrix) B).data(),
+                    B.ld(), 1, C.data(), C.ld());
             return C;
         }
 
@@ -146,8 +146,8 @@ public class NLMatrix extends ColumnMajorMatrix {
         if (B instanceof ColumnMajorMatrix) {
             NLMatrix C = new NLMatrix(nrows(), B.ncols());
             BLAS.getInstance().dgemm(NoTranspose, Transpose,
-                    nrows(), B.ncols(), ncols(), 1.0, data(), nrows(), ((ColumnMajorMatrix) B).data(),
-                    B.nrows(), 1, C.data(), C.nrows());
+                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), ((ColumnMajorMatrix) B).data(),
+                    B.ld(), 1, C.data(), C.ld());
             return C;
         }
 
@@ -159,8 +159,8 @@ public class NLMatrix extends ColumnMajorMatrix {
         if (B instanceof ColumnMajorMatrix) {
             NLMatrix C = new NLMatrix(nrows(), B.ncols());
             BLAS.getInstance().dgemm(Transpose, NoTranspose,
-                    nrows(), B.ncols(), ncols(), 1.0, data(), nrows(), ((ColumnMajorMatrix) B).data(),
-                    B.nrows(), 1, C.data(), C.nrows());
+                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), ((ColumnMajorMatrix) B).data(),
+                    B.ld(), 1, C.data(), C.ld());
             return C;
         }
 
