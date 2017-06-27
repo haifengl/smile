@@ -25,6 +25,22 @@ import smile.math.Math;
  */
 public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, DenseMatrix> {
     /**
+     * The LDA (and LDB, LDC, etc.) parameter in BLAS is effectively
+     * the stride of the matrix as it is laid out in linear memory.
+     * It is perfectly valid to have an LDA value which is larger than
+     * the leading dimension of the matrix which is being operated on.
+     * Typical cases where it is either useful or necessary to use a
+     * larger LDA value are when you are operating on a sub matrix from
+     * a larger dense matrix, and when hardware or algorithms offer
+     * performance advantages when storage is padded to round multiples
+     * of some optimal size (cache lines or GPU memory transaction size,
+     * or load balance in multiprocessor implementations, for example).
+     *
+     * @return the leading dimension
+     */
+    public int ld();
+
+    /**
      * Set the entry value at row i and column j.
      */
     public abstract double set(int i, int j, double x);
