@@ -281,7 +281,7 @@ public class DelimitedTextParser {
             throw new IOException("Empty data source.");
         }
 
-        String[] s = line.split(delimiter, 0);
+        String[] s = line.split(delimiter, -1);
 
         if (attributes == null) {
             int p = s.length;
