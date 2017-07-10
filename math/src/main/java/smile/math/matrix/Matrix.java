@@ -66,6 +66,55 @@ package smile.math.matrix;
  */
 public interface Matrix {
     /**
+     * Returns an matrix initialized by given two-dimensional array.
+     */
+    public static DenseMatrix newInstance(double[][] A) {
+        return Factory.matrix(A);
+    }
+
+    /**
+     * Returns all-zero matrix.
+     */
+    public static DenseMatrix zeros(int rows, int cols) {
+        return Factory.matrix(rows, cols);
+    }
+
+    /**
+     * Return an all-one matrix.
+     */
+    public static DenseMatrix ones(int rows, int cols) {
+        return Factory.matrix(rows, cols, 1.0);
+    }
+
+    /**
+     * Returns an n-by-n identity matrix.
+     */
+    public static DenseMatrix eye(int n) {
+        DenseMatrix matrix = Factory.matrix(n, n);
+
+        for (int i = 0; i < n; i++) {
+            matrix.set(i, i, 1.0);
+        }
+
+        return matrix;
+    }
+
+    /**
+     * Returns a square diagonal matrix with the elements of vector diag on the main diagonal.
+     * @param A the array of diagonal elements.
+     */
+    public static DenseMatrix diag(double[] A) {
+        int n = A.length;
+        DenseMatrix matrix = Factory.matrix(n, n);
+
+        for (int i = 0; i < n; i++) {
+            matrix.set(i, i, A[i]);
+        }
+
+        return matrix;
+    }
+
+    /**
      * Returns the number of rows.
      */
     public int nrows();
