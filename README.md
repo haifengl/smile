@@ -108,16 +108,15 @@ Sentence Splitter and Tokenizer, Bigram Statistical Test, Phrase Extractor, Keyw
 
 Model Serialization
 ===================
-You may notice that most models support the Java `Serializable` interface (all classifiers do support `Serializable` interface). It is because the exact format is hard to keep stable,
-class changes can easily make your serialized data unreadable, reading/writing the data in non-Java code is almost impossible.
-Currently, we suggest [XStream](http://xstream.codehaus.org) to serialize the trained models.
+Most models support the Java `Serializable` interface (all classifiers do support `Serializable` interface) so that
+you can use them in Spark. To reading/writing the models in non-Java code, we suggest [XStream](http://xstream.codehaus.org) to serialize the trained models.
 XStream is a simple library to serialize objects to XML and back again. XStream is easy to use and doesn't require mappings
 (actually requires no modifications to objects). [Protostuff](http://code.google.com/p/protostuff/) is a
 nice alternative that supports forward-backward compatibility (schema evolution) and validation.
 Beyond XML, Protostuff supports many other formats such as JSON, YAML, protobuf, etc. For some predictive models,
 we look forward to supporting PMML (Predictive Model Markup Language), an XML-based file format developed by the Data Mining Group.
 
-Smile Scala API provides read and write functions in package smile.io to read and save models by XStream.
+Smile Scala API provides read, read.xstream, write, and write.xstream functions in package smile.io.
 
 SmilePlot
 =========
