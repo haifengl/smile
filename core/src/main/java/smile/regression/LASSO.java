@@ -21,8 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.NaiveMatrix;
-import smile.math.matrix.RowMajorMatrix;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.SparseMatrix;
 import smile.math.matrix.BiconjugateGradient;
 import smile.math.matrix.Preconditioner;
@@ -241,7 +240,7 @@ public class LASSO  implements Regression<double[]>, Serializable {
         int p = x[0].length;
 
         center = Math.colMean(x);
-        RowMajorMatrix X = new RowMajorMatrix(n, p);
+        DenseMatrix X = Matrix.zeros(n, p);
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
@@ -274,7 +273,7 @@ public class LASSO  implements Regression<double[]>, Serializable {
         }
 
         b = ym - Math.dot(w, center);
-        fitness(new NaiveMatrix(x), y);
+        fitness(Matrix.newInstance(x), y);
     }
 
     /**

@@ -16,7 +16,8 @@
 package smile.mds;
 
 import smile.math.Math;
-import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.Matrix;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
 
 /**
@@ -144,7 +145,7 @@ public class MDS {
         }
 
         if (add) {
-            ColumnMajorMatrix Z = new ColumnMajorMatrix(2 * n, 2 * n);
+            DenseMatrix Z = Matrix.zeros(2 * n, 2 * n);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
                     Z.set(i, n + j, 2 * B[i][j]);

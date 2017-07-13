@@ -16,7 +16,7 @@
 package smile.interpolation;
 
 import smile.math.Math;
-import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.LUDecomposition;
 
@@ -48,7 +48,7 @@ public class KrigingInterpolation1D implements Interpolation {
         int n = x.length;
         yvi = new double[n + 1];
         vstar = new double[n + 1];
-        DenseMatrix v = new ColumnMajorMatrix(n + 1, n + 1);
+        DenseMatrix v = Matrix.zeros(n + 1, n + 1);
 
         for (int i = 0; i < n; i++) {
             yvi[i] = y[i];

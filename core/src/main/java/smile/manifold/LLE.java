@@ -23,7 +23,12 @@ import smile.graph.AdjacencyList;
 import smile.graph.Graph;
 import smile.math.Math;
 import smile.math.distance.EuclideanDistance;
-import smile.math.matrix.*;
+import smile.math.matrix.Matrix;
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.SparseMatrix;
+import smile.math.matrix.LUDecomposition;
+import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.Lanczos;
 import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
 import smile.neighbor.KNNSearch;
@@ -147,7 +152,7 @@ public class LLE {
             colIndex[i] = colIndex[i - 1] + k + 1;
         }
 
-        DenseMatrix C = new ColumnMajorMatrix(k, k);
+        DenseMatrix C = Matrix.zeros(k, k);
         double[] x = new double[k];
         double[] b = new double[k];
         for (int i = 0; i < k; i++) {

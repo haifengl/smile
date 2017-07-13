@@ -56,6 +56,15 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     /**
+     * Constructor of a column vector/matrix initialized with given array.
+     * @param A the array of column vector.
+     */
+    public ColumnMajorMatrix(double[] A) {
+        this(A.length, 1);
+        System.arraycopy(A, 0, this.A, 0, A.length);
+    }
+
+    /**
      * Constructor of all-zero matrix.
      */
     public ColumnMajorMatrix(int rows, int cols) {
@@ -83,15 +92,6 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     /**
-     * Constructor of a square diagonal matrix with the elements of vector diag on the main diagonal.
-     */
-    public ColumnMajorMatrix(double[] diag) {
-        this(diag.length, diag.length);
-        for (int i = 0; i < diag.length; i++)
-            set(i, i, diag[i]);
-    }
-
-    /**
      * Constructor of matrix with normal random values with given mean and standard dev.
      */
     public ColumnMajorMatrix(int rows, int cols, double mu, double sigma) {
@@ -102,26 +102,6 @@ public class ColumnMajorMatrix implements DenseMatrix {
         for (int i = 0; i < n; i++) {
             A[i] = g.rand();
         }
-    }
-
-    /**
-     * Returns an n-by-n identity matrix with ones on the main diagonal and zeros elsewhere.
-     */
-    public static ColumnMajorMatrix eye(int n) {
-        return eye(n, n);
-    }
-
-    /**
-     * Returns an n-by-n identity matrix with ones on the main diagonal and zeros elsewhere.
-     */
-    public static ColumnMajorMatrix eye(int m, int n) {
-        ColumnMajorMatrix matrix = new ColumnMajorMatrix(m, n);
-        int l = Math.min(m, n);
-        for (int i = 0; i < l; i++) {
-            matrix.set(i, i, 1.0);
-        }
-
-        return matrix;
     }
 
     @Override

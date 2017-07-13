@@ -22,7 +22,7 @@ import smile.graph.Graph;
 import smile.graph.Graph.Edge;
 import smile.math.distance.EuclideanDistance;
 import smile.math.Math;
-import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
 import smile.math.matrix.Lanczos;
@@ -171,7 +171,7 @@ public class IsoMap {
         double[] mean = Math.rowMean(D);
         double mu = Math.mean(mean);
 
-        DenseMatrix B = new ColumnMajorMatrix(n, n);
+        DenseMatrix B = Matrix.zeros(n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
                 double b = D[i][j] - mean[i] - mean[j] + mu;

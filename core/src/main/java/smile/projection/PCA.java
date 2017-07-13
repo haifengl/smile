@@ -17,7 +17,7 @@ package smile.projection;
 
 import java.io.Serializable;
 import smile.math.Math;
-import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
 import smile.math.matrix.SingularValueDecomposition;
@@ -138,7 +138,7 @@ public class PCA implements Projection<double[]>, Serializable {
 
         } else {
 
-            DenseMatrix cov = new ColumnMajorMatrix(n, n);
+            DenseMatrix cov = Matrix.zeros(n, n);
             for (int k = 0; k < m; k++) {
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j <= i; j++) {
@@ -253,7 +253,7 @@ public class PCA implements Projection<double[]>, Serializable {
         }
 
         this.p = p;
-        projection = new ColumnMajorMatrix(p, n);
+        projection = Matrix.zeros(p, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
                 projection.set(j, i, eigvectors.get(i, j));

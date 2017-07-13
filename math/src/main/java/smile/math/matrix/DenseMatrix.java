@@ -43,13 +43,97 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     /**
      * Set the entry value at row i and column j.
      */
-    public abstract double set(int i, int j, double x);
+    public double set(int i, int j, double x);
 
     /**
      * Set the entry value at row i and column j. For Scala users.
      */
     default public double update(int i, int j, double x) {
         return set(i, j, x);
+    }
+
+    /**
+     * Returns the LU decomposition.
+     */
+    public default LU lu() {
+        // Use a "left-looking", dot-product, Crout/Doolittle algorithm.
+        int m = nrows();
+        int n = ncols();
+
+        int[] piv = new int[m];
+        for (int i = 0; i < m; i++) {
+            piv[i] = i;
+        }
+
+        int pivsign = 1;
+        double[] LUcolj = new double[m];
+
+        for (int j = 0; j < n; j++) {
+
+            // Make a copy of the j-th column to localize references.
+            for (int i = 0; i < m; i++) {
+                LUcolj[i] = get(i, j);
+            }
+
+            // Apply previous transformations.
+            for (int i = 0; i < m; i++) {
+                // Most of the time is spent in the following dot product.
+
+                int kmax = Math.min(i, j);
+                double s = 0.0;
+                for (int k = 0; k < kmax; k++) {
+                    s += get(i, k) * LUcolj[k];
+                }
+
+                LUcolj[i] -= s;
+                set(i, j, LUcolj[i]);
+            }
+
+            // Find pivot and exchange if necessary.
+            int p = j;
+            for (int i = j + 1; i < m; i++) {
+                if (Math.abs(LUcolj[i]) > Math.abs(LUcolj[p])) {
+                    p = i;
+                }
+            }
+            if (p != j) {
+                for (int k = 0; k < n; k++) {
+                    double t = get(p, k);
+                    set(p, k, get(j, k));
+                    set(j, k, t);
+                }
+                int k = piv[p];
+                piv[p] = piv[j];
+                piv[j] = k;
+                pivsign = -pivsign;
+            }
+
+            // Compute multipliers.
+            if (j < m & get(j, j) != 0.0) {
+                for (int i = j + 1; i < m; i++) {
+                    div(i, j, get(j, j));
+                }
+            }
+        }
+
+        boolean singular = false;
+        for (int j = 0; j < n; j++) {
+            if (get(j, j) == 0) {
+                singular = true;
+                break;
+            }
+        }
+
+        return new LU(this, piv, pivsign, singular);
+    }
+
+    /**
+     * Returns the LU decomposition.
+     * @param inPlace if true, this matrix will be used for matrix decomposition.
+     */
+    public default LU lu(boolean inPlace) {
+        DenseMatrix a = inPlace ? this : copy();
+        return a.lu();
     }
 
     /**
@@ -60,7 +144,7 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     /**
      * Returns the inverse matrix.
      */
-    default DenseMatrix inverse() {
+    public default DenseMatrix inverse() {
         return inverse(false);
     }
 
@@ -68,16 +152,109 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
      * Returns the inverse matrix.
      * @param inPlace if true, this matrix will be used for matrix decomposition.
      */
-    default DenseMatrix inverse(boolean inPlace) {
+    public default DenseMatrix inverse(boolean inPlace) {
         DenseMatrix a = inPlace ? this : copy();
         if (nrows() == ncols()) {
-            LUDecomposition lu = new LUDecomposition(a);
+            LU lu = lu(inPlace);
             return lu.inverse();
         } else {
             QRDecomposition qr = new QRDecomposition(a);
             return qr.inverse();
         }
     }
+
+    /**
+     * L1 matrix norm. Maximum column sum.
+     */
+    public default double norm1() {
+        int m = nrows();
+        int n = ncols();
+
+        double f = 0.0;
+        for (int j = 0; j < n; j++) {
+            double s = 0.0;
+            for (int i = 0; i < m; i++) {
+                s += Math.abs(get(i, j));
+            }
+            f = Math.max(f, s);
+        }
+
+        return f;
+    }
+
+    /**
+     * L2 matrix norm. Maximum singular value.
+     */
+    public default double norm2() {
+        return new SingularValueDecomposition(this).norm();
+    }
+
+    /**
+     * L2 matrix norm. Maximum singular value.
+     */
+    public default double norm() {
+        return norm2();
+    }
+
+    /**
+     * Infinity matrix norm. Maximum row sum.
+     */
+    public default double normInf() {
+        int m = nrows();
+        int n = ncols();
+
+        double[] f = new double[m];
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                f[i] += Math.abs(get(i, j));
+            }
+        }
+
+        return Math.max(f);
+    }
+
+    /**
+     * Frobenius matrix norm. Sqrt of sum of squares of all elements.
+     */
+    public default double normFro() {
+        int m = nrows();
+        int n = ncols();
+
+        double f = 0.0;
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                f = Math.hypot(f, get(i, j));
+            }
+        }
+
+        return f;
+    }
+
+    /**
+     * Returns x' * A * x.
+     * The left upper submatrix of A is used in the computation based
+     * on the size of x.
+     */
+    public default double xax(double[] x) {
+        if (nrows() != ncols()) {
+            throw new IllegalArgumentException("The matrix is not square");
+        }
+
+        if (nrows() != x.length) {
+            throw new IllegalArgumentException("Matrix and vector size doesn't match for x' * A * x");
+        }
+
+        int n = x.length;
+        double s = 0.0;
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < n; i++) {
+                s += get(i, j) * x[i] * x[j];
+            }
+        }
+
+        return s;
+    }
+
     /**
      * Returns a copy of this matrix.
      */

@@ -21,7 +21,11 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
-import smile.math.matrix.*;
+import smile.math.matrix.Matrix;
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.QRDecomposition;
+import smile.math.matrix.SingularValueDecomposition;
+import smile.math.matrix.CholeskyDecomposition;
 import smile.math.special.Beta;
 
 /**
@@ -184,7 +188,7 @@ public class OLS implements Regression<double[]>, Serializable {
 
         // weights and intercept
         double[] w1 = new double[p+1];
-        ColumnMajorMatrix X = new ColumnMajorMatrix(n, p+1);
+        DenseMatrix X = Matrix.zeros(n, p+1);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++)
                 X.set(i, j, x[i][j]);

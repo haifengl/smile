@@ -40,8 +40,8 @@ public class NLMatrix extends ColumnMajorMatrix {
     }
 
     /**
-     * Constructor of a square diagonal matrix with the elements of vector diag on the main diagonal.
-     * @param A the array of diagonal elements.
+     * Constructor of a column vector/matrix initialized with given array.
+     * @param A the array of column vector.
      */
     public NLMatrix(double[] A) {
         super(A);
@@ -65,18 +65,10 @@ public class NLMatrix extends ColumnMajorMatrix {
      * Constructor.
      * @param value the array of matrix values arranged in column major format
      */
-    public NLMatrix(int rows, int cols, double[] value) {
+/*    public NLMatrix(int rows, int cols, double[] value) {
         super(rows, cols, value);
     }
-
-    public static NLMatrix eye(int n) {
-        NLMatrix matrix = new NLMatrix(n, n);
-        for (int i = 0; i < n; i++) {
-            matrix.set(i, i, 1.0);
-        }
-        return matrix;
-    }
-
+*/
     @Override
     public NLMatrix copy() {
         return new NLMatrix(nrows(), ncols(), data().clone());
@@ -177,5 +169,21 @@ public class NLMatrix extends ColumnMajorMatrix {
         }
 
         return B;
+    }
+
+    @Override
+    public LU lu() {
+        boolean singular = false;
+
+        int[] piv = new int[Math.min(nrows(), ncols())];
+        intW info = new intW(0);
+        LAPACK.getInstance().dgetrf(nrows(), ncols(), data(), ld(), piv, info);
+
+        if (info.val > 0)
+            singular = true;
+        else if (info.val < 0)
+            throw new IllegalArgumentException("LAPACK DGETRF error code: " + info.val);
+
+        return new LU(A, piv, singular);
     }
 }

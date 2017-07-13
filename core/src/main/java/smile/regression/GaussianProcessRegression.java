@@ -19,7 +19,11 @@ package smile.regression;
 import java.io.Serializable;
 import smile.math.Math;
 import smile.math.kernel.MercerKernel;
-import smile.math.matrix.*;
+import smile.math.matrix.Matrix;
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.CholeskyDecomposition;
+import smile.math.matrix.LUDecomposition;
+import smile.math.matrix.EigenValueDecomposition;
 
 /**
  * Gaussian Process for Regression. A Gaussian process is a stochastic process
@@ -244,14 +248,14 @@ public class GaussianProcessRegression <T> implements Regression<T>, Serializabl
         int n = x.length;
         int m = t.length;
 
-        DenseMatrix E = new ColumnMajorMatrix(n, m);
+        DenseMatrix E = Matrix.zeros(n, m);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
                 E.set(i, j, kernel.k(x[i], t[j]));
             }
         }
 
-        ColumnMajorMatrix W = new ColumnMajorMatrix(m, m);
+        DenseMatrix W = Matrix.zeros(m, m);
         for (int i = 0; i < m; i++) {
             for (int j = 0; j <= i; j++) {
                 double k = kernel.k(t[i], t[j]);

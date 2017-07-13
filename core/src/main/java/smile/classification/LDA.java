@@ -19,7 +19,7 @@ package smile.classification;
 import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.Math;
-import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
 
@@ -242,7 +242,7 @@ public class LDA implements SoftClassifier<double[]>, Serializable {
         // Common mean vector.
         double[] mean = Math.colMean(x);
         // Common covariance.
-        DenseMatrix C = new ColumnMajorMatrix(p, p);
+        DenseMatrix C = Matrix.zeros(p, p);
         // Class mean vectors.
         mu = new double[k][p];
 

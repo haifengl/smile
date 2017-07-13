@@ -17,7 +17,10 @@ package smile.projection;
 
 import java.io.Serializable;
 import smile.math.Math;
-import smile.math.matrix.*;
+import smile.math.matrix.Matrix;
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.CholeskyDecomposition;
+import smile.math.matrix.EigenValueDecomposition;
 
 /**
  * Probabilistic principal component analysis. PPCA is a simplified factor analysis
@@ -130,7 +133,7 @@ public class PPCA implements Projection<double[]>, Serializable {
         int n = data[0].length;
 
         mu = Math.colMean(data);
-        DenseMatrix cov = new ColumnMajorMatrix(n, n);
+        DenseMatrix cov = Matrix.zeros(n, n);
         for (int l = 0; l < m; l++) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
@@ -157,7 +160,7 @@ public class PPCA implements Projection<double[]>, Serializable {
         }
         noise /= (n - k);
 
-        loading = new ColumnMajorMatrix(n, k);
+        loading = Matrix.zeros(n, k);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < k; j++) {
                 loading.set(i, j, evectors.get(i, j) * Math.sqrt(evalues[j] - noise));
