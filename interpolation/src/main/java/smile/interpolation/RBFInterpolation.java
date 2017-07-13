@@ -16,7 +16,7 @@
 package smile.interpolation;
 
 import smile.math.Math;
-import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.math.rbf.RadialBasisFunction;
@@ -109,7 +109,7 @@ public class RBFInterpolation {
 
         int n = x.length;
 
-        DenseMatrix G = new ColumnMajorMatrix(n, n);
+        DenseMatrix G = Matrix.zeros(n, n);
         double[] rhs = new double[n];
         for (int i = 0; i < n; i++) {
             double sum = 0.0;

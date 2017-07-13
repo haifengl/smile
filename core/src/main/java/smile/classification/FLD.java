@@ -19,7 +19,7 @@ package smile.classification;
 import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.Math;
-import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
 import smile.projection.Projection;
@@ -221,7 +221,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
         // Common mean vector.
         mean = Math.colMean(x);
         // Common covariance.
-        DenseMatrix T = new ColumnMajorMatrix(p, p);
+        DenseMatrix T = Matrix.zeros(p, p);
         // Class mean vectors.
         mu = new double[k][p];
 
@@ -255,7 +255,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
         }
 
         // Between class scatter
-        DenseMatrix B = new ColumnMajorMatrix(p, p);
+        DenseMatrix B = Matrix.zeros(p, p);
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < p; j++) {
                 for (int l = 0; l <= j; l++) {

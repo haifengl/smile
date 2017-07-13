@@ -20,7 +20,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 import smile.math.distance.Metric;
-import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QRDecomposition;
 import smile.math.rbf.GaussianRadialBasis;
@@ -271,7 +271,7 @@ public class RBFNetwork<T> implements Regression<T>, Serializable {
         int n = x.length;
         int m = rbf.length;
 
-        DenseMatrix G = new ColumnMajorMatrix(n, m);
+        DenseMatrix G = Matrix.zeros(n, m);
         double[] b = new double[n];
         w = new double[m];
         for (int i = 0; i < n; i++) {

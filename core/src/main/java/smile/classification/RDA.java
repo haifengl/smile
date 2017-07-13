@@ -19,7 +19,7 @@ package smile.classification;
 import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.Math;
-import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
 
@@ -238,7 +238,7 @@ public class RDA implements SoftClassifier<double[]>, Serializable {
         // Common mean vector.
         double[] mean = Math.colMean(x);
         // Common covariance.
-        DenseMatrix C = new ColumnMajorMatrix(p, p);
+        DenseMatrix C = Matrix.zeros(p, p);
         // Class mean vectors.
         mu = new double[k][p];
         // Class covarainces.
@@ -257,7 +257,7 @@ public class RDA implements SoftClassifier<double[]>, Serializable {
                 throw new IllegalArgumentException(String.format("Class %d has only one sample.", i));
             }
 
-            cov[i] = new ColumnMajorMatrix(p, p);
+            cov[i] = Matrix.zeros(p, p);
 
             for (int j = 0; j < p; j++) {
                 mu[i][j] /= ni[i];

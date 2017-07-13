@@ -176,17 +176,17 @@ trait Operators {
   def chisqtest(table: Array[Array[Int]]): CorTest = CorTest.chisq(table)
 
   /** Returns an n-by-n zero matrix. */
-  def zeros(n: Int) = new ColumnMajorMatrix(n, n)
+  def zeros(n: Int) = Matrix.zeros(n, n)
   /** Returns an m-by-n zero matrix. */
-  def zeros(m: Int, n: Int) = new ColumnMajorMatrix(m, n)
+  def zeros(m: Int, n: Int) = Matrix.zeros(m, n)
   /** Returns an n-by-n matrix of all ones. */
-  def ones(n: Int) = new ColumnMajorMatrix(n, n, 1.0)
+  def ones(n: Int) = Matrix.ones(n, n)
   /** Returns an m-by-n matrix of all ones. */
-  def ones(m: Int, n: Int) = new ColumnMajorMatrix(m, n, 1.0)
+  def ones(m: Int, n: Int) = Matrix.zeros(m, n)
   /** Returns an n-by-n identity matrix. */
-  def eye(n: Int) = ColumnMajorMatrix.eye(n)
+  def eye(n: Int) = Matrix.eye(n)
   /** Returns an m-by-n identity matrix. */
-  def eye(m: Int, n: Int) = ColumnMajorMatrix.eye(m, n)
+  def eye(m: Int, n: Int) = Matrix.eye(m, n)
 
   /** Returns the trace of matrix. */
   def trace(A: Matrix) = A.trace()
@@ -278,7 +278,7 @@ private[math] class PimpedArray[T](override val a: Array[T])(implicit val tag: C
 
 private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]]) extends PimpedArrayLike[Array[Double]] {
 
-  def unary_~ = new ColumnMajorMatrix(a)
+  def unary_~ = Matrix.newInstance(a)
 
   def nrows: Int = a.length
 
@@ -333,7 +333,7 @@ private[math] case class PimpedDouble(a: Double) {
 }
 
 private[math] class PimpedDoubleArray(override val a: Array[Double]) extends PimpedArray[Double](a) {
-  def unary_~ = new ColumnMajorMatrix(a.length, 1, a)
+  def unary_~ = Matrix.newInstance(a)
 
   def += (b: Double): Array[Double] = { a.transform(_ + b); a }
   def -= (b: Double): Array[Double] = { a.transform(_ - b); a }

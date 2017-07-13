@@ -1022,7 +1022,7 @@ public class MathTest {
             v[i] = 1 + Math.random();
         }
 
-        eigenvalue = PowerIteration.eigen(new ColumnMajorMatrix(A), v, 1E-6);
+        eigenvalue = PowerIteration.eigen(Matrix.newInstance(A), v, 1E-6);
         assertEquals(-eigenValues[0], eigenvalue, 1E-3);
 
         ratio = Math.abs(eigenVectors[0][0] / v[0]);

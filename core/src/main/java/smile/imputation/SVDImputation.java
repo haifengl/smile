@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.imputation;
 
-import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QRDecomposition;
 import smile.math.matrix.SingularValueDecomposition;
@@ -138,7 +138,7 @@ public class SVDImputation implements MissingValueImputation {
                 continue;
             }
 
-            DenseMatrix A = new ColumnMajorMatrix(d - missing, k);
+            DenseMatrix A = Matrix.zeros(d - missing, k);
             double[] b = new double[d - missing];
 
             for (int j = 0, m = 0; j < d; j++) {

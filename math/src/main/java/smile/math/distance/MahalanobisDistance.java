@@ -18,6 +18,8 @@ package smile.math.distance;
 
 import java.io.Serializable;
 import smile.math.Math;
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 
 /**
  * In statistics, Mahalanobis distance is based on correlations between
@@ -32,19 +34,15 @@ import smile.math.Math;
 public class MahalanobisDistance implements Metric<double[]>, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private double[][] sigma;
-    private double[][] sigmaInv;
+    private DenseMatrix sigma;
+    private DenseMatrix sigmaInv;
 
     /**
      * Constructor with given covariance matrix.
      */
     public MahalanobisDistance(double[][] cov) {
-        sigma = new double[cov.length][cov.length];
-        for (int i = 0; i < cov.length; i++) {
-            System.arraycopy(cov[i], 0, sigma[i], 0, cov.length);
-        }
-
-        sigmaInv = Math.inverse(sigma).array();
+        sigma = Matrix.newInstance(cov);
+        sigmaInv = sigma.inverse();
     }
 
     @Override
@@ -54,18 +52,18 @@ public class MahalanobisDistance implements Metric<double[]>, Serializable {
 
     @Override
     public double d(double[] x, double[] y) {
-        if (x.length != sigma.length)
-            throw new IllegalArgumentException(String.format("Array x[%d] has different dimension with Sigma[%d][%d].", x.length, sigma.length, sigma.length));
+        if (x.length != sigma.nrows())
+            throw new IllegalArgumentException(String.format("Array x[%d] has different dimension with Sigma[%d][%d].", x.length, sigma.nrows(), sigma.ncols()));
 
-        if (y.length != sigma.length)
-            throw new IllegalArgumentException(String.format("Array y[%d] has different dimension with Sigma[%d][%d].", y.length, sigma.length, sigma.length));
+        if (y.length != sigma.nrows())
+            throw new IllegalArgumentException(String.format("Array y[%d] has different dimension with Sigma[%d][%d].", y.length, sigma.nrows(), sigma.ncols()));
 
         int n = x.length;
         double[] z = new double[n];
         for (int i = 0; i < n; i++)
             z[i] = x[i] - y[i];
 
-        double dist = Math.xax(sigmaInv, z);
+        double dist = sigmaInv.xax(z);
         return Math.sqrt(dist);
     }
 }

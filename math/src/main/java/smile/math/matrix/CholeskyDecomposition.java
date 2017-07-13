@@ -148,7 +148,7 @@ public class CholeskyDecomposition {
      */
     public DenseMatrix inverse() {
         int n = L.length;
-        DenseMatrix inv = ColumnMajorMatrix.eye(n);
+        DenseMatrix inv = Matrix.eye(n);
         solve(inv);
         return inv;
     }

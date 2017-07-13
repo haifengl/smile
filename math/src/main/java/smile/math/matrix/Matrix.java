@@ -73,6 +73,13 @@ public interface Matrix {
     }
 
     /**
+     * Returns a column vector/matrix initialized by given one-dimensional array.
+     */
+    public static DenseMatrix newInstance(double[] A) {
+        return Factory.matrix(A);
+    }
+
+    /**
      * Returns all-zero matrix.
      */
     public static DenseMatrix zeros(int rows, int cols) {
@@ -93,6 +100,20 @@ public interface Matrix {
         DenseMatrix matrix = Factory.matrix(n, n);
 
         for (int i = 0; i < n; i++) {
+            matrix.set(i, i, 1.0);
+        }
+
+        return matrix;
+    }
+
+    /**
+     * Returns an m-by-n identity matrix.
+     */
+    public static DenseMatrix eye(int m, int n) {
+        DenseMatrix matrix = Factory.matrix(m, n);
+
+        int k = Math.min(m, n);
+        for (int i = 0; i < k; i++) {
             matrix.set(i, i, 1.0);
         }
 

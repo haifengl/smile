@@ -207,7 +207,7 @@ public class QRDecomposition {
      * Returns the matrix pseudo inverse.
      */
     public DenseMatrix inverse() {
-        DenseMatrix inv = ColumnMajorMatrix.eye(QR.ncols(), QR.nrows());
+        DenseMatrix inv = Matrix.eye(QR.ncols(), QR.nrows());
         solve(inv);
         return inv;
     }
