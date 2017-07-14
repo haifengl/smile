@@ -219,7 +219,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
         // The number of instances in each class.
         int[] ni = new int[k];
         // Common mean vector.
-        mean = Math.colMean(x);
+        mean = Math.colMeans(x);
         // Common covariance.
         DenseMatrix T = Matrix.zeros(p, p);
         // Class mean vectors.

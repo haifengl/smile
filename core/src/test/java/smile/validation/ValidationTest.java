@@ -461,7 +461,7 @@ public class ValidationTest {
             }
             
             System.out.println("On average:");
-            double[] avg = Math.colMean(results);
+            double[] avg = Math.colMeans(results);
             for (int j = 0; j < measures.length; j++) {
                 System.out.format("%s = %.4f\t", measures[j], avg[j]);
             }

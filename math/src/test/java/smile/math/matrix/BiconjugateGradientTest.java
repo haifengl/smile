@@ -50,8 +50,11 @@ public class BiconjugateGradientTest {
     @Before
     public void setUp() {
         System.out.println("setUp");
-        LUDecomposition lu = new LUDecomposition(A);
-        lu.solve(b, x);
+
+        DenseMatrix a = Matrix.newInstance(A);
+        LU lu = a.lu();
+        x = b.clone();
+        lu.solve(x);
     }
 
     @After
@@ -59,13 +62,13 @@ public class BiconjugateGradientTest {
     }
 
     /**
-     * Test of solve method on NaiveMatrix.
+     * Test of solve method on Matrix.
      */
     @Test
-    public void testSolveNaiveMatrix() {
+    public void testSolveMatrix() {
         System.out.println("naive matrix");
 
-        NaiveMatrix naive = new NaiveMatrix(A);
+        DenseMatrix naive = Matrix.newInstance(A);
         double[] result = new double[3];
         BiconjugateGradient.solve(naive, b, result);
 

@@ -635,7 +635,7 @@ public class SingularValueDecompositionTest {
             {-0.5156083, -0.36573746, -0.47613340, 0.41342817, -0.2659765, 0.1654796, -0.32346758}
         };
 
-        SingularValueDecomposition result = Lanczos.svd(new RowMajorMatrix(A), 7);
+        SingularValueDecomposition result = Lanczos.svd(Matrix.newInstance(A), 7);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().nrows());
@@ -686,7 +686,7 @@ public class SingularValueDecompositionTest {
             {0.32967585, 0.18412070, -0.02567023, 0.2254902}
         };
 
-        SingularValueDecomposition result = Lanczos.svd(new RowMajorMatrix(A), 4);
+        SingularValueDecomposition result = Lanczos.svd(Matrix.newInstance(A), 4);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-6));
 
         assertEquals(U.length, result.getU().nrows());
@@ -760,7 +760,7 @@ public class SingularValueDecompositionTest {
         assertEquals(U.length, result.getU().nrows());
         assertEquals(U[0].length, result.getU().ncols());
         for (int i = 0; i < U.length; i++) {
-            for (int j = 0; j < U[i].length; j++) {
+            for (int j = 0; j < U[0].length; j++) {
                 assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-5);
             }
         }
@@ -768,7 +768,7 @@ public class SingularValueDecompositionTest {
         assertEquals(V.length, result.getV().nrows());
         assertEquals(V[0].length, result.getV().ncols());
         for (int i = 0; i < V.length; i++) {
-            for (int j = 0; j < V[i].length; j++) {
+            for (int j = 0; j < V[0].length; j++) {
                 assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-5);
             }
         }

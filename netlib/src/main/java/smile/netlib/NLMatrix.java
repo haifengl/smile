@@ -20,6 +20,7 @@ import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.ColumnMajorMatrix;
 import com.github.fommil.netlib.BLAS;
 import com.github.fommil.netlib.LAPACK;
+import org.netlib.util.intW;
 
 /**
  * Column-major matrix that employs netlib for matrix-vector and matrix-matrix
@@ -28,8 +29,9 @@ import com.github.fommil.netlib.LAPACK;
  * @author Haifeng Li
  */
 public class NLMatrix extends ColumnMajorMatrix {
-    private static String NoTranspose = "N";
-    private static String Transpose   = "T";
+    static String NoTranspose = "N";
+    static String Transpose   = "T";
+    static String ConjugateTranspose = "C";
 
     /**
      * Constructor.
@@ -65,10 +67,10 @@ public class NLMatrix extends ColumnMajorMatrix {
      * Constructor.
      * @param value the array of matrix values arranged in column major format
      */
-/*    public NLMatrix(int rows, int cols, double[] value) {
+    private NLMatrix(int rows, int cols, double[] value) {
         super(rows, cols, value);
     }
-*/
+
     @Override
     public NLMatrix copy() {
         return new NLMatrix(nrows(), ncols(), data().clone());
@@ -184,6 +186,6 @@ public class NLMatrix extends ColumnMajorMatrix {
         else if (info.val < 0)
             throw new IllegalArgumentException("LAPACK DGETRF error code: " + info.val);
 
-        return new LU(A, piv, singular);
+        return new LU(this, piv, singular);
     }
 }

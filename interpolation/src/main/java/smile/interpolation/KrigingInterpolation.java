@@ -18,7 +18,7 @@ package smile.interpolation;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.LUDecomposition;
+import smile.math.matrix.LU;
 import smile.interpolation.variogram.PowerVariogram;
 import smile.interpolation.variogram.Variogram;
 
@@ -129,7 +129,7 @@ public class KrigingInterpolation {
             }
         }
 
-        LUDecomposition lu = new LUDecomposition(v);
+        LU lu = v.lu(true);
         lu.solve(yvi);
     }
 

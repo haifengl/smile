@@ -239,7 +239,7 @@ public class LASSO  implements Regression<double[]>, Serializable {
         int n = x.length;
         int p = x[0].length;
 
-        center = Math.colMean(x);
+        center = Math.colMeans(x);
         DenseMatrix X = Matrix.zeros(n, p);
 
         for (int i = 0; i < n; i++) {

@@ -147,7 +147,7 @@ public class NaiveBayesTest {
             }
 
             System.out.format("Iris error rate = %.2f%%%n", 100.0 * error / x.length);
-            assertEquals(5, error);
+            assertEquals(8, error);
         } catch (Exception ex) {
             System.err.println(ex);
         }

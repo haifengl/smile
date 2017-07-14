@@ -24,6 +24,7 @@ import smile.clustering.BBDTree;
 import smile.clustering.linkage.Linkage;
 import smile.clustering.linkage.UPGMALinkage;
 import smile.math.Math;
+import smile.math.matrix.Lanczos;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
@@ -237,7 +238,7 @@ public class SOM implements Clustering<double[]> {
             }
         }
 
-        EigenValueDecomposition eigen = Math.eigen(V, 2);
+        EigenValueDecomposition eigen = Lanczos.eigen(V, 2);
         double[] v1 = new double[d];
         double[] v2 = new double[d];
         for (int i = 0; i < d; i++) {

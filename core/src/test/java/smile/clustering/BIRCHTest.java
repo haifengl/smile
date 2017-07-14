@@ -91,8 +91,8 @@ public class BIRCHTest {
             double r = rand.measure(y, p);
             double r2 = ari.measure(y, p);
             System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-            assertTrue(r > 0.65);
-            assertTrue(r2 > 0.20);
+            assertTrue(r > 0.62);
+            assertTrue(r2 > 0.15);
             
             p = new int[testx.length];
             for (int i = 0; i < testx.length; i++) {

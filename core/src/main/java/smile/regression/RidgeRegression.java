@@ -198,7 +198,7 @@ public class RidgeRegression implements Regression<double[]>, Serializable {
         }
 
         ym = Math.mean(y);                
-        center = Math.colMean(x); 
+        center = Math.colMeans(x);
         
         double[][] X = new double[n][p];
         for (int i = 0; i < n; i++) {

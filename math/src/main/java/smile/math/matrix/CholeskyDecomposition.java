@@ -80,7 +80,7 @@ public class CholeskyDecomposition {
      * @throws IllegalArgumentException if the matrix is not positive definite.
      */
     public CholeskyDecomposition(double[][] A) {
-        this(new RowMajorMatrix(A));
+        this(Matrix.newInstance(A));
     }
 
     /**

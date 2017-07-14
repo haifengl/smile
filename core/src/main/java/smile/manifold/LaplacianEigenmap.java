@@ -27,6 +27,7 @@ import smile.math.SparseArray;
 import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.EigenValueDecomposition;
 import smile.math.matrix.Lanczos;
+import smile.math.matrix.PowerIteration;
 import smile.math.matrix.SparseMatrix;
 import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
@@ -192,7 +193,7 @@ public class LaplacianEigenmap {
 
         // Largest eigenvalue.
         SparseMatrix L = W.toSparseMatrix();
-        double lambda = -Math.eigen(L, v, 1E-6);
+        double lambda = -PowerIteration.eigen(L, v, 1E-6);
         for (int i = 0; i < n; i++) {
             W.set(i, i, lambda - 1.0);
         }

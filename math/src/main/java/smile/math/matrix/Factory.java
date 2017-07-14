@@ -60,7 +60,7 @@ class Factory {
             netlibLU = Class.forName("smile.netlib.LUDecomposition");
 
         } catch (ClassNotFoundException e) {
-            logger.info("Netlib module does not exist on the classpath");
+            logger.info("Netlib module does not exist on the classpath. Pure Java matrix library will be employed.");
         }
     }
 

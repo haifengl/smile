@@ -18,7 +18,7 @@ package smile.interpolation;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.LUDecomposition;
+import smile.math.matrix.LU;
 
 /**
  * Kriging interpolation for the data points irregularly distributed in space.
@@ -65,7 +65,7 @@ public class KrigingInterpolation1D implements Interpolation {
         yvi[n] = 0.0;
         v.set(n, n, 0.0);
 
-        LUDecomposition lu = new LUDecomposition(v);
+        LU lu = v.lu(true);
         lu.solve(yvi);
     }
 

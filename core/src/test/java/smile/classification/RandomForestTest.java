@@ -220,7 +220,7 @@ public class RandomForestTest {
             System.out.println("USPS Nominal error = " + error);
             System.out.format("USPS Nominal OOB error rate = %.2f%%%n", 100.0 * forest.error());
             System.out.format("USPS Nominal error rate = %.2f%%%n", 100.0 * error / testx.length);
-            assertTrue(error <= 225);
+            assertTrue(error <= 250);
         } catch (Exception ex) {
             System.err.println(ex);
         }

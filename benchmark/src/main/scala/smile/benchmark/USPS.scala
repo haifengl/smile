@@ -86,8 +86,8 @@ object USPS {
 
     // Neural Network
     val p = x(0).length
-    val mu = Math.colMean(x)
-    val sd = Math.colSd(x)
+    val mu = Math.colMeans(x)
+    val sd = Math.colSds(x)
     x.foreach { xi =>
       (0 until p) foreach { j => xi(j) = (xi(j) - mu(j)) / sd(j)}
     }

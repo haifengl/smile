@@ -24,6 +24,9 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, DenseMatrix> {
+    /** Returns the array of storing the matrix. */
+    public double[] data();
+
     /**
      * The LDA (and LDB, LDC, etc.) parameter in BLAS is effectively
      * the stride of the matrix as it is laid out in linear memory.
@@ -253,6 +256,45 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
         }
 
         return s;
+    }
+
+    /**
+     * Returns the row means for a matrix.
+     */
+    public default double[] rowMeans() {
+        int m = nrows();
+        int n = ncols();
+        double[] x = new double[m];
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 1; i < m; i++) {
+                x[i] += get(i, j);
+            }
+        }
+
+        for (int i = 1; i < m; i++) {
+            x[i] /= n;
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the column means for a matrix.
+     */
+    public default double[] colMeans() {
+        int m = nrows();
+        int n = ncols();
+        double[] x = new double[n];;
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 1; i < m; i++) {
+                x[j] += get(i, j);
+            }
+            x[j] /= m;
+        }
+
+        return x;
     }
 
     /**

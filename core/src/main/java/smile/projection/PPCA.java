@@ -132,7 +132,7 @@ public class PPCA implements Projection<double[]>, Serializable {
         int m = data.length;
         int n = data[0].length;
 
-        mu = Math.colMean(data);
+        mu = Math.colMeans(data);
         DenseMatrix cov = Matrix.zeros(n, n);
         for (int l = 0; l < m; l++) {
             for (int i = 0; i < n; i++) {

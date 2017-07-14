@@ -1379,6 +1379,23 @@ public class Math {
     }
 
     /**
+     * Returns the matrix transpose.
+     */
+    public static double[][] transpose(double[][] A) {
+        int m = A.length;
+        int n = A[0].length;
+
+        double[][] matrix = new double[n][m];
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                matrix[j][i] = A[i][j];
+            }
+        }
+
+        return matrix;
+    }
+
+    /**
      * Returns the row minimum for a matrix.
      */
     public static double[] rowMin(double[][] data) {
@@ -1407,7 +1424,7 @@ public class Math {
     /**
      * Returns the row sums for a matrix.
      */
-    public static double[] rowSum(double[][] data) {
+    public static double[] rowSums(double[][] data) {
         double[] x = new double[data.length];
 
         for (int i = 0; i < x.length; i++) {
@@ -1420,7 +1437,7 @@ public class Math {
     /**
      * Returns the row means for a matrix.
      */
-    public static double[] rowMean(double[][] data) {
+    public static double[] rowMeans(double[][] data) {
         double[] x = new double[data.length];
 
         for (int i = 0; i < x.length; i++) {
@@ -1433,7 +1450,7 @@ public class Math {
     /**
      * Returns the row standard deviations for a matrix.
      */
-    public static double[] rowSd(double[][] data) {
+    public static double[] rowSds(double[][] data) {
         double[] x = new double[data.length];
 
         for (int i = 0; i < x.length; i++) {
@@ -1486,7 +1503,7 @@ public class Math {
     /**
      * Returns the column sums for a matrix.
      */
-    public static double[] colSum(double[][] data) {
+    public static double[] colSums(double[][] data) {
         double[] x = data[0].clone();
 
         for (int i = 1; i < data.length; i++) {
@@ -1499,9 +1516,9 @@ public class Math {
     }
 
     /**
-     * Returns the column sums for a matrix.
+     * Returns the column means for a matrix.
      */
-    public static double[] colMean(double[][] data) {
+    public static double[] colMeans(double[][] data) {
         double[] x = data[0].clone();
 
         for (int i = 1; i < data.length; i++) {
@@ -1518,7 +1535,7 @@ public class Math {
     /**
      * Returns the column deviations for a matrix.
      */
-    public static double[] colSd(double[][] data) {
+    public static double[] colSds(double[][] data) {
         if (data.length < 2) {
             throw new IllegalArgumentException("Array length is less than 2.");
         }
@@ -2458,7 +2475,7 @@ public class Math {
      * Returns the sample covariance matrix.
      */
     public static double[][] cov(double[][] data) {
-        return cov(data, Math.colMean(data));
+        return cov(data, Math.colMeans(data));
     }
 
     /**
@@ -2559,7 +2576,7 @@ public class Math {
      * Returns the sample correlation matrix.
      */
     public static double[][] cor(double[][] data) {
-        return cor(data, Math.colMean(data));
+        return cor(data, Math.colMeans(data));
     }
 
     /**
@@ -2978,7 +2995,7 @@ public class Math {
         int n = x.length;
         int p = x[0].length;
 
-        double[] center = colMean(x);
+        double[] center = colMeans(x);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
                 x[i][j] = x[i][j] - center[j];
@@ -3024,7 +3041,7 @@ public class Math {
         int n = x.length;
         int p = x[0].length;
 
-        double[] center = colMean(x);
+        double[] center = colMeans(x);
         if (centerizing) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < p; j++) {

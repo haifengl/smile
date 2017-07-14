@@ -131,7 +131,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
      */
     public MultivariateGaussianDistribution(double[][] data, boolean diagonal) {
         this.diagonal = diagonal;
-        mu = Math.colMean(data);
+        mu = Math.colMeans(data);
 
         if (diagonal) {
             sigma = new double[data[0].length][data[0].length];

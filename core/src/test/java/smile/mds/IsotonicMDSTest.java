@@ -167,6 +167,17 @@ public class IsotonicMDSTest {
         }
 
         assertEquals(0.023190, mds.getStress(), 1E-6);
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < points[i].length; j++)
+                System.out.print(points[i][j] + " ");
+            System.out.println();
+        }
+        System.out.println("==============");
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < mds.getCoordinates()[i].length; j++)
+                System.out.print(mds.getCoordinates()[i][j] + " ");
+            System.out.println();
+        }
         assertTrue(Math.equals(points, mds.getCoordinates(), 1E-6));
     }
 }

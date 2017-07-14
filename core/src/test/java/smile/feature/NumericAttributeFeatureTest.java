@@ -178,8 +178,8 @@ public class NumericAttributeFeatureTest {
         try {
             AttributeDataset data = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
             double[][] x = data.toArray(new double[data.size()][]);
-            double[] mean = Math.colMean(x);
-            double[] sd = Math.colSd(x);
+            double[] mean = Math.colMeans(x);
+            double[] sd = Math.colSds(x);
             
             NumericAttributeFeature naf = new NumericAttributeFeature(data.attributes(), NumericAttributeFeature.Scaling.STANDARDIZATION, x);
             Attribute[] attributes = naf.attributes();

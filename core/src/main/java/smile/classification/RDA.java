@@ -236,7 +236,7 @@ public class RDA implements SoftClassifier<double[]>, Serializable {
         // The number of instances in each class.
         int[] ni = new int[k];
         // Common mean vector.
-        double[] mean = Math.colMean(x);
+        double[] mean = Math.colMeans(x);
         // Common covariance.
         DenseMatrix C = Matrix.zeros(p, p);
         // Class mean vectors.

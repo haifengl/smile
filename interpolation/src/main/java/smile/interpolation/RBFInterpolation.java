@@ -21,7 +21,7 @@ import smile.math.matrix.DenseMatrix;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.math.rbf.RadialBasisFunction;
 import smile.math.matrix.CholeskyDecomposition;
-import smile.math.matrix.LUDecomposition;
+import smile.math.matrix.LU;
 
 /**
  * Radial basis function interpolation is a popular method for the data points are
@@ -132,7 +132,7 @@ public class RBFInterpolation {
             cholesky.solve(rhs);
             w = rhs;
         } else {
-            LUDecomposition lu = new LUDecomposition(G);
+            LU lu = G.lu(true);
             lu.solve(rhs);
             w = rhs;
         }

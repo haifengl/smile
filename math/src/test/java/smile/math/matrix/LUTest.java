@@ -27,7 +27,7 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class LUDecompositionTest {
+public class LUTest {
     double[][] A = {
         {0.9000, 0.4000, 0.7000},
         {0.4000, 0.5000, 0.3000},
@@ -46,7 +46,7 @@ public class LUDecompositionTest {
         {0.4729730, 0.6621622}
     };
 
-    public LUDecompositionTest() {
+    public LUTest() {
     }
 
     @BeforeClass
@@ -69,26 +69,12 @@ public class LUDecompositionTest {
      * Test of solve method, of class LUDecomposition.
      */
     @Test
-    public void testSolve() {
-        System.out.println("solve");
-        LUDecomposition result = new LUDecomposition(A);
-        double[] x = new double[B.length];
-        result.solve(B, x);
-        assertEquals(X.length, x.length);
-        for (int i = 0; i < X.length; i++) {
-            assertEquals(X[i], x[i], 1E-7);
-        }
-    }
-
-    /**
-     * Test of solve method, of class LUDecomposition.
-     */
-    @Test
     public void testSolveoverwrite() {
         System.out.println("solve in place");
-        LUDecomposition result = new LUDecomposition(A);
-        double[] x = B;
-        result.solve(B, x);
+        DenseMatrix a = new ColumnMajorMatrix(A);
+        LU result = a.lu();
+        double[] x = B.clone();
+        result.solve(x);
         assertEquals(X.length, x.length);
         for (int i = 0; i < X.length; i++) {
             assertEquals(X[i], x[i], 1E-7);
@@ -101,9 +87,10 @@ public class LUDecompositionTest {
     @Test
     public void testSolveMatrix() {
         System.out.println("solve");
-        LUDecomposition result = new LUDecomposition(A);
-        DenseMatrix x = new ColumnMajorMatrix(B2.length, B2[0].length);
-        result.solve(new ColumnMajorMatrix(B2), x);
+        DenseMatrix a = new ColumnMajorMatrix(A);
+        LU result = a.lu();
+        DenseMatrix x = new ColumnMajorMatrix(B2);
+        result.solve(x);
         assertEquals(X2.length, x.nrows());
         assertEquals(X2[0].length, x.ncols());
         for (int i = 0; i < X2.length; i++) {
