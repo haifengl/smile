@@ -123,8 +123,8 @@ public class CholeskyDecompositionTest {
     public void testSolveMatrix() {
         System.out.println("solve");
         CholeskyDecomposition result = new CholeskyDecomposition(A);
-        DenseMatrix x = new ColumnMajorMatrix(B2.length, B2[0].length);
-        result.solve(new ColumnMajorMatrix(B2), x);
+        DenseMatrix x = Matrix.zeros(B2.length, B2[0].length);
+        result.solve(Matrix.newInstance(B2), x);
         assertEquals(X.length, x.nrows());
         assertEquals(X2[0].length, x.ncols());
         for (int i = 0; i < X2.length; i++) {
@@ -141,7 +141,7 @@ public class CholeskyDecompositionTest {
     public void testSolveMatrixOverwrite() {
         System.out.println("solve in place");
         CholeskyDecomposition result = new CholeskyDecomposition(A);
-        DenseMatrix x = new ColumnMajorMatrix(B2);
+        DenseMatrix x = Matrix.newInstance(B2);
         result.solve(x, x);
         assertEquals(X2.length, x.nrows());
         assertEquals(X2[0].length, x.ncols());

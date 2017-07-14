@@ -54,7 +54,7 @@ public class QRDecomposition {
      * @param A input matrix
      */
     public QRDecomposition(double[][] A) {
-        this(new ColumnMajorMatrix(A));
+        this(Matrix.newInstance(A));
     }
 
     /**
@@ -134,7 +134,7 @@ public class QRDecomposition {
     public DenseMatrix getH() {
         int m = QR.nrows();
         int n = QR.ncols();
-        DenseMatrix H = new ColumnMajorMatrix(m, n);
+        DenseMatrix H = Matrix.zeros(m, n);
         for (int i = 0; i < m; i++) {
             for (int j = 0; j <= i; j++) {
                 H.set(i, j, QR.get(i, j));
@@ -168,7 +168,7 @@ public class QRDecomposition {
     public DenseMatrix getR() {
         int m = QR.nrows();
         int n = QR.ncols();
-        DenseMatrix R = new ColumnMajorMatrix(m, n);
+        DenseMatrix R = Matrix.zeros(m, n);
         for (int i = 0; i < n; i++) {
             R.set(i, i, Rdiagonal[i]);
             for (int j = i; j < n; j++) {
@@ -184,7 +184,7 @@ public class QRDecomposition {
     public DenseMatrix getQ() {
         int m = QR.nrows();
         int n = QR.ncols();
-        DenseMatrix Q = new ColumnMajorMatrix(m, n);
+        DenseMatrix Q = Matrix.zeros(m, n);
         for (int k = n - 1; k >= 0; k--) {
             Q.set(k, k, 1.0);
             for (int j = k; j < n; j++) {

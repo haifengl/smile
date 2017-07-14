@@ -71,7 +71,7 @@ public class LUTest {
     @Test
     public void testSolveoverwrite() {
         System.out.println("solve in place");
-        DenseMatrix a = new ColumnMajorMatrix(A);
+        DenseMatrix a = Matrix.newInstance(A);
         LU result = a.lu();
         double[] x = B.clone();
         result.solve(x);
@@ -87,9 +87,9 @@ public class LUTest {
     @Test
     public void testSolveMatrix() {
         System.out.println("solve");
-        DenseMatrix a = new ColumnMajorMatrix(A);
+        DenseMatrix a = Matrix.newInstance(A);
         LU result = a.lu();
-        DenseMatrix x = new ColumnMajorMatrix(B2);
+        DenseMatrix x = Matrix.newInstance(B2);
         result.solve(x);
         assertEquals(X2.length, x.nrows());
         assertEquals(X2[0].length, x.ncols());

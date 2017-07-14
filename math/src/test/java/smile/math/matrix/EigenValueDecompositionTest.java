@@ -78,7 +78,7 @@ public class EigenValueDecompositionTest {
     @Test
     public void testDecompose() {
         System.out.println("decompose");
-        EigenValueDecomposition result = new EigenValueDecomposition(new ColumnMajorMatrix(A), true);
+        EigenValueDecomposition result = new EigenValueDecomposition(Matrix.newInstance(A), true);
         assertTrue(Math.equals(eigenValues, result.getEigenValues(), 1E-7));
 
         assertEquals(eigenVectors.length,    result.getEigenVectors().nrows());
@@ -96,7 +96,7 @@ public class EigenValueDecompositionTest {
     @Test
     public void testDecompose2() {
         System.out.println("decompose");
-        EigenValueDecomposition result = new EigenValueDecomposition(new ColumnMajorMatrix(A), true, true);
+        EigenValueDecomposition result = new EigenValueDecomposition(Matrix.newInstance(A), true, true);
         assertTrue(Math.equals(eigenValues, result.getEigenValues(), 1E-7));
         assertTrue(null == result.getEigenVectors());
     }
