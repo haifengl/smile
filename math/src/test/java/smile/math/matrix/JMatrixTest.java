@@ -28,7 +28,7 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class ColumnMajorMatrixTest {
+public class JMatrixTest {
 
     double[][] A = {
             {0.9000, 0.4000, 0.0000},
@@ -42,7 +42,7 @@ public class ColumnMajorMatrixTest {
             {0.12, 0.39, 0.73}
     };
 
-    ColumnMajorMatrix matrix = new ColumnMajorMatrix(A);
+    JMatrix matrix = new JMatrix(A);
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -124,7 +124,7 @@ public class ColumnMajorMatrixTest {
     @Test
     public void testAAT() {
         System.out.println("AAT");
-        ColumnMajorMatrix c = matrix.aat();
+        JMatrix c = matrix.aat();
         assertEquals(c.nrows(), 3);
         assertEquals(c.ncols(), 3);
         for (int i = 0; i < C.length; i++) {
@@ -156,8 +156,8 @@ public class ColumnMajorMatrixTest {
                 {0.1159052, 0.1652528, -0.97941688}
         };
 
-        ColumnMajorMatrix a = new ColumnMajorMatrix(A);
-        ColumnMajorMatrix b = new ColumnMajorMatrix(B);
+        JMatrix a = new JMatrix(A);
+        JMatrix b = new JMatrix(B);
         assertTrue(Math.equals(a.abmm(b).array(), C, 1E-7));
         Math.abtmm(A, B, C);
         assertTrue(Math.equals(a.abtmm(b).array(), C, 1E-7));

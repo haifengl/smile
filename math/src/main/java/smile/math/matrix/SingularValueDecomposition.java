@@ -126,7 +126,7 @@ public class SingularValueDecomposition {
      * Returns the diagonal matrix of singular values
      */
     public DenseMatrix getS() {
-        DenseMatrix S = new ColumnMajorMatrix(U.nrows(), V.nrows());
+        DenseMatrix S = Matrix.zeros(U.nrows(), V.nrows());
 
         for (int i = 0; i < s.length; i++) {
             S.set(i, i, s[i]);
@@ -210,7 +210,7 @@ public class SingularValueDecomposition {
         }
 
         int nr = 0;
-        DenseMatrix rnge = new ColumnMajorMatrix(m, rank());
+        DenseMatrix rnge = Matrix.zeros(m, rank());
         for (int j = 0; j < n; j++) {
             if (s[j] > tol) {
                 for (int i = 0; i < m; i++) {
@@ -231,7 +231,7 @@ public class SingularValueDecomposition {
         }
 
         int nn = 0;
-        DenseMatrix nullsp = new ColumnMajorMatrix(n, nullity());
+        DenseMatrix nullsp = Matrix.zeros(n, nullity());
         for (int j = 0; j < n; j++) {
             if (s[j] <= tol) {
                 for (int jj = 0; jj < n; jj++) {
@@ -247,7 +247,7 @@ public class SingularValueDecomposition {
      * Returns the Cholesky decomposition of A'A.
      */
     public CholeskyDecomposition toCholesky() {
-        DenseMatrix VD = new ColumnMajorMatrix(V.nrows(), V.ncols());
+        DenseMatrix VD = Matrix.zeros(V.nrows(), V.ncols());
         for (int i = 0; i < V.nrows(); i++) {
             for (int j = 0; j < V.ncols(); j++) {
                 VD.set(i, j, V.get(i, j) * s[j]);
@@ -322,7 +322,7 @@ public class SingularValueDecomposition {
      * @param A    input matrix
      */
     public SingularValueDecomposition(double[][] A) {
-        this(new ColumnMajorMatrix(A));
+        this(Matrix.newInstance(A));
     }
 
     /**
@@ -341,7 +341,7 @@ public class SingularValueDecomposition {
         g = scale = anorm = 0.0;
 
         U = A;
-        V = new ColumnMajorMatrix(n, n);
+        V = Matrix.zeros(n, n);
         double[] w = new double[n];
         double[] rv1 = new double[n];
 

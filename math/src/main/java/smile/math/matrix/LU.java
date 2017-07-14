@@ -100,7 +100,7 @@ public class LU {
     public DenseMatrix getL() {
         int m = lu.nrows();
         int n = lu.ncols();
-        DenseMatrix L = new ColumnMajorMatrix(m, n);
+        DenseMatrix L = Matrix.zeros(m, n);
         for (int i = 0; i < m; i++) {
             L.set(i, i, 1.0);
             for (int j = 0; j < i; j++) {
@@ -115,7 +115,7 @@ public class LU {
      */
     public DenseMatrix getU() {
         int n = lu.ncols();
-        DenseMatrix U = new ColumnMajorMatrix(n, n);
+        DenseMatrix U = Matrix.zeros(n, n);
         for (int i = 0; i < n; i++) {
             for (int j = i; j < n; j++) {
                 U.set(i, j, lu.get(i, j));
@@ -159,7 +159,7 @@ public class LU {
         if (m != n)
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", m, n));
 
-        DenseMatrix inv = new ColumnMajorMatrix(n, n);
+        DenseMatrix inv = Matrix.zeros(n, n);
         for (int i = 0; i < n; i++) {
             inv.set(i, piv[i], 1.0);
         }

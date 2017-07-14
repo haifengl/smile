@@ -21,10 +21,10 @@ import smile.math.Math;
 import smile.stat.distribution.GaussianDistribution;
 
 /**
- * A dense matrix whose data is stored in a single 1D array of
+ * A pure Java implementation of DenseMatrix whose data is stored in a single 1D array of
  * doubles in column major order.
  */
-public class ColumnMajorMatrix implements DenseMatrix {
+public class JMatrix implements DenseMatrix {
 
     /**
      * The matrix storage.
@@ -43,7 +43,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
      * Constructor.
      * @param A the array of matrix.
      */
-    public ColumnMajorMatrix(double[][] A) {
+    public JMatrix(double[][] A) {
         this.nrows = A.length;
         this.ncols = A[0].length;
         this.A = new double[nrows*ncols];
@@ -59,7 +59,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
      * Constructor of a column vector/matrix initialized with given array.
      * @param A the array of column vector.
      */
-    public ColumnMajorMatrix(double[] A) {
+    public JMatrix(double[] A) {
         this(A.length, 1);
         System.arraycopy(A, 0, this.A, 0, A.length);
     }
@@ -67,7 +67,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
     /**
      * Constructor of all-zero matrix.
      */
-    public ColumnMajorMatrix(int rows, int cols) {
+    public JMatrix(int rows, int cols) {
         this.nrows = rows;
         this.ncols = cols;
         A = new double[rows*cols];
@@ -76,7 +76,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
     /**
      * Constructor. Fill the matrix with given value.
      */
-    public ColumnMajorMatrix(int rows, int cols, double value) {
+    public JMatrix(int rows, int cols, double value) {
         this(rows, cols);
         Arrays.fill(A, value);
     }
@@ -85,7 +85,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
      * Constructor.
      * @param value the array of matrix values arranged in column major format
      */
-    public ColumnMajorMatrix(int rows, int cols, double[] value) {
+    public JMatrix(int rows, int cols, double[] value) {
         this.nrows = rows;
         this.ncols = cols;
         this.A = value;
@@ -94,7 +94,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
     /**
      * Constructor of matrix with normal random values with given mean and standard dev.
      */
-    public ColumnMajorMatrix(int rows, int cols, double mu, double sigma) {
+    public JMatrix(int rows, int cols, double mu, double sigma) {
         this(rows, cols);
         GaussianDistribution g = new GaussianDistribution(mu, sigma);
 
@@ -110,8 +110,8 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix copy() {
-        return new ColumnMajorMatrix(nrows, ncols, A.clone());
+    public JMatrix copy() {
+        return new JMatrix(nrows, ncols, A.clone());
     }
 
     @Override
@@ -120,8 +120,8 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix transpose() {
-        ColumnMajorMatrix B = new ColumnMajorMatrix(ncols(), nrows());
+    public JMatrix transpose() {
+        JMatrix B = new JMatrix(ncols(), nrows());
         for (int i = 0; i < nrows(); i++) {
             for (int j = 0; j < ncols(); j++) {
                 B.set(j, i, get(i, j));
@@ -177,9 +177,9 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix add(DenseMatrix b) {
-        if (b instanceof ColumnMajorMatrix) {
-            return add((ColumnMajorMatrix) b);
+    public JMatrix add(DenseMatrix b) {
+        if (b instanceof JMatrix) {
+            return add((JMatrix) b);
         } else {
             if (nrows() != b.nrows() || ncols() != b.ncols()) {
                 throw new IllegalArgumentException("Matrix is not of same size.");
@@ -197,7 +197,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
         }
     }
 
-    public ColumnMajorMatrix add(ColumnMajorMatrix b) {
+    public JMatrix add(JMatrix b) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -210,8 +210,8 @@ public class ColumnMajorMatrix implements DenseMatrix {
 
     @Override
     public DenseMatrix add(DenseMatrix b, DenseMatrix c) {
-        if (b instanceof ColumnMajorMatrix && c instanceof ColumnMajorMatrix) {
-            return add((ColumnMajorMatrix) b, (ColumnMajorMatrix) c);
+        if (b instanceof JMatrix && c instanceof JMatrix) {
+            return add((JMatrix) b, (JMatrix) c);
         }
 
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
@@ -233,7 +233,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
         return c;
     }
 
-    public ColumnMajorMatrix add(ColumnMajorMatrix b, ColumnMajorMatrix c) {
+    public JMatrix add(JMatrix b, JMatrix c) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -249,9 +249,9 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix sub(DenseMatrix b) {
-        if (b instanceof ColumnMajorMatrix) {
-            return sub((ColumnMajorMatrix) b);
+    public JMatrix sub(DenseMatrix b) {
+        if (b instanceof JMatrix) {
+            return sub((JMatrix) b);
         }
 
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
@@ -269,7 +269,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
         return this;
     }
 
-    public ColumnMajorMatrix sub(ColumnMajorMatrix b) {
+    public JMatrix sub(JMatrix b) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -283,8 +283,8 @@ public class ColumnMajorMatrix implements DenseMatrix {
 
     @Override
     public DenseMatrix sub(DenseMatrix b, DenseMatrix c) {
-        if (b instanceof ColumnMajorMatrix && c instanceof ColumnMajorMatrix) {
-            return sub((ColumnMajorMatrix) b, (ColumnMajorMatrix) c);
+        if (b instanceof JMatrix && c instanceof JMatrix) {
+            return sub((JMatrix) b, (JMatrix) c);
         }
 
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
@@ -306,7 +306,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
         return c;
     }
 
-    public ColumnMajorMatrix sub(ColumnMajorMatrix b, ColumnMajorMatrix c) {
+    public JMatrix sub(JMatrix b, JMatrix c) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -322,9 +322,9 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix mul(DenseMatrix b) {
-        if (b instanceof ColumnMajorMatrix) {
-            return mul((ColumnMajorMatrix) b);
+    public JMatrix mul(DenseMatrix b) {
+        if (b instanceof JMatrix) {
+            return mul((JMatrix) b);
         }
 
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
@@ -342,7 +342,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
         return this;
     }
 
-    public ColumnMajorMatrix mul(ColumnMajorMatrix b) {
+    public JMatrix mul(JMatrix b) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -355,8 +355,8 @@ public class ColumnMajorMatrix implements DenseMatrix {
 
     @Override
     public DenseMatrix mul(DenseMatrix b, DenseMatrix c) {
-        if (b instanceof ColumnMajorMatrix && c instanceof ColumnMajorMatrix) {
-            return mul((ColumnMajorMatrix) b, (ColumnMajorMatrix) c);
+        if (b instanceof JMatrix && c instanceof JMatrix) {
+            return mul((JMatrix) b, (JMatrix) c);
         }
 
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
@@ -378,7 +378,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
         return c;
     }
 
-    public ColumnMajorMatrix mul(ColumnMajorMatrix b, ColumnMajorMatrix c) {
+    public JMatrix mul(JMatrix b, JMatrix c) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -394,9 +394,9 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix div(DenseMatrix b) {
-        if (b instanceof ColumnMajorMatrix) {
-            return div((ColumnMajorMatrix) b);
+    public JMatrix div(DenseMatrix b) {
+        if (b instanceof JMatrix) {
+            return div((JMatrix) b);
         }
 
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
@@ -414,7 +414,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
         return this;
     }
 
-    public ColumnMajorMatrix div(ColumnMajorMatrix b) {
+    public JMatrix div(JMatrix b) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -427,8 +427,8 @@ public class ColumnMajorMatrix implements DenseMatrix {
 
     @Override
     public DenseMatrix div(DenseMatrix b, DenseMatrix c) {
-        if (b instanceof ColumnMajorMatrix && c instanceof ColumnMajorMatrix) {
-            return div((ColumnMajorMatrix) b, (ColumnMajorMatrix) c);
+        if (b instanceof JMatrix && c instanceof JMatrix) {
+            return div((JMatrix) b, (JMatrix) c);
         }
 
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
@@ -450,7 +450,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
         return c;
     }
 
-    public ColumnMajorMatrix div(ColumnMajorMatrix b, ColumnMajorMatrix c) {
+    public JMatrix div(JMatrix b, JMatrix c) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -466,7 +466,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix add(double x) {
+    public JMatrix add(double x) {
         for (int i = 0; i < A.length; i++) {
             A[i] += x;
         }
@@ -476,8 +476,8 @@ public class ColumnMajorMatrix implements DenseMatrix {
 
     @Override
     public DenseMatrix add(double x, DenseMatrix c) {
-        if (c instanceof ColumnMajorMatrix) {
-            return add(x, (ColumnMajorMatrix)c);
+        if (c instanceof JMatrix) {
+            return add(x, (JMatrix)c);
         }
 
         if (nrows() != c.nrows() || ncols() != c.ncols()) {
@@ -493,7 +493,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
         return c;
     }
 
-    public ColumnMajorMatrix add(double x, ColumnMajorMatrix c) {
+    public JMatrix add(double x, JMatrix c) {
         if (nrows() != c.nrows() || ncols() != c.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -506,7 +506,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix sub(double x) {
+    public JMatrix sub(double x) {
         for (int i = 0; i < A.length; i++) {
             A[i] -= x;
         }
@@ -516,8 +516,8 @@ public class ColumnMajorMatrix implements DenseMatrix {
 
     @Override
     public DenseMatrix sub(double x, DenseMatrix c) {
-        if (c instanceof ColumnMajorMatrix) {
-            return sub(x, (ColumnMajorMatrix) c);
+        if (c instanceof JMatrix) {
+            return sub(x, (JMatrix) c);
         }
 
         if (nrows() != c.nrows() || ncols() != c.ncols()) {
@@ -533,7 +533,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
         return c;
     }
 
-    public ColumnMajorMatrix sub(double x, ColumnMajorMatrix c) {
+    public JMatrix sub(double x, JMatrix c) {
         if (nrows() != c.nrows() || ncols() != c.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -546,7 +546,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix mul(double x) {
+    public JMatrix mul(double x) {
         for (int i = 0; i < A.length; i++) {
             A[i] *= x;
         }
@@ -556,8 +556,8 @@ public class ColumnMajorMatrix implements DenseMatrix {
 
     @Override
     public DenseMatrix mul(double x, DenseMatrix c) {
-        if (c instanceof ColumnMajorMatrix) {
-            return mul(x, (ColumnMajorMatrix)c);
+        if (c instanceof JMatrix) {
+            return mul(x, (JMatrix)c);
         }
 
         if (nrows() != c.nrows() || ncols() != c.ncols()) {
@@ -573,7 +573,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
         return c;
     }
 
-    public ColumnMajorMatrix mul(double x, ColumnMajorMatrix c) {
+    public JMatrix mul(double x, JMatrix c) {
         if (nrows() != c.nrows() || ncols() != c.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -586,7 +586,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix div(double x) {
+    public JMatrix div(double x) {
         for (int i = 0; i < A.length; i++) {
             A[i] /= x;
         }
@@ -596,8 +596,8 @@ public class ColumnMajorMatrix implements DenseMatrix {
 
     @Override
     public DenseMatrix div(double x, DenseMatrix c) {
-        if (c instanceof ColumnMajorMatrix) {
-            return div(x, (ColumnMajorMatrix) c);
+        if (c instanceof JMatrix) {
+            return div(x, (JMatrix) c);
         }
 
         if (nrows() != c.nrows() || ncols() != c.ncols()) {
@@ -613,7 +613,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
         return c;
     }
 
-    public ColumnMajorMatrix div(double x, ColumnMajorMatrix c) {
+    public JMatrix div(double x, JMatrix c) {
         if (nrows() != c.nrows() || ncols() != c.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -626,7 +626,7 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix replaceNaN(double x) {
+    public JMatrix replaceNaN(double x) {
         for (int i = 0; i < A.length; i++) {
             if (Double.isNaN(A[i])) {
                 A[i] = x;
@@ -647,8 +647,8 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix ata() {
-        ColumnMajorMatrix C = new ColumnMajorMatrix(ncols, ncols);
+    public JMatrix ata() {
+        JMatrix C = new JMatrix(ncols, ncols);
         for (int i = 0; i < ncols; i++) {
             for (int j = 0; j < ncols; j++) {
                 double v = 0.0;
@@ -662,8 +662,8 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix aat() {
-        ColumnMajorMatrix C = new ColumnMajorMatrix(nrows, nrows);
+    public JMatrix aat() {
+        JMatrix C = new JMatrix(nrows, nrows);
         for (int k = 0; k < ncols; k++) {
             for (int i = 0; i < nrows; i++) {
                 for (int j = 0; j < nrows; j++) {
@@ -766,12 +766,12 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix abmm(DenseMatrix B) {
+    public JMatrix abmm(DenseMatrix B) {
         if (ncols() != B.nrows()) {
             throw new IllegalArgumentException(String.format("Matrix multiplication A * B: %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
         }
 
-        ColumnMajorMatrix C = new ColumnMajorMatrix(nrows, B.ncols());
+        JMatrix C = new JMatrix(nrows, B.ncols());
         for (int i = 0; i < nrows; i++) {
             for (int j = 0; j < B.ncols(); j++) {
                 double v = 0.0;
@@ -785,12 +785,12 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix abtmm(DenseMatrix B) {
+    public JMatrix abtmm(DenseMatrix B) {
         if (ncols() != B.ncols()) {
             throw new IllegalArgumentException(String.format("Matrix multiplication A * B': %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
         }
 
-        ColumnMajorMatrix C = new ColumnMajorMatrix(nrows, B.nrows());
+        JMatrix C = new JMatrix(nrows, B.nrows());
         for (int k = 0; k < ncols; k++) {
             for (int i = 0; i < nrows; i++) {
                 for (int j = 0; j < B.nrows(); j++) {
@@ -802,12 +802,12 @@ public class ColumnMajorMatrix implements DenseMatrix {
     }
 
     @Override
-    public ColumnMajorMatrix atbmm(DenseMatrix B) {
+    public JMatrix atbmm(DenseMatrix B) {
         if (nrows() != B.nrows()) {
             throw new IllegalArgumentException(String.format("Matrix multiplication A' * B: %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
         }
 
-        ColumnMajorMatrix C = new ColumnMajorMatrix(ncols, B.ncols());
+        JMatrix C = new JMatrix(ncols, B.ncols());
         for (int i = 0; i < ncols; i++) {
             for (int j = 0; j < B.ncols(); j++) {
                 double v = 0.0;

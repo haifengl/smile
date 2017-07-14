@@ -74,7 +74,7 @@ class Factory {
             }
         }
 
-        return new ColumnMajorMatrix(A);
+        return new JMatrix(A);
     }
 
     /** Creates a column vector/matrix initialized by A. */
@@ -87,7 +87,7 @@ class Factory {
             }
         }
 
-        return new ColumnMajorMatrix(A);
+        return new JMatrix(A);
     }
 
     /** Creates a matrix of all zeros. */
@@ -100,7 +100,7 @@ class Factory {
             }
         }
 
-        return new ColumnMajorMatrix(nrows, ncols);
+        return new JMatrix(nrows, ncols);
     }
 
     /** Creates a matrix filled with given value. */
@@ -113,6 +113,6 @@ class Factory {
             }
         }
 
-        return new ColumnMajorMatrix(nrows, ncols, value);
+        return new JMatrix(nrows, ncols, value);
     }
 }

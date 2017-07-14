@@ -103,8 +103,8 @@ public class QRDecompositionTest {
     public void testSolveMatrix() {
         System.out.println("solve");
         QRDecomposition result = new QRDecomposition(A);
-        DenseMatrix x = new ColumnMajorMatrix(B2.length, B2[0].length);
-        result.solve(new ColumnMajorMatrix(B2), x);
+        DenseMatrix x = Matrix.zeros(B2.length, B2[0].length);
+        result.solve(Matrix.newInstance(B2), x);
         assertEquals(X2.length, x.nrows());
         assertEquals(X2[0].length, x.ncols());
         for (int i = 0; i < X2.length; i++) {
@@ -121,7 +121,7 @@ public class QRDecompositionTest {
     public void testSolveMatrixOverwrite() {
         System.out.println("solve in place");
         QRDecomposition result = new QRDecomposition(A);
-        DenseMatrix x = new ColumnMajorMatrix(B2);
+        DenseMatrix x = Matrix.newInstance(B2);
         result.solve(x);
         assertEquals(X2.length, x.nrows());
         assertEquals(X2[0].length, x.ncols());

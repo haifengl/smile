@@ -154,7 +154,7 @@ public class EigenValueDecomposition {
      */
     public DenseMatrix getD() {
         int n = V.nrows();
-        DenseMatrix D = new ColumnMajorMatrix(n, n);
+        DenseMatrix D = Matrix.zeros(n, n);
         for (int i = 0; i < n; i++) {
             D.set(i, i, d[i]);
             if (e != null) {
@@ -174,7 +174,7 @@ public class EigenValueDecomposition {
      * @param A    square matrix which will be altered during decomposition.
      */
     public EigenValueDecomposition(double[][] A) {
-        this(new ColumnMajorMatrix(A));
+        this(Matrix.newInstance(A));
     }
 
     /**
@@ -184,7 +184,7 @@ public class EigenValueDecomposition {
      * @param symmetric if the matrix A is symmetric.
      */
     public EigenValueDecomposition(double[][] A, boolean symmetric) {
-        this(new ColumnMajorMatrix(A), symmetric);
+        this(Matrix.newInstance(A), symmetric);
     }
 
     /**
@@ -195,7 +195,7 @@ public class EigenValueDecomposition {
      * @param onlyValues if true, only compute eigenvalues; the default is to compute eigenvectors also.
      */
     public EigenValueDecomposition(double[][] A, boolean symmetric, boolean onlyValues) {
-        this(new ColumnMajorMatrix(A), symmetric, onlyValues);
+        this(Matrix.newInstance(A), symmetric, onlyValues);
     }
 
     /**
@@ -257,7 +257,7 @@ public class EigenValueDecomposition {
                 sort(d, e);
                 V = null;
             } else {
-                V = new ColumnMajorMatrix(n, n);
+                V = Matrix.zeros(n, n);
                 for (int i = 0; i < n; i++) {
                     V.set(i, i, 1.0);
                 }
