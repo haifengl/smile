@@ -72,7 +72,7 @@ lazy val netlib = project.in(file("netlib")).settings(commonSettings: _*).depend
 
 lazy val symbolic = project.in(file("symbolic")).settings(commonSettings: _*)
 
-lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph)
+lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph, netlib % "test")
 
 lazy val data = project.in(file("data")).settings(commonSettings: _*).dependsOn(math)
 

@@ -69,8 +69,8 @@ public class NeuralNetworkTest {
 
             int n = x.length;
             int p = x[0].length;
-            double[] mu = Math.colMean(x);
-            double[] sd = Math.colSd(x);
+            double[] mu = Math.colMeans(x);
+            double[] sd = Math.colSds(x);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < p; j++) {
                     x[i][j] = (x[i][j] - mu[j]) / sd[j];
@@ -121,8 +121,8 @@ public class NeuralNetworkTest {
 
             int n = x.length;
             int p = x[0].length;
-            double[] mu = Math.colMean(x);
-            double[] sd = Math.colSd(x);
+            double[] mu = Math.colMeans(x);
+            double[] sd = Math.colSds(x);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < p; j++) {
                     x[i][j] = (x[i][j] - mu[j]) / sd[j];
@@ -267,8 +267,8 @@ public class NeuralNetworkTest {
             int[] testy = test.toArray(new int[test.size()]);
             
             int p = x[0].length;
-            double[] mu = Math.colMean(x);
-            double[] sd = Math.colSd(x);
+            double[] mu = Math.colMeans(x);
+            double[] sd = Math.colSds(x);
             for (int i = 0; i < x.length; i++) {
                 for (int j = 0; j < p; j++) {
                     x[i][j] = (x[i][j] - mu[j]) / sd[j];
@@ -316,8 +316,8 @@ public class NeuralNetworkTest {
             int[] testy = test.toArray(new int[test.size()]);
             
             int p = x[0].length;
-            double[] mu = Math.colMean(x);
-            double[] sd = Math.colSd(x);
+            double[] mu = Math.colMeans(x);
+            double[] sd = Math.colSds(x);
             for (int i = 0; i < x.length; i++) {
                 for (int j = 0; j < p; j++) {
                     x[i][j] = (x[i][j] - mu[j]) / sd[j];

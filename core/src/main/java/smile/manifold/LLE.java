@@ -26,7 +26,7 @@ import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.SparseMatrix;
-import smile.math.matrix.LUDecomposition;
+import smile.math.matrix.LU;
 import smile.math.matrix.EigenValueDecomposition;
 import smile.math.matrix.Lanczos;
 import smile.neighbor.CoverTree;
@@ -153,7 +153,6 @@ public class LLE {
         }
 
         DenseMatrix C = Matrix.zeros(k, k);
-        double[] x = new double[k];
         double[] b = new double[k];
         for (int i = 0; i < k; i++) {
             b[i] = 1.0;
@@ -179,10 +178,10 @@ public class LLE {
                 }
             }
 
-            LUDecomposition lu = new LUDecomposition(C);
-            lu.solve(b, x);
+            LU lu = C.lu(true);
+            lu.solve(b);
 
-            double sum = Math.sum(x);
+            double sum = Math.sum(b);
             int shift = 0;
             for (int p = 0; p < k; p++) {
                 if (newIndex[N[i][p]] > m && shift == 0) {
@@ -190,7 +189,7 @@ public class LLE {
                     w[m * (k + 1) + p] = 1.0;
                     rowIndex[m * (k + 1) + p] = m;
                 }
-                w[m * (k + 1) + p + shift] = -x[p] / sum;
+                w[m * (k + 1) + p + shift] = -b[p] / sum;
                 rowIndex[m * (k + 1) + p + shift] = newIndex[N[i][p]];
             }
 

@@ -23,6 +23,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import smile.math.Math;
+import smile.math.matrix.Matrix;
 
 /**
  *
@@ -67,6 +68,6 @@ public class RandomProjectionTest {
             System.out.println();
         }
 
-        assertTrue(Math.equals(Math.eye(40), t, 1E-10));
+        assertTrue(Math.equals(Matrix.eye(40).array(), t, 1E-10));
     }
 }

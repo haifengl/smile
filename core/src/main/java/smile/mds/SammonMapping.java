@@ -255,7 +255,7 @@ public class SammonMapping {
                 eprev = stress;
 
                 // Move the centroid to origin and update
-                double[] mu = Math.colMean(xu);
+                double[] mu = Math.colMeans(xu);
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j < k; j++) {
                         coordinates[i][j] = xu[i][j] - mu[j];

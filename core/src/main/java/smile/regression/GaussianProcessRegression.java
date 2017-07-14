@@ -22,7 +22,7 @@ import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.CholeskyDecomposition;
-import smile.math.matrix.LUDecomposition;
+import smile.math.matrix.LU;
 import smile.math.matrix.EigenValueDecomposition;
 
 /**
@@ -197,27 +197,26 @@ public class GaussianProcessRegression <T> implements Regression<T>, Serializabl
         int n = x.length;
         int m = t.length;
 
-        double[][] G = new double[n][m];
+        DenseMatrix G = Matrix.zeros(n, m);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                G[i][j] = kernel.k(x[i], t[j]);
+                G.set(i, j, kernel.k(x[i], t[j]));
             }
         }
 
-        double[][] K = Math.atamm(G);
+        DenseMatrix K = G.ata();;
         for (int i = 0; i < m; i++) {
             for (int j = 0; j <= i; j++) {
-                K[i][j] += lambda * kernel.k(t[i], t[j]);
-                K[j][i] = K[i][j];
+                K.add(i, j, lambda * kernel.k(t[i], t[j]));
+                K.set(j, i, K.get(i, j));
             }
         }
 
-        double[] b = new double[m];
         w = new double[m];
-        Math.atx(G, y, b);
+        G.atx(y, w);
 
-        LUDecomposition lu = new LUDecomposition(K);
-        lu.solve(b, w);
+        LU lu = K.lu(true);
+        lu.solve(w);
     }
 
     /**

@@ -63,10 +63,10 @@ public class SignalNoiseRatio implements FeatureRanking {
             }
         }
 
-        double[] mu1 = Math.colMean(x1);
-        double[] mu2 = Math.colMean(x2);
-        double[] sd1 = Math.colSd(x1);
-        double[] sd2 = Math.colSd(x2);
+        double[] mu1 = Math.colMeans(x1);
+        double[] mu2 = Math.colMeans(x2);
+        double[] sd1 = Math.colSds(x1);
+        double[] sd2 = Math.colSds(x2);
 
         int p = mu1.length;
         double[] s2n = new double[p];

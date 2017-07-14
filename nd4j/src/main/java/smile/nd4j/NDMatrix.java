@@ -17,6 +17,7 @@
 package smile.nd4j;
 
 import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.LU;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.inverse.InvertMatrix;
@@ -90,6 +91,11 @@ public class NDMatrix implements DenseMatrix {
     }
 
     @Override
+    public double[] data() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public int ld() {
         return nrows();
     }
@@ -113,6 +119,11 @@ public class NDMatrix implements DenseMatrix {
     public double set(int i, int j, double x) {
         A.putScalar(i, j, x);
         return x;
+    }
+
+    @Override
+    public LU lu() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

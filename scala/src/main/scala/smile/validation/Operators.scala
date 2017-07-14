@@ -333,7 +333,7 @@ trait Operators {
       }.toArray
     }.toArray
 
-    val avg = Math.colMean(results)
+    val avg = Math.colMeans(results)
     println("Bootstrap average:")
     for (i <- 0 until avg.length) {
       println(f"${m(i)}%s: ${100*avg(i)}%.2f%%")
@@ -377,7 +377,7 @@ trait Operators {
       }.toArray
     }.toArray
 
-    val avg = Math.colMean(results)
+    val avg = Math.colMeans(results)
     println("Bootstrap average:")
     for (i <- 0 until avg.length) {
       println(f"${m(i)}%s: ${avg(i)}%.4f")

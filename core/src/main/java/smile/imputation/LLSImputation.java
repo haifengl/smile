@@ -16,7 +16,9 @@
 
 package smile.imputation;
 
-import smile.math.Math;
+import smile.math.matrix.Matrix;
+import smile.math.matrix.LU;
+import smile.math.matrix.DenseMatrix;
 import smile.sort.QuickSort;
 
 /**
@@ -112,21 +114,21 @@ public class LLSImputation implements MissingValueImputation {
 
             QuickSort.sort(dist, dat);
 
-            double[][] A = new double[d - missing][k];
-            double[] B = new double[d - missing];
+            DenseMatrix A = Matrix.zeros(d - missing, k);
+            double[] b = new double[d - missing];
 
             for (int j = 0, m = 0; j < d; j++) {
                 if (!Double.isNaN(data[i][j])) {
                     for (int l = 0; l < k; l++)
-                        A[m][l] = dat[l][j];
-                    B[m++] = dat[i][j];
+                        A.set(m, l, dat[l][j]);
+                    b[m++] = dat[i][j];
                 }
             }
 
             boolean sufficient = true;
-            for (int m = 0; m < A.length; m++) {
+            for (int m = 0; m < A.nrows(); m++) {
                 for (int n = 0; n < k; n++) {
-                    if (Double.isNaN(A[m][n])) {
+                    if (Double.isNaN(A.get(m, n))) {
                         sufficient = false;
                         break;
                     }
@@ -140,13 +142,14 @@ public class LLSImputation implements MissingValueImputation {
             if (!sufficient)
                 continue;
 
-            double[] s = Math.solve(A, B);
+            LU lu = A.lu();
+            lu.solve(b);
 
             for (int j = 0; j < d; j++) {
                 if (Double.isNaN(data[i][j])) {
                     data[i][j] = 0;
                     for (int l = 0; l < k; l++) {
-                        data[i][j] += s[l] * dat[l][j];
+                        data[i][j] += b[l] * dat[l][j];
                     }
                 }
             }

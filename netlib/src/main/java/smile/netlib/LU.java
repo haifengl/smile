@@ -37,65 +37,24 @@ import org.netlib.util.intW;
  */
 public class LU extends smile.math.matrix.LU {
     /**
-     * Array for internal storage of decomposition.
-     */
-    private DenseMatrix lu;
-
-    /**
-     * pivot sign.
-     */
-    private int pivsign;
-
-    /**
-     * Internal storage of pivot vector.
-     */
-    private int[] piv;
-
-    /**
-     * True if the matrix is singular.
-     */
-    private boolean singular;
-
-    /**
      * Constructor.
      * @param lu       LU decomposition matrix
      * @param piv      pivot vector
      * @param singular True if the matrix is singular
      */
     public LU(DenseMatrix lu, int[] piv, boolean singular) {
-        this(lu, piv, 1, singular);
+        super(lu, piv, pivsign(piv, Math.min(lu.nrows(), lu.ncols())), singular);
+    }
 
-        this.pivsign = 1;
-        int n = Math.min(lu.nrows(), lu.ncols());
+    /** Returns the pivot sign. */
+    private static int pivsign(int[] piv, int n) {
+        int pivsign = 1;
         for (int i = 0; i < n; i++) {
-            if (piv[i] != i)
-                this.pivsign = -this.pivsign;
-        }
-    }
-
-    /**
-     * Returns the pivot permutation vector.
-     */
-    public int[] getPivot() {
-        return piv;
-    }
-
-    /**
-     * Returns the matrix determinant
-     */
-    public double det() {
-        int m = lu.nrows();
-        int n = lu.ncols();
-
-        if (m != n)
-            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", m, n));
-
-        double d = (double) pivsign;
-        for (int j = 0; j < n; j++) {
-            d *= lu.get(j, j);
+            if (piv[i] != (i+1))
+                pivsign = -pivsign;
         }
 
-        return d;
+        return pivsign;
     }
 
     /**
@@ -117,118 +76,41 @@ public class LU extends smile.math.matrix.LU {
         return inv;
     }
 
-    /**
-     * Solve A * x = b. b will be overwritten with the solution vector on output.
-     * @param b   right hand side of linear system. On output, it will be
-     * overwritten with the solution vector
-     * @exception  RuntimeException  if matrix is singular.
-     */
+    @Override
     public void solve(double[] b) {
-        solve(b.clone(), b);
-    }
-
-    /**
-     * Solve A * x = b.
-     * @param b   right hand side of linear system.
-     * @param x   the solution vector.
-     * @exception  RuntimeException  if matrix is singular.
-     */
-    public void solve(double[] b, double[] x) {
         int m = lu.nrows();
         int n = lu.ncols();
 
-        if (m != n) {
-            throw new UnsupportedOperationException("The matrix is not square.");
-        }
-
-        if (b.length != m) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but b is %d x 1", lu.nrows(), lu.ncols(), b.length));
-        }
-
-        if (b.length != x.length) {
-            throw new IllegalArgumentException("b and x dimensions do not agree.");
-        }
-
-        if (isSingular()) {
-            throw new RuntimeException("Matrix is singular.");
-        }
-
-        // Copy right hand side with pivoting
-        for (int i = 0; i < m; i++) {
-            x[i] = b[piv[i]];
-        }
-
-        // Solve L*Y = B(piv,:)
-        for (int k = 0; k < n; k++) {
-            for (int i = k + 1; i < n; i++) {
-                x[i] -= x[k] * lu.get(i, k);
-            }
-        }
-
-        // Solve U*X = Y;
-        for (int k = n - 1; k >= 0; k--) {
-            x[k] /= lu.get(k, k);
-
-            for (int i = 0; i < k; i++) {
-                x[i] -= x[k] * lu.get(i, k);
-            }
-        }
-    }
-
-    /**
-     * Solve A * X = B.
-     * @param B   right hand side of linear system.
-     * @param X   the solution matrix.
-     * @throws  RuntimeException  if matrix is singular.
-     */
-    public void solve(DenseMatrix B, DenseMatrix X) {
-        int m = lu.nrows();
-        int n = lu.ncols();
-
-        if (X == B) {
-            throw new IllegalArgumentException("B and X should not be the same object.");
-        }
-
-        if (X.nrows() != B.nrows() || X.ncols() != B.ncols()) {
-            throw new IllegalArgumentException("B and X dimensions do not agree.");
-        }
-
-        // Copy right hand side with pivoting
-        int nx = B.ncols();
-        for (int j = 0; j < nx; j++) {
-            for (int i = 0; i < m; i++) {
-                X.set(i, j, B.get(piv[i], j));
-            }
-        }
-
-        solve(X);
-    }
-
-    /**
-     * Solve A * X = B. B will be overwritten with the solution matrix on output.
-     * @param X  right hand side of linear system. On input, it's rows are
-     *           already reordered with pivoting. On output, X will be
-     *           overwritten with the solution matrix.
-     * @throws  RuntimeException  if matrix is singular.
-     */
-    private void solve(DenseMatrix X) {
-        int m = lu.nrows();
-        int n = lu.ncols();
-        int nx = X.ncols();
-
-        if (X.nrows() != m)
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.nrows(), lu.ncols(), X.nrows(), X.ncols()));
+        if (b.length != m)
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", lu.nrows(), lu.ncols(), b.length));
 
         if (isSingular()) {
             throw new RuntimeException("Matrix is singular.");
         }
 
         intW info = new intW(0);
-        LAPACK.getInstance().dgetrs(trans.netlib(), lu.nrows(), X.ncols(), lu.data(), lu.ld(), piv, X.data(), X.ld(), info);
+        LAPACK.getInstance().dgetrs(NLMatrix.Transpose, lu.nrows(), 1, lu.data(), lu.ld(), piv, b, b.length, info);
 
         if (info.val < 0)
             throw new IllegalArgumentException("LAPACK DGETRS error code: " + info.val);
+    }
 
-        return X;
+    @Override
+    public void solve(DenseMatrix B) {
+        int m = lu.nrows();
+        int n = lu.ncols();
+
+        if (B.nrows() != m)
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.nrows(), lu.ncols(), B.nrows(), B.ncols()));
+
+        if (isSingular()) {
+            throw new RuntimeException("Matrix is singular.");
+        }
+
+        intW info = new intW(0);
+        LAPACK.getInstance().dgetrs(NLMatrix.Transpose, lu.nrows(), B.ncols(), lu.data(), lu.ld(), piv, B.data(), B.ld(), info);
+
+        if (info.val < 0)
+            throw new IllegalArgumentException("LAPACK DGETRS error code: " + info.val);
     }
 }

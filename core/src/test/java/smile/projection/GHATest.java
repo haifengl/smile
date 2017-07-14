@@ -119,7 +119,7 @@ public class GHATest {
         System.out.println("learn");
 
         int k = 3;
-        double[] mu = Math.colMean(USArrests);
+        double[] mu = Math.colMeans(USArrests);
         double[][] cov = Math.cov(USArrests);
         for (int i = 0; i < USArrests.length; i++) {
            Math.minus(USArrests[i], mu);

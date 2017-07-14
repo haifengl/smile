@@ -61,9 +61,10 @@ public class BandMatrixTest {
         };
         double[] b = {0.5, 0.5, 0.5};
 
-        LUDecomposition lu = new LUDecomposition(A);
-        double[] x = new double[b.length];
-        lu.solve(b, x);
+        DenseMatrix a = Matrix.newInstance(A);
+        LU lu = a.lu();
+        double[] x = b.clone();
+        lu.solve(x);
 
         BandMatrix instance = new BandMatrix(3, 1, 1);
         for (int i = 0; i < A.length; i++) {

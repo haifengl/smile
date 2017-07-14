@@ -106,6 +106,14 @@ public class MDSTest {
         };
 
         MDS mds = new MDS(eurodist);
+        for (int i = 0; i < eigs.length; i++) {
+                System.out.print(eigs[i] + " ");
+        }
+        System.out.println("==============");
+        for (int i = 0; i < mds.getEigenValues().length; i++) {
+                System.out.print(mds.getEigenValues()[i] + " ");
+        }
+        System.out.println();
         assertTrue(Math.equals(eigs, mds.getEigenValues(), 1E-4));
 
         double[][] coords = mds.getCoordinates();

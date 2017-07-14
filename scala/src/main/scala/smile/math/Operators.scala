@@ -194,11 +194,11 @@ trait Operators {
   def diag(A: Matrix) = A.diag()
 
   /** LU decomposition. */
-  def lu(A: Array[Array[Double]]) = new LUDecomposition(~A)
+  def lu(A: Array[Array[Double]]) = Matrix.newInstance(A).lu()
   /** LU decomposition. */
-  def lu(A: DenseMatrix) = new LUDecomposition(A.copy)
+  def lu(A: DenseMatrix) = A.copy.lu()
   /** LU decomposition. */
-  def lu(A: MatrixExpression) = new LUDecomposition(A.toMatrix)
+  def lu(A: MatrixExpression) = A.toMatrix.lu()
 
   /** QR decomposition. */
   def qr(A: Array[Array[Double]]) = new QRDecomposition(~A)
@@ -379,9 +379,9 @@ private[math] class PimpedMatrix(a: DenseMatrix) {
 
   /** Solves A * x = b */
   def \ (b: Array[Double]): Array[Double] = {
-    val x = new Array[Double](a.ncols)
+    val x = b.clone()
     if (a.nrows == a.ncols)
-      lu(a).solve(b, x)
+      lu(a).solve(x)
     else
       qr(a).solve(b, x)
     x

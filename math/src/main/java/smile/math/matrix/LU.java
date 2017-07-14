@@ -169,22 +169,12 @@ public class LU {
     }
 
     /**
-     * Solve A * x = b. b will be overwritten with the solution vector on output.
-     * @param b   right hand side of linear system. On output, it will be
-     * overwritten with the solution vector
+     * Solve A * x = b.
+     * @param b  right hand side of linear system.
+     *           On output, B will be overwritten with the solution matrix.
      * @exception  RuntimeException  if matrix is singular.
      */
     public void solve(double[] b) {
-        solve(b.clone(), b);
-    }
-
-    /**
-     * Solve A * x = b.
-     * @param b   right hand side of linear system.
-     * @param x   the solution vector.
-     * @exception  RuntimeException  if matrix is singular.
-     */
-    public void solve(double[] b, double[] x) {
         int m = lu.nrows();
         int n = lu.ncols();
 
@@ -196,14 +186,11 @@ public class LU {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but b is %d x 1", lu.nrows(), lu.ncols(), b.length));
         }
 
-        if (b.length != x.length) {
-            throw new IllegalArgumentException("b and x dimensions do not agree.");
-        }
-
         if (isSingular()) {
             throw new RuntimeException("Matrix is singular.");
         }
 
+        double[] x = new double[b.length];
         // Copy right hand side with pivoting
         for (int i = 0; i < m; i++) {
             x[i] = b[piv[i]];
@@ -224,54 +211,38 @@ public class LU {
                 x[i] -= x[k] * lu.get(i, k);
             }
         }
-    }
 
-    /**
-     * Solve A * X = B.
-     * @param B   right hand side of linear system.
-     * @param X   the solution matrix.
-     * @throws  RuntimeException  if matrix is singular.
-     */
-    public void solve(DenseMatrix B, DenseMatrix X) {
-        int m = lu.nrows();
-        int n = lu.ncols();
-
-        if (X == B) {
-            throw new IllegalArgumentException("B and X should not be the same object.");
+        // Copy the result back to B.
+        for (int i = 0; i < m; i++) {
+            b[i] = x[i];
         }
-
-        if (X.nrows() != B.nrows() || X.ncols() != B.ncols()) {
-            throw new IllegalArgumentException("B and X dimensions do not agree.");
-        }
-
-        // Copy right hand side with pivoting
-        int nx = B.ncols();
-        for (int j = 0; j < nx; j++) {
-            for (int i = 0; i < m; i++) {
-                X.set(i, j, B.get(piv[i], j));
-            }
-        }
-
-        solve(X);
     }
 
     /**
      * Solve A * X = B. B will be overwritten with the solution matrix on output.
-     * @param X  right hand side of linear system. On input, it's rows are
-     *           already reordered with pivoting. On output, X will be
-     *           overwritten with the solution matrix.
+     * @param B  right hand side of linear system.
+     *           On output, B will be overwritten with the solution matrix.
      * @throws  RuntimeException  if matrix is singular.
      */
-    private void solve(DenseMatrix X) {
+    public void solve(DenseMatrix B) {
         int m = lu.nrows();
         int n = lu.ncols();
-        int nx = X.ncols();
+        int nx = B.ncols();
 
-        if (X.nrows() != m)
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.nrows(), lu.ncols(), X.nrows(), X.ncols()));
+        if (B.nrows() != m)
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.nrows(), lu.ncols(), B.nrows(), B.ncols()));
 
         if (isSingular()) {
             throw new RuntimeException("Matrix is singular.");
+        }
+
+        DenseMatrix X = Matrix.zeros(B.nrows(), B.ncols());
+
+        // Copy right hand side with pivoting
+        for (int j = 0; j < nx; j++) {
+            for (int i = 0; i < m; i++) {
+                X.set(i, j, B.get(piv[i], j));
+            }
         }
 
         // Solve L*Y = B(piv,:)
@@ -293,6 +264,13 @@ public class LU {
                 for (int j = 0; j < nx; j++) {
                     X.sub(i, j, X.get(k, j) * lu.get(i, k));
                 }
+            }
+        }
+
+        // Copy the result back to B.
+        for (int j = 0; j < nx; j++) {
+            for (int i = 0; i < m; i++) {
+                B.set(i, j, X.get(i, j));
             }
         }
     }

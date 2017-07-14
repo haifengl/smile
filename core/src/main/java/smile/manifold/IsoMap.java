@@ -168,7 +168,7 @@ public class IsoMap {
             }
         }
 
-        double[] mean = Math.rowMean(D);
+        double[] mean = Math.rowMeans(D);
         double mu = Math.mean(mean);
 
         DenseMatrix B = Matrix.zeros(n, n);
