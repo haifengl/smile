@@ -95,43 +95,6 @@ public class LU {
     }
 
     /**
-     * Returns the lower triangular factor.
-     */
-    public DenseMatrix getL() {
-        int m = lu.nrows();
-        int n = lu.ncols();
-        DenseMatrix L = Matrix.zeros(m, n);
-        for (int i = 0; i < m; i++) {
-            L.set(i, i, 1.0);
-            for (int j = 0; j < i; j++) {
-                L.set(i, j, lu.get(i, j));
-            }
-        }
-        return L;
-    }
-
-    /**
-     * Returns the upper triangular factor.
-     */
-    public DenseMatrix getU() {
-        int n = lu.ncols();
-        DenseMatrix U = Matrix.zeros(n, n);
-        for (int i = 0; i < n; i++) {
-            for (int j = i; j < n; j++) {
-                U.set(i, j, lu.get(i, j));
-            }
-        }
-        return U;
-    }
-
-    /**
-     * Returns the pivot permutation vector.
-     */
-    public int[] getPivot() {
-        return piv;
-    }
-
-    /**
      * Returns the matrix determinant
      */
     public double det() {
