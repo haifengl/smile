@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.QRDecomposition;
+import smile.math.matrix.QR;
 import smile.math.matrix.SingularValueDecomposition;
 import smile.math.matrix.CholeskyDecomposition;
 import smile.math.special.Beta;
@@ -195,14 +195,14 @@ public class OLS implements Regression<double[]>, Serializable {
             X.set(i, p, 1.0);
         }
 
-        QRDecomposition qr = null;
+        QR qr = null;
         SingularValueDecomposition svd = null;
         if (SVD) {
             svd = new SingularValueDecomposition(X);
             svd.solve(y, w1);
         } else {
             try {
-                qr = new QRDecomposition(X);
+                qr = X.qr();
                 qr.solve(y, w1);
             } catch (RuntimeException e) {
                 logger.warn("Matrix is not of full rank, try SVD instead");

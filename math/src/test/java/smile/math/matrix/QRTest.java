@@ -27,7 +27,7 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class QRDecompositionTest {
+public class QRTest {
 
     double[][] A = {
         {0.9000, 0.4000, 0.7000},
@@ -47,7 +47,7 @@ public class QRDecompositionTest {
         {0.4729730, 0.6621622}
     };
 
-    public QRDecompositionTest() {
+    public QRTest() {
     }
 
     @BeforeClass
@@ -72,7 +72,8 @@ public class QRDecompositionTest {
     @Test
     public void testSolve() {
         System.out.println("solve");
-        QRDecomposition result = new QRDecomposition(A);
+        DenseMatrix a = Matrix.newInstance(A);
+        QR result = a.qr();
         double[] x = new double[B.length];
         result.solve(B, x);
         assertEquals(X.length, x.length);
@@ -87,7 +88,8 @@ public class QRDecompositionTest {
     @Test
     public void testSolveoverwrite() {
         System.out.println("solve in place");
-        QRDecomposition result = new QRDecomposition(A);
+        DenseMatrix a = Matrix.newInstance(A);
+        QR result = a.qr();
         double[] x = B;
         result.solve(B, x);
         assertEquals(X.length, x.length);
@@ -102,7 +104,8 @@ public class QRDecompositionTest {
     @Test
     public void testSolveMatrix() {
         System.out.println("solve");
-        QRDecomposition result = new QRDecomposition(A);
+        DenseMatrix a = Matrix.newInstance(A);
+        QR result = a.qr();
         DenseMatrix x = Matrix.zeros(B2.length, B2[0].length);
         result.solve(Matrix.newInstance(B2), x);
         assertEquals(X2.length, x.nrows());
@@ -120,7 +123,8 @@ public class QRDecompositionTest {
     @Test
     public void testSolveMatrixOverwrite() {
         System.out.println("solve in place");
-        QRDecomposition result = new QRDecomposition(A);
+        DenseMatrix a = Matrix.newInstance(A);
+        QR result = a.qr();
         DenseMatrix x = Matrix.newInstance(B2);
         result.solve(x);
         assertEquals(X2.length, x.nrows());

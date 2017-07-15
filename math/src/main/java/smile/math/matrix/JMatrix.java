@@ -819,4 +819,133 @@ public class JMatrix implements DenseMatrix {
         }
         return C;
     }
+
+    /**
+     * LU decomposition is computed by a "left-looking", dot-product, Crout/Doolittle algorithm.
+     */
+    @Override
+    public LU lu() {
+        int m = nrows();
+        int n = ncols();
+
+        int[] piv = new int[m];
+        for (int i = 0; i < m; i++) {
+            piv[i] = i;
+        }
+
+        int pivsign = 1;
+        double[] LUcolj = new double[m];
+
+        for (int j = 0; j < n; j++) {
+
+            // Make a copy of the j-th column to localize references.
+            for (int i = 0; i < m; i++) {
+                LUcolj[i] = get(i, j);
+            }
+
+            // Apply previous transformations.
+            for (int i = 0; i < m; i++) {
+                // Most of the time is spent in the following dot product.
+
+                int kmax = Math.min(i, j);
+                double s = 0.0;
+                for (int k = 0; k < kmax; k++) {
+                    s += get(i, k) * LUcolj[k];
+                }
+
+                LUcolj[i] -= s;
+                set(i, j, LUcolj[i]);
+            }
+
+            // Find pivot and exchange if necessary.
+            int p = j;
+            for (int i = j + 1; i < m; i++) {
+                if (Math.abs(LUcolj[i]) > Math.abs(LUcolj[p])) {
+                    p = i;
+                }
+            }
+            if (p != j) {
+                for (int k = 0; k < n; k++) {
+                    double t = get(p, k);
+                    set(p, k, get(j, k));
+                    set(j, k, t);
+                }
+                int k = piv[p];
+                piv[p] = piv[j];
+                piv[j] = k;
+                pivsign = -pivsign;
+            }
+
+            // Compute multipliers.
+            if (j < m & get(j, j) != 0.0) {
+                for (int i = j + 1; i < m; i++) {
+                    div(i, j, get(j, j));
+                }
+            }
+        }
+
+        boolean singular = false;
+        for (int j = 0; j < n; j++) {
+            if (get(j, j) == 0) {
+                singular = true;
+                break;
+            }
+        }
+
+        return new LU(this, piv, pivsign, singular);
+    }
+
+    /**
+     * QR Decomposition is computed by Householder reflections.
+     */
+    @Override
+    public QR qr() {
+        // Initialize.
+        int m = nrows();
+        int n = ncols();
+        double[] rDiagonal = new double[n];
+
+        // Main loop.
+        for (int k = 0; k < n; k++) {
+            // Compute 2-norm of k-th column without under/overflow.
+            double nrm = 0.0;
+            for (int i = k; i < m; i++) {
+                nrm = Math.hypot(nrm, get(i, k));
+            }
+
+            if (nrm != 0.0) {
+                // Form k-th Householder vector.
+                if (get(k, k) < 0) {
+                    nrm = -nrm;
+                }
+                for (int i = k; i < m; i++) {
+                    div(i, k, nrm);
+                }
+                add(k, k, 1.0);
+
+                // Apply transformation to remaining columns.
+                for (int j = k + 1; j < n; j++) {
+                    double s = 0.0;
+                    for (int i = k; i < m; i++) {
+                        s += get(i, k) * get(i, j);
+                    }
+                    s = -s / get(k, k);
+                    for (int i = k; i < m; i++) {
+                        add(i, j, s * get(i, k));
+                    }
+                }
+            }
+            rDiagonal[k] = -nrm;
+        }
+
+        boolean singular = false;
+        for (int j = 0; j < rDiagonal.length; j++) {
+            if (rDiagonal[j] == 0) {
+                singular = true;
+                break;
+            }
+        }
+
+        return new QR(this, rDiagonal, singular);
+    }
 }

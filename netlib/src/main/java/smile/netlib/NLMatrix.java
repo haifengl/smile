@@ -17,7 +17,8 @@
 package smile.netlib;
 
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.ColumnMajorMatrix;
+import smile.math.matrix.JMatrix;
+import smile.math.matrix.QR;
 import com.github.fommil.netlib.BLAS;
 import com.github.fommil.netlib.LAPACK;
 import org.netlib.util.intW;
@@ -28,7 +29,7 @@ import org.netlib.util.intW;
  *
  * @author Haifeng Li
  */
-public class NLMatrix extends ColumnMajorMatrix {
+public class NLMatrix extends JMatrix {
     static String NoTranspose = "N";
     static String Transpose   = "T";
     static String ConjugateTranspose = "C";
@@ -124,41 +125,41 @@ public class NLMatrix extends ColumnMajorMatrix {
 
     @Override
     public NLMatrix abmm(DenseMatrix B) {
-        if (B instanceof ColumnMajorMatrix) {
+        if (B instanceof JMatrix) {
             NLMatrix C = new NLMatrix(nrows(), B.ncols());
             BLAS.getInstance().dgemm(NoTranspose, NoTranspose,
-                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), ((ColumnMajorMatrix) B).data(),
+                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), ((JMatrix) B).data(),
                     B.ld(), 1, C.data(), C.ld());
             return C;
         }
 
-        throw new IllegalArgumentException("NLMatrix.abmm() parameter must be ColumnMajorMatrix");
+        throw new IllegalArgumentException("NLMatrix.abmm() parameter must be JMatrix");
     }
 
     @Override
     public NLMatrix abtmm(DenseMatrix B) {
-        if (B instanceof ColumnMajorMatrix) {
+        if (B instanceof JMatrix) {
             NLMatrix C = new NLMatrix(nrows(), B.ncols());
             BLAS.getInstance().dgemm(NoTranspose, Transpose,
-                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), ((ColumnMajorMatrix) B).data(),
+                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), ((JMatrix) B).data(),
                     B.ld(), 1, C.data(), C.ld());
             return C;
         }
 
-        throw new IllegalArgumentException("NLMatrix.abmm() parameter must be ColumnMajorMatrix");
+        throw new IllegalArgumentException("NLMatrix.abmm() parameter must be JMatrix");
     }
 
     @Override
     public NLMatrix atbmm(DenseMatrix B) {
-        if (B instanceof ColumnMajorMatrix) {
+        if (B instanceof JMatrix) {
             NLMatrix C = new NLMatrix(nrows(), B.ncols());
             BLAS.getInstance().dgemm(Transpose, NoTranspose,
-                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), ((ColumnMajorMatrix) B).data(),
+                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), ((JMatrix) B).data(),
                     B.ld(), 1, C.data(), C.ld());
             return C;
         }
 
-        throw new IllegalArgumentException("NLMatrix.abmm() parameter must be ColumnMajorMatrix");
+        throw new IllegalArgumentException("NLMatrix.abmm() parameter must be JMatrix");
     }
 
     @Override
@@ -187,5 +188,36 @@ public class NLMatrix extends ColumnMajorMatrix {
             throw new IllegalArgumentException("LAPACK DGETRF error code: " + info.val);
 
         return new LU(this, piv, singular);
+    }
+
+    @Override
+    public QR qr() {
+        boolean singular = false;
+
+        int m = nrows();
+        int n = ncols();
+
+        // Query optimal workspace. First for computing the factorization
+        double[] work = new double[1];
+        intW info = new intW(0);
+        LAPACK.getInstance().dgeqrf(m, n, new double[0], m, new double[0], work, -1, info);
+
+        int lwork = n;
+        if (info.val == 0) {
+            lwork = (int) work[0];
+        }
+
+        lwork = Math.max(1, lwork);
+        work = new double[lwork];
+
+        double[] tau = new double[Math.min(nrows(), ncols())];
+        LAPACK.getInstance().dgeqrf(nrows(), ncols(), data(), ld(), tau, work, lwork, info);
+
+        if (info.val > 0)
+            singular = true;
+        else if (info.val < 0)
+            throw new IllegalArgumentException("LAPACK DGETRF error code: " + info.val);
+
+        return new QR(this, tau, singular);
     }
 }

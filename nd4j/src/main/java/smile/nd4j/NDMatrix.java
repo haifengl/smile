@@ -18,6 +18,7 @@ package smile.nd4j;
 
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.LU;
+import smile.math.matrix.QR;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.inverse.InvertMatrix;
@@ -123,6 +124,11 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public LU lu() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public QR qr() {
         throw new UnsupportedOperationException();
     }
 

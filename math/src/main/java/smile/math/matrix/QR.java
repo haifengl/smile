@@ -32,85 +32,28 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public class QRDecomposition {
+public class QR {
 
     /**
      * Array for internal storage of decomposition.
      */
-    private DenseMatrix QR;
+    private DenseMatrix qr;
     /**
-     * Array for internal storage of diagonal of R.
+     * Array for internal storage of diagonal of Q or R (depending on the implementation).
      */
-    private double[] Rdiagonal;
+    private double[] tau;
     /**
      * Indicate if the matrix is singular.
      */
     private boolean singular;
 
     /**
-     * Constructor. QR Decomposition is computed by Householder reflections.
-     * The decomposition will be stored in a new create matrix. The input matrix
-     * will not be modified.
-     * @param A input matrix
+     * Constructor.
      */
-    public QRDecomposition(double[][] A) {
-        this(Matrix.newInstance(A));
-    }
-
-    /**
-     * Constructor. QR Decomposition is computed by Householder reflections.
-     * The decomposition will be stored in the input matrix.
-     * Otherwise, a new matrix will be allocated to store the decomposition.
-     * @param A    input  matrix
-     */
-    public QRDecomposition(DenseMatrix A) {
-        // Initialize.
-        int m = A.nrows();
-        int n = A.ncols();
-        Rdiagonal = new double[n];
-
-        QR = A;
-
-        // Main loop.
-        for (int k = 0; k < n; k++) {
-            // Compute 2-norm of k-th column without under/overflow.
-            double nrm = 0.0;
-            for (int i = k; i < m; i++) {
-                nrm = Math.hypot(nrm, QR.get(i, k));
-            }
-
-            if (nrm != 0.0) {
-                // Form k-th Householder vector.
-                if (QR.get(k, k) < 0) {
-                    nrm = -nrm;
-                }
-                for (int i = k; i < m; i++) {
-                    QR.div(i, k, nrm);
-                }
-                QR.add(k, k, 1.0);
-
-                // Apply transformation to remaining columns.
-                for (int j = k + 1; j < n; j++) {
-                    double s = 0.0;
-                    for (int i = k; i < m; i++) {
-                        s += QR.get(i, k) * QR.get(i, j);
-                    }
-                    s = -s / QR.get(k, k);
-                    for (int i = k; i < m; i++) {
-                        QR.add(i, j, s * QR.get(i, k));
-                    }
-                }
-            }
-            Rdiagonal[k] = -nrm;
-        }
-
-        singular = false;
-        for (int j = 0; j < Rdiagonal.length; j++) {
-            if (Rdiagonal[j] == 0) {
-                singular = true;
-                break;
-            }
-        }
+    public QR(DenseMatrix qr, double[] tau, boolean singular) {
+        this.qr = qr;
+        this.tau = tau;
+        this.singular = singular;
     }
 
     /**
@@ -132,12 +75,12 @@ public class QRDecomposition {
      * @return  Lower trapezoidal matrix whose columns define the reflections
      */
     public DenseMatrix getH() {
-        int m = QR.nrows();
-        int n = QR.ncols();
+        int m = qr.nrows();
+        int n = qr.ncols();
         DenseMatrix H = Matrix.zeros(m, n);
         for (int i = 0; i < m; i++) {
             for (int j = 0; j <= i; j++) {
-                H.set(i, j, QR.get(i, j));
+                H.set(i, j, qr.get(i, j));
             }
         }
         return H;
@@ -147,15 +90,15 @@ public class QRDecomposition {
      * Returns the Cholesky decomposition of A'A.
      */
     public CholeskyDecomposition toCholesky() {
-        int n = QR.ncols();
+        int n = qr.ncols();
 
         double[][] L = new double[n][];
         for (int i = 0; i < n; i++) {
             L[i] = new double[i+1];
-            L[i][i] = Rdiagonal[i];
+            L[i][i] = tau[i];
 
             for (int j = 0; j < i; j++) {
-                L[i][j] = QR.get(j, i);
+                L[i][j] = qr.get(j, i);
             }
         }
 
@@ -166,13 +109,13 @@ public class QRDecomposition {
      * Returns the upper triangular factor.
      */
     public DenseMatrix getR() {
-        int m = QR.nrows();
-        int n = QR.ncols();
+        int m = qr.nrows();
+        int n = qr.ncols();
         DenseMatrix R = Matrix.zeros(m, n);
         for (int i = 0; i < n; i++) {
-            R.set(i, i, Rdiagonal[i]);
+            R.set(i, i, tau[i]);
             for (int j = i; j < n; j++) {
-                R.set(i, j, QR.get(i, j));
+                R.set(i, j, qr.get(i, j));
             }
         }
         return R;
@@ -182,20 +125,20 @@ public class QRDecomposition {
      * Returns the orthogonal factor.
      */
     public DenseMatrix getQ() {
-        int m = QR.nrows();
-        int n = QR.ncols();
+        int m = qr.nrows();
+        int n = qr.ncols();
         DenseMatrix Q = Matrix.zeros(m, n);
         for (int k = n - 1; k >= 0; k--) {
             Q.set(k, k, 1.0);
             for (int j = k; j < n; j++) {
-                if (QR.get(k, k) != 0) {
+                if (qr.get(k, k) != 0) {
                     double s = 0.0;
                     for (int i = k; i < m; i++) {
-                        s += QR.get(i, k) * Q.get(i, j);
+                        s += qr.get(i, k) * Q.get(i, j);
                     }
-                    s = -s / QR.get(k, k);
+                    s = -s / qr.get(k, k);
                     for (int i = k; i < m; i++) {
-                        Q.add(i, j, s * QR.get(i, k));
+                        Q.add(i, j, s * qr.get(i, k));
                     }
                 }
             }
@@ -207,7 +150,7 @@ public class QRDecomposition {
      * Returns the matrix pseudo inverse.
      */
     public DenseMatrix inverse() {
-        DenseMatrix inv = Matrix.eye(QR.ncols(), QR.nrows());
+        DenseMatrix inv = Matrix.eye(qr.ncols(), qr.nrows());
         solve(inv);
         return inv;
     }
@@ -219,11 +162,11 @@ public class QRDecomposition {
      * @exception  RuntimeException if matrix is rank deficient.
      */
     public void solve(double[] b, double[] x) {
-        int m = QR.nrows();
-        int n = QR.ncols();
+        int m = qr.nrows();
+        int n = qr.ncols();
 
         if (b.length != m) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but b is %d x 1", QR.nrows(), QR.ncols(), b.length));
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but b is %d x 1", qr.nrows(), qr.ncols(), b.length));
         }
 
         if (x.length != n) {
@@ -243,19 +186,19 @@ public class QRDecomposition {
         for (int k = 0; k < n; k++) {
             double s = 0.0;
             for (int i = k; i < m; i++) {
-                s += QR.get(i, k) * y[i];
+                s += qr.get(i, k) * y[i];
             }
-            s = -s / QR.get(k, k);
+            s = -s / qr.get(k, k);
             for (int i = k; i < m; i++) {
-                y[i] += s * QR.get(i, k);
+                y[i] += s * qr.get(i, k);
             }
         }
 
         // Solve R*X = Y;
         for (int k = n - 1; k >= 0; k--) {
-            x[k] = y[k] / Rdiagonal[k];
+            x[k] = y[k] / tau[k];
             for (int i = 0; i < k; i++) {
-                y[i] -= x[k] * QR.get(i, k);
+                y[i] -= x[k] * qr.get(i, k);
             }
         }
     }
@@ -268,7 +211,7 @@ public class QRDecomposition {
      * @exception  RuntimeException  Matrix is rank deficient.
      */
     public void solve(DenseMatrix B) {
-        if (QR.nrows() != QR.ncols()) {
+        if (qr.nrows() != qr.ncols()) {
             throw new UnsupportedOperationException("In-place solver supports only square matrix.");
         }
 
@@ -282,12 +225,12 @@ public class QRDecomposition {
      * @exception  RuntimeException  Matrix is rank deficient.
      */
     public void solve(DenseMatrix B, DenseMatrix X) {
-        if (B.nrows() != QR.nrows()) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", QR.nrows(), QR.nrows(), B.nrows(), B.ncols()));
+        if (B.nrows() != qr.nrows()) {
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", qr.nrows(), qr.nrows(), B.nrows(), B.ncols()));
         }
 
-        if (X.nrows() != QR.ncols()) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but X is %d x %d", QR.nrows(), QR.nrows(), X.nrows(), X.ncols()));
+        if (X.nrows() != qr.ncols()) {
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but X is %d x %d", qr.nrows(), qr.nrows(), X.nrows(), X.ncols()));
         }
 
         if (B.ncols() != X.ncols()) {
@@ -303,8 +246,8 @@ public class QRDecomposition {
         }
 
         // Copy right hand side
-        int m = QR.nrows();
-        int n = QR.ncols();
+        int m = qr.nrows();
+        int n = qr.ncols();
         int nx = B.ncols();
 
         // Compute Y = transpose(Q)*B
@@ -320,11 +263,11 @@ public class QRDecomposition {
             for (int j = 0; j < nx; j++) {
                 double s = 0.0;
                 for (int i = k; i < m; i++) {
-                    s += QR.get(i, k) * X.get(i, j);
+                    s += qr.get(i, k) * X.get(i, j);
                 }
-                s = -s / QR.get(k, k);
+                s = -s / qr.get(k, k);
                 for (int i = k; i < m; i++) {
-                    X.add(i, j, s * QR.get(i, k));
+                    X.add(i, j, s * qr.get(i, k));
                 }
             }
         }
@@ -332,12 +275,12 @@ public class QRDecomposition {
         // Solve R*X = Y;
         for (int k = n - 1; k >= 0; k--) {
             for (int j = 0; j < nx; j++) {
-                X.set(k, j, X.get(k, j) / Rdiagonal[k]);
+                X.set(k, j, X.get(k, j) / tau[k]);
             }
             
             for (int i = 0; i < k; i++) {
                 for (int j = 0; j < nx; j++) {
-                    X.sub(i, j, X.get(k, j) * QR.get(i, k));
+                    X.sub(i, j, X.get(k, j) * qr.get(i, k));
                 }
             }
         }
@@ -350,8 +293,8 @@ public class QRDecomposition {
      * Note that u is modified during the update.
      */
     public void update(double[] u, double[] v) {
-        int m = QR.nrows();
-        int n = QR.ncols();
+        int m = qr.nrows();
+        int n = qr.ncols();
 
         if (u.length != m || v.length != n) {
             throw new IllegalArgumentException("u.length = " + u.length + " v.length = " + v.length);
@@ -380,30 +323,30 @@ public class QRDecomposition {
             }
         }
 
-        Rdiagonal[0] += u[0] * v[0];
+        tau[0] += u[0] * v[0];
         for (int i = 1; i < n; i++) {
-            QR.add(0, i, u[0] * v[i]);
+            qr.add(0, i, u[0] * v[i]);
         }
 
         for (int i = 0; i < k; i++) {
-            rotate(i, Rdiagonal[i], -QR.get(i+1, i));
+            rotate(i, tau[i], -qr.get(i+1, i));
         }
 
         for (int i = 0; i < n; i++) {
-            if (Rdiagonal[i] == 0.0) {
+            if (tau[i] == 0.0) {
                 singular = true;
             }
         }
     }
 
     /*
-     * Utility used by update for Jacobi rotation on rows i and i+1 of QR.
+     * Utility used by update for Jacobi rotation on rows i and i+1 of qr.
      * a and b are the paramters of the rotation:
      * cos &theta; = a / sqrt(a<sup>2</sup>+b<sup>2</sub>)
      * sin &theta; = b / sqrt(a<sup>2</sup>+b<sup>2</sub>)
      */
     private void rotate(int i, double a, double b) {
-        int n = QR.ncols();
+        int n = qr.ncols();
 
         double c, fact, s, w, y;
         if (a == 0.0) {
@@ -420,17 +363,17 @@ public class QRDecomposition {
         }
 
         for (int j = i; j < n; j++) {
-            y = i == j ? Rdiagonal[i] : QR.get(i, j);
-            w = QR.get(i+1, j);
-            QR.set(i, j, c * y - s * w);
-            QR.set(i+1, j, s * y + c * w);
+            y = i == j ? tau[i] : qr.get(i, j);
+            w = qr.get(i+1, j);
+            qr.set(i, j, c * y - s * w);
+            qr.set(i+1, j, s * y + c * w);
         }
 
         for (int j = 0; j < n; j++) {
-            y = QR.get(i, j);
-            w = QR.get(i+1, j);
-            QR.set(i, j, c * y - s * w);
-            QR.set(i+1, j, s * y + c * w);
+            y = qr.get(i, j);
+            w = qr.get(i+1, j);
+            qr.set(i, j, c * y - s * w);
+            qr.set(i+1, j, s * y + c * w);
         }
     }
 }
