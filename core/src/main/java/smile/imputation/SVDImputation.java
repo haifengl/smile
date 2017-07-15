@@ -17,7 +17,7 @@ package smile.imputation;
 
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.QRDecomposition;
+import smile.math.matrix.QR;
 import smile.math.matrix.SingularValueDecomposition;
 
 /**
@@ -151,7 +151,7 @@ public class SVDImputation implements MissingValueImputation {
             }
 
             double[] s = new double[k];
-            QRDecomposition qr = new QRDecomposition(A);
+            QR qr = A.qr();
             qr.solve(b, s);
 
             for (int j = 0; j < d; j++) {

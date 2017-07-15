@@ -201,11 +201,11 @@ trait Operators {
   def lu(A: MatrixExpression) = A.toMatrix.lu()
 
   /** QR decomposition. */
-  def qr(A: Array[Array[Double]]) = new QRDecomposition(~A)
+  def qr(A: Array[Array[Double]]) = Matrix.newInstance(A).qr()
   /** QR decomposition. */
-  def qr(A: DenseMatrix) = new QRDecomposition(A.copy)
+  def qr(A: DenseMatrix) = A.copy().qr()
   /** QR decomposition. */
-  def qr(A: MatrixExpression) = new QRDecomposition(A.toMatrix)
+  def qr(A: MatrixExpression) = A.toMatrix.qr()
 
   /** Cholesky decomposition. */
   def cholesky(A: Array[Array[Double]]) = new CholeskyDecomposition(~A)

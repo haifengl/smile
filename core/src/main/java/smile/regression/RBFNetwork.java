@@ -22,7 +22,7 @@ import java.util.Arrays;
 import smile.math.distance.Metric;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.QRDecomposition;
+import smile.math.matrix.QR;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.math.rbf.RadialBasisFunction;
 import smile.util.SmileUtils;
@@ -289,7 +289,7 @@ public class RBFNetwork<T> implements Regression<T>, Serializable {
             }
         }
 
-        QRDecomposition qr = new QRDecomposition(G);
+        QR qr = G.qr();
         qr.solve(b, w);
     }
 

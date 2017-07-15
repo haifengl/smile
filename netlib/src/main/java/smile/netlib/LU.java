@@ -20,6 +20,8 @@ import smile.math.Math;
 import smile.math.matrix.DenseMatrix;
 import com.github.fommil.netlib.LAPACK;
 import org.netlib.util.intW;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * For an m-by-n matrix A with m &ge; n, the LU decomposition is an m-by-n
@@ -36,6 +38,9 @@ import org.netlib.util.intW;
  * @author Haifeng Li
  */
 public class LU extends smile.math.matrix.LU {
+    private static final long serialVersionUID = 1L;
+    private static final Logger logger = LoggerFactory.getLogger(LU.class);
+
     /**
      * Constructor.
      * @param lu       LU decomposition matrix
@@ -58,8 +63,10 @@ public class LU extends smile.math.matrix.LU {
     }
 
     /**
-     * Returns the matrix inverse. For pseudo inverse, use QRDecomposition.
+     * Returns the matrix inverse. The LU matrix will overwritten with
+     * the inverse of the original matrix.
      */
+    @Override
     public DenseMatrix inverse() {
         int m = lu.nrows();
         int n = lu.ncols();
@@ -67,13 +74,21 @@ public class LU extends smile.math.matrix.LU {
         if (m != n)
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", m, n));
 
-        DenseMatrix inv = new NLMatrix(n, n);
-        for (int i = 0; i < n; i++) {
-            inv.set(i, piv[i], 1.0);
-        }
+        int nb = LAPACK.getInstance().ilaenv(1, "DGETRI", "", n, -1, -1, -1);
+        if (nb < 0)
+            logger.warn("LAPACK ILAENV error code: {}", nb);
 
-        solve(inv);
-        return inv;
+        if (nb < 1) nb = 1;
+
+        int lwork = lu.ncols() * nb;
+        double[] work = new double[lwork];
+        intW info = new intW(0);
+        LAPACK.getInstance().dgetri(lu.ncols(), lu.data(), lu.ld(), piv, work, lwork, info);
+
+        if (info.val != 0)
+            throw new IllegalArgumentException("LAPACK DGETRI error code: " + info.val);
+
+        return lu;
     }
 
     @Override
