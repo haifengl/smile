@@ -210,12 +210,12 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
         double[] x = new double[m];
 
         for (int j = 0; j < n; j++) {
-            for (int i = 1; i < m; i++) {
+            for (int i = 0; i < m; i++) {
                 x[i] += get(i, j);
             }
         }
 
-        for (int i = 1; i < m; i++) {
+        for (int i = 0; i < m; i++) {
             x[i] /= n;
         }
 
@@ -228,10 +228,10 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     public default double[] colMeans() {
         int m = nrows();
         int n = ncols();
-        double[] x = new double[n];;
+        double[] x = new double[n];
 
         for (int j = 0; j < n; j++) {
-            for (int i = 1; i < m; i++) {
+            for (int i = 0; i < m; i++) {
                 x[j] += get(i, j);
             }
             x[j] /= m;
