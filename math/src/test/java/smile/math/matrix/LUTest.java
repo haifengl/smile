@@ -33,14 +33,14 @@ public class LUTest {
         {0.4000, 0.5000, 0.3000},
         {0.7000, 0.3000, 0.8000}
     };
-    double[] B = {0.5, 0.5, 0.5};
-    double[] X = {-0.2027027, 0.8783784, 0.4729730};
-    double[][] B2 = {
+    double[] b = {0.5, 0.5, 0.5};
+    double[] x = {-0.2027027, 0.8783784, 0.4729730};
+    double[][] B = {
         {0.5, 0.2},
         {0.5, 0.8},
         {0.5, 0.3}
     };
-    double[][] X2 = {
+    double[][] X = {
         {-0.2027027, -1.2837838},
         {0.8783784, 2.2297297},
         {0.4729730, 0.6621622}
@@ -69,15 +69,13 @@ public class LUTest {
      * Test of solve method, of class LUDecomposition.
      */
     @Test
-    public void testSolveoverwrite() {
-        System.out.println("solve in place");
-        DenseMatrix a = Matrix.newInstance(A);
+    public void testSolve() {
+        System.out.println("solve a vector");
+        DenseMatrix a = new JMatrix(A);
         LU result = a.lu();
-        double[] x = B.clone();
-        result.solve(x);
-        assertEquals(X.length, x.length);
-        for (int i = 0; i < X.length; i++) {
-            assertEquals(X[i], x[i], 1E-7);
+        result.solve(b);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(x[i], b[i], 1E-7);
         }
     }
 
@@ -86,16 +84,14 @@ public class LUTest {
      */
     @Test
     public void testSolveMatrix() {
-        System.out.println("solve");
-        DenseMatrix a = Matrix.newInstance(A);
+        System.out.println("solve a matrix");
+        DenseMatrix a = new JMatrix(A);
         LU result = a.lu();
-        DenseMatrix x = Matrix.newInstance(B2);
-        result.solve(x);
-        assertEquals(X2.length, x.nrows());
-        assertEquals(X2[0].length, x.ncols());
-        for (int i = 0; i < X2.length; i++) {
-            for (int j = 0; j < X2[i].length; j++) {
-                assertEquals(X2[i][j], x.get(i, j), 1E-7);
+        DenseMatrix b = new JMatrix(B);
+        result.solve(b);
+        for (int i = 0; i < X.length; i++) {
+            for (int j = 0; j < X[i].length; j++) {
+                assertEquals(X[i][j], b.get(i, j), 1E-7);
             }
         }
     }
