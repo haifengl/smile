@@ -71,12 +71,14 @@ public class LU extends smile.math.matrix.LU {
         int m = lu.nrows();
         int n = lu.ncols();
 
-        if (m != n)
+        if (m != n) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", m, n));
+        }
 
         int nb = LAPACK.getInstance().ilaenv(1, "DGETRI", "", n, -1, -1, -1);
-        if (nb < 0)
+        if (nb < 0) {
             logger.warn("LAPACK ILAENV error code: {}", nb);
+        }
 
         if (nb < 1) nb = 1;
 
@@ -85,8 +87,9 @@ public class LU extends smile.math.matrix.LU {
         intW info = new intW(0);
         LAPACK.getInstance().dgetri(lu.ncols(), lu.data(), lu.ld(), piv, work, lwork, info);
 
-        if (info.val != 0)
+        if (info.val != 0) {
             throw new IllegalArgumentException("LAPACK DGETRI error code: " + info.val);
+        }
 
         return lu;
     }
@@ -96,8 +99,9 @@ public class LU extends smile.math.matrix.LU {
         int m = lu.nrows();
         int n = lu.ncols();
 
-        if (b.length != m)
+        if (b.length != m) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", lu.nrows(), lu.ncols(), b.length));
+        }
 
         if (isSingular()) {
             throw new RuntimeException("Matrix is singular.");
@@ -106,8 +110,9 @@ public class LU extends smile.math.matrix.LU {
         intW info = new intW(0);
         LAPACK.getInstance().dgetrs(NLMatrix.Transpose, lu.nrows(), 1, lu.data(), lu.ld(), piv, b, b.length, info);
 
-        if (info.val < 0)
+        if (info.val < 0) {
             throw new IllegalArgumentException("LAPACK DGETRS error code: " + info.val);
+        }
     }
 
     @Override
@@ -115,8 +120,9 @@ public class LU extends smile.math.matrix.LU {
         int m = lu.nrows();
         int n = lu.ncols();
 
-        if (B.nrows() != m)
+        if (B.nrows() != m) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.nrows(), lu.ncols(), B.nrows(), B.ncols()));
+        }
 
         if (isSingular()) {
             throw new RuntimeException("Matrix is singular.");
@@ -125,7 +131,8 @@ public class LU extends smile.math.matrix.LU {
         intW info = new intW(0);
         LAPACK.getInstance().dgetrs(NLMatrix.Transpose, lu.nrows(), B.ncols(), lu.data(), lu.ld(), piv, B.data(), B.ld(), info);
 
-        if (info.val < 0)
+        if (info.val < 0) {
             throw new IllegalArgumentException("LAPACK DGETRS error code: " + info.val);
+        }
     }
 }
