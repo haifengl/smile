@@ -33,8 +33,6 @@ class Factory {
     private static Constructor<?> nlmatrixZeros;
     private static Constructor<?> nlmatrixOnes;
 
-    private static Class<?> netlibLU;
-
     static {
         try {
             nlmatrix = Class.forName("smile.netlib.NLMatrix");
@@ -56,10 +54,8 @@ class Factory {
             } catch (NoSuchMethodException e) {
                 logger.error("NLMatrix(int, int, double) does not exist");
             }
-
-            netlibLU = Class.forName("smile.netlib.LUDecomposition");
-
         } catch (ClassNotFoundException e) {
+            e.printStackTrace();
             logger.info("Netlib module does not exist on the classpath. Pure Java matrix library will be employed.");
         }
     }
