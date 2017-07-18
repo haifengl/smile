@@ -35,10 +35,8 @@ import smile.sort.SortUtils;
  * L<sub>2</sub> norm, L<sub>&infin;</sub> norm, normalize, unitize, cor, Spearman
  * correlation, Kendall correlation, distance, dot product, histogram, vector
  * (element-wise) copy, equal, plus, minus, times, and divide.
- * <li> matrix functions: min, max, rowmean, sum, L<sub>1</sub> norm,
- * L<sub>2</sub> norm, L<sub>&infin;</sub> norm, rank, det, trace, transpose,
- * inverse, SVD and eigen decomposition, linear systems (dense or tridiagonal)
- * and least square, matrix copy, equal, plus, minus and times.
+ * <li> matrix functions: min, max, rowSums, colSums, rowMeans, colMeans, transpose,
+ * cov, cor, matrix copy, equals.
  * <li> random functions: random, randomInt, and permutate.
  * <li> Find the root of a univariate function with or without derivative.
  * </uL>
