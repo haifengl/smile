@@ -25,7 +25,7 @@ import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QR;
 import smile.math.matrix.SingularValueDecomposition;
-import smile.math.matrix.CholeskyDecomposition;
+import smile.math.matrix.Cholesky;
 import smile.math.special.Beta;
 
 /**
@@ -218,14 +218,14 @@ public class OLS implements Regression<double[]>, Serializable {
         System.arraycopy(w1, 0, w, 0, p);
 
         double[] yhat = new double[n];
-        Math.ax(x, w, yhat);
+        X.ax(w1, yhat);
 
         double TSS = 0.0;
         RSS = 0.0;
         double ybar = Math.mean(y);
         residuals = new double[n];
         for (int i = 0; i < n; i++) {
-            double r = y[i] - yhat[i] - b;
+            double r = y[i] - yhat[i];
             residuals[i] = r;
             RSS += Math.sqr(r);
             TSS += Math.sqr(y[i] - ybar);
@@ -260,7 +260,7 @@ public class OLS implements Regression<double[]>, Serializable {
                 }
             }
         } else {
-            CholeskyDecomposition cholesky = qr.toCholesky();
+            Cholesky cholesky = qr.CholeskyOfAtA();
 
             DenseMatrix inv = cholesky.inverse();
 

@@ -30,6 +30,7 @@ class Factory {
 
     private static Class<?> nlmatrix;
     private static Constructor<?> nlmatrixArray;
+    private static Constructor<?> nlmatrixArray2D;
     private static Constructor<?> nlmatrixZeros;
     private static Constructor<?> nlmatrixOnes;
 
@@ -38,9 +39,15 @@ class Factory {
             nlmatrix = Class.forName("smile.netlib.NLMatrix");
 
             try {
-                nlmatrixArray = nlmatrix.getConstructor(double[][].class);
+                nlmatrixArray2D = nlmatrix.getConstructor(double[][].class);
             } catch (NoSuchMethodException e) {
                 logger.error("NLMatrix(double[][]) does not exist");
+            }
+
+            try {
+                nlmatrixArray = nlmatrix.getConstructor(double[].class);
+            } catch (NoSuchMethodException e) {
+                logger.error("NLMatrix(double[]) does not exist");
             }
 
             try {
@@ -55,7 +62,6 @@ class Factory {
                 logger.error("NLMatrix(int, int, double) does not exist");
             }
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
             logger.info("Netlib module does not exist on the classpath. Pure Java matrix library will be employed.");
         }
     }
@@ -64,7 +70,7 @@ class Factory {
     public static DenseMatrix matrix(double[][] A) {
         if (nlmatrixZeros != null) {
             try {
-                return (DenseMatrix) nlmatrixArray.newInstance((Object) A);
+                return (DenseMatrix) nlmatrixArray2D.newInstance((Object) A);
             } catch (Exception e) {
                 logger.error("Failed to call NLMatrix(double[][]): {}", e);
             }
@@ -77,7 +83,7 @@ class Factory {
     public static DenseMatrix matrix(double[] A) {
         if (nlmatrixZeros != null) {
             try {
-                return (DenseMatrix) nlmatrixArray.newInstance((Object) A);
+                return (DenseMatrix) nlmatrixArray.newInstance(A);
             } catch (Exception e) {
                 logger.error("Failed to call NLMatrix(double[]): {}", e);
             }

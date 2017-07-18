@@ -273,7 +273,6 @@ public class RBFNetwork<T> implements Regression<T>, Serializable {
 
         DenseMatrix G = Matrix.zeros(n, m);
         double[] b = new double[n];
-        w = new double[m];
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
             for (int j = 0; j < m; j++) {
@@ -289,6 +288,7 @@ public class RBFNetwork<T> implements Regression<T>, Serializable {
             }
         }
 
+        w = new double[m];
         QR qr = G.qr();
         qr.solve(b, w);
     }

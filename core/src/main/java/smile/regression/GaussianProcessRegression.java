@@ -21,7 +21,7 @@ import smile.math.Math;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.CholeskyDecomposition;
+import smile.math.matrix.Cholesky;
 import smile.math.matrix.LU;
 import smile.math.matrix.EigenValueDecomposition;
 
@@ -155,19 +155,20 @@ public class GaussianProcessRegression <T> implements Regression<T>, Serializabl
         
         int n = x.length;
 
-        double[][] K = new double[n][n];
-        w = new double[n];
+        DenseMatrix K = Matrix.zeros(n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
-                K[i][j] = kernel.k(x[i], x[j]);
-                K[j][i] = K[i][j];
+                double k = kernel.k(x[i], x[j]);
+                K.set(i, j, k);
+                K.set(j, i, k);
             }
 
-            K[i][i] += lambda;
+            K.add(i, i, lambda);
         }
 
-        CholeskyDecomposition cholesky = new CholeskyDecomposition(K);
-        cholesky.solve(y, w);
+        Cholesky cholesky = K.cholesky();
+        w = y.clone();
+        cholesky.solve(w);
     }
 
     /**
@@ -279,7 +280,7 @@ public class GaussianProcessRegression <T> implements Regression<T>, Serializabl
             LtL.add(i, i, lambda);
         }
 
-        CholeskyDecomposition chol = new CholeskyDecomposition(LtL);
+        Cholesky chol = LtL.cholesky();
         DenseMatrix invLtL = chol.inverse();
         DenseMatrix K = L.abmm(invLtL).abtmm(L);
         

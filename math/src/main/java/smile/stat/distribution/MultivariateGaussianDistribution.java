@@ -15,8 +15,10 @@
  *******************************************************************************/
 package smile.stat.distribution;
 
-import smile.math.matrix.CholeskyDecomposition;
+import smile.math.matrix.Cholesky;
 import smile.math.Math;
+import smile.math.matrix.Matrix;
+import smile.math.matrix.DenseMatrix;
 
 /**
  * Multivariate Gaussian distribution.
@@ -29,11 +31,11 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
 
     private static final double LOG2PIE = Math.log(2 * Math.PI * Math.E);
     double[] mu;
-    double[][] sigma;
+    DenseMatrix sigma;
     boolean diagonal;
     private int dim;
-    private double[][] sigmaInv;
-    private double[][] sigmaL;
+    private DenseMatrix sigmaInv;
+    private DenseMatrix sigmaL;
     private double sigmaDet;
     private double pdfConstant;
     private int numParameters;
@@ -51,10 +53,10 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         }
 
         mu = new double[mean.length];
-        sigma = new double[mu.length][mu.length];
+        sigma = Matrix.zeros(mu.length, mu.length);
         for (int i = 0; i < mu.length; i++) {
             mu[i] = mean[i];
-            sigma[i][i] = var;
+            sigma.set(i, i, var);
         }
 
         diagonal = true;
@@ -76,14 +78,13 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         }
 
         mu = new double[mean.length];
-        sigma = new double[mu.length][mu.length];
+        sigma = Matrix.diag(var);
         for (int i = 0; i < mu.length; i++) {
             if (var[i] <= 0) {
                 throw new IllegalArgumentException("Variance is not positive: " + var[i]);
             }
 
             mu[i] = mean[i];
-            sigma[i][i] = var[i];
         }
 
         diagonal = true;
@@ -104,10 +105,9 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         }
 
         mu = new double[mean.length];
-        sigma = new double[mean.length][mean.length];
+        sigma = Matrix.newInstance(cov);
         for (int i = 0; i < mu.length; i++) {
             mu[i] = mean[i];
-            System.arraycopy(cov[i], 0, sigma[i], 0, mu.length);
         }
 
         diagonal = false;
@@ -134,18 +134,18 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         mu = Math.colMeans(data);
 
         if (diagonal) {
-            sigma = new double[data[0].length][data[0].length];
+            sigma = Matrix.zeros(data[0].length, data[0].length);
             for (int i = 0; i < data.length; i++) {
                 for (int j = 0; j < mu.length; j++) {
-                    sigma[j][j] += (data[i][j] - mu[j]) * (data[i][j] - mu[j]);
+                    sigma.add(j, j, (data[i][j] - mu[j]) * (data[i][j] - mu[j]));
                 }
             }
 
             for (int j = 0; j < mu.length; j++) {
-                sigma[j][j] /= (data.length - 1);
+                sigma.div(j, j, (data.length - 1));
             }
         } else {
-            sigma = Math.cov(data, mu);
+            sigma = Matrix.newInstance(Math.cov(data, mu));
         }
 
         numParameters = mu.length + mu.length * (mu.length + 1) / 2;
@@ -158,8 +158,8 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
      */
     private void init() {
         dim = mu.length;
-        CholeskyDecomposition cholesky = new CholeskyDecomposition(sigma);
-        sigmaInv = cholesky.inverse().array();
+        Cholesky cholesky = sigma.cholesky(false);
+        sigmaInv = cholesky.inverse();
         sigmaDet = cholesky.det();
         sigmaL = cholesky.getL();
         pdfConstant = (dim * Math.log(2 * Math.PI) + Math.log(sigmaDet)) / 2.0;
@@ -190,7 +190,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
 
     @Override
     public double[][] cov() {
-        return sigma;
+        return sigma.array();
     }
 
     /**
@@ -208,7 +208,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
 
         double[] v = x.clone();
         Math.minus(v, mu);
-        double result = Math.xax(sigmaInv, v) / -2.0;
+        double result = sigmaInv.xax(v) / -2.0;
         return result - pdfConstant;
     }
 
@@ -244,7 +244,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
 
         // d is always zero
         double[] f = new double[dim];
-        f[0] = GaussianDistribution.getInstance().cdf(v[0] / sigmaL[0][0]);
+        f[0] = GaussianDistribution.getInstance().cdf(v[0] / sigmaL.get(0, 0));
 
         double[] y = new double[dim];
 
@@ -256,10 +256,10 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
                 y[i - 1] = GaussianDistribution.getInstance().quantile(w[i - 1] * f[i - 1]);
                 double q = 0.0;
                 for (int j = 0; j < i; j++) {
-                    q += sigmaL[i][j] * y[j];
+                    q += sigmaL.get(i, j) * y[j];
                 }
 
-                f[i] = GaussianDistribution.getInstance().cdf((v[i] - q) / sigmaL[i][i]) * f[i - 1];
+                f[i] = GaussianDistribution.getInstance().cdf((v[i] - q) / sigmaL.get(i, i)) * f[i - 1];
             }
 
             double del = (f[dim - 1] - p) / N;
@@ -290,12 +290,12 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
             spt[i] = v / u;
         }
 
-        double[] pt = new double[sigmaL.length];
+        double[] pt = new double[sigmaL.nrows()];
 
         // pt = sigmaL * spt
         for (int i = 0; i < pt.length; i++) {
             for (int j = 0; j <= i; j++) {
-                pt[i] += sigmaL[i][j] * spt[j];
+                pt[i] += sigmaL.get(i, j) * spt[j];
             }
         }
 
@@ -369,10 +369,10 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         }
         builder.setCharAt(builder.length() - 1, ']');
         builder.append("\nSigma = [\n");
-        for (int i = 0; i < sigma.length; i++) {
+        for (int i = 0; i < sigma.nrows(); i++) {
             builder.append('\t');
-            for (int j = 0; j < sigma[i].length; j++) {
-                builder.append(sigma[i][j]).append(" ");
+            for (int j = 0; j < sigma.ncols(); j++) {
+                builder.append(sigma.get(i, j)).append(" ");
             }
             builder.append('\n');
         }

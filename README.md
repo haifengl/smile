@@ -13,6 +13,8 @@ regression, clustering, association rule mining, feature selection,
 manifold learning, multidimensional scaling, genetic algorithms,
 missing value imputation, efficient nearest neighbor search, etc.
 
+Please check out our [User Guide](http://haifengl.github.io/smile) for detailed tutorials and examples.
+
 The core algorithms are implemented in Java and self contained.
 
 * **Core**

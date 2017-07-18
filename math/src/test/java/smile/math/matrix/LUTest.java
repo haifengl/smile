@@ -71,7 +71,7 @@ public class LUTest {
     @Test
     public void testSolve() {
         System.out.println("solve a vector");
-        DenseMatrix a = new JMatrix(A);
+        JMatrix a = new JMatrix(A);
         LU result = a.lu();
         result.solve(b);
         for (int i = 0; i < x.length; i++) {
@@ -85,9 +85,9 @@ public class LUTest {
     @Test
     public void testSolveMatrix() {
         System.out.println("solve a matrix");
-        DenseMatrix a = new JMatrix(A);
+        JMatrix a = new JMatrix(A);
         LU result = a.lu();
-        DenseMatrix b = new JMatrix(B);
+        JMatrix b = new JMatrix(B);
         result.solve(b);
         for (int i = 0; i < X.length; i++) {
             for (int j = 0; j < X[i].length; j++) {

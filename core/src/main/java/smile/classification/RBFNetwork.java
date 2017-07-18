@@ -305,7 +305,6 @@ public class RBFNetwork<T> implements Classifier<T>, Serializable {
         int n = x.length;
         int m = rbf.length;
 
-        w = Matrix.zeros(m+1, k);
         DenseMatrix G = Matrix.zeros(n, m+1);
         DenseMatrix b = Matrix.zeros(n, k);
         for (int i = 0; i < n; i++) {
@@ -326,7 +325,15 @@ public class RBFNetwork<T> implements Classifier<T>, Serializable {
         }
 
         QR qr = G.qr();
-        qr.solve(b, w);
+        qr.solve(b);
+
+        // Copy the result from b to w
+        w = Matrix.zeros(m+1, k);
+        for (int j = 0; j < w.ncols(); j++) {
+            for (int i = 0; i < w.nrows(); i++) {
+                w.set(i, j, b.get(i, j));
+            }
+        }
     }
 
     @Override

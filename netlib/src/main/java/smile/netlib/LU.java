@@ -22,6 +22,7 @@ import com.github.fommil.netlib.LAPACK;
 import org.netlib.util.intW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import smile.math.matrix.Matrix;
 
 /**
  * For an m-by-n matrix A with m &ge; n, the LU decomposition is an m-by-n
@@ -38,7 +39,6 @@ import org.slf4j.LoggerFactory;
  * @author Haifeng Li
  */
 public class LU extends smile.math.matrix.LU {
-    private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(LU.class);
 
     /**
@@ -88,6 +88,7 @@ public class LU extends smile.math.matrix.LU {
         LAPACK.getInstance().dgetri(lu.ncols(), lu.data(), lu.ld(), piv, work, lwork, info);
 
         if (info.val != 0) {
+            logger.error("LAPACK DGETRI error code: {}", info.val);
             throw new IllegalArgumentException("LAPACK DGETRI error code: " + info.val);
         }
 
@@ -96,23 +97,9 @@ public class LU extends smile.math.matrix.LU {
 
     @Override
     public void solve(double[] b) {
-        int m = lu.nrows();
-        int n = lu.ncols();
-
-        if (b.length != m) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", lu.nrows(), lu.ncols(), b.length));
-        }
-
-        if (isSingular()) {
-            throw new RuntimeException("Matrix is singular.");
-        }
-
-        intW info = new intW(0);
-        LAPACK.getInstance().dgetrs(NLMatrix.Transpose, lu.nrows(), 1, lu.data(), lu.ld(), piv, b, b.length, info);
-
-        if (info.val < 0) {
-            throw new IllegalArgumentException("LAPACK DGETRS error code: " + info.val);
-        }
+        // B use b as the internal storage. Therefore b will contains the results.
+        DenseMatrix B = Matrix.newInstance(b);
+        solve(B);
     }
 
     @Override
@@ -132,6 +119,7 @@ public class LU extends smile.math.matrix.LU {
         LAPACK.getInstance().dgetrs(NLMatrix.Transpose, lu.nrows(), B.ncols(), lu.data(), lu.ld(), piv, B.data(), B.ld(), info);
 
         if (info.val < 0) {
+            logger.error("LAPACK DGETRS error code: {}", info.val);
             throw new IllegalArgumentException("LAPACK DGETRS error code: " + info.val);
         }
     }

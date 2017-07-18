@@ -246,7 +246,7 @@ public class SingularValueDecomposition {
     /**
      * Returns the Cholesky decomposition of A'A.
      */
-    public CholeskyDecomposition toCholesky() {
+    public Cholesky toCholesky() {
         DenseMatrix VD = Matrix.zeros(V.nrows(), V.ncols());
         for (int i = 0; i < V.nrows(); i++) {
             for (int j = 0; j < V.ncols(); j++) {
@@ -254,7 +254,7 @@ public class SingularValueDecomposition {
             }
         }
 
-        return new CholeskyDecomposition(VD.aat());
+        return new Cholesky(VD.aat());
     }
 
     /**

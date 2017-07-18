@@ -19,7 +19,7 @@ import java.io.Serializable;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.CholeskyDecomposition;
+import smile.math.matrix.Cholesky;
 import smile.math.matrix.EigenValueDecomposition;
 
 /**
@@ -172,7 +172,7 @@ public class PPCA implements Projection<double[]>, Serializable {
             M.add(i, i, noise);
         }
 
-        CholeskyDecomposition chol = new CholeskyDecomposition(M);
+        Cholesky chol = M.cholesky();
         DenseMatrix Mi = chol.inverse();
         projection = Mi.abtmm(loading);
 
