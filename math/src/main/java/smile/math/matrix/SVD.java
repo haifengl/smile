@@ -246,7 +246,7 @@ public class SVD {
     /**
      * Returns the Cholesky decomposition of A'A.
      */
-    public Cholesky toCholesky() {
+    public Cholesky CholeskyOfAtA() {
         DenseMatrix VD = Matrix.zeros(V.nrows(), V.ncols());
         for (int i = 0; i < V.nrows(); i++) {
             for (int j = 0; j < V.ncols(); j++) {
@@ -258,7 +258,10 @@ public class SVD {
     }
 
     /**
-     * Solve A * x = b using the pseudoinverse of A as obtained by SVD.
+     * Solve the least squares A*x = b.
+     * @param b   right hand side of linear system.
+     * @param x   the output solution vector that minimizes the L2 norm of Q*R*x - b.
+     * @exception  RuntimeException if matrix is rank deficient.
      */
     public void solve(double[] b, double[] x) {
         if (!full) {
@@ -291,27 +294,32 @@ public class SVD {
     }
 
     /**
-     * Solve A * X = B using the pseudoinverse of A as obtained by SVD.
+     * Solve the least squares A * X = B. B will be overwritten with the solution
+     * matrix on output.
+     * @param B    right hand side of linear system. B will be overwritten with
+     * the solution matrix on output.
+     * @exception  RuntimeException  Matrix is rank deficient.
      */
-    public void solve(double[][] B, double[][] X) {
+    public void solve(DenseMatrix B) {
         if (!full) {
             throw new IllegalStateException("This is not a FULL singular value decomposition.");
         }
 
-        if (B.length != n || X.length != n || B[0].length != X[0].length) {
+        if (B.nrows() != m) {
             throw new IllegalArgumentException("Dimensions do not agree.");
         }
 
-        double[] xx = new double[n];
-        int p = B[0].length;
+        double[] b = new double[m];
+        double[] x = new double[n];
+        int p = B.ncols();
         for (int j = 0; j < p; j++) {
-            for (int i = 0; i < n; i++) {
-                xx[i] = B[i][j];
+            for (int i = 0; i < m; i++) {
+                b[i] = B.get(i, j);
             }
 
-            solve(xx, xx);
+            solve(b, x);
             for (int i = 0; i < n; i++) {
-                X[i][j] = xx[i];
+                B.set(i, j, x[i]);
             }
         }
     }
