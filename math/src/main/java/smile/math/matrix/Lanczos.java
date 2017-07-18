@@ -135,7 +135,7 @@ public class Lanczos {
      * @param k the number of singular triples we wish to compute for the input matrix.
      * This number cannot exceed the size of A.
      */
-    public static SingularValueDecomposition svd(Matrix A, int k) {
+    public static SVD svd(Matrix A, int k) {
         return svd(A, k, 1.0E-6);
     }
 
@@ -148,7 +148,7 @@ public class Lanczos {
      * This number cannot exceed the size of A.
      * @param kappa relative accuracy of ritz values acceptable as singular values.
      */
-    public static SingularValueDecomposition svd(Matrix A, int k, double kappa) {
+    public static SVD svd(Matrix A, int k, double kappa) {
         ATA B = new ATA(A);
         EigenValueDecomposition eigen = Lanczos.eigen(B, k, kappa);
 
@@ -176,7 +176,7 @@ public class Lanczos {
                 }
             }
 
-            return new SingularValueDecomposition(U, V, s, false);
+            return new SVD(U, V, s, false);
 
         } else {
 
@@ -197,7 +197,7 @@ public class Lanczos {
                 }
             }
 
-            return new SingularValueDecomposition(U, V, s, false);
+            return new SVD(U, V, s, false);
         }
     }
 

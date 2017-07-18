@@ -224,11 +224,11 @@ trait Operators {
   def eigen(A: DenseMatrix, k: Int) = Lanczos.eigen(A, k)
 
   /** SVD decomposition. */
-  def svd(A: Array[Array[Double]]) = new SingularValueDecomposition(~A)
+  def svd(A: Array[Array[Double]]) = Matrix.newInstance(A).svd()
   /** SVD decomposition. */
-  def svd(A: DenseMatrix) = new SingularValueDecomposition(A.copy)
+  def svd(A: DenseMatrix) = A.copy().svd()
   /** SVD decomposition. */
-  def svd(A: MatrixExpression) = new SingularValueDecomposition(A.toMatrix)
+  def svd(A: MatrixExpression) = A.toMatrix.svd()
   /** SVD decomposition. */
   def svd(A: DenseMatrix, k: Int) = Lanczos.svd(A, k)
 

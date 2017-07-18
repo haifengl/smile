@@ -20,7 +20,7 @@ import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EigenValueDecomposition;
-import smile.math.matrix.SingularValueDecomposition;
+import smile.math.matrix.SVD;
 
 /**
  * Principal component analysis. PCA is an orthogonal
@@ -120,15 +120,15 @@ public class PCA implements Projection<double[]>, Serializable {
         n = data[0].length;
 
         mu = Math.colMeans(data);
-        double[][] x = Math.clone(data);
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                x[i][j] = data[i][j] - mu[j];
+        DenseMatrix x = Matrix.newInstance(data);
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                x.sub(i, j, mu[j]);
             }
         }
 
         if (m > n && !cor) {
-            SingularValueDecomposition svd = new SingularValueDecomposition(x);
+            SVD svd = x.svd();
             eigvalues = svd.getSingularValues();
             for (int i = 0; i < eigvalues.length; i++) {
                 eigvalues[i] *= eigvalues[i];
@@ -142,7 +142,7 @@ public class PCA implements Projection<double[]>, Serializable {
             for (int k = 0; k < m; k++) {
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j <= i; j++) {
-                        cov.add(i, j, x[k][i] * x[k][j]);
+                        cov.add(i, j, x.get(k, i) * x.get(k, j));
                     }
                 }
             }

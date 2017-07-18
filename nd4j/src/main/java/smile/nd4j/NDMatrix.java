@@ -20,6 +20,7 @@ import smile.math.matrix.Cholesky;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.LU;
 import smile.math.matrix.QR;
+import smile.math.matrix.SVD;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.inverse.InvertMatrix;
@@ -137,6 +138,11 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public QR qr() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public SVD svd() {
         throw new UnsupportedOperationException();
     }
 
