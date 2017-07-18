@@ -218,14 +218,14 @@ public class OLS implements Regression<double[]>, Serializable {
         System.arraycopy(w1, 0, w, 0, p);
 
         double[] yhat = new double[n];
-        X.ax(w1, yhat);
+        Matrix.newInstance(x).ax(w, yhat);
 
         double TSS = 0.0;
         RSS = 0.0;
         double ybar = Math.mean(y);
         residuals = new double[n];
         for (int i = 0; i < n; i++) {
-            double r = y[i] - yhat[i];
+            double r = y[i] - yhat[i] - b;
             residuals[i] = r;
             RSS += Math.sqr(r);
             TSS += Math.sqr(y[i] - ybar);
