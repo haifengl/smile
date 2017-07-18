@@ -23,6 +23,8 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 import smile.math.Math;
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 
 /**
  *
@@ -120,7 +122,7 @@ public class GHATest {
 
         int k = 3;
         double[] mu = Math.colMeans(USArrests);
-        double[][] cov = Math.cov(USArrests);
+        DenseMatrix cov = Matrix.newInstance(Math.cov(USArrests));
         for (int i = 0; i < USArrests.length; i++) {
            Math.minus(USArrests[i], mu);
         }
@@ -139,21 +141,21 @@ public class GHATest {
             }
         }
 
-        double[][] p = gha.getProjection();
-        double[][] t = Math.atamm(p);
+        DenseMatrix p = gha.getProjection();
+        DenseMatrix t = p.ata();
 
-        for (int i = 0; i < t.length; i++) {
-            for (int j = 0; j < t[i].length; j++) {
-                System.out.format("% .4f ", t[i][j]);
+        for (int i = 0; i < t.nrows(); i++) {
+            for (int j = 0; j < t.ncols(); j++) {
+                System.out.format("% .4f ", t.get(i, j));
             }
             System.out.println();
         }
 
-        double[][] s = Math.abtmm(Math.abmm(p, cov), p);
+        DenseMatrix s = p.abmm(cov).abtmm(p);
         double[] ev = new double[k];
         System.out.println("Relative error of eigenvalues:");
         for (int i = 0; i < k; i++) {
-            ev[i] = Math.abs(eigenvalues[i] - s[i][i]) / eigenvalues[i];
+            ev[i] = Math.abs(eigenvalues[i] - s.get(i, i)) / eigenvalues[i];
             System.out.format("%.4f ", ev[i]);
         }
         System.out.println();
@@ -164,9 +166,10 @@ public class GHATest {
 
         double[][] lt = Math.transpose(loadings);
         double[] evdot = new double[k];
+        double[][] pa = p.array();
         System.out.println("Dot products of learned eigenvectors to true eigenvectors:");
         for (int i = 0; i < k; i++) {
-            evdot[i] = Math.dot(lt[i], p[i]);
+            evdot[i] = Math.dot(lt[i], pa[i]);
             System.out.format("%.4f ", evdot[i]);
         }
         System.out.println();

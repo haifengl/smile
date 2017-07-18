@@ -728,31 +728,6 @@ public class MathTest {
     }
 
     /**
-     * Test of plusEquals method, of class Math.
-     */
-    @Test
-    public void testAdd_doubleArrArr_doubleArrArr() {
-        System.out.println("add");
-        double[][] A = {
-            {0.7220180, 0.07121225, 0.6881997},
-            {-0.2648886, -0.89044952, 0.3700456},
-            {-0.6391588, 0.44947578, 0.6240573}
-        };
-        double[][] B = {
-            {0.6881997, -0.07121225, 0.7220180},
-            {0.3700456, 0.89044952, -0.2648886},
-            {0.6240573, -0.44947578, -0.6391588}
-        };
-        double[][] C = {
-            {1.4102177, 0, 1.4102177},
-            {0.1051570, 0, 0.1051570},
-            {-0.0151015, 0, -0.0151015}
-        };
-        Math.plus(A, B);
-        assertTrue(Math.equals(A, C));
-    }
-
-    /**
      * Test of minusEquals method, of class Math.
      */
     @Test
@@ -763,91 +738,6 @@ public class MathTest {
         double[] z = {-0.4186894, -0.2900074, -0.9957886, 2.0028598, 0.7778815};
         Math.minus(x, y);
         assertTrue(Math.equals(x, z));
-    }
-
-    /**
-     * Test of minusEquals method, of class Math.
-     */
-    @Test
-    public void testMinusEquals_doubleArrArr_doubleArrArr() {
-        System.out.println("minus");
-        double[][] A = {
-            {0.7220180, 0.07121225, 0.6881997},
-            {-0.2648886, -0.89044952, 0.3700456},
-            {-0.6391588, 0.44947578, 0.6240573}
-        };
-        double[][] B = {
-            {0.6881997, -0.07121225, 0.7220180},
-            {0.3700456, 0.89044952, -0.2648886},
-            {0.6240573, -0.44947578, -0.6391588}
-        };
-        double[][] C = {
-            {0.0338183, 0.1424245, -0.0338183},
-            {-0.6349342, -1.7808990, 0.6349342},
-            {-1.2632161, 0.8989516, 1.2632161}
-        };
-        Math.minus(A, B);
-        assertTrue(Math.equals(A, C, 1E-7));
-    }
-
-    /**
-     * Test of times method, of class Math.
-     */
-    @Test
-    public void testTimes_doubleArrArr_doubleArrArr() {
-        System.out.println("times");
-        double[][] A = {
-            {0.7220180, 0.07121225, 0.6881997},
-            {-0.2648886, -0.89044952, 0.3700456},
-            {-0.6391588, 0.44947578, 0.6240573}
-        };
-        double[][] B = {
-            {0.6881997, -0.07121225, 0.7220180},
-            {0.3700456, 0.89044952, -0.2648886},
-            {0.6240573, -0.44947578, -0.6391588}
-        };
-        double[][] C = {
-            {0.9527204, -0.2973347, 0.06257778},
-            {-0.2808735, -0.9403636, -0.19190231},
-            {0.1159052, 0.1652528, -0.97941688}
-        };
-        assertTrue(Math.equals(Math.abmm(A, B), C, 1E-7));
-    }
-
-    /**
-     * Test of times method, of class Math.
-     */
-    @Test
-    public void testTimes_3args_1() {
-        System.out.println("ax");
-        double[][] A = {
-            {0.7220180, 0.07121225, 0.6881997},
-            {-0.2648886, -0.89044952, 0.3700456},
-            {-0.6391588, 0.44947578, 0.6240573}
-        };
-        double[] B = {0.6881997, 0.3700456, 0.6240573};
-        double[] C = {0.9527204, -0.2808735, 0.1159052};
-        double[] D = {0, 0, 0};
-        Math.ax(A, B, D);
-        assertTrue(Math.equals(D, C, 1E-7));
-    }
-
-    /**
-     * Test of times method, of class Math.
-     */
-    @Test
-    public void testTimes_3args_2() {
-        System.out.println("atx");
-        double[][] A = {
-            {0.6881997, -0.07121225, 0.7220180},
-            {0.3700456, 0.89044952, -0.2648886},
-            {0.6240573, -0.44947578, -0.6391588}
-        };
-        double[] B = {0.7220180, 0.07121225, 0.6881997};
-        double[] C = {0.9527204, -0.2973347, 0.06257778};
-        double[] D = {0, 0, 0};
-        Math.atx(A, B, D);
-        assertTrue(Math.equals(D, C, 1E-7));
     }
 
     /**

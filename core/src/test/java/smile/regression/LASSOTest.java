@@ -24,6 +24,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.math.Math;
+import smile.math.matrix.Matrix;
+import smile.math.matrix.DenseMatrix;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import static org.junit.Assert.*;
@@ -94,7 +96,8 @@ public class LASSOTest {
         
         double[] x0 = {1, 0, 1, 0};    // original signal
         double[] y = new double[A.length];
-        Math.ax(A, x0, y);          // measurements with no noise
+        DenseMatrix a = Matrix.newInstance(A);
+        a.ax(x0, y);          // measurements with no noise
         for (int i = 0; i < y.length; i++) {
             y[i] += 5;
         }
