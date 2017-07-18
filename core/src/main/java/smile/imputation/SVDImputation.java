@@ -18,7 +18,7 @@ package smile.imputation;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QR;
-import smile.math.matrix.SingularValueDecomposition;
+import smile.math.matrix.SVD;
 
 /**
  * Missing value imputation with singular value decomposition. Given SVD
@@ -120,7 +120,7 @@ public class SVDImputation implements MissingValueImputation {
      * @param data the data with current imputations.
      */
     private void svdImpute(double[][] raw, double[][] data) {
-        SingularValueDecomposition svd = new SingularValueDecomposition(data);
+        SVD svd = Matrix.newInstance(data).svd();
 
         int d = data[0].length;
 

@@ -103,6 +103,21 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
+     * Returns the singular value decomposition. Note that the input matrix
+     * will hold U on output.
+     */
+    public SVD svd();
+
+    /**
+     * Returns the singular value decomposition.
+     * @param inPlace if true, this matrix will hold U on output.
+     */
+    public default SVD svd(boolean inPlace) {
+        DenseMatrix a = inPlace ? this : copy();
+        return a.svd();
+    }
+
+    /**
      * Returns the matrix transpose.
      */
     public DenseMatrix transpose();
@@ -150,7 +165,7 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
      * L2 matrix norm. Maximum singular value.
      */
     public default double norm2() {
-        return new SingularValueDecomposition(this).norm();
+        return svd(false).norm();
     }
 
     /**

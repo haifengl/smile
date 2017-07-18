@@ -24,7 +24,7 @@ import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QR;
-import smile.math.matrix.SingularValueDecomposition;
+import smile.math.matrix.SVD;
 import smile.math.matrix.Cholesky;
 import smile.math.special.Beta;
 
@@ -196,9 +196,9 @@ public class OLS implements Regression<double[]>, Serializable {
         }
 
         QR qr = null;
-        SingularValueDecomposition svd = null;
+        SVD svd = null;
         if (SVD) {
-            svd = new SingularValueDecomposition(X);
+            svd = X.svd();
             svd.solve(y, w1);
         } else {
             try {
@@ -207,7 +207,7 @@ public class OLS implements Regression<double[]>, Serializable {
             } catch (RuntimeException e) {
                 logger.warn("Matrix is not of full rank, try SVD instead");
                 SVD = true;
-                svd = new SingularValueDecomposition(X);
+                svd = X.svd();
                 Arrays.fill(w1, 0.0);
                 svd.solve(y, w1);
             }
