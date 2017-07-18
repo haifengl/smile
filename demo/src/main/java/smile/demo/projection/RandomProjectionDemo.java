@@ -23,6 +23,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import smile.math.matrix.DenseMatrix;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.projection.PCA;
@@ -94,10 +95,10 @@ public class RandomProjectionDemo extends ProjectionDemo {
 
         RandomProjection rp = new RandomProjection(data[0].length, 2, sparseBox.isSelected());
         System.out.format("%d x %d Random Projection:\n", data[0].length, 3);
-        double[][] projection = rp.getProjection();
-        for (int i = 0; i < projection.length; i++) {
-            for (int j = 0; j < projection[i].length; j++) {
-                System.out.format("% .4f ", projection[i][j]);
+        DenseMatrix projection = rp.getProjection();
+        for (int i = 0; i < projection.nrows(); i++) {
+            for (int j = 0; j < projection.ncols(); j++) {
+                System.out.format("% .4f ", projection.get(i, j));
             }
             System.out.println();
         }
@@ -121,9 +122,9 @@ public class RandomProjectionDemo extends ProjectionDemo {
         rp = new RandomProjection(data[0].length, 3, sparseBox.isSelected());
         System.out.format("%d x %d Random Projection:\n", data[0].length, 3);
         projection = rp.getProjection();
-        for (int i = 0; i < projection.length; i++) {
-            for (int j = 0; j < projection[i].length; j++) {
-                System.out.format("% .4f ", projection[i][j]);
+        for (int i = 0; i < projection.nrows(); i++) {
+            for (int j = 0; j < projection.ncols(); j++) {
+                System.out.format("% .4f ", projection.get(i, j));
             }
             System.out.println();
         }
