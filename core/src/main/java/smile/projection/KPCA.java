@@ -176,7 +176,13 @@ public class KPCA<T> implements Projection<T>, Serializable {
             }
         }
 
-        coordinates = K.abtmm(projection).array();
+        DenseMatrix coord = projection.abmm(K);
+        coordinates = new double[n][p];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < p; j++) {
+                coordinates[i][j] = coord.get(j, i);
+            }
+        }
     }
 
     /**

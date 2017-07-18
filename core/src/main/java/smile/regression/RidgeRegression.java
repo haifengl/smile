@@ -18,7 +18,8 @@ package smile.regression;
 
 import java.io.Serializable;
 import smile.math.Math;
-import smile.math.matrix.CholeskyDecomposition;
+import smile.math.matrix.Matrix;
+import smile.math.matrix.Cholesky;
 import smile.math.matrix.DenseMatrix;
 import smile.math.special.Beta;
 
@@ -200,17 +201,17 @@ public class RidgeRegression implements Regression<double[]>, Serializable {
         ym = Math.mean(y);                
         center = Math.colMeans(x);
         
-        double[][] X = new double[n][p];
+        DenseMatrix X = Matrix.zeros(n, p);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
-                X[i][j] = x[i][j] - center[j];
+                X.set(i, j, x[i][j] - center[j]);
             }
         }
         
         scale = new double[p];
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
-                scale[j] += Math.sqr(X[i][j]);
+                scale[j] += Math.sqr(X.get(i, j));
             }
             scale[j] = Math.sqrt(scale[j] / n);
         }
@@ -218,19 +219,19 @@ public class RidgeRegression implements Regression<double[]>, Serializable {
         for (int j = 0; j < p; j++) {
             if (!Math.isZero(scale[j])) {
                 for (int i = 0; i < n; i++) {
-                    X[i][j] /= scale[j];
+                    X.div(i, j, scale[j]);
                 }
             }
         }
 
         w = new double[p];
-        Math.atx(X, y, w);
+        X.atx(y, w);
 
-        double[][] XtX = Math.atamm(X);
+        DenseMatrix XtX = X.ata();;
         for (int i = 0; i < p; i++) {
-            XtX[i][i] += lambda;
+            XtX.add(i, i, lambda);
         }
-        CholeskyDecomposition cholesky = new CholeskyDecomposition(XtX);
+        Cholesky cholesky = XtX.cholesky();;
 
         cholesky.solve(w);
         

@@ -16,6 +16,7 @@
 
 package smile.nd4j;
 
+import smile.math.matrix.Cholesky;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.LU;
 import smile.math.matrix.QR;
@@ -124,6 +125,11 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public LU lu() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Cholesky cholesky() {
         throw new UnsupportedOperationException();
     }
 

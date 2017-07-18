@@ -57,6 +57,7 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
 
     /**
      * Returns the LU decomposition.
+     * This input matrix will be overwritten with the decomposition.
      */
     public LU lu();
 
@@ -70,7 +71,25 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
+     * Returns the Cholesky decomposition.
+     * This input matrix will be overwritten with the decomposition.
+     * @throws IllegalArgumentException if the matrix is not positive definite.
+     */
+    public Cholesky cholesky();
+
+    /**
+     * Returns the Cholesky decomposition.
+     * @param inPlace if true, this matrix will be used for matrix decomposition.
+     * @throws IllegalArgumentException if the matrix is not positive definite.
+     */
+    public default Cholesky cholesky(boolean inPlace) {
+        DenseMatrix a = inPlace ? this : copy();
+        return a.cholesky();
+    }
+
+    /**
      * Returns the QR decomposition.
+     * This input matrix will be overwritten with the decomposition.
      */
     public QR qr();
 
@@ -100,13 +119,12 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
      * @param inPlace if true, this matrix will be used for matrix decomposition.
      */
     public default DenseMatrix inverse(boolean inPlace) {
-        if (nrows() == ncols()) {
-            LU lu = lu(inPlace);
-            return lu.inverse();
-        } else {
-            QR qr = qr(inPlace);
-            return qr.inverse();
+        if (nrows() != ncols()) {
+            throw new UnsupportedOperationException("Call inverse() on a non-square matrix");
         }
+
+        LU lu = lu(inPlace);
+        return lu.inverse();
     }
 
     /**

@@ -18,10 +18,11 @@ package smile.netlib;
 
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.JMatrix;
-import smile.math.matrix.QR;
 import com.github.fommil.netlib.BLAS;
 import com.github.fommil.netlib.LAPACK;
 import org.netlib.util.intW;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Column-major matrix that employs netlib for matrix-vector and matrix-matrix
@@ -30,9 +31,21 @@ import org.netlib.util.intW;
  * @author Haifeng Li
  */
 public class NLMatrix extends JMatrix {
+    private static final Logger logger = LoggerFactory.getLogger(NLMatrix.class);
+
     static String NoTranspose = "N";
     static String Transpose   = "T";
     static String ConjugateTranspose = "C";
+
+    static String Upper = "U";
+    static String Lower = "L";
+
+    static String Left = "L";
+    static String Right = "R";
+
+    /** The diagonal elements are assumed to be 1. */
+    static String UnitTriangular = "U";
+    static String NonUnitTriangular = "N";
 
     /**
      * Constructor.
@@ -43,7 +56,7 @@ public class NLMatrix extends JMatrix {
     }
 
     /**
-     * Constructor of a column vector/matrix initialized with given array.
+     * Constructor of a column vector/matrix with given array as the internal storage.
      * @param A the array of column vector.
      */
     public NLMatrix(double[] A) {
@@ -128,8 +141,8 @@ public class NLMatrix extends JMatrix {
         if (B instanceof JMatrix) {
             NLMatrix C = new NLMatrix(nrows(), B.ncols());
             BLAS.getInstance().dgemm(NoTranspose, NoTranspose,
-                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), ((JMatrix) B).data(),
-                    B.ld(), 1, C.data(), C.ld());
+                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), B.data(),
+                    B.ld(), 0.0, C.data(), C.ld());
             return C;
         }
 
@@ -141,12 +154,12 @@ public class NLMatrix extends JMatrix {
         if (B instanceof JMatrix) {
             NLMatrix C = new NLMatrix(nrows(), B.ncols());
             BLAS.getInstance().dgemm(NoTranspose, Transpose,
-                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), ((JMatrix) B).data(),
-                    B.ld(), 1, C.data(), C.ld());
+                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), B.data(),
+                    B.ld(), 0.0, C.data(), C.ld());
             return C;
         }
 
-        throw new IllegalArgumentException("NLMatrix.abmm() parameter must be JMatrix");
+        throw new IllegalArgumentException("NLMatrix.abtmm() parameter must be JMatrix");
     }
 
     @Override
@@ -154,12 +167,12 @@ public class NLMatrix extends JMatrix {
         if (B instanceof JMatrix) {
             NLMatrix C = new NLMatrix(nrows(), B.ncols());
             BLAS.getInstance().dgemm(Transpose, NoTranspose,
-                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), ((JMatrix) B).data(),
-                    B.ld(), 1, C.data(), C.ld());
+                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), B.data(),
+                    B.ld(), 0.0, C.data(), C.ld());
             return C;
         }
 
-        throw new IllegalArgumentException("NLMatrix.abmm() parameter must be JMatrix");
+        throw new IllegalArgumentException("NLMatrix.atbmm() parameter must be JMatrix");
     }
 
     @Override
@@ -182,12 +195,38 @@ public class NLMatrix extends JMatrix {
         intW info = new intW(0);
         LAPACK.getInstance().dgetrf(nrows(), ncols(), data(), ld(), piv, info);
 
-        if (info.val > 0)
+        if (info.val > 0) {
             singular = true;
-        else if (info.val < 0)
+        }
+
+        if (info.val < 0) {
+            logger.error("LAPACK DGETRF error code: {}", info.val);
             throw new IllegalArgumentException("LAPACK DGETRF error code: " + info.val);
+        }
 
         return new LU(this, piv, singular);
+    }
+
+    @Override
+    public Cholesky cholesky() {
+        if (nrows() != ncols()) {
+            throw new UnsupportedOperationException("Cholesky decomposition on non-square matrix");
+        }
+
+        intW info = new intW(0);
+        LAPACK.getInstance().dpotrf(NLMatrix.Lower, nrows(), data(), ld(), info);
+
+        if (info.val > 0) {
+            logger.error("LAPACK DPOTRF error code: {}", info.val);
+            throw new IllegalArgumentException("The matrix is not positive definite.");
+        }
+
+        if (info.val < 0) {
+            logger.error("LAPACK DPOTRF error code: {}", info.val);
+            throw new IllegalArgumentException("LAPACK DPOTRF error code: " + info.val);
+        }
+
+        return new Cholesky(this);
     }
 
     @Override
@@ -197,7 +236,7 @@ public class NLMatrix extends JMatrix {
         int m = nrows();
         int n = ncols();
 
-        // Query optimal workspace. First for computing the factorization
+        // Query optimal workspace.
         double[] work = new double[1];
         intW info = new intW(0);
         LAPACK.getInstance().dgeqrf(m, n, new double[0], m, new double[0], work, -1, info);
@@ -205,18 +244,26 @@ public class NLMatrix extends JMatrix {
         int lwork = n;
         if (info.val == 0) {
             lwork = (int) work[0];
+            logger.info("LAPACK DEGQRF returns work space size: {}", lwork);
+        } else {
+            logger.info("LAPACK DEGQRF error code: {}", info.val);
         }
 
         lwork = Math.max(1, lwork);
         work = new double[lwork];
 
+        info.val = 0;
         double[] tau = new double[Math.min(nrows(), ncols())];
         LAPACK.getInstance().dgeqrf(nrows(), ncols(), data(), ld(), tau, work, lwork, info);
 
-        if (info.val > 0)
+        if (info.val > 0) {
             singular = true;
-        else if (info.val < 0)
+        }
+
+        if (info.val < 0) {
+            logger.error("LAPACK DGETRF error code: {}", info.val);
             throw new IllegalArgumentException("LAPACK DGETRF error code: " + info.val);
+        }
 
         return new QR(this, tau, singular);
     }

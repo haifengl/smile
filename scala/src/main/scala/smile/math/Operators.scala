@@ -208,11 +208,11 @@ trait Operators {
   def qr(A: MatrixExpression) = A.toMatrix.qr()
 
   /** Cholesky decomposition. */
-  def cholesky(A: Array[Array[Double]]) = new CholeskyDecomposition(~A)
+  def cholesky(A: Array[Array[Double]]) =  Matrix.newInstance(A).cholesky()
   /** Cholesky decomposition. */
-  def cholesky(A: DenseMatrix) = new CholeskyDecomposition(A.copy)
+  def cholesky(A: DenseMatrix) = A.copy().cholesky()
   /** Cholesky decomposition. */
-  def cholesky(A: MatrixExpression) = new CholeskyDecomposition(A.toMatrix)
+  def cholesky(A: MatrixExpression) = A.toMatrix.cholesky()
 
   /** Eigen decomposition. */
   def eigen(A: Array[Array[Double]]) = new EigenValueDecomposition(~A)

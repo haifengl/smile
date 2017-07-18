@@ -25,7 +25,7 @@ import smile.math.Math;
  * The QR decomposition always exists, even if the matrix does not have
  * full rank. The primary use of the QR decomposition is in the least squares
  * solution of non-square systems of simultaneous linear equations, where
- * {@link #isFullColumnRank} has to be true.
+ * {@link #isSingular()} has to be false.
  * <p>
  * QR decomposition is also the basis for a particular eigenvalue algorithm,
  * the QR algorithm.
@@ -37,15 +37,16 @@ public class QR {
     /**
      * Array for internal storage of decomposition.
      */
-    private DenseMatrix qr;
+    protected DenseMatrix qr;
     /**
-     * Array for internal storage of diagonal of Q or R (depending on the implementation).
+     * The diagonal of R for this implementation.
+     * For netlib based QR, this is the scales for the reflectors.
      */
-    private double[] tau;
+    protected double[] tau;
     /**
      * Indicate if the matrix is singular.
      */
-    private boolean singular;
+    protected boolean singular;
 
     /**
      * Constructor.
@@ -57,64 +58,39 @@ public class QR {
     }
 
     /**
-     * Returns true if the matrix is full column rank.
-     */
-    public boolean isFullColumnRank() {
-        return !singular;
-    }
-
-    /**
-     * Returns true if the matrix is singular.
+     * Returns true if the matrix is singular (not full column rank).
      */
     public boolean isSingular() {
         return singular;
     }
 
     /**
-     * Returns the Householder vectors.
-     * @return  Lower trapezoidal matrix whose columns define the reflections
-     */
-    public DenseMatrix getH() {
-        int m = qr.nrows();
-        int n = qr.ncols();
-        DenseMatrix H = Matrix.zeros(m, n);
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j <= i; j++) {
-                H.set(i, j, qr.get(i, j));
-            }
-        }
-        return H;
-    }
-
-    /**
      * Returns the Cholesky decomposition of A'A.
      */
-    public CholeskyDecomposition toCholesky() {
+    public Cholesky CholeskyOfAtA() {
         int n = qr.ncols();
 
-        double[][] L = new double[n][];
+        DenseMatrix L = Matrix.zeros(n, n);
         for (int i = 0; i < n; i++) {
-            L[i] = new double[i+1];
-            L[i][i] = tau[i];
+            L.set(i, i, tau[i]);
 
             for (int j = 0; j < i; j++) {
-                L[i][j] = qr.get(j, i);
+                L.set(i, j, qr.get(j, i));
             }
         }
 
-        return CholeskyDecomposition.newInstance(L);
+        return new Cholesky(L);
     }
 
     /**
      * Returns the upper triangular factor.
      */
     public DenseMatrix getR() {
-        int m = qr.nrows();
         int n = qr.ncols();
-        DenseMatrix R = Matrix.zeros(m, n);
+        DenseMatrix R = Matrix.zeros(n, n);
         for (int i = 0; i < n; i++) {
             R.set(i, i, tau[i]);
-            for (int j = i; j < n; j++) {
+            for (int j = i+1; j < n; j++) {
                 R.set(i, j, qr.get(i, j));
             }
         }
@@ -146,61 +122,28 @@ public class QR {
         return Q;
     }
 
-    /**
-     * Returns the matrix pseudo inverse.
-     */
-    public DenseMatrix inverse() {
-        DenseMatrix inv = Matrix.eye(qr.ncols(), qr.nrows());
-        solve(inv);
-        return inv;
-    }
-
-    /**
+   /**
      * Solve the least squares A*x = b.
      * @param b   right hand side of linear system.
-     * @param x   the solution vector that minimizes the L2 norm of Q*R*x - b.
+    *  @param x   the output solution vector that minimizes the L2 norm of Q*R*x - b.
      * @exception  RuntimeException if matrix is rank deficient.
      */
     public void solve(double[] b, double[] x) {
-        int m = qr.nrows();
-        int n = qr.ncols();
-
-        if (b.length != m) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but b is %d x 1", qr.nrows(), qr.ncols(), b.length));
+        if (b.length != qr.nrows()) {
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", qr.nrows(), qr.nrows(), b.length));
         }
 
-        if (x.length != n) {
-            throw new IllegalArgumentException("A and x dimensions do not agree.");
+        if (x.length != qr.ncols()) {
+            throw new IllegalArgumentException("A and x dimensions don't match.");
         }
 
-        if (!isFullColumnRank()) {
+        if (singular) {
             throw new RuntimeException("Matrix is rank deficient.");
         }
 
-        // Compute Y = transpose(Q) * b
-        double[] y = b;
-        if (b != x) {
-            y = b.clone();
-        }
-        
-        for (int k = 0; k < n; k++) {
-            double s = 0.0;
-            for (int i = k; i < m; i++) {
-                s += qr.get(i, k) * y[i];
-            }
-            s = -s / qr.get(k, k);
-            for (int i = k; i < m; i++) {
-                y[i] += s * qr.get(i, k);
-            }
-        }
-
-        // Solve R*X = Y;
-        for (int k = n - 1; k >= 0; k--) {
-            x[k] = y[k] / tau[k];
-            for (int i = 0; i < k; i++) {
-                y[i] -= x[k] * qr.get(i, k);
-            }
-        }
+        double[] B = b.clone();
+        solve(Matrix.newInstance(B));
+        System.arraycopy(B, 0, x, 0, x.length);
     }
 
     /**
@@ -211,76 +154,41 @@ public class QR {
      * @exception  RuntimeException  Matrix is rank deficient.
      */
     public void solve(DenseMatrix B) {
-        if (qr.nrows() != qr.ncols()) {
-            throw new UnsupportedOperationException("In-place solver supports only square matrix.");
-        }
-
-        solve(B, B);
-    }
-
-    /**
-     * Solve the least squares A * X = B.
-     * @param B    right hand side of linear system.
-     * @param X    the solution matrix that minimizes the L2 norm of Q*R*X - B.
-     * @exception  RuntimeException  Matrix is rank deficient.
-     */
-    public void solve(DenseMatrix B, DenseMatrix X) {
         if (B.nrows() != qr.nrows()) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", qr.nrows(), qr.nrows(), B.nrows(), B.ncols()));
         }
 
-        if (X.nrows() != qr.ncols()) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but X is %d x %d", qr.nrows(), qr.nrows(), X.nrows(), X.ncols()));
-        }
-
-        if (B.ncols() != X.ncols()) {
-            throw new IllegalArgumentException(String.format("B and X column dimension do not agree: B is %d x %d, but X is %d x %d", B.nrows(), B.ncols(), X.nrows(), X.ncols()));
-        }
-
-        if (!isFullColumnRank()) {
+        if (singular) {
             throw new RuntimeException("Matrix is rank deficient.");
         }
 
-        if (X.ncols() != B.ncols()) {
-            throw new IllegalArgumentException("B and X dimensions do not agree.");
-        }
-
-        // Copy right hand side
         int m = qr.nrows();
         int n = qr.ncols();
-        int nx = B.ncols();
+        int nrhs = B.ncols();
 
-        // Compute Y = transpose(Q)*B
-        if (B != X) {
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < nx; j++) {
-                    X.set(i, j, B.get(i, j));
-                }
-            }
-        }
-        
+        // Compute Y = Q' * B
         for (int k = 0; k < n; k++) {
-            for (int j = 0; j < nx; j++) {
+            for (int j = 0; j < nrhs; j++) {
                 double s = 0.0;
                 for (int i = k; i < m; i++) {
-                    s += qr.get(i, k) * X.get(i, j);
+                    s += qr.get(i, k) * B.get(i, j);
                 }
                 s = -s / qr.get(k, k);
                 for (int i = k; i < m; i++) {
-                    X.add(i, j, s * qr.get(i, k));
+                    B.add(i, j, s * qr.get(i, k));
                 }
             }
         }
 
         // Solve R*X = Y;
         for (int k = n - 1; k >= 0; k--) {
-            for (int j = 0; j < nx; j++) {
-                X.set(k, j, X.get(k, j) / tau[k]);
+            for (int j = 0; j < nrhs; j++) {
+                B.set(k, j, B.get(k, j) / tau[k]);
             }
             
             for (int i = 0; i < k; i++) {
-                for (int j = 0; j < nx; j++) {
-                    X.sub(i, j, X.get(k, j) * qr.get(i, k));
+                for (int j = 0; j < nrhs; j++) {
+                    B.sub(i, j, B.get(k, j) * qr.get(i, k));
                 }
             }
         }
@@ -341,7 +249,7 @@ public class QR {
 
     /*
      * Utility used by update for Jacobi rotation on rows i and i+1 of qr.
-     * a and b are the paramters of the rotation:
+     * a and b are the parameters of the rotation:
      * cos &theta; = a / sqrt(a<sup>2</sup>+b<sup>2</sub>)
      * sin &theta; = b / sqrt(a<sup>2</sup>+b<sup>2</sub>)
      */

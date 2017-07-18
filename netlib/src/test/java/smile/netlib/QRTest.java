@@ -14,7 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.math.matrix;
+package smile.netlib;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -27,7 +27,8 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class LUTest {
+public class QRTest {
+
     double[][] A = {
         {0.9000, 0.4000, 0.7000},
         {0.4000, 0.5000, 0.3000},
@@ -46,7 +47,7 @@ public class LUTest {
         {0.4729730, 0.6621622}
     };
 
-    public LUTest() {
+    public QRTest() {
     }
 
     @BeforeClass
@@ -66,28 +67,28 @@ public class LUTest {
     }
 
     /**
-     * Test of solve method, of class LUDecomposition.
+     * Test of solve method, of class QRDecomposition.
      */
     @Test
     public void testSolve() {
-        System.out.println("solve a vector");
-        JMatrix a = new JMatrix(A);
-        LU result = a.lu();
-        result.solve(b);
+        System.out.println("solve");
+        NLMatrix a = new NLMatrix(A);
+        QR result = a.qr();
+        result.solve(b.clone(), b);
         for (int i = 0; i < x.length; i++) {
             assertEquals(x[i], b[i], 1E-7);
         }
     }
 
     /**
-     * Test of solve method, of class LUDecomposition.
+     * Test of solve method, of class QRDecomposition.
      */
     @Test
     public void testSolveMatrix() {
-        System.out.println("solve a matrix");
-        JMatrix a = new JMatrix(A);
-        LU result = a.lu();
-        JMatrix b = new JMatrix(B);
+        System.out.println("solve");
+        NLMatrix a = new NLMatrix(A);
+        QR result = a.qr();
+        NLMatrix b = new NLMatrix(B);
         result.solve(b);
         for (int i = 0; i < X.length; i++) {
             for (int j = 0; j < X[i].length; j++) {

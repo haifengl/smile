@@ -20,7 +20,7 @@ import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.math.rbf.RadialBasisFunction;
-import smile.math.matrix.CholeskyDecomposition;
+import smile.math.matrix.Cholesky;
 import smile.math.matrix.LU;
 
 /**
@@ -128,7 +128,7 @@ public class RBFInterpolation1D implements Interpolation {
         }
 
         if (rbf instanceof GaussianRadialBasis) {
-            CholeskyDecomposition cholesky = new CholeskyDecomposition(G);
+            Cholesky cholesky = G.cholesky();
             cholesky.solve(rhs);
             w = rhs;
         } else {

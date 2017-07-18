@@ -56,12 +56,13 @@ public class JMatrix implements DenseMatrix {
     }
 
     /**
-     * Constructor of a column vector/matrix initialized with given array.
+     * Constructor of a column vector/matrix with given array as the internal storage.
      * @param A the array of column vector.
      */
     public JMatrix(double[] A) {
-        this(A.length, 1);
-        System.arraycopy(A, 0, this.A, 0, A.length);
+        this.nrows = A.length;
+        this.ncols = 1;
+        this.A = A;
     }
 
     /**
@@ -893,6 +894,44 @@ public class JMatrix implements DenseMatrix {
         }
 
         return new LU(this, piv, pivsign, singular);
+    }
+
+    /**
+     * Cholesky decomposition for symmetric and positive definite matrix.
+     * Only the lower triangular part will be used in the decomposition.
+     *
+     * @throws IllegalArgumentException if the matrix is not positive definite.
+     */
+    @Override
+    public Cholesky cholesky() {
+        if (nrows() != ncols()) {
+            throw new UnsupportedOperationException("Cholesky decomposition on non-square matrix");
+        }
+
+        int n = nrows();
+
+        // Main loop.
+        for (int j = 0; j < n; j++) {
+            double d = 0.0;
+            for (int k = 0; k < j; k++) {
+                double s = 0.0;
+                for (int i = 0; i < k; i++) {
+                    s += get(k, i) * get(j, i);
+                }
+                s = (get(j, k) - s) / get(k, k);
+                set(j, k, s);
+                d = d + s * s;
+            }
+            d = get(j, j) - d;
+
+            if (d < 0.0) {
+                throw new IllegalArgumentException("The matrix is not positive definite.");
+            }
+
+            set(j, j, Math.sqrt(d));
+        }
+
+        return new Cholesky(this);
     }
 
     /**

@@ -27,11 +27,16 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class LUTest {
+public class CholeskyTest {
     double[][] A = {
         {0.9000, 0.4000, 0.7000},
         {0.4000, 0.5000, 0.3000},
         {0.7000, 0.3000, 0.8000}
+    };
+    double[][] L = {
+        {0.9486833, 0.00000000, 0.0000000},
+        {0.4216370, 0.56764621, 0.0000000},
+        {0.7378648, -0.01957401, 0.5051459}
     };
     double[] b = {0.5, 0.5, 0.5};
     double[] x = {-0.2027027, 0.8783784, 0.4729730};
@@ -46,7 +51,7 @@ public class LUTest {
         {0.4729730, 0.6621622}
     };
 
-    public LUTest() {
+    public CholeskyTest() {
     }
 
     @BeforeClass
@@ -66,29 +71,44 @@ public class LUTest {
     }
 
     /**
-     * Test of solve method, of class LUDecomposition.
+     * Test of decompose method, of class CholeskyDecomposition.
+     */
+    @Test
+    public void testDecompose() {
+        System.out.println("decompose");
+        JMatrix a = new JMatrix(A);
+        Cholesky cholesky = a.cholesky();
+        for (int i = 0; i < a.nrows(); i++) {
+            for (int j = 0; j <= i; j++) {
+                assertEquals(Math.abs(L[i][j]), Math.abs(a.get(i, j)), 1E-7);
+            }
+        }
+    }
+
+    /**
+     * Test of solve method, of class CholeskyDecomposition.
      */
     @Test
     public void testSolve() {
-        System.out.println("solve a vector");
+        System.out.println("solve");
         JMatrix a = new JMatrix(A);
-        LU result = a.lu();
-        result.solve(b);
+        Cholesky cholesky = a.cholesky();
+        cholesky.solve(b);
         for (int i = 0; i < x.length; i++) {
             assertEquals(x[i], b[i], 1E-7);
         }
     }
 
     /**
-     * Test of solve method, of class LUDecomposition.
+     * Test of solve method, of class CholeskyDecomposition.
      */
     @Test
     public void testSolveMatrix() {
-        System.out.println("solve a matrix");
+        System.out.println("solve");
         JMatrix a = new JMatrix(A);
-        LU result = a.lu();
+        Cholesky cholesky = a.cholesky();
         JMatrix b = new JMatrix(B);
-        result.solve(b);
+        cholesky.solve(b);
         for (int i = 0; i < X.length; i++) {
             for (int j = 0; j < X[i].length; j++) {
                 assertEquals(X[i][j], b.get(i, j), 1E-7);
