@@ -59,6 +59,8 @@ import java.util.Arrays;
  * @author Haifeng Li
  */
 public class BandMatrix implements Matrix, LinearSolver {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Compact store of band matrix as A[0, n-1][0, m1+m2].
      */

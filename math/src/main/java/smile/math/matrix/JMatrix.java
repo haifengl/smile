@@ -25,6 +25,7 @@ import smile.stat.distribution.GaussianDistribution;
  * doubles in column major order.
  */
 public class JMatrix implements DenseMatrix {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The matrix storage.
