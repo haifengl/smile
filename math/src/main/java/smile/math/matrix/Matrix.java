@@ -16,6 +16,8 @@
 
 package smile.math.matrix;
 
+import java.io.Serializable;
+
 /**
  * An abstract interface of matrix. The most important method is the matrix vector
  * multiplication, which is the only operation needed in many iterative matrix
@@ -64,7 +66,7 @@ package smile.math.matrix;
  *
  * @author Haifeng Li
  */
-public interface Matrix {
+public interface Matrix extends Serializable {
     /**
      * Returns an matrix initialized by given two-dimensional array.
      */

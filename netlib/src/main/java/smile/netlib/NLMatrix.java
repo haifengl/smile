@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
  * @author Haifeng Li
  */
 public class NLMatrix extends JMatrix {
+    private static final long serialVersionUID = 1L;
+
     private static final Logger logger = LoggerFactory.getLogger(NLMatrix.class);
 
     static String NoTranspose = "N";

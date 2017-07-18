@@ -30,6 +30,8 @@ import org.nd4j.linalg.inverse.InvertMatrix;
  * @author Haifeng Li
  */
 public class NDMatrix implements DenseMatrix {
+    private static final long serialVersionUID = 1L;
+
     /**
      * The matrix storage.
      */
