@@ -141,10 +141,13 @@ public class NLMatrix extends JMatrix {
     @Override
     public NLMatrix abmm(DenseMatrix B) {
         if (B instanceof JMatrix) {
-            NLMatrix C = new NLMatrix(nrows(), B.ncols());
+            int m = nrows();
+            int n = B.ncols();
+            int k = ncols();
+            NLMatrix C = new NLMatrix(m, n);
             BLAS.getInstance().dgemm(NoTranspose, NoTranspose,
-                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), B.data(),
-                    B.ld(), 0.0, C.data(), C.ld());
+                    m, n, k, 1.0, data(), m, B.data(),
+                    k, 0.0, C.data(), m);
             return C;
         }
 
@@ -154,10 +157,13 @@ public class NLMatrix extends JMatrix {
     @Override
     public NLMatrix abtmm(DenseMatrix B) {
         if (B instanceof JMatrix) {
-            NLMatrix C = new NLMatrix(nrows(), B.ncols());
+            int m = nrows();
+            int n = B.nrows();
+            int k = ncols();
+            NLMatrix C = new NLMatrix(m, n);
             BLAS.getInstance().dgemm(NoTranspose, Transpose,
-                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), B.data(),
-                    B.ld(), 0.0, C.data(), C.ld());
+                    m, n, k, 1.0, data(), m, B.data(),
+                    n, 0.0, C.data(), m);
             return C;
         }
 
@@ -167,10 +173,13 @@ public class NLMatrix extends JMatrix {
     @Override
     public NLMatrix atbmm(DenseMatrix B) {
         if (B instanceof JMatrix) {
-            NLMatrix C = new NLMatrix(nrows(), B.ncols());
+            int m = ncols();
+            int n = B.ncols();
+            int k = nrows();
+            NLMatrix C = new NLMatrix(m, n);
             BLAS.getInstance().dgemm(Transpose, NoTranspose,
-                    nrows(), B.ncols(), ncols(), 1.0, data(), ld(), B.data(),
-                    B.ld(), 0.0, C.data(), C.ld());
+                    m, n, k, 1.0, data(), k, B.data(),
+                    k, 0.0, C.data(), m);
             return C;
         }
 
