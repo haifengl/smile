@@ -18,6 +18,7 @@ package smile.netlib;
 
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.JMatrix;
+import smile.math.matrix.SVD;
 import com.github.fommil.netlib.BLAS;
 import com.github.fommil.netlib.LAPACK;
 import org.netlib.util.intW;
@@ -277,5 +278,44 @@ public class NLMatrix extends JMatrix {
         }
 
         return new QR(this, tau, singular);
+    }
+
+    @Override
+    public SVD svd() {
+        int m = nrows();
+        int n = ncols();
+        int mx = Math.max(m, n);
+        int mn = Math.min(m, n);
+
+        NLMatrix U  = m >= n ? this : new NLMatrix(m, n);
+        NLMatrix Vt = m >= n ? new NLMatrix(n, n) : this;
+        double[] s = new double[mn];
+        int[] iwork = new int[8*mn];
+
+        // Query optimal workspace.
+        double[] work = new double[1];
+        intW info = new intW(0);
+        LAPACK.getInstance().dgesdd("O", m, n, data(), ld(), s, U.data(), U.ld(), Vt.data(), Vt.ld(), work, -1, iwork, info);
+
+        int lwork = 3 * mn + Math.max(mx, 5*mn*mn + 4 *mn);
+        if (info.val == 0) {
+            lwork = (int) work[0];
+            logger.info("LAPACK DGESDD returns work space size: {}", lwork);
+        } else {
+            logger.info("LAPACK DGESDD error code: {}", info.val);
+        }
+
+        lwork = Math.max(1, lwork);
+        work = new double[lwork];
+
+        info.val = 0;
+        LAPACK.getInstance().dgesdd("O", m, n, data(), ld(), s, U.data(), U.ld(), Vt.data(), Vt.ld(), work, lwork, iwork, info);
+
+        if (info.val != 0) {
+            logger.error("LAPACK DGESDD error code: {}", info.val);
+            throw new IllegalArgumentException("LAPACK DGESDD error code: " + info.val);
+        }
+
+        return new SVD(U, Vt.transpose(), s, true);
     }
 }
