@@ -62,7 +62,7 @@ class Factory {
                 logger.error("NLMatrix(int, int, double) does not exist");
             }
         } catch (ClassNotFoundException e) {
-            logger.info("Netlib module does not exist on the classpath. Pure Java matrix library will be employed.");
+            logger.info("smile-netlib module is not available in the classpath. Pure Java matrix library will be employed.");
         }
     }
 
