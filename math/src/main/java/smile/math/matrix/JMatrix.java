@@ -989,11 +989,6 @@ public class JMatrix implements DenseMatrix {
         return new QR(this, rDiagonal, singular);
     }
 
-    /**
-     * Returns the singular value decomposition. Note that the row number
-     * of input matrix should be equal to or larger than column number
-     * for this implementation.
-     */
     @Override
     public SVD svd() {
         int m = nrows();
@@ -1317,6 +1312,9 @@ public class JMatrix implements DenseMatrix {
             }
         }
 
-        return new SVD(U, V, w, true);
+        // There are at most Math.min(m, n) nonzero singular values.
+        double[] sigma = new double[Math.min(m, n)];
+        System.arraycopy(w, 0, sigma, 0, sigma.length);
+        return new SVD(U, V, sigma, true);
     }
 }
