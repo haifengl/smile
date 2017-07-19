@@ -167,8 +167,8 @@ public class MDS {
                 }
             }
 
-            EVD eigen = Lanczos.eigen(Z, 1);
-            double c = Math.max(eigen.getEigenValues());
+            double[] evalues = Z.eig();
+            double c = Math.max(evalues);
 
             for (int i = 0; i < n; i++) {
                 B.set(i, i, 0.0);
