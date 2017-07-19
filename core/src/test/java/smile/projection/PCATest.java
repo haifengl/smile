@@ -168,12 +168,23 @@ public class PCATest {
             {118.176327855097, 5.50757920474225, 2.71132076743689, -0.204972398473778},
             {10.4345393883043, -5.92445292066816, 3.79444682032120, 0.517867427500318}
         };
-        PCA pca = new PCA(Math.clone(USArrests));
+        PCA pca = new PCA(USArrests);
         pca.setProjection(4);
         assertTrue(Math.equals(prop, pca.getVarianceProportion(), 1E-7));
         assertTrue(Math.equals(cumprop, pca.getCumulativeVarianceProportion(), 1E-7));
-        assertTrue(Math.equals(loadings, pca.getLoadings().array(), 1E-7));
-        assertTrue(Math.equals(points, pca.project(USArrests), 1E-7));
+
+        for (int i = 0; i < loadings.length; i++) {
+            for (int j = 0; j < loadings[i].length; j++) {
+                assertEquals(Math.abs(loadings[i][j]), Math.abs(pca.getLoadings().get(i, j)), 1E-5);
+            }
+        }
+
+        double[][] p = pca.project(USArrests);
+        for (int i = 0; i < points.length; i++) {
+            for (int j = 0; j < points[i].length; j++) {
+                assertEquals(Math.abs(points[i][j]), Math.abs(p[i][j]), 1E-5);
+            }
+        }
     }
 
     /**
@@ -243,11 +254,22 @@ public class PCATest {
             {-0.629426663525205, -0.321012967465219, 0.240659233693745, 0.166651800709434}
         };
 
-        PCA pca = new PCA(Math.clone(USArrests), true);
+        PCA pca = new PCA(USArrests, true);
         pca.setProjection(4);
         assertTrue(Math.equals(prop, pca.getVarianceProportion(), 1E-7));
         assertTrue(Math.equals(cumprop, pca.getCumulativeVarianceProportion(), 1E-7));
-        assertTrue(Math.equals(loadings, pca.getLoadings().array(), 1E-7));
-        assertTrue(Math.equals(points, pca.project(USArrests), 1E-7));
+
+        for (int i = 0; i < loadings.length; i++) {
+            for (int j = 0; j < loadings[i].length; j++) {
+                assertEquals(Math.abs(loadings[i][j]), Math.abs(pca.getLoadings().get(i, j)), 1E-5);
+            }
+        }
+
+        double[][] p = pca.project(USArrests);
+        for (int i = 0; i < points.length; i++) {
+            for (int j = 0; j < points[i].length; j++) {
+                assertEquals(Math.abs(points[i][j]), Math.abs(p[i][j]), 1E-5);
+            }
+        }
     }
 }
