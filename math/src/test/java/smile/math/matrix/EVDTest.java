@@ -46,6 +46,10 @@ public class EVDTest {
         {0.4000, 0.5000, 0.3000},
         {0.8000, 0.3000, 0.8000}
     };
+    // Note that this result is different from that of Netlib
+    // Both are correct as the eigen vectors are not unique
+    // (linear combination of eigen vectors are still eigen vectors).
+    // We can verify that both results are correct by A * V = lambda * V.
     double[][] eigenVectorsB = {
         {0.7178958,  0.05322098,  0.6812010},
         {0.3837711, -0.84702111, -0.1494582},
