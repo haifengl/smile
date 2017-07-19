@@ -21,7 +21,7 @@ import java.util.Arrays;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.EVD;
 
 /**
  * Linear discriminant analysis. LDA is based on the Bayes decision theory
@@ -293,7 +293,8 @@ public class LDA implements SoftClassifier<double[]>, Serializable {
             }
         }
 
-        EigenValueDecomposition evd = new EigenValueDecomposition(C, true);
+        C.setSymmetric(true);
+        EVD evd = C.eigen();
 
         for (double s : evd.getEigenValues()) {
             if (s < tol) {

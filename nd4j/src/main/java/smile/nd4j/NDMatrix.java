@@ -21,6 +21,7 @@ import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.LU;
 import smile.math.matrix.QR;
 import smile.math.matrix.SVD;
+import smile.math.matrix.EVD;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.inverse.InvertMatrix;
@@ -37,6 +38,10 @@ public class NDMatrix implements DenseMatrix {
      * The matrix storage.
      */
     private INDArray A;
+    /**
+     * True if the matrix is symmetric.
+     */
+    private boolean symmetric = false;
 
     /**
      * Constructor.
@@ -101,6 +106,16 @@ public class NDMatrix implements DenseMatrix {
     }
 
     @Override
+    public boolean isSymmetric() {
+        return symmetric;
+    }
+
+    @Override
+    public void setSymmetric(boolean symmetric) {
+        this.symmetric = symmetric;
+    }
+
+    @Override
     public int ld() {
         return nrows();
     }
@@ -143,6 +158,16 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public SVD svd() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public double[] eig() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public EVD eigen() {
         throw new UnsupportedOperationException();
     }
 

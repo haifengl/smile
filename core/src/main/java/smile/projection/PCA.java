@@ -19,7 +19,7 @@ import java.io.Serializable;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.EVD;
 import smile.math.matrix.SVD;
 
 /**
@@ -169,7 +169,8 @@ public class PCA implements Projection<double[]>, Serializable {
                 }
             }
 
-            EigenValueDecomposition eigen = new EigenValueDecomposition(cov, true);
+            cov.setSymmetric(true);
+            EVD eigen = cov.eigen();
 
             DenseMatrix loadings = eigen.getEigenVectors();
             if (cor) {

@@ -24,7 +24,7 @@ import smile.math.distance.EuclideanDistance;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.EVD;
 import smile.math.matrix.Lanczos;
 import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
@@ -180,7 +180,7 @@ public class IsoMap {
             }
         }
 
-        EigenValueDecomposition eigen = Lanczos.eigen(B, d);
+        EVD eigen = Lanczos.eigen(B, d);
         coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
             if (eigen.getEigenValues()[j] < 0) {

@@ -19,7 +19,7 @@ import smile.math.Math;
 import smile.math.matrix.Lanczos;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.EVD;
 
 /**
  * Classical multidimensional scaling, also known as principal coordinates
@@ -167,7 +167,7 @@ public class MDS {
                 }
             }
 
-            EigenValueDecomposition eigen = new EigenValueDecomposition(Z, false, true);
+            EVD eigen = Lanczos.eigen(Z, 1);
             double c = Math.max(eigen.getEigenValues());
 
             for (int i = 0; i < n; i++) {
@@ -180,7 +180,7 @@ public class MDS {
             }
         }
 
-        EigenValueDecomposition eigen = Lanczos.eigen(B, k);
+        EVD eigen = Lanczos.eigen(B, k);
         
         coordinates = new double[n][k];
         for (int j = 0; j < k; j++) {

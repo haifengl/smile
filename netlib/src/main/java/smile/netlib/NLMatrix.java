@@ -19,6 +19,8 @@ package smile.netlib;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.JMatrix;
 import smile.math.matrix.SVD;
+import smile.math.matrix.EVD;
+import smile.sort.QuickSort;
 import com.github.fommil.netlib.BLAS;
 import com.github.fommil.netlib.LAPACK;
 import org.netlib.util.intW;
@@ -316,6 +318,212 @@ public class NLMatrix extends JMatrix {
             throw new IllegalArgumentException("LAPACK DGESDD error code: " + info.val);
         }
 
-        return new SVD(U, Vt.transpose(), s, true);
+        return new SVD(U, Vt.transpose(), s);
+    }
+
+    @Override
+    public double[] eig() {
+        if (nrows() != ncols()) {
+            throw new UnsupportedOperationException("Eigen decomposition on non-square matrix");
+        }
+
+        int n = nrows();
+
+        if (isSymmetric()) {
+            double[] V  = new double[0];
+            double[] d = new double[n];
+
+            double abstol = LAPACK.getInstance().dlamch("Safe minimum");
+
+            // Query optimal workspace.
+            int[] isuppz = new int[2 * Math.max(1, n)];
+            double[] work = new double[1];
+            int[] iwork = new int[1];
+            intW m = new intW(0);
+            intW info = new intW(0);
+            LAPACK.getInstance().dsyevr("N", "A",
+                    NLMatrix.Lower, n, data(), ld(), 0, 0, 0, 0, abstol,
+                    m, d, V, 1, isuppz, work, -1, iwork, -1, info);
+
+            int lwork = 26 * n;
+            int liwork = 10 * n;
+            if (info.val == 0) {
+                lwork = (int) work[0];
+                liwork = (int) iwork[0];
+                logger.info("LAPACK DSYEVR returns work space size: {}", lwork);
+            } else {
+                logger.info("LAPACK DSYEVR error code: {}", info.val);
+            }
+
+            lwork = Math.max(1, lwork);
+            liwork = Math.max(1, liwork);
+            work = new double[lwork];
+            iwork = new int[liwork];
+
+            m.val = 0;
+            info.val = 0;
+            LAPACK.getInstance().dsyevr("N", "A",
+                    NLMatrix.Lower, n, data(), ld(), 0, 0, 0, 0, abstol,
+                    m, d, V, 1, isuppz, work, lwork, iwork, liwork, info);
+
+            if (info.val != 0) {
+                logger.error("LAPACK DSYEVR error code: {}", info.val);
+                throw new IllegalArgumentException("LAPACK DSYEVR error code: " + info.val);
+            }
+
+            // LAPACK returns eigen values in ascending order.
+            // In contrast, JMatrix returns eigen values in descending order.
+            // Reverse the array to match JMatrix.
+            double[] w = new double[2*n];
+            for (int i = 0; i < n; i++) {
+                w[i] = d[n - i - 1];
+            }
+            return w;
+
+        } else {
+            double[] V  = new double[0];
+            double[] d = new double[n];
+            double[] e = new double[n];
+
+            // Query optimal workspace.
+            double[] work = new double[1];
+            intW info = new intW(0);
+            LAPACK.getInstance().dgeev("N", "N", n, data(), ld(), d, e, V, 1, V, 1, work, -1, info);
+
+            int lwork = 4 * n;
+            if (info.val == 0) {
+                lwork = (int) work[0];
+                logger.info("LAPACK DGEEV returns work space size: {}", lwork);
+            } else {
+                logger.info("LAPACK DGEEV error code: {}", info.val);
+            }
+
+            lwork = Math.max(1, lwork);
+            work = new double[lwork];
+
+            info.val = 0;
+            LAPACK.getInstance().dgeev("N", "N", n, data(), ld(), d, e, V, 1, V, 1, work, lwork, info);
+
+            if (info.val != 0) {
+                logger.error("LAPACK DGEEV error code: {}", info.val);
+                throw new IllegalArgumentException("LAPACK DGEEV error code: " + info.val);
+            }
+
+            // LAPACK returns eigen values in undefined order.
+            // In contrast, JMatrix returns eigen values in descending order.
+            // Sort the array to match JMatrix.
+            sort(d, e);
+            double[] w = new double[2*n];
+            System.arraycopy(d, 0, w, 0, n);
+            System.arraycopy(e, 0, w, n, n);
+            return w;
+        }
+    }
+
+    @Override
+    public EVD eigen() {
+        if (nrows() != ncols()) {
+            throw new UnsupportedOperationException("Eigen decomposition on non-square matrix");
+        }
+
+        int n = nrows();
+
+        if (isSymmetric()) {
+            NLMatrix V  = new NLMatrix(n, n);
+            double[] d = new double[n];
+            double[] e = new double[n];
+
+            double abstol = LAPACK.getInstance().dlamch("Safe minimum");
+
+            // Query optimal workspace.
+            int[] isuppz = new int[2 * Math.max(1, n)];
+            double[] work = new double[1];
+            int[] iwork = new int[1];
+            intW m = new intW(0);
+            intW info = new intW(0);
+            LAPACK.getInstance().dsyevr("V", "A",
+                    NLMatrix.Lower, n, data(), ld(), 0, 0, 0, 0, abstol,
+                    m, d, V.data(), V.ld(), isuppz, work, -1, iwork, -1, info);
+
+            int lwork = 26 * n;
+            int liwork = 10 * n;
+            if (info.val == 0) {
+                lwork = (int) work[0];
+                liwork = (int) iwork[0];
+                logger.info("LAPACK DSYEVR returns work space size: {}", lwork);
+            } else {
+                logger.info("LAPACK DSYEVR error code: {}", info.val);
+            }
+
+            lwork = Math.max(1, lwork);
+            liwork = Math.max(1, liwork);
+            work = new double[lwork];
+            iwork = new int[liwork];
+
+            m.val = 0;
+            info.val = 0;
+            LAPACK.getInstance().dsyevr("V", "A",
+                    NLMatrix.Lower, n, data(), ld(), 0, 0, 0, 0, abstol,
+                    m, d, V.data(), V.ld(), isuppz, work, lwork, iwork, liwork, info);
+
+            if (info.val != 0) {
+                logger.error("LAPACK DSYEVR error code: {}", info.val);
+                throw new IllegalArgumentException("LAPACK DSYEVR error code: " + info.val);
+            }
+
+            // LAPACK returns eigen values in ascending order.
+            // In contrast, JMatrix returns eigen values in descending order.
+            // Reverse the array to match JMatrix.
+            int half = n / 2;
+            for (int i = 0; i < half; i++) {
+                double tmp = d[i];
+                d[i] = d[n - i - 1];
+                d[n - i - 1] = tmp;
+            }
+            for (int j = 0; j < half; j++) {
+                for (int i = 0; i < n; i++) {
+                    double tmp = V.get(i, j);
+                    V.set(i, j, V.get(i, n - j - 1));
+                    V.set(i, n - j - 1, tmp);
+                }
+            }
+
+            return new EVD(V, d, e);
+
+        } else {
+            NLMatrix V  = new NLMatrix(n, n);
+            double[] d = new double[n];
+            double[] e = new double[n];
+
+            // Query optimal workspace.
+            double[] work = new double[1];
+            intW info = new intW(0);
+            LAPACK.getInstance().dgeev("N", "V", n, data(), ld(), d, e, V.data(), 1, V.data(), V.ld(), work, -1, info);
+
+            int lwork = 4 * n;
+            if (info.val == 0) {
+                lwork = (int) work[0];
+                logger.info("LAPACK DGEEV returns work space size: {}", lwork);
+            } else {
+                logger.info("LAPACK DGEEV error code: {}", info.val);
+            }
+
+            lwork = Math.max(1, lwork);
+            work = new double[lwork];
+
+            info.val = 0;
+            LAPACK.getInstance().dgeev("N", "V", n, data(), ld(), d, e, new double[0], 1, V.data(), V.ld(), work, lwork, info);
+
+            if (info.val != 0) {
+                logger.error("LAPACK DGEEV error code: {}", info.val);
+                throw new IllegalArgumentException("LAPACK DGEEV error code: " + info.val);
+            }
+
+            // LAPACK returns eigen values in undefined order.
+            // In contrast, JMatrix returns eigen values in descending order.
+            // Sort the array to match JMatrix.
+            sort(d, e, V);
+            return new EVD(V, d, e);
+        }
     }
 }

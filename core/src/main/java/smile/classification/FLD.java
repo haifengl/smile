@@ -21,7 +21,7 @@ import java.util.Arrays;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.EVD;
 import smile.projection.Projection;
 
 /**
@@ -272,7 +272,8 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
             }
         }
 
-        EigenValueDecomposition eigen = new EigenValueDecomposition(T, true);
+        T.setSymmetric(true);
+        EVD eigen = T.eigen();
         
         tol = tol * tol;
         double[] s = eigen.getEigenValues();
@@ -294,7 +295,8 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
         }
 
         B = U.abmm(UB);
-        eigen = new EigenValueDecomposition(B, true);
+        B.setSymmetric(true);
+        eigen = B.eigen();
 
         U = eigen.getEigenVectors();
         scaling = Matrix.zeros(p, L);

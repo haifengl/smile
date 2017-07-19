@@ -80,23 +80,16 @@ public class SVD {
     protected double tol;
 
     /**
-     * Private constructor.
+     * Constructor.
      */
     public SVD(DenseMatrix U, DenseMatrix V, double[] s) {
-        this(U, V, s, true);
-    }
-
-    /**
-     * Private constructor.
-     */
-    public SVD(DenseMatrix U, DenseMatrix V, double[] s, boolean full) {
         this.U = U;
         this.V = V;
         this.s = s;
-        this.full = full;
 
         m = U.nrows();
-        n = V.ncols();
+        n = V.nrows();
+        full = s.length == Math.min(m, n);
         tol = 0.5 * Math.sqrt(m + n + 1.0) * s[0] * Math.EPSILON;
     }
 

@@ -466,17 +466,6 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         return aat;
     }
 
-    /**
-     * Returns the k largest eigen pairs. Only works for symmetric matrix.
-     */
-    public EigenValueDecomposition eigen(int k) {
-        if (nrows != ncols) {
-            throw new UnsupportedOperationException("The matrix is not square.");
-        }
-
-        return Lanczos.eigen(this, k);
-    }
-
     @Override
     public double[] diag() {
         int n = smile.math.Math.min(nrows(), ncols());

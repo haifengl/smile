@@ -215,11 +215,11 @@ trait Operators {
   def cholesky(A: MatrixExpression) = A.toMatrix.cholesky()
 
   /** Eigen decomposition. */
-  def eigen(A: Array[Array[Double]]) = new EigenValueDecomposition(~A)
+  def eigen(A: Array[Array[Double]]) = Matrix.newInstance(A).eigen()
   /** Eigen decomposition. */
-  def eigen(A: DenseMatrix) = new EigenValueDecomposition(A.copy)
+  def eigen(A: DenseMatrix) = A.copy().eigen()
   /** Eigen decomposition. */
-  def eigen(A: MatrixExpression) = new EigenValueDecomposition(A.toMatrix)
+  def eigen(A: MatrixExpression) = A.toMatrix.eigen()
   /** Eigen decomposition. */
   def eigen(A: DenseMatrix, k: Int) = Lanczos.eigen(A, k)
 
