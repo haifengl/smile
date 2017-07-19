@@ -27,7 +27,7 @@ import smile.math.Math;
 import smile.math.matrix.Lanczos;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.EVD;
 
 /**
  * Self-Organizing Map. An SOM is a unsupervised learning method to produce
@@ -238,7 +238,7 @@ public class SOM implements Clustering<double[]> {
             }
         }
 
-        EigenValueDecomposition eigen = Lanczos.eigen(V, 2);
+        EVD eigen = Lanczos.eigen(V, 2);
         double[] v1 = new double[d];
         double[] v2 = new double[d];
         for (int i = 0; i < d; i++) {

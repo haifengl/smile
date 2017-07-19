@@ -150,7 +150,7 @@ public class Lanczos {
      */
     public static SVD svd(Matrix A, int k, double kappa) {
         ATA B = new ATA(A);
-        EigenValueDecomposition eigen = Lanczos.eigen(B, k, kappa);
+        EVD eigen = Lanczos.eigen(B, k, kappa);
 
         double[] s = eigen.getEigenValues();
         for (int i = 0; i < s.length; i++) {
@@ -176,7 +176,7 @@ public class Lanczos {
                 }
             }
 
-            return new SVD(U, V, s, false);
+            return new SVD(U, V, s);
 
         } else {
 
@@ -197,7 +197,7 @@ public class Lanczos {
                 }
             }
 
-            return new SVD(U, V, s, false);
+            return new SVD(U, V, s);
         }
     }
 
@@ -209,7 +209,7 @@ public class Lanczos {
      * @param k the number of eigenvalues we wish to compute for the input matrix.
      * This number cannot exceed the size of A.
      */
-    public static EigenValueDecomposition eigen(Matrix A, int k) {
+    public static EVD eigen(Matrix A, int k) {
         return eigen(A, k, 1.0E-6);
     }
 
@@ -222,7 +222,7 @@ public class Lanczos {
      * This number cannot exceed the size of A.
      * @param kappa relative accuracy of ritz values acceptable as eigenvalues.
      */
-    public static EigenValueDecomposition eigen(Matrix A, int k, double kappa) {
+    public static EVD eigen(Matrix A, int k, double kappa) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }
@@ -417,7 +417,7 @@ public class Lanczos {
 
             // compute the eigenvalues and eigenvectors of the
             // tridiagonal matrix
-            EigenValueDecomposition.tql2(z, ritz, wptr[5], j + 1);
+            JMatrix.tql2(z, ritz, wptr[5], j + 1);
 
             for (int i = 0; i <= j; i++) {
                 bnd[i] = rnm * Math.abs(z.get(j, i));
@@ -459,7 +459,7 @@ public class Lanczos {
             }
         }
 
-        return new EigenValueDecomposition(eigenvectors, eigenvalues);
+        return new EVD(eigenvectors, eigenvalues);
     }
 
     /**

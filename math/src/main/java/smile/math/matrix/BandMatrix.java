@@ -176,16 +176,6 @@ public class BandMatrix implements Matrix, LinearSolver {
     }
 
     /**
-     * Returns the k largest eigen pairs. Only works for symmetric matrix.
-     */
-    public EigenValueDecomposition eigen(int k) {
-        if (m1 !=  m2) {
-            throw new UnsupportedOperationException("The matrix is not square.");
-        }
-        return Lanczos.eigen(this, k);
-    }
-
-    /**
      * Returns the matrix determinant.
      */
     public double det() {

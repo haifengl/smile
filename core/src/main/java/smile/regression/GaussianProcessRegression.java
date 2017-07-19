@@ -23,7 +23,7 @@ import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Cholesky;
 import smile.math.matrix.LU;
-import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.EVD;
 
 /**
  * Gaussian Process for Regression. A Gaussian process is a stochastic process
@@ -264,7 +264,8 @@ public class GaussianProcessRegression <T> implements Regression<T>, Serializabl
             }
         }
 
-        EigenValueDecomposition eigen = new EigenValueDecomposition(W, true);
+        W.setSymmetric(true);
+        EVD eigen = W.eigen();
         DenseMatrix U = eigen.getEigenVectors();
         DenseMatrix D = eigen.getD();
         for (int i = 0; i < m; i++) {

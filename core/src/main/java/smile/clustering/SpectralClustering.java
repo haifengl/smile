@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.EVD;
 import smile.math.matrix.Lanczos;
 
 /**
@@ -124,7 +124,7 @@ public class SpectralClustering implements Serializable {
             }
         }
         
-        EigenValueDecomposition eigen = Lanczos.eigen(L, k);
+        EVD eigen = Lanczos.eigen(L, k);
         double[][] Y = eigen.getEigenVectors().array();
         for (int i = 0; i < n; i++) {
             Math.unitize2(Y[i]);
@@ -191,7 +191,7 @@ public class SpectralClustering implements Serializable {
             }
         }
 
-        EigenValueDecomposition eigen = Lanczos.eigen(L, k);
+        EVD eigen = Lanczos.eigen(L, k);
         double[][] Y = eigen.getEigenVectors().array();
         for (int i = 0; i < n; i++) {
             Math.unitize2(Y[i]);
@@ -273,7 +273,7 @@ public class SpectralClustering implements Serializable {
             }
         }
         
-        EigenValueDecomposition eigen = Lanczos.eigen(W, k);
+        EVD eigen = Lanczos.eigen(W, k);
         double[] e = eigen.getEigenValues();
         double scale = Math.sqrt((double)l / n);
         for (int i = 0; i < k; i++) {

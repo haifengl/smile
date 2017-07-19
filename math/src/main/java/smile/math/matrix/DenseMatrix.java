@@ -43,6 +43,16 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
      */
     public int ld();
 
+    /** Returns true if the matrix is symmetric. */
+    public boolean isSymmetric();
+
+    /**
+     * Sets if the matrix is symmetric. It is the caller's responability to
+     * make sure if the matrix symmetric. Also the matrix won't update this
+     * property if the matrix values are changed.
+     */
+    public void setSymmetric(boolean symmetric);
+
     /**
      * Set the entry value at row i and column j.
      */
@@ -115,6 +125,39 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     public default SVD svd(boolean inPlace) {
         DenseMatrix a = inPlace ? this : copy();
         return a.svd();
+    }
+
+    /**
+     * Returns the eigen value decomposition. Note that the input matrix
+     * will be overwritten on output.
+     */
+    public EVD eigen();
+
+    /**
+     * Returns the eigen value decomposition.
+     * @param inPlace if true, this matrix will be overwritten U on output.
+     */
+    public default EVD eigen(boolean inPlace) {
+        DenseMatrix a = inPlace ? this : copy();
+        return a.eigen();
+    }
+
+    /**
+     * Returns the eigen values in an array of size 2N. The first half and second half
+     * of returned array contain the real and imaginary parts, respectively, of the
+     * computed eigenvalues.
+     */
+    public double[] eig();
+
+    /**
+     * Returns the eigen values in an array of size 2N. The first half and second half
+     * of returned array contain the real and imaginary parts, respectively, of the
+     * computed eigenvalues.
+     * @param inPlace if true, this matrix will be overwritten U on output.
+     */
+    public default double[] eig(boolean inPlace) {
+        DenseMatrix a = inPlace ? this : copy();
+        return a.eig();
     }
 
     /**

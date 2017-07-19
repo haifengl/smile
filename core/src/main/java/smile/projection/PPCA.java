@@ -20,7 +20,7 @@ import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Cholesky;
-import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.EVD;
 
 /**
  * Probabilistic principal component analysis. PPCA is a simplified factor analysis
@@ -149,8 +149,8 @@ public class PPCA implements Projection<double[]>, Serializable {
             }
         }
 
-
-        EigenValueDecomposition eigen = new EigenValueDecomposition(cov);
+        cov.setSymmetric(true);
+        EVD eigen = cov.eigen();
         double[] evalues = eigen.getEigenValues();
         DenseMatrix evectors = eigen.getEigenVectors();
 

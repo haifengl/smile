@@ -27,7 +27,7 @@ import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.SparseMatrix;
 import smile.math.matrix.LU;
-import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.EVD;
 import smile.math.matrix.Lanczos;
 import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
@@ -205,7 +205,7 @@ public class LLE {
         SparseMatrix W = new SparseMatrix(n, n, w, rowIndex, colIndex);
         SparseMatrix M = W.aat();
 
-        EigenValueDecomposition eigen = Lanczos.eigen(M, n);
+        EVD eigen = Lanczos.eigen(M, n);
 
         coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {

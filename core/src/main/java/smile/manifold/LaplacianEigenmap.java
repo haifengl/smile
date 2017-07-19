@@ -25,7 +25,7 @@ import smile.graph.Graph.Edge;
 import smile.math.Math;
 import smile.math.SparseArray;
 import smile.math.distance.EuclideanDistance;
-import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.EVD;
 import smile.math.matrix.Lanczos;
 import smile.math.matrix.PowerIteration;
 import smile.math.matrix.SparseMatrix;
@@ -199,7 +199,7 @@ public class LaplacianEigenmap {
         }
 
         L = W.toSparseMatrix();
-        EigenValueDecomposition eigen = Lanczos.eigen(L, d + 1);
+        EVD eigen = Lanczos.eigen(L, d + 1);
 
         coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {

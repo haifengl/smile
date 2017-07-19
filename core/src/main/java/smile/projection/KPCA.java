@@ -20,7 +20,7 @@ import smile.math.Math;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.EVD;
 import smile.math.matrix.Lanczos;
 
 /**
@@ -154,7 +154,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
             }
         }
 
-        EigenValueDecomposition eigen = Lanczos.eigen(K, k);
+        EVD eigen = Lanczos.eigen(K, k);
 
         p = 0;
         for (int i = 0; i < k; i++) {

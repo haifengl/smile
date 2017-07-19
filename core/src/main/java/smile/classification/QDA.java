@@ -21,7 +21,7 @@ import java.util.Arrays;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EigenValueDecomposition;
+import smile.math.matrix.EVD;
 
 /**
  * Quadratic discriminant analysis. QDA is closely related to linear discriminant
@@ -285,7 +285,8 @@ public class QDA implements SoftClassifier<double[]>, Serializable {
                 }
             }
 
-            EigenValueDecomposition eigen = new EigenValueDecomposition(cov[i], true);
+            cov[i].setSymmetric(true);
+            EVD eigen = cov[i].eigen();
 
             for (double s : eigen.getEigenValues()) {
                 if (s < tol) {
