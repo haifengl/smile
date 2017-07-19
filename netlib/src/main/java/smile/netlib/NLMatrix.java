@@ -86,7 +86,7 @@ public class NLMatrix extends JMatrix {
      * Constructor.
      * @param value the array of matrix values arranged in column major format
      */
-    private NLMatrix(int rows, int cols, double[] value) {
+    public NLMatrix(int rows, int cols, double[] value) {
         super(rows, cols, value);
     }
 
@@ -431,7 +431,6 @@ public class NLMatrix extends JMatrix {
         if (isSymmetric()) {
             NLMatrix V  = new NLMatrix(n, n);
             double[] d = new double[n];
-            double[] e = new double[n];
 
             double abstol = LAPACK.getInstance().dlamch("Safe minimum");
 
@@ -471,24 +470,8 @@ public class NLMatrix extends JMatrix {
                 throw new IllegalArgumentException("LAPACK DSYEVR error code: " + info.val);
             }
 
-            // LAPACK returns eigen values in ascending order.
-            // In contrast, JMatrix returns eigen values in descending order.
-            // Reverse the array to match JMatrix.
-            int half = n / 2;
-            for (int i = 0; i < half; i++) {
-                double tmp = d[i];
-                d[i] = d[n - i - 1];
-                d[n - i - 1] = tmp;
-            }
-            for (int j = 0; j < half; j++) {
-                for (int i = 0; i < n; i++) {
-                    double tmp = V.get(i, j);
-                    V.set(i, j, V.get(i, n - j - 1));
-                    V.set(i, n - j - 1, tmp);
-                }
-            }
-
-            return new EVD(V, d, e);
+            reverse(d, V);
+            return new EVD(V, d);
 
         } else {
             NLMatrix V  = new NLMatrix(n, n);
@@ -524,6 +507,27 @@ public class NLMatrix extends JMatrix {
             // Sort the array to match JMatrix.
             sort(d, e, V);
             return new EVD(V, d, e);
+        }
+    }
+
+    // LAPACK/ARPACK returns eigen values in ascending order.
+    // In contrast, JMatrix returns eigen values in descending order.
+    // Reverse the array to match JMatrix.
+    static void reverse(double[] d, DenseMatrix V) {
+        int m = V.nrows();
+        int n = d.length;
+        int half = n / 2;
+        for (int i = 0; i < half; i++) {
+            double tmp = d[i];
+            d[i] = d[n - i - 1];
+            d[n - i - 1] = tmp;
+        }
+        for (int j = 0; j < half; j++) {
+            for (int i = 0; i < m; i++) {
+                double tmp = V.get(i, j);
+                V.set(i, j, V.get(i, n - j - 1));
+                V.set(i, n - j - 1, tmp);
+            }
         }
     }
 }
