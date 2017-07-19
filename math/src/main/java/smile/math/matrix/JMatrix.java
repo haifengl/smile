@@ -18,6 +18,8 @@ package smile.math.matrix;
 
 import java.util.Arrays;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Complex;
 import smile.math.Math;
 import smile.stat.distribution.GaussianDistribution;
@@ -28,6 +30,7 @@ import smile.stat.distribution.GaussianDistribution;
  */
 public class JMatrix implements DenseMatrix {
     private static final long serialVersionUID = 1L;
+    private static final Logger logger = LoggerFactory.getLogger(JMatrix.class);
 
     /**
      * The matrix storage.
@@ -1743,9 +1746,13 @@ public class JMatrix implements DenseMatrix {
                 }
             }
 
+            if (m == n) {
+                logger.warn("tql2: m == n");
+            }
+
             // If m == l, d[l] is an eigenvalue,
             // otherwise, iterate.
-            if (m > l) {
+            if (m > l && m < n) {
                 int iter = 0;
                 do {
                     if (++iter >= 30) {
@@ -1754,7 +1761,7 @@ public class JMatrix implements DenseMatrix {
 
                     // Compute implicit shift
                     double g = d[l];
-                    double p = (d[l + 1] - d[l]) / (2.0 * e[l]);
+                    double p = (d[l + 1] - g) / (2.0 * e[l]);
                     double r = Math.hypot(p, 1.0);
                     if (p < 0) {
                         r = -r;
