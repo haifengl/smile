@@ -38,24 +38,22 @@ public class Lanczos {
     private static class ATA extends Matrix {
 
         Matrix A;
+        Matrix AtA;
         double[] buf;
 
         public ATA(Matrix A) {
             this.A = A;
-            if (A.nrows() >= A.ncols()) {
-                buf = new double[A.nrows()];
-            } else {
-                buf = new double[A.ncols()];
+            buf = new double[A.nrows()];
+            setSymmetric(true);
+
+            if ((A.ncols() < 10000) && (A instanceof DenseMatrix)) {
+                AtA = A.ata();
             }
         }
 
         @Override
         public int nrows() {
-            if (A.nrows() >= A.ncols()) {
-                return A.ncols();
-            } else {
-                return A.nrows();
-            }
+            return A.ncols();
         }
 
         @Override
@@ -80,12 +78,11 @@ public class Lanczos {
 
         @Override
         public double[] ax(double[] x, double[] y) {
-            if (A.nrows() >= A.ncols()) {
+            if (AtA != null) {
+                AtA.ax(x, y);
+            } else {
                 A.ax(x, buf);
                 A.atx(buf, y);
-            } else {
-                A.atx(x, buf);
-                A.ax(buf, y);
             }
 
             return y;
