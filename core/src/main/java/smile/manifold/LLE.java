@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.manifold;
 
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
 import org.slf4j.Logger;
@@ -213,7 +212,7 @@ public class LLE {
         /*
         try {
             Class<?> clazz = Class.forName("smile.netlib.ARPACK");
-            Method method = clazz.getMethod("eigen", Matrix.class, Integer.TYPE, String.class);
+            java.lang.reflect.Method method = clazz.getMethod("eigen", Matrix.class, Integer.TYPE, String.class);
             EVD eigen = (EVD) method.invoke(null, M, d+1, "SA");
             DenseMatrix V = eigen.getEigenVectors();
             coordinates = new double[n][d];
