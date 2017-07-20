@@ -207,23 +207,23 @@ public class LLE {
         SparseMatrix M = W.aat();
         M.setSymmetric(true);
 
+        // ARPACK is not stable enough here as which = 'SM' may lead to slow execution
+        // time and/or anomalous results. A better approach is to use shift-invert mode,
+        // which we don't support yet.
+        /*
         try {
             Class<?> clazz = Class.forName("smile.netlib.ARPACK");
             Method method = clazz.getMethod("eigen", Matrix.class, Integer.TYPE, String.class);
             EVD eigen = (EVD) method.invoke(null, M, d+1, "SA");
             DenseMatrix V = eigen.getEigenVectors();
-            for (int i = 0; i < eigen.getEigenValues().length;i++) System.out.print(eigen.getEigenValues()[i]+" ");
-            System.out.println();
-            System.out.println(V);
             coordinates = new double[n][d];
             for (int j = 0; j < d; j++) {
                 for (int i = 0; i < n; i++) {
-                    coordinates[i][j] = V.get(i, j+1);
+                    coordinates[i][j] = V.get(i, j);
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            // ARPACK is not available. Use pure Java implementation of Lanczos algorithm.
+        */
             // We don't support caclulate smallest eigen values with Lanczos. So we compute
             // all the eigen values.
             EVD eigen = Lanczos.eigen(M, n);
@@ -234,7 +234,7 @@ public class LLE {
                     coordinates[i][j] = eigen.getEigenVectors().get(i, n-j-2);
                 }
             }
-        }
+        //}
     }
 
     /**
