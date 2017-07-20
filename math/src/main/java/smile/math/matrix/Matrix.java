@@ -66,7 +66,12 @@ import java.io.Serializable;
  *
  * @author Haifeng Li
  */
-public interface Matrix extends Serializable {
+public abstract class Matrix implements Serializable {
+    /**
+     * True if the matrix is symmetric.
+     */
+    private boolean symmetric = false;
+
     /**
      * Returns an matrix initialized by given two-dimensional array.
      */
@@ -137,38 +142,51 @@ public interface Matrix extends Serializable {
         return matrix;
     }
 
+    /** Returns true if the matrix is symmetric. */
+    public boolean isSymmetric() {
+        return symmetric;
+    }
+
+    /**
+     * Sets if the matrix is symmetric. It is the caller's responability to
+     * make sure if the matrix symmetric. Also the matrix won't update this
+     * property if the matrix values are changed.
+     */
+    public void setSymmetric(boolean symmetric) {
+        this.symmetric = symmetric;
+    }
+
     /**
      * Returns the number of rows.
      */
-    public int nrows();
+    public abstract int nrows();
 
     /**
      * Returns the number of columns.
      */
-    public int ncols();
+    public abstract int ncols();
 
     /**
      * Returns the matrix transpose.
      */
-    public Matrix transpose();
+    public abstract Matrix transpose();
 
     /**
      * Returns the entry value at row i and column j.
      */
-    public double get(int i, int j);
+    public abstract double get(int i, int j);
 
     /**
      * Returns the entry value at row i and column j. For Scala users.
      */
-    default public double apply(int i, int j) {
+    public double apply(int i, int j) {
         return get(i, j);
     }
 
     /**
      * Returns the diagonal elements.
-     * @return
      */
-    default public double[] diag() {
+    public double[] diag() {
         int n = smile.math.Math.min(nrows(), ncols());
 
         double[] d = new double[n];
@@ -182,7 +200,7 @@ public interface Matrix extends Serializable {
     /**
      * Returns the matrix trace. The sum of the diagonal elements.
      */
-    default public double trace() {
+    public double trace() {
         int n = Math.min(nrows(), ncols());
 
         double t = 0.0;
@@ -196,46 +214,46 @@ public interface Matrix extends Serializable {
     /**
      * Returns A' * A
      */
-    public Matrix ata();
+    public abstract Matrix ata();
 
     /**
      * Returns A * A'
      */
-    public Matrix aat();
+    public abstract Matrix aat();
 
     /**
      * y = A * x
      * @return y
      */
-    public double[] ax(double[] x, double[] y);
+    public abstract double[] ax(double[] x, double[] y);
 
     /**
      * y = A * x + y
      * @return y
      */
-    public double[] axpy(double[] x, double[] y);
+    public abstract double[] axpy(double[] x, double[] y);
 
     /**
      * y = A * x + b * y
      * @return y
      */
-    public double[] axpy(double[] x, double[] y, double b);
+    public abstract double[] axpy(double[] x, double[] y, double b);
 
     /**
      * y = A' * x
      * @return y
      */
-    public double[] atx(double[] x, double[] y);
+    public abstract double[] atx(double[] x, double[] y);
 
     /**
      * y = A' * x + y
      * @return y
      */
-    public double[] atxpy(double[] x, double[] y);
+    public abstract double[] atxpy(double[] x, double[] y);
 
     /**
      * y = A' * x + b * y
      * @return y
      */
-    public double[] atxpy(double[] x, double[] y, double b);
+    public abstract double[] atxpy(double[] x, double[] y, double b);
 }

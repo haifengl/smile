@@ -557,7 +557,7 @@ public class LASSO  implements Regression<double[]>, Serializable {
         return sum;
     }
 
-    class PCGMatrix implements Matrix, Preconditioner {
+    class PCGMatrix extends Matrix implements Preconditioner {
 
         Matrix A;
         Matrix AtA;

@@ -35,7 +35,7 @@ import smile.math.Math;
 public class Lanczos {
     private static final Logger logger = LoggerFactory.getLogger(Lanczos.class);
 
-    private static class ATA implements Matrix {
+    private static class ATA extends Matrix {
 
         Matrix A;
         double[] buf;

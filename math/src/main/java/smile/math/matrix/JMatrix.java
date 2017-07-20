@@ -28,7 +28,7 @@ import smile.stat.distribution.GaussianDistribution;
  * A pure Java implementation of DenseMatrix whose data is stored in a single 1D array of
  * doubles in column major order.
  */
-public class JMatrix implements DenseMatrix {
+public class JMatrix extends DenseMatrix {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(JMatrix.class);
 
@@ -44,10 +44,6 @@ public class JMatrix implements DenseMatrix {
      * The number of columns.
      */
     private int ncols;
-    /**
-     * True if the matrix is symmetric.
-     */
-    private boolean symmetric = false;
 
     /**
      * Constructor.
@@ -123,18 +119,8 @@ public class JMatrix implements DenseMatrix {
     @Override
     public JMatrix copy() {
         JMatrix a = new JMatrix(nrows, ncols, A.clone());
-        a.symmetric = symmetric;
+        a.setSymmetric(isSymmetric());
         return a;
-    }
-
-    @Override
-    public boolean isSymmetric() {
-        return symmetric;
-    }
-
-    @Override
-    public void setSymmetric(boolean symmetric) {
-        this.symmetric = symmetric;
     }
 
     @Override
@@ -1349,7 +1335,7 @@ public class JMatrix implements DenseMatrix {
         double[] d = new double[n];
         double[] e = new double[n];
 
-        if (symmetric) {
+        if (isSymmetric()) {
             // Tridiagonalize.
             tred(this, d, e);
             // Diagonalize.
@@ -1381,7 +1367,7 @@ public class JMatrix implements DenseMatrix {
         double[] e = new double[n];
 
         DenseMatrix V;
-        if (symmetric) {
+        if (isSymmetric()) {
             V = this;
 
             // Tridiagonalize.
