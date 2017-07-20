@@ -155,13 +155,22 @@ public class NDMatrixTest {
                 {-0.2808735, -0.9403636, -0.19190231},
                 {0.1159052, 0.1652528, -0.97941688}
         };
+        double[][] D = {
+                { 0.9887140,  0.1482942, -0.0212965},
+                { 0.1482942, -0.9889421, -0.0015881},
+                {-0.0212965, -0.0015881, -0.9997719 }
+        };
+        double[][] E = {
+                {0.0000,  0.0000, 1.0000},
+                {0.0000, -1.0000, 0.0000},
+                {1.0000,  0.0000, 0.0000}
+        };
 
         NDMatrix a = new NDMatrix(A);
         NDMatrix b = new NDMatrix(B);
+        System.out.println(a.atbmm(b));
         assertTrue(Math.equals(a.abmm(b).array(), C, 1E-7));
-        Math.abtmm(A, B, C);
-        assertTrue(Math.equals(a.abtmm(b).array(), C, 1E-7));
-        Math.atbmm(A, B, C);
-        assertTrue(Math.equals(a.atbmm(b).array(), C, 1E-7));
+        assertTrue(Math.equals(a.abtmm(b).array(), D, 1E-7));
+        assertTrue(Math.equals(a.atbmm(b).array(), E, 1E-5));
     }
 }

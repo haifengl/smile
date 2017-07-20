@@ -173,9 +173,9 @@ public class SimpleCorpusTest {
      */
     @Test
     public void testSearch2WithNoHits() {
-        System.out.println("search 'romantic comedy'");
-        String[] terms = {"find", "words"};
+        System.out.println("search 'no hits'");
+        String[] terms = {"thisisnotaword"};
         Iterator<Relevance> hits = corpus.search(new BM25(), terms);
-        assertEquals(Collections.emptyIterator(),hits);
+        assertEquals(false, hits.hasNext());
     }
 }
