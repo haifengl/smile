@@ -58,39 +58,30 @@ public class ARPACK {
     private static final com.github.fommil.netlib.ARPACK arpack = com.github.fommil.netlib.ARPACK.getInstance();
 
     /**
-     * Solve the eigensystem for the number of eigenvalues requested.
-     * <p>
-     * NOTE: The references to the eigenvectors will keep alive a reference to a
-     * {@code nev * n} double array, so use the {@code copy()} method to free it
-     * up if only a subset is required.
+     * Find k approximate eigen pairs of a symmetric matrix by the
+     * Lanczos algorithm.
      *
      * @param k Number of eigenvalues of OP to be computed. 0 < k < N.
      * @param ritz Specify which of the Ritz values to compute.
      */
     public static EVD eigen(Matrix A, int k, Ritz ritz) {
-        return eigen(A, k, ritz, 1E-6, 1000);
+        return eigen(A, k, ritz, 1E-8, 10 * A.nrows());
     }
 
     /**
-     * Solve the eigensystem for the number of eigenvalues requested.
-     * <p>
-     * NOTE: The references to the eigenvectors will keep alive a reference to a
-     * {@code nev * n} double array, so use the {@code copy()} method to free it
-     * up if only a subset is required.
+     * Find k approximate eigen pairs of a symmetric matrix by the
+     * Lanczos algorithm.
      *
      * @param k Number of eigenvalues of OP to be computed. 0 < k < N.
      * @param which Specify which of the Ritz values to compute.
      */
     public static EVD eigen(Matrix A, int k, String which) {
-        return eigen(A, k, which, 1E-6, 1000);
+        return eigen(A, k, which, 1E-8, 10 * A.nrows());
     }
 
     /**
-     * Solve the eigensystem for the number of eigenvalues requested.
-     * <p>
-     * NOTE: The references to the eigenvectors will keep alive a reference to a
-     * {@code nev * n} double array, so use the {@code copy()} method to free it
-     * up if only a subset is required.
+     * Find k approximate eigen pairs of a symmetric matrix by the
+     * Lanczos algorithm.
      *
      * @param k Number of eigenvalues of OP to be computed. 0 < k < N.
      * @param ritz Specify which of the Ritz values to compute.
@@ -102,11 +93,8 @@ public class ARPACK {
     }
 
     /**
-     * Solve the eigensystem for the number of eigenvalues requested.
-     * <p>
-     * NOTE: The references to the eigenvectors will keep alive a reference to a
-     * {@code nev * n} double array, so use the {@code copy()} method to free it
-     * up if only a subset is required.
+     * Find k approximate eigen pairs of a symmetric matrix by the
+     * Lanczos algorithm.
      *
      * @param k Number of eigenvalues of OP to be computed. 0 < NEV < N.
      * @param which Specify which of the Ritz values to compute.
@@ -115,11 +103,11 @@ public class ARPACK {
      */
     public static EVD eigen(Matrix A, int k, String which, double kappa, int maxIter) {
         if (A.nrows() != A.ncols()) {
-            throw new IllegalArgumentException("Matrix is not symmetric");
+            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
         }
 
         if (!A.isSymmetric()) {
-            throw new UnsupportedOperationException("This implementation supports only symmetric matrix yet.");
+            throw new UnsupportedOperationException("This matrix is not symmetric.");
         }
 
         int n = A.nrows();
@@ -170,7 +158,11 @@ public class ARPACK {
         logger.info("ARPACK: " + iter + " iterations for Matrix of size " + n);
 
         if (info.val != 0) {
-            throw new IllegalStateException("ARPACK DSAUPD error code: " + info.val);
+            if (info.val == 1) {
+                logger.info("ARPACK DSAUPD found all possible eigenvalues: {}", iparam[4]);
+            } else {
+                throw new IllegalStateException("ARPACK DSAUPD error code: " + info.val);
+            }
         }
 
         double[] d = new double[nev.val];
