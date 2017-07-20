@@ -22,7 +22,6 @@ import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
-import smile.math.matrix.Lanczos;
 
 /**
  * Spectral Clustering. Given a set of data points, the similarity matrix may
@@ -123,8 +122,9 @@ public class SpectralClustering implements Serializable {
                 L.set(j, i, l);
             }
         }
-        
-        EVD eigen = Lanczos.eigen(L, k);
+
+        L.setSymmetric(true);
+        EVD eigen = L.eigen(k);
         double[][] Y = eigen.getEigenVectors().array();
         for (int i = 0; i < n; i++) {
             Math.unitize2(Y[i]);
@@ -191,7 +191,8 @@ public class SpectralClustering implements Serializable {
             }
         }
 
-        EVD eigen = Lanczos.eigen(L, k);
+        L.setSymmetric(true);
+        EVD eigen = L.eigen(k);
         double[][] Y = eigen.getEigenVectors().array();
         for (int i = 0; i < n; i++) {
             Math.unitize2(Y[i]);
@@ -272,8 +273,9 @@ public class SpectralClustering implements Serializable {
                 W.set(i, j, C.get(i, j));
             }
         }
-        
-        EVD eigen = Lanczos.eigen(W, k);
+
+        W.setSymmetric(true);
+        EVD eigen = W.eigen(k);
         double[] e = eigen.getEigenValues();
         double scale = Math.sqrt((double)l / n);
         for (int i = 0; i < k; i++) {

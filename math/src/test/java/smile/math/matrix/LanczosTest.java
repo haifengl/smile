@@ -66,7 +66,9 @@ public class LanczosTest {
     @Test
     public void testLanczos() {
         System.out.println("Lanczos");
-        EVD result = Lanczos.eigen(Matrix.newInstance(A), 3);
+        Matrix a = Matrix.newInstance(A);
+        a.setSymmetric(true);
+        EVD result = Lanczos.eigen(a, 3);
         assertTrue(Math.equals(eigenValues, result.getEigenValues(), 1E-7));
 
         assertEquals(eigenVectors.length,    result.getEigenVectors().nrows());
@@ -84,7 +86,9 @@ public class LanczosTest {
     @Test
     public void testLanczos1() {
         System.out.println("Lanczos1");
-        EVD result = Lanczos.eigen(Matrix.newInstance(A), 1);
+        Matrix a = Matrix.newInstance(A);
+        a.setSymmetric(true);
+        EVD result = Lanczos.eigen(a, 1);
         assertEquals(eigenValues[0], result.getEigenValues()[0], 1E-4);
 
         for (int i = 0; i < 3; i++) {
@@ -102,7 +106,9 @@ public class LanczosTest {
         A[0][0] = A[1][1] = A[2][2] = A[3][3] = 2.0;
         for (int i = 4; i < 500; i++)
             A[i][i] = (500 - i) / 500.0;
-        EVD result = Lanczos.eigen(Matrix.newInstance(A), 6);
+        Matrix a = Matrix.newInstance(A);
+        a.setSymmetric(true);
+        EVD result = Lanczos.eigen(a, 6);
         assertEquals(2.0, result.getEigenValues()[0], 1E-4);
         assertEquals(2.0, result.getEigenValues()[1], 1E-4);
         assertEquals(2.0, result.getEigenValues()[2], 1E-4);

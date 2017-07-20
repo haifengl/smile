@@ -708,30 +708,4 @@ public abstract class DenseMatrix extends Matrix implements MatrixMultiplication
         }
         return V;
     }
-
-    /**
-     * Returns the string representation of matrix.
-     * @param full Print the full matrix if true. Otherwise only print top left 7 x 7 submatrix.
-     */
-    public String toString(boolean full) {
-        StringBuilder sb = new StringBuilder();
-        final int fields = 7;
-        int m = Math.min(fields, nrows());
-        int n = Math.min(fields, ncols());
-
-        String newline = n < ncols() ? "...\n" : "\n";
-
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                sb.append(String.format("%8.4f  ", get(i, j)));
-            }
-            sb.append(newline);
-        }
-
-        if (m < nrows()) {
-            sb.append("  ...\n");
-        }
-
-        return sb.toString();
-    }
 }

@@ -21,7 +21,6 @@ import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
-import smile.math.matrix.Lanczos;
 
 /**
  * Kernel principal component analysis. Kernel PCA is an extension of
@@ -154,7 +153,8 @@ public class KPCA<T> implements Projection<T>, Serializable {
             }
         }
 
-        EVD eigen = Lanczos.eigen(K, k);
+        K.setSymmetric(true);
+        EVD eigen = K.eigen(k);
 
         p = 0;
         for (int i = 0; i < k; i++) {

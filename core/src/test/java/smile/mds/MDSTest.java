@@ -117,16 +117,9 @@ public class MDSTest {
         assertTrue(Math.equals(eigs, mds.getEigenValues(), 1E-4));
 
         double[][] coords = mds.getCoordinates();
-        for (int j = 0; j < coords[0].length; j++) {
-            double sign = coords[0][j] * points[0][j];
-            if (sign >= 0) {
-                sign = 1;
-            } else {
-                sign = -1;
-            }
-
-            for (int i = 0; i < coords.length; i++) {
-                assertEquals(points[i][j], sign*coords[i][j], 1E-4);
+        for (int i = 0; i < points.length; i++) {
+            for (int j = 0; j < points[0].length; j++) {
+                assertEquals(Math.abs(points[i][j]), Math.abs(coords[i][j]), 1E-2);
             }
         }
     }
@@ -167,16 +160,9 @@ public class MDSTest {
         assertTrue(Math.equals(eigs, mds.getEigenValues(), 1E-1));
 
         double[][] coords = mds.getCoordinates();
-        for (int j = 0; j < coords[0].length; j++) {
-            double sign = coords[0][j] * points[0][j];
-            if (sign >= 0) {
-                sign = 1;
-            } else {
-                sign = -1;
-            }
-
-            for (int i = 0; i < coords.length; i++) {
-                assertEquals(points[i][j], sign*coords[i][j], 1E-4);
+        for (int i = 0; i < points.length; i++) {
+            for (int j = 0; j < points[0].length; j++) {
+                assertEquals(Math.abs(points[i][j]), Math.abs(coords[i][j]), 1E-2);
             }
         }
     }

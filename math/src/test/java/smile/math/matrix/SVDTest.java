@@ -684,7 +684,9 @@ public class SVDTest {
             {0.32967585, 0.18412070, -0.02567023, 0.2254902}
         };
 
-        SVD result = Lanczos.svd(Matrix.newInstance(A), 4);
+        Matrix a = Matrix.newInstance(A);
+        a.setSymmetric(true);
+        SVD result = Lanczos.svd(a, 4);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-6));
 
         assertEquals(U.length, result.getU().nrows());

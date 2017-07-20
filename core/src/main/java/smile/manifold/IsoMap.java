@@ -25,7 +25,6 @@ import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
-import smile.math.matrix.Lanczos;
 import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
 import smile.neighbor.KNNSearch;
@@ -180,7 +179,10 @@ public class IsoMap {
             }
         }
 
-        EVD eigen = Lanczos.eigen(B, d);
+        B.setSymmetric(true);
+        EVD eigen = B.eigen(d);
+
+        DenseMatrix V = eigen.getEigenVectors();
         coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
             if (eigen.getEigenValues()[j] < 0) {
@@ -189,7 +191,7 @@ public class IsoMap {
 
             double scale = Math.sqrt(eigen.getEigenValues()[j]);
             for (int i = 0; i < n; i++) {
-                coordinates[i][j] = eigen.getEigenVectors().get(i, j) * scale;
+                coordinates[i][j] = V.get(i, j) * scale;
             }
         }        
     }
