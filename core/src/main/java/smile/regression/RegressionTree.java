@@ -19,8 +19,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.LinkedList;
 import java.util.concurrent.Callable;
-
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
@@ -1158,5 +1159,77 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             return (lDepth + 1);
         else
             return (rDepth + 1);
+    }
+
+    // For dot() tree traversal.
+    private class DotNode {
+        int parent;
+        int id;
+        Node node;
+        DotNode(int parent, int id, Node node) {
+            this.parent = parent;
+            this.id = id;
+            this.node = node;
+        }
+    }
+
+    /**
+     * Returns the graphic representation in Graphviz dot format.
+     * Try http://viz-js.com/ to visualize the returned string.
+     */
+    public String dot() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("digraph RegressionTree {\n node [shape=box, style=\"filled, rounded\", color=\"black\", fontname=helvetica];\n edge [fontname=helvetica];\n");
+
+        int n = 0; // number of nodes processed
+        Queue<DotNode> queue = new LinkedList<DotNode>();
+        queue.add(new DotNode(-1, 0, root));
+
+        while (!queue.isEmpty()) {
+            // Dequeue a vertex from queue and print it
+            DotNode dnode = queue.poll();
+            int id = dnode.id;
+            int parent = dnode.parent;
+            Node node = dnode.node;
+
+            // leaf node
+            if (node.trueChild == null && node.falseChild == null) {
+                builder.append(String.format(" %d [label=<%.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, node.output));
+            } else {
+                Attribute attr = attributes[node.splitFeature];
+                if (attr.getType() == Attribute.Type.NOMINAL) {
+                    builder.append(String.format(" %d [label=<%s = %s<br/>nscore = %.4f>, fillcolor=\"#00000000\"];\n", id, attr.getName(), attr.toString(node.splitValue), node.splitScore));
+                } else if (attr.getType() == Attribute.Type.NUMERIC) {
+                    builder.append(String.format(" %d [label=<%s &le; %.4f<br/>score = %.4f>, fillcolor=\"#00000000\"];\n", id, attr.getName(), node.splitValue, node.splitScore));
+                } else {
+                    throw new IllegalStateException("Unsupported attribute type: " + attr.getType());
+                }
+            }
+
+            // add edge
+            if (parent >= 0) {
+                builder.append(' ').append(parent).append(" -> ").append(id);
+                // only draw edge label at top
+                if (parent == 0) {
+                    if (id == 1) {
+                        builder.append(" [labeldistance=2.5, labelangle=45, headlabel=\"True\"]");
+                    } else {
+                        builder.append(" [labeldistance=2.5, labelangle=-45, headlabel=\"False\"]");
+                    }
+                }
+                builder.append(";\n");
+            }
+
+            if (node.trueChild != null) {
+                queue.add(new DotNode(id, ++n, node.trueChild));
+            }
+
+            if (node.falseChild != null) {
+                queue.add(new DotNode(id, ++n, node.falseChild));
+            }
+        }
+
+        builder.append("}");
+        return builder.toString();
     }
 }
