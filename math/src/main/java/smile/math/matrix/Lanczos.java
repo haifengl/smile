@@ -35,6 +35,10 @@ import smile.math.Math;
 public class Lanczos {
     private static final Logger logger = LoggerFactory.getLogger(Lanczos.class);
 
+    /**
+     * For SVD, we compute eigen decomposition of A' * A
+     * when m >= n, or that of A * A' when m < n.
+     */
     private static class ATA extends Matrix {
 
         Matrix A;
@@ -43,17 +47,30 @@ public class Lanczos {
 
         public ATA(Matrix A) {
             this.A = A;
-            buf = new double[A.nrows()];
             setSymmetric(true);
 
-            if ((A.ncols() < 10000) && (A instanceof DenseMatrix)) {
-                AtA = A.ata();
+            if (A.nrows() >= A.ncols()) {
+                buf = new double[A.nrows()];
+
+                if ((A.ncols() < 10000) && (A instanceof DenseMatrix)) {
+                    AtA = A.ata();
+                }
+            } else {
+                buf = new double[A.ncols()];
+
+                if ((A.nrows() < 10000) && (A instanceof DenseMatrix)) {
+                    AtA = A.aat();
+                }
             }
         }
 
         @Override
         public int nrows() {
-            return A.ncols();
+            if (A.nrows() >= A.ncols()) {
+                return A.ncols();
+            } else {
+                return A.nrows();
+            }
         }
 
         @Override
@@ -81,8 +98,13 @@ public class Lanczos {
             if (AtA != null) {
                 AtA.ax(x, y);
             } else {
-                A.ax(x, buf);
-                A.atx(buf, y);
+                if (A.nrows() >= A.ncols()) {
+                    A.ax(x, buf);
+                    A.atx(buf, y);
+                } else {
+                    A.atx(x, buf);
+                    A.ax(buf, y);
+                }
             }
 
             return y;
@@ -133,7 +155,7 @@ public class Lanczos {
      * This number cannot exceed the size of A.
      */
     public static SVD svd(Matrix A, int k) {
-        return svd(A, k, 1.0E-6);
+        return svd(A, k, 1.0E-8, 10 * A.nrows());
     }
 
     /**
@@ -144,10 +166,11 @@ public class Lanczos {
      * @param k the number of singular triples we wish to compute for the input matrix.
      * This number cannot exceed the size of A.
      * @param kappa relative accuracy of ritz values acceptable as singular values.
+     * @param maxIter Maximum number of iterations.
      */
-    public static SVD svd(Matrix A, int k, double kappa) {
+    public static SVD svd(Matrix A, int k, double kappa, int maxIter) {
         ATA B = new ATA(A);
-        EVD eigen = Lanczos.eigen(B, k, kappa);
+        EVD eigen = Lanczos.eigen(B, k, kappa, maxIter);
 
         double[] s = eigen.getEigenValues();
         for (int i = 0; i < s.length; i++) {
@@ -207,7 +230,7 @@ public class Lanczos {
      * This number cannot exceed the size of A.
      */
     public static EVD eigen(Matrix A, int k) {
-        return eigen(A, k, 1.0E-6);
+        return eigen(A, k, 1.0E-8, 10 * A.nrows());
     }
 
     /**
@@ -218,10 +241,15 @@ public class Lanczos {
      * @param k the number of eigenvalues we wish to compute for the input matrix.
      * This number cannot exceed the size of A.
      * @param kappa relative accuracy of ritz values acceptable as eigenvalues.
+     * @param maxIter Maximum number of iterations.
      */
-    public static EVD eigen(Matrix A, int k, double kappa) {
+    public static EVD eigen(Matrix A, int k, double kappa, int maxIter) {
         if (A.nrows() != A.ncols()) {
-            throw new IllegalArgumentException("Matrix is not square.");
+            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
+        }
+
+        if (!A.isSymmetric()) {
+            throw new IllegalArgumentException("Matrix is not symmetric.");
         }
 
         if (k < 1 || k > A.nrows()) {
@@ -314,7 +342,8 @@ public class Lanczos {
         boolean enough = false;
 
         // algorithm iterations
-        while (!enough) {
+        int iter = 0;
+        for (; !enough && iter < maxIter; iter++) {
             if (rnm <= tol) {
                 rnm = 0.0;
             }
@@ -414,7 +443,7 @@ public class Lanczos {
 
             // compute the eigenvalues and eigenvectors of the
             // tridiagonal matrix
-            JMatrix.tql2(z, ritz, wptr[5], j + 1);
+            JMatrix.tql2(z, ritz, wptr[5]);
 
             for (int i = 0; i <= j; i++) {
                 bnd[i] = rnm * Math.abs(z.get(j, i));
@@ -439,6 +468,9 @@ public class Lanczos {
             }
             enough = enough || first >= n;
         }
+
+        logger.info("Lanczos: " + iter + " iterations for Matrix of size " + n);
+
         store(q, j, wptr[1]);
 
         k = Math.min(k, neig);
