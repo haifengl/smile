@@ -58,7 +58,7 @@ import java.util.Arrays;
  * 
  * @author Haifeng Li
  */
-public class BandMatrix implements Matrix, LinearSolver {
+public class BandMatrix extends Matrix implements LinearSolver {
     private static final long serialVersionUID = 1L;
 
     /**

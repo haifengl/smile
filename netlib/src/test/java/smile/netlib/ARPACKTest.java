@@ -23,6 +23,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import smile.math.Math;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.EVD;
 
@@ -68,7 +69,9 @@ public class ARPACKTest {
     @Test
     public void testARPACK() {
         System.out.println("ARPACK");
-        EVD result = ARPACK.eigen(Matrix.newInstance(A), 2, ARPACK.Ritz.SA);
+        DenseMatrix a = Matrix.newInstance(A);
+        a.setSymmetric(true);
+        EVD result = ARPACK.eigen(a, 2, ARPACK.Ritz.SA);
         assertEquals(eigenValues[1], result.getEigenValues()[0], 1E-4);
         assertEquals(eigenValues[2], result.getEigenValues()[1], 1E-4);
 
@@ -87,7 +90,9 @@ public class ARPACKTest {
     @Test
     public void testARPACK1() {
         System.out.println("ARPACK1");
-        EVD result = ARPACK.eigen(Matrix.newInstance(A), 1, ARPACK.Ritz.LA);
+        DenseMatrix a = Matrix.newInstance(A);
+        a.setSymmetric(true);
+        EVD result = ARPACK.eigen(a, 1, ARPACK.Ritz.LA);
         assertEquals(eigenValues[0], result.getEigenValues()[0], 1E-4);
 
         for (int i = 0; i < 3; i++) {
@@ -105,7 +110,9 @@ public class ARPACKTest {
         A[0][0] = A[1][1] = A[2][2] = A[3][3] = 2.0;
         for (int i = 4; i < 500; i++)
             A[i][i] = (500 - i) / 500.0;
-        EVD result = ARPACK.eigen(Matrix.newInstance(A), 6, ARPACK.Ritz.LA);
+        DenseMatrix a = Matrix.newInstance(A);
+        a.setSymmetric(true);
+        EVD result = ARPACK.eigen(a, 6, ARPACK.Ritz.LA);
         assertEquals(2.0, result.getEigenValues()[0], 1E-4);
         assertEquals(2.0, result.getEigenValues()[1], 1E-4);
         assertEquals(2.0, result.getEigenValues()[2], 1E-4);
