@@ -574,13 +574,15 @@ public class LASSO  implements Regression<double[]>, Serializable {
             this.d2 = d2;
             this.prb = prb;
             this.prs = prs;
+            setSymmetric(true);
 
             int n = A.nrows();
             ax = new double[n];
             atax = new double[p];
 
-            if ((A.ncols() < 10000) && !(A instanceof SparseMatrix))
+            if ((A.ncols() < 10000) && (A instanceof DenseMatrix)) {
                 AtA = A.ata();
+            }
         }
 
         @Override
