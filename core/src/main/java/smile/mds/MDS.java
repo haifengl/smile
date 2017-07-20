@@ -16,7 +16,6 @@
 package smile.mds;
 
 import smile.math.Math;
-import smile.math.matrix.Lanczos;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
@@ -180,7 +179,8 @@ public class MDS {
             }
         }
 
-        EVD eigen = Lanczos.eigen(B, k);
+        B.setSymmetric(true);
+        EVD eigen = B.eigen(k);
         
         coordinates = new double[n][k];
         for (int j = 0; j < k; j++) {

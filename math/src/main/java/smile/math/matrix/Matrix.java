@@ -16,6 +16,10 @@
 
 package smile.math.matrix;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import smile.math.Math;
+
 import java.io.Serializable;
 
 /**
@@ -67,6 +71,9 @@ import java.io.Serializable;
  * @author Haifeng Li
  */
 public abstract class Matrix implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private static final Logger logger = LoggerFactory.getLogger(Matrix.class);
+
     /**
      * True if the matrix is symmetric.
      */
@@ -256,4 +263,68 @@ public abstract class Matrix implements Serializable {
      * @return y
      */
     public abstract double[] atxpy(double[] x, double[] y, double b);
+
+    /**
+     * Find k largest approximate eigen pairs of a symmetric matrix by the
+     * Lanczos algorithm.
+     *
+     * @param k the number of eigenvalues we wish to compute for the input matrix.
+     * This number cannot exceed the size of A.
+     */
+    public EVD eigen(int k) {
+        return eigen(k, 1.0E-8, 10 * nrows());
+    }
+
+    /**
+     * Find k largest approximate eigen pairs of a symmetric matrix by the
+     * Lanczos algorithm.
+     *
+     * @param k the number of eigenvalues we wish to compute for the input matrix.
+     * This number cannot exceed the size of A.
+     * @param kappa relative accuracy of ritz values acceptable as eigenvalues.
+     * @param maxIter Maximum number of iterations.
+     */
+    public EVD eigen(int k, double kappa, int maxIter) {
+        try {
+            Class<?> clazz = Class.forName("smile.netlib.ARPACK");
+            java.lang.reflect.Method method = clazz.getMethod("eigen", Matrix.class, Integer.TYPE, String.class, Double.TYPE, Integer.TYPE);
+            return (EVD) method.invoke(null, this, k, "LA", kappa, maxIter);
+        } catch (Exception e) {
+            if (!(e instanceof ClassNotFoundException)) {
+                logger.info("Matrix.eigen({}, {}, {}):", k, kappa, maxIter, e);
+            }
+            return Lanczos.eigen(this, k, kappa, maxIter);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return toString(false);
+    }
+
+    /**
+     * Returns the string representation of matrix.
+     * @param full Print the full matrix if true. Otherwise only print top left 7 x 7 submatrix.
+     */
+    public String toString(boolean full) {
+        StringBuilder sb = new StringBuilder();
+        final int fields = 7;
+        int m = Math.min(fields, nrows());
+        int n = Math.min(fields, ncols());
+
+        String newline = n < ncols() ? "...\n" : "\n";
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                sb.append(String.format("%8.4f  ", get(i, j)));
+            }
+            sb.append(newline);
+        }
+
+        if (m < nrows()) {
+            sb.append("  ...\n");
+        }
+
+        return sb.toString();
+    }
 }

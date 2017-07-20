@@ -25,8 +25,8 @@ import smile.graph.Graph.Edge;
 import smile.math.Math;
 import smile.math.SparseArray;
 import smile.math.distance.EuclideanDistance;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
-import smile.math.matrix.Lanczos;
 import smile.math.matrix.PowerIteration;
 import smile.math.matrix.SparseMatrix;
 import smile.neighbor.CoverTree;
@@ -199,13 +199,15 @@ public class LaplacianEigenmap {
         }
 
         L = W.toSparseMatrix();
-        EVD eigen = Lanczos.eigen(L, d + 1);
+        L.setSymmetric(true);
+        EVD eigen = L.eigen(d + 1);
 
+        DenseMatrix V = eigen.getEigenVectors();
         coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
             double norm = 0.0;
             for (int i = 0; i < n; i++) {
-                coordinates[i][j] = eigen.getEigenVectors().get(i, j + 1) * D[i];
+                coordinates[i][j] = V.get(i, j + 1) * D[i];
                 norm += coordinates[i][j] * coordinates[i][j];
             }
 
