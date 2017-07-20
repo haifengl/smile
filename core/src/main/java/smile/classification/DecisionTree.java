@@ -1059,7 +1059,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
         builder.append("digraph DecisionTree {\n node [shape=box, style=\"filled, rounded\", color=\"black\", fontname=helvetica];\n edge [fontname=helvetica];\n");
 
         int n = 0; // number of nodes processed
-        Queue<DotNode> queue = new LinkedList<DotNode>();
+        Queue<DotNode> queue = new LinkedList<>();
         queue.add(new DotNode(-1, 0, root));
 
         while (!queue.isEmpty()) {
