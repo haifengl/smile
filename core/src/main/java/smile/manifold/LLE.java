@@ -205,10 +205,12 @@ public class LLE {
         M.setSymmetric(true);
 
         EVD eigen = M.eigen(n-1);
+
+        DenseMatrix V = eigen.getEigenVectors();
         coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
             for (int i = 0; i < n; i++) {
-                coordinates[i][j] = eigen.getEigenVectors().get(i, n-j-2);
+                coordinates[i][j] = V.get(i, n-j-2);
             }
         }
     }
