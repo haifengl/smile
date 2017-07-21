@@ -288,7 +288,7 @@ public abstract class Matrix implements Serializable {
         try {
             Class<?> clazz = Class.forName("smile.netlib.ARPACK");
             java.lang.reflect.Method method = clazz.getMethod("eigen", Matrix.class, Integer.TYPE, String.class, Double.TYPE, Integer.TYPE);
-            return (EVD) method.invoke(null, this, k, "LA", kappa, maxIter);
+            return (EVD) method.invoke(null, this, k, "LM", kappa, maxIter);
         } catch (Exception e) {
             if (!(e instanceof ClassNotFoundException)) {
                 logger.info("Matrix.eigen({}, {}, {}):", k, kappa, maxIter, e);
