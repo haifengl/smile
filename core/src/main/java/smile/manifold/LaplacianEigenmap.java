@@ -27,7 +27,6 @@ import smile.math.SparseArray;
 import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
-import smile.math.matrix.PowerIteration;
 import smile.math.matrix.SparseMatrix;
 import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
@@ -138,42 +137,23 @@ public class LaplacianEigenmap {
 
         SparseDataset W = new SparseDataset(n);
         double[] D = new double[n];
-        if (t <= 0) {
-            for (int i = 0; i < n; i++) {
-                W.set(i, i, 1.0);
+        double gamma = -1.0 / t;
 
-                Collection<Edge> edges = graph.getEdges(i);
-                    for (Edge edge : edges) {
-                    int j = edge.v2;
-                    if (i == j) {
-                        j = edge.v1;
-                    }
-
-                    W.set(i, j, 1.0);
-                    D[i] += 1.0;
+        for (int i = 0; i < n; i++) {
+            Collection<Edge> edges = graph.getEdges(i);
+            for (Edge edge : edges) {
+                int j = edge.v2;
+                if (i == j) {
+                    j = edge.v1;
                 }
 
-                D[i] = 1 / Math.sqrt(D[i]);
+                double w = t <= 0 ? 1.0 : Math.exp(gamma * Math.sqr(edge.weight));
+                if (i == j) System.out.println(i);
+                W.set(i, j, w);
+                D[i] += w;
             }
-        } else {
-            double gamma = -1.0 / t;
-            for (int i = 0; i < n; i++) {
-                W.set(i, i, 1.0);
 
-                Collection<Edge> edges = graph.getEdges(i);
-                    for (Edge edge : edges) {
-                    int j = edge.v2;
-                    if (i == j) {
-                        j = edge.v1;
-                    }
-
-                    double w = Math.exp(gamma * Math.sqr(edge.weight));
-                    W.set(i, j, w);
-                    D[i] += w;
-                }
-
-                D[i] = 1 / Math.sqrt(D[i]);
-            }
+            D[i] = 1 / Math.sqrt(D[i]);
         }
 
         for (int i = 0; i < n; i++) {
@@ -183,24 +163,15 @@ public class LaplacianEigenmap {
                 double s = D[i] * edge.x * D[j];
                 W.set(i, j, s);
             }
-            W.set(i, i, -1.0);
+            W.set(i, i, 0.0);
         }
 
-        double[] v = new double[n];
-        for (int i = 0; i < n; i++) {
-            v[i] = Math.random();
-        }
-
-        // Largest eigenvalue.
         SparseMatrix L = W.toSparseMatrix();
-        double lambda = -PowerIteration.eigen(L, v, 1E-6);
-        for (int i = 0; i < n; i++) {
-            W.set(i, i, lambda - 1.0);
-        }
-
-        L = W.toSparseMatrix();
         L.setSymmetric(true);
-        EVD eigen = L.eigen(d + 1);
+
+        // ARPACK may not find all needed eigen values for d + 1
+        // Use d + 2 as a work around. Our Lanczos class has no issue.
+        EVD eigen = L.eigen(d + 2);
 
         DenseMatrix V = eigen.getEigenVectors();
         coordinates = new double[n][d];
