@@ -1,5 +1,8 @@
 *.class
 
+# Intellij
+.idea
+
 # javadoc
 shell/src/universal/doc/api/
 
