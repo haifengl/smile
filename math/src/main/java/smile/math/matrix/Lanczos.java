@@ -144,7 +144,7 @@ public class Lanczos {
         public double[] atxpy(double[] x, double[] y, double b) {
             throw new UnsupportedOperationException();
         }
-    };
+    }
 
     /**
      * Find k largest approximate singular triples of a matrix by the

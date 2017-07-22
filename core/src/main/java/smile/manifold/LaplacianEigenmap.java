@@ -148,7 +148,6 @@ public class LaplacianEigenmap {
                 }
 
                 double w = t <= 0 ? 1.0 : Math.exp(gamma * Math.sqr(edge.weight));
-                if (i == j) System.out.println(i);
                 W.set(i, j, w);
                 D[i] += w;
             }
