@@ -168,9 +168,10 @@ public class LaplacianEigenmap {
         SparseMatrix L = W.toSparseMatrix();
         L.setSymmetric(true);
 
-        // ARPACK may not find all needed eigen values for d + 1
-        // Use d + 2 as a work around. Our Lanczos class has no issue.
-        EVD eigen = L.eigen(d + 2);
+        // ARPACK may not find all needed eigen values for k = d + 1.
+        // Set it to 10 * (d + 1) as a hack to NCV parameter of DSAUPD.
+        // Our Lanczos class has no such issue.
+        EVD eigen = L.eigen(Math.min(10*(d + 1), n - 1));
 
         DenseMatrix V = eigen.getEigenVectors();
         coordinates = new double[n][d];
