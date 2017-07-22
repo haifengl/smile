@@ -118,7 +118,7 @@ public class ARPACK {
 
         intW nev = new intW(k);
 
-        int ncv = Math.min(2 * k, n);
+        int ncv = Math.min(3 * k, n);
 
         String bmat = "I"; // standard eigenvalue problem
         doubleW tol = new doubleW(kappa);
