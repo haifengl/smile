@@ -149,6 +149,36 @@ public abstract class Matrix implements Serializable {
         return matrix;
     }
 
+    @Override
+    public String toString() {
+        return toString(false);
+    }
+
+    /**
+     * Returns the string representation of matrix.
+     * @param full Print the full matrix if true. Otherwise only print top left 7 x 7 submatrix.
+     */
+    public String toString(boolean full) {
+        StringBuilder sb = new StringBuilder();
+        int m = full ? nrows() : Math.min(7, nrows());
+        int n = full ? ncols() : Math.min(7, ncols());
+
+        String newline = n < ncols() ? "...\n" : "\n";
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                sb.append(String.format("%8.4f  ", get(i, j)));
+            }
+            sb.append(newline);
+        }
+
+        if (m < nrows()) {
+            sb.append("  ...\n");
+        }
+
+        return sb.toString();
+    }
+
     /** Returns true if the matrix is symmetric. */
     public boolean isSymmetric() {
         return symmetric;
@@ -297,33 +327,191 @@ public abstract class Matrix implements Serializable {
         }
     }
 
-    @Override
-    public String toString() {
-        return toString(false);
+
+    /**
+     * Find k largest approximate singular triples of a matrix by the
+     * Lanczos algorithm.
+     *
+     * @param k the number of singular triples we wish to compute for the input matrix.
+     * This number cannot exceed the size of A.
+     */
+    public SVD svd(int k) {
+        return svd(k, 1.0E-8, 10 * nrows());
     }
 
     /**
-     * Returns the string representation of matrix.
-     * @param full Print the full matrix if true. Otherwise only print top left 7 x 7 submatrix.
+     * Find k largest approximate singular triples of a matrix by the
+     * Lanczos algorithm.
+     *
+     * @param k the number of singular triples we wish to compute for the input matrix.
+     * This number cannot exceed the size of A.
+     * @param kappa relative accuracy of ritz values acceptable as singular values.
+     * @param maxIter Maximum number of iterations.
      */
-    public String toString(boolean full) {
-        StringBuilder sb = new StringBuilder();
-        int m = full ? nrows() : Math.min(7, nrows());
-        int n = full ? ncols() : Math.min(7, ncols());
+    public SVD svd(int k, double kappa, int maxIter) {
+        ATA B = new ATA(this);
+        EVD eigen = Lanczos.eigen(B, k, kappa, maxIter);
 
-        String newline = n < ncols() ? "...\n" : "\n";
+        double[] s = eigen.getEigenValues();
+        for (int i = 0; i < s.length; i++) {
+            s[i] = Math.sqrt(s[i]);
+        }
 
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                sb.append(String.format("%8.4f  ", get(i, j)));
+        int m = nrows();
+        int n = ncols();
+
+        if (m >= n) {
+
+            DenseMatrix V = eigen.getEigenVectors();
+
+            double[] tmp = new double[m];
+            double[] vi = new double[n];
+            DenseMatrix U = Matrix.zeros(m, s.length);
+            for (int i = 0; i < s.length; i++) {
+                for (int j = 0; j < n; j++) {
+                    vi[j] = V.get(j, i);
+                }
+
+                ax(vi, tmp);
+
+                for (int j = 0; j < m; j++) {
+                    U.set(j, i, tmp[j] / s[i]);
+                }
             }
-            sb.append(newline);
+
+            return new SVD(U, V, s);
+
+        } else {
+
+            DenseMatrix U = eigen.getEigenVectors();
+
+            double[] tmp = new double[n];
+            double[] ui = new double[m];
+            DenseMatrix V = Matrix.zeros(n, s.length);
+            for (int i = 0; i < s.length; i++) {
+                for (int j = 0; j < m; j++) {
+                    ui[j] = U.get(j, i);
+                }
+
+                atx(ui, tmp);
+
+                for (int j = 0; j < n; j++) {
+                    V.set(j, i, tmp[j] / s[i]);
+                }
+            }
+
+            return new SVD(U, V, s);
+        }
+    }
+
+    /**
+     * For SVD, we compute eigen decomposition of A' * A
+     * when m >= n, or that of A * A' when m < n.
+     */
+    private static class ATA extends Matrix {
+
+        Matrix A;
+        Matrix AtA;
+        double[] buf;
+
+        public ATA(Matrix A) {
+            this.A = A;
+            setSymmetric(true);
+
+            if (A.nrows() >= A.ncols()) {
+                buf = new double[A.nrows()];
+
+                if ((A.ncols() < 10000) && (A instanceof DenseMatrix)) {
+                    AtA = A.ata();
+                }
+            } else {
+                buf = new double[A.ncols()];
+
+                if ((A.nrows() < 10000) && (A instanceof DenseMatrix)) {
+                    AtA = A.aat();
+                }
+            }
         }
 
-        if (m < nrows()) {
-            sb.append("  ...\n");
+        @Override
+        public int nrows() {
+            if (A.nrows() >= A.ncols()) {
+                return A.ncols();
+            } else {
+                return A.nrows();
+            }
         }
 
-        return sb.toString();
+        @Override
+        public int ncols() {
+            return nrows();
+        }
+
+        @Override
+        public ATA transpose() {
+            return this;
+        }
+
+        @Override
+        public ATA ata() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ATA aat() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double[] ax(double[] x, double[] y) {
+            if (AtA != null) {
+                AtA.ax(x, y);
+            } else {
+                if (A.nrows() >= A.ncols()) {
+                    A.ax(x, buf);
+                    A.atx(buf, y);
+                } else {
+                    A.atx(x, buf);
+                    A.ax(buf, y);
+                }
+            }
+
+            return y;
+        }
+
+        @Override
+        public double[] atx(double[] x, double[] y) {
+            return ax(x, y);
+        }
+
+        @Override
+        public double[] axpy(double[] x, double[] y) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double[] axpy(double[] x, double[] y, double b) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double get(int i, int j) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double apply(int i, int j) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double[] atxpy(double[] x, double[] y) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double[] atxpy(double[] x, double[] y, double b) {
+            throw new UnsupportedOperationException();
+        }
     }
 }

@@ -65,7 +65,7 @@ public class LanczosTest {
      */
     @Test
     public void testLanczos() {
-        System.out.println("Lanczos");
+        System.out.println("eigen");
         Matrix a = Matrix.newInstance(A);
         a.setSymmetric(true);
         EVD result = Lanczos.eigen(a, 3);
@@ -84,8 +84,8 @@ public class LanczosTest {
      * Test of decompose method, of class EigenValueDecomposition.
      */
     @Test
-    public void testLanczos1() {
-        System.out.println("Lanczos1");
+    public void testEigen1() {
+        System.out.println("eigen1");
         Matrix a = Matrix.newInstance(A);
         a.setSymmetric(true);
         EVD result = Lanczos.eigen(a, 1);
@@ -100,8 +100,8 @@ public class LanczosTest {
      * Test of decompose method, of class EigenValueDecomposition.
      */
     @Test
-    public void testLanczos2() {
-        System.out.println("Lanczos2");
+    public void testEigen2() {
+        System.out.println("eigen2");
         A = new double[500][500];
         A[0][0] = A[1][1] = A[2][2] = A[3][3] = 2.0;
         for (int i = 4; i < 500; i++)
@@ -121,7 +121,7 @@ public class LanczosTest {
      */
     @Test
     public void testDecompose1() {
-        System.out.println("decompose symm");
+        System.out.println("svd symm");
         double[][] A = {
                 {0.9000, 0.4000, 0.7000},
                 {0.4000, 0.5000, 0.3000},
@@ -142,7 +142,7 @@ public class LanczosTest {
                 {0.6240573, -0.44947578, -0.6391588}
         };
 
-        SVD result = Lanczos.svd(Matrix.newInstance(A), 3);
+        SVD result = Matrix.newInstance(A).svd(3);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().nrows());
@@ -167,7 +167,7 @@ public class LanczosTest {
      */
     @Test
     public void testDecompose2() {
-        System.out.println("decompose asymm");
+        System.out.println("svd asymm");
         double[][] A = {
                 {1.19720880, -1.8391378, 0.3019585, -1.1165701, -1.7210814, 0.4918882, -0.04247433},
                 {0.06605075, 1.0315583, 0.8294362, -0.3646043, -1.6038017, -0.9188110, -0.63760340},
@@ -200,7 +200,7 @@ public class LanczosTest {
                 {-0.5156083, -0.36573746, -0.47613340, 0.41342817, -0.2659765, 0.1654796, -0.32346758}
         };
 
-        SVD result = Lanczos.svd(Matrix.newInstance(A), 7);
+        SVD result = Matrix.newInstance(A).svd(7);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().nrows());
@@ -224,8 +224,8 @@ public class LanczosTest {
      * Test of decompose method, of class SingularValueDecomposition.
      */
     @Test
-    public void testDecompose3() {
-        System.out.println("decompose m = n+1");
+    public void testSVD3() {
+        System.out.println("svd m = n+1");
         double[][] A = {
                 {1.19720880, -1.8391378, 0.3019585, -1.1165701, -1.7210814, 0.4918882},
                 {0.06605075, 1.0315583, 0.8294362, -0.3646043, -1.6038017, -0.9188110},
@@ -257,7 +257,7 @@ public class LanczosTest {
                 {0.06127719, 0.230326187, 0.04693098, -0.3300697, 0.825499232, -0.3880689}
         };
 
-        SVD result = Lanczos.svd(Matrix.newInstance(A), 6);
+        SVD result = Matrix.newInstance(A).svd(6);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().nrows());
@@ -281,8 +281,8 @@ public class LanczosTest {
      * Test of decompose method, of class SingularValueDecomposition.
      */
     @Test
-    public void testDecompose4() {
-        System.out.println("decompose m = n+2");
+    public void testSVD4() {
+        System.out.println("svd m = n+2");
         double[][] A = {
                 {1.19720880, -1.8391378, 0.3019585, -1.1165701, -1.7210814},
                 {0.06605075, 1.0315583, 0.8294362, -0.3646043, -1.6038017},
@@ -313,7 +313,7 @@ public class LanczosTest {
                 {0.82502638, -0.400562630, 0.30810911, -0.1797507, 0.1778750}
         };
 
-        SVD result = Lanczos.svd(Matrix.newInstance(A), 5);
+        SVD result = Matrix.newInstance(A).svd(5);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().nrows());
@@ -337,8 +337,8 @@ public class LanczosTest {
      * Test of decompose method, of class SingularValueDecomposition.
      */
     @Test
-    public void testDecompose9() {
-        System.out.println("decompose sparse matrix");
+    public void testSVD9() {
+        System.out.println("SparseMatrix.svd()");
         double[][] A = {
                 {1, 0, 0, 1, 0, 0, 0, 0, 0},
                 {1, 0, 1, 0, 0, 0, 0, 0, 0},
@@ -380,7 +380,7 @@ public class LanczosTest {
                 {-0.406678, -0.10893, 0.492444, 0.0123293, 0.270696, -0.0538747, -0.0538747, -0.165339, -0.579426, -0.225424, 0.231961, 0.182535}
         };
 
-        SVD result = Lanczos.svd(new SparseMatrix(A), 9);
+        SVD result = new SparseMatrix(A).svd(9);
         assertTrue(Math.equals(s, result.getSingularValues(), 1E-5));
 
         assertEquals(Ut[0].length, result.getU().nrows());
