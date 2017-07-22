@@ -144,12 +144,12 @@ public class LLE {
             }
         }
 
-        int len = n * (k+1);
+        int len = n * k;
         double[] w = new double[len];
         int[] rowIndex = new int[len];
         int[] colIndex = new int[n + 1];
         for (int i = 1; i <= n; i++) {
-            colIndex[i] = colIndex[i - 1] + k + 1;
+            colIndex[i] = colIndex[i - 1] + k;
         }
 
         DenseMatrix C = Matrix.zeros(k, k);
@@ -180,37 +180,28 @@ public class LLE {
             lu.solve(b);
 
             double sum = Math.sum(b);
-            int shift = 0;
             for (int p = 0; p < k; p++) {
-                if (newIndex[N[i][p]] > m && shift == 0) {
-                    shift = 1;
-                    w[m * (k + 1) + p] = 1.0;
-                    rowIndex[m * (k + 1) + p] = m;
-                }
-                w[m * (k + 1) + p + shift] = -b[p] / sum;
-                rowIndex[m * (k + 1) + p + shift] = newIndex[N[i][p]];
-            }
-
-            if (shift == 0) {
-                w[m * (k + 1) + k] = 1.0;
-                rowIndex[m * (k + 1) + k] = m;
+                w[m * k + p] = b[p] / sum;
+                rowIndex[m * k + p] = newIndex[N[i][p]];
             }
 
             m++;
         }
 
-        // This is actually the transpose of W in the paper.
-        SparseMatrix W = new SparseMatrix(n, n, w, rowIndex, colIndex);
-        SparseMatrix M = W.aat();
-        M.setSymmetric(true);
+        // This is the transpose of W in the paper.
+        SparseMatrix Wt = new SparseMatrix(n, n, w, rowIndex, colIndex);
+        IM im = new IM(Wt);
 
-        EVD eigen = M.eigen(n-1);
+        // ARPACK may not find all needed eigen values for k = d + 1.
+        // Set it to 10 * (d + 1) as a hack to NCV parameter of DSAUPD.
+        // Our Lanczos class has no such issue.
+        EVD eigen = im.eigen(Math.min(10*(d + 1), n - 1));
 
         DenseMatrix V = eigen.getEigenVectors();
         coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
             for (int i = 0; i < n; i++) {
-                coordinates[i][j] = V.get(i, n-j-2);
+                coordinates[i][j] = V.get(i, j + 1);
             }
         }
     }
@@ -237,4 +228,103 @@ public class LLE {
     public Graph getNearestNeighborGraph() {
         return graph;
     }
+
+    /**
+     * Instead of computing smallest eigen values of M, we
+     * computing the largest eigen values of I - M.
+     * Since M = t(I - W) * (I - W), t() as the transpose,
+     * we have (I - M)v = Wv + t(W)(v - Wv). As W is sparse and we can
+     * compute only Wv and t(W)v efficiently.
+     */
+    private static class IM extends Matrix {
+
+        Matrix Wt;
+        double[] Wx;
+        double[] Wtx;
+
+        public IM(Matrix Wt) {
+            this.Wt = Wt;
+            setSymmetric(true);
+
+            Wx = new double[Wt.nrows()];
+            Wtx = new double[Wt.ncols()];
+        }
+
+        @Override
+        public int nrows() {
+            return Wt.nrows();
+        }
+
+        @Override
+        public int ncols() {
+            return nrows();
+        }
+
+        @Override
+        public IM transpose() {
+            return this;
+        }
+
+        @Override
+        public IM ata() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public IM aat() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double[] ax(double[] x, double[] y) {
+            Wt.atx(x, Wx);
+
+            int n = Wt.nrows();
+            for (int i = 0; i < n; i++) {
+                Wtx[i] = x[i] - Wx[i];
+            }
+
+            Wt.ax(Wtx, y);
+            for (int i = 0; i < n; i++) {
+                y[i] += Wx[i];
+            }
+
+            return y;
+        }
+
+        @Override
+        public double[] atx(double[] x, double[] y) {
+            return ax(x, y);
+        }
+
+        @Override
+        public double[] axpy(double[] x, double[] y) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double[] axpy(double[] x, double[] y, double b) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double get(int i, int j) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double apply(int i, int j) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double[] atxpy(double[] x, double[] y) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double[] atxpy(double[] x, double[] y, double b) {
+            throw new UnsupportedOperationException();
+        }
+    };
 }
