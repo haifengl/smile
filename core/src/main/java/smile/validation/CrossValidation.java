@@ -43,13 +43,23 @@ public class CrossValidation {
      * The index of testing instances.
      */
     public final int[][] test;
-
+    
     /**
      * Constructor.
      * @param n the number of samples.
      * @param k the number of rounds of cross validation.
      */
     public CrossValidation(int n, int k) {
+    	this(n,k,System.currentTimeMillis());
+    }
+
+    /**
+     * Constructor.
+     * @param n the number of samples.
+     * @param k the number of rounds of cross validation.
+     * @param seed the initial random number generator seed.
+     */
+    public CrossValidation(int n, int k, long seed) {
         if (n < 0) {
             throw new IllegalArgumentException("Invalid sample size: " + n);
         }
@@ -60,7 +70,7 @@ public class CrossValidation {
 
         this.k = k;
 
-        smile.math.Random random = new smile.math.Random(System.currentTimeMillis());
+        smile.math.Random random = new smile.math.Random(seed);
         int[] index = random.permutate(n);
 
         train = new int[k][];
