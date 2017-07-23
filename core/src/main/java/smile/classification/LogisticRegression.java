@@ -107,7 +107,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
     /**
      * Trainer for logistic regression.
      */
-    public static class Trainer extends ClassifierTrainer<double[]> {
+    public static class Trainer extends SoftClassifierTrainer<double[]> {
 
         /**
          * Regularization factor. &lambda; > 0 gives a "regularized" estimate

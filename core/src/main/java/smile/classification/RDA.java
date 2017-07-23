@@ -77,7 +77,7 @@ public class RDA implements SoftClassifier<double[]>, Serializable {
     /**
      * Trainer for regularized discriminant analysis.
      */
-    public static class Trainer extends ClassifierTrainer<double[]> {
+    public static class Trainer extends SoftClassifierTrainer<double[]> {
         /**
          * Regularization factor in [0, 1] allows a continuum of models
          * between LDA and QDA.

@@ -173,7 +173,7 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
     /**
      * Trainer for naive Bayes classifier for document classification.
      */
-    public static class Trainer extends ClassifierTrainer<double[]> {
+    public static class Trainer extends SoftClassifierTrainer<double[]> {
 
         /**
          * The generation model of naive Bayes.

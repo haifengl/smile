@@ -93,7 +93,7 @@ public class LDA implements SoftClassifier<double[]>, Serializable {
     /**
      * Trainer for linear discriminant analysis.
      */
-    public static class Trainer extends ClassifierTrainer<double[]> {
+    public static class Trainer extends SoftClassifierTrainer<double[]> {
         /**
          * A priori probabilities of each class.
          */

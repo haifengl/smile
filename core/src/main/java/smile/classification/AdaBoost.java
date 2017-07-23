@@ -92,7 +92,7 @@ public class AdaBoost implements SoftClassifier<double[]>, Serializable {
     /**
      * Trainer for AdaBoost classifiers.
      */
-    public static class Trainer extends ClassifierTrainer<double[]> {
+    public static class Trainer extends SoftClassifierTrainer<double[]> {
         /**
          * The number of trees.
          */
