@@ -91,7 +91,7 @@ public class KNN<T> implements SoftClassifier<T>, Serializable {
     /**
      * Trainer for KNN classifier.
      */
-    public static class Trainer<T> extends ClassifierTrainer<T> {
+    public static class Trainer<T> extends SoftClassifierTrainer<T> {
         /**
          * The number of neighbors.
          */

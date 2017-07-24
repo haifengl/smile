@@ -83,7 +83,7 @@ public class Maxent implements SoftClassifier<int[]>, Serializable {
     /**
      * Trainer for maximum entropy classifier.
      */
-    public static class Trainer extends ClassifierTrainer<int[]> {
+    public static class Trainer extends SoftClassifierTrainer<int[]> {
 
         /**
          * The dimension of feature space.

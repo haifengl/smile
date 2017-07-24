@@ -226,7 +226,7 @@ public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier
     /**
      * Trainer for neural networks.
      */
-    public static class Trainer extends ClassifierTrainer<double[]> {
+    public static class Trainer extends SoftClassifierTrainer<double[]> {
         /**
          * The type of error function of network.
          */        

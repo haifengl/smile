@@ -80,7 +80,8 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
      * tree votes.
      */
     static class Tree implements Serializable {
-        DecisionTree tree;
+        private static final long serialVersionUID = 1L;
+		DecisionTree tree;
         double weight;
         Tree(DecisionTree tree, double weight) {
             this.tree = tree;
@@ -116,7 +117,7 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
     /**
      * Trainer for random forest classifiers.
      */
-    public static class Trainer extends ClassifierTrainer<double[]> {
+    public static class Trainer extends SoftClassifierTrainer<double[]> {
         /**
          * The number of trees.
          */

@@ -145,7 +145,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]>, Serializable
     /**
      * Trainer for GradientTreeBoost classifiers.
      */
-    public static class Trainer extends ClassifierTrainer<double[]> {
+    public static class Trainer extends SoftClassifierTrainer<double[]> {
         /**
          * The number of trees.
          */

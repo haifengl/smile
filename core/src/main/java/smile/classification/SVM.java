@@ -146,7 +146,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
     /**
      * Trainer for support vector machines.
      */
-    public static class Trainer<T> extends ClassifierTrainer<T> {
+    public static class Trainer<T> extends SoftClassifierTrainer<T> {
         /**
          * The kernel function.
          */

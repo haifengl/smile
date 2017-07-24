@@ -82,7 +82,7 @@ public class QDA implements SoftClassifier<double[]>, Serializable {
     /**
      * Trainer for quadratic discriminant analysis.
      */
-    public static class Trainer extends ClassifierTrainer<double[]> {
+    public static class Trainer extends SoftClassifierTrainer<double[]> {
         /**
          * A priori probabilities of each class.
          */

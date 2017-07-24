@@ -145,7 +145,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
     /**
      * Trainer for decision tree classifiers.
      */
-    public static class Trainer extends ClassifierTrainer<double[]> {
+    public static class Trainer extends SoftClassifierTrainer<double[]> {
         /**
          * The splitting rule.
          */
