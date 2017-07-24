@@ -17,6 +17,7 @@ package smile.netlib;
 
 import org.netlib.util.doubleW;
 import org.netlib.util.intW;
+import smile.math.Math;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.EVD;
@@ -114,6 +115,14 @@ public class ARPACK {
 
         if (k <= 0 || k >= n) {
             throw new IllegalArgumentException("Invalid NEV parameter k: " + k);
+        }
+
+        if (kappa <= Math.EPSILON) {
+            throw new IllegalArgumentException("Invalid tolerance: kappa = " + kappa);
+        }
+
+        if (maxIter <= 0) {
+            maxIter = 10 * A.nrows();
         }
 
         intW nev = new intW(k);

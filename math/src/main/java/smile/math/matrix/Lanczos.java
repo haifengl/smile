@@ -70,6 +70,14 @@ public class Lanczos {
             throw new IllegalArgumentException("k is larger than the size of A: " + k + " > " + A.nrows());
         }
 
+        if (kappa <= Math.EPSILON) {
+            throw new IllegalArgumentException("Invalid tolerance: kappa = " + kappa);
+        }
+
+        if (maxIter <= 0) {
+            maxIter = 10 * A.nrows();
+        }
+
         int n = A.nrows();
         int intro = 0;
 
