@@ -194,43 +194,50 @@ trait Operators {
   def diag(A: Matrix) = A.diag()
 
   /** LU decomposition. */
-  def lu(A: Array[Array[Double]]) = Matrix.newInstance(A).lu()
+  def lu(A: Array[Array[Double]]) = Matrix.newInstance(A).lu(true)
   /** LU decomposition. */
-  def lu(A: DenseMatrix) = A.copy.lu()
+  def lu(A: DenseMatrix) = A.lu(false)
   /** LU decomposition. */
-  def lu(A: MatrixExpression) = A.toMatrix.lu()
+  def lu(A: MatrixExpression) = A.toMatrix.lu(true)
 
   /** QR decomposition. */
-  def qr(A: Array[Array[Double]]) = Matrix.newInstance(A).qr()
+  def qr(A: Array[Array[Double]]) = Matrix.newInstance(A).qr(true)
   /** QR decomposition. */
-  def qr(A: DenseMatrix) = A.copy().qr()
+  def qr(A: DenseMatrix) = A.qr(false)
   /** QR decomposition. */
-  def qr(A: MatrixExpression) = A.toMatrix.qr()
+  def qr(A: MatrixExpression) = A.toMatrix.qr(true)
 
   /** Cholesky decomposition. */
-  def cholesky(A: Array[Array[Double]]) =  Matrix.newInstance(A).cholesky()
+  def cholesky(A: Array[Array[Double]]) =  Matrix.newInstance(A).cholesky(true)
   /** Cholesky decomposition. */
-  def cholesky(A: DenseMatrix) = A.copy().cholesky()
+  def cholesky(A: DenseMatrix) = A.cholesky(false)
   /** Cholesky decomposition. */
-  def cholesky(A: MatrixExpression) = A.toMatrix.cholesky()
+  def cholesky(A: MatrixExpression) = A.toMatrix.cholesky(true)
+
+  /** Returns eigen values. */
+  def eig(A: Array[Array[Double]]) = Matrix.newInstance(A).eig(true)
+  /** Returns eigen values. */
+  def eig(A: DenseMatrix) = A.eig(false)
+  /** Returns eigen values. */
+  def eig(A: MatrixExpression) = A.toMatrix.eig(true)
 
   /** Eigen decomposition. */
-  def eigen(A: Array[Array[Double]]) = Matrix.newInstance(A).eigen()
+  def eigen(A: Array[Array[Double]]) = Matrix.newInstance(A).eigen(true)
   /** Eigen decomposition. */
-  def eigen(A: DenseMatrix) = A.copy().eigen()
+  def eigen(A: DenseMatrix) = A.eigen(false)
   /** Eigen decomposition. */
-  def eigen(A: MatrixExpression) = A.toMatrix.eigen()
+  def eigen(A: MatrixExpression) = A.toMatrix.eigen(true)
   /** Eigen decomposition. */
-  def eigen(A: DenseMatrix, k: Int) = Lanczos.eigen(A, k)
+  def eigen(A: DenseMatrix, k: Int, kappa: Double = 1E-8, maxIter: Int = -1) = A.eigen(k, kappa, maxIter)
 
   /** SVD decomposition. */
-  def svd(A: Array[Array[Double]]) = Matrix.newInstance(A).svd()
+  def svd(A: Array[Array[Double]]) = Matrix.newInstance(A).svd(true)
   /** SVD decomposition. */
-  def svd(A: DenseMatrix) = A.copy().svd()
+  def svd(A: DenseMatrix) = A.svd(false)
   /** SVD decomposition. */
-  def svd(A: MatrixExpression) = A.toMatrix.svd()
+  def svd(A: MatrixExpression) = A.toMatrix.svd(true)
   /** SVD decomposition. */
-  def svd(A: DenseMatrix, k: Int) = Lanczos.svd(A, k)
+  def svd(A: DenseMatrix, k: Int, kappa: Double = 1E-8, maxIter: Int = -1) = A.svd(k, kappa, maxIter)
 
   /** Returns the determinant of matrix. */
   def det(A: DenseMatrix) = lu(A).det()
