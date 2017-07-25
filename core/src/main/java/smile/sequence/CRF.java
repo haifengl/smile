@@ -654,7 +654,6 @@ public class CRF implements SequenceLabeler<double[]> {
             double[] y;
             int[][] order;
             int[] samples;
-            smile.math.Random random;
 
             BoostingTask(TreePotentialFunction potential, TrellisNode[][][] trellis, int i) {
                 this.potential = potential;
@@ -672,7 +671,6 @@ public class CRF implements SequenceLabeler<double[]> {
                     n += 1 + (trellis[l].length - 1) * numClasses;
                 }
 
-                random = new smile.math.Random(System.currentTimeMillis());
                 //samples = new int[n];
                 y = new double[n];
                 if (numFeatures <= 0) {
@@ -731,7 +729,7 @@ public class CRF implements SequenceLabeler<double[]> {
                 /*
                 int n = y.length;
                 for (int l = 0; l < n; l++) {
-                    if (random.random() < 0.75) {
+                    if (Math.random() < 0.75) {
                         samples[l] = 1;
                     } else {
                         samples[l] = 0;
