@@ -90,13 +90,19 @@ public class Math {
      */
     public static int NEGEP = -53;
     /**
+     * True when we create the first random number generator.
+     */
+    private static boolean firstRNG = true;
+    /**
      * High quality random number generator.
      */
     private static ThreadLocal<smile.math.Random> random = new ThreadLocal<smile.math.Random>() {
         protected synchronized smile.math.Random initialValue() {
-            if (Thread.currentThread().getName().equals("run-main-0")) {
-                // For main thread, we use the default seed so that we can
+            if (firstRNG) {
+                // For the first RNG, we use the default seed so that we can
                 // get repeatable results for random algorithms.
+                // Note that this may or may not be the main thread.
+                firstRNG = false;
                 return new smile.math.Random();
             } else {
                 // Make sure other threads not to use the same seed.
