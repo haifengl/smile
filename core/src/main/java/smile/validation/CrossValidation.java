@@ -16,6 +16,8 @@
 
 package smile.validation;
 
+import smile.math.Math;
+
 /**
  * Cross-validation is a technique for assessing how the results of a
  * statistical analysis will generalize to an independent data set.
@@ -60,8 +62,7 @@ public class CrossValidation {
 
         this.k = k;
 
-        smile.math.Random random = new smile.math.Random(System.currentTimeMillis());
-        int[] index = random.permutate(n);
+        int[] index = Math.permutate(n);
 
         train = new int[k][];
         test = new int[k][];
