@@ -149,7 +149,7 @@ public class PCA implements Projection<double[]>, Serializable {
 
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
-                    cov.div(i, j, m); // divide m instead of m-1 for S-PLUS compatibilit
+                    cov.div(i, j, m); // divide m instead of m-1 for S-PLUS compatibility
                     cov.set(j, i, cov.get(i, j));
                 }
             }
