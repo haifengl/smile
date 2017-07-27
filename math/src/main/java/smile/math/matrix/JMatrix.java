@@ -98,19 +98,6 @@ public class JMatrix extends DenseMatrix {
         this.A = value;
     }
 
-    /**
-     * Constructor of matrix with normal random values with given mean and standard dev.
-     */
-    public JMatrix(int rows, int cols, double mu, double sigma) {
-        this(rows, cols);
-        GaussianDistribution g = new GaussianDistribution(mu, sigma);
-
-        int n = rows * cols;
-        for (int i = 0; i < n; i++) {
-            A[i] = g.rand();
-        }
-    }
-
     @Override
     public JMatrix copy() {
         JMatrix a = new JMatrix(nrows, ncols, A.clone());
