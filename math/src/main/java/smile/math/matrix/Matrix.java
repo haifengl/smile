@@ -16,12 +16,11 @@
 
 package smile.math.matrix;
 
+import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.stat.distribution.GaussianDistribution;
-
-import java.io.Serializable;
 
 /**
  * An abstract interface of matrix. The most important method is the matrix vector
