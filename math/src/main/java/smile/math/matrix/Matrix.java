@@ -19,6 +19,7 @@ package smile.math.matrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
+import smile.stat.distribution.GaussianDistribution;
 
 import java.io.Serializable;
 
@@ -147,6 +148,29 @@ public abstract class Matrix implements Serializable {
         }
 
         return matrix;
+    }
+
+    /**
+     * Returns a random matrix of standard normal distributed values with given mean and standard dev.
+     */
+    public static DenseMatrix randn(int rows, int cols) {
+        return randn(rows, cols, 0.0, 1.0);
+    }
+
+    /**
+     * Returns a random matrix of normal distributed values with given mean and standard dev.
+     */
+    public static DenseMatrix randn(int rows, int cols, double mu, double sigma) {
+        DenseMatrix a = zeros(rows, cols);
+        GaussianDistribution g = new GaussianDistribution(mu, sigma);
+
+        for (int j = 0; j < cols; j++) {
+            for (int i = 0; i < rows; i++) {
+                a.set(i, j, g.rand());
+            }
+        }
+
+        return a;
     }
 
     @Override
