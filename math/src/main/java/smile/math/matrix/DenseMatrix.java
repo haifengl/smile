@@ -269,7 +269,24 @@ public abstract class DenseMatrix extends Matrix implements MatrixMultiplication
     }
 
     /**
-     * Returns the row means for a matrix.
+     * Returns the sum of each row for a matrix.
+     */
+    public double[] rowSums() {
+        int m = nrows();
+        int n = ncols();
+        double[] x = new double[m];
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                x[i] += get(i, j);
+            }
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the mean of each row for a matrix.
      */
     public double[] rowMeans() {
         int m = nrows();
@@ -290,7 +307,24 @@ public abstract class DenseMatrix extends Matrix implements MatrixMultiplication
     }
 
     /**
-     * Returns the column means for a matrix.
+     * Returns the sum of each column for a matrix.
+     */
+    public double[] colSums() {
+        int m = nrows();
+        int n = ncols();
+        double[] x = new double[n];
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                x[j] += get(i, j);
+            }
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the mean of each column for a matrix.
      */
     public double[] colMeans() {
         int m = nrows();
