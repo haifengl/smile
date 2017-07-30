@@ -68,7 +68,7 @@ public class TSNE {
      * @param k the dimension of embedding space.
      */
     public TSNE(double[][] X, int k) {
-        this(X, k, 50, 2000);
+        this(X, k, 50, 1000);
     }
 
     /** Constructor.
@@ -88,7 +88,7 @@ public class TSNE {
      * @param k the dimension of embedding space.
      */
     public TSNE(DenseMatrix D, int k) {
-        this(D, k, 50, 2000);
+        this(D, k, 50, 1000);
     }
 
     /** Constructor.
@@ -108,12 +108,22 @@ public class TSNE {
 
         double[][] Y          = new double[n][k];
         double[][] dY         = new double[n][k];
-        double[][] gains      = new double[n][k];
-        double[] dC           = new double[k];
+        double[][] gains      = new double[n][k]; // adjust learning rate for each point
+        double[]   dC         = new double[k];
 
-        DenseMatrix P         = expd(D, perplexity, 1e-5);
+        // Large tolerance to speed up the search of Gaussian kernel width
+        // A small difference of kernel width is not important.
+        DenseMatrix P         = expd(D, perplexity, 1E-3);
         DenseMatrix Q         = Matrix.zeros(P.nrows(), P.ncols());
 
+        // Initialize Y randomly
+        for (int i = 0; i < n; i++) {
+            for (int d = 0; d < k; d++) {
+                Y[i][d] = Math.random();
+            }
+        }
+
+        // Make P symmetric
         double Psum = P.sum();
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < j; i++) {
@@ -124,14 +134,15 @@ public class TSNE {
             }
         }
 
-        for (int iter = 0; iter < maxIter; iter++) {
+        for (int iter = 1; iter <= maxIter; iter++) {
             Math.pdist(Y, Q);
             double Qsum = 0.0;
             for (int j = 0; j < n; j++) {
-                for (int i = 0; i < n; i++) {
+                for (int i = 0; i < j; i++) {
                     if (i != j) {
                         double q = 1.0 / (1.0 + Q.get(i, j));
                         Q.set(i, j, q);
+                        Q.set(j, i, q);
                         Qsum += q;
                     }
                 }
@@ -140,12 +151,14 @@ public class TSNE {
             for (int i = 0; i < n; i++) {
                 // Compute gradient
                 Arrays.fill(dC, 0.0);
+                double[] yi = Y[i];
                 for (int j = 0; j < n; j++) {
                     if (i != j) {
+                        double[] yj = Y[j];
                         double q = Q.get(i, j);
-                        double mult = 4.0 * (P.get(i, j) - (q / Qsum)) * q;
-                        for(int d = 0; d < k; d++) {
-                            dC[d] += (Y[i][d] - Y[j][d]) * mult;
+                        double z = 4.0 * (P.get(i, j) - (q / Qsum)) * q;
+                        for (int d = 0; d < k; d++) {
+                            dC[d] += (yi[d] - yj[d]) * z;
                         }
                     }
                 }
@@ -207,25 +220,27 @@ public class TSNE {
             int iter = 0;
             double Hdiff = 0.0;
             do {
-                double dp = 0.0;
-                double s = 0.0;
+                double H = 0.0;
+                double sum = 0.0;
                 for (int i = 0; i < n; i++) {
                     if (i != j) {
-                        double d = -beta * D.get(i, j);
-                        double p = Math.exp(d);
+                        double d = beta * D.get(i, j);
+                        double p = Math.exp(-d);
                         P.set(i, j, p);
-                        s += p;
-                        dp += p * d;
+                        sum += p;
+                        H += p * d;
                     }
                 }
 
-                double H = Math.log(s) + dp / s;
+                H = Math.log(sum) + H / sum;
                 Hdiff = H - logU;
 
                 if (Math.abs(Hdiff) > tol) {
                     if (Hdiff > 0) {
+                        betamin = beta;
                         beta = (beta + betamax) / 2;
                     } else {
+                        betamax = beta;
                         beta = (beta + betamin) / 2;
                     }
                 }

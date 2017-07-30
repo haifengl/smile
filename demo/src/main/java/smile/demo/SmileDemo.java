@@ -59,6 +59,7 @@ import smile.demo.clustering.SIBDemo;
 import smile.demo.clustering.SOMDemo;
 import smile.demo.clustering.SpectralClusteringDemo;
 import smile.demo.clustering.XMeansDemo;
+import smile.demo.manifold.TSNEDemo;
 import smile.demo.plot.BarPlotDemo;
 import smile.demo.plot.BoxPlotDemo;
 import smile.demo.plot.ContourDemo;
@@ -238,6 +239,9 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         category.add(algorithm);
 
         algorithm = new DefaultMutableTreeNode(new LaplacianEigenmapDemo());
+        category.add(algorithm);
+
+        algorithm = new DefaultMutableTreeNode(new TSNEDemo());
         category.add(algorithm);
 
         category = new DefaultMutableTreeNode("Classification");
