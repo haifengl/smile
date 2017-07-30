@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import smile.math.matrix.DenseMatrix;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.SortUtils;
@@ -1964,11 +1965,30 @@ public class Math {
         double[][] proximity = new double[n][n];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
-                proximity[i][j] = distance(x[i], x[j]);
+                double d = distance(x[i], x[j]);
+                proximity[i][j] = d;
+                proximity[j][i] = d;
             }
         }
 
         return proximity;
+    }
+
+    /**
+     * Pairwise distance between pairs of objects.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @param dist The distance matrix.
+     */
+    public static void pdist(double[][] x, DenseMatrix dist) {
+        int n = x.length;
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                double d = distance(x[i], x[j]);
+                dist.set(i, j, d);
+                dist.set(j, i, d);
+            }
+        }
     }
 
     /**
@@ -1988,6 +2008,21 @@ public class Math {
         }
 
         return proximity;
+    }
+
+    /**
+     * Pairwise distance between pairs of objects. Only the lower half is stored to save space.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @param dist The distance matrix. Only the lower half of pairwise distance matrix is referred.
+     */
+    public static void proximity(double[][] x, double[][] dist) {
+        int n = x.length;
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                dist[i][j] = distance(x[i], x[j]);
+            }
+        }
     }
 
     /**
