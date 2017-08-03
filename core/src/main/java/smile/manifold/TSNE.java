@@ -16,13 +16,16 @@
 
 package smile.manifold;
 
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-
-import java.util.Arrays;
+import smile.util.MulticoreExecutor;
 
 /**
  * t-distributed stochastic neighbor embedding (t-SNE) is a nonlinear
@@ -65,51 +68,50 @@ public class TSNE {
     /** Constructor.
      *
      * @param X input data.
-     * @param k the dimension of embedding space.
+     * @param d the dimension of embedding space.
      */
-    public TSNE(double[][] X, int k) {
-        this(X, k, 50, 1000);
+    public TSNE(double[][] X, int d) {
+        this(X, d, 50, 1000);
     }
 
     /** Constructor.
      *
      * @param X input data.
-     * @param k the dimension of embedding space.
+     * @param d the dimension of embedding space.
      * @param perplexity the perplexity of the conditional distribution.
      * @param maxIter maximum number of iterations.
      */
-    public TSNE(double[][] X, int k, double perplexity, int maxIter) {
-        this(Matrix.newInstance(Math.pdist(X)), k, perplexity, maxIter);
+    public TSNE(double[][] X, int d, double perplexity, int maxIter) {
+        this(Matrix.newInstance(Math.pdist(X)), d, perplexity, maxIter);
     }
 
     /** Constructor.
      *
      * @param D distance/dissimilarity matrix.
-     * @param k the dimension of embedding space.
+     * @param d the dimension of embedding space.
      */
-    public TSNE(DenseMatrix D, int k) {
-        this(D, k, 50, 1000);
+    public TSNE(DenseMatrix D, int d) {
+        this(D, d, 50, 1000);
     }
 
     /** Constructor.
      *
      * @param D distance/dissimilarity matrix.
-     * @param k the dimension of embedding space.
+     * @param d the dimension of embedding space.
      * @param perplexity the perplexity of the conditional distribution.
      * @param maxIter maximum number of iterations.
      */
-    public TSNE(DenseMatrix D, int k, double perplexity, int maxIter) {
+    public TSNE(DenseMatrix D, int d, double perplexity, int maxIter) {
         int n = D.nrows();
         double momentum        = 0.5;
         double finalMomentum   = 0.8;
         int momentumSwitchIter = 250;
-        int eta                = 50; // learning rate
-        double minGain         = 0.01;
+        int eta                =  20;  // learning rate
+        double minGain         = .01;
 
-        double[][] Y          = new double[n][k];
-        double[][] dY         = new double[n][k];
-        double[][] gains      = new double[n][k]; // adjust learning rate for each point
-        double[]   dC         = new double[k];
+        double[][] Y          = new double[n][d];
+        double[][] dY         = new double[n][d];
+        double[][] gains      = new double[n][d]; // adjust learning rate for each point
 
         // Large tolerance to speed up the search of Gaussian kernel width
         // A small difference of kernel width is not important.
@@ -118,8 +120,8 @@ public class TSNE {
 
         // Initialize Y randomly
         for (int i = 0; i < n; i++) {
-            for (int d = 0; d < k; d++) {
-                Y[i][d] = Math.random();
+            for (int j = 0; j < d; j++) {
+                Y[i][j] = Math.random();
             }
         }
 
@@ -132,6 +134,12 @@ public class TSNE {
                 P.set(i, j, p);
                 P.set(j, i, p);
             }
+        }
+
+        List<ComputeTask> tasks = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            ComputeTask task = new ComputeTask(i, P, Q, Y, dY, gains, minGain, eta);
+            tasks.add(task);
         }
 
         for (int iter = 1; iter <= maxIter; iter++) {
@@ -148,34 +156,15 @@ public class TSNE {
                 }
             }
 
-            for (int i = 0; i < n; i++) {
-                // Compute gradient
-                Arrays.fill(dC, 0.0);
-                double[] yi = Y[i];
-                for (int j = 0; j < n; j++) {
-                    if (i != j) {
-                        double[] yj = Y[j];
-                        double q = Q.get(i, j);
-                        double z = 4.0 * (P.get(i, j) - (q / Qsum)) * q;
-                        for (int d = 0; d < k; d++) {
-                            dC[d] += (yi[d] - yj[d]) * z;
-                        }
-                    }
-                }
+            for (ComputeTask task : tasks) {
+                task.Qsum = Qsum;
+                task.momentum = momentum;
+            }
 
-                // Perform the update
-                double[] g = gains[i]; // dereference before the loop for better performance
-                double[] dy = dY[i];
-                double[] y = Y[i];
-                for (int d = 0; d < k; d++) {
-                    // Update gains
-                    g[d] = (Math.signum(dC[d]) != Math.signum(dy[d])) ? (g[d] + .2) : (g[d] * .8);
-                    if (g[d] < minGain) g[d] = minGain;
-
-                    // Perform gradient update (with momentum and gains)
-                    dy[d] = momentum * dy[d] - eta * g[d] * dC[d];
-                    y[d] += dy[d];
-                }
+            try {
+                MulticoreExecutor.run(tasks);
+            } catch (Exception e) {
+                logger.error("t-SNE iteration task fails: {}", e);
             }
 
             if (iter > momentumSwitchIter) {
@@ -199,6 +188,69 @@ public class TSNE {
         }
 
         coordinates = Y;
+    }
+
+    private class ComputeTask implements Callable<Void> {
+        int i;
+        double[][] Y;
+        double[][] dY;
+        double[][] gains;
+        double Qsum;
+        DenseMatrix P;
+        DenseMatrix Q;
+        double minGain;
+        double momentum;
+        double eta;
+        double[] dC;
+
+
+        ComputeTask(int i, DenseMatrix P, DenseMatrix Q, double[][] Y, double[][] dY, double[][] gains, double minGain, double eta) {
+            this.i = i;
+            this.P = P;
+            this.Q = Q;
+            this.Y = Y;
+            this.dY = dY;
+            this.gains = gains;
+            this.minGain = minGain;
+            this.eta = eta;
+            this.dC = new double[Y[0].length];
+        }
+
+        @Override
+        public Void call() {
+            int n = Y.length;
+            int d = Y[0].length;
+            Arrays.fill(dC, 0.0);
+
+            // Compute gradient
+            double[] yi = Y[i];
+            for (int j = 0; j < n; j++) {
+                if (i != j) {
+                    double[] yj = Y[j];
+                    double q = Q.get(i, j);
+                    double z = 4.0 * (P.get(i, j) - (q / Qsum)) * q;
+                    for (int k = 0; k < d; k++) {
+                        dC[k] += (yi[k] - yj[k]) * z;
+                    }
+                }
+            }
+
+            // Perform the update
+            double[] g = gains[i]; // dereference before the loop for better performance
+            double[] dy = dY[i];
+            double[] y = Y[i];
+            for (int k = 0; k < d; k++) {
+                // Update gains
+                g[k] = (Math.signum(dC[k]) != Math.signum(dy[k])) ? (g[k] + .2) : (g[k] * .8);
+                if (g[k] < minGain) g[k] = minGain;
+
+                // Perform gradient update (with momentum and gains)
+                dy[k] = momentum * dy[k] - eta * g[k] * dC[k];
+                y[k] += dy[k];
+            }
+
+            return null;
+        }
     }
 
     /** Compute the Gaussian kernel (search the width for given perplexity. */
