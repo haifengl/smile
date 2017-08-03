@@ -123,9 +123,9 @@ public class TSNE {
             }
         }
 
-        List<ComputeTask> tasks = new ArrayList<>();
+        List<SNETask> tasks = new ArrayList<>();
         for (int i = 0; i < n; i++) {
-            ComputeTask task = new ComputeTask(i, P, Q, Y, dY, gains, minGain, eta);
+            SNETask task = new SNETask(i, P, Q, Y, dY, gains, minGain, eta);
             tasks.add(task);
         }
 
@@ -143,7 +143,7 @@ public class TSNE {
                 }
             }
 
-            for (ComputeTask task : tasks) {
+            for (SNETask task : tasks) {
                 task.Qsum = Qsum;
                 task.momentum = momentum;
             }
@@ -177,7 +177,7 @@ public class TSNE {
         coordinates = Y;
     }
 
-    private class ComputeTask implements Callable<Void> {
+    private class SNETask implements Callable<Void> {
         int i;
         double[][] Y;
         double[][] dY;
@@ -191,7 +191,7 @@ public class TSNE {
         double[] dC;
 
 
-        ComputeTask(int i, DenseMatrix P, DenseMatrix Q, double[][] Y, double[][] dY, double[][] gains, double minGain, double eta) {
+        SNETask(int i, DenseMatrix P, DenseMatrix Q, double[][] Y, double[][] dY, double[][] gains, double minGain, double eta) {
             this.i = i;
             this.P = P;
             this.Q = Q;
@@ -243,12 +243,46 @@ public class TSNE {
     /** Compute the Gaussian kernel (search the width for given perplexity. */
     private DenseMatrix expd(DenseMatrix D, double perplexity, double tol){
         int n              = D.nrows();
-        double logU        = Math.log(perplexity);
         DenseMatrix P      = Matrix.zeros(n,n);
         double[] ds        = D.colSums();
 
-        // Column wise is more efficient for DenseMatrix
+        List<PerplexityTask> tasks = new ArrayList<>();
         for (int j = 0; j < n; j++) {
+            PerplexityTask task = new PerplexityTask(j, D, P, ds, perplexity, tol);
+            tasks.add(task);
+        }
+
+        try {
+            MulticoreExecutor.run(tasks);
+        } catch (Exception e) {
+            logger.error("t-SNE Gaussian kernel width search task fails: {}", e);
+        }
+
+        return P;
+    }
+
+    private class PerplexityTask implements Callable<Void> {
+        int j;
+        DenseMatrix D;
+        DenseMatrix P;
+        double[] ds;
+        double perplexity;
+        double tol;
+
+        PerplexityTask(int j, DenseMatrix D, DenseMatrix P, double[] ds, double perplexity, double tol) {
+            this.j = j;
+            this.D = D;
+            this.P = P;
+            this.ds = ds;
+            this.perplexity = perplexity;
+            this.tol = tol;
+        }
+
+        @Override
+        public Void call() {
+            int n              = D.nrows();
+            double logU        = Math.log(perplexity);
+
             // Use sqrt(1 / avg of distance) to initialize beta
             double beta = Math.sqrt((n-1) / ds[j]);
             double betamin = 0.0;
@@ -286,9 +320,9 @@ public class TSNE {
 
                 logger.debug("Hdiff = {}, beta[{}] = {}", Hdiff, j, beta);
             } while (Math.abs(Hdiff) > tol && ++iter < 50);
-        }
 
-        return P;
+            return null;
+        }
     }
 
     /**
