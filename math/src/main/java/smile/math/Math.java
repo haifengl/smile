@@ -1979,14 +1979,14 @@ public class Math {
      * @param x Rows of x correspond to observations, and columns correspond to variables.
      * @param dist The distance matrix.
      */
-    public static void pdist(double[][] x, DenseMatrix dist) {
+    public static void pdist(double[][] x, double[][] dist) {
         int n = x.length;
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
                 double d = distance(x[i], x[j]);
-                dist.set(i, j, d);
-                dist.set(j, i, d);
+                dist[i][j] = d;
+                dist[j][i] = d;
             }
         }
     }
