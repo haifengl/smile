@@ -67,7 +67,7 @@ public class TSNE {
 
     /** Constructor.
      *
-     * @param X input data.
+     * @param X input data. If X is a square matrix, it is assumed to be the distance/dissimilarity matrix.
      * @param d the dimension of embedding space.
      */
     public TSNE(double[][] X, int d) {
@@ -76,33 +76,13 @@ public class TSNE {
 
     /** Constructor.
      *
-     * @param X input data.
+     * @param X input data. If X is a square matrix, it is assumed to be the distance/dissimilarity matrix.
      * @param d the dimension of embedding space.
      * @param perplexity the perplexity of the conditional distribution.
      * @param maxIter maximum number of iterations.
      */
     public TSNE(double[][] X, int d, double perplexity, int maxIter) {
-        this(Matrix.newInstance(Math.pdist(X)), d, perplexity, maxIter);
-    }
-
-    /** Constructor.
-     *
-     * @param D distance/dissimilarity matrix.
-     * @param d the dimension of embedding space.
-     */
-    public TSNE(DenseMatrix D, int d) {
-        this(D, d, 50, 1000);
-    }
-
-    /** Constructor.
-     *
-     * @param D distance/dissimilarity matrix.
-     * @param d the dimension of embedding space.
-     * @param perplexity the perplexity of the conditional distribution.
-     * @param maxIter maximum number of iterations.
-     */
-    public TSNE(DenseMatrix D, int d, double perplexity, int maxIter) {
-        int n = D.nrows();
+        int n = X.length;;
         double momentum        = 0.5;
         double finalMomentum   = 0.8;
         int momentumSwitchIter = 250;
@@ -112,6 +92,13 @@ public class TSNE {
         double[][] Y          = new double[n][d];
         double[][] dY         = new double[n][d];
         double[][] gains      = new double[n][d]; // adjust learning rate for each point
+
+        DenseMatrix D;
+        if (X.length == X[0].length) {
+            D = Matrix.newInstance(X);
+        } else {
+            D = Matrix.newInstance(Math.pdist(X));
+        }
 
         // Large tolerance to speed up the search of Gaussian kernel width
         // A small difference of kernel width is not important.
