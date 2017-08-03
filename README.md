@@ -4,7 +4,8 @@ Smile
 [![Join the chat at https://gitter.im/haifengl/smile](https://badges.gitter.im/haifengl/smile.svg)](https://gitter.im/haifengl/smile?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core)
 
 Smile (Statistical Machine Intelligence and Learning Engine) is
-a fast and comprehensive machine learning system.
+a fast and comprehensive machine learning, NLP, linear algebra,
+graph, interpolation, and visualization system in Java and Scala.
 With advanced data structures and algorithms,
 Smile delivers state-of-art performance.
 
@@ -12,30 +13,6 @@ Smile covers every aspect of machine learning, including classification,
 regression, clustering, association rule mining, feature selection,
 manifold learning, multidimensional scaling, genetic algorithms,
 missing value imputation, efficient nearest neighbor search, etc.
-
-Please check out our [User Guide](http://haifengl.github.io/smile) for detailed tutorials and examples.
-
-The core algorithms are implemented in Java and self contained.
-
-* **Core**
-The core machine learning library.
-* **Scala**
-The high level operators in Scala.
-* **Math**
-Linear algebra, statistical distribution, hypothesis tests,
-random number generators, sorting, special functions, various kernels,
-distance and rbf functions.
-* **Data**
-Parsers for arff, libsvm, delimited text, sparse matrix,
-microarray gene expression data.
-* **Graph**
-Graph algorithms on adjacency list and matrix.
-* **Interpolation**
-One and two dimensional interpolation.
-* **NLP**
-Natural language processing.
-* **Plot**
-Swing-based data visualization library.
 
 Smile is well documented and please check out the
 [project website](http://haifengl.github.io/smile/)
@@ -46,19 +23,54 @@ You can use the libraries through Maven central repository by adding the followi
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>1.3.1</version>
+      <version>1.4.0</version>
     </dependency>
 ```
+
 For NLP, use the artifactId smile-nlp.
 
 For Scala API, please use
 ```
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "1.4.0"
+```
+
+To enable machine optimised matrix computation, the users should add
+the dependency of smile-netlib:
+```
     <dependency>
       <groupId>com.github.haifengl</groupId>
-      <artifactId>smile-scala_2.11</artifactId>
-      <version>1.3.1</version>
+      <artifactId>smile-netlib</artifactId>
+      <version>1.4.0</version>
     </dependency>
 ```
+and also make their machine-optimised libblas3 (CBLAS) and liblapack3 (Fortran)
+available as shared libraries at runtime.
+
+OS X
+----
+Apple OS X requires no further setup as it ships with the veclib framework.
+
+Linux
+-----
+Generically-tuned ATLAS and OpenBLAS are available with most distributions
+and must be enabled explicitly using the package-manager. For example,
+
+ - sudo apt-get install libatlas3-base libopenblas-base
+ - sudo update-alternatives --config libblas.so
+ - sudo update-alternatives --config libblas.so.3
+ - sudo update-alternatives --config liblapack.so
+ - sudo update-alternatives --config liblapack.so.3
+
+However, these are only generic pre-tuned builds. If you have an Intel MKL licence,
+you could also create symbolic links from libblas.so.3 and liblapack.so.3 to libmkl_rt.so
+or use Debian's alternatives system.
+
+Windows
+-------
+The native_system builds expect to find libblas3.dll and liblapack3.dll
+on the %PATH% (or current working directory). Besides vendor-supplied
+implementations, OpenBLAS provide generically tuned binaries, and it
+is possible to build ATLAS.
 
 Smile comes with an interactive shell. Download pre-packaged Smile from the [releases page](https://github.com/haifengl/smile/releases).
 In the home directory of Smile, type
@@ -94,7 +106,7 @@ BIRCH, CLARANS, DBScan, DENCLUE, Deterministic Annealing, K-Means, X-Means, G-Me
 FP-growth mining algorithm
 
 * **Manifold learning**
-IsoMap, LLE, Laplacian Eigenmap, PCA, Kernel PCA, Probabilistic PCA, GHA, Random Projection
+IsoMap, LLE, Laplacian Eigenmap, t-SNE, PCA, Kernel PCA, Probabilistic PCA, GHA, Random Projection
 
 * **Multi-Dimensional Scaling**
 Classical MDS, Isotonic MDS, Sammon Mapping
@@ -118,7 +130,7 @@ nice alternative that supports forward-backward compatibility (schema evolution)
 Beyond XML, Protostuff supports many other formats such as JSON, YAML, protobuf, etc. For some predictive models,
 we look forward to supporting PMML (Predictive Model Markup Language), an XML-based file format developed by the Data Mining Group.
 
-Smile Scala API provides read, read.xstream, write, and write.xstream functions in package smile.io.
+Smile Scala API provides `read()`, `read.xstream()`, `write()`, and `write.xstream()` functions in package smile.io.
 
 SmilePlot
 =========
@@ -132,7 +144,7 @@ To use SmilePlot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>1.3.1</version>
+      <version>1.4.0</version>
     </dependency>
 ```
 

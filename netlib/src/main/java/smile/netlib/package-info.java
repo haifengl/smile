@@ -28,7 +28,7 @@
  * framework, boasting incredible CPU performance that is difficult to
  * surpass.
  *
- * Linux (includes Raspberry Pi)
+ * Linux
  *
  * Generically-tuned ATLAS and OpenBLAS are available with most distributions
  * and must be enabled explicitly using the package-manager. For example,
