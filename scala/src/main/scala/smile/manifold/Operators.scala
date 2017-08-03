@@ -119,4 +119,29 @@ trait Operators {
       new LaplacianEigenmap(data, d, k, t)
     }
   }
+
+  /** t-distributed stochastic neighbor embedding. t-SNE is a nonlinear
+    * dimensionality reduction technique that is particularly well suited
+    * for embedding high-dimensional data into a space of two or three
+    * dimensions, which can then be visualized in a scatter plot. Specifically,
+    * it models each high-dimensional object by a two- or three-dimensional
+    * point in such a way that similar objects are modeled by nearby points
+    * and dissimilar objects are modeled by distant points.
+    *
+    * ====References:====
+    *  - L.J.P. van der Maaten. Accelerating t-SNE using Tree-Based Algorithms. Journal of Machine Learning Research 15(Oct):3221-3245, 2014.
+    *  - L.J.P. van der Maaten and G.E. Hinton. Visualizing Non-Metric Similarities in Multiple Maps. Machine Learning 87(1):33-55, 2012.
+    *  - L.J.P. van der Maaten. Learning a Parametric Embedding by Preserving Local Structure. In Proceedings of the Twelfth International Conference on Artificial Intelligence & Statistics (AI-STATS), JMLR W&CP 5:384-391, 2009.
+    *  - L.J.P. van der Maaten and G.E. Hinton. Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research 9(Nov):2579-2605, 2008.
+    *
+    * @param data the data set.
+    * @param d the dimension of the manifold.
+    * @param perplexity the perplexity of the conditional distribution.
+    * @param maxIter maximum number of iterations.
+    */
+  def tsne(data: Array[Array[Double]], d: Int = 2, perplexity: Double = 50.0, maxIter: Int = 1000): TSNE = {
+    time {
+      new TSNE(data, d, perplexity, maxIter)
+    }
+  }
 }
