@@ -23,8 +23,6 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
-import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
 import smile.util.MulticoreExecutor;
 
 /**
@@ -82,28 +80,23 @@ public class TSNE {
      * @param maxIter maximum number of iterations.
      */
     public TSNE(double[][] X, int d, double perplexity, int maxIter) {
-        int n = X.length;;
+        int n = X.length;
         double momentum        = 0.5;
         double finalMomentum   = 0.8;
         int momentumSwitchIter = 250;
         int eta                =  20;  // learning rate
         double minGain         = .01;
 
-        double[][] Y          = new double[n][d];
-        double[][] dY         = new double[n][d];
-        double[][] gains      = new double[n][d]; // adjust learning rate for each point
-
-        DenseMatrix D;
+        double[][] D;
         if (X.length == X[0].length) {
-            D = Matrix.newInstance(X);
+            D = X;
         } else {
-            D = Matrix.newInstance(Math.pdist(X));
+            D = Math.pdist(X);
         }
 
-        // Large tolerance to speed up the search of Gaussian kernel width
-        // A small difference of kernel width is not important.
-        DenseMatrix P         = expd(D, perplexity, 1E-3);
-        DenseMatrix Q         = Matrix.zeros(P.nrows(), P.ncols());
+        double[][] Y           = new double[n][d];
+        double[][] dY          = new double[n][d];
+        double[][] gains       = new double[n][d]; // adjust learning rate for each point
 
         // Initialize Y randomly
         for (int i = 0; i < n; i++) {
@@ -112,14 +105,26 @@ public class TSNE {
             }
         }
 
+        // Large tolerance to speed up the search of Gaussian kernel width
+        // A small difference of kernel width is not important.
+        double[][] P = expd(D, perplexity, 1E-3);
+        double[][] Q = new double[n][n];
+
         // Make P symmetric
-        double Psum = P.sum();
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < j; i++) {
-                double p = (P.get(i, j) + P.get(j, i)) / Psum;
+        double Psum = 0.0;
+        for (int i = 0; i < n; i++) {
+            double[] Pi = P[i];
+            for (int j = 0; j < n; j++) {
+                Psum += Pi[j];
+            }
+        }
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                double p = (P[i][j] + P[j][i]) / Psum;
                 if (Double.isNaN(p) || p < 1E-12) p = 1E-12;
-                P.set(i, j, p);
-                P.set(j, i, p);
+                P[i][j] = p;
+                P[j][i] = p;
             }
         }
 
@@ -132,14 +137,13 @@ public class TSNE {
         for (int iter = 1; iter <= maxIter; iter++) {
             Math.pdist(Y, Q);
             double Qsum = 0.0;
-            for (int j = 0; j < n; j++) {
-                for (int i = 0; i < j; i++) {
-                    if (i != j) {
-                        double q = 1.0 / (1.0 + Q.get(i, j));
-                        Q.set(i, j, q);
-                        Q.set(j, i, q);
-                        Qsum += q;
-                    }
+            for (int i = 0; i < n; i++) {
+                double[] Qi = Q[i];
+                for (int j = 0; j < i; j++) {
+                    double q = 1.0 / (1.0 + Qi[j]);
+                    Qi[j] = q;
+                    Q[j][i] = q;
+                    Qsum += q;
                 }
             }
 
@@ -161,13 +165,14 @@ public class TSNE {
             // Compute current value of cost function
             if (iter % 100 == 0)   {
                 double C = 0.0;
-                for (int j = 0; j < n; j++) {
-                    for (int i = 0; i < j; i++) {
-                        if (i != j) {
-                            double p = P.get(i, j);
-                            double q = Q.get(i, j) / Qsum;
-                            C += p * Math.log(p / q);
-                        }
+                for (int i = 0; i < n; i++) {
+                    double[] Pi = P[i];
+                    double[] Qi = Q[i];
+                    for (int j = 0; j < i; j++) {
+                        double p = Pi[j];
+                        double q = Qi[j] / Qsum;
+                        if (Double.isNaN(q) || q < 1E-12) q = 1E-12;
+                        C += p * Math.log(p / q);
                     }
                 }
                 logger.info("Error after {} iterations: {}", iter, 2 * C);
@@ -183,15 +188,15 @@ public class TSNE {
         double[][] dY;
         double[][] gains;
         double Qsum;
-        DenseMatrix P;
-        DenseMatrix Q;
+        double[][] P;
+        double[][] Q;
         double minGain;
         double momentum;
         double eta;
         double[] dC;
 
 
-        SNETask(int i, DenseMatrix P, DenseMatrix Q, double[][] Y, double[][] dY, double[][] gains, double minGain, double eta) {
+        SNETask(int i, double[][] P, double[][] Q, double[][] Y, double[][] dY, double[][] gains, double minGain, double eta) {
             this.i = i;
             this.P = P;
             this.Q = Q;
@@ -210,30 +215,31 @@ public class TSNE {
             Arrays.fill(dC, 0.0);
 
             // Compute gradient
-            double[] yi = Y[i];
+            double[] Yi = Y[i];
+            double[] Pi = P[i];
+            double[] Qi = Q[i];
             for (int j = 0; j < n; j++) {
                 if (i != j) {
-                    double[] yj = Y[j];
-                    double q = Q.get(i, j);
-                    double z = 4.0 * (P.get(i, j) - (q / Qsum)) * q;
+                    double[] Yj = Y[j];
+                    double q = Qi[j];
+                    double z = 4.0 * (Pi[j] - (q / Qsum)) * q;
                     for (int k = 0; k < d; k++) {
-                        dC[k] += (yi[k] - yj[k]) * z;
+                        dC[k] += (Yi[k] - Yj[k]) * z;
                     }
                 }
             }
 
             // Perform the update
             double[] g = gains[i]; // dereference before the loop for better performance
-            double[] dy = dY[i];
-            double[] y = Y[i];
+            double[] dYi = dY[i];
             for (int k = 0; k < d; k++) {
                 // Update gains
-                g[k] = (Math.signum(dC[k]) != Math.signum(dy[k])) ? (g[k] + .2) : (g[k] * .8);
+                g[k] = (Math.signum(dC[k]) != Math.signum(dYi[k])) ? (g[k] + .2) : (g[k] * .8);
                 if (g[k] < minGain) g[k] = minGain;
 
                 // Perform gradient update (with momentum and gains)
-                dy[k] = momentum * dy[k] - eta * g[k] * dC[k];
-                y[k] += dy[k];
+                dYi[k] = momentum * dYi[k] - eta * g[k] * dC[k];
+                Yi[k] += dYi[k];
             }
 
             return null;
@@ -241,14 +247,14 @@ public class TSNE {
     }
 
     /** Compute the Gaussian kernel (search the width for given perplexity. */
-    private DenseMatrix expd(DenseMatrix D, double perplexity, double tol){
-        int n              = D.nrows();
-        DenseMatrix P      = Matrix.zeros(n,n);
-        double[] ds        = D.colSums();
+    private double[][] expd(double[][] D, double perplexity, double tol){
+        int n          = D.length;
+        double[][] P   = new double[n][n];
+        double[] ds    = Math.rowSums(D);
 
         List<PerplexityTask> tasks = new ArrayList<>();
-        for (int j = 0; j < n; j++) {
-            PerplexityTask task = new PerplexityTask(j, D, P, ds, perplexity, tol);
+        for (int i = 0; i < n; i++) {
+            PerplexityTask task = new PerplexityTask(i, D, P, ds, perplexity, tol);
             tasks.add(task);
         }
 
@@ -262,15 +268,15 @@ public class TSNE {
     }
 
     private class PerplexityTask implements Callable<Void> {
-        int j;
-        DenseMatrix D;
-        DenseMatrix P;
+        int i;
+        double[][] D;
+        double[][] P;
         double[] ds;
         double perplexity;
         double tol;
 
-        PerplexityTask(int j, DenseMatrix D, DenseMatrix P, double[] ds, double perplexity, double tol) {
-            this.j = j;
+        PerplexityTask(int i, double[][] D, double[][] P, double[] ds, double perplexity, double tol) {
+            this.i = i;
             this.D = D;
             this.P = P;
             this.ds = ds;
@@ -280,14 +286,14 @@ public class TSNE {
 
         @Override
         public Void call() {
-            int n              = D.nrows();
-            double logU        = Math.log(perplexity);
+            int n       = D.length;
+            double logU = Math.log(perplexity);
 
             // Use sqrt(1 / avg of distance) to initialize beta
-            double beta = Math.sqrt((n-1) / ds[j]);
+            double beta = Math.sqrt((n-1) / ds[i]);
             double betamin = 0.0;
             double betamax = 16 * beta;
-            logger.debug("initial beta[{}] = {}", j, beta);
+            logger.debug("initial beta[{}] = {}", i, beta);
 
             // Evaluate whether the perplexity is within tolerance
             int iter = 0;
@@ -295,15 +301,19 @@ public class TSNE {
             do {
                 double H = 0.0;
                 double sum = 0.0;
-                for (int i = 0; i < n; i++) {
-                    if (i != j) {
-                        double d = beta * D.get(i, j);
-                        double p = Math.exp(-d);
-                        P.set(i, j, p);
-                        sum += p;
-                        H += p * d;
-                    }
+                double[] Pi = P[i];
+                double[] Di = D[i];
+                for (int j = 0; j < n; j++) {
+                    double d = beta * Di[j];
+                    double p = Math.exp(-d);
+                    Pi[j] = p;
+                    sum += p;
+                    H += p * d;
                 }
+
+                // discount D[i][i]
+                Pi[i] = 0.0;
+                sum -= 1.0;
 
                 H = Math.log(sum) + H / sum;
                 Hdiff = H - logU;
@@ -318,7 +328,7 @@ public class TSNE {
                     }
                 }
 
-                logger.debug("Hdiff = {}, beta[{}] = {}", Hdiff, j, beta);
+                logger.debug("Hdiff = {}, beta[{}] = {}", Hdiff, i, beta);
             } while (Math.abs(Hdiff) > tol && ++iter < 50);
 
             return null;

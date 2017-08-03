@@ -134,14 +134,14 @@ trait Operators {
     *  - L.J.P. van der Maaten. Learning a Parametric Embedding by Preserving Local Structure. In Proceedings of the Twelfth International Conference on Artificial Intelligence & Statistics (AI-STATS), JMLR W&CP 5:384-391, 2009.
     *  - L.J.P. van der Maaten and G.E. Hinton. Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research 9(Nov):2579-2605, 2008.
     *
-    * @param data the data set.
+    * @param X input data. If X is a square matrix, it is assumed to be the distance/dissimilarity matrix.
     * @param d the dimension of the manifold.
     * @param perplexity the perplexity of the conditional distribution.
     * @param maxIter maximum number of iterations.
     */
-  def tsne(data: Array[Array[Double]], d: Int = 2, perplexity: Double = 50.0, maxIter: Int = 1000): TSNE = {
+  def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 50.0, maxIter: Int = 1000): TSNE = {
     time {
-      new TSNE(data, d, perplexity, maxIter)
+      new TSNE(X, d, perplexity, maxIter)
     }
   }
 }
