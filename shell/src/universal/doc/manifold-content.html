@@ -228,7 +228,7 @@
     val pc = pca(x)
     pc.setProjection(50)
     val x50 = pc.project(x)
-    val sne = tsne(x50, 2, 50, 20, 1000)
+    val sne = tsne(x50, 2, 20, 200, 1000)
     plot(sne.getCoordinates, y, 'o', Palette.COLORS)
     </code></pre>
 
