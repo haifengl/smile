@@ -85,7 +85,7 @@ public class TSNE {
      * @param d the dimension of embedding space.
      */
     public TSNE(double[][] X, int d) {
-        this(X, d, 20, 200.0, 1000);
+        this(X, d, 20, 200, 1000);
     }
 
     /** Constructor.
