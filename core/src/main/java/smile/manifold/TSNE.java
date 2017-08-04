@@ -63,13 +63,28 @@ public class TSNE {
      */
     private double[][] coordinates;
 
+    private double eta             = 200;
+    private double momentum        = 0.5;
+    private double finalMomentum   = 0.8;
+    private int momentumSwitchIter = 250;
+    private double minGain         = .01;
+    private int    totalIter       =   1; // total iterations
+
+    private double[][] D;
+
+    private double[][] dY;
+    private double[][] gains; // adjust learning rate for each point
+
+    private double[][] P;
+    private double[][] Q;
+
     /** Constructor.
      *
      * @param X input data. If X is a square matrix, it is assumed to be the distance/dissimilarity matrix.
      * @param d the dimension of embedding space.
      */
     public TSNE(double[][] X, int d) {
-        this(X, d, 50, 20.0, 2000);
+        this(X, d, 20, 200.0, 1000);
     }
 
     /** Constructor.
@@ -81,60 +96,65 @@ public class TSNE {
      * @param iterations the number of iterations.
      */
     public TSNE(double[][] X, int d, double perplexity, double eta, int iterations) {
+        this.eta = eta;
         int n = X.length;
-        double momentum        = 0.5;
-        double finalMomentum   = 0.8;
-        int momentumSwitchIter = 250;
-        double minGain         = .01;
 
-        double[][] D;
         if (X.length == X[0].length) {
             D = X;
         } else {
             D = Math.pdist(X);
         }
 
-        double[][] Y           = new double[n][d];
-        double[][] dY          = new double[n][d];
-        double[][] gains       = new double[n][d]; // adjust learning rate for each point
+        coordinates = new double[n][d];
+        double[][] Y = coordinates;
+        dY = new double[n][d];
+        gains = new double[n][d]; // adjust learning rate for each point
 
         // Initialize Y randomly
         for (int i = 0; i < n; i++) {
+            Arrays.fill(gains[i], 1.0);
+            double[] Yi = Y[i];
             for (int j = 0; j < d; j++) {
-                Y[i][j] = Math.random();
+                Yi[j] = Math.random() * 0.0001;
             }
         }
 
         // Large tolerance to speed up the search of Gaussian kernel width
         // A small difference of kernel width is not important.
-        double[][] P = expd(D, perplexity, 1E-3);
-        double[][] Q = new double[n][n];
+        P = expd(D, perplexity, 1E-3);
+        Q = new double[n][n];
 
         // Make P symmetric
-        double Psum = 0.0;
-        for (int i = 0; i < n; i++) {
-            double[] Pi = P[i];
-            for (int j = 0; j < n; j++) {
-                Psum += Pi[j];
-            }
-        }
-
+        // sum(P) = 2 * n as each row of P is normalized
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
-                double p = (P[i][j] + P[j][i]) / Psum;
+                double p = 6.0 * (P[i][j] + P[j][i]) / n;
                 if (Double.isNaN(p) || p < 1E-12) p = 1E-12;
                 P[i][j] = p;
                 P[j][i] = p;
             }
         }
 
+        learn(iterations);
+    }
+
+    /** Continue to learn additional iterations. */
+    public void learn(int iterations) {
+        double[][] Y = coordinates;
+        int n = Y.length;
+        int d = Y[0].length;
+
+        int nprocs = MulticoreExecutor.getThreadPoolSize();
+        int chunk = n / nprocs;
         List<SNETask> tasks = new ArrayList<>();
-        for (int i = 0; i < n; i++) {
-            SNETask task = new SNETask(i, P, Q, Y, dY, gains, minGain, eta);
+        for (int i = 0; i < nprocs; i++) {
+            int start = i * chunk;
+            int end = i == nprocs-1 ? n : (i+1) * chunk;
+            SNETask task = new SNETask(start, end, P, Q, Y, dY, gains, minGain, eta);
             tasks.add(task);
         }
 
-        for (int iter = 1; iter <= iterations; iter++) {
+        for (int iter = 1; iter <= iterations; iter++, totalIter++) {
             Math.pdist(Y, Q);
             double Qsum = 0.0;
             for (int i = 0; i < n; i++) {
@@ -146,6 +166,7 @@ public class TSNE {
                     Qsum += q;
                 }
             }
+            Qsum *= 2.0;
 
             for (SNETask task : tasks) {
                 task.Qsum = Qsum;
@@ -158,12 +179,18 @@ public class TSNE {
                 logger.error("t-SNE iteration task fails: {}", e);
             }
 
-            if (iter > momentumSwitchIter) {
+            if (totalIter == momentumSwitchIter) {
                 momentum = finalMomentum;
+                for (int i = 0; i < n; i++) {
+                    double[] Pi = P[i];
+                    for (int j = 0; j < n; j++) {
+                        Pi[j] /= 12.0;
+                    }
+                }
             }
 
             // Compute current value of cost function
-            if (iter % 100 == 0)   {
+            if (iter % 50 == 0)   {
                 double C = 0.0;
                 for (int i = 0; i < n; i++) {
                     double[] Pi = P[i];
@@ -175,15 +202,22 @@ public class TSNE {
                         C += p * Math.log(p / q);
                     }
                 }
-                logger.info("Error after {} iterations: {}", iter, 2 * C);
+                logger.info("Error after {} iterations: {}", totalIter, 2 * C);
             }
         }
 
-        coordinates = Y;
+        // Make solution zero-mean
+        double[] colMeans = Math.colMeans(Y);
+        for (int i = 0; i < n; i++) {
+            double[] Yi = Y[i];
+            for (int j = 0; j < d; j++) {
+                Yi[j] -= colMeans[j];
+            }
+        }
     }
 
     private class SNETask implements Callable<Void> {
-        int i;
+        int start, end;
         double[][] Y;
         double[][] dY;
         double[][] gains;
@@ -196,8 +230,9 @@ public class TSNE {
         double[] dC;
 
 
-        SNETask(int i, double[][] P, double[][] Q, double[][] Y, double[][] dY, double[][] gains, double minGain, double eta) {
-            this.i = i;
+        SNETask(int start, int end, double[][] P, double[][] Q, double[][] Y, double[][] dY, double[][] gains, double minGain, double eta) {
+            this.start = start;
+            this.end = end;
             this.P = P;
             this.Q = Q;
             this.Y = Y;
@@ -210,19 +245,29 @@ public class TSNE {
 
         @Override
         public Void call() {
+            for (int i = start; i < end; i++) {
+                compute(i);
+            }
+
+            return null;
+        }
+
+        private void compute(int i) {
             int n = Y.length;
             int d = Y[0].length;
             Arrays.fill(dC, 0.0);
 
             // Compute gradient
+            // dereference before the loop for better performance
             double[] Yi = Y[i];
             double[] Pi = P[i];
             double[] Qi = Q[i];
+            double[] g = gains[i];
             for (int j = 0; j < n; j++) {
                 if (i != j) {
                     double[] Yj = Y[j];
                     double q = Qi[j];
-                    double z = 4.0 * (Pi[j] - (q / Qsum)) * q;
+                    double z = (Pi[j] - (q / Qsum)) * q;
                     for (int k = 0; k < d; k++) {
                         dC[k] += (Yi[k] - Yj[k]) * z;
                     }
@@ -230,7 +275,6 @@ public class TSNE {
             }
 
             // Perform the update
-            double[] g = gains[i]; // dereference before the loop for better performance
             double[] dYi = dY[i];
             for (int k = 0; k < d; k++) {
                 // Update gains
@@ -240,9 +284,14 @@ public class TSNE {
                 // Perform gradient update (with momentum and gains)
                 dYi[k] = momentum * dYi[k] - eta * g[k] * dC[k];
                 Yi[k] += dYi[k];
+                /*
+                if (i == 0) {
+                        System.out.println("gain " + k +" = " +g[k]);
+                    System.out.println("dC " + k +" = " +dC[k]);
+                    System.out.println("dY " + k +" = " +dYi[k]);
+                }
+                */
             }
-
-            return null;
         }
     }
 
@@ -252,9 +301,13 @@ public class TSNE {
         double[][] P   = new double[n][n];
         double[] ds    = Math.rowSums(D);
 
+        int nprocs = MulticoreExecutor.getThreadPoolSize();
+        int chunk = n / nprocs;
         List<PerplexityTask> tasks = new ArrayList<>();
-        for (int i = 0; i < n; i++) {
-            PerplexityTask task = new PerplexityTask(i, D, P, ds, perplexity, tol);
+        for (int i = 0; i < nprocs; i++) {
+            int start = i * chunk;
+            int end = i == nprocs-1 ? n : (i+1) * chunk;
+            PerplexityTask task = new PerplexityTask(start, end, D, P, ds, perplexity, tol);
             tasks.add(task);
         }
 
@@ -268,15 +321,16 @@ public class TSNE {
     }
 
     private class PerplexityTask implements Callable<Void> {
-        int i;
+        int start, end;
         double[][] D;
         double[][] P;
         double[] ds;
         double perplexity;
         double tol;
 
-        PerplexityTask(int i, double[][] D, double[][] P, double[] ds, double perplexity, double tol) {
-            this.i = i;
+        PerplexityTask(int start, int end, double[][] D, double[][] P, double[] ds, double perplexity, double tol) {
+            this.start = start;
+            this.end = end;
             this.D = D;
             this.P = P;
             this.ds = ds;
@@ -286,52 +340,65 @@ public class TSNE {
 
         @Override
         public Void call() {
+            for (int i = start; i < end; i++) {
+                compute(i);
+            }
+            return null;
+        }
+
+        private void compute(int i) {
             int n       = D.length;
-            double logU = Math.log(perplexity);
+            double logU = Math.log2(perplexity);
+
+            double[] Pi = P[i];
+            double[] Di = D[i];
 
             // Use sqrt(1 / avg of distance) to initialize beta
             double beta = Math.sqrt((n-1) / ds[i]);
             double betamin = 0.0;
-            double betamax = 16 * beta;
+            double betamax = Double.MAX_VALUE;
             logger.debug("initial beta[{}] = {}", i, beta);
 
             // Evaluate whether the perplexity is within tolerance
-            int iter = 0;
-            double Hdiff = 0.0;
-            do {
+            double Hdiff = Double.MAX_VALUE;
+            for (int iter = 0; Math.abs(Hdiff) > tol && iter < 50; iter++) {
+                double Pisum = 0.0;
                 double H = 0.0;
-                double sum = 0.0;
-                double[] Pi = P[i];
-                double[] Di = D[i];
                 for (int j = 0; j < n; j++) {
                     double d = beta * Di[j];
                     double p = Math.exp(-d);
                     Pi[j] = p;
-                    sum += p;
+                    Pisum += p;
                     H += p * d;
                 }
 
-                // discount D[i][i]
+                // P[i][i] should be 0
                 Pi[i] = 0.0;
-                sum -= 1.0;
+                Pisum -= 1.0;
 
-                H = Math.log(sum) + H / sum;
+                H = Math.log2(Pisum) + H / Pisum;
                 Hdiff = H - logU;
 
                 if (Math.abs(Hdiff) > tol) {
                     if (Hdiff > 0) {
                         betamin = beta;
-                        beta = (beta + betamax) / 2;
+                        if (betamax == Double.MAX_VALUE)
+                            beta *= 2.0;
+                        else
+                            beta = (beta + betamax) / 2;
                     } else {
                         betamax = beta;
                         beta = (beta + betamin) / 2;
                     }
+                } else {
+                    // normalize by row
+                    for (int j = 0; j < n; j++) {
+                        Pi[j] /= Pisum;
+                    }
                 }
 
-                logger.debug("Hdiff = {}, beta[{}] = {}", Hdiff, i, beta);
-            } while (Math.abs(Hdiff) > tol && ++iter < 50);
-
-            return null;
+                logger.debug("Hdiff = {}, beta[{}] = {}, H = {}, logU = {}", Hdiff, i, beta, H, logU);
+            }
         }
     }
 

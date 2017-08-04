@@ -208,7 +208,7 @@
         and dissimilar objects are modeled by distant points.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 50.0, eta: Double = 20.0, iterations: Int = 1000): TSNE
+    def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 50.0, eta: Double = 200.0, iterations: Int = 1000): TSNE
     </code></pre>
 
     <p>where <code>X</code> is input data, <code>perplexity</code> is the perplexity
@@ -228,7 +228,7 @@
     val pc = pca(x)
     pc.setProjection(50)
     val x50 = pc.project(x)
-    val sne = tsne(x, 2, 50, 20, 1000)
+    val sne = tsne(x50, 2, 50, 20, 1000)
     plot(sne.getCoordinates, y, 'o', Palette.COLORS)
     </code></pre>
 
