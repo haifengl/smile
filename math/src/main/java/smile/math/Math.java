@@ -18,9 +18,12 @@ package smile.math;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ForkJoinPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.matrix.DenseMatrix;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.SortUtils;
@@ -1954,6 +1957,42 @@ public class Math {
         return Math.sqrt(squaredDistance(x, y));
     }
 
+    private static class PdistTask implements Callable<Void> {
+        double[][] x;
+        double[][] dist;
+        int nprocs;
+        int pid;
+        boolean half;
+
+        PdistTask(double[][] x, double[][] dist, int nprocs, int pid, boolean half) {
+            this.x = x;
+            this.dist = dist;
+            this.nprocs = nprocs;
+            this.pid = pid;
+            this.half = half;
+        }
+
+        @Override
+        public Void call() {
+            int n = x.length;
+            if (half) {
+                for (int i = pid; i < n; i += nprocs) {
+                    for (int j = 0; j < i; j++) {
+                        dist[i][j] = distance(x[i], x[j]);
+                    }
+                }
+            } else {
+                for (int i = pid; i < n; i += nprocs) {
+                    for (int j = 0; j < i; j++) {
+                        double d = distance(x[i], x[j]);
+                        dist[i][j] = d;
+                        dist[j][i] = d;
+                    }
+                }
+            }
+            return null;
+        }
+    }
     /**
      * Pairwise distance between pairs of objects.
      * @param x Rows of x correspond to observations, and columns correspond to variables.
@@ -1962,16 +2001,10 @@ public class Math {
     public static double[][] pdist(double[][] x) {
         int n = x.length;
 
-        double[][] proximity = new double[n][n];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < i; j++) {
-                double d = distance(x[i], x[j]);
-                proximity[i][j] = d;
-                proximity[j][i] = d;
-            }
-        }
+        double[][] dist = new double[n][n];
+        pdist(x, dist);
 
-        return proximity;
+        return dist;
     }
 
     /**
@@ -1982,12 +2015,22 @@ public class Math {
     public static void pdist(double[][] x, double[][] dist) {
         int n = x.length;
 
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < i; j++) {
-                double d = distance(x[i], x[j]);
-                dist[i][j] = d;
-                dist[j][i] = d;
+        if (n < 100) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < i; j++) {
+                    double d = distance(x[i], x[j]);
+                    dist[i][j] = d;
+                    dist[j][i] = d;
+                }
             }
+        } else {
+            int nprocs = Runtime.getRuntime().availableProcessors();
+            List<PdistTask> tasks = new ArrayList<>();
+            for (int i = 0; i < nprocs; i++) {
+                PdistTask task = new PdistTask(x, dist, nprocs, i, false);
+                tasks.add(task);
+            }
+            ForkJoinPool.commonPool().invokeAll(tasks);
         }
     }
 
@@ -1999,15 +2042,14 @@ public class Math {
     public static double[][] proximity(double[][] x) {
         int n = x.length;
 
-        double[][] proximity = new double[n][];
+        double[][] dist = new double[n][];
         for (int i = 0; i < n; i++) {
-            proximity[i] = new double[i + 1];
-            for (int j = 0; j < i; j++) {
-                proximity[i][j] = distance(x[i], x[j]);
-            }
+            dist[i] = new double[i + 1];
         }
 
-        return proximity;
+        proximity(x, dist);
+
+        return dist;
     }
 
     /**
@@ -2018,10 +2060,20 @@ public class Math {
     public static void proximity(double[][] x, double[][] dist) {
         int n = x.length;
 
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < i; j++) {
-                dist[i][j] = distance(x[i], x[j]);
+        if (n < 100) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < i; j++) {
+                    dist[i][j] = distance(x[i], x[j]);
+                }
             }
+        } else {
+            int nprocs = Runtime.getRuntime().availableProcessors();
+            List<PdistTask> tasks = new ArrayList<>();
+            for (int i = 0; i < nprocs; i++) {
+                PdistTask task = new PdistTask(x, dist, nprocs, i, true);
+                tasks.add(task);
+            }
+            ForkJoinPool.commonPool().invokeAll(tasks);
         }
     }
 
