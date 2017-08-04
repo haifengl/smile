@@ -69,7 +69,7 @@ public class TSNE {
      * @param d the dimension of embedding space.
      */
     public TSNE(double[][] X, int d) {
-        this(X, d, 50, 1000);
+        this(X, d, 50, 20.0, 2000);
     }
 
     /** Constructor.
@@ -77,14 +77,14 @@ public class TSNE {
      * @param X input data. If X is a square matrix, it is assumed to be the distance/dissimilarity matrix.
      * @param d the dimension of embedding space.
      * @param perplexity the perplexity of the conditional distribution.
-     * @param maxIter maximum number of iterations.
+     * @param eta the learning rate.
+     * @param iterations the number of iterations.
      */
-    public TSNE(double[][] X, int d, double perplexity, int maxIter) {
+    public TSNE(double[][] X, int d, double perplexity, double eta, int iterations) {
         int n = X.length;
         double momentum        = 0.5;
         double finalMomentum   = 0.8;
         int momentumSwitchIter = 250;
-        int eta                =  20;  // learning rate
         double minGain         = .01;
 
         double[][] D;
@@ -134,7 +134,7 @@ public class TSNE {
             tasks.add(task);
         }
 
-        for (int iter = 1; iter <= maxIter; iter++) {
+        for (int iter = 1; iter <= iterations; iter++) {
             Math.pdist(Y, Q);
             double Qsum = 0.0;
             for (int i = 0; i < n; i++) {

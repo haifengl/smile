@@ -137,11 +137,12 @@ trait Operators {
     * @param X input data. If X is a square matrix, it is assumed to be the distance/dissimilarity matrix.
     * @param d the dimension of the manifold.
     * @param perplexity the perplexity of the conditional distribution.
-    * @param maxIter maximum number of iterations.
+    * @param eta        the learning rate.
+    * @param iterations the number of iterations.
     */
-  def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 50.0, maxIter: Int = 1000): TSNE = {
+  def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 50.0, eta: Double = 20.0, iterations: Int = 2000): TSNE = {
     time {
-      new TSNE(X, d, perplexity, maxIter)
+      new TSNE(X, d, perplexity, eta, iterations)
     }
   }
 }
