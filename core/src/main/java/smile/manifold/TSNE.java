@@ -23,6 +23,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
+import smile.stat.distribution.GaussianDistribution;
 import smile.util.MulticoreExecutor;
 
 /**
@@ -110,12 +111,13 @@ public class TSNE {
         dY = new double[n][d];
         gains = new double[n][d]; // adjust learning rate for each point
 
-        // Initialize Y randomly
+        // Initialize Y randomly by N(0, 0.01)
+        GaussianDistribution gaussian = new GaussianDistribution(0.0, 0.01);
         for (int i = 0; i < n; i++) {
             Arrays.fill(gains[i], 1.0);
             double[] Yi = Y[i];
             for (int j = 0; j < d; j++) {
-                Yi[j] = Math.random() * 0.0001;
+                Yi[j] = gaussian.rand();
             }
         }
 
@@ -126,11 +128,13 @@ public class TSNE {
 
         // Make P symmetric
         // sum(P) = 2 * n as each row of P is normalized
+        double Psum = 2 * n;
         for (int i = 0; i < n; i++) {
+            double[] Pi = P[i];
             for (int j = 0; j < i; j++) {
-                double p = 6.0 * (P[i][j] + P[j][i]) / n;
+                double p = 12.0 * (Pi[j] + P[j][i]) / Psum;
                 if (Double.isNaN(p) || p < 1E-12) p = 1E-12;
-                P[i][j] = p;
+                Pi[j] = p;
                 P[j][i] = p;
             }
         }
@@ -262,6 +266,7 @@ public class TSNE {
             double[] Yi = Y[i];
             double[] Pi = P[i];
             double[] Qi = Q[i];
+            double[] dYi = dY[i];
             double[] g = gains[i];
             for (int j = 0; j < n; j++) {
                 if (i != j) {
@@ -269,34 +274,26 @@ public class TSNE {
                     double q = Qi[j];
                     double z = (Pi[j] - (q / Qsum)) * q;
                     for (int k = 0; k < d; k++) {
-                        dC[k] += (Yi[k] - Yj[k]) * z;
+                        dC[k] += 4.0 * (Yi[k] - Yj[k]) * z;
                     }
                 }
             }
 
             // Perform the update
-            double[] dYi = dY[i];
             for (int k = 0; k < d; k++) {
                 // Update gains
                 g[k] = (Math.signum(dC[k]) != Math.signum(dYi[k])) ? (g[k] + .2) : (g[k] * .8);
                 if (g[k] < minGain) g[k] = minGain;
 
-                // Perform gradient update (with momentum and gains)
+                // gradient update with momentum and gains
                 dYi[k] = momentum * dYi[k] - eta * g[k] * dC[k];
                 Yi[k] += dYi[k];
-                /*
-                if (i == 0) {
-                        System.out.println("gain " + k +" = " +g[k]);
-                    System.out.println("dC " + k +" = " +dC[k]);
-                    System.out.println("dY " + k +" = " +dYi[k]);
-                }
-                */
             }
         }
     }
 
     /** Compute the Gaussian kernel (search the width for given perplexity. */
-    private double[][] expd(double[][] D, double perplexity, double tol){
+    private double[][] expd(double[][] D, double perplexity, double tol) {
         int n          = D.length;
         double[][] P   = new double[n][n];
         double[] ds    = Math.rowSums(D);
