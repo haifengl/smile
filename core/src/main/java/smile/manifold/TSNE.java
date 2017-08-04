@@ -133,7 +133,7 @@ public class TSNE {
             double[] Pi = P[i];
             for (int j = 0; j < i; j++) {
                 double p = 12.0 * (Pi[j] + P[j][i]) / Psum;
-                if (Double.isNaN(p) || p < 1E-12) p = 1E-12;
+                if (Double.isNaN(p) || p < 1E-16) p = 1E-16;
                 Pi[j] = p;
                 P[j][i] = p;
             }
@@ -202,7 +202,7 @@ public class TSNE {
                     for (int j = 0; j < i; j++) {
                         double p = Pi[j];
                         double q = Qi[j] / Qsum;
-                        if (Double.isNaN(q) || q < 1E-12) q = 1E-12;
+                        if (Double.isNaN(q) || q < 1E-16) q = 1E-16;
                         C += p * Math.log(p / q);
                     }
                 }
@@ -286,8 +286,8 @@ public class TSNE {
                 if (g[k] < minGain) g[k] = minGain;
 
                 // gradient update with momentum and gains
-                dYi[k] = momentum * dYi[k] - eta * g[k] * dC[k];
                 Yi[k] += dYi[k];
+                dYi[k] = momentum * dYi[k] - eta * g[k] * dC[k];
             }
         }
     }
