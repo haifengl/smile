@@ -7,8 +7,8 @@ check_error() {
 }
 
 rm -rf shell/src/universal/doc/api/
-CLASSPATH=$CLASSPATH:$HOME/.ivy2/cache/org.swinglabs/swingx/jars/*:$HOME/.ivy2/cache/org.slf4j/slf4j-api/jars/*
-javadoc -source "1.8" -bottom '<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>' -Xdoclint:none -doctitle "Smile &mdash; Statistical Machine Intelligence and Learning Engine" -d shell/src/universal/doc/api/java  -subpackages smile -sourcepath math/src/main/java:data/src/main/java:core/src/main/java:graph/src/main/java:interpolation/src/main/java:nlp/src/main/java:plot/src/main/java
+export CLASSPATH=$CLASSPATH:$HOME/.ivy2/cache/org.swinglabs/swingx/jars/*:$HOME/.ivy2/cache/org.slf4j/slf4j-api/jars/*
+javadoc -source "1.8" --allow-script-in-comments -bottom '<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>' -Xdoclint:none -doctitle "Smile &mdash; Statistical Machine Intelligence and Learning Engine" -d shell/src/universal/doc/api/java  -subpackages smile -sourcepath math/src/main/java:data/src/main/java:core/src/main/java:graph/src/main/java:interpolation/src/main/java:nlp/src/main/java:plot/src/main/java
 check_error "javadoc"
 
 sbt clean
@@ -34,5 +34,5 @@ fi
 
 #sbt publish-signed
 #sbt ++2.10.6 scala/publish-signed
-#sbt ++2.12.2 scala/publish-signed
+#sbt ++2.11.8 scala/publish-signed
 #check_error "Publishing"
