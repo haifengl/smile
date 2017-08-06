@@ -1963,31 +1963,25 @@ public class Math {
         int nprocs;
         int pid;
         boolean half;
+        boolean squared;
 
-        PdistTask(double[][] x, double[][] dist, int nprocs, int pid, boolean half) {
+        PdistTask(double[][] x, double[][] dist, int nprocs, int pid, boolean squared, boolean half) {
             this.x = x;
             this.dist = dist;
             this.nprocs = nprocs;
             this.pid = pid;
+            this.squared = squared;
             this.half = half;
         }
 
         @Override
         public Void call() {
             int n = x.length;
-            if (half) {
-                for (int i = pid; i < n; i += nprocs) {
-                    for (int j = 0; j < i; j++) {
-                        dist[i][j] = distance(x[i], x[j]);
-                    }
-                }
-            } else {
-                for (int i = pid; i < n; i += nprocs) {
-                    for (int j = 0; j < i; j++) {
-                        double d = distance(x[i], x[j]);
-                        dist[i][j] = d;
-                        dist[j][i] = d;
-                    }
+            for (int i = pid; i < n; i += nprocs) {
+                for (int j = 0; j < i; j++) {
+                    double d = squared ? squaredDistance(x[i], x[j]) : distance(x[i], x[j]);
+                    dist[i][j] = d;
+                    if (!half) dist[j][i] = d;
                 }
             }
             return null;
@@ -2002,7 +1996,7 @@ public class Math {
         int n = x.length;
 
         double[][] dist = new double[n][n];
-        pdist(x, dist);
+        pdist(x, dist, false, false);
 
         return dist;
     }
@@ -2010,9 +2004,11 @@ public class Math {
     /**
      * Pairwise distance between pairs of objects.
      * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @param squared If true, compute the squared Euclidean distance.
+     * @param half, If true, only the lower half of dist will be referenced.
      * @param dist The distance matrix.
      */
-    public static void pdist(double[][] x, double[][] dist) {
+    public static void pdist(double[][] x, double[][] dist, boolean squared, boolean half) {
         int n = x.length;
 
         if (n < 100) {
@@ -2027,50 +2023,7 @@ public class Math {
             int nprocs = Runtime.getRuntime().availableProcessors();
             List<PdistTask> tasks = new ArrayList<>();
             for (int i = 0; i < nprocs; i++) {
-                PdistTask task = new PdistTask(x, dist, nprocs, i, false);
-                tasks.add(task);
-            }
-            ForkJoinPool.commonPool().invokeAll(tasks);
-        }
-    }
-
-    /**
-     * Pairwise distance between pairs of objects. Only the lower half is stored to save space.
-     * @param x Rows of x correspond to observations, and columns correspond to variables.
-     * @return the lower half of pairwise distance matrix.
-     */
-    public static double[][] proximity(double[][] x) {
-        int n = x.length;
-
-        double[][] dist = new double[n][];
-        for (int i = 0; i < n; i++) {
-            dist[i] = new double[i + 1];
-        }
-
-        proximity(x, dist);
-
-        return dist;
-    }
-
-    /**
-     * Pairwise distance between pairs of objects. Only the lower half is stored to save space.
-     * @param x Rows of x correspond to observations, and columns correspond to variables.
-     * @param dist The distance matrix. Only the lower half of pairwise distance matrix is referred.
-     */
-    public static void proximity(double[][] x, double[][] dist) {
-        int n = x.length;
-
-        if (n < 100) {
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < i; j++) {
-                    dist[i][j] = distance(x[i], x[j]);
-                }
-            }
-        } else {
-            int nprocs = Runtime.getRuntime().availableProcessors();
-            List<PdistTask> tasks = new ArrayList<>();
-            for (int i = 0; i < nprocs; i++) {
-                PdistTask task = new PdistTask(x, dist, nprocs, i, true);
+                PdistTask task = new PdistTask(x, dist, nprocs, i, squared, half);
                 tasks.add(task);
             }
             ForkJoinPool.commonPool().invokeAll(tasks);
