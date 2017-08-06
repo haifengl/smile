@@ -140,7 +140,7 @@ trait Operators {
     * @param eta        the learning rate.
     * @param iterations the number of iterations.
     */
-  def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 500.0, iterations: Int = 1000): TSNE = {
+  def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 200.0, iterations: Int = 1000): TSNE = {
     time {
       new TSNE(X, d, perplexity, eta, iterations)
     }

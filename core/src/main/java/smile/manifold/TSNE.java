@@ -86,7 +86,7 @@ public class TSNE {
      * @param d the dimension of embedding space.
      */
     public TSNE(double[][] X, int d) {
-        this(X, d, 20, 500, 1000);
+        this(X, d, 20, 200, 1000);
     }
 
     /** Constructor.
@@ -264,7 +264,7 @@ public class TSNE {
             // Perform the update
             for (int k = 0; k < d; k++) {
                 // Update gains
-                g[k] = (signum(dC[k]) != signum(dYi[k])) ? (g[k] + .2) : (g[k] * .8);
+                g[k] = (Math.signum(dC[k]) != Math.signum(dYi[k])) ? (g[k] + .2) : (g[k] * .8);
                 if (g[k] < minGain) g[k] = minGain;
 
                 // gradient update with momentum and gains
@@ -272,10 +272,6 @@ public class TSNE {
                 dYi[k] = momentum * dYi[k] - eta * g[k] * dC[k];
             }
         }
-    }
-
-    private int signum(double x) {
-        return (x == .0 ? 0 : (x < .0 ? -1 : 1));
     }
 
     /** Compute the Gaussian kernel (search the width for given perplexity. */
