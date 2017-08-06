@@ -208,7 +208,7 @@
         and dissimilar objects are modeled by distant points.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 50.0, eta: Double = 200.0, iterations: Int = 1000): TSNE
+    def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 500.0, iterations: Int = 1000): TSNE
     </code></pre>
 
     <p>where <code>X</code> is input data, <code>perplexity</code> is the perplexity
@@ -216,9 +216,25 @@
         the number of iterations. If <code>X</code> is a square matrix, it is assumed
         to be the distance/dissimilarity matrix.</p>
 
+    <p>The t-SNE on the MNIST data is as follows. Note that the input data is preprocessed
+        using PCA to reduce the dimensionality to 50 before t-SNE is performed.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val mnist = read.table("data/mnist/mnist2500_X.txt")
+    val label = read.table("data/mnist/mnist2500_labels.txt")
+    val x = mnist.unzip
+    val y = label.unzip.map(_(0).toInt)
+    val legend = label.unzip.map(_(0).toString)
+    val pc = pca(x)
+    pc.setProjection(50)
+    val x50 = pc.project(x)
+    val sne = tsne(x50, 3, 20, 200, 1000)
+    plot(sne.getCoordinates, y, 'o', Palette.COLORS)
+    </code></pre>
+
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/tsne.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">t-SNE on Iris</div>
+        <div class="caption" style="min-width: 480px;">t-SNE</div>
     </div>
 
     <div id="btnv">
