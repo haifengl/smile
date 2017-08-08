@@ -27,7 +27,7 @@ import smile.stat.distribution.GaussianDistribution;
 import smile.util.MulticoreExecutor;
 
 /**
- * t-distributed stochastic neighbor embedding (t-SNE) is a nonlinear
+ * The t-distributed stochastic neighbor embedding (t-SNE) is a nonlinear
  * dimensionality reduction technique that is particularly well suited
  * for embedding high-dimensional data into a space of two or three
  * dimensions, which can then be visualized in a scatter plot. Specifically,
@@ -80,16 +80,16 @@ public class TSNE {
     private double[][] Q;
     private double     Qsum;
 
-    /** Constructor.
+    /** Constructor. Train t-SNE for 1000 iterations, perplexity = 20 and learning rate = 200.
      *
-     * @param X input data. If X is a square matrix, it is assumed to be the distance/dissimilarity matrix.
+     * @param X input data. If X is a square matrix, it is assumed to be the squared distance/dissimilarity matrix.
      * @param d the dimension of embedding space.
      */
     public TSNE(double[][] X, int d) {
         this(X, d, 20, 200, 1000);
     }
 
-    /** Constructor.
+    /** Constructor. Train t-SNE for given number of iterations.
      *
      * @param X input data. If X is a square matrix, it is assumed to be the squared distance/dissimilarity matrix.
      * @param d the dimension of embedding space.
