@@ -93,7 +93,7 @@ public class NDMatrix extends DenseMatrix {
 
     @Override
     public double[] data() {
-        throw new UnsupportedOperationException();
+        return A.data().asDouble();
     }
 
     @Override
