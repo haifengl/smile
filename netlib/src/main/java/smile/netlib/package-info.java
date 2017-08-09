@@ -18,7 +18,7 @@
  * netlib-java is a wrapper for low-level BLAS, LAPACK and ARPACK that
  * performs as fast as the C / Fortran interfaces with a pure JVM fallback.
  *
- * To enable machine optimised natives in netlib-java, end-users make
+ * To enable machine optimized natives in netlib-java, end-users make
  * their machine-optimised libblas3 (CBLAS) and liblapack3 (Fortran)
  * available as shared libraries at runtime.
  *

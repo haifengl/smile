@@ -43,7 +43,7 @@ the dependency of smile-netlib:
       <version>1.4.0</version>
     </dependency>
 ```
-and also make their machine-optimised libblas3 (CBLAS) and liblapack3 (Fortran)
+and also make their machine-optimized libblas3 (CBLAS) and liblapack3 (Fortran)
 available as shared libraries at runtime.
 
 OS X
