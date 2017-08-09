@@ -213,26 +213,19 @@
         them together.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val a = new ColumnMajorMatrix( 300,  900, 0.0, 1.0)
-    val b = new ColumnMajorMatrix( 900,  150, 0.0, 1.0)
-    val c = new ColumnMajorMatrix( 150, 1800, 0.0, 1.0)
-    val d = new ColumnMajorMatrix(1800,   30, 0.0, 1.0)
+    val a = randn( 300,  900)
+    val b = randn( 900,  150)
+    val c = randn( 150, 1800)
+    val d = randn(1800,   30)
 
     time {(a %*% b %*% c %*% d).toMatrix}
     </code></pre>
 
-    <p>Note that <code>ColumnMajorMatrix</code> (and <code>RowMajorMatrix</code>)
-        in the package <code>smile.math.matrix</code> are pure Java implementation.
-        Even though the runtime optimization improves the performance
-        significantly for matrix multiplication chain, JVM is not
-        the best platform for numeric computation. If you are working
-        on very large matrix, <code>smile.nd4j.NDMatrix</code> is a
-        nice alternative. <code>NDMatrix</code> is based on ND4j that employs native
-        (or even GPU) BLAS library. It provides very high performance.
-        However, the native implementation of matrix decompositions is not
-        available for <code>NDMatrix</code> currently. But our Java implementations
-        of matrix decompositions discussed in the next section can still
-        be applied to <code>NDMatrix</code>.</p>
+    <p>where <code>randn()</code> creates a matrix of normally distributed
+        random numbers. The shell will try to load machine optimized
+        BLAS/LAPACK native libraries for most matrix computation.
+        If BLAS/LAPACK is not available, smile will fall back to pure Java
+        implementation.</p>
 
     <h2 id="decomposition" class="title">Matrix Decomposition</h2>
 
