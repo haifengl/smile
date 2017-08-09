@@ -15,58 +15,69 @@
  *******************************************************************************/
 
 /**
- * netlib-java is a wrapper for low-level BLAS, LAPACK and ARPACK that
+ * Matrix implementation based on low-level BLAS, LAPACK and ARPACK that
  * performs as fast as the C / Fortran interfaces with a pure JVM fallback.
- *
- * To enable machine optimized natives in netlib-java, end-users make
- * their machine-optimised libblas3 (CBLAS) and liblapack3 (Fortran)
- * available as shared libraries at runtime.
- *
- * OS X
+ * <p>
+ * This module relies on the netlib-java library. To enable machine optimized
+ * natives in netlib-java, the users should make their machine-optimized
+ * libblas3 (CBLAS) and liblapack3 (Fortran) available as shared libraries at
+ * runtime.
+ * <p>
+ * <h3>OS X</h3>
  *
  * Apple OS X requires no further setup because OS X ships with the veclib
  * framework, boasting incredible CPU performance that is difficult to
  * surpass.
  *
- * Linux
+ * <h3>Linux</h3>
  *
  * Generically-tuned ATLAS and OpenBLAS are available with most distributions
  * and must be enabled explicitly using the package-manager. For example,
- *
+ * <p>
+ * <pre><code>
  * sudo apt-get install libatlas3-base libopenblas-base
  * sudo update-alternatives --config libblas.so
  * sudo update-alternatives --config libblas.so.3
  * sudo update-alternatives --config liblapack.so
  * sudo update-alternatives --config liblapack.so.3
- *
+ * </code></pre>
+ * <p>
  * However, these are only generic pre-tuned builds.
- *
+ * <p>
  * If you have an Intel MKL licence, you could also create symbolic links
  * from libblas.so.3 and liblapack.so.3 to libmkl_rt.so or use Debian's
  * alternatives system.
  *
- * Windows
+ * <h3>Windows</h3>
  *
  * The native_system builds expect to find libblas3.dll and liblapack3.dll
  * on the %PATH% (or current working directory). Besides vendor-supplied
  * implementations, OpenBLAS provide generically tuned binaries, and it
  * is possible to build ATLAS.
  *
- * A specific implementation may be forced like so:
+ * <h3>Customization</h3>
  *
+ * A specific implementation may be forced like so:
+ * <p>
+ * <pre><code>
  * -Dcom.github.fommil.netlib.BLAS=com.github.fommil.netlib.NativeRefBLAS
  * -Dcom.github.fommil.netlib.LAPACK=com.github.fommil.netlib.NativeRefLAPACK
  * -Dcom.github.fommil.netlib.ARPACK=com.github.fommil.netlib.NativeRefARPACK
- *
+ * </code></pre>
+ * <p>
  * A specific (non-standard) JNI binary may be forced like so:
- *
+ * <p>
+ * <pre><code>
  * -Dcom.github.fommil.netlib.NativeSystemBLAS.natives=netlib-native_system-myos-myarch.so
- *
+ * </code></pre>
+ * <p>
  * To turn off natives altogether, add these to the JVM flags:
- *
+ * <p>
+ * <pre><code>
  * -Dcom.github.fommil.netlib.BLAS=com.github.fommil.netlib.F2jBLAS
  * -Dcom.github.fommil.netlib.LAPACK=com.github.fommil.netlib.F2jLAPACK
  * -Dcom.github.fommil.netlib.ARPACK=com.github.fommil.netlib.F2jARPACK
+ * </code></pre>
  *
  * @author Haifeng Li
  */

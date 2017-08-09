@@ -2005,7 +2005,7 @@ public class Math {
      * Pairwise distance between pairs of objects.
      * @param x Rows of x correspond to observations, and columns correspond to variables.
      * @param squared If true, compute the squared Euclidean distance.
-     * @param half, If true, only the lower half of dist will be referenced.
+     * @param half If true, only the lower half of dist will be referenced.
      * @param dist The distance matrix.
      */
     public static void pdist(double[][] x, double[][] dist, boolean squared, boolean half) {
