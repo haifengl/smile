@@ -29,6 +29,8 @@ bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.
 
 bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../conf/smile.conf""""
 
+batScriptExtraDefines  += """set _JAVA_OPTS=%_JAVA_OPTS% -Dsmile.home=%SMILE_HOME% -Dscala.repl.autoruncode=%SMILE_HOME%\\init.scala -Dconfig.file=%SMILE_HOME%\\..\\conf\\smile.conf"""
+
 // native packager Docker plugin
 enablePlugins(DockerPlugin)
 

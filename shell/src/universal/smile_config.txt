@@ -1,0 +1,26 @@
+-Xmx4096M
+-Xms1024M
+
+# Add additional jvm parameters
+-server
+
+# Performance optimization
+-XX:+AggressiveOpts
+
+# G1 garbage collector
+-XX:+UseG1GC
+
+# Optimize string duplication, which happens a lot when parsing a data file
+-XX:+UseStringDeduplication
+
+# Turn on JVM debugging, open at the given port
+# -jvm-debug <port>
+-XX:-PrintGCDetails
+
+# Don't run the java version check
+# -no-version-check
+
+# enabling debug and sending -d as app argument
+# the '--' prevents app-parameter swallowing when
+# using a reserved parameter. See #184
+# -d -- -d
