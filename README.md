@@ -34,7 +34,7 @@ For Scala API, please use
     libraryDependencies += "com.github.haifengl" %% "smile-scala" % "1.4.0"
 ```
 
-To enable machine optimised matrix computation, the users should add
+To enable machine optimized matrix computation, the users should add
 the dependency of smile-netlib:
 ```
     <dependency>
