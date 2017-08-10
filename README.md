@@ -79,14 +79,14 @@ In the home directory of Smile, type
 ```
 to enter the shell, which is based on Scala interpreter. So you can run any valid Scala expressions in the shell.
 In the simplest case, you can use it as a calculator. Besides, all high-level Smile operators are predefined
-in the shell. Be default, the shell uses up to 4GB memory. If you need more memory to handle large data,
+in the shell. By default, the shell uses up to 4GB memory. If you need more memory to handle large data,
 use the option `-J-Xmx`. For example,
 
 ```
     ./bin/smile -J-Xmx8192M
 ```
 You can also modify the configuration file `./conf/application.ini` for the memory and other JVM settings.
-For detailed helps, checkout the [project website](http://haifengl.github.io/smile/).
+For detailed help, checkout the [project website](http://haifengl.github.io/smile/).
 
 Smile implements the following major machine learning algorithms:
 
@@ -123,7 +123,7 @@ Sentence Splitter and Tokenizer, Bigram Statistical Test, Phrase Extractor, Keyw
 Model Serialization
 ===================
 Most models support the Java `Serializable` interface (all classifiers do support `Serializable` interface) so that
-you can use them in Spark. To reading/writing the models in non-Java code, we suggest [XStream](http://xstream.codehaus.org) to serialize the trained models.
+you can use them in Spark. For reading/writing the models in non-Java code, we suggest [XStream](http://xstream.codehaus.org) to serialize the trained models.
 XStream is a simple library to serialize objects to XML and back again. XStream is easy to use and doesn't require mappings
 (actually requires no modifications to objects). [Protostuff](http://code.google.com/p/protostuff/) is a
 nice alternative that supports forward-backward compatibility (schema evolution) and validation.
