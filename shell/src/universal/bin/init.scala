@@ -27,6 +27,7 @@ import smile.math.Math.{log2, logistic, factorial, choose, random, randomInt, pe
 import smile.math.distance._
 import smile.math.kernel._
 import smile.math.matrix._
+import smile.math.matrix.Matrix._
 import smile.stat.distribution._
 import smile.data._
 import java.awt.Color, smile.plot._
