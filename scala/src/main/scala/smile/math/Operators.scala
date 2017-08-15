@@ -187,8 +187,6 @@ trait Operators {
   def eye(n: Int) = Matrix.eye(n)
   /** Returns an m-by-n identity matrix. */
   def eye(m: Int, n: Int) = Matrix.eye(m, n)
-  /** Returns an n-by-n matrix of normally distributed random numbers. */
-  def randn(n: Int, mu: Double = 0.0, sigma: Double = 1.0) = Matrix.randn(n, n, mu, sigma)
   /** Returns an m-by-n matrix of normally distributed random numbers. */
   def randn(m: Int, n: Int, mu: Double = 0.0, sigma: Double = 1.0) = Matrix.randn(m, n, mu, sigma)
   /** Returns the trace of matrix. */
