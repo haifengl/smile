@@ -18,10 +18,10 @@
  * Matrix implementation based on low-level BLAS, LAPACK and ARPACK that
  * performs as fast as the C / Fortran interfaces with a pure JVM fallback.
  * <p>
- * This module relies on the netlib-java library. To enable machine optimized
- * natives in netlib-java, the users should make their machine-optimized
- * libblas3 (CBLAS) and liblapack3 (Fortran) available as shared libraries at
- * runtime.
+ * This module employs the highly efficient <a href="https://github.com/fommil/netlib-java#netlib-java">netlib-java</a>
+ * library. To enable machine optimized natives in netlib-java, the users
+ * should make their machine-optimized libblas3 (CBLAS) and liblapack3
+ * (Fortran) available as shared libraries at runtime.
  * <p>
  * <h3>OS X</h3>
  *
