@@ -44,7 +44,8 @@ the dependency of smile-netlib:
     </dependency>
 ```
 and also make their machine-optimized libblas3 (CBLAS) and liblapack3 (Fortran)
-available as shared libraries at runtime.
+available as shared libraries at runtime. This module employs the highly efficient
+[netlib-java](https://github.com/fommil/netlib-java#netlib-java) library.
 
 OS X
 ----
