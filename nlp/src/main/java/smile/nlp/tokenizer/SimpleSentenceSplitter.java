@@ -222,15 +222,19 @@ public class SimpleSentenceSplitter implements SentenceSplitter {
                     }
                 }
             }
-
         }
 
         if (end < text.length()) {
             // There may be something after the last sentence.
-            String lastPart = text.substring(end).trim();
+            String lastPart = text.substring(end);
             if (!lastPart.isEmpty()) {
-                sentences.add(lastPart);
+                currentSentence.append(lastPart);
             }
+        }
+
+        // If currentSentence is not empty (e.g. break at abbrev), add it to the results.
+        if (currentSentence.length() > 0) {
+            sentences.add(currentSentence.toString().trim());
         }
 
         String[] result = new String[sentences.size()];
