@@ -123,4 +123,36 @@ public class SimpleSentenceSplitterTest {
         for (int i = 0; i < result.length; i++)
             assertEquals(expResult[i], result[i]);
     }
+
+    /**
+     * Test of split method, of class SimpleSentenceSplitter.
+     */
+    @Test
+    public void testSplitEndWithAbbreviation() {
+        System.out.println("split with abbreviation ending");
+        String text1 = "This is an nn. This is the next sentence.";
+        String text2 = "This is an nn. this is the next sentence.";
+        String text3 = "This is an na. This is the next sentence.";
+
+        String[] expResult1 = {"This is an nn. This is the next sentence."};
+        String[] expResult2 = {"This is an nn. this is the next sentence."};
+        String[] expResult3 = {"This is an na.", "This is the next sentence."};
+
+        SimpleSentenceSplitter instance = SimpleSentenceSplitter.getInstance();
+
+        String[] result1 = instance.split(text1);
+        assertEquals(expResult1.length, result1.length);
+        for (int i = 0; i < result1.length; i++)
+            assertEquals(expResult1[i], result1[i]);
+
+        String[] result2 = instance.split(text2);
+        assertEquals(expResult2.length, result2.length);
+        for (int i = 0; i < result2.length; i++)
+            assertEquals(expResult2[i], result2[i]);
+
+        String[] result3 = instance.split(text3);
+        assertEquals(expResult3.length, result3.length);
+        for (int i = 0; i < result3.length; i++)
+            assertEquals(expResult3[i], result3[i]);
+    }
 }
