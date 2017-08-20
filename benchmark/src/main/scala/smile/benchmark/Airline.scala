@@ -101,7 +101,7 @@ object Airline {
     // AdaBoost
     test2soft(x, y, testx, testy) { (x, y) =>
       println("Training AdaBoost of 300 trees...")
-      adaboost(x, y, attributes, 300, 6)
+      adaBoost(x, y, attributes, 300, 6)
     }
   }
 }
