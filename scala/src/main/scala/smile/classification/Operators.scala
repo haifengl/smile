@@ -191,7 +191,7 @@ trait Operators {
     * @param maxIter maximum number of iterations.
     * @return Maximum entropy model.
     */
-  def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent = {
+  def maxEnt(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent = {
     time {
       new Maxent(p, x, y, lambda, tol, maxIter)
     }
@@ -289,12 +289,12 @@ trait Operators {
     */
   def mlp(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, activation: NeuralNetwork.ActivationFunction, epochs: Int = 25, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork = {
     time {
-      val nnet = new NeuralNetwork(error, activation, numUnits: _*)
-      nnet.setLearningRate(eta)
-      nnet.setMomentum(alpha)
-      nnet.setWeightDecay(lambda)
-      (0 until epochs).foreach { _ => nnet.learn(x, y) }
-      nnet
+      val nNet = new NeuralNetwork(error, activation, numUnits: _*)
+      nNet.setLearningRate(eta)
+      nNet.setMomentum(alpha)
+      nNet.setWeightDecay(lambda)
+      (0 until epochs).foreach { _ => nNet.learn(x, y) }
+      nNet
     }
   }
 
@@ -360,14 +360,14 @@ trait Operators {
     * @param rbf the radial basis function.
     * @param centers the centers of RBF functions.
     */
-  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
+  def rBFNet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
     time {
       new RBFNetwork[T](x, y, distance, rbf, centers, false)
     }
   }
 
   /** Normalized radial basis function networks. */
-  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
+  def nRBFNet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
     time {
       new RBFNetwork[T](x, y, distance, rbf, centers, true)
     }
@@ -434,14 +434,14 @@ trait Operators {
     * @param rbf the radial basis functions at each center.
     * @param centers the centers of RBF functions.
     */
-  def rbfnet[T <: AnyRef, RBF <: RadialBasisFunction](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RBF], centers: Array[T]): RBFNetwork[T] = {
+  def rBFNet[T <: AnyRef, RBF <: RadialBasisFunction](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RBF], centers: Array[T]): RBFNetwork[T] = {
     time {
       new RBFNetwork[T](x, y, distance, rbf.asInstanceOf[Array[RadialBasisFunction]], centers, false)
     }
   }
 
   /** Normalized radial basis function networks. */
-  def nrbfnet[T <: AnyRef, RBF <: RadialBasisFunction](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RBF], centers: Array[T]): RBFNetwork[T] = {
+  def nRBFNet[T <: AnyRef, RBF <: RadialBasisFunction](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RBF], centers: Array[T]): RBFNetwork[T] = {
     time {
       new RBFNetwork[T](x, y, distance, rbf.asInstanceOf[Array[RadialBasisFunction]], centers, true)
     }
@@ -502,10 +502,10 @@ trait Operators {
     val k = Math.max(y) + 1
     val svm = if (k == 2) new SVM[T](kernel, C) else new SVM[T](kernel, C, k, strategy)
     time {
-      for (i <- 1 to epoch) {
-        println(s"SVM training epoch $i...")
+      (1 to epoch).foreach { index =>
+        println(s"SVM training epoch $index...")
         svm.learn(x, y)
-        svm.finish
+        svm.finish()
       }
     }
     svm
@@ -579,8 +579,10 @@ trait Operators {
     * @param splitRule the splitting rule.
     * @return Decision tree model.
     */
-  def cart(x: Array[Array[Double]], y: Array[Int], maxNodes: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
-    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
+  def cart(x: Array[Array[Double]], y: Array[Int], maxNodes: Int, attributes: Option[Array[Attribute]] = None, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
+    val length = x.headOption.getOrElse(Array()).length
+    val attr = attributes.getOrElse(numericAttributes(length))
+
     time {
       new DecisionTree(attr, x, y, maxNodes, splitRule)
     }
@@ -626,33 +628,33 @@ trait Operators {
     * @param y the response variable.
     * @param attributes the attribute properties. If not provided, all attributes
     *                   are treated as numeric values.
-    * @param ntrees the number of trees.
-    * @param mtry the number of random selected features to be used to determine
+    * @param nTrees the number of trees.
+    * @param maxTry the number of random selected features to be used to determine
     *             the decision at a node of the tree. floor(sqrt(dim)) seems to give
     *             generally good performance, where dim is the number of variables.
     * @param nodeSize number of instances in a node below which the tree will not split.
     * @param maxNodes maximum number of leaf nodes.
-    * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+    * @param subSample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
     *                  sampling without replacement.
     * @param splitRule Decision tree node split rule.
     * @param classWeight Priors of the classes.
     *
     * @return Random forest classification model.
     */
-  def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 1, mtry: Int = -1, subsample: Double = 1.0, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
-    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
+  def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Option[Array[Attribute]] = None, nTrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 1, maxTry: Int = -1, subSample: Double = 1.0, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Option[Array[Int]] = None): RandomForest = {
+    val length = x.headOption.getOrElse(Array()).length
 
-    val p = x(0).length
+    val attr = attributes.getOrElse(numericAttributes(length))
 
-    val m = if (mtry <= 0) Math.floor(Math.sqrt(p)).toInt else mtry
+    val m = if (maxTry <= 0) Math.floor(Math.sqrt(length)).toInt else maxTry
 
     val j = if (maxNodes <= 1) x.length / nodeSize else maxNodes
 
     val k = Math.max(y) + 1
-    val weight = if (classWeight == null) Array.fill[Int](k)(1) else classWeight
+    val weight = classWeight.getOrElse(Array.fill[Int](k)(1))
 
     time {
-      new RandomForest(attr, x, y, ntrees, j, nodeSize, m, subsample, splitRule, weight)
+      new RandomForest(attr, x, y, nTrees, j, nodeSize, m, subSample, splitRule, weight)
     }
   }
 
@@ -691,16 +693,16 @@ trait Operators {
     * Soon after the introduction of gradient boosting Friedman proposed a
     * minor modification to the algorithm, motivated by Breiman's bagging method.
     * Specifically, he proposed that at each iteration of the algorithm, a base
-    * learner should be fit on a subsample of the training set drawn at random
+    * learner should be fit on a subSample of the training set drawn at random
     * without replacement. Friedman observed a substantial improvement in
     * gradient boosting's accuracy with this modification.
     *
-    * Subsample size is some constant fraction f of the size of the training set.
+    * SubSample size is some constant fraction f of the size of the training set.
     * When f = 1, the algorithm is deterministic and identical to the one
     * described above. Smaller values of f introduce randomness into the
     * algorithm and help prevent over-fitting, acting as a kind of regularization.
     * The algorithm also becomes faster, because regression trees have to be fit
-    * to smaller datasets at each iteration. Typically, f is set to 0.5, meaning
+    * to smaller dataSets at each iteration. Typically, f is set to 0.5, meaning
     * that one half of the training set is used to build each base learner.
     *
     * Also, like in bagging, sub-sampling allows one to define an out-of-bag
@@ -724,18 +726,19 @@ trait Operators {
     * @param y the class labels.
     * @param attributes the attribute properties. If not provided, all attributes
     *                   are treated as numeric values.
-    * @param ntrees the number of iterations (trees).
+    * @param nTrees the number of iterations (trees).
     * @param maxNodes the number of leaves in each tree.
     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
-    * @param subsample the sampling fraction for stochastic tree boosting.
+    * @param subSample the sampling fraction for stochastic tree boosting.
     *
     * @return Gradient boosted trees.
     */
-  def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
-    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
+  def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Option[Array[Attribute]] = None, nTrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subSample: Double = 0.7): GradientTreeBoost = {
+    val length = x.headOption.getOrElse(Array()).length
+    val attr = attributes.getOrElse(numericAttributes(length))
 
     time {
-      new GradientTreeBoost(attr, x, y, ntrees, maxNodes, shrinkage, subsample)
+      new GradientTreeBoost(attr, x, y, nTrees, maxNodes, shrinkage, subSample)
     }
   }
 
@@ -769,22 +772,20 @@ trait Operators {
     * @param y the response variable.
     * @param attributes the attribute properties. If not provided, all attributes
     *                   are treated as numeric values.
-    * @param ntrees the number of trees.
+    * @param nTrees the number of trees.
     * @param maxNodes the maximum number of leaf nodes in the trees.
     *
     * @return AdaBoost model.
     */
-  def adaboost(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 2): AdaBoost = {
-    val p = x(0).length
+  def adaBoost(x: Array[Array[Double]], y: Array[Int], attributes: Option[Array[Attribute]] = None, nTrees: Int = 500, maxNodes: Int = 2): AdaBoost = {
+    val arrayHead = x.headOption.getOrElse(Array())
 
-    val attr = if (attributes == null) {
-      val attr = new Array[Attribute](p)
-      for (i <- 0 until p) attr(i) = new NumericAttribute(s"V$i")
-      attr
-    } else attributes
+    val attr = attributes.getOrElse {
+      (for (i <- arrayHead.indices) yield new NumericAttribute(s"V$i")).toArray
+    }
 
     time {
-      new AdaBoost(attr, x, y, ntrees, maxNodes)
+      new AdaBoost(attr, x, y, nTrees, maxNodes)
     }
   }
 
@@ -934,11 +935,16 @@ trait Operators {
     * @param priori the priori probability of each class. If null, equal probability is assume for each class.
     * @param sigma the prior count of add-k smoothing of evidence.
     */
-  def naiveBayes(x: Array[Array[Double]], y: Array[Int], model: NaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): NaiveBayes = {
+  def naiveBayes(x: Array[Array[Double]], y: Array[Int], model: NaiveBayes.Model, priori: Option[Array[Double]] = None, sigma: Double = 1.0): NaiveBayes = {
     time {
-      val p = x(0).length
+      val p = x.headOption.getOrElse(Array()).length
       val k = Math.max(y) + 1
-      val naive = if (priori == null) new NaiveBayes(model, k, p, sigma) else new NaiveBayes(model, priori, p, sigma)
+
+      val naive = priori match {
+        case Some(prioriValue) => new NaiveBayes(model, prioriValue, p, sigma)
+        case None => new NaiveBayes(model, k, p, sigma)
+      }
+
       naive.learn(x, y)
       naive
     }
@@ -947,13 +953,13 @@ trait Operators {
   /** Creates a general naive Bayes classifier.
     *
     * @param priori the priori probability of each class.
-    * @param condprob the conditional distribution of each variable in
+    * @param condProb the conditional distribution of each variable in
     *                 each class. In particular, condprob[i][j] is the conditional
     *                 distribution P(x<sub>j</sub> | class i).
     */
-  def naiveBayes(priori: Array[Double], condprob: Array[Array[Distribution]]): NaiveBayes = {
+  def naiveBayes(priori: Array[Double], condProb: Array[Array[Distribution]]): NaiveBayes = {
     time {
-      new NaiveBayes(priori, condprob)
+      new NaiveBayes(priori, condProb)
     }
   }
 }
