@@ -1,7 +1,5 @@
 name := "smile-nd4j"
 
-libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.21"
-
 libraryDependencies ++= {
   val nd4jV = "0.8.0"
   Seq(
