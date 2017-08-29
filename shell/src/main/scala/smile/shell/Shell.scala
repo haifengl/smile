@@ -16,15 +16,14 @@
 
 package smile.shell
 
-import scala.tools.nsc.interpreter.ILoop
-
 /** Smile shell.
   *
   * @author Haifeng Li
   */
-class Shell extends ILoop  {
-  override def prompt = "smile> "
-  override def printWelcome = echo(
+object Shell {
+  val home = ammonite.ops.Path(System.getProperty("user.home")) / ".smile"
+  val prompt = "smile> "
+  val welcome =
     s"""
        |                                                       ..::''''::..
        |                                                     .;''        ``;.
@@ -37,9 +36,52 @@ class Shell extends ILoop  {
        |                                                       ``::,,,,::''
        |
        |  Welcome to Smile Shell; enter 'help<RETURN>' for the list of commands.
-       |  Type ":quit<RETURN>" to leave the Smile Shell
+       |  Type "exit<RETURN>" to leave the Smile Shell
        |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion}, Built at ${BuildInfo.builtAtString}
        |===============================================================================
      """.stripMargin
+
+  val imports =
+    s"""
+       |import smile._
+       |import smile.util._
+       |import smile.math._
+       |import java.lang.Math._
+       |import smile.math.Math.{log2, logistic, factorial, choose, random, randomInt, permutate, sum, mean, median, q1, q3, `var` => variance, sd, mad, min, max, whichMin, whichMax, unique, dot, distance, pdist, KullbackLeiblerDivergence => kld, JensenShannonDivergence => jsd, cov, cor, spearman, kendall, norm, norm1, norm2, normInf, standardize, normalize, rescale, unitize, unitize1, unitize2, root}
+       |import smile.math.distance._
+       |import smile.math.kernel._
+       |import smile.math.matrix._
+       |import smile.math.matrix.Matrix._
+       |import smile.stat.distribution._
+       |import smile.data._
+       |import java.awt.Color, smile.plot._
+       |import smile.interpolation._
+       |import smile.validation._
+       |import smile.association._
+       |import smile.regression._
+       |import smile.classification._
+       |import smile.feature._
+       |import smile.clustering._
+       |import smile.vq._
+       |import smile.manifold._
+       |import smile.mds._
+       |import smile.sequence._
+       |import smile.projection._
+       |import smile.nlp._
+       |import smile.wavelet._
+       |import smile.shell._
+       |
+     """.stripMargin
+
+  val repl = ammonite.Main(
+    predefCode = imports,
+    defaultPredef = true,
+    storageBackend = new ammonite.runtime.Storage.Folder(home),
+    welcomeBanner = Some(welcome),
+    verboseOutput = false
   )
+
+  def run() = repl.run()
+  def runCode(code: String) = repl.runCode(code)
+  def runScript(path: String, args: Seq[(String, Option[String])]) = repl.runScript(ammonite.ops.Path(path), args)
 }
