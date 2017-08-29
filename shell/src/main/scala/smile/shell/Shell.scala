@@ -73,7 +73,7 @@ object Shell {
        |import smile.nlp._
        |import smile.wavelet._
        |import smile.shell._
-       |
+       |repl.prompt() = "smile> "
      """.stripMargin
 
   val repl = ammonite.Main(
