@@ -34,19 +34,19 @@ public class Dataset<E> implements Iterable<Datum<E>> {
     /**
      * The name of dataset.
      */
-    private String name;
+    protected String name;
     /**
      * The optional detailed description of dataset.
      */
-    private String description = "";
+    protected String description = "";
     /**
      * The attribute property of response variable. null means no response variable.
      */
-    private Attribute response = null;
+    protected Attribute response = null;
     /**
      * The data objects.
      */
-    private List<Datum<E>> data = new ArrayList<>();
+    protected List<Datum<E>> data = new ArrayList<>();
 
     /**
      * Constructor.
@@ -125,7 +125,12 @@ public class Dataset<E> implements Iterable<Datum<E>> {
     public int size() {
         return data.size();
     }
-    
+
+    /**
+     * Returns the data set.
+     */
+    public List<Datum<E>> data() { return data; }
+
     /**
      * Add a datum item into the dataset.
      * @param x a datum item.

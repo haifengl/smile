@@ -26,8 +26,9 @@ import scala.collection.JavaConverters._
   * @author Haifeng Li
   */
 package object data {
+  type Row = Datum[Array[Double]]
 
-  implicit def pimpDataset(data: AttributeDataset): PimpedDataset = new PimpedDataset(data)
+  implicit def pimpDataset(data: AttributeDataset): DataFrame = DataFrame(data)
   implicit def pimpSparseDataset(data: SparseDataset): PimpedSparseDataset = new PimpedSparseDataset(data)
 
   def summary(x: Array[Double]): Unit = {
@@ -55,74 +56,7 @@ package object data {
 
 package data {
 
-  import smile.math.{SparseArray, Math}
-
-  private[data] class PimpedDataset(data: AttributeDataset) extends Iterable[Datum[Array[Double]]] {
-    override def iterator : Iterator[Datum[Array[Double]]] = data.iterator.asScala
-
-    /** Returns the row names. */
-    def rownames: Array[String] = map(_.name).toArray
-
-    /** Returns the columns names. */
-    def colnames: Array[String] = data.attributes().map(_.getName)
-
-    /** Returns the columns names. */
-    def names: Array[String] = colnames
-
-    def summary(): Unit = {
-      println(" \tmin\tq1\tmedian\tmean\tq3\tmax")
-      val matrix = unzip
-      for (i <- colnames.indices) {
-        val x = matrix.map(_(i))
-        val min = Math.min(x)
-        val q1 = Math.q1(x)
-        val median = Math.median(x)
-        val mean = Math.mean(x)
-        val q3 = Math.q3(x)
-        val max = Math.max(x)
-        println(f"${colnames(i)}\t$min%1.5f\t$q1%1.5f\t$median%1.5f\t$mean%1.5f\t$q3%1.5f\t$max%1.5f")
-      }
-    }
-
-    /** Shows the first few rows.
-      * Cannot use default parameter value, otherwise it confuses with iterator.head.
-      */
-    def head(n: Int): Unit = {
-      println(colnames.mkString("\t"))
-      for (i <- 0 until Math.min(data.size, n)) {
-        val x = data.get(i).x
-        println(x.map{xi => f"$xi%1.4f"}.mkString("\t"))
-      }
-    }
-
-    /** Shows the last few rows.
-      * Cannot use default parameter value, otherwise it confuses with iterator.tail.
-      */
-    def tail(n: Int): Unit = {
-      println(colnames.mkString("\t"))
-      for (i <- Math.max(0, data.size - n) until data.size) {
-        val x = data.get(i).x
-        println(x.map{xi => f"$xi%1.4f"}.mkString("\t"))
-      }
-    }
-
-    /** Unzip the data. If the data contains a response variable, it won't be copied. */
-    def unzip: Array[Array[Double]] = data.toArray(new Array[Array[Double]](data.size))
-
-    /** Split the data into x and y of Int */
-    def unzipInt: (Array[Array[Double]], Array[Int]) = {
-      val x = data.toArray(new Array[Array[Double]](data.size))
-      val y = data.toArray(new Array[Int](data.size))
-      (x, y)
-    }
-
-    /** Split the data into x and y of Double */
-    def unzipDouble: (Array[Array[Double]], Array[Double]) = {
-      val x = data.toArray(new Array[Array[Double]](data.size))
-      val y = data.toArray(new Array[Double](data.size))
-      (x, y)
-    }
-  }
+  import smile.math.SparseArray
 
   private[data] class PimpedSparseDataset(data: SparseDataset) extends Iterable[Datum[SparseArray]] {
     override def iterator : Iterator[Datum[SparseArray]] = data.iterator.asScala

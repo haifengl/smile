@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.data;
 
+import smile.math.Math;
+
 /**
  * A dataset of fixed number of attributes. All attribute values are stored as
  * double even if the attribute may be nominal, ordinal, string, or date.
@@ -56,5 +58,143 @@ public class AttributeDataset extends Dataset<double[]> {
      */
     public Attribute[] attributes() {
         return attributes;
+    }
+
+    @Override
+    public String toString() {
+        int n = 10;
+        String s = head(n);
+        if (size() <= n) return s;
+        else return s + "\n" + (size() - n) + " more rows...";
+    }
+
+    /** Shows the first few rows. */
+    public String head(int n) {
+        return toString(0, n);
+    }
+
+    /** Shows the last few rows. */
+    public String tail(int n) {
+        return toString(size() - n, size());
+    }
+
+    /**
+     * Stringify dataset.
+     * @param from starting row (inclusive)
+     * @param to ending row (exclusive)
+     */
+    public String toString(int from, int to) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append('\t');
+
+        if (response != null) {
+            sb.append(response.getName());
+        }
+
+        int p = attributes.length;
+        for (int j = 0; j < p; j++) {
+            sb.append('\t');
+            sb.append(attributes[j].getName());
+        }
+
+        int end = Math.min(data.size(), to);
+        for (int i = from; i < end; i++) {
+            sb.append(System.getProperty("line.separator"));
+
+            Datum<double[]> datum = data.get(i);
+            sb.append('[');
+            if (datum.name != null)
+                sb.append(datum.name);
+            else
+                sb.append(i+1);
+            sb.append("]\t");
+
+            if (response != null) {
+                double y = data.get(i).y;
+                if (response.getType() == Attribute.Type.NUMERIC)
+                    sb.append(String.format("%1.4f", y));
+                else
+                    sb.append(response.toString(y));
+            }
+
+            double[] x = datum.x;
+            for (int j = 0; j < p; j++) {
+                sb.append('\t');
+                Attribute attr = attributes[j];
+                if (attr.getType() == Attribute.Type.NUMERIC)
+                    sb.append(String.format("%1.4f", x[j]));
+                else
+                    sb.append(attr.toString(x[j]));
+            }
+        }
+
+        return sb.toString();
+    }
+
+    /** Returns a column. */
+    public double[] column(int i) {
+        if (i < 0 || i >= attributes.length) {
+            throw new IllegalArgumentException("Invalid column index: " + i);
+        }
+
+        double[] c = new double[size()];
+        for (int j = 0; j < c.length; j++) {
+            c[j] = data.get(j).x[i];
+        }
+        return c;
+    }
+
+    /** Returns a column. */
+    public double[] column(String col) {
+        int i = -1;
+        for (int j = 0; j < attributes.length; j++) {
+            if (attributes[j].getName().equals(col)) {
+                i = j;
+                break;
+            }
+        }
+
+        if (i == -1) {
+            throw new IllegalArgumentException("Invalid column name: " + col);
+        }
+
+        return column(i);
+    }
+
+    /** Returns a column. */
+    public double[] $(String col) {
+        return column(col);
+    }
+
+    /** Returns statistic summary. */
+    public AttributeDataset summary() {
+        Attribute[] attr = {
+                new NumericAttribute("min"),
+                new NumericAttribute("q1"),
+                new NumericAttribute("median"),
+                new NumericAttribute("mean"),
+                new NumericAttribute("q3"),
+                new NumericAttribute("max"),
+        };
+
+        AttributeDataset stat = new AttributeDataset(name + " Summary", attr);
+
+        for (int i = 0; i < attributes.length; i++) {
+            double[] x = column(i);
+            double[] s = new double[attr.length];
+            s[0] = Math.min(x);
+            s[0] = Math.q1(x);
+            s[0] = Math.median(x);
+            s[0] = Math.mean(x);
+            s[0] = Math.q3(x);
+            s[0] = Math.max(x);
+            Datum<double[]> datum = new Datum<>(s);
+            datum.name = attributes[i].getName();
+            datum.description = attributes[i].getDescription();
+            stat.add(datum);
+        }
+
+        return stat;
     }
 }
