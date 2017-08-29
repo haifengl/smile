@@ -34,9 +34,9 @@ object Main extends App {
     !isFailure
   }
 
-  def process(args: Array[String]): Boolean = {
+  def process(args: Array[String]) = {
     val command = new GenericRunnerCommand(args.toList, (x: String) => errorFn(x))
-    import command.{ settings, howToRun, thingToRun, shortUsageMsg, shouldStopWithInfo }
+    import command.{ settings, shortUsageMsg, shouldStopWithInfo }
     settings.usejavacp.value = true
     settings.deprecation.value = true
     def sampleCompiler = new Global(settings)   // def so it's not created unless needed
@@ -52,38 +52,23 @@ object Main extends App {
       if (isI)
         settings.Yreplsync.value = true
 
-      def combinedCode  = {
-        val files   = if (isI) dashi map (file => File(file).slurp()) else Nil
-        val str     = if (isE) List(dashe) else Nil
-
-        files ++ str mkString "\n\n"
-      }
-
-      def runTarget(): Either[Throwable, Boolean] = howToRun match {
-        case AsObject =>
-          ObjectRunner.runAndCatch(settings.classpathURLs, thingToRun, command.arguments)
-        case AsScript =>
-          ScriptRunner.runScriptAndCatch(settings, thingToRun, command.arguments)
-        case Error =>
-          Right(false)
-        case _  =>
-          Right(new Shell process settings)
-      }
-
       /** If -e and -i were both given, we want to execute the -e code after the
         *  -i files have been included, so they are read into strings and prepended to
         *  the code given in -e.  The -i option is documented to only make sense
         *  interactively so this is a pretty reasonable assumption.
-        *
-        *  This all needs a rewrite though.
         */
+      if (isI)
+        dashi.foreach(file => Shell.runScript(file, Seq()))//command.arguments))
+
       if (isE) {
-        ScriptRunner.runCommand(settings, combinedCode, thingToRun +: command.arguments)
+        val code = dashe.mkString("\n\n")
+        Shell.runCode(code)
       }
-      else runTarget() match {
-        case Left(ex) => errorFn("", Some(ex))  // there must be a useful message of hope to offer here
-        case Right(b) => b
-      }
+
+      if (!isI && !isE)
+        Shell.run()
+
+      true
     }
 
     if (!command.ok)
