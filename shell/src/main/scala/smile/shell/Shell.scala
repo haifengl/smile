@@ -16,12 +16,15 @@
 
 package smile.shell
 
+import ammonite.ops.Path
+import ammonite.runtime.Storage
+
 /** Smile shell.
   *
   * @author Haifeng Li
   */
 object Shell {
-  val home = ammonite.ops.Path(System.getProperty("user.home")) / ".smile"
+  val home = Path(System.getProperty("user.home")) / ".smile"
   val prompt = "smile> "
   val welcome =
     s"""
@@ -76,12 +79,12 @@ object Shell {
   val repl = ammonite.Main(
     predefCode = imports,
     defaultPredef = true,
-    storageBackend = new ammonite.runtime.Storage.Folder(home),
+    storageBackend = new Storage.Folder(home),
     welcomeBanner = Some(welcome),
     verboseOutput = false
   )
 
   def run() = repl.run()
   def runCode(code: String) = repl.runCode(code)
-  def runScript(path: String, args: Seq[(String, Option[String])]) = repl.runScript(ammonite.ops.Path(path), args)
+  def runScript(path: Path) = repl.runScript(path, Seq.empty)
 }
