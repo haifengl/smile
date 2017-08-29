@@ -16,7 +16,8 @@
 
 package smile.shell
 
-import scala.tools.nsc._, GenericRunnerCommand._, io.File
+import ammonite.main.Cli
+import ammonite.ops.{Path, pwd}
 
 /** An object that runs Smile script or interactive shell.
   * Based on Scala MainGenericRunner.
@@ -25,57 +26,32 @@ import scala.tools.nsc._, GenericRunnerCommand._, io.File
   */
 object Main extends App {
 
-  // This is actually the main function
-  if (!process(args)) sys.exit(1)
+  Cli.groupArgs(args.toList, Cli.ammoniteArgSignature, Cli.Config()) match{
+    case Left(msg) =>
+      println(msg)
+      false
+    case Right((cliConfig, leftoverArgs)) =>
+      if (cliConfig.help) {
+        println(Cli.ammoniteHelp)
+        true
+      } else {
+        (cliConfig.code, leftoverArgs) match{
+          case (Some(code), Nil) =>
+            Shell.runCode(code)
 
-  def errorFn(str: String, e: Option[Throwable] = None, isFailure: Boolean = true): Boolean = {
-    if (str.nonEmpty) Console.err println str
-    e foreach (_.printStackTrace())
-    !isFailure
-  }
+          case (None, Nil) =>
+            Shell.run()
+            true
 
-  def process(args: Array[String]) = {
-    val command = new GenericRunnerCommand(args.toList, (x: String) => errorFn(x))
-    import command.{ settings, shortUsageMsg, shouldStopWithInfo }
-    settings.usejavacp.value = true
-    settings.deprecation.value = true
-    def sampleCompiler = new Global(settings)   // def so it's not created unless needed
+          case (None, head :: rest) if head.startsWith("-") =>
+            val failureMsg = s"Unknown option: $head\nUse --help to list possible options"
+            println(failureMsg)
+            false
 
-    def run(): Boolean = {
-      def isE   = !settings.execute.isDefault
-      def dashe = settings.execute.value
-
-      def isI   = !settings.loadfiles.isDefault
-      def dashi = settings.loadfiles.value
-
-      // Deadlocks on startup under -i unless we disable async.
-      if (isI)
-        settings.Yreplsync.value = true
-
-      /** If -e and -i were both given, we want to execute the -e code after the
-        *  -i files have been included, so they are read into strings and prepended to
-        *  the code given in -e.  The -i option is documented to only make sense
-        *  interactively so this is a pretty reasonable assumption.
-        */
-      if (isI)
-        dashi.foreach(file => Shell.runScript(file, Seq()))//command.arguments))
-
-      if (isE) {
-        val code = dashe.mkString("\n\n")
-        Shell.runCode(code)
+          case (None, head :: rest) =>
+            val success = Shell.runScript(Path(head, pwd)) // ignore script args for now
+            success
+        }
       }
-
-      if (!isI && !isE)
-        Shell.run()
-
-      true
-    }
-
-    if (!command.ok)
-      errorFn(f"%n$shortUsageMsg")
-    else if (shouldStopWithInfo)
-      errorFn(command getInfoMessage sampleCompiler, isFailure = false)
-    else
-      run()
   }
 }
