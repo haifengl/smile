@@ -118,7 +118,7 @@ public class FeatureSet <T> {
      * @return an attribute dataset with generated features 
      */
     public AttributeDataset f(Dataset<T> data) {
-        AttributeDataset dataset = new AttributeDataset(data.getName(), attributes(), data.response()); 
+        AttributeDataset dataset = new AttributeDataset(data.getName(), attributes(), data.responseAttribute());
         dataset.setDescription(data.getDescription());
 
         for (int i = 0; i < data.size(); i++) {

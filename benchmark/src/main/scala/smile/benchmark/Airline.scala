@@ -62,7 +62,7 @@ object Airline {
       if (attr.isInstanceOf[NominalAttribute])
         println(attr.getName + attr.asInstanceOf[NominalAttribute].values.mkString(", "))
     }
-    println("class: " + train.response.asInstanceOf[NominalAttribute].values.mkString(", "))
+    println("class: " + train.responseAttribute().asInstanceOf[NominalAttribute].values.mkString(", "))
     println("train data size: " + train.size + ", test data size: " + test.size)
 
     val (x, y) = train.unzipInt

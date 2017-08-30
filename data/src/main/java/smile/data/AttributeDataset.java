@@ -60,6 +60,13 @@ public class AttributeDataset extends Dataset<double[]> {
         return attributes;
     }
 
+    /** Returns the array of data items. */
+    public double[][] x() {
+        double[][] x = new double[size()][];
+        toArray(x);
+        return x;
+    }
+
     @Override
     public String toString() {
         int n = 10;
@@ -103,12 +110,14 @@ public class AttributeDataset extends Dataset<double[]> {
             sb.append(System.getProperty("line.separator"));
 
             Datum<double[]> datum = data.get(i);
-            sb.append('[');
-            if (datum.name != null)
+            if (datum.name != null) {
                 sb.append(datum.name);
-            else
-                sb.append(i+1);
-            sb.append("]\t");
+            } else {
+                sb.append('[');
+                sb.append(i + 1);
+                sb.append(']');
+            }
+            sb.append('\t');
 
             if (response != null) {
                 double y = data.get(i).y;
@@ -133,20 +142,21 @@ public class AttributeDataset extends Dataset<double[]> {
     }
 
     /** Returns a column. */
-    public double[] column(int i) {
+    public AttributeVector column(int i) {
         if (i < 0 || i >= attributes.length) {
             throw new IllegalArgumentException("Invalid column index: " + i);
         }
 
-        double[] c = new double[size()];
-        for (int j = 0; j < c.length; j++) {
-            c[j] = data.get(j).x[i];
+        double[] vector = new double[size()];
+        for (int j = 0; j < vector.length; j++) {
+            vector[j] = data.get(j).x[i];
         }
-        return c;
+
+        return new AttributeVector(attributes[i], vector);
     }
 
     /** Returns a column. */
-    public double[] column(String col) {
+    public AttributeVector column(String col) {
         int i = -1;
         for (int j = 0; j < attributes.length; j++) {
             if (attributes[j].getName().equals(col)) {
@@ -160,11 +170,6 @@ public class AttributeDataset extends Dataset<double[]> {
         }
 
         return column(i);
-    }
-
-    /** Returns a column. */
-    public double[] $(String col) {
-        return column(col);
     }
 
     /** Returns statistic summary. */
@@ -181,14 +186,14 @@ public class AttributeDataset extends Dataset<double[]> {
         AttributeDataset stat = new AttributeDataset(name + " Summary", attr);
 
         for (int i = 0; i < attributes.length; i++) {
-            double[] x = column(i);
+            double[] x = column(i).vector();
             double[] s = new double[attr.length];
             s[0] = Math.min(x);
-            s[0] = Math.q1(x);
-            s[0] = Math.median(x);
-            s[0] = Math.mean(x);
-            s[0] = Math.q3(x);
-            s[0] = Math.max(x);
+            s[1] = Math.q1(x);
+            s[2] = Math.median(x);
+            s[3] = Math.mean(x);
+            s[4] = Math.q3(x);
+            s[5] = Math.max(x);
             Datum<double[]> datum = new Datum<>(s);
             datum.name = attributes[i].getName();
             datum.description = attributes[i].getDescription();

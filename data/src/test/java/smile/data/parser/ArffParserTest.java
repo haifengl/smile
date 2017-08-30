@@ -62,22 +62,22 @@ public class ArffParserTest {
             double[][] x = weather.toArray(new double[weather.size()][]);
             int[] y = weather.toArray(new int[weather.size()]);
             
-            assertEquals(Attribute.Type.NOMINAL, weather.response().getType());
+            assertEquals(Attribute.Type.NOMINAL, weather.responseAttribute().getType());
             for (Attribute attribute : weather.attributes()) {
                 assertEquals(Attribute.Type.NOMINAL, attribute.getType());
             }
             
             assertEquals(14, weather.size());
             assertEquals(4, weather.attributes().length);
-            assertEquals("no", weather.response().toString(y[0]));
-            assertEquals("no", weather.response().toString(y[1]));
-            assertEquals("yes", weather.response().toString(y[2]));
+            assertEquals("no", weather.responseAttribute().toString(y[0]));
+            assertEquals("no", weather.responseAttribute().toString(y[1]));
+            assertEquals("yes", weather.responseAttribute().toString(y[2]));
             assertEquals("sunny", weather.attributes()[0].toString(x[0][0]));
             assertEquals("hot", weather.attributes()[1].toString(x[0][1]));
             assertEquals("high", weather.attributes()[2].toString(x[0][2]));
             assertEquals("FALSE", weather.attributes()[3].toString(x[0][3]));
 
-            assertEquals("no", weather.response().toString(y[13]));            
+            assertEquals("no", weather.responseAttribute().toString(y[13]));
             assertEquals("rainy", weather.attributes()[0].toString(x[13][0]));
             assertEquals("mild", weather.attributes()[1].toString(x[13][1]));
             assertEquals("high", weather.attributes()[2].toString(x[13][2]));
@@ -100,22 +100,22 @@ public class ArffParserTest {
             double[][] x = iris.toArray(new double[iris.size()][]);
             int[] y = iris.toArray(new int[iris.size()]);
             
-            assertEquals(Attribute.Type.NOMINAL, iris.response().getType());
+            assertEquals(Attribute.Type.NOMINAL, iris.responseAttribute().getType());
             for (Attribute attribute : iris.attributes()) {
                 assertEquals(Attribute.Type.NUMERIC, attribute.getType());
             }
             
             assertEquals(150, iris.size());
             assertEquals(4, iris.attributes().length);
-            assertEquals("Iris-setosa", iris.response().toString(y[0]));
-            assertEquals("Iris-setosa", iris.response().toString(y[1]));
-            assertEquals("Iris-setosa", iris.response().toString(y[2]));
+            assertEquals("Iris-setosa", iris.responseAttribute().toString(y[0]));
+            assertEquals("Iris-setosa", iris.responseAttribute().toString(y[1]));
+            assertEquals("Iris-setosa", iris.responseAttribute().toString(y[2]));
             assertEquals(5.1, x[0][0], 1E-7);
             assertEquals(3.5, x[0][1], 1E-7);
             assertEquals(1.4, x[0][2], 1E-7);
             assertEquals(0.2, x[0][3], 1E-7);
 
-            assertEquals("Iris-virginica", iris.response().toString(y[149]));            
+            assertEquals("Iris-virginica", iris.responseAttribute().toString(y[149]));
             assertEquals(5.9, x[149][0], 1E-7);
             assertEquals(3.0, x[149][1], 1E-7);
             assertEquals(5.1, x[149][2], 1E-7);

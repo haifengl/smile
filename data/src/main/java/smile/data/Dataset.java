@@ -115,10 +115,26 @@ public class Dataset<E> implements Iterable<Datum<E>> {
      * @return the attribute of the response variable. null means no response
      * variable in this dataset.
      */
-    public Attribute response() {
+    public Attribute responseAttribute() {
         return response;
     }
-    
+
+    /**
+     * Returns the response attribute vector. null means no response
+     * variable in this dataset.
+     * @return the response attribute vector. null means no response
+     * variable in this dataset.
+     */
+    /*
+    public AttributeVector response() {
+        double[] y = new double[data.size()];
+        for (int i = 0; i < y.length; i++) {
+            y[i] = data.get(i).y;
+        }
+        return new AttributeVector(response, y);
+    }
+    */
+
     /**
      * Returns the size of dataset.
      */
@@ -268,7 +284,21 @@ public class Dataset<E> implements Iterable<Datum<E>> {
             }
         };
     }
-    
+
+    /** Returns the response values. */
+    public double[] y() {
+        double[] y = new double[size()];
+        toArray(y);
+        return y;
+    }
+
+    /** Returns the class labels. */
+    public int[] labels() {
+        int[] y = new int[size()];
+        toArray(y);
+        return y;
+    }
+
     /**
      * Returns an array containing all of the elements in this dataset in
      * proper sequence (from first to last element); the runtime type of the
