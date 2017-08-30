@@ -57,7 +57,7 @@ public class PPCADemo extends ProjectionDemo {
         PlotCanvas plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
         if (names != null) {
             plot.points(y, names);
-        } else if (dataset[datasetIndex].response() != null) {
+        } else if (dataset[datasetIndex].responseAttribute() != null) {
             int[] labels = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
             for (int i = 0; i < y.length; i++) {
                 plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
@@ -75,7 +75,7 @@ public class PPCADemo extends ProjectionDemo {
         plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
         if (names != null) {
             plot.points(y, names);
-        } else if (dataset[datasetIndex].response() != null) {
+        } else if (dataset[datasetIndex].responseAttribute() != null) {
             int[] labels = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
             for (int i = 0; i < y.length; i++) {
                 plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
@@ -92,7 +92,7 @@ public class PPCADemo extends ProjectionDemo {
         plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
         if (names != null) {
             plot.points(y, names);
-        } else if (dataset[datasetIndex].response() != null) {
+        } else if (dataset[datasetIndex].responseAttribute() != null) {
             int[] labels = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
             for (int i = 0; i < y.length; i++) {
                 plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
@@ -111,7 +111,7 @@ public class PPCADemo extends ProjectionDemo {
         plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
         if (names != null) {
             plot.points(y, names);
-        } else if (dataset[datasetIndex].response() != null) {
+        } else if (dataset[datasetIndex].responseAttribute() != null) {
             int[] labels = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
             for (int i = 0; i < y.length; i++) {
                 plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);

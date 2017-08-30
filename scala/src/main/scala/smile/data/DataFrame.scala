@@ -42,6 +42,14 @@ case class DataFrame(data: AttributeDataset) extends Dynamic with Traversable[Ro
   override def size: Int = data.size
   def iterator : Iterator[Row] = rows.iterator
 
+  override def filter(p: (Row) => Boolean): DataFrame = {
+    val dataset = new AttributeDataset(data.name, data.attributes, data.response)
+    rows.foreach { row =>
+      if (p(row)) dataset.add(row)
+    }
+    DataFrame(dataset)
+  }
+
   /** Returns the row names. */
   val rownames: Array[String] = map(_.name).toArray
 
@@ -52,28 +60,20 @@ case class DataFrame(data: AttributeDataset) extends Dynamic with Traversable[Ro
   def names: Array[String] = colnames
 
   /** Returns a column. */
-  def apply(col: String): Array[Double] = data.column(col)
+  def apply(col: String): AttributeVector = data.column(col)
 
   /** Returns a column. */
-  def applyDynamic(col: String): Array[Double] = apply(col)
+  def applyDynamic(col: String): AttributeVector = apply(col)
 
   /** Returns a column. */
-  def selectDynamic(col: String): Array[Double] = apply(col)
+  def selectDynamic(col: String): AttributeVector = apply(col)
 
   /** Unzip the data. If the data contains a response variable, it won't be copied. */
-  def unzip: Array[Array[Double]] = data.toArray(new Array[Array[Double]](data.size))
+  def unzip: Array[Array[Double]] = data.x
 
   /** Split the data into x and y of Int */
-  def unzipInt: (Array[Array[Double]], Array[Int]) = {
-    val x = data.toArray(new Array[Array[Double]](data.size))
-    val y = data.toArray(new Array[Int](data.size))
-    (x, y)
-  }
+  def unzipInt: (Array[Array[Double]], Array[Int]) = (data.x, data.labels)
 
   /** Split the data into x and y of Double */
-  def unzipDouble: (Array[Array[Double]], Array[Double]) = {
-    val x = data.toArray(new Array[Array[Double]](data.size))
-    val y = data.toArray(new Array[Double](data.size))
-    (x, y)
-  }
+  def unzipDouble: (Array[Array[Double]], Array[Double]) = (data.x, data.y)
 }
