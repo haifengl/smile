@@ -35,8 +35,21 @@ public class GaussianKernel implements MercerKernel<double[]>, Serializable {
      * The width of the kernel.
      */
     private double gamma;
-    
+
     /**
+     * Should we automatically compute gamma?
+     */
+    private boolean auto;
+
+    /**
+     * Constructor. Automatically compute gamma as {@code (1 / num_features)}
+     */
+    public GaussianKernel() {
+      this.auto = true;
+    }
+
+    /**
+     *
      * Constructor.
      * @param sigma the smooth/width parameter of Gaussian kernel.
      */
@@ -44,18 +57,23 @@ public class GaussianKernel implements MercerKernel<double[]>, Serializable {
         if (sigma <= 0)
             throw new IllegalArgumentException("sigma is not positive.");
 
+        this.auto = false;
         this.gamma = 0.5 / (sigma * sigma);
     }
 
     @Override
     public String toString() {
-        return String.format("Gaussian Kernel (\u02E0 = %.4f)", Math.sqrt(0.5/gamma));
+        return auto
+          ? "Gaussian Kernel (auto)"
+          : String.format("Gaussian Kernel (\u02E0 = %.4f)", Math.sqrt(0.5/gamma));
     }
 
     @Override
     public double k(double[] x, double[] y) {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+
+        if (auto) gamma = 1.0 / x.length;
 
         return Math.exp(-gamma * Math.squaredDistance(x, y));
     }
