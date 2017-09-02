@@ -107,6 +107,18 @@ public class DateAttribute extends Attribute {
     }
 
     /**
+     * Retruns the date object from internal double encoding.
+     * @param x the date in double encoding.
+     */
+    public Date toDate(double x) {
+        if (Double.isNaN(x)) {
+            return null;
+        }
+
+        return new Date(Double.doubleToRawLongBits(x));
+    }
+
+    /**
      * Returns the double value representation of a data object.
      */
     public double valueOf(Date date) {
