@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.data;
 
+import java.util.Date;
 import smile.math.Math;
 
 /**
@@ -31,6 +32,65 @@ public class AttributeDataset extends Dataset<double[]> {
      * The list of attributes.
      */
     private Attribute[] attributes;
+
+    public class Row extends Datum<double[]> {
+        /**
+         * Constructor.
+         * @param x the datum.
+         */
+        public Row(double[] x) {
+            super(x);
+        }
+
+        /**
+         * Constructor.
+         * @param x the datum.
+         * @param y the class label or real-valued response.
+         */
+        public Row(double[] x, double y) {
+            super(x, y);
+        }
+
+        /**
+         * Constructor.
+         * @param x the datum.
+         * @param y the class label or real-valued response.
+         * @param weight the weight of datum. The particular meaning of weight
+         * depends on applications and machine learning algorithms. Although there
+         * are on explicit requirements on the weights, in general, they should be
+         * positive.
+         */
+        public Row(double[] x, double y, double weight) {
+            super(x, y, weight);
+        }
+
+        /** Returns the class label in string format. */
+        public String label() {
+            if (response.getType() != Attribute.Type.NOMINAL) {
+                throw new IllegalStateException("The response is not of nominal type");
+            }
+            return response.toString(y);
+        }
+
+        /**
+         * Returns an element value in string format.
+         * @param i the element index.
+         */
+        public String string(int i) {
+            return attributes[i].toString(x[i]);
+        }
+
+        /**
+         * Returns a date element.
+         * @param i the element index.
+         */
+        public Date date(int i) {
+            if (attributes[i].getType() != Attribute.Type.DATE) {
+                throw new IllegalStateException("Attribute is not of date type");
+            }
+            return ((DateAttribute) attributes[i]).toDate(x[i]);
+        }
+    }
 
     /**
      * Constructor.
@@ -65,6 +125,74 @@ public class AttributeDataset extends Dataset<double[]> {
         double[][] x = new double[size()][];
         toArray(x);
         return x;
+    }
+
+    @Override
+    public Datum<double[]> add(Datum<double[]> x) {
+        if (!(x instanceof Row)) {
+            throw new IllegalArgumentException("The added Datum is not of type AttributeDataset.Row");
+        }
+
+        return super.add(x);
+    }
+
+    /**
+     * Add a datum item into the dataset.
+     * @param x a datum item.
+     * @return the added datum item.
+     */
+    public Row add(Row x) {
+        data.add(x);
+        return x;
+    }
+
+    @Override
+    public Row add(double[] x) {
+        return add(new Row(x));
+    }
+
+    @Override
+    public Row add(double[] x, int y) {
+        if (response == null) {
+            throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
+        }
+
+        if (response.getType() != Attribute.Type.NOMINAL) {
+            throw new IllegalArgumentException(RESPONSE_NOT_NOMINAL);
+        }
+
+        return add(new Row(x, y));
+    }
+
+    @Override
+    public Row add(double[] x, int y, double weight) {
+        if (response == null) {
+            throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
+        }
+
+        if (response.getType() != Attribute.Type.NOMINAL) {
+            throw new IllegalArgumentException(RESPONSE_NOT_NOMINAL);
+        }
+
+        return add(new Row(x, y, weight));
+    }
+
+    @Override
+    public Row add(double[] x, double y) {
+        if (response == null) {
+            throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
+        }
+
+        return add(new Row(x, y));
+    }
+
+    @Override
+    public Row add(double[] x, double y, double weight) {
+        if (response == null) {
+            throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
+        }
+
+        return add(new Row(x, y, weight));
     }
 
     @Override

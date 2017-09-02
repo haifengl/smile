@@ -28,9 +28,9 @@ import java.util.List;
  * @author Haifeng Li
  */
 public class Dataset<E> implements Iterable<Datum<E>> {
-    private static final String DATASET_HAS_NO_RESPONSE = "The dataset has no response values.";
-    private static final String RESPONSE_NOT_NOMINAL = "The response variable is not nominal.";
-    private static final String RESPONSE_NOT_NUMERIC = "The response variable is not numeric.";
+    protected static final String DATASET_HAS_NO_RESPONSE = "The dataset has no response values.";
+    protected static final String RESPONSE_NOT_NOMINAL = "The response variable is not nominal.";
+    protected static final String RESPONSE_NOT_NUMERIC = "The response variable is not numeric.";
     /**
      * The name of dataset.
      */
@@ -125,7 +125,6 @@ public class Dataset<E> implements Iterable<Datum<E>> {
      * @return the response attribute vector. null means no response
      * variable in this dataset.
      */
-    /*
     public AttributeVector response() {
         double[] y = new double[data.size()];
         for (int i = 0; i < y.length; i++) {
@@ -133,7 +132,6 @@ public class Dataset<E> implements Iterable<Datum<E>> {
         }
         return new AttributeVector(response, y);
     }
-    */
 
     /**
      * Returns the size of dataset.
@@ -150,25 +148,29 @@ public class Dataset<E> implements Iterable<Datum<E>> {
     /**
      * Add a datum item into the dataset.
      * @param x a datum item.
+     * @return the added datum item.
      */
-    public void add(Datum<E> x) {
+    public Datum<E> add(Datum<E> x) {
         data.add(x);
+        return x;
     }
     
     /**
      * Add a datum item into the dataset.
      * @param x a datum item.
+     * @return the added datum item.
      */
-    public void add(E x) {
-        add(new Datum<>(x));
+    public Datum<E> add(E x) {
+        return add(new Datum<>(x));
     }
 
     /**
      * Add a datum item into the dataset.
      * @param x a datum item.
      * @param y the class label of the datum.
+     * @return the added datum item.
      */
-    public void add(E x, int y) {
+    public Datum<E> add(E x, int y) {
         if (response == null) {
             throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
         }
@@ -177,7 +179,7 @@ public class Dataset<E> implements Iterable<Datum<E>> {
             throw new IllegalArgumentException(RESPONSE_NOT_NOMINAL);
         }
         
-        add(new Datum<>(x, y));
+        return add(new Datum<>(x, y));
     }
 
     /**
@@ -185,11 +187,12 @@ public class Dataset<E> implements Iterable<Datum<E>> {
      * @param x a datum item.
      * @param y the class label of the datum.
      * @param weight the weight of datum. The particular meaning of weight
-     * depends on applications and machine learning algorithms. Although there
-     * are on explicit requirements on the weights, in general, they should be
-     * positive.
+     *               depends on applications and machine learning algorithms.
+     *               Although there are on explicit requirements on the weights,
+     *               in general, they should be positive.
+     * @return the added datum item.
      */
-    public void add(E x, int y, double weight) {
+    public Datum<E> add(E x, int y, double weight) {
         if (response == null) {
             throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
         }
@@ -198,15 +201,16 @@ public class Dataset<E> implements Iterable<Datum<E>> {
             throw new IllegalArgumentException(RESPONSE_NOT_NOMINAL);
         }
         
-        add(new Datum<>(x, y, weight));
+        return add(new Datum<>(x, y, weight));
     }
 
     /**
      * Add a datum item into the dataset.
      * @param x a datum item.
      * @param y the real-valued response for regression.
+     * @return the added datum item.
      */
-    public void add(E x, double y) {
+    public Datum<E> add(E x, double y) {
         if (response == null) {
             throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
         }
@@ -215,18 +219,19 @@ public class Dataset<E> implements Iterable<Datum<E>> {
             throw new IllegalArgumentException(RESPONSE_NOT_NUMERIC);
         }
         
-        add(new Datum<>(x, y));
+        return add(new Datum<>(x, y));
     }
 
     /**
      * Add a datum item into the dataset.
      * @param x a datum item.
      * @param weight the weight of datum. The particular meaning of weight
-     * depends on applications and machine learning algorithms. Although there
-     * are on explicit requirements on the weights, in general, they should be
-     * positive.
+     *               depends on applications and machine learning algorithms.
+     *               Although there are on explicit requirements on the weights,
+     *               in general, they should be positive.
+     * @return the added datum item.
      */
-    public void add(E x, double y, double weight) {
+    public Datum<E> add(E x, double y, double weight) {
         if (response == null) {
             throw new IllegalArgumentException(DATASET_HAS_NO_RESPONSE);
         }
@@ -235,7 +240,7 @@ public class Dataset<E> implements Iterable<Datum<E>> {
             throw new IllegalArgumentException(RESPONSE_NOT_NUMERIC);
         }
         
-        add(new Datum<>(x, y, weight));
+        return add(new Datum<>(x, y, weight));
     }
 
     /**

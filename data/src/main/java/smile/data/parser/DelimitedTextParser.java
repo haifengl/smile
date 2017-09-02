@@ -27,7 +27,6 @@ import java.text.ParseException;
 
 import smile.data.Attribute;
 import smile.data.AttributeDataset;
-import smile.data.Datum;
 import smile.data.NumericAttribute;
 
 /**
@@ -344,9 +343,8 @@ public class DelimitedTextParser {
                 }
             }
 
-            Datum<double[]> datum = new Datum<>(x, y);
+            AttributeDataset.Row datum = data.add(x, y);
             datum.name = rowName;
-            data.add(datum);
         }
 
         while ((line = reader.readLine()) != null) {
@@ -374,9 +372,8 @@ public class DelimitedTextParser {
                 }
             }
 
-            Datum<double[]> datum = new Datum<>(x, y);
+            AttributeDataset.Row datum = data.add(x, y);
             datum.name = rowName;
-            data.add(datum);
         }
 
         return data;
