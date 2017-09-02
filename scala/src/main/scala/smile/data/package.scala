@@ -26,7 +26,6 @@ import scala.collection.JavaConverters._
   * @author Haifeng Li
   */
 package object data {
-  type Row = Datum[Array[Double]]
 
   implicit def pimpDataset(data: AttributeDataset): DataFrame = DataFrame(data)
   implicit def pimpSparseDataset(data: SparseDataset): PimpedSparseDataset = new PimpedSparseDataset(data)

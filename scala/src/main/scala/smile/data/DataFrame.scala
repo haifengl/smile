@@ -19,30 +19,24 @@ package smile.data
 import scala.language.dynamics
 import scala.language.implicitConversions
 import scala.collection.JavaConverters._
-import smile.math.Math
 
 /**
   * Immutable data frame.
   * @param data underlying attribute dataset.
   */
-case class DataFrame(data: AttributeDataset) extends Dynamic with Traversable[Row] {
-  val rows: List[Row] = data.data().asScala.toList
+case class DataFrame(data: AttributeDataset) extends Dynamic {
+  type Row = data.Row
+  lazy val rows = data.data().asScala.map(_.asInstanceOf[Row])
 
-  override def copyToArray[B >: Row](xs: Array[B], start: Int, len: Int): Unit = rows.copyToArray(xs, start, len)
-  override def find(p: (Row) => Boolean): Option[Row] = rows.find(p)
-  override def exists(p: (Row) => Boolean): Boolean = rows.exists(p)
-  override def forall(p: (Row) => Boolean): Boolean = rows.forall(p)
-  override def foreach[U](p: (Row) => U): Unit = rows.foreach(p)
-  override def hasDefiniteSize: Boolean = rows.hasDefiniteSize
-  override def isEmpty: Boolean = rows.isEmpty
-  override def seq: Traversable[Row] = rows.seq
-  override def toIterator: Iterator[Row] = rows.toIterator
-  override def toStream: Stream[Row] = rows.toStream
+  def size: Int = data.size
+  def find(p: (Row) => Boolean): Option[Row] = rows.find(p)
+  def exists(p: (Row) => Boolean): Boolean = rows.exists(p)
+  def forall(p: (Row) => Boolean): Boolean = rows.forall(p)
+  def map[U](p: (Row) => U): Traversable[U] = rows.map(p)
+  def foreach[U](p: (Row) => U): Unit = rows.foreach(p)
+  def isEmpty: Boolean = rows.isEmpty
 
-  override def size: Int = data.size
-  def iterator : Iterator[Row] = rows.iterator
-
-  override def filter(p: (Row) => Boolean): DataFrame = {
+  def filter(p: (Row) => Boolean): DataFrame = {
     val dataset = new AttributeDataset(data.name, data.attributes, data.response)
     rows.foreach { row =>
       if (p(row)) dataset.add(row)
