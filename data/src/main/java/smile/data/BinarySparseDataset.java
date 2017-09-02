@@ -90,7 +90,7 @@ public class BinarySparseDataset extends Dataset<int[]> {
      * into ascending order.
      */
     @Override
-    public void add(Datum<int[]> datum) {
+    public Datum<int[]> add(Datum<int[]> datum) {
         int[] x = datum.x;
         
         for (int xi : x) {
@@ -122,7 +122,7 @@ public class BinarySparseDataset extends Dataset<int[]> {
             colSize[xi]++;
         }
         
-        super.add(datum);
+        return super.add(datum);
     }
     
     /**
