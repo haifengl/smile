@@ -55,7 +55,7 @@ public class ConfusionMatrix {
 		
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append("ROW=truth and COL=predicted\n\n");
+		sb.append("ROW=truth and COL=predicted\n");
 		
 		for(int i = 0; i < matrix.length; i++){
 			sb.append("class "+i+"\t: ");
