@@ -584,6 +584,14 @@ public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier
     }
 
     /**
+     * Returns the weights of a layer.
+     * @param layer the layer of netural network, 0 for input layer.
+     */
+    public double[][] getWeight(int layer) {
+        return net[layer].weight;
+    }
+
+    /**
      * Sets the input vector into the input layer.
      * @param x the input vector.
      */
