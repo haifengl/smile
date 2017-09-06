@@ -1079,6 +1079,46 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
         return this;
     }
 
+    /** Support vector. */
+    public class SupportVector implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        /**
+         * Support vector.
+         */
+        public T x;
+        /**
+         * Support vector label.
+         */
+        public int y;
+        /**
+         * Lagrangian multiplier of support vector.
+         */
+        public double alpha;
+
+        public SupportVector(T x, int y, double alpha) {
+            this.x = x;
+            this.y = y;
+            this.alpha = alpha;
+        }
+    }
+
+    /** Returns the support vectors of binary nonlinear SVM. */
+    public List<SupportVector> getSupportVectors() {
+        if (svm == null || svm.sv == null) {
+            throw new UnsupportedOperationException("getSupportVectors is only applicable to binary nonlinear SVM");
+        }
+
+        int n = svm.sv.size();
+        List<SupportVector> sv = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            LASVM.SupportVector v = svm.sv.get(i);
+            sv.add(new SupportVector(v.x, v.y, v.alpha));
+        }
+
+        return sv;
+    }
+
     @Override
     public void learn(T x, int y) {
         learn(x, y, 1.0);
