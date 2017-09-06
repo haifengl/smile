@@ -36,7 +36,7 @@
     <h2 id="settings">Settings</h2>
 
     <p>Smile runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS).
-        All you need is to have <code>Java</code> installed on your system <code>PATH</code>,
+        All you need is to have <code>Java 8</code> installed on your system <code>PATH</code>,
         or the <code>JAVA_HOME</code> environment variable pointing to a Java installation.</p>
 
     <p>In the home directory of Smile, type</p>
@@ -67,17 +67,16 @@
                                                        ``::,,,,::''
 
   Welcome to Smile Shell; enter 'help&lt;RETURN&gt;' for list of supported commands.
-  Type ":quit&lt;RETURN&gt;" to leave the Smile Shell
-  Version 1.1.0, Scala 2.11.7, SBT 0.13.9, Built at 2016-01-14 04:47:10.516
+  Type "exit&lt;RETURN&gt;" to leave the Smile Shell
+  Version 1.4.1, Scala 2.12.3, SBT 0.13.16, Built at 2017-09-03 16:02:37.944
 ===============================================================================
 smile&gt;
     </code></pre>
     <p>The <strong>smile&gt;</strong> line is the prompt that the shell is waiting for you to enter expressions.
-        type <code>:help</code> to print system command help
-        information. To get help information of Smile high-level operators,
-        the <code>help</code>. You can also get detailed information on
+        To get help information of Smile high-level operators,
+        type <code>help</code>. You can also get detailed information on
         each operator by typing <code>help("command")</code>, e.g.
-        <code>help("svm")</code>. To exit the shell, type <code>:quit</code>.</p>
+        <code>help("svm")</code>. To exit the shell, type <code>exit</code>.</p>
 
     <p>On startup, the shell analyzes the classpath and creates a database of every visible package and path.
         This is available via tab-completion analogous to the path-completion available in most shells.
@@ -89,10 +88,35 @@ smile&gt;
     randomDecisionForest   rbfnet   rda
     </code></pre>
 
+    <h2 id="third-party-libraries">Third Party Libraries</h2>
+
+    <p>It is also possible to use third party libraries from Maven Central.
+        For example,</p>
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; import $ivy.`com.google.guava:guava:18.0`, com.google.common.collect._
+    </code></pre>
+
+    <p>If the library is not available in local ivy cache, Smile Shell will download
+        it automatically. Note that the format <code>org:library:version</code> is similar
+        with the library dependency in SBT. For Scala library, it is recommended to use
+        the format <code>org::library:version</code>, which will choose the library in the
+        same Scala major version (e.g. 2.11 vs 2.12).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; import $ivy.`org.scalaz::scalaz-core:7.2.7`, scalaz._, Scalaz._
+    </code></pre>
+
+    <p>Beyond the default resolvers, we can add third-party or our own repositories:</p>
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; interp.repositories() ++= Seq(coursier.ivy.IvyRepository.fromPattern(
+      "https://ambiata-oss.s3-ap-southeast-2.amazonaws.com/" +:
+      coursier.ivy.Pattern.default
+    ))
+    </code></pre>
+
     <h2 id="calculator">Calculator</h2>
 
-    <p>Smile Shell is built on top of <a href="http://www.scala-lang.org">Scala</a> interpreter
-        (Scala installation is not required to run Smile). So you can run any valid Scala
+    <p>Smile Shell is based on <a href="http://ammonite.io">Ammonite REPL</a>. We can run any valid Scala
         expressions in the shell. In the simplest case, you can use it as a calculator.</p>
 
     <pre class="prettyprint lang-scala"><code>
@@ -140,12 +164,8 @@ smile&gt;
 
     <pre class="prettyprint lang-scala"><code>
     #!/bin/bash
-    exec smile -nc "$0" "$@"
+    exec smile "$0" "$@"
     !#
-    import smile._
-    import smile.data._
-    import smile.shell._
-    import smile.classification._
 
     val data = read.arff("data/weka/iris.arff", 4)
     val (x, y) = data.unzipInt

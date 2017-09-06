@@ -28,6 +28,7 @@
     <p>Smile is a fast and comprehensive machine learning system.
         With advanced data structures and algorithms, Smile delivers the state-of-art performance.
         Smile is self contained and requires only Java standard library.
+        Since v1.4, Smile may optionally leverage native BLAS/LAPACK library too.
         It also provides high-level operators in Scala and an interactive shell.
         In practice, data scientists usually build models with high-level tools such as R, Matlab,
         SAS, etc. However, developers have to spend a lot of time and energy to incorporate these
@@ -38,9 +39,11 @@
     <h2 id="download">Download</h2>
 
     <p>Get Smile from the <a href="https://github.com/haifengl/smile/releases">releases page</a> of
-        the project website. Downloads are pre-packaged for Mac, Windows, and universal tarball.</p>
+        the project website. We provide pre-packaged binary for Mac. The universal tarball
+        is also available and can be used on Windows and Linux.</p>
 
-    <p>If you would like to build Smile from source, please first install Java, Scala and SBT.
+    <p>If you would like to build Smile from source, please first install Java 8, Scala 2.12
+        and SBT 0.13+.
         Smile uses <a href="http://www.scala-sbt.org/sbt-pgp/">sbt-pgp</a> plugin when
         publishing to maven central repository. Although you will not publish the project,
         you still have to set up sbt-pgp in order to build the packages. Fortunately, it is
@@ -56,6 +59,12 @@
     git clone https://github.com/haifengl/smile.git
     cd smile
     sbt package
+    </code></pre>
+
+    <p>To build with Scala 2.11, run</p>
+
+    <pre class="prettyprint lang-bash"><code>
+    sbt ++2.11.8 scala/package
     </code></pre>
 
     <p>To build with Scala 2.10, run</p>
@@ -74,11 +83,8 @@
     <p>which will build the system and enter the shell.</p>
 
     <p>Smile runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS).
-        All you need is to have <code>Java</code> installed on your system <code>PATH</code>,
+        All you need is to have <code>Java 8</code> installed on your system <code>PATH</code>,
         or the <code>JAVA_HOME</code> environment variable pointing to a Java installation.</p>
-
-    <p>The download packages of Smile are built on Java 8. But Java 7 is sufficient to build it
-        if needed. For the Scala API, we uses Scala 2.11.</p>
 
     <h2 id="shell">Shell</h2>
 
@@ -88,9 +94,9 @@
     ./bin/smile
     </code></pre>
 
-    <p>to enter the shell, which is based on <a href="http://www.scala-lang.org">Scala</a>
-        interpreter. So you can run any valid Scala
-        expressions in the shell. In the simplest case, you can use it as a calculator.
+    <p>to enter the shell, which is based on <a href="http://ammonite.io">Ammonite REPL</a>.
+        In the shell, you can run any valid Scala expressions.
+        In the simplest case, you can use it as a calculator.
         Besides, all high-level Smile operators are predefined
         in the shell. Be default, the shell uses up to 4GB memory. If you need more memory
         to handle large data, use the option <code>-J-Xmx</code>. For example,</p>
@@ -100,13 +106,13 @@
     </code></pre>
 
     <p>You can also modify the configuration file <code>./conf/application.ini</code>
-        for the memory and other JVM settings.</p>
+        for the memory and other JVM settings. On Windows, the configuration
+        file is <code>smile_config.txt</code>.</p>
 
-    <p>In the shell, type <code>:help</code> to print Scala interpreter help
-        information. To get help information of Smile high-level operators,
-        the <code>help</code>. You can also get detailed information on
+    <p>To get help information of Smile high-level operators,
+        the <code>help</code> in the shell. You can also get detailed information on
         each operator by typing <code>help("command")</code>, e.g.
-        <code>help("svm")</code>. To exit the shell, type <code>:quit</code>.</p>
+        <code>help("svm")</code>. To exit the shell, type <code>exit</code>.</p>
 
     <p>In the shell, type <code>demo</code> to bring up the demo window,
         which shows off various Smile's machine learning capabilities.</p>
