@@ -56,6 +56,20 @@ public class SVMTest {
     public void tearDown() {
     }
 
+    @Test
+    public void testLinear() {
+        SVM<double[]> svm = new SVM<>(new LinearKernel(), 10.0);
+        svm.learn(new double[] {3, 0, 0, 0}, 1);
+        svm.learn(new double[] {1, 0, 1, 0}, 1);
+        svm.learn(new double[] {0, 2, 0, 0}, 0);
+        svm.learn(new double[] {0, 1, 0, 0}, 0);
+        svm.learn(new double[] {0, 0, 1, 0}, 1);
+        svm.learn(new double[] {0, 0, 0, 3}, 0);
+        svm.finish();
+        int p = svm.predict(new double[] {0, 0, 0, 1}); // This line throws exception
+        System.out.println(p);
+    }
+
     /**
      * Test of learn method, of class SVM.
      */
