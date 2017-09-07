@@ -1141,6 +1141,18 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
         if (weight <= 0.0) {
             throw new IllegalArgumentException("Invalid instance weight: " + weight);
         }
+
+        if (p == 0 && kernel instanceof LinearKernel) {
+            if (x instanceof double[]) {
+                double[] x0 = (double[]) x;
+                p = x0.length;
+            } else if (x instanceof float[]) {
+                float[] x0 = (float[]) x;
+                p = x0.length;
+            } else {
+                throw new UnsupportedOperationException("Unsupported data type for linear kernel.");
+            }
+        }
             
         if (k == 2) {
             if (y == 1) {
