@@ -343,7 +343,7 @@ public class DelimitedTextParser {
                 }
             }
 
-            AttributeDataset.Row datum = data.add(x, y);
+            AttributeDataset.Row datum = Double.isNaN(y) ? data.add(x) : data.add(x, y);
             datum.name = rowName;
         }
 
@@ -372,7 +372,7 @@ public class DelimitedTextParser {
                 }
             }
 
-            AttributeDataset.Row datum = data.add(x, y);
+            AttributeDataset.Row datum = Double.isNaN(y) ? data.add(x) : data.add(x, y);
             datum.name = rowName;
         }
 
