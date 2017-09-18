@@ -60,10 +60,11 @@ public class KNNDemo extends ClassificationDemo {
         int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
         
         KNN<double[]> knn = KNN.learn(data, label, k);
+        int[] pred = new int[label.length];
         for (int i = 0; i < label.length; i++) {
-            label[i] = knn.predict(data[i]);
+            pred[i] = knn.predict(data[i]);
         }
-        double trainError = error(label, label);
+        double trainError = error(pred, label);
 
         System.out.format("training error = %.2f%%\n", 100*trainError);
 
