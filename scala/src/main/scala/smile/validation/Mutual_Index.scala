@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.validation
 
-import scala.math.{max, log, sqrt}
-
 /**
  * @author Beck Gaël
  */
