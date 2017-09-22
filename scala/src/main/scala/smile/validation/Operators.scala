@@ -27,6 +27,78 @@ import smile.util._
   */
 trait Operators {
 
+  /** Computes the confusion matrix. */
+  def confusion(truth: Array[Int], prediction: Array[Int]): ConfusionMatrix = new ConfusionMatrix(truth, prediction)
+  /** The accuracy is the proportion of true results (both true positives and
+    * true negatives) in the population.
+    */
+  def accuracy(truth: Array[Int], prediction: Array[Int]): Double = new Accuracy().measure(truth, prediction)
+  /** In information retrieval area, sensitivity is called recall. */
+  def recall(truth: Array[Int], prediction: Array[Int]): Double = new Recall().measure(truth, prediction)
+  /** The precision or positive predictive value (PPV) is ratio of true positives
+    * to combined true and false positives, which is different from sensitivity.
+    */
+  def precision(truth: Array[Int], prediction: Array[Int]): Double = new Precision().measure(truth, prediction)
+  /** Sensitivity or true positive rate (TPR) (also called hit rate, recall) is a
+    * statistical measures of the performance of a binary classification test.
+    * Sensitivity is the proportion of actual positives which are correctly
+    * identified as such.
+    */
+  def sensitivity(truth: Array[Int], prediction: Array[Int]): Double = new Sensitivity().measure(truth, prediction)
+  /** Specificity or True Negative Rate is a statistical measures of the
+    * performance of a binary classification test. Specificity measures the
+    * proportion of negatives which are correctly identified.
+    */
+  def specificty(truth: Array[Int], prediction: Array[Int]): Double = new Specificity().measure(truth, prediction)
+  /** Fall-out, false alarm rate, or false positive rate (FPR).
+    * Fall-out is actually Type I error and closely related to specificity
+    * (1 - specificity).
+    */
+  def fallout(truth: Array[Int], prediction: Array[Int]): Double = new Fallout().measure(truth, prediction)
+  /** The false discovery rate (FDR) is ratio of false positives
+    * to combined true and false positives, which is actually 1 - precision.
+    */
+  def fdr(truth: Array[Int], prediction: Array[Int]): Double = new FDR().measure(truth, prediction)
+  /** The F-score (or F-measure) considers both the precision and the recall of the test
+    * to compute the score. The precision p is the number of correct positive results
+    * divided by the number of all positive results, and the recall r is the number of
+    * correct positive results divided by the number of positive results that should
+    * have been returned.
+    *
+    * The traditional or balanced F-score (F1 score) is the harmonic mean of
+    * precision and recall, where an F1 score reaches its best value at 1 and worst at 0.
+    */
+  def f1(truth: Array[Int], prediction: Array[Int]): Double = new FMeasure().measure(truth, prediction)
+  /** The area under the curve (AUC). When using normalized units, the area under
+    * the curve is equal to the probability that a classifier will rank a
+    * randomly chosen positive instance higher than a randomly chosen negative
+    * one (assuming 'positive' ranks higher than 'negative').
+    */
+  def auc(truth: Array[Int], probability: Array[Double]): Double = AUC.measure(truth, probability)
+  /** Mean squared error. */
+  def mse(truth: Array[Double], prediction: Array[Double]): Double = new MSE().measure(truth, prediction)
+  /** Root mean squared error. */
+  def rmse(truth: Array[Double], prediction: Array[Double]): Double = new RMSE().measure(truth, prediction)
+  /** Residual sum of squares. */
+  def rss(truth: Array[Double], prediction: Array[Double]): Double = new RSS().measure(truth, prediction)
+  /** Rand index is defined as the number of pairs of objects
+    * that are either in the same group or in different groups in both partitions
+    * divided by the total number of pairs of objects. The Rand index lies between
+    * 0 and 1. When two partitions agree perfectly, the Rand index achieves the
+    * maximum value 1. A problem with Rand index is that the expected value of
+    * the Rand index between two random partitions is not a constant. This problem
+    * is corrected by the adjusted Rand index.
+    */
+  def randIndex(truth: Array[Int], prediction: Array[Int]): Double = new RandIndex().measure(truth, prediction)
+  /** Adjusted Rand Index. Adjusted Rand Index assumes the generalized
+    * hyper-geometric distribution as the model of randomness. The adjusted Rand
+    * index has the maximum value 1, and its expected value is 0 in the case
+    * of random clusters. A larger adjusted Rand index means a higher agreement
+    * between two partitions. The adjusted Rand index is recommended for measuring
+    * agreement even when the partitions compared have different numbers of clusters.
+    */
+  def adjustedRandIndex(truth: Array[Int], prediction: Array[Int]): Double = new AdjustedRandIndex().measure(truth, prediction)
+
   /** Test a generic classifier.
     * The accuracy will be measured and printed out on standard output.
     *
