@@ -322,7 +322,7 @@ public class AttributeDataset extends Dataset<double[]> {
             s[3] = Math.mean(x);
             s[4] = Math.q3(x);
             s[5] = Math.max(x);
-            Datum<double[]> datum = new Datum<>(s);
+            Row datum = new Row(s);
             datum.name = attributes[i].getName();
             datum.description = attributes[i].getDescription();
             stat.add(datum);
