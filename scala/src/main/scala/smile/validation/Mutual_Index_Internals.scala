@@ -36,7 +36,7 @@ abstract class MutualInformationInternal extends ClusterMeasure
 		x.map(indexedValuesMap)
 	}
 
-	def mutualInformationInternal(x: Array[Int], y:Array[Int]) =
+	protected def mutualInformationInternal(x: Array[Int], y:Array[Int]) =
 	{
 		require( x.size == y.size )
 		val n = x.size
