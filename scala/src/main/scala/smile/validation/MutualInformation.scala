@@ -22,22 +22,20 @@ import scala.math.{max, log, sqrt}
  */
 
  /**
-  * Computte the mutual information
+  * Compute the mutual information and the normalized mutual information
+  * https://en.wikipedia.org/wiki/Mutual_information
   **/
-abstract class MutualInformationInternal extends ClusterMeasure
-{
+class MutualInformation(normalization: String = "sqrt") extends ClusterMeasure {
 	/**
 	 * Normalize Sequences in order to prevent construction of a to big 'count' matrix
 	 * Ex: [4,5,6,6] -> [0,1,2,2]
 	 **/
-	private def prepareList(x: Array[Int]) =
-	{
+	private def prepareList(x: Array[Int]) = {
 		val indexedValuesMap = x.distinct.zipWithIndex.toMap
 		x.map(indexedValuesMap)
 	}
 
-	protected def mutualInformationInternal(x: Array[Int], y:Array[Int]) =
-	{
+	private def mutualInformationInternal(x: Array[Int], y:Array[Int]) = {
 		require( x.size == y.size )
 		val n = x.size
 		val xx = prepareList(x)
@@ -48,14 +46,14 @@ abstract class MutualInformationInternal extends ClusterMeasure
 		val maxOneIndices = (0 to maxX).toArray
 		val maxTwoIndices = (0 to maxY).toArray
 
-		val count = for( m <- maxOneIndices ) yield( for( l <- maxTwoIndices ) yield(0D) )
+		val count = Array.fill(maxX + 1)(Array.fill(maxY + 1)(0D))
 		for( i <- xx.indices ) count(xx(i))(yy(i)) += 1D
 
 		val ai = new Array[Double](maxX + 1)
 		val bj = new Array[Double](maxY + 1)
 
-		for( m <- maxOneIndices ) for( l <- maxTwoIndices ) ai(m) += count(m)(l)
-		for( m <- maxTwoIndices ) for( l <- maxOneIndices ) bj(m) += count(l)(m)
+		maxOneIndices.foreach( m => maxTwoIndices.foreach( l => ai(m) += count(m)(l) ) )
+		maxTwoIndices.foreach( m => maxOneIndices.foreach( l => bj(m) += count(l)(m) ) )
 
 
 		val nN = ai.reduce(_ + _)
@@ -67,10 +65,24 @@ abstract class MutualInformationInternal extends ClusterMeasure
 		bj.foreach( v => { val c = v / nN; if( c > 0) hv -= c * log(c) } ) 
 
 		var huStrichV = 0D
-		for( i <- maxOneIndices ) for( j <- maxTwoIndices ) if( count(i)(j) > 0 ) huStrichV -= count(i)(j) / nN * log( (count(i)(j)) / bj(j) )
 	    maxOneIndices.foreach( i => maxTwoIndices.foreach( j => if( count(i)(j) > 0 ) huStrichV -= count(i)(j) / nN * log( (count(i)(j)) / bj(j) ) ) )
 
 		val mi = hu - huStrichV
 		(mi, hu, hv)
 	}
+
+	def mutualInformation(x: Array[Int], y:Array[Int]) = mutualInformationInternal(x, y)._1
+
+	def normalizedMutualInformation(x: Array[Int], y: Array[Int]) =	{
+		val (mi, hu, hv) = mutualInformationInternal(x, y)
+		val nmi = normalization match {
+			case "sqrt" => mi / sqrt(hu * hv)
+			case "max" => mi / max(hu, hv)
+			case _ => throw new Exception("You set an unknow parameter for normalization")
+		}
+		nmi
+	}
+
+	override def measure(x: Array[Int], y: Array[Int]) = mutualInformation(x, y)
+
 }
