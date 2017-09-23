@@ -29,6 +29,7 @@ package object data {
 
   implicit def pimpDataset(data: AttributeDataset): DataFrame = DataFrame(data)
   implicit def pimpSparseDataset(data: SparseDataset): PimpedSparseDataset = new PimpedSparseDataset(data)
+  implicit def attributeVector2Array(vector: AttributeVector): Array[Double] = vector.vector()
 
   def summary(x: Array[Double]): Unit = {
     println("min\tq1\tmedian\tmean\tq3\tmax")
