@@ -26,7 +26,6 @@ import java.text.ParseException;
 
 import smile.data.Attribute;
 import smile.data.AttributeDataset;
-import smile.data.Datum;
 import smile.data.NumericAttribute;
 
 /**
@@ -210,10 +209,9 @@ public class RESParser {
                 x[j] = Double.valueOf(tokens[2*j+2]);
             }
 
-            Datum<double[]> datum = new Datum<>(x);
+            AttributeDataset.Row datum = data.add(x);
             datum.name = tokens[1];
             datum.description = tokens[0];
-            data.add(datum);
         }
         
         reader.close();
