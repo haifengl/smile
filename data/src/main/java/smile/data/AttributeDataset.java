@@ -90,6 +90,52 @@ public class AttributeDataset extends Dataset<double[]> {
             }
             return ((DateAttribute) attributes[i]).toDate(x[i]);
         }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+
+            // Header
+            if (name != null) {
+                sb.append('\t');
+            }
+
+            if (response != null) {
+                sb.append(response.getName());
+            }
+
+            int p = attributes.length;
+            for (int j = 0; j < p; j++) {
+                sb.append('\t');
+                sb.append(attributes[j].getName());
+            }
+
+            sb.append(System.getProperty("line.separator"));
+
+            // Data
+            if (name != null) {
+                sb.append(name);
+                sb.append('\t');
+            }
+
+            if (response != null) {
+                if (response.getType() == Attribute.Type.NUMERIC)
+                    sb.append(String.format("%1.4f", y));
+                else
+                    sb.append(response.toString(y));
+            }
+
+            for (int j = 0; j < p; j++) {
+                sb.append('\t');
+                Attribute attr = attributes[j];
+                if (attr.getType() == Attribute.Type.NUMERIC)
+                    sb.append(String.format("%1.4f", x[j]));
+                else
+                    sb.append(attr.toString(x[j]));
+            }
+
+            return sb.toString();
+        }
     }
 
     /**
@@ -198,19 +244,31 @@ public class AttributeDataset extends Dataset<double[]> {
     @Override
     public String toString() {
         int n = 10;
-        String s = head(n);
+        String s = toString(0, n);
         if (size() <= n) return s;
         else return s + "\n" + (size() - n) + " more rows...";
     }
 
-    /** Shows the first few rows. */
-    public String head(int n) {
-        return toString(0, n);
+    /** returns the first few rows. */
+    public AttributeDataset head(int n) {
+        return range(0, n);
     }
 
-    /** Shows the last few rows. */
-    public String tail(int n) {
-        return toString(size() - n, size());
+    /** Returns the last few rows. */
+    public AttributeDataset tail(int n) {
+        return range(size() - n, size());
+    }
+
+    /** Returns the rows in the given range [from, to). */
+    public AttributeDataset range(int from, int to) {
+        AttributeDataset sub = new AttributeDataset(name+'['+from+", "+to+']', attributes, response);
+        sub.description = description;
+
+        for (int i = from; i < to; i++) {
+            sub.add(get(i));
+        }
+
+        return sub;
     }
 
     /**
@@ -220,6 +278,16 @@ public class AttributeDataset extends Dataset<double[]> {
      */
     public String toString(int from, int to) {
         StringBuilder sb = new StringBuilder();
+
+        if (name != null && !name.isEmpty()) {
+            sb.append(name);
+            sb.append(System.getProperty("line.separator"));
+        }
+
+        if (description != null && !description.isEmpty()) {
+            sb.append(description);
+            sb.append(System.getProperty("line.separator"));
+        }
 
         sb.append('\t');
 
@@ -298,6 +366,39 @@ public class AttributeDataset extends Dataset<double[]> {
         }
 
         return column(i);
+    }
+
+    public AttributeDataset columns(String... cols) {
+        Attribute[] attrs = new Attribute[cols.length];
+        int[] index = new int[cols.length];
+        for (int k = 0; k < cols.length; k++) {
+            for (int j = 0; j < attributes.length; j++) {
+                if (attributes[j].getName().equals(cols[k])) {
+                    index[k] = j;
+                    attrs[k] = attributes[j];
+                    break;
+                }
+            }
+
+            if (attrs[k] == null) {
+                throw new IllegalArgumentException("Unknown column: " + cols[k]);
+            }
+        }
+
+        AttributeDataset sub = new AttributeDataset(name, attrs, response);
+        for (Datum<double[]> datum : data) {
+            double[] x = new double[index.length];
+            for (int i = 0; i < x.length; i++) {
+                x[i] = datum.x[index[i]];
+            }
+            Row row = sub.add(x, datum.y);
+            row.name = datum.name;
+            row.weight = datum.weight;
+            row.description = datum.description;
+            row.timestamp = datum.timestamp;
+        }
+
+        return sub;
     }
 
     /** Returns statistic summary. */
