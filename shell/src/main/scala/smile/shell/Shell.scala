@@ -61,8 +61,8 @@ object Shell {
        |import smile.interpolation._
        |import smile.validation._
        |import smile.association._
-       |import smile.regression._
        |import smile.classification._
+       |import smile.regression.{ols, ridge, lasso, svr, gpr}
        |import smile.feature._
        |import smile.clustering._
        |import smile.vq._
