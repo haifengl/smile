@@ -26,7 +26,6 @@ import java.text.ParseException;
 
 import smile.data.Attribute;
 import smile.data.AttributeDataset;
-import smile.data.Datum;
 import smile.data.NumericAttribute;
 
 /**
@@ -211,10 +210,9 @@ public class GCTParser {
                 }
             }
 
-            Datum<double[]> datum = new Datum<>(x);
+            AttributeDataset.Row datum = data.add(x);
             datum.name = tokens[0];
             datum.description = tokens[1];
-            data.add(datum);
         }
         
         reader.close();
