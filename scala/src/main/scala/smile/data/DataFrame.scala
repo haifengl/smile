@@ -82,10 +82,10 @@ case class DataFrame(data: AttributeDataset) extends Dynamic {
   /** Partitions this DataFrame in two according to a predicate.
     *
     *  @param p the predicate on which to partition.
-    *  @return  a pair of ${DataFrame}s: the first $DataFrame consists of all elements that
-    *           satisfy the predicate `p` and the second $DataFrame consists of all elements
-    *           that don't. The relative order of the elements in the resulting ${DataFrames}s
-    *           is the same as in the original $DataFrame.
+    *  @return  a pair of DataFrames: the first DataFrame consists of all elements that
+    *           satisfy the predicate `p` and the second DataFrame consists of all elements
+    *           that don't. The relative order of the elements in the resulting DataFramess
+    *           is the same as in the original DataFrame.
     */
   def partition(p: (Row) => Boolean): (DataFrame, DataFrame) = {
     val l = new AttributeDataset(data.name, data.attributes, data.response)
@@ -96,12 +96,12 @@ case class DataFrame(data: AttributeDataset) extends Dynamic {
     (l, r)
   }
 
-  /** Partitions the $DataFrame into a map of ${DataFrame}s according to
+  /** Partitions the DataFrame into a map of DataFrames according to
     * some discriminator function.
     *
     * @param f the discriminator function.
     * @tparam K the type of keys returned by the discriminator function.
-    * @return A map from keys to ${DataFrame}s
+    * @return A map from keys to DataFrames
     */
   def groupBy[K](f: (Row) => K): scala.collection.immutable.Map[K, DataFrame] = {
     val groups = rows.groupBy(f)
@@ -113,11 +113,11 @@ case class DataFrame(data: AttributeDataset) extends Dynamic {
     }
   }
 
-  /** Partitions the $DataFrame into a map of ${DataFrame}s according to
+  /** Partitions the DataFrame into a map of DataFrames according to
     * the value of a column.
     *
     * @param col the column for grouping.
-    * @return A map from keys to ${DataFrame}s
+    * @return A map from keys to DataFrames
     */
   def groupBy(col: String): scala.collection.immutable.Map[Double, DataFrame] = {
     val i = colnames.indexOf(col)
@@ -125,12 +125,12 @@ case class DataFrame(data: AttributeDataset) extends Dynamic {
     groupBy(f)
   }
 
-  /** Partitions the $DataFrame into a map of ${DataFrame}s according to
+  /** Partitions the DataFrame into a map of DataFrames according to
     * the value of a pair of columns.
     *
     * @param c1 the first column for grouping.
     * @param c2 the second column for grouping.
-    * @return A map from keys to ${DataFrame}s
+    * @return A map from keys to DataFrames
     */
   def groupBy(c1: String, c2: String): scala.collection.immutable.Map[(Double, Double), DataFrame] = {
     val i = colnames.indexOf(c1)
@@ -139,12 +139,12 @@ case class DataFrame(data: AttributeDataset) extends Dynamic {
     groupBy(f)
   }
 
-  /** Partitions the $DataFrame into a map of ${DataFrame}s according to
+  /** Partitions the DataFrame into a map of DataFrames according to
     * the value of a pair of columns.
     *
     * @param c1 the first column for grouping.
     * @param c2 the second column for grouping.
-    * @return A map from keys to ${DataFrame}s
+    * @return A map from keys to DataFrames
     */
   def groupBy(c1: String, c2: String, c3: String): scala.collection.immutable.Map[(Double, Double, Double), DataFrame] = {
     val i = colnames.indexOf(c1)
