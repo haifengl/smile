@@ -120,6 +120,332 @@
        feature vectors and <code>y</code> is an array of labels. If the response variable is
        real valued in case of regression, <code>unzipDouble</code> can be used.</p>
 
+    <pre class="prettyprint lang-scala"><code>
+    val iris = read.arff("data/weka/iris.arff", 4)
+    // Get the feature vectors.
+    val x = iris.unzip
+    // Get the feature vectors and labels.
+    val (x, y) = iris.unzipInt
+    </code></pre>
+
+    <p>Data scientists generally want to inspect the data and its statistics
+        before training advanced models. <code>AttributeDataset</code> provides
+        several functions such as <code>head()</code>, <code>tail()</code>,
+        <code>range()</code>, <code>summary()</code> for this purpose.
+        These functions also return a new <code>AttributeDataset</code>.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; iris // or iris.head(10)
+res9: AttributeDataset = iris
+	class	sepallength	sepalwidth	petallength	petalwidth
+[1]	Iris-setosa	5.1000	3.5000	1.4000	0.2000
+[2]	Iris-setosa	4.9000	3.0000	1.4000	0.2000
+[3]	Iris-setosa	4.7000	3.2000	1.3000	0.2000
+[4]	Iris-setosa	4.6000	3.1000	1.5000	0.2000
+[5]	Iris-setosa	5.0000	3.6000	1.4000	0.2000
+[6]	Iris-setosa	5.4000	3.9000	1.7000	0.4000
+[7]	Iris-setosa	4.6000	3.4000	1.4000	0.3000
+[8]	Iris-setosa	5.0000	3.4000	1.5000	0.2000
+[9]	Iris-setosa	4.4000	2.9000	1.4000	0.2000
+[10]	Iris-setosa	4.9000	3.1000	1.5000	0.1000
+140 more rows...
+
+smile&gt; iris.tail(10)
+res10: AttributeDataset = iris[140, 150]
+	class	sepallength	sepalwidth	petallength	petalwidth
+[1]	Iris-virginica	6.7000	3.1000	5.6000	2.4000
+[2]	Iris-virginica	6.9000	3.1000	5.1000	2.3000
+[3]	Iris-virginica	5.8000	2.7000	5.1000	1.9000
+[4]	Iris-virginica	6.8000	3.2000	5.9000	2.3000
+[5]	Iris-virginica	6.7000	3.3000	5.7000	2.5000
+[6]	Iris-virginica	6.7000	3.0000	5.2000	2.3000
+[7]	Iris-virginica	6.3000	2.5000	5.0000	1.9000
+[8]	Iris-virginica	6.5000	3.0000	5.2000	2.0000
+[9]	Iris-virginica	6.2000	3.4000	5.4000	2.3000
+[10]	Iris-virginica	5.9000	3.0000	5.1000	1.8000
+
+smile&gt; iris.summary
+res11: AttributeDataset = iris Summary
+		min	q1	median	mean	q3	max
+sepallength		4.3000	5.1000	5.8000	5.8433	6.4000	7.9000
+sepalwidth		2.0000	2.8000	3.0000	3.0540	3.3000	4.4000
+petallength		1.0000	1.6000	4.4000	3.7587	5.1000	6.9000
+petalwidth		0.1000	0.3000	1.3000	1.1987	1.8000	2.5000
+    </code></pre>
+
+    <h2 id="data-frame">Data Frame</h2>
+
+    <p>In Scala, we can also wrap <code>AttributeDataset</code> into a
+        <code>DataFrame</code>, which provides advanced data manipulation
+        functions. For example, we can get a row with the array syntax or
+        refer a column by its name</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; val df = DataFrame(iris)
+smile&gt; iris(0)
+res12: Datum[Array[Double]] = class	sepallength	sepalwidth	petallength	petalwidth
+Iris-setosa	5.1000	3.5000	1.4000	0.2000
+
+smile&gt; df.sepallength
+res13: AttributeVector = 	sepallength
+[1]	5.1000
+[2]	4.9000
+[3]	4.7000
+[4]	4.6000
+[5]	5.0000
+[6]	5.4000
+[7]	4.6000
+[8]	5.0000
+[9]	4.4000
+[10]	4.9000
+140 more values...
+    </code></pre>
+
+    <p>It is also easy to create a subset of data frame.</p>
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; df(10,100)
+res13: DataFrame = DataFrame(
+  iris[10, 100]
+	class	sepallength	sepalwidth	petallength	petalwidth
+[1]	Iris-setosa	5.4000	3.7000	1.5000	0.2000
+[2]	Iris-setosa	4.8000	3.4000	1.6000	0.2000
+[3]	Iris-setosa	4.8000	3.0000	1.4000	0.1000
+[4]	Iris-setosa	4.3000	3.0000	1.1000	0.1000
+[5]	Iris-setosa	5.8000	4.0000	1.2000	0.2000
+[6]	Iris-setosa	5.7000	4.4000	1.5000	0.4000
+[7]	Iris-setosa	5.4000	3.9000	1.3000	0.4000
+[8]	Iris-setosa	5.1000	3.5000	1.4000	0.3000
+[9]	Iris-setosa	5.7000	3.8000	1.7000	0.3000
+[10]	Iris-setosa	5.1000	3.8000	1.5000	0.3000
+80 more rows...
+)
+    </code></pre>
+
+    <p>Similarly, we can select a few columns to create a new data frame. </p>
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; df("sepallength", "sepalwidth")
+res15: DataFrame = DataFrame(
+  iris
+	class	sepallength	sepalwidth
+[1]	Iris-setosa	5.1000	3.5000
+[2]	Iris-setosa	4.9000	3.0000
+[3]	Iris-setosa	4.7000	3.2000
+[4]	Iris-setosa	4.6000	3.1000
+[5]	Iris-setosa	5.0000	3.6000
+[6]	Iris-setosa	5.4000	3.9000
+[7]	Iris-setosa	4.6000	3.4000
+[8]	Iris-setosa	5.0000	3.4000
+[9]	Iris-setosa	4.4000	2.9000
+[10]	Iris-setosa	4.9000	3.1000
+140 more rows...
+)
+    </code></pre>
+
+    <p>Advanced operations such as <code>exists</code>, <code>forall</code>,
+        <code>find</code>, <code>filter</code> are also supported.
+        The <code>predicate</code> of these functions expect a <code>Row</code>,
+        which has fields <code>x</code> for attribute vector and <code>y</code>
+        for responsible variable. If the response variable is a class label,
+        the user may use <code>label</code> to access the response variable
+        in string label.</p>
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; df.exists(_.x(0) > 6)
+res16: Boolean = true
+
+smile&gt; df.forall(_.x(0) < 10)
+res17: Boolean = true
+
+smile&gt; df.find(_.y == 1)
+res18: Option[df.Row] = Some(
+  class	sepallength	sepalwidth	petallength	petalwidth
+Iris-versicolor	7.0000	3.2000	4.7000	1.4000
+)
+
+smile&gt; df.find(_.label == "Iris-versicolor") // _.label returns the class label in Strings
+res19: Option[df.Row] = Some(
+  class	sepallength	sepalwidth	petallength	petalwidth
+Iris-versicolor	7.0000	3.2000	4.7000	1.4000
+)
+
+smile&gt; df.filter { row => row.x(1) > 3 && row.y != 0 }
+res20: DataFrame = DataFrame(
+  iris
+	class	sepallength	sepalwidth	petallength	petalwidth
+[1]	Iris-versicolor	7.0000	3.2000	4.7000	1.4000
+[2]	Iris-versicolor	6.4000	3.2000	4.5000	1.5000
+[3]	Iris-versicolor	6.9000	3.1000	4.9000	1.5000
+[4]	Iris-versicolor	6.3000	3.3000	4.7000	1.6000
+[5]	Iris-versicolor	6.7000	3.1000	4.4000	1.4000
+[6]	Iris-versicolor	5.9000	3.2000	4.8000	1.8000
+[7]	Iris-versicolor	6.0000	3.4000	4.5000	1.6000
+[8]	Iris-versicolor	6.7000	3.1000	4.7000	1.5000
+[9]	Iris-virginica	6.3000	3.3000	6.0000	2.5000
+[10]	Iris-virginica	7.2000	3.6000	6.1000	2.5000
+15 more rows...
+)
+    </code></pre>
+
+    <p>Note that the type of <code>Row.x</code> is <code>Array[Double]</code>.
+        If a column is of type <code>String</code> or <code>Date</code>,
+        we may refer them by the function <code>string(Int)</code> or
+        <code>date(Int)</code> in the predicate.</p>
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; val df2 = DataFrame(read.arff("data/weka/string.arff"))
+df2: DataFrame = DataFrame(
+  LCCvsLCSH
+		LCC	LCSH
+[1]		AG5	Encyclopedias and dictionaries.;Twentieth century.
+[2]		AS262	Science -- Soviet Union -- History.
+[3]		AE5	Encyclopedias and dictionaries.
+[4]		AS281	Astronomy, Assyro-Babylonian.;Moon -- Phases.
+[5]		AS281	Astronomy, Assyro-Babylonian.;Moon -- Tables.
+)
+
+smile&gt; df2.filter(_.string(0).startsWith("AS"))
+res20: DataFrame = DataFrame(
+  LCCvsLCSH
+		LCC	LCSH
+[1]		AS262	Science -- Soviet Union -- History.
+[2]		AS281	Astronomy, Assyro-Babylonian.;Moon -- Phases.
+[3]		AS281	Astronomy, Assyro-Babylonian.;Moon -- Tables.
+)
+    </code></pre>
+
+    <p>For data wrangling, the most important functions of <code>DataFrame</code>
+        are <code>map</code> and <code>groupBy</code>. There are three flavors of
+        <code>map</code>. The first version of <code>map</code> simply treats
+        <code>DataFrame</code> as a collection and returns a new collection of
+        any type that predicate returns.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; df.map { row =>
+                val x = new Array[Double](6)
+                System.arraycopy(row.x, 0, x, 0, 4)
+                x(4) = x(0) * x(1)
+                x(5) = x(2) * x(3)
+                x
+              }
+res17: Traversable[Array[Double]] = ArrayBuffer(
+  Array(5.1, 3.5, 1.4, 0.2, 17.849999999999998, 0.27999999999999997),
+  Array(4.9, 3.0, 1.4, 0.2, 14.700000000000001, 0.27999999999999997),
+  Array(4.7, 3.2, 1.3, 0.2, 15.040000000000001, 0.26),
+  Array(4.6, 3.1, 1.5, 0.2, 14.26, 0.30000000000000004),
+  Array(5.0, 3.6, 1.4, 0.2, 18.0, 0.27999999999999997),
+  Array(5.4, 3.9, 1.7, 0.4, 21.060000000000002, 0.68),
+  Array(4.6, 3.4, 1.4, 0.3, 15.639999999999999, 0.42),
+  Array(5.0, 3.4, 1.5, 0.2, 17.0, 0.30000000000000004),
+  Array(4.4, 2.9, 1.4, 0.2, 12.76, 0.27999999999999997),
+  Array(4.9, 3.1, 1.5, 0.1, 15.190000000000001, 0.15000000000000002),
+  Array(5.4, 3.7, 1.5, 0.2, 19.980000000000004, 0.30000000000000004),
+  Array(4.8, 3.4, 1.6, 0.2, 16.32, 0.32000000000000006),
+  Array(4.8, 3.0, 1.4, 0.1, 14.399999999999999, 0.13999999999999999),
+  Array(4.3, 3.0, 1.1, 0.1, 12.899999999999999, 0.11000000000000001),
+  Array(5.8, 4.0, 1.2, 0.2, 23.2, 0.24),
+  Array(5.7, 4.4, 1.5, 0.4, 25.080000000000002, 0.6000000000000001),
+  Array(5.4, 3.9, 1.3, 0.4, 21.060000000000002, 0.52),
+  Array(5.1, 3.5, 1.4, 0.3, 17.849999999999998, 0.42),
+  Array(5.7, 3.8, 1.7, 0.3, 21.66, 0.51),
+  Array(5.1, 3.8, 1.5, 0.3, 19.38, 0.44999999999999996),
+  Array(5.4, 3.4, 1.7, 0.2, 18.36, 0.34),
+  Array(5.1, 3.7, 1.5, 0.4, 18.87, 0.6000000000000001),
+  Array(4.6, 3.6, 1.0, 0.2, 16.56, 0.2),
+  Array(5.1, 3.3, 1.7, 0.5, 16.83, 0.85),
+...
+    </code></pre>
+
+    <p>Optionally, the <code>map</code> functions may take an array of <code>Attribute</code>
+        as parameter and return a new <code>DataFrame</code>.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; val attr = new Array[Attribute](6)
+          System.arraycopy(iris.attributes, 0, attr, 0, 4)
+          attr(4) = new NumericAttribute("sepallength * sepalwidth")
+          attr(5) = new NumericAttribute("petallength * petalwidth")
+
+          df.map(attr) { row =>
+            val x = new Array[Double](6)
+            System.arraycopy(row.x, 0, x, 0, 4)
+            x(4) = x(0) * x(1)
+            x(5) = x(2) * x(3)
+            x
+          }
+res23: DataFrame = DataFrame(
+  iris
+		sepallength	sepalwidth	petallength	petalwidth	sepallength * sepalwidth	petallength * petalwidth
+[1]		5.1000	3.5000	1.4000	0.2000	17.8500	0.2800
+[2]		4.9000	3.0000	1.4000	0.2000	14.7000	0.2800
+[3]		4.7000	3.2000	1.3000	0.2000	15.0400	0.2600
+[4]		4.6000	3.1000	1.5000	0.2000	14.2600	0.3000
+[5]		5.0000	3.6000	1.4000	0.2000	18.0000	0.2800
+[6]		5.4000	3.9000	1.7000	0.4000	21.0600	0.6800
+[7]		4.6000	3.4000	1.4000	0.3000	15.6400	0.4200
+[8]		5.0000	3.4000	1.5000	0.2000	17.0000	0.3000
+[9]		4.4000	2.9000	1.4000	0.2000	12.7600	0.2800
+[10]		4.9000	3.1000	1.5000	0.1000	15.1900	0.1500
+140 more rows...
+)
+    </code></pre>
+
+    <p>We can pass an additional response attribute too:</p>
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; df.map(attr, iris.responseAttribute) { row =>
+            val x = new Array[Double](6)
+            System.arraycopy(row.x, 0, x, 0, 4)
+            x(4) = x(0) * x(1)
+            x(5) = x(2) * x(3)
+            (x, row.y)
+          }
+res24: DataFrame = DataFrame(
+  iris
+	class	sepallength	sepalwidth	petallength	petalwidth	sepallength * sepalwidth	petallength * petalwidth
+[1]	Iris-setosa	5.1000	3.5000	1.4000	0.2000	17.8500	0.2800
+[2]	Iris-setosa	4.9000	3.0000	1.4000	0.2000	14.7000	0.2800
+[3]	Iris-setosa	4.7000	3.2000	1.3000	0.2000	15.0400	0.2600
+[4]	Iris-setosa	4.6000	3.1000	1.5000	0.2000	14.2600	0.3000
+[5]	Iris-setosa	5.0000	3.6000	1.4000	0.2000	18.0000	0.2800
+[6]	Iris-setosa	5.4000	3.9000	1.7000	0.4000	21.0600	0.6800
+[7]	Iris-setosa	4.6000	3.4000	1.4000	0.3000	15.6400	0.4200
+[8]	Iris-setosa	5.0000	3.4000	1.5000	0.2000	17.0000	0.3000
+[9]	Iris-setosa	4.4000	2.9000	1.4000	0.2000	12.7600	0.2800
+[10]	Iris-setosa	4.9000	3.1000	1.5000	0.1000	15.1900	0.1500
+140 more rows...
+)
+    </code></pre>
+
+    <p>For <code>groupBy</code>, the user may provide one more more
+        column names, on which the grouping operation is based.
+        The user may also provide a generic function that returns
+        the key of groups.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; val labor = read.arff("data/weka/labor.arff", 16)
+smile&gt; labor.groupBy("cost-of-living-adjustment")
+res1: Map[Double, DataFrame] = Map(
+  0.0 -> DataFrame(
+    labor-neg-data
+	class	duration	wage-increase-first-year	wage-increase-second-year	wage-increase-third-year	cost-of-living-adjustment	working-hours	pension	standby-pay	shift-differential	education-allowance	statutory-holidays	vacation	longterm-disability-assistance	contribution-to-dental-plan	bereavement-assistance	contribution-to-health-plan
+[1]	good	1.0000	5.7000	NaN	NaN	none	40.0000	empl_contr	NaN	4.0000	null	11.0000	generous	yes	full	null	null
+[2]	good	3.0000	3.5000	4.0000	4.6000	none	36.0000	null	NaN	3.0000	null	13.0000	generous	null	null	yes	full
+[3]	bad	2.0000	3.5000	4.0000	NaN	none	40.0000	null	NaN	2.0000	no	10.0000	below_average	no	half	null	half
+[4]	good	1.0000	3.0000	NaN	NaN	none	36.0000	null	NaN	10.0000	no	11.0000	generous	null	null	null	null
+[5]	good	2.0000	4.5000	4.0000	NaN	none	37.0000	empl_contr	NaN	NaN	null	11.0000	average	null	full	yes	null
+[6]	bad	1.0000	2.0000	NaN	NaN	none	38.0000	none	NaN	NaN	yes	11.0000	average	no	none	no	none
+[7]	bad	3.0000	2.0000	2.0000	2.0000	none	40.0000	none	NaN	NaN	null	10.0000	below_average	null	half	yes	full
+[8]	good	2.0000	3.0000	3.0000	NaN	none	33.0000	null	NaN	NaN	yes	12.0000	generous	null	null	yes	full
+[9]	good	2.0000	5.0000	4.0000	NaN	none	37.0000	null	NaN	5.0000	no	11.0000	below_average	yes	full	yes	full
+[10]	good	3.0000	4.5000	4.5000	5.0000	none	40.0000	null	NaN	NaN	no	11.0000	average	null	half	null	null
+12 more rows...
+  ),
+  1.0 -> DataFrame(
+    labor-neg-data
+	class	duration	wage-increase-first-year	wage-increase-second-year	wage-increase-third-year	cost-of-living-adjustment	working-hours	pension	standby-pay	shift-differential	education-allowance	statutory-holidays	vacation	longterm-disability-assistance	contribution-to-dental-plan	bereavement-assistance	contribution-to-health-plan
+[1]	good	3.0000	3.5000	4.0000	5.1000	tcf	37.0000	null	NaN	4.0000	null	13.0000	generous	null	full	yes	full
+[2]	good	2.0000	4.0000	5.0000	NaN	tcf	35.0000	null	13.0000	5.0000	null	15.0000	generous	null	null	null	null
+[3]	good	3.0000	3.5000	4.0000	4.6000	tcf	27.0000	null	NaN	NaN	null	NaN	null	null	null	null	null
+[4]	good	2.0000	4.5000	4.5000	NaN	tcf	NaN	null	NaN	NaN	yes	10.0000	below_average	yes	none	null	half
+...
+    </code></pre>
+
     <h2 id="sparse">Sparse Dataset</h2>
 
     <p>The feature vectors could be very sparse. To save space, <a href="api/java/smile/data/SparseDataset.html">SparseDataset</a>
