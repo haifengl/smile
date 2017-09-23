@@ -83,15 +83,78 @@
 
     <p>In Smile, the class label 1 is regarded as positive and all others are regarded as negative.</p>
 
+    <p>The below example shows how to calculate the accuracy of a multi-class model.</p>
+    <pre class="prettyprint lang-scala"><code>
+val train = read.arff("data/weka/segment-challenge.arff", 19)
+val test = read.arff("data/weka/segment-test.arff", 19)
+
+val (x, y) = train.unzipInt
+val model = randomForest(x, y)
+
+val (testx, testy) = test.unzipInt
+val pred = testx.map(model.predict(_))
+
+smile&gt; accuracy(testy, pred)
+res6: Double = 0.9604938271604938
+    </code></pre>
+
     <p>Sensitivity and specificity are closely related to the concepts of type I and type II errors.
         For any test, there is usually a trade-off between the measures. This trade-off
-        can be represented graphically using an ROC curve.</p>
+        can be represented graphically using an ROC curve. When using normalized units, the area under
+        the ROC curve is equal to the probability that a classifier will rank a
+        randomly chosen positive instance higher than a randomly chosen negative
+        one (assuming 'positive' ranks higher than 'negative').</p>
+
+    <p>The following example calculates various metrics for a binary classification problem.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+val label = new NominalAttribute("class")
+val train = read.table("data/classification/toy/toy-train.txt", Some((label, 0)))
+val test = read.table("data/classification/toy/toy-test.txt", Some((label, 0)))
+
+val (x, y) = train.unzipInt
+val model = logit(x, y, 0.1, 0.001)
+
+val (testx, testy) = test.unzipInt
+val pred = testx.map(model.predict(_))
+
+smile&gt; accuracy(testy, pred)
+res7: Double = 0.81435
+
+smile&gt; recall(testy, pred)
+res8: Double = 0.7828
+
+smile&gt; sensitivity(testy, pred)
+res9: Double = 0.7828
+
+smile&gt; specificity(testy, pred)
+res10: Double = 0.8459
+
+smile&gt; fallout(testy, pred)
+res11: Double = 0.15410000000000001
+
+smile&gt; fdr(testy, pred)
+res12: Double = 0.16447859963710107
+
+smile&gt; f1(testy, pred)
+res13: Double = 0.808301925757654
+
+// Calculate posteriori probability for AUC computation.
+val posteriori = new Array[Double](2)
+val prob = testx.map { x =>
+        model.predict(x, posteriori)
+        posteriori(1)
+    }
+
+smile&gt; auc(testy, prob)
+res17: Double = 0.8650958
+    </code></pre>
 
     <p>For regression, Smile has the following measures:</p>
 
     <ul>
-        <li>MSE (mean squared error) and RMSE (root mean squared error.).</li>
-        <li>Absolute deviation error.</li>
+        <li>MSE (mean squared error) and RMSE (root mean squared error).</li>
+        <li>MAD (mean absolute deviation error).</li>
         <li>RSS (residual sum of squares).</li>
     </ul>
 
@@ -130,6 +193,85 @@
         networks, this parameter should be set false. These methods return the trained model
         and print out various measures.</p>
 
+    <pre class="prettyprint lang-scala"><code>
+val train = read.arff("data/weka/segment-challenge.arff", 19)
+val segment = read.arff("data/weka/segment-test.arff", 19)
+
+val (x, y) = train.unzipInt
+val (testx, testy) = segment.unzipInt
+
+smile&gt; test(x, y, testx, testy) { case (x, y) => randomForest(x, y) }
+training...
+[main] INFO smile.util.package$ - runtime: 1344.61536 ms
+[main] INFO smile.util.package$ - runtime: 1350.594382 ms
+testing...
+[main] INFO smile.util.package$ - runtime: 100.191294 ms
+Accuracy = 96.30%
+Confusion Matrix: ROW=truth and COL=predicted
+class  0 |     124 |       0 |       0 |       0 |       1 |       0 |       0 |
+class  1 |       0 |     110 |       0 |       0 |       0 |       0 |       0 |
+class  2 |       3 |       0 |     113 |       0 |       6 |       0 |       0 |
+class  3 |       1 |       0 |       0 |     105 |       4 |       0 |       0 |
+class  4 |       1 |       0 |       7 |       4 |     114 |       0 |       0 |
+class  5 |       0 |       0 |       0 |       0 |       0 |      94 |       0 |
+class  6 |       0 |       0 |       0 |       3 |       0 |       0 |     120 |
+res5: RandomForest = smile.classification.RandomForest@2ac50ab0
+    </code></pre>
+
+    <pre class="prettyprint lang-scala"><code>
+val label = new NominalAttribute("class")
+val train = read.table("data/classification/toy/toy-train.txt", Some((label, 0)))
+val test = read.table("data/classification/toy/toy-test.txt", Some((label, 0)))
+
+val (x, y) = train.unzipInt
+val (testx, testy) = test.unzipInt
+
+smile&gt; test2(x, y, testx, testy) { case (x, y) => lda(x, y) }
+training...
+Sep 23, 2017 10:46:18 AM com.github.fommil.jni.JniLoader liberalLoad
+INFO: successfully loaded /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/jniloader5628602571859069912netlib-native_system-osx-x86_64.jnilib
+[main] INFO smile.netlib.NLMatrix - LAPACK DSYEVR returns work space size: 66
+[main] INFO smile.util.package$ - runtime: 127.952111 ms
+[main] INFO smile.util.package$ - runtime: 132.074615 ms
+testing...
+Sep 23, 2017 10:46:18 AM com.github.fommil.jni.JniLoader load
+INFO: already loaded netlib-native_system-osx-x86_64.jnilib
+[main] INFO smile.util.package$ - runtime: 78.653061 ms
+Accuracy = 81.23%
+Sensitivity/Recall = 78.28%
+Specificity = 84.17%
+Precision = 83.18%
+F1-Score = 80.66%
+F2-Score = 79.21%
+F0.5-Score = 82.15%
+Confusion Matrix: ROW=truth and COL=predicted
+class 0	: 8417	| 1583	|
+class 1	: 2172	| 7828	|
+res5: LDA = smile.classification.LDA@5a524a19
+
+smile&gt; test2(x, y, testx, testy) { case (x, y) => randomForest(x, y) }
+training...
+[main] INFO smile.util.package$ - runtime: 133.819391 ms
+[main] INFO smile.util.package$ - runtime: 136.249939 ms
+testing...
+[main] INFO smile.util.package$ - runtime: 449.700148 ms
+Accuracy = 81.11%
+Sensitivity/Recall = 80.99%
+Specificity = 81.22%
+Precision = 81.18%
+F1-Score = 81.08%
+F2-Score = 81.03%
+F0.5-Score = 81.14%
+Confusion Matrix: ROW=truth and COL=predicted
+class 0	: 8122	| 1878	|
+class 1	: 1901	| 8099	|
+res6: RandomForest = smile.classification.RandomForest@a24e874
+
+// AUC will be reported in binary classification
+test2soft(x, y, testx, testy) { case (x, y) => lda(x, y) }
+test2soft(x, y, testx, testy) { case (x, y) => randomForest(x, y) }
+    </code></pre>
+
     <h3 id="out-of-bag">Out-of-bag Error</h3>
 
     <p>Out-of-bag (OOB) error, also called out-of-bag estimate, is a method of measuring
@@ -167,13 +309,43 @@
         for classification or regression, respectively.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val data = read.arff("data/weka/iris.arff", 4)
-    val (x, y) = data.unzipInt
-    cv(x, y, 10) { case (x, y) => lda(x, y) }
-    </code></pre>
+smile&gt; val data = read.arff("data/weka/iris.arff", 4)
+smile&gt; val (x, y) = data.unzipInt
+smile&gt; cv(x, y, 10) { case (x, y) => lda(x, y) }
+cv 1...Sep 23, 2017 10:49:39 AM com.github.fommil.jni.JniLoader liberalLoad
+INFO: successfully loaded /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/jniloader2149102048580875489netlib-native_system-osx-x86_64.jnilib
+[main] INFO smile.netlib.NLMatrix - LAPACK DSYEVR returns work space size: 132
+[main] INFO smile.util.package$ - runtime: 120.440284 ms
+Sep 23, 2017 10:49:39 AM com.github.fommil.jni.JniLoader load
+INFO: already loaded netlib-native_system-osx-x86_64.jnilib
+cv 2...[main] INFO smile.netlib.NLMatrix - LAPACK DSYEVR returns work space size: 132
+[main] INFO smile.util.package$ - runtime: 0.317248 ms
+cv 3...[main] INFO smile.netlib.NLMatrix - LAPACK DSYEVR returns work space size: 132
+[main] INFO smile.util.package$ - runtime: 0.277836 ms
+cv 4...[main] INFO smile.netlib.NLMatrix - LAPACK DSYEVR returns work space size: 132
+[main] INFO smile.util.package$ - runtime: 0.329278 ms
+cv 5...[main] INFO smile.netlib.NLMatrix - LAPACK DSYEVR returns work space size: 132
+[main] INFO smile.util.package$ - runtime: 0.313139 ms
+cv 6...[main] INFO smile.netlib.NLMatrix - LAPACK DSYEVR returns work space size: 132
+[main] INFO smile.util.package$ - runtime: 0.193949 ms
+cv 7...[main] INFO smile.netlib.NLMatrix - LAPACK DSYEVR returns work space size: 132
+[main] INFO smile.util.package$ - runtime: 0.231793 ms
+cv 8...[main] INFO smile.netlib.NLMatrix - LAPACK DSYEVR returns work space size: 132
+[main] INFO smile.util.package$ - runtime: 0.243219 ms
+cv 9...[main] INFO smile.netlib.NLMatrix - LAPACK DSYEVR returns work space size: 132
+[main] INFO smile.util.package$ - runtime: 0.312006 ms
+cv 10...[main] INFO smile.netlib.NLMatrix - LAPACK DSYEVR returns work space size: 132
+[main] INFO smile.util.package$ - runtime: 0.289655 ms
+Confusion Matrix: ROW=truth and COL=predicted
+class 0	: 49	| 1	| 0	|
+class 1	: 0	| 41	| 9	|
+class 2	: 0	| 13	| 37	|
+Accuracy: 84.67%
+res2: Array[Double] = Array(0.8466666666666667)
+</code></pre>
 
     <p>On the Iris data, the accuracy estimation of 10-fold cross validation
-        is about 84%. You may get different number because of the random partitions.</p>
+        is about 84.7%. You may get different number because of the random partitions.</p>
 
     <p>A special case is the leave-one-out cross validation that uses a single observation
         from the original sample as the validation data, and the remaining
@@ -194,7 +366,13 @@
         is because more data is used for training and less for testing.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    loocv(x, y) { case (x, y) => lda(x, y) }
+smile&gt; loocv(x, y) { case (x, y) => lda(x, y) }
+Confusion Matrix: ROW=truth and COL=predicted
+class  0 |      49 |       1 |       0 |
+class  1 |       0 |      41 |       9 |
+class  2 |       0 |      12 |      38 |
+Accuracy: 85.33%
+res7: Array[Double] = Array(0.8533333333333334)
     </code></pre>
 
     <h2 id="bootstrap">Bootstrap</h2>
@@ -215,10 +393,13 @@
     </code></pre>
 
     <p>On the Iris data, the accuracy estimation of 100 bootstraps
-        is about 83.3%, which is slightly lower than that of 10-fold cross validation.</p>
+        is about 83.7%, which is slightly lower than that of 10-fold cross validation.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    bootstrap(x, y, 100) { case (x, y) => lda(x, y) }
+smile&gt; bootstrap(x, y, 100) { case (x, y) => lda(x, y) }
+Bootstrap average:
+Accuracy: 83.72%
+res8: Array[Double] = Array(0.8372408157995903)
     </code></pre>
 
     <p>The bootstrap distribution of a parameter-estimator has been used to
@@ -236,7 +417,7 @@
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
-        <a class="btn-prev-text" href="feature.html" title="Previous Section: Feature Selection and Dimension Reduction"><span>Feature Selection and Dimension Reduction</span></a>
+        <a class="btn-prev-text" href="feature.html" title="Previous Section: Features"><span>Features</span></a>
         <a class="btn-next-text" href="missing-value-imputation.html" title="Next Section: Missing Value Imputation"><span>Missing Value Imputation</span></a>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
