@@ -49,7 +49,7 @@ trait Operators {
     * performance of a binary classification test. Specificity measures the
     * proportion of negatives which are correctly identified.
     */
-  def specificty(truth: Array[Int], prediction: Array[Int]): Double = new Specificity().measure(truth, prediction)
+  def specificity(truth: Array[Int], prediction: Array[Int]): Double = new Specificity().measure(truth, prediction)
   /** Fall-out, false alarm rate, or false positive rate (FPR).
     * Fall-out is actually Type I error and closely related to specificity
     * (1 - specificity).
@@ -69,18 +69,23 @@ trait Operators {
     * precision and recall, where an F1 score reaches its best value at 1 and worst at 0.
     */
   def f1(truth: Array[Int], prediction: Array[Int]): Double = new FMeasure().measure(truth, prediction)
+
   /** The area under the curve (AUC). When using normalized units, the area under
     * the curve is equal to the probability that a classifier will rank a
     * randomly chosen positive instance higher than a randomly chosen negative
     * one (assuming 'positive' ranks higher than 'negative').
     */
   def auc(truth: Array[Int], probability: Array[Double]): Double = AUC.measure(truth, probability)
+
   /** Mean squared error. */
   def mse(truth: Array[Double], prediction: Array[Double]): Double = new MSE().measure(truth, prediction)
   /** Root mean squared error. */
   def rmse(truth: Array[Double], prediction: Array[Double]): Double = new RMSE().measure(truth, prediction)
   /** Residual sum of squares. */
   def rss(truth: Array[Double], prediction: Array[Double]): Double = new RSS().measure(truth, prediction)
+  /** Mean absolute deviation error. */
+  def mad(truth: Array[Double], prediction: Array[Double]): Double = new MeanAbsoluteDeviation().measure(truth, prediction)
+
   /** Rand index is defined as the number of pairs of objects
     * that are either in the same group or in different groups in both partitions
     * divided by the total number of pairs of objects. The Rand index lies between

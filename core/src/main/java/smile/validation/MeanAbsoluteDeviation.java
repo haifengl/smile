@@ -19,11 +19,11 @@ package smile.validation;
 import smile.math.Math;
 
 /**
- * Absolute deviation error.
+ * Mean absolute deviation error.
  * 
  * @author Haifeng Li
  */
-public class AbsoluteDeviation implements RegressionMeasure {
+public class MeanAbsoluteDeviation implements RegressionMeasure {
 
     @Override
     public double measure(double[] truth, double[] prediction) {
@@ -42,6 +42,6 @@ public class AbsoluteDeviation implements RegressionMeasure {
 
     @Override
     public String toString() {
-        return "Absolute Deviation";
+        return "Mean Absolute Deviation";
     }
 }
