@@ -98,6 +98,8 @@ trait Operators {
     * agreement even when the partitions compared have different numbers of clusters.
     */
   def adjustedRandIndex(truth: Array[Int], prediction: Array[Int]): Double = new AdjustedRandIndex().measure(truth, prediction)
+  /** Normalized mutual information score between two clusterings. */
+  def mutualInformationScore(truth: Array[Int], prediction: Array[Int]): Double = new MutualInformationScore().measure(truth, prediction)
 
   /** Test a generic classifier.
     * The accuracy will be measured and printed out on standard output.
