@@ -19,11 +19,11 @@ package smile.shell
 import ammonite.ops.Path
 import ammonite.runtime.Storage
 
-/** Smile shell.
+/** Ammonite REPL based shell.
   *
   * @author Haifeng Li
   */
-object Shell {
+object AmmoniteShell {
   val home = Path(System.getProperty("user.home")) / ".smile"
   val prompt = "smile> "
   val welcome =
