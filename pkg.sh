@@ -13,7 +13,7 @@ check_error "javadoc"
 
 sbt clean
 
-sbt universal:packageZipTarball
+sbt universal:packageBin
 check_error "Packaging .tgz"
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
