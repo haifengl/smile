@@ -69,9 +69,10 @@ or use Debian's alternatives system.
 Windows
 -------
 The native_system builds expect to find libblas3.dll and liblapack3.dll
-on the %PATH% (or current working directory). Besides vendor-supplied
-implementations, OpenBLAS provide generically tuned binaries, and it
-is possible to build ATLAS.
+on the %PATH% (or current working directory). Smile ships a prebuilt
+[LAPACK for Windows](http://icl.cs.utk.edu/lapack-for-windows/lapack).
+The users can also install vendor-supplied implementations, which may
+offer better performance.
 
 Smile comes with an interactive shell. Download pre-packaged Smile from the [releases page](https://github.com/haifengl/smile/releases).
 In the home directory of Smile, type
