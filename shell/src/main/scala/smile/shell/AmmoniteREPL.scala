@@ -23,7 +23,7 @@ import ammonite.runtime.Storage
   *
   * @author Haifeng Li
   */
-object AmmoniteShell {
+object AmmoniteREPL {
   val home = Path(System.getProperty("user.home")) / ".smile"
   val prompt = "smile> "
   val welcome =
