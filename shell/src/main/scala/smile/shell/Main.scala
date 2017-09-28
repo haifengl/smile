@@ -42,10 +42,10 @@ object Main extends App {
         } else {
           (cliConfig.code, leftoverArgs) match {
             case (Some(code), Nil) =>
-              AmmoniteShell.runCode(code)
+              AmmoniteREPL.runCode(code)
 
             case (None, Nil) =>
-              AmmoniteShell.run()
+              AmmoniteREPL.run()
               true
 
             case (None, head :: rest) if head.startsWith("-") =>
@@ -54,7 +54,7 @@ object Main extends App {
               false
 
             case (None, head :: rest) =>
-              val success = AmmoniteShell.runScript(Path(head, pwd)) // ignore script args for now
+              val success = AmmoniteREPL.runScript(Path(head, pwd)) // ignore script args for now
               success
           }
         }
