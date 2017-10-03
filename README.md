@@ -70,7 +70,7 @@ Windows
 -------
 The native_system builds expect to find libblas3.dll and liblapack3.dll
 on the %PATH% (or current working directory). Smile ships a prebuilt
-[LAPACK for Windows](http://icl.cs.utk.edu/lapack-for-windows/lapack).
+[OpenBLAS](http://www.openblas.net/).
 The users can also install vendor-supplied implementations, which may
 offer better performance.
 
