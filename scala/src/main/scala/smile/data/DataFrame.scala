@@ -28,6 +28,8 @@ case class DataFrame(data: AttributeDataset) extends Dynamic {
   type Row = data.Row
   lazy val rows = data.data().asScala.map(_.asInstanceOf[Row])
 
+  /** Returns the attribute list. */
+  def attributes: Array[Attribute] = data.attributes()
   /** Returns the size of data frame. */
   def size: Int = data.size
   /** Finds the first row satisfying a predicate. */
@@ -174,6 +176,9 @@ case class DataFrame(data: AttributeDataset) extends Dynamic {
 
   /** Returns a new data frame of selected columns. */
   def apply(cols: String*): DataFrame = DataFrame(data.columns(cols: _*))
+
+  /** Returns a new data frame without given columns. */
+  def remove(cols: String*): DataFrame = DataFrame(data.remove(cols: _*))
 
   /** Returns a column. */
   def applyDynamic(col: String): AttributeVector = apply(col)

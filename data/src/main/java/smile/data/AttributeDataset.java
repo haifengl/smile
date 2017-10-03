@@ -368,6 +368,7 @@ public class AttributeDataset extends Dataset<double[]> {
         return column(i);
     }
 
+    /** Returns a dataset with selected columns. */
     public AttributeDataset columns(String... cols) {
         Attribute[] attrs = new Attribute[cols.length];
         int[] index = new int[cols.length];
@@ -391,7 +392,43 @@ public class AttributeDataset extends Dataset<double[]> {
             for (int i = 0; i < x.length; i++) {
                 x[i] = datum.x[index[i]];
             }
-            Row row = sub.add(x, datum.y);
+            Row row = response == null ? sub.add(x) : sub.add(x, datum.y);
+            row.name = datum.name;
+            row.weight = datum.weight;
+            row.description = datum.description;
+            row.timestamp = datum.timestamp;
+        }
+
+        return sub;
+    }
+
+    /** Returns a new dataset without given columns. */
+    public AttributeDataset remove(String... cols) {
+        Attribute[] attrs = new Attribute[cols.length];
+        int[] index = new int[cols.length];
+        for (int j = 0, i = 0; j < attributes.length; j++) {
+            boolean hit = false;
+            for (int k = 0; k < cols.length; k++) {
+                if (attributes[j].getName().equals(cols[k])) {
+                    hit = true;
+                    break;
+                }
+            }
+
+            if (!hit) {
+                index[i] = j;
+                attrs[i] = attributes[j];
+                i++;
+            }
+        }
+
+        AttributeDataset sub = new AttributeDataset(name, attrs, response);
+        for (Datum<double[]> datum : data) {
+            double[] x = new double[index.length];
+            for (int i = 0; i < x.length; i++) {
+                x[i] = datum.x[index[i]];
+            }
+            Row row = response == null ? sub.add(x) : sub.add(x, datum.y);
             row.name = datum.name;
             row.weight = datum.weight;
             row.description = datum.description;
