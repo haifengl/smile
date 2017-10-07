@@ -43,6 +43,64 @@ object write {
       close
     }
   }
+
+  /** Writes an AttributeDataset to an ARFF file. */
+  def arff(data: AttributeDataset, file: String): Unit = {
+    val writer = new PrintWriter(new File(file))
+
+    writer.print("% ")
+    writer.println(data.getDescription)
+
+    writer.print("@RELATION ")
+    writer.println(data.getName)
+
+    val attributes = data.attributes()
+    attributes.foreach { attr =>
+      writeAttribute(writer, attr)
+    }
+
+    val response = data.responseAttribute
+    if (response != null) {
+      writeAttribute(writer, response)
+    }
+
+    writer.println("@DATA")
+
+    val p = attributes.length
+    data.foreach { row =>
+      val x = (0 until p).map { i =>
+        attributes(i).toString(row.x(i))
+      }.mkString(",")
+      writer.print(x)
+
+      if (response != null) {
+        writer.print(',')
+        writer.print(response.toString(row.y))
+      }
+
+      writer.println
+    }
+
+    writer.close
+  }
+
+  private def writeAttribute(writer: PrintWriter, attr: Attribute): Unit = {
+    writer.print("@ATTRIBUTE ")
+    writer.print(attr.getName)
+    attr.getType match {
+      case Attribute.Type.NUMERIC => writer.println(" REAL")
+      case Attribute.Type.STRING => writer.println(" STRING")
+      case Attribute.Type.DATE => writer.println(""" DATE "yyyy-MM-dd HH:mm:ss"""")
+      case Attribute.Type.NOMINAL =>
+        val nominal = attr.asInstanceOf[NominalAttribute]
+        writer.println((0 until nominal.size).map(nominal.toString(_)).mkString(" {", ",", "}"))
+    }
+  }
+
+  /** Writes a DataFrame to an ARFF file. */
+  def arff(data: DataFrame, file: String): Unit = {
+    arff(data.data, file)
+  }
 }
 
 /** Input operators. */
