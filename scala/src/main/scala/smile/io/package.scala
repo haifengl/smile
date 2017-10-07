@@ -143,11 +143,11 @@ object write {
 
   /** Writes a two-dimensional array to a delimited text file.
     *
-    * @param data an attribute dataset.
+    * @param data a two-dimensional array.
     * @param file the file path
     * @param delimiter delimiter string
     */
-  def table(data: Array[Array[Double]], file: String, delimiter: String): Unit = {
+  def table[T](data: Array[Array[T]], file: String, delimiter: String): Unit = {
     val writer = new PrintWriter(new File(file))
 
     data.foreach { row =>
@@ -159,11 +159,34 @@ object write {
 
   /** Writes a two-dimensional array to a delimited text file.
     *
-    * @param data an attribute dataset.
+    * @param data a two-dimensional array.
     * @param file the file path
     */
-  def csv(data: Array[Array[Double]], file: String): Unit = {
+  def csv[T](data: Array[Array[T]], file: String): Unit = {
     table(data, file, ",")
+  }
+
+  /** Writes an AttributeVector to a text file line by line.
+    *
+    * @param data an array.
+    * @param file the file path
+    */
+  def apply[T](data: AttributeVector, file: String): Unit = {
+    val writer = new PrintWriter(new File(file))
+    writer.println(data.attribute.getName)
+    data.vector.foreach(writer.println(_))
+    writer.close
+  }
+
+  /** Writes an array to a text file line by line.
+    *
+    * @param data an array.
+    * @param file the file path
+    */
+  def apply[T](data: Array[T], file: String): Unit = {
+    val writer = new PrintWriter(new File(file))
+    data.foreach(writer.println(_))
+    writer.close
   }
 }
 
