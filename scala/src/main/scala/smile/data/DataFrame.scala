@@ -29,7 +29,12 @@ case class DataFrame(data: AttributeDataset) extends Dynamic {
   lazy val rows = data.data().asScala.map(_.asInstanceOf[Row])
 
   /** Returns the attribute list. */
-  def attributes: Array[Attribute] = data.attributes()
+  def attributes = data.attributes()
+  /** Returns the response variable. */
+  def response = data.response()
+  /** Returns the response attribute. */
+  def responseAttribute = data.responseAttribute()
+
   /** Returns the size of data frame. */
   def size: Int = data.size
   /** Finds the first row satisfying a predicate. */
