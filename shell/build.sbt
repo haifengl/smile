@@ -23,7 +23,7 @@ executableScriptName := "smile"
 
 bashScriptConfigLocation := Some("${app_home}/../conf/smile.ini")
 
-bashScriptExtraDefines += """addJava "-Dsmile.home=${app_home}""""
+bashScriptExtraDefines += """addJava "-Dsmile.home=${app_home}/..""""
 
 bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.scala""""
 
