@@ -189,10 +189,10 @@ public class ValidationTest {
             RadialBasisFunction[] rbf = SmileUtils.learnGaussianRadialBasis(x, centers, 2);
             RBFNetwork<double[]> rkhs = new RBFNetwork<>(x, y, new EuclideanDistance(), rbf, centers);
 
-            RegressionMeasure[] measures = {new RMSE(), new AbsoluteDeviation()};
+            RegressionMeasure[] measures = {new RMSE(), new MeanAbsoluteDeviation()};
             double[] results = Validation.test(rkhs, testx, testy, measures);
             System.out.println("RMSE = " + results[0]);
-            System.out.println("Absolute Deviation = " + results[1]);
+            System.out.println("MAD = " + results[1]);
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -286,10 +286,10 @@ public class ValidationTest {
 
             RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
-            RegressionMeasure[] measures = {new RMSE(), new AbsoluteDeviation()};
+            RegressionMeasure[] measures = {new RMSE(), new MeanAbsoluteDeviation()};
             double[] results = Validation.loocv(trainer, x, y, measures);
             System.out.println("RMSE = " + results[0]);
-            System.out.println("Absolute Deviation = " + results[1]);
+            System.out.println("MAD = " + results[1]);
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -380,10 +380,10 @@ public class ValidationTest {
 
             RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
-            RegressionMeasure[] measures = {new RMSE(), new AbsoluteDeviation()};
+            RegressionMeasure[] measures = {new RMSE(), new MeanAbsoluteDeviation()};
             double[] results = Validation.cv(10, trainer, x, y, measures);
             System.out.println("RMSE = " + results[0]);
-            System.out.println("Absolute Deviation = " + results[1]);
+            System.out.println("MAD = " + results[1]);
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -486,7 +486,7 @@ public class ValidationTest {
 
             RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
-            RegressionMeasure[] measures = {new RMSE(), new AbsoluteDeviation()};
+            RegressionMeasure[] measures = {new RMSE(), new MeanAbsoluteDeviation()};
             double[][] results = Validation.bootstrap(100, trainer, x, y, measures);
             System.out.println("100-fold bootstrap RMSE average = " + Math.mean(results[0]));
             System.out.println("100-fold bootstrap RMSE std.dev = " + Math.sd(results[0]));
