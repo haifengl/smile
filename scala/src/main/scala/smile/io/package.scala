@@ -48,9 +48,6 @@ object write {
   def arff(data: AttributeDataset, file: String): Unit = {
     val writer = new PrintWriter(new File(file))
 
-    writer.print("% ")
-    writer.println(data.getDescription)
-
     writer.print("@RELATION ")
     writer.println(data.getName)
 
@@ -97,9 +94,76 @@ object write {
     }
   }
 
-  /** Writes a DataFrame to an ARFF file. */
-  def arff(data: DataFrame, file: String): Unit = {
-    arff(data.data, file)
+  /** Writes an AttributeDataset to a delimited text file.
+    *
+    * @param data an attribute dataset.
+    * @param file the file path
+    * @param delimiter delimiter string
+    */
+  def table(data: AttributeDataset, file: String, delimiter: String = "\t"): Unit = {
+    val writer = new PrintWriter(new File(file))
+
+    val attributes = data.attributes()
+    writer.print(attributes.map(_.getName).mkString(delimiter))
+
+    val response = data.responseAttribute
+    if (response != null) {
+      writer.print(delimiter)
+      writer.print(response.getName)
+    }
+
+    writer.println
+
+    val p = attributes.length
+    data.foreach { row =>
+      val x = (0 until p).map { i =>
+        attributes(i).toString(row.x(i))
+      }.mkString(delimiter)
+      writer.print(x)
+
+      if (response != null) {
+        writer.print(delimiter)
+        writer.print(response.toString(row.y))
+      }
+
+      writer.println
+    }
+
+    writer.close
+  }
+
+  /** Writes an AttributeDataset to a delimited text file.
+    *
+    * @param data an attribute dataset.
+    * @param file the file path
+    */
+  def csv(data: AttributeDataset, file: String): Unit = {
+    table(data, file, ",")
+  }
+
+  /** Writes a two-dimensional array to a delimited text file.
+    *
+    * @param data an attribute dataset.
+    * @param file the file path
+    * @param delimiter delimiter string
+    */
+  def table(data: Array[Array[Double]], file: String, delimiter: String): Unit = {
+    val writer = new PrintWriter(new File(file))
+
+    data.foreach { row =>
+      writer.println(row.mkString(delimiter))
+    }
+
+    writer.close
+  }
+
+  /** Writes a two-dimensional array to a delimited text file.
+    *
+    * @param data an attribute dataset.
+    * @param file the file path
+    */
+  def csv(data: Array[Array[Double]], file: String): Unit = {
+    table(data, file, ",")
   }
 }
 
