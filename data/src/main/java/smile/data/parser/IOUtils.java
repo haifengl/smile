@@ -31,11 +31,11 @@ public class IOUtils {
 
     }
 
-    private static String home = System.getProperty("smile.home", "shell/src/universal/bin");
+    private static String home = System.getProperty("smile.home", "shell/src/universal/");
 
     /** Get the file path of sample dataset. */
     public static String getTestDataPath(String path) {
-        return home + "/../data/" + path;
+        return home + "/data/" + path;
     }
 
     /** Get the file object of sample dataset. */
