@@ -33,4 +33,18 @@ public interface Regression<T> {
      * @return the predicted value of dependent variable.
      */
     public double predict(T x);
+
+    /**
+     * Predicts the dependent variables of an array of instances.
+     *
+     * @param x the instances.
+     * @return the predicted values.
+     */
+    default public double[] predict(T[] x) {
+        double[] y = new double[x.length];
+        for (int i = 0; i < y.length; i++) {
+            y[i] = predict(x[i]);
+        }
+        return y;
+    }
 }
