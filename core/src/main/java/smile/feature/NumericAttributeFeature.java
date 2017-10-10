@@ -215,7 +215,7 @@ public class NumericAttributeFeature implements Feature<double[]> {
             throw new IllegalArgumentException("Invalid lower limit: " + lower);
         }
         
-        if (upper < 0.5 || lower > 1.0) {
+        if (upper < 0.5 || upper > 1.0) {
             throw new IllegalArgumentException("Invalid upper limit: " + upper);
         }
         
@@ -317,11 +317,11 @@ public class NumericAttributeFeature implements Feature<double[]> {
     @Override
     public double f(double[] object, int id) {
         if (object.length != attributes.length) {
-            throw new IllegalArgumentException(String.format("Invalide object size %d, expected %d", object.length, attributes.length));            
+            throw new IllegalArgumentException(String.format("Invalid object size %d, expected %d", object.length, attributes.length));
         }
         
         if (id < 0 || id >= features.length) {
-            throw new IllegalArgumentException("Invalide feature id: " + id);
+            throw new IllegalArgumentException("Invalid feature id: " + id);
         }
         
         double x = object[map[id]];
