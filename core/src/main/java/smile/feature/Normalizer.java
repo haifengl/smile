@@ -16,6 +16,9 @@
 
 package smile.feature;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import smile.data.Attribute;
 import smile.math.Math;
 
 /**
@@ -28,7 +31,9 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public class Normalizer implements FeatureTransform {
+public class Normalizer extends FeatureTransform {
+    private static final Logger logger = LoggerFactory.getLogger(Normalizer.class);
+
     /**
      * The types of data scaling.
      */
@@ -47,11 +52,20 @@ public class Normalizer implements FeatureTransform {
         Inf
     }
 
-    private Norm norm;
+    /** The type of norm .*/
+    private Norm norm = Norm.L2;
 
     /** Default constructor with L2 norm. */
     public Normalizer() {
 
+    }
+
+    /**
+     * Constructor with L2 norm.
+     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
+     */
+    public Normalizer(boolean copy) {
+        super(copy);
     }
 
     /**
@@ -60,6 +74,21 @@ public class Normalizer implements FeatureTransform {
      */
     public Normalizer(Norm norm) {
         this.norm = norm;
+    }
+
+    /**
+     * Constructor.
+     * @param norm The norm to use to normalize each non zero sample.
+     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
+     */
+    public Normalizer(Norm norm, boolean copy) {
+        super(copy);
+        this.norm = norm;
+    }
+
+    @Override
+    public void learn(Attribute[] attributes, double[][] data) {
+        logger.info("Normalizer is stateless and learn() does nothing.");
     }
 
     @Override
@@ -80,12 +109,22 @@ public class Normalizer implements FeatureTransform {
                 throw new IllegalStateException("Unknown type of norm: " + norm);
         }
 
-        if (!Math.isZero(scale)) {
+        double[] y = copy ? new double[x.length] : x;
+        if (Math.isZero(scale)) {
+            if (y != x) {
+                System.arraycopy(x, 0, y, 0, x.length);
+            }
+        } else {
             for (int i = 0; i < x.length; i++) {
-                x[i] /= scale;
+                y[i] = x[i] / scale;
             }
         }
 
-        return x;
+        return y;
+    }
+
+    @Override
+    public String toString() {
+        return "Normalizer()";
     }
 }

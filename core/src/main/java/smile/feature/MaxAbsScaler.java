@@ -29,45 +29,29 @@ import smile.sort.QuickSelect;
  *
  * @author Haifeng Li
  */
-public class MaxAbsScaler implements FeatureTransform {
+public class MaxAbsScaler extends FeatureTransform {
     /**
      * Scaling factor.
      */
     private double[] scale;
 
     /**
-     * Constructor. Learn the scaling parameters from the data.
-     * @param data The training data to learn scaling parameters.
-     *             The data will not be modified.
+     * Constructor.
      */
-    public MaxAbsScaler(double[][] data) {
-        int n = data.length;
-        int p = data[0].length;
-        scale = new double[p];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++) {
-                double abs = Math.abs(data[i][j]);
-                if (scale[j] < abs) {
-                    scale[j] = abs;
-                }
-            }
-        }
+    public MaxAbsScaler() {
 
-        for (int i = 0; i < scale.length; i++) {
-            if (Math.isZero(scale[i])) {
-                scale[i] = 1.0;
-            }
-        }
     }
 
     /**
-     * Constructor. Learn the scaling parameters from the data.
-     * @param attributes The variable attributes. Of which, numeric variables
-     *                   will be standardized.
-     * @param data The training data to learn scaling parameters.
-     *             The data will not be modified.
+     * Constructor.
+     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
      */
-    public MaxAbsScaler(Attribute[] attributes, double[][] data) {
+    public MaxAbsScaler(boolean copy) {
+        super(copy);
+    }
+
+    @Override
+    public void learn(Attribute[] attributes, double[][] data) {
         int n = data.length;
         int p = data[0].length;
         scale = new double[p];
@@ -100,10 +84,28 @@ public class MaxAbsScaler implements FeatureTransform {
             throw new IllegalArgumentException(String.format("Invalid vector size %d, expected %d", x.length, scale.length));
         }
 
+        double[] y = copy ? new double[x.length] : x;
         for (int i = 0; i < x.length; i++) {
-            x[i] /= scale[i];
+            y[i] = x[i] / scale[i];
         }
 
-        return x;
+        return y;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("MaxAbsScaler(");
+        if (scale != null) {
+            if (scale.length > 0) {
+                sb.append(String.format("%.4f", scale[0]));
+            }
+
+            for (int i = 1; i < scale.length; i++) {
+                sb.append(String.format(", %.4f", scale[i]));
+            }
+        }
+        sb.append(")");
+        return sb.toString();
     }
 }

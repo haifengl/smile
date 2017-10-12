@@ -16,10 +16,8 @@
 
 package smile.feature;
 
-import smile.data.NumericAttribute;
 import smile.math.Math;
 import smile.data.Attribute;
-import smile.sort.QuickSelect;
 
 /**
  * Scales all numeric variables into the range [0, 1].
@@ -33,7 +31,7 @@ import smile.sort.QuickSelect;
  *
  * @author Haifeng Li
  */
-public class Scaler implements FeatureTransform {
+public class Scaler extends FeatureTransform {
     /**
      * Lower bound.
      */
@@ -43,31 +41,21 @@ public class Scaler implements FeatureTransform {
      */
     protected double[] hi;
 
-    /**
-     * Constructor. Learn the scaling parameters from the data.
-     * @param data The training data to learn scaling parameters.
-     *             The data will not be modified.
-     */
-    public Scaler(double[][] data) {
-        lo = Math.colMin(data);
-        hi = Math.colMax(data);
+    /** Constructor. Inplace transformation. */
+    public Scaler() {
 
-        for (int i = 0; i < hi.length; i++) {
-            hi[i] -= lo[i];
-            if (Math.isZero(hi[i])) {
-                hi[i] = 1.0;
-            }
-        }
     }
 
     /**
-     * Constructor. Learn the scaling parameters from the data.
-     * @param attributes The variable attributes. Of which, numeric variables
-     *                   will be standardized.
-     * @param data The training data to learn scaling parameters.
-     *             The data will not be modified.
+     * Constructor.
+     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
      */
-    public Scaler(Attribute[] attributes, double[][] data) {
+    public Scaler(boolean copy) {
+        super(copy);
+    }
+
+    @Override
+    public void learn(Attribute[] attributes, double[][] data) {
         lo = Math.colMin(data);
         hi = Math.colMax(data);
 
@@ -83,127 +71,36 @@ public class Scaler implements FeatureTransform {
         }
     }
 
-    /**
-     * Constructor. Learn the scaling parameters from the data by Winsorization procedure.
-     * @param data The training data to learn scaling parameters.
-     *             The data will not be modified.
-     * @param lower the lower limit in terms of percentiles of the original
-     *              distribution (say 5th percentile).
-     * @param upper the upper limit in terms of percentiles of the original
-     *              distribution (say 95th percentile).
-     */
-    public Scaler(double[][] data, double lower, double upper) {
-        if (lower < 0.0 || lower > 0.5) {
-            throw new IllegalArgumentException("Invalid lower limit: " + lower);
-        }
-
-        if (upper < 0.5 || upper > 1.0) {
-            throw new IllegalArgumentException("Invalid upper limit: " + upper);
-        }
-
-        if (upper <= lower) {
-            throw new IllegalArgumentException("Invalid lower and upper limit pair: " + lower + " >= " + upper);
-        }
-
-        int n = data.length;
-        int p = data[0].length;
-        int i1 = (int) Math.round(lower * n);
-        int i2 = (int) Math.round(upper * n);
-        if (i2 == n) {
-            i2 = n - 1;
-        }
-
-        lo = new double[p];
-        hi = new double[p];
-        double[] x = new double[n];
-
-        for (int j = 0; j < p; j++) {
-            for (int i = 0; i < n; i++) {
-                x[i] = data[i][j];
-            }
-
-            lo[j] = QuickSelect.select(x, i1);
-            hi[j] = QuickSelect.select(x, i2) - lo[j];
-            if (Math.isZero(hi[j])) {
-                throw new IllegalArgumentException("Attribute " + j + " has constant values in the given range.");
-            }
-        }
-    }
-
-    /**
-     * Constructor. Learn the scaling parameters from the data by Winsorization procedure.
-     * @param attributes The variable attributes. Of which, numeric variables
-     *                   will be standardized.
-     * @param data The training data to learn scaling parameters.
-     *             The data will not be modified.
-     * @param lower the lower limit in terms of percentiles of the original
-     *              distribution (say 5th percentile).
-     * @param upper the upper limit in terms of percentiles of the original
-     *              distribution (say 95th percentile).
-     */
-    public Scaler(Attribute[] attributes, double[][] data, double lower, double upper) {
-        if (lower < 0.0 || lower > 0.5) {
-            throw new IllegalArgumentException("Invalid lower limit: " + lower);
-        }
-
-        if (upper < 0.5 || upper > 1.0) {
-            throw new IllegalArgumentException("Invalid upper limit: " + upper);
-        }
-
-        if (upper <= lower) {
-            throw new IllegalArgumentException("Invalid lower and upper limit pair: " + lower + " >= " + upper);
-        }
-
-
-        int n = data.length;
-        int p = data[0].length;
-        int i1 = (int) Math.round(lower * n);
-        int i2 = (int) Math.round(upper * n);
-        if (i2 == n) {
-            i2 = n - 1;
-        }
-
-        lo = new double[p];
-        hi = new double[p];
-        double[] x = new double[n];
-
-        for (int j = 0; j < p; j++) {
-            if (attributes[j].getType() != Attribute.Type.NUMERIC) {
-                lo[j] = Double.NaN;
-            } else {
-                for (int i = 0; i < n; i++) {
-                    x[i] = data[i][j];
-                }
-
-                lo[j] = QuickSelect.select(x, i1);
-                hi[j] = QuickSelect.select(x, i2) - lo[j];
-                if (Math.isZero(hi[j])) {
-                    throw new IllegalArgumentException("Attribute " + j + " has constant values in the given range.");
-                }
-            }
-        }
-    }
-
-    /**
-     * Scales the elements of input vector into [0, 1].
-     * @param x a vector to be scaled. The vector will be modified on output.
-     * @return the input vector.
-     */
     @Override
     public double[] transform(double[] x) {
         if (x.length != lo.length) {
             throw new IllegalArgumentException(String.format("Invalid vector size %d, expected %d", x.length, lo.length));
         }
 
+        double[] y = copy ? new double[x.length] : x;
         for (int i = 0; i < x.length; i++) {
             if (!Double.isNaN(lo[i])) {
-                double y = (x[i] - lo[i]) / hi[i];
-                if (y < 0.0) y = 0.0;
-                if (y > 1.0) y = 1.0;
-                x[i] = y;
+                double yi = (x[i] - lo[i]) / hi[i];
+                if (yi < 0.0) yi = 0.0;
+                if (yi > 1.0) yi = 1.0;
+                y[i] = yi;
             }
         }
 
-        return x;
+        return y;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Scaler(");
+        if (lo != null) {
+            sb.append("\n");
+            for (int i = 0; i < lo.length; i++) {
+                sb.append(String.format("  [%.4f, %.4f]%n", lo[i], hi[i]));
+            }
+        }
+        sb.append(")");
+        return sb.toString();
     }
 }
