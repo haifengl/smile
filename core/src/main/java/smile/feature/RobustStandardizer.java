@@ -29,39 +29,22 @@ import smile.sort.QuickSelect;
 public class RobustStandardizer extends Standardizer {
 
     /**
-     * Constructor. Learn the scaling parameters from the data.
-     * @param data The training data to learn scaling parameters.
-     *             The data will not be modified.
+     * Constructor.
      */
-    public RobustStandardizer(double[][] data) {
-        int n = data.length;
-        int p = data[0].length;
+    public RobustStandardizer() {
 
-        mu = new double[p];
-        std = new double[p];
-        double[] x = new double[n];
-
-        for (int j = 0; j < p; j++) {
-            for (int i = 0; i < n; i++) {
-                x[i] = data[i][j];
-            }
-
-            mu[j] = QuickSelect.median(x);
-            std[j] = QuickSelect.q3(x) - QuickSelect.q1(x);
-            if (Math.isZero(std[j])) {
-                throw new IllegalArgumentException("Column " + j + " has constant values between Q1 and Q3.");
-            }
-        }
     }
 
     /**
-     * Constructor. Learn the scaling parameters from the data.
-     * @param attributes The variable attributes. Of which, numeric variables
-     *                   will be standardized.
-     * @param data The training data to learn scaling parameters.
-     *             The data will not be modified.
+     * Constructor.
+     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
      */
-    public RobustStandardizer(Attribute[] attributes, double[][] data) {
+    public RobustStandardizer(boolean copy) {
+        super(copy);
+    }
+
+    @Override
+    public void learn(Attribute[] attributes, double[][] data) {
         int n = data.length;
         int p = data[0].length;
 
@@ -84,5 +67,19 @@ public class RobustStandardizer extends Standardizer {
                 }
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("RobustStandardizer(");
+        if (mu != null) {
+            sb.append("\n");
+            for (int i = 0; i < mu.length; i++) {
+                sb.append(String.format("  [%.4f, %.4f]%n", mu[i], std[i]));
+            }
+        }
+        sb.append(")");
+        return sb.toString();
     }
 }
