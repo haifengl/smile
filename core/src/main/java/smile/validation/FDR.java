@@ -35,6 +35,14 @@ public class FDR implements ClassificationMeasure {
         int fp = 0;
         int p = 0;
         for (int i = 0; i < truth.length; i++) {
+            if (truth[i] != 0 && truth[i] != 1) {
+                throw new IllegalArgumentException("FDR can only be applied to binary classification: " + truth[i]);
+            }
+
+            if (prediction[i] != 0 && prediction[i] != 1) {
+                throw new IllegalArgumentException("FDR can only be applied to binary classification: " + prediction[i]);
+            }
+
             if (prediction[i] == 1) {
                 p++;
 

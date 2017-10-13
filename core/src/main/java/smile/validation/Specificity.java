@@ -27,8 +27,8 @@ package smile.validation;
  * I and type II errors. For any test, there is usually a trade-off between
  * the measures. This trade-off can be represented graphically using an ROC curve.
  * <p>
- * In this implementation, the class label 1 is regarded as positive and all others
- * are regarded as negative.
+ * In this implementation, the class label 1 is regarded as positive and 0
+ * is regarded as negative.
  *
  * @author Haifeng Li
  */
@@ -43,6 +43,14 @@ public class Specificity implements ClassificationMeasure {
         int tn = 0;
         int n = 0;
         for (int i = 0; i < truth.length; i++) {
+            if (truth[i] != 0 && truth[i] != 1) {
+                throw new IllegalArgumentException("Specificity can only be applied to binary classification: " + truth[i]);
+            }
+
+            if (prediction[i] != 0 && prediction[i] != 1) {
+                throw new IllegalArgumentException("Specificity can only be applied to binary classification: " + prediction[i]);
+            }
+
             if (truth[i] != 1) {
                 n++;
 
