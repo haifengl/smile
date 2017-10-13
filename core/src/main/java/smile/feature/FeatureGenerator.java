@@ -25,7 +25,7 @@ import smile.data.Attribute;
  * 
  * @author Haifeng Li
  */
-public interface Feature <T> {
+public interface FeatureGenerator<T> {
     /**
      * Returns the variable attributes of generated features.
      * Note that these are NOT the original variable attributes of objects.
@@ -36,8 +36,7 @@ public interface Feature <T> {
     /**
      * Generates a feature for given object.
      * @param object an object of interest.
-     * @param id the index of feature to be generated.
-     * @return a feature value.
+     * @return a feature vector.
      */
-    public double f(T object, int id);
+    public double[] feature(T object);
 }

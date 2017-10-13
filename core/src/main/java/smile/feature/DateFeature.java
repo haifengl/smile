@@ -19,6 +19,7 @@ package smile.feature;
 import java.util.Date;
 import smile.data.Attribute;
 import smile.data.DateAttribute;
+import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
 
 /**
@@ -29,7 +30,7 @@ import smile.data.NumericAttribute;
  * 
  * @author Haifeng Li
  */
-public class DateFeature implements Feature<double[]> {
+public class DateFeature implements FeatureGenerator<Date> {
     /**
      * The types of date/time features.
      */
@@ -72,91 +73,70 @@ public class DateFeature implements Feature<double[]> {
     }
     
     /**
-     * The variable attributes.
+     * The attributes of generated features.
      */
     private Attribute[] attributes;
-    /**
-     * The attributes of generated binary dummy variables.
-     */
-    private Attribute[] features;
     /**
      * The types of features to be generated.
      */
     private Type[] types;
-    /**
-     * A map from feature id to original attribute index.
-     */
-    private int[] map;
 
     /**
      * Constructor.
-     * @param attributes the variable attributes.
      * @param types the types of features to be generated.
      */
-    public DateFeature(Attribute[] attributes, Type[] types) {
-        this.attributes = attributes;
+    public DateFeature(Type[] types) {
         this.types = types;
         
-        int p = 0;
-        for (Attribute attribute : attributes) {
-            if (attribute instanceof DateAttribute) {
-                p += types.length;
+        attributes = new Attribute[types.length];
+        for (int i = 0; i < attributes.length; i++) {
+            switch (types[i]) {
+                case MONTH:
+                    attributes[i] = new NominalAttribute(types[i].name(), new String[]{"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"});
+                    break;
+                case DAY_OF_WEEK:
+                    attributes[i] = new NominalAttribute(types[i].name(), new String[]{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"});
+                    break;
+                default:
+                    attributes[i] = new NumericAttribute(types[i].name());
             }
-        }
-        
-        features = new Attribute[p];
-        map = new int[p];
-        for (int i = 0, j = 0; j < attributes.length; j++) {
-            Attribute attribute = attributes[j];
-            if (attribute instanceof DateAttribute) {
-                DateAttribute date = (DateAttribute) attribute;
-                double weight = date.getWeight();
-                String name = date.getName();
-                String description = date.getDescription();
-                
-                for (int k = 0; k < types.length; k++, i++) {
-                    features[i] = new NumericAttribute(name + "_" + types[k], description, weight);
-                    map[i] = j;
-                }
-            }            
         }
     }
     
     @Override
     public Attribute[] attributes() {
-        return features;
+        return attributes;
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public double f(double[] object, int id) {
-        if (object.length != attributes.length) {
-            throw new IllegalArgumentException(String.format("Invalid object size %d, expected %d", object.length, attributes.length));
-        }
-        
-        if (id < 0 || id >= features.length) {
-            throw new IllegalArgumentException("Invalid feature id: " + id);
-        }
-        
-        Date date = new Date(Double.doubleToLongBits(object[map[id]]));
-        Type t = types[id % types.length];
-        switch (t) {
+    public double[] feature(Date date) {
+        double[] x = new double[types.length];
+        for (int i = 0; i < types.length; i++)
+        switch (types[i]) {
             case YEAR:
-                return 1900 + date.getYear();
+                x[i] = 1900 + date.getYear();
+                break;
             case MONTH:
-                return date.getMonth();
+                x[i] = date.getMonth();
+                break;
             case DAY_OF_MONTH:
-                return date.getDate();
+                x[i] = date.getDate();
+                break;
             case DAY_OF_WEEK:
-                return date.getDay();
+                x[i] = date.getDay();
+                break;
             case HOURS:
-                return date.getHours();
+                x[i] = date.getHours();
+                break;
             case MINUTES:
-                return date.getMinutes();
+                x[i] = date.getMinutes();
+                break;
             case SECONDS:
-                return date.getSeconds();
+                x[i] = date.getSeconds();
+                break;
+            default:
+                throw new IllegalStateException("Unknown date feature type: " + types[i]);
         }
-        
-        throw new IllegalStateException("Impossible to reach here.");
-    }    
+        return x;
+    }
 }
