@@ -21,15 +21,15 @@ import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
 
 /**
- * Nominal variable to binary dummy variables feature generator.
- * This is also called one-hot encoding. Although some
- * method such as decision trees can handle nominal variable directly, other
- * methods generally require nominal variables converted to multiple binary
- * dummy variables to indicate the presence or absence of a characteristic.
+ * Encode categorical integer features using a one-hot aka one-of-K scheme.
+ * Although some method such as decision trees can handle nominal variable
+ * directly, other methods generally require nominal variables converted to
+ * multiple binary dummy variables to indicate the presence or absence of
+ * a characteristic.
  * 
  * @author Haifeng Li
  */
-public class Nominal2Binary implements Feature<double[]> {
+public class OneHotEncoder implements FeatureGenerator<double[]> {
     /**
      * The variable attributes.
      */
@@ -38,21 +38,13 @@ public class Nominal2Binary implements Feature<double[]> {
      * The attributes of generated binary dummy variables.
      */
     private Attribute[] features;
-    /**
-     * A map from feature id to original attribute index.
-     */
-    private int[] map;
-    /**
-     * A map from feature id to nominal attribute value.
-     */
-    private int[] value;
 
     /**
      * Constructor.
      * @param attributes the variable attributes. Of which, nominal variables
      * will be converted to binary dummy variables.
      */
-    public Nominal2Binary(Attribute[] attributes) {
+    public OneHotEncoder(Attribute[] attributes) {
         this.attributes = attributes;
         
         int p = 0;
@@ -60,12 +52,12 @@ public class Nominal2Binary implements Feature<double[]> {
             if (attribute instanceof NominalAttribute) {
                 NominalAttribute nominal = (NominalAttribute) attribute;
                 p += nominal.size();
+            } else {
+                p++;
             }
         }
         
         features = new Attribute[p];
-        map = new int[p];
-        value = new int[p];
         for (int i = 0, j = 0; j < attributes.length; j++) {
             Attribute attribute = attributes[j];
             if (attribute instanceof NominalAttribute) {
@@ -76,10 +68,10 @@ public class Nominal2Binary implements Feature<double[]> {
                 
                 for (int k = 0; k < nominal.size(); k++, i++) {
                     features[i] = new NumericAttribute(name + "_" + k, description, weight);
-                    map[i] = j;
-                    value[i] = k;
                 }
-            }            
+            } else {
+                features[i++] = attribute;
+            }
         }
     }
     
@@ -89,19 +81,23 @@ public class Nominal2Binary implements Feature<double[]> {
     }
     
     @Override
-    public double f(double[] object, int id) {
-        if (object.length != attributes.length) {
-            throw new IllegalArgumentException(String.format("Invalid object size %d, expected %d", object.length, attributes.length));
+    public double[] feature(double[] x) {
+        if (x.length != attributes.length) {
+            throw new IllegalArgumentException(String.format("Invalid vector size %d, expected %d", x.length, attributes.length));
         }
-        
-        if (id < 0 || id >= features.length) {
-            throw new IllegalArgumentException("Invalid feature id: " + id);
+
+        double[] y = new double[features.length];
+        for (int i = 0, j = 0; j < attributes.length; j++) {
+            Attribute attribute = attributes[j];
+            if (attribute instanceof NominalAttribute) {
+                NominalAttribute nominal = (NominalAttribute) attribute;
+                y[i + (int)x[j]] = 1.0;
+                i += nominal.size();
+            } else {
+                y[i++] = x[j];
+            }
         }
-        
-        if (object[map[id]] == value[id]) {
-            return 1;
-        } else {
-            return 0;
-        }
+
+        return y;
     }    
 }

@@ -18,6 +18,9 @@ package smile.feature;
 
 import java.util.HashMap;
 import java.util.Map;
+import smile.data.Attribute;
+import smile.data.NominalAttribute;
+import smile.data.NumericAttribute;
 
 /**
  * The bag-of-words feature of text used in natural language
@@ -29,7 +32,11 @@ import java.util.Map;
  * 
  * @author Haifeng Li
  */
-public class Bag<T> {
+public class Bag<T> implements FeatureGenerator<T[]> {
+    /**
+     * The attributes of generated features.
+     */
+    private Attribute[] attributes;
     /**
      * The mapping from feature words to indices.
      */
@@ -64,13 +71,28 @@ public class Bag<T> {
                 this.features.put(features[i], k++);
             }
         }
+
+        attributes = new Attribute[this.features.size()];
+        for (Map.Entry<T, Integer> entry : this.features.entrySet()) {
+            if (binary) {
+                attributes[entry.getValue()] = new NominalAttribute(entry.getKey().toString(), new String[]{"No", "Yes"});
+            } else {
+                attributes[entry.getValue()] = new NumericAttribute(entry.getKey().toString());
+            }
+        }
     }
-    
+
+    @Override
+    public Attribute[] attributes() {
+        return attributes;
+    }
+
     /**
      * Returns the bag-of-words features of a document. The features are real-valued
      * in convenience of most learning algorithms although they take only integer
      * or binary values.
      */
+    @Override
     public double[] feature(T[] x) {
         double[] bag = new double[features.size()];
 

@@ -30,9 +30,9 @@ import smile.data.parser.ArffParser;
  *
  * @author Haifeng
  */
-public class Nominal2BinaryTest {
+public class OneHotEncoderTest {
     
-    public Nominal2BinaryTest() {
+    public OneHotEncoderTest() {
     }
 
     @BeforeClass
@@ -52,7 +52,7 @@ public class Nominal2BinaryTest {
     }
 
     /**
-     * Test of attributes method, of class Nominal2Binary.
+     * Test of attributes method, of class OneHotEncoder.
      */
     @SuppressWarnings("unused")
     @Test
@@ -64,7 +64,7 @@ public class Nominal2BinaryTest {
             AttributeDataset weather = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.nominal.arff"));
             double[][] x = weather.toArray(new double[weather.size()][]);
             
-            Nominal2Binary n2b = new Nominal2Binary(weather.attributes());
+            OneHotEncoder n2b = new OneHotEncoder(weather.attributes());
             Attribute[] attributes = n2b.attributes();
             assertEquals(10, attributes.length);
             for (int i = 0; i < attributes.length; i++) {
@@ -77,11 +77,11 @@ public class Nominal2BinaryTest {
     }
 
     /**
-     * Test of f method, of class Nominal2Binary.
+     * Test of f method, of class OneHotEncoder.
      */
     @Test
-    public void testF() {
-        System.out.println("f");
+    public void testFeature() {
+        System.out.println("feature");
         double[][] result = {
             {1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0},
             {1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0},
@@ -104,13 +104,11 @@ public class Nominal2BinaryTest {
         try {
             AttributeDataset weather = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.nominal.arff"));
             double[][] x = weather.toArray(new double[weather.size()][]);
-            
-            Nominal2Binary n2b = new Nominal2Binary(weather.attributes());
-            Attribute[] attributes = n2b.attributes();
+
+            OneHotEncoder n2b = new OneHotEncoder(weather.attributes());
             for (int i = 0; i < x.length; i++) {
-                double[] y = new double[attributes.length];
+                double[] y = n2b.feature(x[i]);
                 for (int j = 0; j < y.length; j++) {
-                    y[j] = n2b.f(x[i], j);
                     assertEquals(result[i][j], y[j], 1E-7);
                 }
             }
