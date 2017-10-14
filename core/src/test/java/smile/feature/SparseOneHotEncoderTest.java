@@ -28,9 +28,9 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class Nominal2SparseBinaryTest {
+public class SparseOneHotEncoderTest {
     
-    public Nominal2SparseBinaryTest() {
+    public SparseOneHotEncoderTest() {
     }
 
     @BeforeClass
@@ -50,11 +50,11 @@ public class Nominal2SparseBinaryTest {
     }
 
     /**
-     * Test of f method, of class Nominal2SparseBinary.
+     * Test of feature method, of class SparseOneHotEncoder.
      */
     @Test
-    public void testF() {
-        System.out.println("f");
+    public void testFeature() {
+        System.out.println("feature");
         int[][] result = {
             {0, 3, 6, 9},
             {0, 3, 6, 8},
@@ -77,10 +77,10 @@ public class Nominal2SparseBinaryTest {
         try {
             AttributeDataset weather = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.nominal.arff"));
             double[][] x = weather.toArray(new double[weather.size()][]);
-            
-            Nominal2SparseBinary n2sb = new Nominal2SparseBinary(weather.attributes());
+
+            SparseOneHotEncoder n2sb = new SparseOneHotEncoder(weather.attributes());
             for (int i = 0; i < x.length; i++) {
-                int[] y = n2sb.f(x[i]);
+                int[] y = n2sb.feature(x[i]);
                 assertEquals(result[i].length, y.length);
                 for (int j = 0; j < y.length; j++) {
                     assertEquals(result[i][j], y[j]);

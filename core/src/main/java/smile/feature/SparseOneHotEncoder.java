@@ -20,16 +20,15 @@ import smile.data.Attribute;
 import smile.data.NominalAttribute;
 
 /**
- * Nominal variables to sparse binary representation converter.
- * This is also called one-hot encoding. Here we assume
- * that all variables are nominal attributes and will be converted to binary
+ * Encode categorical integer features using sparse one-hot scheme.
+ * All variables should be nominal attributes and will be converted to binary
  * dummy variables in a compact representation in which only indices of nonzero
  * elements are stored in an integer array. In Maximum Entropy Classifier, 
  * the data are expected to store in this format.
  * 
  * @author Haifeng Li
  */
-public class Nominal2SparseBinary {
+public class SparseOneHotEncoder {
     /**
      * The variable attributes.
      */
@@ -42,9 +41,9 @@ public class Nominal2SparseBinary {
     /**
      * Constructor.
      * @param attributes the variable attributes. All of them have to be
-     * nominal attributes.
+     *                   nominal attributes.
      */
-    public Nominal2SparseBinary(Attribute[] attributes) {        
+    public SparseOneHotEncoder(Attribute[] attributes) {
         int p = attributes.length;
         this.attributes = new NominalAttribute[p];
         base = new int[p];
@@ -64,18 +63,18 @@ public class Nominal2SparseBinary {
     
     /**
      * Generates the compact representation of sparse binary features for given object.
-     * @param object an object of interest.
+     * @param x an object of interest.
      * @return an integer array of nonzero binary features.
      */
-    public int[] f(double[] object) {
-        if (object.length != attributes.length) {
-            throw new IllegalArgumentException(String.format("Invalide object size %d, expected %d", object.length, attributes.length));            
+    public int[] feature(double[] x) {
+        if (x.length != attributes.length) {
+            throw new IllegalArgumentException(String.format("Invalid feature vector size %d, expected %d", x.length, attributes.length));
         }
         
         int[] features = new int[attributes.length];
         for (int i = 0; i < features.length; i++) {
-            int f = (int) object[i];
-            if (Math.floor(object[i]) != object[i] || f < 0 || f >= attributes[i].size()) {
+            int f = (int) x[i];
+            if (Math.floor(x[i]) != x[i] || f < 0 || f >= attributes[i].size()) {
                 throw new IllegalArgumentException(String.format("Invalid value of attribute %s: %d", attributes[i].toString(), f));
             }
             
