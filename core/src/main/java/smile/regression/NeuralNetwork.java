@@ -14,22 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
- package smile.regression;
+
+package smile.regression;
  
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import smile.math.Math;
-import smile.regression.OnlineRegression;
-import smile.regression.RegressionTrainer;
  
  /**
- * @author Sam Erickson
- */
- 
- public class NeuralNetworkRegressor implements OnlineRegression<double[]>, Serializable {
+  * Multilayer perceptron neural network for regression.
+  * An MLP consists of several layers of nodes, interconnected through weighted
+  * acyclic arcs from each preceding layer to the following, without lateral or
+  * feedback connections. Each node calculates a transformed weighted linear
+  * combination of its inputs (output activations from the preceding layer), with
+  * one of the weights acting as a trainable bias connected to a constant input.
+  * The transformation, called activation function, is a bounded non-decreasing
+  * (non-linear) function, such as the sigmoid functions (ranges from 0 to 1).
+  * Another popular activation function is hyperbolic tangent which is actually
+  * equivalent to the sigmoid function in shape but ranges from -1 to 1.
+  *
+  * @author Sam Erickson
+  */
+ public class NeuralNetwork implements OnlineRegression<double[]>, Serializable {
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(NeuralNetworkRegressor.class);
+    private static final Logger logger = LoggerFactory.getLogger(NeuralNetwork.class);
 
     public enum ActivationFunction {
         /**
@@ -220,8 +229,8 @@ import smile.regression.RegressionTrainer;
         }
 
         @Override
-        public NeuralNetworkRegressor train(double[][] x, double[] y) {
-            NeuralNetworkRegressor net = new NeuralNetworkRegressor(activationFunction, numUnits);
+        public NeuralNetwork train(double[][] x, double[] y) {
+            NeuralNetwork net = new NeuralNetwork(activationFunction, numUnits);
             net.setLearningRate(eta);
             net.setMomentum(alpha);
             net.setWeightDecay(lambda);
@@ -240,7 +249,7 @@ import smile.regression.RegressionTrainer;
      *
      * @param numUnits the number of units in each layer.
      */
-    public NeuralNetworkRegressor(int... numUnits) {
+    public NeuralNetwork(int... numUnits) {
         this(ActivationFunction.LOGISTIC_SIGMOID, numUnits);
     }
     /**
@@ -249,7 +258,7 @@ import smile.regression.RegressionTrainer;
      * @param activation the activation function of output layer.
      * @param numUnits the number of units in each layer.
      */
-    public NeuralNetworkRegressor(ActivationFunction activation, int... numUnits) {
+    public NeuralNetwork(ActivationFunction activation, int... numUnits) {
         this(activation,0.0001,0.9,numUnits);
     }
 
@@ -259,7 +268,7 @@ import smile.regression.RegressionTrainer;
      * @param activation the activation function of output layer.
      * @param numUnits the number of units in each layer.
      */
-    public NeuralNetworkRegressor(ActivationFunction activation, double alpha, double lambda, int... numUnits) {
+    public NeuralNetwork(ActivationFunction activation, double alpha, double lambda, int... numUnits) {
         int numLayers = numUnits.length;
         if (numLayers < 2) {
             throw new IllegalArgumentException("Invalid number of layers: " + numLayers);
@@ -310,13 +319,13 @@ import smile.regression.RegressionTrainer;
     /**
      * Private constructor for clone purpose.
      */
-    private NeuralNetworkRegressor() {
+    private NeuralNetwork() {
 
     }
 
     @Override
-    public NeuralNetworkRegressor clone() {
-        NeuralNetworkRegressor copycat = new NeuralNetworkRegressor();
+    public NeuralNetwork clone() {
+        NeuralNetwork copycat = new NeuralNetwork();
 
         copycat.activationFunction = activationFunction;
         copycat.p = p;

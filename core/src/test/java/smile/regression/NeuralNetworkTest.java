@@ -30,8 +30,8 @@ import smile.math.Math;
  * 
  * @author Sam Erickson
  */
-public class NeuralNetworkRegressorTest {
-    public NeuralNetworkRegressorTest(){
+public class NeuralNetworkTest {
+    public NeuralNetworkTest(){
     }
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -48,7 +48,7 @@ public class NeuralNetworkRegressorTest {
     @After
     public void tearDown() {
     }
-    public void test(NeuralNetworkRegressor.ActivationFunction activation, String dataset, String url, int response) {
+    public void test(NeuralNetwork.ActivationFunction activation, String dataset, String url, int response) {
         System.out.println(dataset + "\t" + activation);
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(response);
@@ -81,7 +81,7 @@ public class NeuralNetworkRegressorTest {
                 double[][] testx = smile.math.Math.slice(datax, cv.test[i]);
                 double[] testy = smile.math.Math.slice(datay, cv.test[i]);
 
-                NeuralNetworkRegressor neuralNetwork = new NeuralNetworkRegressor(activation,new int[]{datax[0].length,10,10,1});
+                NeuralNetwork neuralNetwork = new NeuralNetwork(activation,new int[]{datax[0].length,10,10,1});
                 neuralNetwork.learn(trainx,trainy);
 
                 for (int j = 0; j < testx.length; j++) {
@@ -96,32 +96,32 @@ public class NeuralNetworkRegressorTest {
          }
     }
     /**
-     * Test of learn method, of class NeuralNetworkRegressor.
+     * Test of learn method, of class NeuralNetwork.
      */
     @Test
     public void testLogisticSigmoid() {
-        test(NeuralNetworkRegressor.ActivationFunction.LOGISTIC_SIGMOID, "CPU", "weka/cpu.arff", 6);
-        //test(NeuralNetworkRegressor.ActivationFunction.LOGISTIC_SIGMOID, "2dplanes", "weka/regression/2dplanes.arff", 6);
-        test(NeuralNetworkRegressor.ActivationFunction.LOGISTIC_SIGMOID, "abalone", "weka/regression/abalone.arff", 8);
-        //test(NeuralNetworkRegressor.ActivationFunction.LOGISTIC_SIGMOID, "ailerons", "weka/regression/ailerons.arff", 40);
-        //test(NeuralNetworkRegressor.ActivationFunction.LOGISTIC_SIGMOID, "bank32nh", "weka/regression/bank32nh.arff", 32);
-        test(NeuralNetworkRegressor.ActivationFunction.LOGISTIC_SIGMOID, "cal_housing", "weka/regression/cal_housing.arff", 8);
+        test(NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, "CPU", "weka/cpu.arff", 6);
+        //test(NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, "2dplanes", "weka/regression/2dplanes.arff", 6);
+        test(NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, "abalone", "weka/regression/abalone.arff", 8);
+        //test(NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, "ailerons", "weka/regression/ailerons.arff", 40);
+        //test(NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, "bank32nh", "weka/regression/bank32nh.arff", 32);
+        test(NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, "cal_housing", "weka/regression/cal_housing.arff", 8);
         //test(NeuralNetworkRegressor.ActivationFunction.LOGISTIC_SIGMOID, "puma8nh", "weka/regression/puma8nh.arff", 8);
-        test(NeuralNetworkRegressor.ActivationFunction.LOGISTIC_SIGMOID, "kin8nm", "weka/regression/kin8nm.arff", 8);
+        test(NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, "kin8nm", "weka/regression/kin8nm.arff", 8);
     }
     
     /**
-     * Test of learn method, of class NeuralNetworkRegressor.
+     * Test of learn method, of class NeuralNetwork.
      */
     @Test
-    public void testTANH() {
-        test(NeuralNetworkRegressor.ActivationFunction.TANH, "CPU", "weka/cpu.arff", 6);
+    public void testTanh() {
+        test(NeuralNetwork.ActivationFunction.TANH, "CPU", "weka/cpu.arff", 6);
         //test(NeuralNetworkRegressor.ActivationFunction.TANH, "2dplanes", "weka/regression/2dplanes.arff", 6);
-        test(NeuralNetworkRegressor.ActivationFunction.TANH, "abalone", "weka/regression/abalone.arff", 8);
+        test(NeuralNetwork.ActivationFunction.TANH, "abalone", "weka/regression/abalone.arff", 8);
         //test(NeuralNetworkRegressor.ActivationFunction.TANH, "ailerons", "weka/regression/ailerons.arff", 40);
         //test(NeuralNetworkRegressor.ActivationFunction.TANH, "bank32nh", "weka/regression/bank32nh.arff", 32);
-        test(NeuralNetworkRegressor.ActivationFunction.TANH, "cal_housing", "weka/regression/cal_housing.arff", 8);
+        test(NeuralNetwork.ActivationFunction.TANH, "cal_housing", "weka/regression/cal_housing.arff", 8);
         //test(NeuralNetworkRegressor.ActivationFunction.TANH, "puma8nh", "weka/regression/puma8nh.arff", 8);
-        test(NeuralNetworkRegressor.ActivationFunction.TANH, "kin8nm", "weka/regression/kin8nm.arff", 8);
+        test(NeuralNetwork.ActivationFunction.TANH, "kin8nm", "weka/regression/kin8nm.arff", 8);
     }
 }
