@@ -332,7 +332,6 @@ import smile.math.Math;
         copycat.eta = eta;
         copycat.alpha = alpha;
         copycat.lambda = lambda;
-		  copycat.epochs = epochs;
 
         int numLayers = net.length;
         copycat.net = new Layer[numLayers];
