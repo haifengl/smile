@@ -107,10 +107,6 @@ import smile.math.Math;
      * weight decay factor, which is also a regularization term.
      */
     private double lambda = 0.0;
-    /**
-     * The number of epochs to learn through the training set.
-     */
-    private int epochs=25;
 
     /**
      * Trainer for neural networks.
@@ -332,7 +328,6 @@ import smile.math.Math;
         copycat.eta = eta;
         copycat.alpha = alpha;
         copycat.lambda = lambda;
-        copycat.epochs=epochs;
 
         int numLayers = net.length;
         copycat.net = new Layer[numLayers];
@@ -408,18 +403,6 @@ import smile.math.Math;
      */
     public double getWeightDecay() {
         return lambda;
-    }
-
-    public void setEpochs(int epochs) {
-        if (epochs < 1) {
-            throw new IllegalArgumentException("Invalid number of epochs: " + epochs);
-        }
-
-        this.epochs=epochs;
-    }
-
-    public int getEpochs() {
-        return epochs;
     }
 
     /**
@@ -601,11 +584,9 @@ import smile.math.Math;
      */
     public void learn(double[][] x, double[] y) {
         int n = x.length;
-        for (int it=0; it<epochs; it++) {
-            int[] index = Math.permutate(n);
-            for (int i = 0; i < n; i++) {
-                learn(x[index[i]], y[index[i]]);
-            }
+        int[] index = Math.permutate(n);
+        for (int i = 0; i < n; i++) {
+            learn(x[index[i]], y[index[i]]);
         }
     }
 }
