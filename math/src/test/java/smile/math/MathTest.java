@@ -538,35 +538,10 @@ public class MathTest {
      */
     @Test
     public void testDot_doubleArr_doubleArr() {
-        System.out.println("dot 1D");
+        System.out.println("dot");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
         double[] y = {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300};
         assertEquals(3.350726, Math.dot(x, y), 1E-6);
-    }
-    
-    /**
-     * Test of dot method, of class Math.
-     */
-    @Test
-    public void testDot_double2DArr_doubleArr() {
-        System.out.println("dot 2D");
-        double[][] a = {{-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515},
-                        {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515},
-                        {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515}};
-        double[][] b = {{-1.7781325,-1.7781325},
-                        {-0.6659839,-0.6659839},
-                        {0.9526148,0.9526148},
-                        {-0.9460919,-0.9460919},
-                        {-0.3925300,-0.3925300}
-                        };
-        double[][] c = Math.dot(a,b);
-        assertEquals(3, c.length);
-        assertEquals(2, c[0].length);
-        for (int i=0; i<c.length; i++){
-            for (int j=0; j<c[0].length; j++){
-                assertEquals(3.350726, c[i][j], 1E-6);
-            }
-        }
     }
 
     /**
