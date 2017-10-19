@@ -95,7 +95,7 @@ public class OLSTest {
     }
 
     /**
-     * Test of learn method, of class LinearRegression.
+     * Test of learn method, of class OLS.
      */
     @Test
     public void testLearn() {
@@ -133,7 +133,7 @@ public class OLSTest {
     }
 
     /**
-     * Test of learn method, of class LinearRegression.
+     * Test of learn method, of class OLS.
      */
     @Test
     public void testCPU() {
@@ -169,5 +169,81 @@ public class OLSTest {
         } catch (Exception ex) {
              System.err.println(ex);
         }
+    }
+    
+    /**
+     * Test of online learn method of class OLS.
+     */
+    public void testOnlineLearn(boolean svd, String name, String fileName, int responseIndex){
+        System.out.println(name+"\t Online Learn "+(svd?" SVD":" QR"));
+        ArffParser parser = new ArffParser();
+        parser.setResponseIndex(responseIndex);
+        try {
+            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile(fileName));
+
+            double[][] datax = data.toArray(new double[data.size()][]);
+            double[] datay = data.toArray(new double[data.size()]);
+
+            int n = datax.length;
+            int k = 10;
+            int trainOnlineSplit=5;
+
+            CrossValidation cv = new CrossValidation(n, k);
+            double rss = 0.0;
+            for (int i = 0; i < k; i++) {
+                double[][] trainx = Math.slice(datax, cv.train[i]);
+                double[] trainy = Math.slice(datay, cv.train[i]);
+                double[][] testx = Math.slice(datax, cv.test[i]);
+                double[] testy = Math.slice(datay, cv.test[i]);
+                
+                // Split the training data to instances learned from least square solutions
+                // and instances for online learning
+                CrossValidation splitTrainOnlineLearn = new CrossValidation(trainx.length,trainOnlineSplit);
+                double[][] constructorTrainx = Math.slice(trainx, splitTrainOnlineLearn.train[0]);
+                double[] constructorTrainy = Math.slice(trainy, splitTrainOnlineLearn.train[0]);
+                double[][] onlineTrainX = Math.slice(trainx, splitTrainOnlineLearn.test[0]);
+                double[] onlineTrainY = Math.slice(trainy, splitTrainOnlineLearn.test[0]);
+
+                OLS linear = new OLS(constructorTrainx, constructorTrainy, svd);
+                linear.learn(onlineTrainX,onlineTrainY);
+
+                for (int j = 0; j < testx.length; j++) {
+                    double r = testy[j] - linear.predict(testx[j]);
+                    rss += r * r;
+                }
+                
+            }
+            System.out.println("MSE = " + rss / n);
+        } catch (Exception ex) {
+             System.err.println(ex);
+        }
+    }
+    
+    /**
+     * Test SVD Online Method
+     */
+    @Test
+    public void testSVDOnlineMethod() {
+        testOnlineLearn(true, "CPU", "weka/cpu.arff", 6);
+        //testOnlineLearn(true, "2dplanes", "weka/regression/2dplanes.arff", 6);
+        //testOnlineLearn(true, "abalone", "weka/regression/abalone.arff", 8);
+        //testOnlineLearn(true, "bank32nh", "weka/regression/bank32nh.arff", 32);
+        //testOnlineLearn(true, "cal_housing", "weka/regression/cal_housing.arff", 8);
+        testOnlineLearn(true, "puma8nh", "weka/regression/puma8nh.arff", 8);
+        testOnlineLearn(true, "kin8nm", "weka/regression/kin8nm.arff", 8);
+    }
+    
+    /**
+     * Test QR Online Method
+     */
+    @Test
+    public void testQROnlineMethod() {
+        testOnlineLearn(false, "CPU", "weka/cpu.arff", 6);
+        //testOnlineLearn(false, "2dplanes", "weka/regression/2dplanes.arff", 6);
+        //testOnlineLearn(false, "abalone", "weka/regression/abalone.arff", 8);
+        //testOnlineLearn(true, "bank32nh", "weka/regression/bank32nh.arff", 32);
+        //testOnlineLearn(false, "cal_housing", "weka/regression/cal_housing.arff", 8);
+        testOnlineLearn(false, "puma8nh", "weka/regression/puma8nh.arff", 8);
+        testOnlineLearn(false, "kin8nm", "weka/regression/kin8nm.arff", 8);
     }
 }
