@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaSbtSettings">
+    <option name="linkedExternalProjectsSettings">
+      <SbtProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="jdk" value="1.8" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/benchmark" />
+            <option value="$PROJECT_DIR$/benchmark/project" />
+            <option value="$PROJECT_DIR$/core" />
+            <option value="$PROJECT_DIR$/core/project" />
+            <option value="$PROJECT_DIR$/data" />
+            <option value="$PROJECT_DIR$/data/project" />
+            <option value="$PROJECT_DIR$/demo" />
+            <option value="$PROJECT_DIR$/demo/project" />
+            <option value="$PROJECT_DIR$/graph" />
+            <option value="$PROJECT_DIR$/graph/project" />
+            <option value="$PROJECT_DIR$/interpolation" />
+            <option value="$PROJECT_DIR$/interpolation/project" />
+            <option value="$PROJECT_DIR$/math" />
+            <option value="$PROJECT_DIR$/math/project" />
+            <option value="$PROJECT_DIR$/nd4j" />
+            <option value="$PROJECT_DIR$/nd4j/project" />
+            <option value="$PROJECT_DIR$/nlp" />
+            <option value="$PROJECT_DIR$/nlp/project" />
+            <option value="$PROJECT_DIR$/plot" />
+            <option value="$PROJECT_DIR$/plot/project" />
+            <option value="$PROJECT_DIR$/project" />
+            <option value="$PROJECT_DIR$/scala" />
+            <option value="$PROJECT_DIR$/scala/project" />
+            <option value="$PROJECT_DIR$/shell" />
+            <option value="$PROJECT_DIR$/shell/project" />
+            <option value="$PROJECT_DIR$/symbolic" />
+            <option value="$PROJECT_DIR$/symbolic/project" />
+          </set>
+        </option>
+        <option name="sbtVersion" value="0.13.13" />
+        <option name="useAutoImport" value="true" />
+        <option name="useOurOwnAutoImport" value="true" />
+      </SbtProjectSettings>
+    </option>
+  </component>
+</project>

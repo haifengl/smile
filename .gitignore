@@ -17,3 +17,5 @@ hs_err_pid*
 *.iml
 **/target
 
+#Mac OS
+.DS_Store

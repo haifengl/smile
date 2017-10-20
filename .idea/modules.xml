@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/benchmark.iml" filepath="$PROJECT_DIR$/.idea/modules/benchmark.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/benchmark-build.iml" filepath="$PROJECT_DIR$/.idea/modules/benchmark-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core.iml" filepath="$PROJECT_DIR$/.idea/modules/core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core-build.iml" filepath="$PROJECT_DIR$/.idea/modules/core-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/data.iml" filepath="$PROJECT_DIR$/.idea/modules/data.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/data-build.iml" filepath="$PROJECT_DIR$/.idea/modules/data-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/demo.iml" filepath="$PROJECT_DIR$/.idea/modules/demo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/demo-build.iml" filepath="$PROJECT_DIR$/.idea/modules/demo-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/graph.iml" filepath="$PROJECT_DIR$/.idea/modules/graph.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/graph-build.iml" filepath="$PROJECT_DIR$/.idea/modules/graph-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/interpolation.iml" filepath="$PROJECT_DIR$/.idea/modules/interpolation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/interpolation-build.iml" filepath="$PROJECT_DIR$/.idea/modules/interpolation-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/math.iml" filepath="$PROJECT_DIR$/.idea/modules/math.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/math-build.iml" filepath="$PROJECT_DIR$/.idea/modules/math-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nd4j.iml" filepath="$PROJECT_DIR$/.idea/modules/nd4j.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nd4j-build.iml" filepath="$PROJECT_DIR$/.idea/modules/nd4j-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nlp.iml" filepath="$PROJECT_DIR$/.idea/modules/nlp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nlp-build.iml" filepath="$PROJECT_DIR$/.idea/modules/nlp-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/plot.iml" filepath="$PROJECT_DIR$/.idea/modules/plot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/plot-build.iml" filepath="$PROJECT_DIR$/.idea/modules/plot-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/root.iml" filepath="$PROJECT_DIR$/.idea/modules/root.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/root-build.iml" filepath="$PROJECT_DIR$/.idea/modules/root-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scala.iml" filepath="$PROJECT_DIR$/.idea/modules/scala.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scala-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scala-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/shell.iml" filepath="$PROJECT_DIR$/.idea/modules/shell.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/shell-build.iml" filepath="$PROJECT_DIR$/.idea/modules/shell-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/symbolic.iml" filepath="$PROJECT_DIR$/.idea/modules/symbolic.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/symbolic-build.iml" filepath="$PROJECT_DIR$/.idea/modules/symbolic-build.iml" />
+    </modules>
+  </component>
+</project>

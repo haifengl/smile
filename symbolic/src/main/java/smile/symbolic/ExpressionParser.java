@@ -1,18 +1,4 @@
-/*******************************************************************************
- * Copyright (c) 2017 Ernest DeFoy
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+
 
 package smile.symbolic;
 
@@ -21,6 +7,9 @@ import java.util.Stack;
 import java.util.Arrays;
 
 /**
+ * Parser for mathematical expressions.  Ensures expressions have valid syntax, converts String expressions to ArrayList
+ * token expressions in polish notation, and re-formats expressions.
+ *
  * @author Ernest DeFoy
  */
 public class ExpressionParser {
@@ -94,8 +83,11 @@ public class ExpressionParser {
         return true;
     }
 
-    // modifies the string to look more like it would if someone wrote the expression
-    // out on paper
+    /**
+     * Modifies the string to look more like it would if someone wrote the expression
+     * out on paper.
+     * @param s the mathematical expression.
+     */
     public String format(String s)
     {
         for(int i = 0; i < s.length(); i++) {
@@ -107,6 +99,12 @@ public class ExpressionParser {
         return s;
     }
 
+    /**
+     * Creates tokens in polish notation for and re-formats the expression, unless an expression without valid syntax
+     * is passed in.
+     * @param expression a mathematical expression.
+     * @return a modified version of the expression.
+     */
     public String parse(String expression) throws InvalidExpressionException {
 
         this.expression = expression;
@@ -124,6 +122,10 @@ public class ExpressionParser {
         return this.expression;
     }
 
+    /**
+     * Checks for syntax errors.
+     * @return Returns the expression's variable.
+     */
     private String check() throws InvalidExpressionException {
 
         expression = expression.replaceAll("\\s","");
@@ -271,6 +273,12 @@ public class ExpressionParser {
 
     // separates the expression string into "tokens" and sorts them in
     // postfix order
+
+    /**
+     * 
+     * @param exp
+     * @return
+     */
     public ArrayList<String> tokenize(String exp)
     {
         ArrayList<String> tokens = new ArrayList<>();
