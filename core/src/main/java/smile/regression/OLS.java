@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.JMatrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QR;
 import smile.math.matrix.SVD;
@@ -76,10 +75,36 @@ import smile.math.special.Beta;
  * 
  * @author Haifeng Li
  */
-public class OLS implements Regression<double[]>, OnlineRegression<double[]>, Serializable {
+public class OLS implements OnlineRegression<double[]>, Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(OLS.class);
+    
+    private class OnlineParameters implements Serializable {
+        private static final long serialVersionUID = 1L;
 
+        /**
+        * The gamma matrix for recursive least squares used in online updates. 
+        * The gamma matrix is updated with each learning instance in the learn()
+        * method, and it is used to update the coefficients in online learning.
+        * Gamma is first initialized to the matrix (X<sup>T</sup>X)<sup>-1</sup>.
+        * 
+        * A more complete description can be found on the wikipedia article
+        * about online machine learning.
+        */
+        DenseMatrix gamma;
+       /**
+        * A single learning instance X
+        */
+        DenseMatrix X;
+        /**
+         * The target value to learn
+         */
+        double y;
+       /**
+        * The coefficients W
+        */
+        DenseMatrix W;
+    }
     /**
      * The dimensionality.
      */
@@ -92,14 +117,11 @@ public class OLS implements Regression<double[]>, OnlineRegression<double[]>, Se
      * The linear weights.
      */
     private double[] w;
+    private OnlineParameters onlineParameters;
     /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
     private double[][] coefficients;
-    /**
-     * The gamma matrix for recursive least squares used in online updates
-     */
-    private JMatrix gamma;
     /**
      * The residuals, that is response minus fitted values.
      */
@@ -221,6 +243,10 @@ public class OLS implements Regression<double[]>, OnlineRegression<double[]>, Se
         b = w1[p];
         w = new double[p];
         System.arraycopy(w1, 0, w, 0, p);
+        
+        onlineParameters = new OnlineParameters();
+        onlineParameters.W = Matrix.newInstance(w1);
+        onlineParameters.X = Matrix.zeros(p+1, 1);
 
         double[] yhat = new double[n];
         Matrix.newInstance(x).ax(w, yhat);
@@ -247,9 +273,10 @@ public class OLS implements Regression<double[]>, OnlineRegression<double[]>, Se
         int df2 = n - p - 1;
         pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
 
-        gamma = new JMatrix(p+1,p+1);
         coefficients = new double[p+1][4];
         if (SVD) {
+            // sigmaInverse is used to compute inverse of (X^T * X)
+            DenseMatrix sigmaInverse = Matrix.eye(p+1);
             for (int i = 0; i <= p; i++) {
                 coefficients[i][0] = w1[i];
                 double s = svd.getSingularValues()[i];
@@ -258,25 +285,26 @@ public class OLS implements Regression<double[]>, OnlineRegression<double[]>, Se
                     coefficients[i][1] = se;
                     double t = w1[i] / se;
                     coefficients[i][2] = t;
-                    coefficients[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
-                    if (!Math.isZero(s,1E-5)){
-                        gamma.set(i,i,1/(s*s));
-                    }
-                    else {
-                        gamma.set(i,i,1/s);
-                    }
-                      
+                    coefficients[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t)); 
                 } else {
                     coefficients[i][1] = Double.NaN;
                     coefficients[i][2] = 0.0;
                     coefficients[i][3] = 1.0;
-                    gamma.set(i,i,1);
+                }
+                if (!Math.isZero(s, .01)){
+                    sigmaInverse.set(i, i, 1/Math.sqr(s));
+                }else{
+                    sigmaInverse.set(i, i, 1);
                 }
             }
+            // Calculate pseudoinverse of X^T * X
+            DenseMatrix V = svd.getV();
+            onlineParameters.gamma = V.abmm(sigmaInverse.abmm(V.transpose()));
         } else {
             Cholesky cholesky = qr.CholeskyOfAtA();
 
             DenseMatrix inv = cholesky.inverse();
+            onlineParameters.gamma = inv;
 
             for (int i = 0; i <= p; i++) {
                 coefficients[i][0] = w1[i];
@@ -285,7 +313,6 @@ public class OLS implements Regression<double[]>, OnlineRegression<double[]>, Se
                 double t = w1[i] / se;
                 coefficients[i][2] = t;
                 coefficients[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
-                gamma.set(i,i,inv.get(i,i));
             }
         }
     }
@@ -394,39 +421,43 @@ public class OLS implements Regression<double[]>, OnlineRegression<double[]>, Se
     
     /**
      * Learn a new instance with online regression.
-     * @param x the training instance.
+     * @param x the training instance. 
      * @param y the target value.
      */
     @Override
     public void learn(double[] x, double y){
-        JMatrix X = new JMatrix(p+1,1);
-        JMatrix W = new JMatrix(p+1,1);
-        for (int i=0; i<p; i++){
-            X.set(i,0,x[i]);
-            W.set(i,0,w[i]);
-        }
-        X.set(p,0,1);
-        W.set(p,0,b);
-        updateGamma(X);
-        updateW(X,W,y);
+        System.arraycopy(x, 0, onlineParameters.X.data(), 0, p);
+        onlineParameters.X.set(p, 0, 1);
+        onlineParameters.y = y;
+        updateGamma();
+        updateW();
     }
     
-    private void updateGamma(JMatrix x){
-        double v = 1+gamma.xax(x.data());
-        if(!Math.isZero(v, 1E-10)){
-            gamma=gamma.sub((gamma.abmm(x.aat().abmm(gamma))).div(v));
-        }
-        else{
-            gamma=gamma.sub((gamma.abmm(x.aat().abmm(gamma))));
+    private void updateGamma(){
+        DenseMatrix x = onlineParameters.X;
+        DenseMatrix gamma = onlineParameters.gamma;
+        
+        double v = 1 + gamma.xax(x.data());
+        if(!Math.isZero(v, .01)){
+            gamma = gamma.sub((gamma.abmm(x.aat().abmm(gamma))).div(v));
+        }else{
+            gamma = gamma.sub((gamma.abmm(x.aat().abmm(gamma))));
         }
     }
     
-    private void updateW(JMatrix x, JMatrix w, double y){
+    private void updateW(){
+        DenseMatrix x = onlineParameters.X;
+        DenseMatrix w = onlineParameters.W;
+        DenseMatrix gamma = onlineParameters.gamma;
+        double y = onlineParameters.y;
+        
         double[] delta = gamma.abmm(x).mul(Math.dot(x.data(),w.data())-y).data();
-        for (int i=0; i<p; i++){
-            this.w[i]-=delta[i];
+        for (int i = 0; i < p; i++){
+            this.w[i] -= delta[i];
+            onlineParameters.W.set(i, 0, this.w[i]);
         }
-        b-=delta[p];
+        b -= delta[p];
+        onlineParameters.W.set(p, 0, b);
     }
     
     /**
