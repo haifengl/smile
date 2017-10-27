@@ -26,4 +26,8 @@ object matrix {
 
   /** Creates a Matrix instance. */
   def apply(A: Array[Double]*) = Matrix.newInstance(A.toArray)
+
+
+  /** Creates a single column matrix. */
+  def apply(A: Array[Double]) = Matrix.newInstance(A)
 }
