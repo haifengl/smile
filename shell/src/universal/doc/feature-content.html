@@ -42,24 +42,9 @@
         a feature vector, which contains a number of features that are descriptive
         of the object. The number of features should not be too large because of
         the curse of dimensionality; but should contain enough information to
-        accurately predict the output. Beyond feature vectors, a few algorithms such as support vector machines
-        can process complex data object such as sequences, trees, and even graphs with
-        properly engineered kernels.</p>
-
-    <p>Many machine learning methods such as Neural Networks and SVM with Gaussian
-        kernel also require the features properly scaled/standardized. For example,
-        each variable is scaled into interval [0, 1] or to have mean 0 and standard
-        deviation 1. Methods that employ a distance function
-        are particularly sensitive to this. Although some method such as decision trees can handle nominal
-        variable directly, other methods generally require nominal variables converted
-        to multiple binary dummy variables to indicate the presence or absence of a
-        characteristic.</p>
-
-    <p>If the input features contain redundant information (e.g., highly correlated
-        features), some learning algorithms (e.g., linear regression, logistic
-        regression, and distance based methods) will perform poorly because of
-        numerical instabilities. These problems can often be solved by imposing
-        some form of regularization.</p>
+        accurately predict the output. Beyond feature vectors, a few algorithms such as
+        support vector machines can process complex data object such as sequences, trees,
+        and even graphs with properly engineered kernels.</p>
 
     <p>If each of the features makes an independent contribution to the output,
         then algorithms based on linear functions (e.g., linear regression,
@@ -68,6 +53,63 @@
         then algorithms such as nonlinear support vector machines, decision trees
         and neural networks work better. Linear methods can also be applied, but
         engineers must manually specify the interactions when using them.</p>
+
+    <p>If the input features contain redundant information (e.g., highly correlated
+        features), some learning algorithms (e.g., linear regression, logistic
+        regression, and distance based methods) will perform poorly because of
+        numerical instabilities. These problems can often be solved by imposing
+        some form of regularization.</p>
+
+    <h2 id="preprocessing">Preprocessing</h2>
+
+    <p>Many machine learning methods such as Neural Networks and SVM with Gaussian
+        kernel also require the features properly scaled/standardized. For example,
+        each variable is scaled into interval [0, 1] or to have mean 0 and standard
+        deviation 1. Methods that employ a distance function are particularly sensitive
+        to this. In the package <code>smile.feature</code>, we provide several classes
+        to preprocess the features. These classes generally learn the transform from
+        a training data and can be applied to new feature vectors.</p>
+
+    <p>The class <code>Scaler</code> scales all numeric variables into the range [0, 1].
+        If the dataset has outliers, normalization will certainly scale
+        the "normal" data to a very small interval. In this case, the
+        Winsorization procedure should be applied: values greater than the
+        specified upper limit are replaced with the upper limit, and those
+        below the lower limit are replace with the lower limit. Often, the
+        specified range is indicate in terms of percentiles of the original
+        distribution (like the 5th and 95th percentile). The class <code>WinsorScaler</code>
+        implements this algorithm. In additional, the class <code>MaxAbsScaler</code>
+        scales each feature by its maximum absolute value so that the maximal absolute value
+        of each feature in the training set will be 1.0. It does not shift/center
+        the data, and thus does not destroy any sparsity.</p>
+
+    <p>The class <code>Standardizer</code> transforms numeric feature to 0 mean and unit variance.
+        Standardization makes an assumption that the data follows
+        a Gaussian distribution and are also not robust when outliers present.
+        A robust alternative is to subtract the median and divide by the IQR, which
+        is implemented <code>RobustStandardizer</code>.</p>
+
+    <p>The class <code>Normalizer</code> transform samples to unit norm. This class
+        is stateless and thus doesn't need to learn transformation parameters from data.
+        Each sample (i.e. each row of the data matrix) with at least one non zero
+        component is rescaled independently of other samples so that its norm
+        (L1 or L2) equals one. Scaling inputs to unit norms is a common operation for text
+        classification or clustering for instance.</p>
+
+    <p>The class <code>smile.math.Math</code> also provides several functions for
+        similar purpose, such as <code>standardize()</code>, <code>normalize()</code>,
+        and <code>scale()</code> that apply to a matrix.</p>
+
+    <p>Although some method such as decision trees can handle nominal variable directly,
+        other methods generally require nominal variables converted to multiple binary
+        dummy variables to indicate the presence or absence of a characteristic.
+        The class <code>OneHotEncoder</code> encode categorical integer features
+        using the one-of-K scheme.</p>
+
+    <p>There are also other feature generation classes in the package. For example,
+        <code>DateFeature</code> generates the attributes of <code>Date</code> object.
+        <code>Bag</code> is a generic implementation of bag of words features, which
+        may be applied to generic objects other than <code>String</code>. </p>
 
     <h2 id="Hughes-effect">Hughes Effect</h2>
 
