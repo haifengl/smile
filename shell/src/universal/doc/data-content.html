@@ -182,7 +182,7 @@ petalwidth		0.1000	0.3000	1.3000	1.1987	1.8000	2.5000
 
     <pre class="prettyprint lang-scala"><code>
 smile&gt; val df = DataFrame(iris)
-smile&gt; iris(0)
+smile&gt; df(0)
 res12: Datum[Array[Double]] = class	sepallength	sepalwidth	petallength	petalwidth
 Iris-setosa	5.1000	3.5000	1.4000	0.2000
 
@@ -468,7 +468,7 @@ res1: Map[Double, DataFrame] = Map(
         these parsers with the sample data in the <code>data</code> directory. In Scala API, the
         parsing functions are in the <code>smile.read</code> object.</p>
 
-    <h3 id="arff">Weka ARFF</h3>
+    <h3 id="read.arff">Weka ARFF</h3>
     <p><a href="http://www.cs.waikato.ac.nz/ml/weka/arff.html">Weka ARFF (attribute relation file format)</a>
         is an ASCII text file format that is essentially a CSV file with a header that describes the meta data.
         ARFF was developed for use in the <a href="http://www.cs.waikato.ac.nz/ml/weka/">Weka</a> machine learning software.</p>
@@ -500,7 +500,7 @@ res1: Map[Double, DataFrame] = Map(
     val data = read.arff("data/weka/iris.arff", 4)
     </code></pre>
 
-    <h3 id="libsvm">LibSVM</h3>
+    <h3 id="read.libsvm">LibSVM</h3>
     <p>LibSVM is a very fast and popular library for support vector machines.
         LibSVM uses a sparse format where zero values do not need to be stored.
         Each line of a libsvm file is in the format:</p>
@@ -538,7 +538,7 @@ res1: Map[Double, DataFrame] = Map(
     sparse: smile.math.matrix.SparseMatrix = smile.math.matrix.SparseMatrix@73ad7e90
     </code></pre>
 
-    <h3 id="csv">Delimited Text and CSV</h3>
+    <h3 id="read.csv">Delimited Text and CSV</h3>
     <p>The delimited text files are widely used in machine learning research community.
         The comma-separated values (CSV) file is a special case. Smile provides flexible
         parser for them.</p>
@@ -681,6 +681,31 @@ res1: Map[Double, DataFrame] = Map(
     <pre class="prettyprint lang-scala"><code>
     val (vertices, edges) = read.wavefront("data/wireframe/teapot.obj")
     </code></pre>
+
+    <h2 id="export">Export Data and Models</h2>
+
+    <p>To serialize a model, you may use</p>
+    <pre class="prettyprint lang-scala"><code>
+    write(model, file)
+    </code></pre>
+    <p>This method is in the Scala API <code>smile.write</code> object and serialize the model to Java
+        serialization format. This is handy if you want to use a model in Spark.</p>
+
+    <p>Alternatively, you can also use</p>
+    <pre class="prettyprint lang-scala"><code>
+    write.xstream(model, file)
+    </code></pre>
+
+    <p>which uses XStream library to serialize the model (actually any objects) to XML file.</p>
+
+    <p>To read the model back, you can use <code>read(file)</code> or <code>read.xstream(file)</code>, correspondingly.</p>
+
+    <p>You can also save an <code>AttributeDataset</code> to an ARFF file with the method
+        <code>write.arff(data, file)</code>. The ARFF file keeps the data type information.
+        If you prefer the plain csv text file, you may use the methods <code>write.csv(data, file)</code> or
+        <code>write.table(data, file, "delimiter")</code>, which save a generic two dimensional array
+        with comma or customized delimiter. To save one dimensional array, simply call
+        <code>write(array, file)</code>.</p>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
