@@ -22,11 +22,14 @@ import smile.util.Logging
 /**
  * Vector Expression.
  */
-sealed trait VectorExpression {
+sealed trait VectorExpression extends Traversable[Double] {
   def length: Int
   def apply(i: Int): Double
   def toArray: Array[Double]
   override def toString = runtime.ScalaRunTime.stringOf(toArray)
+  override def foreach[U](p: (Double) => U): Unit = {
+    for (i <- 0 until length) p(apply(i))
+  }
 
   def + (b: VectorExpression) = {
     if (length != b.length) throw new IllegalArgumentException(s"Vector sizes don't match: ${length} + ${b.length}")
@@ -66,6 +69,7 @@ case class VectorAddValue(x: VectorExpression, y: Double) extends VectorExpressi
     z
   }
 }
+
 case class VectorSubValue(x: VectorExpression, y: Double) extends VectorExpression {
   override def length: Int = x.length
   override def apply(i: Int): Double = x(i) - y
@@ -75,6 +79,7 @@ case class VectorSubValue(x: VectorExpression, y: Double) extends VectorExpressi
     z
   }
 }
+
 case class VectorMulValue(x: VectorExpression, y: Double) extends VectorExpression {
   override def length: Int = x.length
   override def apply(i: Int): Double = x(i) * y
@@ -84,6 +89,7 @@ case class VectorMulValue(x: VectorExpression, y: Double) extends VectorExpressi
     z
   }
 }
+
 case class VectorDivValue(x: VectorExpression, y: Double) extends VectorExpression {
   override def length: Int = x.length
   override def apply(i: Int): Double = x(i) / y
@@ -103,6 +109,7 @@ case class ValueAddVector(y: Double, x: VectorExpression) extends VectorExpressi
     z
   }
 }
+
 case class ValueSubVector(y: Double, x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
   override def apply(i: Int): Double = y - x(i)
@@ -112,6 +119,7 @@ case class ValueSubVector(y: Double, x: VectorExpression) extends VectorExpressi
     z
   }
 }
+
 case class ValueMulVector(y: Double, x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
   override def apply(i: Int): Double = y * x(i)
@@ -121,6 +129,7 @@ case class ValueMulVector(y: Double, x: VectorExpression) extends VectorExpressi
     z
   }
 }
+
 case class ValueDivVector(y: Double, x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
   override def apply(i: Int): Double = x(i) / y
@@ -140,6 +149,7 @@ case class VectorAddVector(x: VectorExpression, y: VectorExpression) extends Vec
     z
   }
 }
+
 case class VectorSubVector(x: VectorExpression, y: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
   override def apply(i: Int): Double = x(i) + y(i)
@@ -149,6 +159,7 @@ case class VectorSubVector(x: VectorExpression, y: VectorExpression) extends Vec
     z
   }
 }
+
 case class VectorMulVector(x: VectorExpression, y: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
   override def apply(i: Int): Double = x(i) + y(i)
@@ -158,12 +169,193 @@ case class VectorMulVector(x: VectorExpression, y: VectorExpression) extends Vec
     z
   }
 }
+
 case class VectorDivVector(x: VectorExpression, y: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
   override def apply(i: Int): Double = x(i) + y(i)
   override lazy val toArray: Array[Double] = {
     val z = new Array[Double](x.length)
     for (i <- 0 until x.length) z(i) = x(i) / y(i)
+    z
+  }
+}
+
+case class AbsVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.abs(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.abs(x(i))
+    z
+  }
+}
+
+case class AcosVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.acos(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.acos(x(i))
+    z
+  }
+}
+
+case class AsinVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.asin(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.asin(x(i))
+    z
+  }
+}
+
+case class AtanVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.atan(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.atan(x(i))
+    z
+  }
+}
+
+case class CbrtVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.cbrt(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.cbrt(x(i))
+    z
+  }
+}
+
+case class CeilVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.ceil(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.ceil(x(i))
+    z
+  }
+}
+
+case class ExpVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.exp(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.exp(x(i))
+    z
+  }
+}
+
+case class Expm1Vector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.expm1(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.expm1(x(i))
+    z
+  }
+}
+
+case class FloorVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.floor(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.floor(x(i))
+    z
+  }
+}
+
+case class LogVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.log(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.log(x(i))
+    z
+  }
+}
+
+case class Log2Vector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.log2(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.log2(x(i))
+    z
+  }
+}
+
+case class Log10Vector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.log10(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.log10(x(i))
+    z
+  }
+}
+
+case class Log1pVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.log1p(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.log1p(x(i))
+    z
+  }
+}
+
+case class RoundVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.round(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.round(x(i))
+    z
+  }
+}
+
+case class SinVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.sin(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.sin(x(i))
+    z
+  }
+}
+
+case class SqrtVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.sqrt(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.sqrt(x(i))
+    z
+  }
+}
+
+case class TanVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.tan(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.tan(x(i))
+    z
+  }
+}
+
+case class TanhVector(x: VectorExpression) extends VectorExpression {
+  override def length: Int = x.length
+  override def apply(i: Int): Double = Math.tanh(x(i))
+  override lazy val toArray: Array[Double] = {
+    val z = new Array[Double](x.length)
+    for (i <- 0 until x.length) z(i) = Math.tanh(x(i))
     z
   }
 }
@@ -475,3 +667,238 @@ class MatrixOrderOptimization(dims: Array[Int]) extends Logging {
     }
   }
 }
+
+case class AbsMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.abs(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.abs(A(i, j))
+    z
+  }
+}
+
+case class AcosMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.acos(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.acos(A(i, j))
+    z
+  }
+}
+
+case class AsinMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.asin(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.asin(A(i, j))
+    z
+  }
+}
+
+case class AtanMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.atan(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.atan(A(i, j))
+    z
+  }
+}
+
+case class CbrtMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.cbrt(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.cbrt(A(i, j))
+    z
+  }
+}
+
+case class CeilMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.ceil(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.ceil(A(i, j))
+    z
+  }
+}
+
+case class ExpMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.exp(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.exp(A(i, j))
+    z
+  }
+}
+
+case class Expm1Matrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.expm1(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.expm1(A(i, j))
+    z
+  }
+}
+
+case class FloorMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.floor(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.floor(A(i, j))
+    z
+  }
+}
+
+case class LogMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.log(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.log(A(i, j))
+    z
+  }
+}
+
+case class Log2Matrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.log2(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.log2(A(i, j))
+    z
+  }
+}
+
+case class Log10Matrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.log10(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.log10(A(i, j))
+    z
+  }
+}
+
+case class Log1pMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.log1p(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.log1p(A(i, j))
+    z
+  }
+}
+
+case class RoundMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.abs(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.abs(A(i, j))
+    z
+  }
+}
+
+case class SinMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.sin(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.sin(A(i, j))
+    z
+  }
+}
+
+case class SqrtMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.sqrt(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.sqrt(A(i, j))
+    z
+  }
+}
+
+case class TanMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.tan(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.tan(A(i, j))
+    z
+  }
+}
+
+case class TanhMatrix(A: MatrixExpression) extends MatrixExpression {
+  override def nrows: Int = A.nrows
+  override def ncols: Int = A.ncols
+  override def apply(i: Int, j: Int): Double = Math.tanh(A(i, j))
+  override lazy val toMatrix: DenseMatrix = {
+    val z = Matrix.zeros(A.nrows, A.ncols)
+    for (j <- 0 until ncols)
+      for (i <- 0 until nrows)
+        z(i, j) = Math.tanh(A(i, j))
+    z
+  }
+}
+

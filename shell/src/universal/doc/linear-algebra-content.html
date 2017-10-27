@@ -90,8 +90,8 @@
 
     <p>Common arithmetic operations on vectors and scalars are similar as in R and Matlab.</p>
     <pre class="prettyprint lang-scala"><code>
-    smile&gt; val x = Array(1.0, 2.0, 3.0, 4.0)
-    smile&gt; val y = Array(4.0, 3.0, 2.0, 1.0)
+    smile&gt; val x = c(1.0, 2.0, 3.0, 4.0)
+    smile&gt; val y = c(4.0, 3.0, 2.0, 1.0)
 
     smile&gt; x + y
     res22: smile.math.VectorAddVector = Array(5.0, 5.0, 5.0, 5.0)
@@ -135,20 +135,21 @@
 
     <p>Like Matlab, we can use <code>eye</code>, <code>zeros</code> and <code>ones</code>
         to create identity, zero, or all-ones matrix, respectively.
-        To create a matrix from 2-dimensional array, we can use the <code>~</code> operator.
+        To create a matrix from 2-dimensional array, we can use the constructor <code>matrix</code>
+        or the <code>~</code> operator.
         The <code>~</code> operator can be applied to 1-dimensional array too, which creates
         a single column matrix.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val A = Array(
-        Array(0.7220180, 0.07121225, 0.6881997),
-        Array(-0.2648886, -0.89044952, 0.3700456),
-        Array(-0.6391588, 0.44947578, 0.6240573)
+    val a = matrix(
+        c(0.7220180, 0.07121225, 0.6881997),
+        c(-0.2648886, -0.89044952, 0.3700456),
+        c(-0.6391588, 0.44947578, 0.6240573)
     )
-    val B = Array(
-        Array(0.6881997, -0.07121225, 0.7220180),
-        Array(0.3700456, 0.89044952, -0.2648886),
-        Array(0.6240573, -0.44947578, -0.6391588)
+    val b = matrix(
+        c(0.6881997, -0.07121225, 0.7220180),
+        c(0.3700456, 0.89044952, -0.2648886),
+        c(0.6240573, -0.44947578, -0.6391588)
     )
     val C = Array(
         Array(0.9527204, -0.2973347, 0.06257778),
@@ -156,9 +157,7 @@
         Array(0.1159052, 0.1652528, -0.97941688)
     )
 
-    val a = ~A
-    val b = ~B
-    val c = ~C
+    val c = ~C // or val c = matrix(C)
     </code></pre>
 
     <p>Matrix-vector operations are just like in math formula.</p>
