@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.JMatrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QR;
 import smile.math.matrix.SVD;
@@ -76,7 +75,7 @@ import smile.math.special.Beta;
  * 
  * @author Haifeng Li
  */
-public class OLS implements Regression<double[]>, OnlineRegression<double[]>, Serializable {
+public class OLS implements Regression<double[]>, Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(OLS.class);
 
@@ -96,10 +95,6 @@ public class OLS implements Regression<double[]>, OnlineRegression<double[]>, Se
      * The coefficients, their standard errors, t-scores, and p-values.
      */
     private double[][] coefficients;
-    /**
-     * The gamma matrix for recursive least squares used in online updates
-     */
-    private JMatrix gamma;
     /**
      * The residuals, that is response minus fitted values.
      */
@@ -247,7 +242,6 @@ public class OLS implements Regression<double[]>, OnlineRegression<double[]>, Se
         int df2 = n - p - 1;
         pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
 
-        gamma = new JMatrix(p+1,p+1);
         coefficients = new double[p+1][4];
         if (SVD) {
             for (int i = 0; i <= p; i++) {
@@ -259,18 +253,10 @@ public class OLS implements Regression<double[]>, OnlineRegression<double[]>, Se
                     double t = w1[i] / se;
                     coefficients[i][2] = t;
                     coefficients[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
-                    if (!Math.isZero(s,1E-5)){
-                        gamma.set(i,i,1/(s*s));
-                    }
-                    else {
-                        gamma.set(i,i,1/s);
-                    }
-                      
                 } else {
                     coefficients[i][1] = Double.NaN;
                     coefficients[i][2] = 0.0;
                     coefficients[i][3] = 1.0;
-                    gamma.set(i,i,1);
                 }
             }
         } else {
@@ -285,7 +271,6 @@ public class OLS implements Regression<double[]>, OnlineRegression<double[]>, Se
                 double t = w1[i] / se;
                 coefficients[i][2] = t;
                 coefficients[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
-                gamma.set(i,i,inv.get(i,i));
             }
         }
     }
@@ -390,54 +375,6 @@ public class OLS implements Regression<double[]>, OnlineRegression<double[]>, Se
         }
 
         return b + Math.dot(x, w);
-    }
-    
-    /**
-     * Learn a new instance with online regression.
-     * @param x the training instance.
-     * @param y the target value.
-     */
-    @Override
-    public void learn(double[] x, double y){
-        JMatrix X = new JMatrix(p+1,1);
-        JMatrix W = new JMatrix(p+1,1);
-        for (int i=0; i<p; i++){
-            X.set(i,0,x[i]);
-            W.set(i,0,w[i]);
-        }
-        X.set(p,0,1);
-        W.set(p,0,b);
-        updateGamma(X);
-        updateW(X,W,y);
-    }
-    
-    private void updateGamma(JMatrix x){
-        double v = 1+gamma.xax(x.data());
-        if(!Math.isZero(v, 1E-10)){
-            gamma=gamma.sub((gamma.abmm(x.aat().abmm(gamma))).div(v));
-        }
-        else{
-            gamma=gamma.sub((gamma.abmm(x.aat().abmm(gamma))));
-        }
-    }
-    
-    private void updateW(JMatrix x, JMatrix w, double y){
-        double[] delta = gamma.abmm(x).mul(Math.dot(x.data(),w.data())-y).data();
-        for (int i=0; i<p; i++){
-            this.w[i]-=delta[i];
-        }
-        b-=delta[p];
-    }
-    
-    /**
-     * Update the weights with given instance and associated target value.
-     * @param x the training instances.
-     * @param y the target values.
-     */
-    public void learn(double[][] x, double[] y){
-        for (int i = 0; i < x.length; i++) {
-            learn(x[i], y[i]);
-        }
     }
 
     /**
