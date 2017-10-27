@@ -16,13 +16,11 @@
 
 package smile.feature;
 
-import smile.data.NumericAttribute;
 import smile.math.Math;
 import smile.data.Attribute;
-import smile.sort.QuickSelect;
 
 /**
- * Scale each feature by its maximum absolute value. This class scales and
+ * Scales each feature by its maximum absolute value. This class scales and
  * translates each feature individually such that the maximal absolute value
  * of each feature in the training set will be 1.0. It does not shift/center
  * the data, and thus does not destroy any sparsity.
