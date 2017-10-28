@@ -92,7 +92,7 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
     private double lambda;
     
     /**
-     * Trainer for linear regression by ordinary least squares.
+     * Trainer for linear regression by recursive least squares.
      */
     public static class Trainer extends RegressionTrainer<double[]> {
         /**
@@ -116,15 +116,15 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
     /**
      * 
      * @param p the dimensions of input columns
-     * @param gamma the matrix used to update the coefficients
+     * @param gamma the p + 1 x p + 1 matrix used to update the coefficients
      */
     public RLS(int p, DenseMatrix gamma){
         this (p, gamma, 1);
     }
     /**
      * Constructor.
-     * @param p the dimensions of input columns
-     * @param gamma the matrix used to update the coefficients
+     * @param p the dimensions of input columns, without the bias dimension
+     * @param gamma the p + 1 x p + 1 matrix used to update the coefficients
      * @param lambda the forgetting factor
      */
     public RLS(int p, DenseMatrix gamma, double lambda){
@@ -248,6 +248,20 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
     
     /**
      * Learn a new instance with online regression.
+     * @param x the training instances. 
+     * @param y the target values.
+     */
+    public void learn(double[][] x, double y[]){
+        if (x.length != y.length) {
+            throw new IllegalArgumentException(String.format("Input vector x of size %d not equal to length %d of y", x.length, y.length));
+        }
+        for (int i = 0; i < x.length; i++){
+            learn(x[i], y[i]);
+        }
+    }
+    
+    /**
+     * Learn a new instance with online regression.
      * @param x the training instance. 
      * @param y the target value.
      */
@@ -289,26 +303,15 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
         b -= gammaX[p] * err;
         W[p] = b;
     }
-    
     /**
-     * Learn a new instance with online regression.
-     * @param x the training instances. 
-     * @param y the target values.
+     * Get the gamma matrix
+     * @return the gamma matrix
      */
-    public void learn(double[][] x, double y[]){
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("Input vector x of size %d not equal to length %d of y", x.length, y.length));
-        }
-        for (int i = 0; i < x.length; i++){
-            learn(x[i], y[i]);
-        }
-    }
-    
     public DenseMatrix getGamma(){
         return gamma;
     }
     /**
-     * 
+     * Set the gamma matrix.
      * @param gamma the gamma matrix used to update the coefficients.
      */
     public void setGamma(DenseMatrix gamma){
