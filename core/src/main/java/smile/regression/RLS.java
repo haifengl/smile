@@ -34,6 +34,8 @@ import smile.math.matrix.SVD;
  * of the matrix (X<sup>T</sup> X). gamma is updated with the Sherman-Morrison 
  * formula for each new learning instance x. After the gamma matrix has been updated
  * the coefficients W are updated with with the rule W = W - gamma*x(x*W - y).
+ * More information about recursive least squares can be found at 
+ * https://www.otexts.org/1582 
  * 
  * @author Sam Erickson
  */
@@ -59,8 +61,13 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
     * method, and it is used to update the coefficients in online learning.
     * Gamma is first initialized to the matrix (X<sup>T</sup>X)<sup>-1</sup>.
     * 
+    * It is is common to initialize gamma with c*I, where I is the 
+    * p + 1 x p + 1 identity matrix and c > 0 is a scalar value, or initialize
+    * gamma with the inverse of the Cholesky decomposition of X<sup>T</sup> * X
+    * 
     * A more complete description can be found on the wikipedia article
-    * about online machine learning.
+    * about online machine learning, and also at
+    * https://www.otexts.org/1582
     */
     private DenseMatrix gamma;
    /**
@@ -77,7 +84,10 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
     private double[] gammaX;
     /**
      * The forgetting factor. Values closer to 1 will have longer "memory"
-     * and values closer to 0 will be have shorter "memory"
+     * and values closer to 0 will be have shorter "memory". Some authors 
+     * state that that the forgetting factor must a non-zero number 
+     * less than 1, while others state that it must be in the interval (0, 1]. 
+     * We stick with the latter formality.
      */
     private double lambda;
     
@@ -98,7 +108,7 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
     }
     /**
      * Constructor.
-     * @param p the dimensions of input columns
+     * @param p the dimensions of input columns, without the bias dimension
      */
     public RLS(int p){
         this(p, DenseMatrix.eye(p+1));
@@ -122,7 +132,7 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
             throw new IllegalArgumentException(String.format("gamma is not square: %d != %d", gamma.ncols(), gamma.nrows()));
         }
         if (p + 1 != gamma.nrows()){
-            throw new IllegalArgumentException(String.format("The dimensions of gamma don't match the input dimensions: %d != %d", p + 1, gamma.nrows()));
+            throw new IllegalArgumentException(String.format("The dimensions of gamma don't match the input dimensions (plus bias dimension): %d != %d", p + 1, gamma.nrows()));
         }
         if (lambda<=0 || lambda>1){
            throw new IllegalArgumentException("The forgetting factor must be between 0 (exclusive) and 1 (inclusive)"); 
@@ -254,6 +264,12 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
     
     private void updateGamma(){
         double v = 1 + gamma.xax(X);
+        // If 1/v is NaN, then the update to gamma will no longer be invertible.
+        // See https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula#Statement
+        if (Double.isNaN(1/v)){
+            throw new IllegalStateException("The updated gamma matrix is no longer invertible. Try using a different x, or resetting "
+                    + "the gamma matrix with c*I where I is a p + 1 x p + 1 identity matrix and c > 0 is scalar.");
+        }
         gamma.ax(X, gammaX);
         for (int i = 0; i < p + 1; i++){
             for (int j = 0; j < p + 1; j++){
