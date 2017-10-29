@@ -71,17 +71,17 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
     */
     private DenseMatrix gamma;
    /**
-    * A single learning instance X
+    * A single learning instance X, padded with 1 for intercept
     */
-    private double[] X;
+    private transient double[] X;
    /**
-    * The coefficients W
+    * The coefficients with intercept
     */
-    private double[] W;
+    private transient double[] W;
     /**
      * A temporary array used in computing gamma * X * X^T * gamma
      */
-    private double[] gammaX;
+    private transient double[] gammaX;
     /**
      * The forgetting factor. Values closer to 1 will have longer "memory"
      * and values closer to 0 will be have shorter "memory". Some authors 
@@ -99,6 +99,7 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
          * Constructor.
          */
         public Trainer() {
+
         }
 
         @Override
@@ -106,35 +107,38 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
             return new RLS(x, y);
         }
     }
+
     /**
      * Constructor.
      * @param p the dimensions of input columns, without the bias dimension
      */
-    public RLS(int p){
+    public RLS(int p) {
         this(p, DenseMatrix.eye(p+1));
     }
+
     /**
      * 
      * @param p the dimensions of input columns
      * @param gamma the p + 1 x p + 1 matrix used to update the coefficients
      */
-    public RLS(int p, DenseMatrix gamma){
+    public RLS(int p, DenseMatrix gamma) {
         this (p, gamma, 1);
     }
+
     /**
      * Constructor.
      * @param p the dimensions of input columns, without the bias dimension
      * @param gamma the p + 1 x p + 1 matrix used to update the coefficients
      * @param lambda the forgetting factor
      */
-    public RLS(int p, DenseMatrix gamma, double lambda){
-        if (gamma.nrows() != gamma.ncols()){
+    public RLS(int p, DenseMatrix gamma, double lambda) {
+        if (gamma.nrows() != gamma.ncols()) {
             throw new IllegalArgumentException(String.format("gamma is not square: %d != %d", gamma.ncols(), gamma.nrows()));
         }
-        if (p + 1 != gamma.nrows()){
+        if (p + 1 != gamma.nrows()) {
             throw new IllegalArgumentException(String.format("The dimensions of gamma don't match the input dimensions (plus bias dimension): %d != %d", p + 1, gamma.nrows()));
         }
-        if (lambda<=0 || lambda>1){
+        if (lambda<=0 || lambda>1) {
            throw new IllegalArgumentException("The forgetting factor must be between 0 (exclusive) and 1 (inclusive)"); 
         }
         
@@ -156,18 +160,18 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
     public RLS(double[][] x, double[] y) {
         this(x, y, false, 1);
     }
+
     /**
      * Constructor. Learn the ordinary least squares model to initialize gamma and coefficients.
      * @param x a matrix containing the explanatory variables. NO NEED to include a constant column of 1s for bias.
      * @param y the response values.
-     * @param If true, use SVD to fit the model. Otherwise, use QR decomposition. SVD is slower than QR but
-     *            can handle rank-deficient matrix.
      * @param lambda the forgetting factor.
      */
     public RLS(double[][] x, double[] y, boolean SVD, double lambda) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
+
         if (lambda<=0 || lambda>1){
            throw new IllegalArgumentException("The forgetting factor must be between 0 (exclusive) and 1 (inclusive)"); 
         }
@@ -251,10 +255,11 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
      * @param x the training instances. 
      * @param y the target values.
      */
-    public void learn(double[][] x, double y[]){
+    public void learn(double[][] x, double y[]) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Input vector x of size %d not equal to length %d of y", x.length, y.length));
         }
+
         for (int i = 0; i < x.length; i++){
             learn(x[i], y[i]);
         }
@@ -266,17 +271,18 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
      * @param y the target value.
      */
     @Override
-    public void learn(double[] x, double y){
+    public void learn(double[] x, double y) {
         if (x.length != p) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
+
         System.arraycopy(x, 0, X, 0, p);
         X[p] = 1;
         updateGamma();
         updateW(y);
     }
     
-    private void updateGamma(){
+    private void updateGamma() {
         double v = 1 + gamma.xax(X);
         // If 1/v is NaN, then the update to gamma will no longer be invertible.
         // See https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula#Statement
@@ -284,16 +290,17 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
             throw new IllegalStateException("The updated gamma matrix is no longer invertible. Try using a different x, or resetting "
                     + "the gamma matrix with c*I where I is a p + 1 x p + 1 identity matrix and c > 0 is scalar.");
         }
+
         gamma.ax(X, gammaX);
-        for (int i = 0; i < p + 1; i++){
-            for (int j = 0; j < p + 1; j++){
+        for (int i = 0; i < p + 1; i++) {
+            for (int j = 0; j < p + 1; j++) {
                 double tmp = (1/lambda)*(gamma.get(i, j) - ((gammaX[i] * gammaX[j])/v));
                 gamma.set(i, j, tmp);
             }
         }
     }
     
-    private void updateW(double y){
+    private void updateW(double y) {
         gamma.ax(X, gammaX);
         double err = smile.math.Math.dot(X, W) - y;
         for (int i = 0; i < p; i++){
@@ -303,31 +310,36 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
         b -= gammaX[p] * err;
         W[p] = b;
     }
+
     /**
      * Get the gamma matrix
      * @return the gamma matrix
      */
-    public DenseMatrix getGamma(){
+    public DenseMatrix getGamma() {
         return gamma;
     }
+
     /**
      * Set the gamma matrix.
      * @param gamma the gamma matrix used to update the coefficients.
      */
-    public void setGamma(DenseMatrix gamma){
-        if (gamma.nrows() != gamma.ncols()){
+    public void setGamma(DenseMatrix gamma) {
+        if (gamma.nrows() != gamma.ncols()) {
             throw new IllegalArgumentException(String.format("gamma is not square: %d != %d", gamma.ncols(), gamma.nrows()));
         }
-        if (p + 1 != gamma.nrows()){
+
+        if (p + 1 != gamma.nrows()) {
             throw new IllegalArgumentException(String.format("The dimensions of gamma don't match the input dimensions: %d != %d", p + 1, gamma.nrows()));
         }
+
         this.gamma = gamma;
     }
+
     /**
      * Get the forgetting factor
      * @return the forgetting factor
      */
-    public double getForgettingFactor(){
+    public double getForgettingFactor() {
         return lambda;
     }
     
@@ -335,7 +347,7 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
      * Set the forgetting factor
      * @param lambda the forgetting factor
      */
-    public void setForgettingFactor(double lambda){
+    public void setForgettingFactor(double lambda) {
         if (lambda<=0 || lambda>1){
            throw new IllegalArgumentException("The forgetting factor is not between 0 (exclusive) and 1 (inclusive)"); 
         }
