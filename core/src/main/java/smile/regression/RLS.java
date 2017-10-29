@@ -28,15 +28,23 @@ import smile.math.matrix.QR;
 import smile.math.matrix.SVD;
 
 /**
- * Recursive least squares is an online model that approximates ordinary least squares
- * by updating the coefficients with each new learning instance. Recursive least
- * squares does this by initializing a matrix called gamma, which is the inverse
- * of the matrix (X<sup>T</sup> X). gamma is updated with the Sherman-Morrison 
- * formula for each new learning instance x. After the gamma matrix has been updated
- * the coefficients W are updated with with the rule W = W - gamma*x(x*W - y).
- * More information about recursive least squares can be found at 
- * https://www.otexts.org/1582 
- * 
+ * Recursive least-squares. RLS updates an ordinary least squares with
+ * samples that arrive sequentially. To initialize RLS, we typically
+ * train an OLS model with a batch of samples.
+ *
+ * In some adaptive configurations it can be useful not to give equal
+ * importance to all the historical data but to assign higher weights
+ * to the most recent data (and then to forget the oldest one). This
+ * may happen when the phenomenon underlying the data is non stationary
+ * or when we want to approximate a nonlinear dependence by using a
+ * linear model which is local in time. Both these situations are common
+ * in adaptive control problems.
+ *
+ * <h2>References</h2>
+ * <ol>
+ * <li> https://www.otexts.org/1582 </li>
+ * </ol>
+ *
  * @author Sam Erickson
  */
 public class RLS implements OnlineRegression<double[]>, Serializable {
@@ -44,50 +52,29 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
     private static final Logger logger = LoggerFactory.getLogger(RLS.class);
     
     /**
-     * The linear weights.
-     */
-    private double[] w;
-    /**
-     * Intercept
-     */
-    private double b;
-    /**
      * The dimensionality.
      */
     private int p;
     /**
-    * The gamma matrix for recursive least squares used in online updates. 
-    * The gamma matrix is updated with each learning instance in the learn()
-    * method, and it is used to update the coefficients in online learning.
-    * Gamma is first initialized to the matrix (X<sup>T</sup>X)<sup>-1</sup>.
-    * 
-    * It is is common to initialize gamma with c*I, where I is the 
-    * p + 1 x p + 1 identity matrix and c > 0 is a scalar value, or initialize
-    * gamma with the inverse of the Cholesky decomposition of X<sup>T</sup> * X
-    * 
-    * A more complete description can be found on the wikipedia article
-    * about online machine learning, and also at
-    * https://www.otexts.org/1582
-    */
-    private DenseMatrix gamma;
-   /**
-    * A single learning instance X, padded with 1 for intercept
-    */
-    private transient double[] X;
-   /**
-    * The coefficients with intercept
-    */
-    private transient double[] W;
-    /**
-     * A temporary array used in computing gamma * X * X^T * gamma
+     * First initialized to the matrix (X<sup>T</sup>X)<sup>-1</sup>,
+     * it is updated with each new learning instance.
      */
-    private transient double[] gammaX;
+    private DenseMatrix V;
     /**
-     * The forgetting factor. Values closer to 1 will have longer "memory"
-     * and values closer to 0 will be have shorter "memory". Some authors 
-     * state that that the forgetting factor must a non-zero number 
-     * less than 1, while others state that it must be in the interval (0, 1]. 
-     * We stick with the latter formality.
+     * A single learning instance X, padded with 1 for intercept.
+     */
+    private transient double[] x1;
+    /**
+     * The coefficients with intercept.
+     */
+    private transient double[] w;
+    /**
+     * A temporary array used in computing V * X .
+     */
+    private transient double[] Vx;
+    /**
+     * The forgetting factor in (0, 1]. Values closer to 1 will have
+     * longer memory and values closer to 0 will be have shorter memory.
      */
     private double lambda;
     
@@ -109,56 +96,12 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
     }
 
     /**
-     * Constructor.
-     * @param p the dimensions of input columns, without the bias dimension
-     */
-    public RLS(int p) {
-        this(p, DenseMatrix.eye(p+1));
-    }
-
-    /**
-     * 
-     * @param p the dimensions of input columns
-     * @param gamma the p + 1 x p + 1 matrix used to update the coefficients
-     */
-    public RLS(int p, DenseMatrix gamma) {
-        this (p, gamma, 1);
-    }
-
-    /**
-     * Constructor.
-     * @param p the dimensions of input columns, without the bias dimension
-     * @param gamma the p + 1 x p + 1 matrix used to update the coefficients
-     * @param lambda the forgetting factor
-     */
-    public RLS(int p, DenseMatrix gamma, double lambda) {
-        if (gamma.nrows() != gamma.ncols()) {
-            throw new IllegalArgumentException(String.format("gamma is not square: %d != %d", gamma.ncols(), gamma.nrows()));
-        }
-        if (p + 1 != gamma.nrows()) {
-            throw new IllegalArgumentException(String.format("The dimensions of gamma don't match the input dimensions (plus bias dimension): %d != %d", p + 1, gamma.nrows()));
-        }
-        if (lambda<=0 || lambda>1) {
-           throw new IllegalArgumentException("The forgetting factor must be between 0 (exclusive) and 1 (inclusive)"); 
-        }
-        
-        this.p = p;
-        this.gamma = gamma;
-        this.lambda = lambda;
-        
-        w = new double[p];
-        W = new double[p+1];
-        X = new double[p+1];
-        gammaX = new double[p+1];
-    }
-    
-    /**
      * Constructor. Learn the ordinary least squares model to initialize gamma and coefficients.
      * @param x a matrix containing the explanatory variables. NO NEED to include a constant column of 1s for bias.
      * @param y the response values.
      */
     public RLS(double[][] x, double[] y) {
-        this(x, y, false, 1);
+        this(x, y, 1);
     }
 
     /**
@@ -167,13 +110,13 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
      * @param y the response values.
      * @param lambda the forgetting factor.
      */
-    public RLS(double[][] x, double[] y, boolean SVD, double lambda) {
+    public RLS(double[][] x, double[] y, double lambda) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        if (lambda<=0 || lambda>1){
-           throw new IllegalArgumentException("The forgetting factor must be between 0 (exclusive) and 1 (inclusive)"); 
+        if (lambda <= 0 || lambda > 1){
+           throw new IllegalArgumentException("The forgetting factor must be in (0, 1]");
         }
         
         this.lambda = lambda;
@@ -193,52 +136,23 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
         }
 
         // weights and intercept
-        this.W = new double[p+1];
-        QR qr = null;
-        SVD svd = null;
-        if (SVD) {
-            svd = X.svd();
-            svd.solve(y, W);
-        } else {
-            try {
-                qr = X.qr();
-                qr.solve(y, W);
-            } catch (RuntimeException e) {
-                logger.warn("Matrix is not of full rank, try SVD instead");
-                SVD = true;
-                svd = X.svd();
-                Arrays.fill(W, 0.0);
-                svd.solve(y, W);
-            }
-        }
-        b = W[p];
-        w = new double[p];
-        System.arraycopy(W, 0, w, 0, p);
-        
-        this.X = new double[p+1];
-        this.gammaX = new double[p+1];
-        
-        if (SVD) {
-            Cholesky cholesky = svd.CholeskyOfAtA();
-            gamma = cholesky.inverse();
-        } else {
-            Cholesky cholesky = qr.CholeskyOfAtA();
-            gamma = cholesky.inverse();
-        }
+        this.w = new double[p+1];
+        SVD svd = X.svd();
+        svd.solve(y, w);
+
+        Cholesky cholesky = svd.CholeskyOfAtA();
+        this.V = cholesky.inverse();
+
+        this.Vx = new double[p+1];
+        this.x1 = new double[p+1];
+        x1[p] = 1;
     }
 
     /**
-     * Returns the linear coefficients (without intercept).
+     * Returns the linear coefficients, of which the last element is the intercept.
      */
     public double[] coefficients() {
         return w;
-    }
-
-    /**
-     * Returns the intercept.
-     */
-    public double intercept() {
-        return b;
     }
 
     @Override
@@ -247,7 +161,12 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        return b + smile.math.Math.dot(x, w);
+        double y = w[p];
+        for (int i = 0; i < x.length; i++) {
+            y += x[i] * w[i];
+        }
+
+        return y;
     }
     
     /**
@@ -276,63 +195,26 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        System.arraycopy(x, 0, X, 0, p);
-        X[p] = 1;
-        updateGamma();
-        updateW(y);
-    }
-    
-    private void updateGamma() {
-        double v = 1 + gamma.xax(X);
+        System.arraycopy(x, 0, x1, 0, p);
+        double v = 1 + V.xax(x1);
         // If 1/v is NaN, then the update to gamma will no longer be invertible.
         // See https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula#Statement
         if (Double.isNaN(1/v)){
-            throw new IllegalStateException("The updated gamma matrix is no longer invertible. Try using a different x, or resetting "
-                    + "the gamma matrix with c*I where I is a p + 1 x p + 1 identity matrix and c > 0 is scalar.");
+            throw new IllegalStateException("The updated V matrix is no longer invertible.");
         }
 
-        gamma.ax(X, gammaX);
-        for (int i = 0; i < p + 1; i++) {
-            for (int j = 0; j < p + 1; j++) {
-                double tmp = (1/lambda)*(gamma.get(i, j) - ((gammaX[i] * gammaX[j])/v));
-                gamma.set(i, j, tmp);
+        V.ax(x1, Vx);
+        for (int j = 0; j <= p; j++) {
+            for (int i = 0; i <= p; i++) {
+                double tmp = V.get(i, j) - ((Vx[i] * Vx[j])/v);
+                V.set(i, j, tmp/lambda);
             }
         }
-    }
-    
-    private void updateW(double y) {
-        gamma.ax(X, gammaX);
-        double err = smile.math.Math.dot(X, W) - y;
-        for (int i = 0; i < p; i++){
-            w[i] -= gammaX[i] * err;
-            W[i] = w[i];
+
+        double err = y - predict(x);
+        for (int i = 0; i <= p; i++){
+            w[i] += Vx[i] * err;
         }
-        b -= gammaX[p] * err;
-        W[p] = b;
-    }
-
-    /**
-     * Get the gamma matrix
-     * @return the gamma matrix
-     */
-    public DenseMatrix getGamma() {
-        return gamma;
-    }
-
-    /**
-     * Set the gamma matrix.
-     * @param gamma the gamma matrix used to update the coefficients.
-     */
-    public void setGamma(DenseMatrix gamma) {
-        if (gamma.nrows() != gamma.ncols()) {
-            throw new IllegalArgumentException(String.format("gamma is not square: %d != %d", gamma.ncols(), gamma.nrows()));
-        }
-
-        if (p + 1 != gamma.nrows()) {
-            throw new IllegalArgumentException(String.format("The dimensions of gamma don't match the input dimensions: %d != %d", p + 1, gamma.nrows()));
-        }
-
-        this.gamma = gamma;
     }
 
     /**
