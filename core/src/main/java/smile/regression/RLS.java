@@ -212,8 +212,10 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
             }
         }
 
-        double err = y - predict(x);
+        // V has been updated. Compute Vx again.
         V.ax(x1, Vx);
+        
+        double err = y - predict(x);
         for (int i = 0; i <= p; i++){
             w[i] += Vx[i] * err;
         }
