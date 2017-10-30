@@ -76,6 +76,10 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
      * A temporary array used in computing V * X .
      */
     private double[] Vx;
+    /**
+     * A temporary array used in computing w .
+     */
+    private double[] updatedVx;
 
     /**
      * Trainer for linear regression by recursive least squares.
@@ -145,6 +149,7 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
         this.V = cholesky.inverse();
 
         this.Vx = new double[p+1];
+        this.updatedVx = new double[p+1];
         this.x1 = new double[p+1];
         x1[p] = 1;
     }
@@ -197,7 +202,6 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
         }
 
         System.arraycopy(x, 0, x1, 0, p);
-        x1[p] = 1;
         double v = 1 + V.xax(x1);
         // If 1/v is NaN, then the update to V will no longer be invertible.
         // See https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula#Statement
@@ -210,12 +214,17 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
             for (int i = 0; i <= p; i++) {
                 double tmp = V.get(i, j) - ((Vx[i] * Vx[j])/v);
                 V.set(i, j, tmp/lambda);
+                
+                if (j == 0){
+                    updatedVx[i] = 0;
+                }
+                updatedVx[i] += V.get(i, j) * x1[j];
             }
         }
 
         double err = y - predict(x);
         for (int i = 0; i <= p; i++){
-            w[i] += Vx[i] * err;
+            w[i] += updatedVx[i] * err;
         }
     }
 
