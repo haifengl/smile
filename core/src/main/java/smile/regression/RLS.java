@@ -197,8 +197,9 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
         }
 
         System.arraycopy(x, 0, x1, 0, p);
+        x1[p] = 1;
         double v = 1 + V.xax(x1);
-        // If 1/v is NaN, then the update to gamma will no longer be invertible.
+        // If 1/v is NaN, then the update to V will no longer be invertible.
         // See https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula#Statement
         if (Double.isNaN(1/v)){
             throw new IllegalStateException("The updated V matrix is no longer invertible.");
@@ -232,7 +233,7 @@ public class RLS implements OnlineRegression<double[]>, Serializable {
      */
     public void setForgettingFactor(double lambda) {
         if (lambda <= 0 || lambda > 1){
-           throw new IllegalArgumentException("The forgetting factor is not between 0 (exclusive) and 1 (inclusive)"); 
+           throw new IllegalArgumentException("The forgetting factor must be in (0, 1]");
         }
         this.lambda = lambda;
     }
