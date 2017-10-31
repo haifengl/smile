@@ -19,8 +19,8 @@ package smile.nlp.dictionary;
 /**
  * A set of stop words in some language. Stop words is the name given to word
  * s which are filtered out prior to, or after, processing of natural language
- * text. There is no definite list of stop words which all Natural language
- * processing (NLP) tools incorporate. Not all NLP tools use a stoplist. Some
+ * text. There is no definite list of stop words which all NLP
+ * tools incorporate. Not all NLP tools use a stoplist. Some
  * tools specifically avoid using them to support phrase search.
  * <p>
  * Stop words can cause problems when using a search engine to search for

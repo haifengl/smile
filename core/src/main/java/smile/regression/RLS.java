@@ -28,7 +28,7 @@ import smile.math.matrix.QR;
 import smile.math.matrix.SVD;
 
 /**
- * Recursive least-squares. RLS updates an ordinary least squares with
+ * Recursive least squares. RLS updates an ordinary least squares with
  * samples that arrive sequentially. To initialize RLS, we typically
  * train an OLS model with a batch of samples.
  *
