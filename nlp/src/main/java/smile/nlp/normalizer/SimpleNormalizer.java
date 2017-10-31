@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  * <li>Apply Unicode normalization form NFKC.</li>
  * <li>Strip, trim, normalize, and compress whitespace.</li>
  * <li>Remove control and formatting characters.</li>
- * <li>Normalize double and single quotes.</li>
+ * <li>Normalize dash, double and single quotes.</li>
  * </ul>
  *
  * @author Mark Arehart
@@ -38,6 +38,8 @@ public class SimpleNormalizer implements Normalizer {
     private static final Pattern DOUBLE_QUOTES = Pattern.compile("[\\u02BA\\u201C\\u201D\\u201E\\u201F\\u2033\\u2036\\u275D\\u275E\\u301D\\u301E\\u301F\\uFF02]");
 
     private static final Pattern SINGLE_QUOTES = Pattern.compile("[\\u0060\\u02BB\\u02BC\\u02BD\\u2018\\u2019\\u201A\\u201B\\u275B\\u275C]");
+
+    private static final Pattern DASH = Pattern.compile("[\\u2012\\u2013\\u2014\\u2015\\u2053]");
 
     /**
      * The singleton instance.
@@ -72,6 +74,8 @@ public class SimpleNormalizer implements Normalizer {
         text = DOUBLE_QUOTES.matcher(text).replaceAll("\"");
 
         text = SINGLE_QUOTES.matcher(text).replaceAll("'");
+
+        text = DASH.matcher(text).replaceAll("--");
 
         return text;
     }
