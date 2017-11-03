@@ -18,7 +18,6 @@ package smile.feature;
 
 import java.util.Date;
 import smile.data.Attribute;
-import smile.data.DateAttribute;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
 
@@ -34,7 +33,7 @@ public class DateFeature implements FeatureGenerator<Date> {
     /**
      * The types of date/time features.
      */
-    public static enum Type {
+    public enum Type {
         /**
          * The year represented by an integer.
          */
@@ -109,6 +108,7 @@ public class DateFeature implements FeatureGenerator<Date> {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public double[] feature(Date date) {
         double[] x = new double[types.length];
         for (int i = 0; i < types.length; i++)
