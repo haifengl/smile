@@ -326,7 +326,7 @@ public class Lanczos {
         for (int id = 0; id < 3; id++) {
             if (id > 0 || step > 0 || rnm == 0) {
                 for (int i = 0; i < r.length; i++) {
-                    r[i] = Math.random();
+                    r[i] = Math.random() - 0.5;
                 }
             }
             Math.copy(wptr[0], wptr[3]);
