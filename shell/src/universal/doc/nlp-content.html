@@ -1,0 +1,505 @@
+<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+        <div id="search">
+            <script>
+                (function() {
+                    var cx = '010264411143030149390:ajvee_ckdzs';
+                    var gcse = document.createElement('script');
+                    gcse.type = 'text/javascript';
+                    gcse.async = true;
+                    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                            '//cse.google.com/cse.js?cx=' + cx;
+                    var s = document.getElementsByTagName('script')[0];
+                    s.parentNode.insertBefore(gcse, s);
+                })();
+            </script>
+            <gcse:searchbox-only></gcse:searchbox-only>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+
+    <h1 id="nlp-top" class="title">Natural Language Processing</h1>
+
+    <p>Natural language processing (NLP) is about developing applications
+        and services that are able to understand human languages. Advanced
+        high level NLP tasks include speech recognition, machine translation,
+        natural language understanding, natural language generation,
+        dialog system, etc. In Smile, we focus on low and intermediate level
+        NLP tasks such as sentence breaking, stemming, n-gram, part-of-speech
+        recognition, keyword detection, named entity recognition, etc.
+        Statistical natural language processing relies heavily on machine
+        learning.</p>
+
+    <h2 id="normalization" class="title">Normalization</h2>
+
+    <p>Text often contains variations (various quote marks in Unicode) that
+        introduces annoying problems in many NLP tools. Normalization is typically
+        applied to text first to remove unwanted variations. Normalization may
+        range from light textual cleanup such as compressing whitespace to
+        more aggressive and knowledge-intensive forms like standardizing date
+        formats or expanding abbreviations. The nature and extent of normalization,
+        as well as whether it is most appropriate to apply on the document, sentence,
+        or token level, must be determined in the context of a specific application.</p>
+
+    <p>The function <code>normalize</code> is a simple normalizer for
+        processing Unicode text:</p>
+    <ul>
+        <li>Apply Unicode normalization form NFKC.</li>
+        <li>Strip, trim, normalize, and compress whitespace.</li>
+        <li>Remove control and formatting characters.</li>
+        <li>Normalize dash, double and single quotes.</li>
+    </ul>
+
+    <pre class="prettyprint lang-scala"><code>
+val unicode = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.
+
+“It was very strange to see the seal. I’ve seen a lot of things on runways, but never a seal,” Babcock told ABC News. His footage of the hefty mammal went viral after he posted it on Facebook.
+
+According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a “sled.”
+
+Normal air traffic soon resumed, the station said.
+
+Poking fun at the seal’s surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of  “low sealings” in the North Slope region — a pun on “low ceilings,” a term used to describe low clouds and poor visibility.
+
+Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.
+
+“Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,” department spokeswoman Meadow Bailey told the Associated Press. “Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare.”"""
+
+val text = unicode.normalize
+    </code></pre>
+
+    <h2 id="sentence" class="title">Sentence Breaking</h2>
+
+    <p>In many NLP tasks, the input text has to be divided into sentences.
+        However, sentence boundary identification is challenging because
+        punctuation marks are often ambiguous.
+        In English, punctuation marks that usually appear at the end of a sentence
+        may not indicate the end of a sentence. The period is the worst offender.
+        A period can end a sentence but it can also be part of an abbreviation
+        or acronym, an ellipsis, a decimal number, or part of a bracket of periods
+        surrounding a Roman numeral. A period can even act both as the end of an
+        abbreviation and the end of a sentence at the same time. Other the other
+        hand, some poems may not contain any sentence punctuation at all.</p>
+
+    <p>We implement an efficient rule-based sentence splitter for English.
+        In Smile shell, simply call <code>sentences</code> on a string
+        to return an array of sentences. Any carriage returns
+        in the text will be replaced by whitespace.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; val sentences = text.sentences
+sentences: Array[String] = Array(
+  "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.",
+  "\"It was very strange to see the seal.",
+  "I've seen a lot of things on runways, but never a seal,\" Babcock told ABC News.",
+  "His footage of the hefty mammal went viral after he posted it on Facebook.",
+  "According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a \"sled.\"",
+  "Normal air traffic soon resumed, the station said.",
+  "Poking fun at the seal's surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of \"low sealings\" in the North Slope region -- a pun on \"low ceilings,\" a term used to describe low clouds and poor visibility.",
+  "Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.",
+  "\"Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,\" department spokeswoman Meadow Bailey told the Associated Press.",
+  "\"Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare.\"",
+  ""
+)
+    </code></pre>
+
+    <h2 id="tokenizer" class="title">Word Segmentation</h2>
+
+    <p>For a language like English, this is fairly trivial to
+        separate a chunk of continuous text into separate words,
+        since words are usually separated by spaces.
+        However, some written languages like Chinese, Japanese
+        and Thai do not mark word boundaries by spaces.
+        In those languages word segmentation is a significant
+        task requiring knowledge of the vocabulary and morphology
+        of words in the language.</p>
+
+    <p>The method <code>words(filter)</code> assumes that an English text
+        has already been segmented into sentences and splits a sentence
+        into tokens. Any periods &ndash; apart from those at the end
+        of a string or before newline &ndash; are assumed to be part
+        of the word they are attached to (e.g. for abbreviations, etc),
+        and are not separately tokenized. Most punctuation is split
+        from adjoining words. Verb contractions and the Anglo-Saxon
+        genitive of nouns are split into their component morphemes,
+        and each morpheme is tagged separately. The below example
+        splits a set of sentences and flat out the results into one
+        array.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; sentences.flatMap(_.words())
+res6: Array[String] = Array(
+  "airport",
+  "foreman",
+  "Scott",
+  "Babcock",
+  "went",
+  "runway",
+  "Wiley",
+  "Post-Will",
+  "Rogers",
+  "Memorial",
+  "Airport",
+  "Utqiagvik",
+  "Alaska",
+  "Monday",
+  "clear",
+  "snow",
+  "surprised",
+  "visitor",
+  "waiting",
+  "asphalt",
+  "450-pound",
+  "bearded",
+  "seal",
+  "chilling",
+...
+    </code></pre>
+
+    <p>You may notice that some words like "the", "a", etc. are missing
+        in the result. It is because that <code>words()</code> filters
+        out stop words and punctuations by default. A stop word is a
+        commonly used word that many NLP algorithms would like to ignore.
+        For example, a search engine ignores stop words both when indexing
+        entries and when retrieving them in order to save space and
+        time as stop words are deemed irrelevant for searching
+        purposes. There is no definite list of stop words which all tools
+        incorporate. So the parameter <code>filter</code> may take the
+        following values:</p>
+        <ul>
+            <li>"none": no filtering</li>
+            <li>"default": the default English stop word list</li>
+            <li>"comprehensive": a more comprehensive English stop word list</li>
+            <li>"google": the stop words list used by Google search engine</li>
+            <li>"mysql": the stop words list used by MySQL FullText feature</li>
+            <li>custom stop word list: comma separated stop word list</li>
+        </ul>
+
+    <h2 id="stemmer" class="title">Stemming</h2>
+
+    <p>For grammatical reasons, we use different forms of a word,
+        such as go, goes, and went. Additionally, there are families
+        of derivationally related words with similar meanings,
+        such as democracy, democratic, and democratization. For many
+        machine learning algorithms, it is good to reduce inflectional
+        forms and sometimes derivationally related forms of a word
+        to a common base form to improve the signal-to-noise ratio.</p>
+
+    <p> Stemming is a crude heuristic process that chops off the
+        ends of words in the hope of achieving this goal correctly
+        most of the time, and often includes the removal of
+        derivational affixes. The most common algorithm for stemming
+        English is Porter's algorithm. Porter's algorithm is based on the idea that the
+        suffixes in the English language are mostly made up of a combination of
+        smaller and simpler suffixes. As a linear step stemmer,
+        Porter's algorithm consists of 5 phases of word reductions, applied sequentially.
+        Within each step, if a suffix rule matched to a word, then the conditions
+        attached to that rule are tested on what would be the resulting stem,
+        if that suffix was removed, in the way defined by the rule. Once a Rule
+        passes its conditions and is accepted the rule fires and the suffix is
+        removed and control moves to the next step. If the rule is not accepted
+        then the next rule in the step is tested, until either a rule from that
+        step fires and control passes to the next step or there are no more rules
+        in that step whence control moves to the next step.</p>
+
+    <p>Another popular stemming algorithm is the Paice/Husk Lancaster
+        algorithm, which is a conflation based iterative stemmer.
+        The stemmer, although remaining efficient and easily implemented,
+        is known to be very strong and aggressive. The stemmer
+        utilizes a single table of rules, each of which may specify
+        the removal or replacement of an ending. The implementation
+        <code>LancasterStemmer</code> allows the user to load customized rules.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; porter("democratization")
+    res10: String = "democrat"
+    smile&gt; lancaster("democratization")
+    res11: String = "democr"
+    </code></pre>
+
+    <p>Different from stemming that commonly collapses derivationally
+        related words, lemmatization aims to remove inflectional endings
+        only and to return the base or dictionary form of a word, which is
+        known as the lemma.</p>
+
+    <h2 id="bag-of-words" class="title">Bag of Words</h2>
+
+    <p>The bag-of-words model is a simple representation of text
+        as the bag of its words, disregarding grammar and word
+        order but keeping multiplicity.</p>
+
+    <p>The method <code>bag(stemmer)</code> returns the map
+        of word to frequency. By default, the parameter <code>stemmer</code>
+        use Porter's algorithm. Passing <code>None</code> to disable stemming.
+        There is a similar function <code>bag2(stemmer)</code> that returns
+        a binary bag of words (<code>Set[String]</code>). That is, presence/absence
+        is used instead of frequencies.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; unicode.bag()
+res12: Map[String, Int] = Map(
+  "spokeswoman" -> 1,
+  "snow" -> 1,
+  "anim" -> 2,
+  "post" -> 1,
+  "footag" -> 1,
+  "move" -> 1,
+  "wait" -> 1,
+  "carib" -> 1,
+  "industri" -> 1,
+  "sunshin" -> 1,
+  "seen" -> 1,
+  "abc" -> 1,
+  "said" -> 2,
+  "soon" -> 1,
+  "warn" -> 1,
+  "pun" -> 1,
+  "polar" -> 1,
+  "bear" -> 1,
+  "90" -> 1,
+  "sight" -> 1,
+  "babcock" -> 2,
+  "u.s." -> 1,
+  "clear" -> 1,
+  "normal" -> 1,
+...
+    </code></pre>
+
+    <p>The function <code>vectorize(features, bag)</code> converts
+        a bag of words to a feature vector. The parameter
+        <code>features</code> is the token list used as features
+        in machine learning models. Generally it is not
+        a good practice to use all tokens in the corpus as features.
+        Therefore, we require the user to provide a list of selected
+        tokens as the features in <code>vectorize()</code>.
+        A overloaded version of <code>vectorize()</code> converts
+        a binary bag of words (<code>Set[String]</code>) to a sparse
+        integer vector, which elements are the indices of presented
+        feature tokens in ascending order. As most documents will typically
+        use a very small subset of the words used in the corpus,
+        this representation is very memory efficient and often used with
+        Maximum Entropy Classifier (<code>Maxent</code>).</p>
+
+    <p>In practice, the bag-of-words model is mainly used for
+        feature generation in document classification by calculating
+        various measures to characterize the text. The most common
+        feature is term frequency. However, a high raw term frequency
+        doesn't necessarily mean that the corresponding word is more
+        important. It is popular to normalize the term frequencies
+        by the inverse of document frequency, i.e. tf-idf (term
+        frequency-inverse document frequency).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+val lines = scala.io.Source.fromFile("data/text/movie.txt").getLines()
+val corpus = lines.map(_.bag()).toArray
+
+val features = Array("like", "good", "perform", "littl", "love", "bad", "best")
+val bags = corpus.map(vectorize(features, _))
+val data = tfidf(bags)
+    </code></pre>
+
+    <p>In the example, we load a file, of which each line is a document.
+        We define a short list of terms as the features (only for demo
+        purpose). Then we apply the function <code>vectorize()</code>
+        to convert the bag-of-words counts to the feature vectors.
+        Finally, we use the function <code>tfidf</code> to compute the
+        normalized feature vectors, which may be used in machine learning
+        algorithms.</p>
+
+    <p>For a new document in prediction phase, an overload version of <code>tfidf(bag, n, df)</code>
+        can be employed, where <code>bag</code> is the bag-of-words feature
+        vector of a document, <code>n</code> is the number of documents in
+        training corpus, and <code>df</code> is an array which element is the
+        the number of documents containing the given term in the corpus.</p>
+
+    <h2 id="phrase" class="title">Phrase/Collocation Extraction</h2>
+
+    <p>So far, we have treat words to be independent. But natural languages
+        include the expressions consisting of two or more words that correspond
+        to some conventional way of saying things. A collocation is a sequence of
+        words or terms that co-occur more often than would be expected by chance.
+        There are about six main types of collocations: adjective+noun, noun+noun,
+        verb+noun, adverb+adjective, verbs+prepositional, and verb+adverb.
+        Collocation extraction employs various computational linguistics
+        techniques to find collocations in a document or corpus that are
+        statistically significant.</p>
+
+    <p>Finding collocations requires first calculating the frequencies of words
+        and their appearance in the context of other words. Often the collection
+        of words will then requiring filtering to only retain useful content terms.
+        Each n-gram of words may then be scored according to some association measure,
+        in order to determine the relative likelihood of each n-gram being a collocation.</p>
+
+    <p>The functions <code>bigram(k, minFreq, text*)</code> and <code>bigram(p, minFreq, text*)</code>
+        can find bigrams in a document/corpus. The integer parameter <code>k</code> specifies how many
+        top bigrams to find. Alternatively, you may provide a double parameter <code>p</code>
+        to specify the p-value threshold. The parameter <code>minFreq</code> is the minimum
+        frequency of collocation in the corpus.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; bigram(10, 5, lines.toSeq: _*)
+[main] INFO smile.util.package$ - runtime: 255287.678705 ms
+res16: Array[collocation.BigramCollocation] = Array(
+  (special effects, 278, 3522.38),
+  (new york, 201, 2450.90),
+  (star wars, 153, 2016.87),
+  (high school, 132, 1432.43),
+  (science fiction, 105, 1408.87),
+  (phantom menace, 76, 1330.73),
+  (ve seen, 147, 1291.82),
+  (pulp fiction, 83, 1254.05),
+  (star trek, 100, 1209.88),
+  (hong kong, 61, 1088.61)
+)
+    </code></pre>
+
+    <p>In the output, the second column is the frequency of bigrams and
+        the third is the statistical test score.</p>
+
+    <p>To find the collocations of more than 2 words, the function
+        <code>ngram(maxNGramSize: Int, minFreq: Int, text: String*)</code>
+        can be used. This function uses an Apiori-like algorithm to
+        extract n-gram phrases. It takes a collection of texts and generates all n-grams of
+        length at most maxNGramSize that occur at least minFreq times in the
+        text.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; val turing = scala.io.Source.fromFile("data/text/turing.txt").getLines().mkString
+smile&gt; phrase = ngram(4, 4, turing)
+smile&gt; phrase(2)
+res19: Seq[NGram] = Buffer(
+  ([digital, computer], 32),
+  ([discrete-state, machine], 17),
+  ([imitation, game], 14),
+  ([storage, capacity], 11),
+  ([human, computer], 10),
+  ([machine, think], 9),
+  ([child, machine], 7),
+  ([scientific, induction], 6),
+  ([analytical, engine], 5),
+  ([lady, lovelace], 5),
+  ([someth, like], 5),
+  ([well-establish, fact], 5),
+  ([subject, matter], 4),
+  ([differential, analyser], 4),
+  ([manchester, machine], 4),
+  ([learn, machine], 4)
+)
+
+smile&gt; phrase(3)
+res20: Seq[NGram] = Buffer(
+  ([rule, of, conduct], 5),
+  ([winter, 's, day], 5),
+  ([law, of, behaviour], 5),
+  ([number, of, state], 5),
+  ([point, of, view], 4),
+  ([punishment, and, reward], 4),
+  ([machine, in, question], 4)
+)
+    </code></pre>
+
+    <p>The result is an array list of sets of n-grams. The i-th entry is the set of i-grams.</p>
+
+    <h2 id="keyword" class="title">Keyword Extraction</h2>
+
+    <p>Beyond finding phrases, keyword extraction is tasked with the automatic
+        identification of terms that best describe the subject of a document,
+        Keywords are the terms that represent the most relevant information
+        contained in the document, i.e. characterization of the topic discussed
+        in a document.</p>
+
+    <p>We provide a method <code>keywords(k: Int)</code> to returns top-k
+        keywords in a single document using word co-occurrence statistical
+        information. The below is the found keywords of Turing's famous paper
+        "Computing Machinery and Intelligence". The seminal paper on artificial
+        intelligence introduces the concept of what is now known as the Turing test.
+        As shown in the results, the algorithm works pretty well and captures
+        many important concepts in the paper such as "storage capacity", "machine",
+        "digital computer", "discrete-state machine", etc.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; turing.keywords(10)
+res21: Seq[NGram] = Buffer(
+  ([storage, capacity], 11),
+  ([machine], 197),
+  ([think], 45),
+  ([digital, computer], 32),
+  ([imitation, game], 14),
+  ([discrete-state, machine], 17),
+  ([teach], 11),
+  ([view], 20),
+  ([process], 17),
+  ([play], 15)
+)
+    </code></pre>
+
+    <p>This algorithm relies on co-occurrence probability and information theory.
+        Therefore, the article should be long enough to contain sufficient
+        statistical signals. In other words, it won't work on short text such as
+        tweets.</p>
+
+    <h2 id="pos" class="title">Part-of-Speech Tagging</h2>
+
+    <p>Given a sentence, determine the part of speech for each word.
+        Many words, especially common ones, can serve as multiple
+        parts of speech. For example, "book" can be a noun or verb;
+        "set" can be a noun, verb or adjective; and "out" can be any
+        of at least five different parts of speech. Some languages
+        have more such ambiguity than others. Languages with little
+        inflectional morphology, such as English are particularly
+        prone to such ambiguity. Chinese is prone to such ambiguity
+        because it is a tonal language during verbalization. Such
+        inflection is not readily conveyed via the entities employed
+        within the orthography to convey intended meaning.</p>
+
+    <h2 id="ner" class="title">Named entity recognition</h2>
+
+    <p>Given a stream of text, determine which items in the text map to
+        proper names, such as people or places, and what the type of
+        each such name is (e.g. person, location, organization).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val haar = wavelet("haar")
+
+    smile&gt; haar.transform(sp500)
+    </code></pre>
+
+    <p>The above example transform a S&amp;P 500 time series with Haar
+        wavelet. The result is stored in the input array. To transform
+        it back, the method <code>inverse</code> can be applied.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    haar.inverse(sp500)
+    </code></pre>
+
+    <p>In case that you don't want to create the wavelet object
+        explicitly, the methods <code>dwt</code> and <code>idwt</code>
+        can be used.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    // Discrete wavelet transform.
+    def dwt(t: Array[Double], filter: String): Unit
+    </code></pre>
+
+    <pre class="prettyprint lang-scala"><code>
+    // Inverse discrete wavelet transform.
+    def idwt(wt: Array[Double], filter: String): Unit
+    </code></pre>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="graph.html" title="Previous Section: Graph"><span>Graph</span></a>
+        <a class="btn-next-text" href="faq.html" title="Next Section: FAQ"><span>FAQ</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>
