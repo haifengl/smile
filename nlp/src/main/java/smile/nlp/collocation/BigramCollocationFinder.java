@@ -32,8 +32,8 @@ import smile.nlp.Corpus;
  * Finding collocations requires first calculating the frequencies of words
  * and their appearance in the context of other words. Often the collection
  * of words will then requiring filtering to only retain useful content terms.
- * Each ngram of words may then be scored according to some association measure,
- * in order to determine the relative likelihood of each ngram being a
+ * Each n-gram of words may then be scored according to some association measure,
+ * in order to determine the relative likelihood of each n-gram being a
  * collocation.
  * 
  * @author Haifeng Li
