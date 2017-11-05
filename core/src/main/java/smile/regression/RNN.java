@@ -155,6 +155,11 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
      * number of steps to use for truncated BPTT
      */
     private int steps;
+    /**
+     * array to determine if i<i>th</i> instance in recurrent memory
+     * is a training instance
+     */
+    private boolean[] trainingInstance;
 
     /**
      * Trainer for neural networks.
@@ -380,6 +385,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         this.steps = steps;
         this.p = numUnits[0];
         priorOutputGradients = new double[steps];
+        trainingInstance = new boolean[steps];
         
         net = new Layer[numLayers];
         for (int i = 0; i < numLayers; i++) {
@@ -534,11 +540,12 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
      * Sets the input vector into the input layer.
      * @param x the input vector.
      */
-    private void setInput(double[] x) {
+    private void setInput(double[] x, boolean isTrainingInstance) {
         if (x.length != inputLayer.units) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, inputLayer.units));
         }
-        
+        System.arraycopy(trainingInstance, 1, trainingInstance, 0, steps - 1);
+        trainingInstance[steps - 1] = isTrainingInstance;
         System.arraycopy(inputLayer.output, 1, inputLayer.output, 0, steps - 1);
         System.arraycopy(x, 0, inputLayer.output[steps - 1], 0, inputLayer.units);
     }
@@ -702,12 +709,19 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
 
     @Override
     public double predict(double[] x) {
-        setInput(x);
+        setInput(x, false);
         // shift priorOutputGradients and set current output gradient to 0
         System.arraycopy(priorOutputGradients, 1, priorOutputGradients, 0, steps - 1);
         priorOutputGradients[steps - 1] = 0;
         propagate();
         return outputLayer.output[steps - 1][0];
+    }
+    
+    /**
+     * Reset the memory when the training data loses it's sequential order
+     */
+    private void resetMemory(){
+        //TODO
     }
 
 
@@ -720,7 +734,19 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
      * @return the weighted training error before back-propagation.
      */
     public double learn(double[] x, double y, double weight) {
-        setInput(x);
+        // Determine if memory needs to be reset
+        boolean reset = false;
+        for (int t = 0; t < trainingInstance.length; t++){
+            if (!trainingInstance[t]){
+                reset = true;
+                break;
+            }
+        }
+        if (reset){
+            resetMemory();
+        }
+        
+        setInput(x, true);
         propagate();
 
         double err = weight * computeOutputError(y);
