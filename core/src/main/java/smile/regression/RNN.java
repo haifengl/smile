@@ -22,27 +22,38 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import smile.math.Math;
-import smile.stat.distribution.GaussianDistribution;
  
  /**
   * Recurrent neural network for regression.
   * An RNN consists of several layers of nodes, which are a combination of
   * interconnected and weighted arcs from each preceding layer to 
   * the following, and weighted context units which are the previous 
-  * outputs of the layer i<i>th</i> after the previous training instance has
-  * been propagated through the network. Each node calculates a transformed 
-  * weighted linear combination of its inputs (output activations from the 
-  * preceding layer and output of node at previous time step), with one of the 
-  * weights acting as a trainable bias connected to a constant input.
-  * The transformation, called an activation function, 
-  * is a bounded non-decreasing (non-linear) function, such as the sigmoid 
-  * functions (ranges from 0 to 1). Another popular activation function is 
-  * hyperbolic tangent which is actually equivalent to the sigmoid function 
-  * in shape but ranges from -1 to 1.
+  * outputs of the layer i<i>th</i> to itself after the previous training 
+  * instance has been propagated through the network. The context units are 
+  * analogous to memory, and the context units allow RNNs to model sequential 
+  * interactions that occur between training instances. An example use case
+  * for RNNs in regression is in time series forecasting.
+  * 
+  * The most popular algorithm to train RNNs is 
+  * truncated back-propagation through time (TBPTT), which is a gradient descent 
+  * method. Based on chain rule, the algorithm propagates the error back 
+  * through the network in time and adjusts the weights of each connection in 
+  * order to reduce the value of the error function.
+  * 
+  * For neural networks, the data should be scaled/standardized.
+  * Commonly, each input variable is scaled into interval [0, 1] or to have
+  * mean 0 and standard deviation 1.
+  * 
+  * A common issue with RNNs is the vanishing gradient problem and the 
+  * exploding gradient problem. Both issues can happen after repeated matrix 
+  * multiplications with small or large values in the weights of the hidden
+  * layers. Methods to combat these issues include scaling or 
+  * normalizing the inputs to the RNN to the [0, 1] interval, reducing the 
+  * learning rate, and clipping gradients that have values not in
+  * (-c, c) for some scalar c.
   * 
   * <h2>References</h2>
   * <ol>
-  * <li> http://mnemstudio.org/neural-networks-elman.htm </li>
   * <li> http://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture10.pdf </li>
   * </ol>
   *
@@ -112,6 +123,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
          */
         double[][] currentRecurrentDelta;
     }
+    
     /**
      * The type of activation function in output layer.
      */
@@ -139,7 +151,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
     /**
      * learning rate
      */
-    private double eta = 0.1;
+    private double eta = 0.05;
     /**
      * momentum factor
      */
@@ -201,6 +213,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
          *
          * @param activation the activation function of output layer.
          * @param numUnits the number of units in each layer.
+         * @param recurrentLayers booleans determining if the i<i>th</i> layer is recurrent.
          */
         public Trainer(ActivationFunction activation, int[] numUnits, boolean[] recurrentLayers) {
             int numLayers = numUnits.length;
@@ -319,7 +332,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
      * @param recurrentLayers booleans determining if the i<i>th</i> layer is recurrent.
      */
     public RNN(ActivationFunction activation, int steps, int[] numUnits, boolean[] recurrentLayers) {
-        this(activation, 0.0001, 0.9, steps, numUnits, recurrentLayers);
+        this(activation, 0.0001, 0, steps, numUnits, recurrentLayers);
     }
 
     /**
@@ -335,12 +348,12 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
     public RNN(ActivationFunction activation, double alpha, double lambda, int steps, int[] numUnits, boolean[] recurrentLayers) {
         int numLayers = numUnits.length;
         int numRecurrentSpecified = recurrentLayers.length;
-        if (steps < 1){
-            throw new IllegalArgumentException("Invalid number of truncated BPTT steps: " + steps);
+        if (steps < 2){
+            throw new IllegalArgumentException(String.format("Invalid number of truncated BPTT steps: %d", steps));
         }
         
         if (numLayers < 2) {
-            throw new IllegalArgumentException("Invalid number of layers: " + numLayers);
+            throw new IllegalArgumentException(String.format("Invalid number of layers: %d", numLayers));
         }
 
         if (numRecurrentSpecified != numLayers){
@@ -351,10 +364,18 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
             throw new IllegalArgumentException("Only hidden layers can be recurrent");
         }
         
+        int recurrentCt = 0;
         for (int i = 0; i < numLayers; i++) {
             if (numUnits[i] < 1) {
                 throw new IllegalArgumentException(String.format("Invalid number of units of layer %d: %d", i+1, numUnits[i]));
             }
+            if (recurrentLayers[i]){
+                recurrentCt += 1;
+            }
+        }
+        
+        if (recurrentCt < 1){
+            throw new IllegalArgumentException(String.format("Invalid number of recurrent layers: %d", recurrentCt));
         }
 
         if (numUnits[numLayers - 1]!=1){
@@ -362,16 +383,13 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         }
 
         this.activationFunction = activation;
-
         this.alpha = alpha;
         this.lambda = lambda;
         
         this.steps = steps;
-
         this.p = numUnits[0];
+        priorOutputGradients = new double[steps];
         
-
-        GaussianDistribution standardNormal = new GaussianDistribution(0, 1);
         net = new Layer[numLayers];
         for (int i = 0; i < numLayers; i++) {
             net[i] = new Layer();
@@ -384,9 +402,10 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
                 net[i].recurrentWeight = new double[numUnits[i]][numUnits[i]];
                 net[i].recurrentDelta = new double[numUnits[i]][numUnits[i]];
                 net[i].currentRecurrentDelta = new double[numUnits[i]][numUnits[i]];
+                double r = 1.0 / Math.sqrt(net[i].units);
                 for (int j = 0; j < numUnits[i]; j++){
                     for (int k = 0; k < numUnits[i]; k++){
-                        net[i].recurrentWeight[j][k] = standardNormal.rand()*0.01;
+                        net[i].recurrentWeight[j][k] = Math.random(-r, r);
                     }
                 }
             }
@@ -394,16 +413,16 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
 
         inputLayer = net[0];
         outputLayer = net[numLayers - 1];
-        priorOutputGradients = new double[steps];
 
         // Initialize random weights.
         for (int l = 1; l < numLayers; l++) {
             net[l].weight = new double[numUnits[l]][numUnits[l - 1]];
             net[l].delta = new double[numUnits[l]][numUnits[l - 1]];
             net[l].currentDelta = new double[numUnits[l]][numUnits[l - 1]];
+            double r = 1.0 / Math.sqrt(net[l - 1].units);
             for (int i = 0; i < net[l].units; i++) {
                 for (int j = 0; j < net[l - 1].units; j++) {
-                    net[l].weight[i][j] = standardNormal.rand()*0.01;
+                    net[l].weight[i][j] = Math.random(-r, r);
                 }
             }
         }
@@ -425,6 +444,8 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         copycat.eta = eta;
         copycat.alpha = alpha;
         copycat.lambda = lambda;
+        copycat.steps = steps;
+        copycat.priorOutputGradients = priorOutputGradients.clone();
 
         int numLayers = net.length;
         copycat.net = new Layer[numLayers];
@@ -526,6 +547,9 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         if (x.length != inputLayer.units) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, inputLayer.units));
         }
+        
+        System.arraycopy(inputLayer.output, 1, inputLayer.output, 0, steps - 1);
+        System.arraycopy(x, 0, inputLayer.output[steps - 1], 0, inputLayer.units);
     }
 
     /**
@@ -534,17 +558,15 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
      * @param upper the upper layer where signals are propagated to.
      */
     private void propagate(Layer lower, Layer upper) {
+        System.arraycopy(upper.output, 1, upper.output, 0, steps - 1);
+        
         for (int i = 0; i < upper.units; i++) {
             double sum = 0.0;
+            if (upper.recurrent){
+                sum += Math.dot(upper.recurrentWeight[i], upper.output[steps - 2]);
+            }
             for (int j = 0; j < lower.units; j++) {
                 sum += upper.weight[i][j] * lower.output[steps - 1][j];
-                if (upper.recurrent){
-                    sum += Math.dot(upper.recurrentWeight[i], upper.output[steps - 2]);
-                }
-            }
-            upper.output[0][i] = 0;
-            for (int t = 0; t < steps - 1; t++){
-                upper.output[t][i] = upper.output[t + 1][i];
             }
             
             if (upper == outputLayer) {
@@ -592,14 +614,11 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         double g = output - out;
 
         error += (0.5*g * g);
-
-
         gradient[0] = g;
-        priorOutputGradients[0] = 0;
-        for (int t = 0; t < steps - 1; t++){
-            priorOutputGradients[t] = priorOutputGradients[t + 1];
-        }
+        
+        System.arraycopy(priorOutputGradients, 1, priorOutputGradients, 0, steps - 1);
         priorOutputGradients[steps - 1] = g;
+        
         return error;
     }
 
@@ -614,12 +633,10 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
             double out = lower.output[t][i];
             double err = 0;
             for (int j = 0; j < upper.units; j++) {
-                if (lower.recurrent){
-                    err += (upper.weight[j][i] * upper.error[j]) + lower.nextError[i];
-                }
-                else{
-                    err += upper.weight[j][i] * upper.error[j];
-                }
+                err += upper.weight[j][i] * upper.error[j];
+            }
+            if (lower.recurrent){
+                err += lower.nextError[i];
             }
             if (activationFunction==ActivationFunction.LOGISTIC_SIGMOID) {
                 lower.error[i] = out * (1.0 - out) * err;
@@ -695,6 +712,9 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
     @Override
     public double predict(double[] x) {
         setInput(x);
+        // shift priorOutputGradients and set current output gradient to 0
+        System.arraycopy(priorOutputGradients, 1, priorOutputGradients, 0, steps - 1);
+        priorOutputGradients[steps - 1] = 0;
         propagate();
         return outputLayer.output[steps - 1][0];
     }
@@ -710,11 +730,6 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
      */
     public double learn(double[] x, double y, double weight) {
         setInput(x);
-        Arrays.fill(inputLayer.output[0], 0);
-        for (int t = 0; t < steps - 1; t++){
-            System.arraycopy(inputLayer.output[t+1], 0, inputLayer.output[t], 0, inputLayer.units);
-        }
-        System.arraycopy(x, 0, inputLayer.output[steps - 1], 0, inputLayer.units);
         propagate();
 
         double err = weight * computeOutputError(y);
@@ -723,11 +738,13 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
             outputLayer.error[0] *= weight;
         }
         
+        // Do truncated BPTT from newest instance to oldest instance
         for (int t = steps - 1; t >= 0; t--){
             outputLayer.error[0] = priorOutputGradients[t];
             backpropagate(t);
             adjustWeights(t);
         }
+        outputLayer.error[0] = priorOutputGradients[steps - 1];
         
         return err;
     }

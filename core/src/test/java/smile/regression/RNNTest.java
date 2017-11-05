@@ -74,16 +74,13 @@ public class RNNTest {
 
             CrossValidation cv = new CrossValidation(n, k);
             double rss = 0.0;
-            double ad = 0.0;
             for (int i = 0; i < k; i++) {
                 double[][] trainx = smile.math.Math.slice(datax, cv.train[i]);
                 double[] trainy = smile.math.Math.slice(datay, cv.train[i]);
                 double[][] testx = smile.math.Math.slice(datax, cv.test[i]);
                 double[] testy = smile.math.Math.slice(datay, cv.test[i]);
 
-                RNN neuralNetwork = new RNN(activation, 3, new int[]{datax[0].length, 10, 10, 1}, new boolean[]{false, false, false, false});
-                neuralNetwork.setLearningRate(0.005);
-                neuralNetwork.setMomentum(0.01);
+                RNN neuralNetwork = new RNN(activation, 3, new int[]{datax[0].length, 10, 10, 1}, new boolean[]{false, true, true, false});
                 neuralNetwork.learn(trainx,trainy);
 
                 for (int j = 0; j < testx.length; j++) {
