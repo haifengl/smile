@@ -21,6 +21,9 @@ package smile.math.matrix
   * @author Haifeng Li
   */
 object matrix {
+  /** Creates a matrix filled with given value. */
+  def apply(nrows: Int, ncols: Int, value: Double) = Matrix.newInstance(nrows, ncols, value)
+
   /** Creates a Matrix instance. */
   def apply(A: Array[Array[Double]]) = Matrix.newInstance(A)
 

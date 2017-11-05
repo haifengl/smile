@@ -94,6 +94,13 @@ public abstract class Matrix implements Serializable {
     }
 
     /**
+     * Creates a matrix filled with given value.
+     */
+    public static DenseMatrix newInstance(int rows, int cols, double value) {
+        return Factory.matrix(rows, cols, value);
+    }
+
+    /**
      * Returns all-zero matrix.
      */
     public static DenseMatrix zeros(int rows, int cols) {
