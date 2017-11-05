@@ -30,27 +30,18 @@ import smile.math.Math;
   * the following, and weighted context units which are the previous 
   * outputs of the layer i<i>th</i> to itself after the previous training 
   * instance has been propagated through the network. The context units are 
-  * analogous to memory, and the context units allow RNNs to model sequential 
-  * interactions that occur between training instances. An example use case
-  * for RNNs in regression is in time series forecasting.
+  * analogous to memory, and make RNNs useful for predicting sequential data.
+  * An example use case for RNNs in regression is in time series forecasting.
   * 
-  * The most popular algorithm to train RNNs is 
-  * truncated back-propagation through time (TBPTT), which is a gradient descent 
-  * method. Based on chain rule, the algorithm propagates the error back 
-  * through the network in time and adjusts the weights of each connection in 
-  * order to reduce the value of the error function.
+  * A common algorithm to train RNNs is truncated back-propagation 
+  * through time (TBPTT), which is a gradient descent method. Based on chain 
+  * rule, the algorithm propagates the error back through the unfolded network 
+  * in time and adjusts the weights of each connection in order to reduce the 
+  * value of the error function.
   * 
   * For neural networks, the data should be scaled/standardized.
   * Commonly, each input variable is scaled into interval [0, 1] or to have
   * mean 0 and standard deviation 1.
-  * 
-  * A common issue with RNNs is the vanishing gradient problem and the 
-  * exploding gradient problem. Both issues can happen after repeated matrix 
-  * multiplications with small or large values in the weights of the hidden
-  * layers. Methods to combat these issues include scaling or 
-  * normalizing the inputs to the RNN to the [0, 1] interval, reducing the 
-  * learning rate, and clipping gradients that have values not in
-  * (-c, c) for some scalar c.
   * 
   * <h2>References</h2>
   * <ol>
