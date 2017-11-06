@@ -446,51 +446,261 @@ res21: Seq[NGram] = Buffer(
 
     <h2 id="pos" class="title">Part-of-Speech Tagging</h2>
 
-    <p>Given a sentence, determine the part of speech for each word.
-        Many words, especially common ones, can serve as multiple
-        parts of speech. For example, "book" can be a noun or verb;
-        "set" can be a noun, verb or adjective; and "out" can be any
-        of at least five different parts of speech. Some languages
-        have more such ambiguity than others. Languages with little
-        inflectional morphology, such as English are particularly
-        prone to such ambiguity. Chinese is prone to such ambiguity
-        because it is a tonal language during verbalization. Such
-        inflection is not readily conveyed via the entities employed
-        within the orthography to convey intended meaning.</p>
+    <p>A part of speech (PoS) is a category of words which have similar
+        grammatical properties. Words that are assigned to the same part
+        of speech generally display similar behavior in terms of syntax &ndash;
+        they play similar roles within the grammatical structure of sentences
+        &ndash; and sometimes in terms of morphology, in that they undergo
+        inflection for similar properties. Commonly listed English parts of
+        speech are noun, verb, adjective, adverb, pronoun, preposition,
+        conjunction, interjection, etc. In Smile, we use the Penn Treebank
+        PoS tag set. The complete list can be found in the class
+        <a href="api/java/smile/nlp/pos/PennTreebankPOS.html"><code>smile.nlp.pos.PennTreebankPOS</code></a>.</p>
 
-    <h2 id="ner" class="title">Named entity recognition</h2>
-
-    <p>Given a stream of text, determine which items in the text map to
-        proper names, such as people or places, and what the type of
-        each such name is (e.g. person, location, organization).</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    smile&gt; val haar = wavelet("haar")
-
-    smile&gt; haar.transform(sp500)
-    </code></pre>
-
-    <p>The above example transform a S&amp;P 500 time series with Haar
-        wavelet. The result is stored in the input array. To transform
-        it back, the method <code>inverse</code> can be applied.</p>
+    <p>PoS tagging is an important intermediate task to make sense of
+        some of the structure inherent in language without requiring
+        complete understanding. Smile implements a highly efficient
+        English PoS tagger based on hidden Markov model (HMM). Suppose
+        a string is a single sentence, simply call <code>postag</code>
+        on the string to return an array of (word, tag) pairs. Because
+        PoS tags are often used as features along with other attributes
+        in machine learning algorithms, the sentence is typically
+        already split into words. In this case, just call <code>postab(words)</code>
+        on an array of words.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    haar.inverse(sp500)
+smile&gt; val sentence = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."""
+sentence: String = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."
+
+smile&gt; sentence.postag
+res1: Array[(String, pos.PennTreebankPOS)] = Array(
+  ("When", WRB),
+  ("airport", NN),
+  ("foreman", NN),
+  ("Scott", NNP),
+  ("Babcock", NNP),
+  ("went", VBD),
+  ("out", RP),
+  ("onto", IN),
+  ("the", DT),
+  ("runway", NN),
+  ("at", IN),
+  ("Wiley", NNP),
+  ("Post-Will", NNP),
+  ("Rogers", NNP),
+  ("Memorial", NNP),
+  ("Airport", NNP),
+  ("in", IN),
+  ("Utqiagvik", NNP),
+  (",", ,),
+  ("Alaska", NNP),
+  (",", ,),
+  ("on", IN),
+  ("Monday", NNP),
+  ("to", TO),
+...
+
+smile&gt; postag(sentence.words("none"))
+[main] INFO smile.util.package$ - runtime: 4.356543 ms
+res2: Array[pos.PennTreebankPOS] = Array(
+  WRB,
+  NN,
+  NN,
+  NNP,
+  NNP,
+  VBD,
+  RP,
+  IN,
+  DT,
+  NN,
+  IN,
+  NNP,
+  NNP,
+  NNP,
+  NNP,
+  NNP,
+  IN,
+  NNP,
+  ,,
+  NNP,
+  ,,
+  IN,
+  NNP,
+  TO,
+...
     </code></pre>
 
-    <p>In case that you don't want to create the wavelet object
-        explicitly, the methods <code>dwt</code> and <code>idwt</code>
-        can be used.</p>
+    <h2 id="naive-bayes" class="title">Naive Bayes</h2>
+
+    <p>After generating feature vectors of texts, many machine learning
+        algorithms can be applied. But there are several algorithms
+        are particularly popular in NLP, e.g. naive Bayes, maximum
+        entropy classifier, conditional random fields, etc.</p>
+
+    <p>A naive Bayes classifier is a simple probabilistic
+        classifier based on applying Bayes' theorem with strong (naive) independence
+        assumptions. Depending on the precise nature of the probability model, naive
+        Bayes classifiers can be trained very efficiently in a supervised learning
+        setting. In spite of their naive design and apparently over-simplified assumptions,
+        naive Bayes classifiers have worked quite well in many complex real-world
+        situations and are very popular in NLP.</p>
+
+    <p>For a general purpose naive Bayes classifier without any assumptions
+        about the underlying distribution of each variable, we don't provide
+        a learning method to infer the variable distributions from the training data.
+        Instead, the users can fit any appropriate distributions on the data by
+        themselves with various <code>Distribution</code> classes. Although the <code>predict</code>
+        method takes an array of double values as a general form of independent variables,
+        the users are free to use any discrete distributions to model categorical or
+        ordinal random variables.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    // Discrete wavelet transform.
-    def dwt(t: Array[Double], filter: String): Unit
+    def naiveBayes(priori: Array[Double], condprob: Array[Array[Distribution]]): NaiveBayes
     </code></pre>
 
+    <p>For document classification in NLP, there are two different ways we can set
+        up an naive Bayes classifier: multinomial model and Bernoulli model. The
+        multinomial model generates one term from the vocabulary in each position
+        of the document. The multivariate Bernoulli model or Bernoulli model
+        generates an indicator for each term of the vocabulary, either indicating
+        presence of the term in the document or indicating absence.
+        Of the two models, the Bernoulli model is particularly sensitive to noise
+        features. A Bernoulli naive Bayes classifier requires some form of feature
+        selection or else its accuracy will be low.</p>
+
     <pre class="prettyprint lang-scala"><code>
-    // Inverse discrete wavelet transform.
-    def idwt(wt: Array[Double], filter: String): Unit
+    def naiveBayes(x: Array[Array[Double]], y: Array[Int], model: NaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): NaiveBayes
     </code></pre>
+
+    <p>The different generation models imply different estimation strategies and
+        different classification rules. The Bernoulli model estimates as the
+        fraction of documents of class that contain term. In contrast, the
+        multinomial model estimates as the fraction of tokens or fraction of
+        positions in documents of class that contain term. When classifying a
+        test document, the Bernoulli model uses binary occurrence information,
+        ignoring the number of occurrences, whereas the multinomial model keeps
+        track of multiple occurrences. As a result, the Bernoulli model typically
+        makes many mistakes when classifying long documents. However, it was reported
+        that the Bernoulli model works better in sentiment analysis.</p>
+
+    <p>The models also differ in how non-occurring terms are used in classification.
+        They do not affect the classification decision in the multinomial model;
+        but in the Bernoulli model the probability of nonoccurrence is factored
+        in when computing. This is because only the Bernoulli model models
+        absence of terms explicitly.</p>
+
+    <h2 id="maxent">Maximum Entropy Classifier</h2>
+
+    <p>Maximum entropy is a technique for learning
+        probability distributions from data. In maximum entropy models, the
+        observed data itself is assumed to be the testable information. Maximum
+        entropy models don't assume anything about the probability distribution
+        other than what have been observed and always choose the most uniform
+        distribution subject to the observed constraints.</p>
+
+    <p>Basically, maximum entropy classifier is another name of multinomial logistic
+        regression applied to categorical independent variables, which are
+        converted to binary dummy variables. Maximum entropy models are widely
+        used in natural language processing.  Here, we provide an implementation
+        which assumes that binary features are stored in a sparse array, of which
+        entries are the indices of nonzero features.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent
+    </code></pre>
+
+    <p>where <code>x</code> is the sparse training samples. Each sample is represented by a set of sparse
+        binary features. The features are stored in an integer array, of which
+        are the indices of nonzero features.
+        The parameter <code>p</code> is the dimension of feature space, and <code>lambda</code>
+        is the regularization factor.</p>
+
+    <p>Like naive Byes, maximum entropy classifier is often used in text
+        categorization tasks. Besides, it is also applied in sentence boundary
+        detection (is a period end of sentence or abbreviation?), sentiment
+        analysis, prepositional phrase attachment ambiguity resolution
+        (attach to verb or noun?), and parsing decisions in general.</p>
+
+    <h2 id="hmm" class="title">Hidden Markov Model</h2>
+
+    <p>Both naive Bayes and maximum entropy classifier ignore the sequence information
+        of text. In contrast, the hidden Markov model (HMM) is a sequence model.
+        A sequence model or sequence classifier is a model to assign a label or
+        class to each unit in a sequence, thus mapping a sequence of observations
+        to a sequence of labels. Given language consists of sequences
+        at many representational levels, sequence labeling tasks come up throughout
+        speech and language processing. These include part-of-speech tagging,
+        named entity recognition, and speech recognition among others.</p>
+
+    <p>An HMM is a probabilistic sequence model: given a sequence of units,
+        it computes a probability distribution over possible sequences of labels
+        and chooses the best label sequence. An HMM is a statistical Markov model
+        in which the system being modeled is assumed to be a Markov process with unobserved (hidden) states.
+        An HMM can be considered as the simplest dynamic Bayesian network.
+        In a regular Markov model, the state is directly visible to the observer,
+        and therefore the state transition probabilities are the only parameters.
+        In a hidden Markov model, the state is not directly visible, but output,
+        dependent on the state, is visible. Each state has a probability distribution
+        over the possible output tokens. Therefore the sequence of tokens generated
+        by an HMM gives some information about the sequence of states.</p>
+
+    <p>The below function trains a first-order hidden Markov model.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def hmm(observations: Array[Array[Int]], labels: Array[Array[Int]]): HMM[Int]
+    </code></pre>
+
+    <p>where <code>observations</code> is the observation sequences, of which symbols take
+        values in [0, n), where n is the number of unique symbols.
+        The parameter <code>labels</code> is the state labels of observations,
+        of which states take values in [0, p), where p is the number of hidden states.</p>
+
+    <h2 id="crf" class="title">Conditional Random Field</h2>
+
+    <p>As an alternative to the related HMM, conditional random fields (CRFs)
+        are also widely used in NLP. A conditional random field is a type of
+        discriminative undirected probabilistic graphical model.
+        It is used to encode known relationships between observations and construct
+        consistent interpretations. It is often used for labeling or parsing of
+        sequential data, such as natural language processing or biological sequences
+        and in computer vision.</p>
+
+    <p>A CRF is a Markov random field that was trained discriminatively.
+        Therefore it is not necessary to model the distribution over
+        always observed variables, which makes it possible to include
+        arbitrarily complicated features of the observed variables into the model.</p>
+
+    <p>Training CRF is usually done by maximum likelihood learning.
+        If all nodes have exponential family distributions and all
+        nodes are observed during training, this optimization is convex.
+        It can be solved for example using gradient descent algorithms,
+        or Quasi-Newton methods such as the L-BFGS algorithm.
+        On the other hand, if some variables are unobserved, the inference
+        problem has to be solved for these variables. Exact inference is
+        intractable in general graphs, so approximations have to be used.</p>
+
+    <p>We implement an algorithm that trains CRFs via gradient
+        tree boosting (Thomas G. Dietterich, Guohua Hao, and
+        Adam Ashenfelter. Gradient Tree Boosting for Training Conditional Random
+        Fields. JMLR, 2008). In tree boosting, the CRF potential functions
+        are represented as weighted sums of regression trees, which provide
+        compact representations of feature interactions. So the algorithm does
+        not explicitly consider the potentially large parameter space. As a result,
+        gradient tree boosting scales linearly in the order of the Markov model and in
+        the order of the feature interactions, rather than exponentially as
+        in previous algorithms based on iterative scaling and gradient descent.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def crf(sequences: Array[Array[Array[Double]]], labels: Array[Array[Int]], attributes: Array[Attribute], k: Int, eta: Double = 1.0, ntrees: Int = 100, maxNodes: Int = 100): CRF
+    </code></pre>
+
+    <p>where <code>sequences</code> is the observation attribute sequences,
+        <code>labels</code> is sequence labels,
+        <code>attributes</code> is the feature attributes,
+        <code>k</code> is the number of classes,
+        <code>eta</code> is the learning rate of potential function,
+        <code>ntrees</code> is the number of trees/iterations,
+        <code>maxNodes</code> is the maximum number of leaf nodes in the tree.</p>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
