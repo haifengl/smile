@@ -723,7 +723,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
     /**
     * Reset the memory when the training data loses it's sequential order
     */
-    private void resetMemory(){
+    public void resetMemory(){
         Arrays.fill(priorOutputGradients, 0);
         Arrays.fill(trainingInstance, true);
         for (int l = 0; l < net.length; l++){
