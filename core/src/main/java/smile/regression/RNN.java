@@ -219,7 +219,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
             int numLayers = numUnits.length;
             int numRecurrentSpecified = recurrentLayers.length;
             if (numLayers < 2) {
-                throw new IllegalArgumentException("Invalid number of layers: " + numLayers);
+                throw new IllegalArgumentException(String.format("Invalid number of layers: %d", numLayers));
             }
 
             if (numRecurrentSpecified != numLayers){
@@ -230,10 +230,18 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
                 throw new IllegalArgumentException("Only hidden layers can be recurrent");
             }
 
+            int recurrentCt = 0;
             for (int i = 0; i < numLayers; i++) {
                 if (numUnits[i] < 1) {
                     throw new IllegalArgumentException(String.format("Invalid number of units of layer %d: %d", i+1, numUnits[i]));
                 }
+                if (recurrentLayers[i]){
+                    recurrentCt += 1;
+                }
+            }
+
+            if (recurrentCt < 1){
+                throw new IllegalArgumentException(String.format("Invalid number of recurrent layers: %d", recurrentCt));
             }
 
             if (numUnits[numLayers - 1]!=1){
