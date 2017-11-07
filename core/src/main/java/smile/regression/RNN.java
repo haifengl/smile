@@ -160,6 +160,10 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
     * is a training instance
     */
     private boolean[] trainingInstance;
+    /**
+     * current step in training
+     */
+    private int currentStep;
 
     /**
      * Trainer for neural networks.
@@ -383,6 +387,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         this.lambda = lambda;
         
         this.steps = steps;
+        currentStep = 1;
         this.p = numUnits[0];
         priorOutputGradients = new double[steps];
         trainingInstance = new boolean[steps];
@@ -724,15 +729,20 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
     * Reset the memory when the training data loses it's sequential order
     */
     public void resetMemory(){
+        currentStep = 1;
         Arrays.fill(priorOutputGradients, 0);
         Arrays.fill(trainingInstance, true);
         for (int l = 0; l < net.length; l++){
             if (net[l].recurrent){
                 Arrays.fill(net[l].nextError, 0);
             }
-            for (int i = 0; i < net[l].units; i++){
-                Arrays.fill(net[l].delta[i], 0);
-                Arrays.fill(net[l].recurrentDelta[i], 0);
+            if (l > 0){
+                for (int i = 0; i < net[l].units; i++){
+                    Arrays.fill(net[l].delta[i], 0);
+                    if (net[l].recurrent){
+                        Arrays.fill(net[l].recurrentDelta[i], 0);
+                    }
+                }
             }
             for (int t = 0; t < steps; t++){
                 Arrays.fill(net[l].output[t], 0);
@@ -754,21 +764,22 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         }
         setInput(x, true);
         propagate();
-
         double err = weight * computeOutputError(y);
-
         if (weight != 1.0) {
             outputLayer.error[0] *= weight;
         }
-        
-        // Do truncated BPTT from newest instance to oldest instance
-        for (int t = steps - 1; t >= 0; t--){
-            outputLayer.error[0] = priorOutputGradients[t];
-            backpropagate(t);
-            adjustWeights(t);
+
+        if (currentStep >= steps){
+            // Do truncated BPTT from newest instance to oldest instance
+            for (int t = steps - 1; t >= 0; t--){
+                outputLayer.error[0] = priorOutputGradients[t];
+                backpropagate(t);
+                adjustWeights(t);
+            }
+            outputLayer.error[0] = priorOutputGradients[steps - 1];
         }
-        outputLayer.error[0] = priorOutputGradients[steps - 1];
         
+        currentStep += 1;
         return err;
     }
 
