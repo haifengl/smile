@@ -184,7 +184,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         /**
          * learning rate
          */
-        private double eta = 0.1;
+        private double eta = 0.05;
         /**
          * momentum factor
          */
@@ -306,6 +306,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
 
             for (int i = 1; i <= epochs; i++) {
                 net.learn(x, y);
+                net.resetMemory();
                 logger.info("RNN learns epoch {}", i);
             }
 
