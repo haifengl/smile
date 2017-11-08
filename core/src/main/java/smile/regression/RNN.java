@@ -312,11 +312,13 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
             net.setMomentum(alpha);
             net.setWeightDecay(lambda);
 
-            for (int i = 1; i <= epochs; i++) {
+            for (int i = 1; i < epochs; i++) {
                 net.learn(x, y);
                 net.resetMemory();
                 logger.info("RNN learns epoch {}", i);
             }
+            net.learn(x, y);
+            logger.info("RNN learns epoch {}", epochs);
 
             return net;
         }
