@@ -613,29 +613,28 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
     /**
      * Compute the network output error.
      * @param output the desired output.
+     * @param weight the weight of this learning instance
      */
-    private double computeOutputError(double output) {
-        return computeOutputError(output, outputLayer.error);
+    private double computeOutputError(double output, double weight) {
+        return computeOutputError(output, outputLayer.error, weight);
     }
 
     /**
      * Compute the network output error.
      * @param output the desired output.
      * @param gradient the array to store gradient on output.
+     * @param weight the weight of this learning instance
      * @return the error defined by loss function.
      */
-    private double computeOutputError(double output, double[] gradient) {
-
-        double error = 0.0;
+    private double computeOutputError(double output, double[] gradient, double weight) {
         double out = outputLayer.output[steps - 1][0];
-        double g = output - out;
-
-        error += (0.5*g * g);
+        double g = (output - out) * weight;
         gradient[0] = g;
         
         System.arraycopy(priorOutputGradients, 1, priorOutputGradients, 0, steps - 1);
         priorOutputGradients[steps - 1] = g;
         
+        double error = 0.5 * g * g;
         return error;
     }
 
@@ -775,23 +774,30 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         }
         setInput(x, true);
         propagate();
-        double err = weight * computeOutputError(y);
-        if (weight != 1.0) {
-            outputLayer.error[0] *= weight;
-        }
+        computeOutputError(y, weight);
 
         if (currentStep >= steps){
+            currentStep += 1;
+            double err = 0;
             // Do truncated BPTT from newest instance to oldest instance
             for (int t = steps - 1; t >= 0; t--){
+                err += 0.5*priorOutputGradients[t]*priorOutputGradients[t];
                 outputLayer.error[0] = priorOutputGradients[t];
                 backpropagate(t);
                 adjustWeights(t);
             }
             outputLayer.error[0] = priorOutputGradients[steps - 1];
+            return err;
         }
-        
-        currentStep += 1;
-        return err;
+        else{
+            currentStep += 1;
+            double err = 0;
+            for (int t = steps - 1; t >= 0; t--){
+                err += 0.5*priorOutputGradients[t]*priorOutputGradients[t];
+            }
+            logger.warn("The returned error isn't the total loss yet.");
+            return err;
+        }
     }
 
     @Override
