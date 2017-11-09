@@ -459,6 +459,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         copycat.alpha = alpha;
         copycat.lambda = lambda;
         copycat.steps = steps;
+        copycat.currentStep = currentStep;
         copycat.priorOutputGradients = priorOutputGradients.clone();
         copycat.trainingInstance = trainingInstance.clone();
 
@@ -467,16 +468,16 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         for (int i = 0; i < numLayers; i++) {
             copycat.net[i] = new Layer();
             copycat.net[i].units = net[i].units;
-            copycat.net[i].output = net[i].output.clone();
+            copycat.net[i].output = Math.clone(net[i].output);
             copycat.net[i].error = net[i].error.clone();
             copycat.net[i].recurrent = net[i].recurrent;
             if (i > 0) {
                 copycat.net[i].weight = Math.clone(net[i].weight);
                 copycat.net[i].delta = Math.clone(net[i].delta);
-                copycat.net[i].currentDelta = Math.clone(net[i].delta);
+                copycat.net[i].currentDelta = Math.clone(net[i].currentDelta);
                 if (copycat.net[i].recurrent){
                     copycat.net[i].recurrentWeight = Math.clone(net[i].recurrentWeight);
-                    copycat.net[i].nextError = net[i].nextError;
+                    copycat.net[i].nextError = net[i].nextError.clone();
                     copycat.net[i].recurrentDelta = Math.clone(net[i].recurrentDelta);
                     copycat.net[i].currentRecurrentDelta = Math.clone(net[i].currentRecurrentDelta);
                 }
