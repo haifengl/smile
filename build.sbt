@@ -6,7 +6,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "1.5.0-RC3",
+  version := "1.5.0",
   javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF8", "-g:lines,vars,source", "-Xlint:unchecked"),
   javacOptions in (Compile, doc) ++= Seq("-Xdoclint:none"),
   javaOptions in test += "-Dsmile.threads=1",

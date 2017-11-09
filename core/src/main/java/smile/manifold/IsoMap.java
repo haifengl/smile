@@ -182,7 +182,7 @@ public class IsoMap {
         B.setSymmetric(true);
 
         EVD eigen = B.eigen(d);
-        
+
         if (eigen.getEigenValues().length < d) {
             logger.warn("eigen({}) returns only {} eigen vectors", d, eigen.getEigenValues().length);
             d = eigen.getEigenValues().length;
