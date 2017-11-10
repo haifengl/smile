@@ -312,7 +312,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
             net.setMomentum(alpha);
             net.setWeightDecay(lambda);
 
-            for (int i = 1; i < epochs; i++) {
+            for (int i = 1; i <= epochs; i++) {
                 net.learn(x, y);
                 net.resetMemory();
                 logger.info("RNN learns epoch {}", i);
@@ -777,8 +777,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         propagate();
         computeOutputError(y, weight);
 
-        if (currentStep >= steps){
-            currentStep += 1;
+        if (currentStep % steps == 0){
             double err = 0;
             // Do truncated BPTT from newest instance to oldest instance
             for (int t = steps - 1; t >= 0; t--){
@@ -788,6 +787,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
                 adjustWeights(t);
             }
             outputLayer.error[0] = priorOutputGradients[steps - 1];
+            resetMemory();
             return err;
         }
         else{
