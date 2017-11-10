@@ -226,7 +226,7 @@ trait Operators {
     println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, prediction)))
     println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, prediction)))
     println("AUC = %.2f%%" format (100.0 * AUC.measure(testy, probability)))
-    println("Confusion Matrix: " + new ConfusionMatrix(testy, pred))
+    println("Confusion Matrix: " + new ConfusionMatrix(testy, prediction))
 
     classifier
   }
