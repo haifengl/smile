@@ -312,7 +312,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
             net.setMomentum(alpha);
             net.setWeightDecay(lambda);
 
-            for (int i = 1; i < epochs; i++) {
+            for (int i = 1; i <= epochs; i++) {
                 net.learn(x, y);
                 net.resetMemory();
                 logger.info("RNN learns epoch {}", i);
@@ -459,6 +459,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         copycat.alpha = alpha;
         copycat.lambda = lambda;
         copycat.steps = steps;
+        copycat.currentStep = currentStep;
         copycat.priorOutputGradients = priorOutputGradients.clone();
         copycat.trainingInstance = trainingInstance.clone();
 
@@ -467,16 +468,16 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         for (int i = 0; i < numLayers; i++) {
             copycat.net[i] = new Layer();
             copycat.net[i].units = net[i].units;
-            copycat.net[i].output = net[i].output.clone();
+            copycat.net[i].output = Math.clone(net[i].output);
             copycat.net[i].error = net[i].error.clone();
             copycat.net[i].recurrent = net[i].recurrent;
             if (i > 0) {
                 copycat.net[i].weight = Math.clone(net[i].weight);
                 copycat.net[i].delta = Math.clone(net[i].delta);
-                copycat.net[i].currentDelta = Math.clone(net[i].delta);
+                copycat.net[i].currentDelta = Math.clone(net[i].currentDelta);
                 if (copycat.net[i].recurrent){
                     copycat.net[i].recurrentWeight = Math.clone(net[i].recurrentWeight);
-                    copycat.net[i].nextError = net[i].nextError;
+                    copycat.net[i].nextError = net[i].nextError.clone();
                     copycat.net[i].recurrentDelta = Math.clone(net[i].recurrentDelta);
                     copycat.net[i].currentRecurrentDelta = Math.clone(net[i].currentRecurrentDelta);
                 }
@@ -776,8 +777,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
         propagate();
         computeOutputError(y, weight);
 
-        if (currentStep >= steps){
-            currentStep += 1;
+        if (currentStep % steps == 0){
             double err = 0;
             // Do truncated BPTT from newest instance to oldest instance
             for (int t = steps - 1; t >= 0; t--){
@@ -787,6 +787,7 @@ public class RNN implements OnlineRegression<double[]>, Serializable  {
                 adjustWeights(t);
             }
             outputLayer.error[0] = priorOutputGradients[steps - 1];
+            resetMemory();
             return err;
         }
         else{
