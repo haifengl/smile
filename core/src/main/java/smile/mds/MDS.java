@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.mds;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
@@ -34,6 +36,7 @@ import smile.math.matrix.EVD;
  * @author Haifeng Li
  */
 public class MDS {
+    private static final Logger logger = LoggerFactory.getLogger(MDS.class);
 
     /**
      * Component scores.
@@ -181,7 +184,12 @@ public class MDS {
 
         B.setSymmetric(true);
         EVD eigen = B.eigen(k);
-        
+
+        if (eigen.getEigenValues().length < k) {
+            logger.warn("eigen({}) returns only {} eigen vectors", k, eigen.getEigenValues().length);
+            k = eigen.getEigenValues().length;
+        }
+
         coordinates = new double[n][k];
         for (int j = 0; j < k; j++) {
             if (eigen.getEigenValues()[j] < 0) {

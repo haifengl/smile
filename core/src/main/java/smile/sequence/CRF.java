@@ -37,6 +37,15 @@ import smile.util.MulticoreExecutor;
  * possible to include arbitrarily complicated features of the observed
  * variables into the model.
  *
+ * This class implements an algorithm that trains CRFs via gradient
+ * tree boosting. In tree boosting, the CRF potential functions
+ * are represented as weighted sums of regression trees, which provide
+ * compact representations of feature interactions. So the algorithm does
+ * not explicitly consider the potentially large parameter space. As a result,
+ * gradient tree boosting scales linearly in the order of the Markov model and in
+ * the order of the feature interactions, rather than exponentially as
+ * in previous algorithms based on iterative scaling and gradient descent.
+ *
  * <h2>References</h2>
  * <ol>
  * <li> J. Lafferty, A. McCallum and F. Pereira.
@@ -283,8 +292,10 @@ public class CRF implements SequenceLabeler<double[]> {
         int[] label = new int[n];
         double[] p = new double[numClasses];
         for (int i = 0; i < n; i++) {
+            TrellisNode[] ti = trellis[i];
             for (int j = 0; j < numClasses; j++) {
-                p[j] = trellis[i][j].alpha * trellis[i][j].beta;
+                TrellisNode tij = ti[j];
+                p[j] = tij.alpha * tij.beta;
             }
 
             double max = Double.NEGATIVE_INFINITY;
@@ -317,35 +328,42 @@ public class CRF implements SequenceLabeler<double[]> {
 
         // forward
         double[] features = featureset(x[0], numClasses);
+        double[] t0 = trellis[0];
+        int[] p0 = psy[0];
         for (int j = 0; j < numClasses; j++) {
-            trellis[0][j] = potentials[j].f(features);
-            psy[0][j] = 0;
+            t0[j] = potentials[j].f(features);
+            p0[j] = 0;
         }
 
         for (int t = 1; t < n; t++) {
             System.arraycopy(x[t], 0, features, 0, p);
+            double[] tt = trellis[t];
+            double[] tt1 = trellis[t - 1];
+            int[] pt = psy[t];
             for (int i = 0; i < numClasses; i++) {
                 double max = Double.NEGATIVE_INFINITY;
                 int maxPsy = 0;
+                TreePotentialFunction pi = potentials[i];
                 for (int j = 0; j < numClasses; j++) {
                     features[p] = j;
-                    double delta = potentials[i].f(features) + trellis[t - 1][j];
+                    double delta = pi.f(features) + tt1[j];
                     if (max < delta) {
                         max = delta;
                         maxPsy = j;
                     }
                 }
-                trellis[t][i] = max;
-                psy[t][i] = maxPsy;
+                tt[i] = max;
+                pt[i] = maxPsy;
             }
         }
 
         // trace back
         int[] label = new int[n];
+        double[] tn1 = trellis[n - 1];
         double max = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < numClasses; i++) {
-            if (max < trellis[n - 1][i]) {
-                max = trellis[n - 1][i];
+            if (max < tn1[i]) {
+                max = tn1[i];
                 label[n - 1] = i;
             }
         }
@@ -375,8 +393,10 @@ public class CRF implements SequenceLabeler<double[]> {
         int[] label = new int[n];
         double[] p = new double[numClasses];
         for (int i = 0; i < n; i++) {
+            TrellisNode[] ti = trellis[i];
             for (int j = 0; j < numClasses; j++) {
-                p[j] = trellis[i][j].alpha * trellis[i][j].beta;
+                TrellisNode tij = ti[j];
+                p[j] = tij.alpha * tij.beta;
             }
 
             double max = Double.NEGATIVE_INFINITY;
@@ -408,36 +428,42 @@ public class CRF implements SequenceLabeler<double[]> {
         int p = x[0].length; // dimension
 
         // forward
+        double[] t0 = trellis[0];
+        int[] p0 = psy[0];
         int[] features = featureset(x[0], numClasses);
         for (int j = 0; j < numClasses; j++) {
-            trellis[0][j] = potentials[j].f(features);
-            psy[0][j] = 0;
+            t0[j] = potentials[j].f(features);
+            p0[j] = 0;
         }
 
         for (int t = 1; t < n; t++) {
             System.arraycopy(x[t], 0, features, 0, p);
+            double[] tt = trellis[t];
+            double[] tt1 = trellis[t - 1];
+            int[] pt = psy[t];
             for (int i = 0; i < numClasses; i++) {
                 double max = Double.NEGATIVE_INFINITY;
                 int maxPsy = 0;
                 for (int j = 0; j < numClasses; j++) {
                     features[p] = numFeatures + j;
-                    double delta = potentials[i].f(features) + trellis[t - 1][j];
+                    double delta = potentials[i].f(features) + tt1[j];
                     if (max < delta) {
                         max = delta;
                         maxPsy = j;
                     }
                 }
-                trellis[t][i] = max;
-                psy[t][i] = maxPsy;
+                tt[i] = max;
+                pt[i] = maxPsy;
             }
         }
 
         // trace back
         int[] label = new int[n];
+        double[] tn1 = trellis[n - 1];
         double max = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < numClasses; i++) {
-            if (max < trellis[n - 1][i]) {
-                max = trellis[n - 1][i];
+            if (max < tn1[i]) {
+                max = tn1[i];
                 label[n - 1] = i;
             }
         }
@@ -677,11 +703,13 @@ public class CRF implements SequenceLabeler<double[]> {
                     x = new double[n][];
 
                     for (int l = 0, m = 0; l < trellis.length; l++) {
-                        x[m++] = trellis[l][0][i].samples[0];
+                        TrellisNode[][] tl = trellis[l];
+                        x[m++] = tl[0][i].samples[0];
 
                         for (int t = 1; t < trellis[l].length; t++) {
+                            TrellisNode tlti = tl[t][i];
                             for (int j = 0; j < numClasses; j++) {
-                                x[m++] = trellis[l][t][i].samples[j];
+                                x[m++] = tlti.samples[j];
                             }
                         }
                     }
@@ -703,11 +731,13 @@ public class CRF implements SequenceLabeler<double[]> {
                     sparseX = new int[n][];
 
                     for (int l = 0, m = 0; l < trellis.length; l++) {
-                        sparseX[m++] = trellis[l][0][i].sparseSamples[0];
+                        TrellisNode[][] tl = trellis[l];
+                        sparseX[m++] = tl[0][i].sparseSamples[0];
 
                         for (int t = 1; t < trellis[l].length; t++) {
+                            TrellisNode tlti = tl[t][i];
                             for (int j = 0; j < numClasses; j++) {
-                                sparseX[m++] = trellis[l][t][i].sparseSamples[j];
+                                sparseX[m++] = tlti.sparseSamples[j];
                             }
                         }
                     }
@@ -717,11 +747,13 @@ public class CRF implements SequenceLabeler<double[]> {
             @Override
             public Object call() {
                 for (int l = 0, m = 0; l < trellis.length; l++) {
-                    y[m++] = trellis[l][0][i].target[0];
+                    TrellisNode[][] tl = trellis[l];
+                    y[m++] = tl[0][i].target[0];
 
                     for (int t = 1; t < trellis[l].length; t++) {
+                        TrellisNode tlti = tl[t][i];
                         for (int j = 0; j < numClasses; j++) {
-                            y[m++] = trellis[l][t][i].target[j];
+                            y[m++] = tlti.target[j];
                         }
                     }
                 }
@@ -758,58 +790,65 @@ public class CRF implements SequenceLabeler<double[]> {
     private void forward(TrellisNode[][] trellis, double[] scaling) {
         int n = trellis.length; // length of sequence
 
+        TrellisNode[] t0 = trellis[0];
         for (int i = 0; i < numClasses; i++) {
+            TrellisNode t0i = t0[i];
+            TreePotentialFunction pi = potentials[i];
             if (numFeatures <= 0) {
-                for (int k = trellis[0][i].age; k < potentials[i].trees.size(); k++) {
-                    trellis[0][i].scores[0] += potentials[i].eta * potentials[i].trees.get(k).predict(trellis[0][i].samples[0]);
+                for (int k = t0i.age; k < pi.trees.size(); k++) {
+                    t0i.scores[0] += pi.eta * pi.trees.get(k).predict(t0i.samples[0]);
                 }
             } else {
-                for (int k = trellis[0][i].age; k < potentials[i].trees.size(); k++) {
-                    trellis[0][i].scores[0] += potentials[i].eta * potentials[i].trees.get(k).predict(trellis[0][i].sparseSamples[0]);
+                for (int k = t0i.age; k < pi.trees.size(); k++) {
+                    t0i.scores[0] += pi.eta * pi.trees.get(k).predict(t0i.sparseSamples[0]);
                 }                
             }
 
-            trellis[0][i].expScores[0] = Math.exp(trellis[0][i].scores[0]);
-            trellis[0][i].alpha = trellis[0][i].expScores[0];
-            trellis[0][i].age = potentials[i].trees.size();
+            t0i.expScores[0] = Math.exp(t0i.scores[0]);
+            t0i.alpha = t0i.expScores[0];
+            t0i.age = pi.trees.size();
         }
 
         // Normalize alpha values since they increase quickly
         scaling[0] = 0.0;
         for (int i = 0; i < numClasses; i++) {
-            scaling[0] += trellis[0][i].alpha;
+            scaling[0] += t0[i].alpha;
         }
         for (int i = 0; i < numClasses; i++) {
-            trellis[0][i].alpha /= scaling[0];
+            t0[i].alpha /= scaling[0];
         }
 
         for (int t = 1; t < n; t++) {
+            TrellisNode[] tt = trellis[t];
+            TrellisNode[] tt1 = trellis[t-1];
             for (int i = 0; i < numClasses; i++) {
-                trellis[t][i].alpha = 0.0;
+                TrellisNode tti = tt[i];
+                TreePotentialFunction pi = potentials[i];
+                tti.alpha = 0.0;
                 for (int j = 0; j < numClasses; j++) {
                     if (numFeatures <= 0) {
-                        for (int k = trellis[t][i].age; k < potentials[i].trees.size(); k++) {
-                            trellis[t][i].scores[j] += potentials[i].eta * potentials[i].trees.get(k).predict(trellis[t][i].samples[j]);
+                        for (int k = tti.age; k < pi.trees.size(); k++) {
+                            tti.scores[j] += pi.eta * pi.trees.get(k).predict(tti.samples[j]);
                         }
                     } else {
-                        for (int k = trellis[t][i].age; k < potentials[i].trees.size(); k++) {
-                            trellis[t][i].scores[j] += potentials[i].eta * potentials[i].trees.get(k).predict(trellis[t][i].sparseSamples[j]);
+                        for (int k = tti.age; k < pi.trees.size(); k++) {
+                            tti.scores[j] += pi.eta * pi.trees.get(k).predict(tti.sparseSamples[j]);
                         }
                     }
 
-                    trellis[t][i].expScores[j] = Math.exp(trellis[t][i].scores[j]);
-                    trellis[t][i].alpha += trellis[t][i].expScores[j] * trellis[t - 1][j].alpha;
+                    tti.expScores[j] = Math.exp(tti.scores[j]);
+                    tti.alpha += tti.expScores[j] * tt1[j].alpha;
                 }
-                trellis[t][i].age = potentials[i].trees.size();
+                tti.age = pi.trees.size();
             }
 
             // Normalize alpha values since they increase quickly
             scaling[t] = 0.0;
             for (int i = 0; i < numClasses; i++) {
-                scaling[t] += trellis[t][i].alpha;
+                scaling[t] += tt[i].alpha;
             }
             for (int i = 0; i < numClasses; i++) {
-                trellis[t][i].alpha /= scaling[t];
+                tt[i].alpha /= scaling[t];
             }
         }
     }
@@ -819,25 +858,29 @@ public class CRF implements SequenceLabeler<double[]> {
      */
     private void backward(TrellisNode[][] trellis) {
         int n = trellis.length - 1;
+        TrellisNode[] tn = trellis[n];
         for (int i = 0; i < numClasses; i++) {
-            trellis[n][i].beta = 1.0;
+            tn[i].beta = 1.0;
         }
 
         for (int t = n; t-- > 0;) {
+            TrellisNode[] tt = trellis[t];
+            TrellisNode[] tt1 = trellis[t+1];
             for (int i = 0; i < numClasses; i++) {
-                trellis[t][i].beta = 0.0;
+                TrellisNode tti = tt[i];
+                tti.beta = 0.0;
                 for (int j = 0; j < numClasses; j++) {
-                    trellis[t][i].beta += trellis[t + 1][j].expScores[i] * trellis[t + 1][j].beta;
+                    tti.beta += tt1[j].expScores[i] * tt1[j].beta;
                 }
             }
 
             // Normalize beta values since they increase quickly
             double sum = 0.0;
             for (int i = 0; i < numClasses; i++) {
-                sum += trellis[t][i].beta;
+                sum += tt[i].beta;
             }
             for (int i = 0; i < numClasses; i++) {
-                trellis[t][i].beta /= sum;
+                tt[i].beta /= sum;
             }
         }
     }
@@ -850,20 +893,23 @@ public class CRF implements SequenceLabeler<double[]> {
     private TrellisNode[][] getTrellis(double[][] sequence) {
         TrellisNode[][] trellis = new TrellisNode[sequence.length][numClasses];
 
+        TrellisNode[] t0 = trellis[0];
         for (int i = 0; i < numClasses; i++) {
-            trellis[0][i] = new TrellisNode(false);
-            trellis[0][i].samples[0] = featureset(sequence[0], numClasses);
+            t0[i] = new TrellisNode(false);
+            t0[i].samples[0] = featureset(sequence[0], numClasses);
         }
 
         for (int t = 1; t < sequence.length; t++) {
             trellis[t][0] = new TrellisNode(false);
+            TrellisNode tt0 = trellis[t][0];
             for (int j = 0; j < numClasses; j++) {
-                trellis[t][0].samples[j] = featureset(sequence[t], j);
+                tt0.samples[j] = featureset(sequence[t], j);
             }
 
             for (int i = 1; i < numClasses; i++) {
                 trellis[t][i] = new TrellisNode(false);
-                System.arraycopy(trellis[t][0].samples, 0, trellis[t][i].samples, 0, numClasses);
+                TrellisNode tti = trellis[t][i];
+                System.arraycopy(tt0.samples, 0, tti.samples, 0, numClasses);
             }
         }
 
@@ -878,20 +924,23 @@ public class CRF implements SequenceLabeler<double[]> {
     private TrellisNode[][] getTrellis(int[][] sequence) {
         TrellisNode[][] trellis = new TrellisNode[sequence.length][numClasses];
 
+        TrellisNode[] t0 = trellis[0];
         for (int i = 0; i < numClasses; i++) {
-            trellis[0][i] = new TrellisNode(true);
-            trellis[0][i].sparseSamples[0] = featureset(sequence[0], numClasses);
+            t0[i] = new TrellisNode(true);
+            t0[i].sparseSamples[0] = featureset(sequence[0], numClasses);
         }
 
         for (int t = 1; t < sequence.length; t++) {
             trellis[t][0] = new TrellisNode(true);
+            TrellisNode tt0 = trellis[t][0];
             for (int j = 0; j < numClasses; j++) {
-                trellis[t][0].sparseSamples[j] = featureset(sequence[t], j);
+                tt0.sparseSamples[j] = featureset(sequence[t], j);
             }
 
             for (int i = 1; i < numClasses; i++) {
                 trellis[t][i] = new TrellisNode(true);
-                System.arraycopy(trellis[t][0].sparseSamples, 0, trellis[t][i].sparseSamples, 0, numClasses);
+                TrellisNode tti = trellis[t][i];
+                System.arraycopy(tt0.sparseSamples, 0, tti.sparseSamples, 0, numClasses);
             }
         }
 
@@ -902,33 +951,38 @@ public class CRF implements SequenceLabeler<double[]> {
      * Set training targets based on results of forward-backward
      */
     private void setTargets(TrellisNode[][] trellis, double[] scaling, int[] label) {
+        TrellisNode[] t0 = trellis[0];
+
         // Finding the normalizer for our first 'column' in the matrix
         double normalizer = 0.0;
         for (int i = 0; i < numClasses; i++) {
-            normalizer += trellis[0][i].expScores[0] * trellis[0][i].beta;
+            normalizer += t0[i].expScores[0] * t0[i].beta;
         }
 
         for (int i = 0; i < numClasses; i++) {
             if (label[0] == i) {
-                trellis[0][i].target[0] = 1 - trellis[0][i].expScores[0] * trellis[0][i].beta / normalizer;
+                t0[i].target[0] = 1 - t0[i].expScores[0] * t0[i].beta / normalizer;
             } else {
-                trellis[0][i].target[0] = -trellis[0][i].expScores[0] * trellis[0][i].beta / normalizer;
+                t0[i].target[0] = -t0[i].expScores[0] * t0[i].beta / normalizer;
             }
         }
 
         for (int t = 1; t < label.length; t++) {
             normalizer = 0.0;
+            TrellisNode[] tt = trellis[t];
+            TrellisNode[] tt1 = trellis[t-1];
             for (int i = 0; i < numClasses; i++) {
-                normalizer += trellis[t][i].alpha * trellis[t][i].beta;
+                normalizer += tt[i].alpha * tt[i].beta;
             }
             normalizer *= scaling[t];
 
             for (int i = 0; i < numClasses; i++) {
+                TrellisNode tti = tt[i];
                 for (int j = 0; j < numClasses; j++) {
                     if (label[t] == i && label[t - 1] == j) {
-                        trellis[t][i].target[j] = 1 - trellis[t][i].expScores[j] * trellis[t - 1][j].alpha * trellis[t][i].beta / normalizer;
+                        tti.target[j] = 1 - tti.expScores[j] * tt1[j].alpha * tti.beta / normalizer;
                     } else {
-                        trellis[t][i].target[j] = -trellis[t][i].expScores[j] * trellis[t - 1][j].alpha * trellis[t][i].beta / normalizer;
+                        tti.target[j] = -tti.expScores[j] * tt1[j].alpha * tti.beta / normalizer;
                     }
                 }
             }

@@ -1,0 +1,715 @@
+<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+    <div id="sidebar">
+        <div class="sidebar-toc" style="margin-bottom: 20px;">
+            <p class="toc-header">Contents</p>
+            <div id="toc"></div>
+        </div>
+        <div id="search">
+            <script>
+                (function() {
+                    var cx = '010264411143030149390:ajvee_ckdzs';
+                    var gcse = document.createElement('script');
+                    gcse.type = 'text/javascript';
+                    gcse.async = true;
+                    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+                            '//cse.google.com/cse.js?cx=' + cx;
+                    var s = document.getElementsByTagName('script')[0];
+                    s.parentNode.insertBefore(gcse, s);
+                })();
+            </script>
+            <gcse:searchbox-only></gcse:searchbox-only>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+
+    <h1 id="nlp-top" class="title">Natural Language Processing</h1>
+
+    <p>Natural language processing (NLP) is about developing applications
+        and services that are able to understand human languages. Advanced
+        high level NLP tasks include speech recognition, machine translation,
+        natural language understanding, natural language generation,
+        dialog system, etc. In Smile, we focus on low and intermediate level
+        NLP tasks such as sentence breaking, stemming, n-gram, part-of-speech
+        recognition, keyword detection, named entity recognition, etc.
+        Statistical natural language processing relies heavily on machine
+        learning.</p>
+
+    <h2 id="normalization" class="title">Normalization</h2>
+
+    <p>Text often contains variations (various quote marks in Unicode) that
+        introduces annoying problems in many NLP tools. Normalization is typically
+        applied to text first to remove unwanted variations. Normalization may
+        range from light textual cleanup such as compressing whitespace to
+        more aggressive and knowledge-intensive forms like standardizing date
+        formats or expanding abbreviations. The nature and extent of normalization,
+        as well as whether it is most appropriate to apply on the document, sentence,
+        or token level, must be determined in the context of a specific application.</p>
+
+    <p>The function <code>normalize</code> is a simple normalizer for
+        processing Unicode text:</p>
+    <ul>
+        <li>Apply Unicode normalization form NFKC.</li>
+        <li>Strip, trim, normalize, and compress whitespace.</li>
+        <li>Remove control and formatting characters.</li>
+        <li>Normalize dash, double and single quotes.</li>
+    </ul>
+
+    <pre class="prettyprint lang-scala"><code>
+val unicode = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.
+
+“It was very strange to see the seal. I’ve seen a lot of things on runways, but never a seal,” Babcock told ABC News. His footage of the hefty mammal went viral after he posted it on Facebook.
+
+According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a “sled.”
+
+Normal air traffic soon resumed, the station said.
+
+Poking fun at the seal’s surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of  “low sealings” in the North Slope region — a pun on “low ceilings,” a term used to describe low clouds and poor visibility.
+
+Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.
+
+“Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,” department spokeswoman Meadow Bailey told the Associated Press. “Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare.”"""
+
+val text = unicode.normalize
+    </code></pre>
+
+    <h2 id="sentence" class="title">Sentence Breaking</h2>
+
+    <p>In many NLP tasks, the input text has to be divided into sentences.
+        However, sentence boundary identification is challenging because
+        punctuation marks are often ambiguous.
+        In English, punctuation marks that usually appear at the end of a sentence
+        may not indicate the end of a sentence. The period is the worst offender.
+        A period can end a sentence but it can also be part of an abbreviation
+        or acronym, an ellipsis, a decimal number, or part of a bracket of periods
+        surrounding a Roman numeral. A period can even act both as the end of an
+        abbreviation and the end of a sentence at the same time. Other the other
+        hand, some poems may not contain any sentence punctuation at all.</p>
+
+    <p>We implement an efficient rule-based sentence splitter for English.
+        In Smile shell, simply call <code>sentences</code> on a string
+        to return an array of sentences. Any carriage returns
+        in the text will be replaced by whitespace.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; val sentences = text.sentences
+sentences: Array[String] = Array(
+  "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.",
+  "\"It was very strange to see the seal.",
+  "I've seen a lot of things on runways, but never a seal,\" Babcock told ABC News.",
+  "His footage of the hefty mammal went viral after he posted it on Facebook.",
+  "According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a \"sled.\"",
+  "Normal air traffic soon resumed, the station said.",
+  "Poking fun at the seal's surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of \"low sealings\" in the North Slope region -- a pun on \"low ceilings,\" a term used to describe low clouds and poor visibility.",
+  "Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.",
+  "\"Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,\" department spokeswoman Meadow Bailey told the Associated Press.",
+  "\"Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare.\"",
+  ""
+)
+    </code></pre>
+
+    <h2 id="tokenizer" class="title">Word Segmentation</h2>
+
+    <p>For a language like English, this is fairly trivial to
+        separate a chunk of continuous text into separate words,
+        since words are usually separated by spaces.
+        However, some written languages like Chinese, Japanese
+        and Thai do not mark word boundaries by spaces.
+        In those languages word segmentation is a significant
+        task requiring knowledge of the vocabulary and morphology
+        of words in the language.</p>
+
+    <p>The method <code>words(filter)</code> assumes that an English text
+        has already been segmented into sentences and splits a sentence
+        into tokens. Any periods &ndash; apart from those at the end
+        of a string or before newline &ndash; are assumed to be part
+        of the word they are attached to (e.g. for abbreviations, etc),
+        and are not separately tokenized. Most punctuation is split
+        from adjoining words. Verb contractions and the Anglo-Saxon
+        genitive of nouns are split into their component morphemes,
+        and each morpheme is tagged separately. The below example
+        splits a set of sentences and flat out the results into one
+        array.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; sentences.flatMap(_.words())
+res6: Array[String] = Array(
+  "airport",
+  "foreman",
+  "Scott",
+  "Babcock",
+  "went",
+  "runway",
+  "Wiley",
+  "Post-Will",
+  "Rogers",
+  "Memorial",
+  "Airport",
+  "Utqiagvik",
+  "Alaska",
+  "Monday",
+  "clear",
+  "snow",
+  "surprised",
+  "visitor",
+  "waiting",
+  "asphalt",
+  "450-pound",
+  "bearded",
+  "seal",
+  "chilling",
+...
+    </code></pre>
+
+    <p>You may notice that some words like "the", "a", etc. are missing
+        in the result. It is because that <code>words()</code> filters
+        out stop words and punctuations by default. A stop word is a
+        commonly used word that many NLP algorithms would like to ignore.
+        For example, a search engine ignores stop words both when indexing
+        entries and when retrieving them in order to save space and
+        time as stop words are deemed irrelevant for searching
+        purposes. There is no definite list of stop words which all tools
+        incorporate. So the parameter <code>filter</code> may take the
+        following values:</p>
+        <ul>
+            <li>"none": no filtering</li>
+            <li>"default": the default English stop word list</li>
+            <li>"comprehensive": a more comprehensive English stop word list</li>
+            <li>"google": the stop words list used by Google search engine</li>
+            <li>"mysql": the stop words list used by MySQL FullText feature</li>
+            <li>custom stop word list: comma separated stop word list</li>
+        </ul>
+
+    <h2 id="stemmer" class="title">Stemming</h2>
+
+    <p>For grammatical reasons, we use different forms of a word,
+        such as go, goes, and went. Additionally, there are families
+        of derivationally related words with similar meanings,
+        such as democracy, democratic, and democratization. For many
+        machine learning algorithms, it is good to reduce inflectional
+        forms and sometimes derivationally related forms of a word
+        to a common base form to improve the signal-to-noise ratio.</p>
+
+    <p> Stemming is a crude heuristic process that chops off the
+        ends of words in the hope of achieving this goal correctly
+        most of the time, and often includes the removal of
+        derivational affixes. The most common algorithm for stemming
+        English is Porter's algorithm. Porter's algorithm is based on the idea that the
+        suffixes in the English language are mostly made up of a combination of
+        smaller and simpler suffixes. As a linear step stemmer,
+        Porter's algorithm consists of 5 phases of word reductions, applied sequentially.
+        Within each step, if a suffix rule matched to a word, then the conditions
+        attached to that rule are tested on what would be the resulting stem,
+        if that suffix was removed, in the way defined by the rule. Once a Rule
+        passes its conditions and is accepted the rule fires and the suffix is
+        removed and control moves to the next step. If the rule is not accepted
+        then the next rule in the step is tested, until either a rule from that
+        step fires and control passes to the next step or there are no more rules
+        in that step whence control moves to the next step.</p>
+
+    <p>Another popular stemming algorithm is the Paice/Husk Lancaster
+        algorithm, which is a conflation based iterative stemmer.
+        The stemmer, although remaining efficient and easily implemented,
+        is known to be very strong and aggressive. The stemmer
+        utilizes a single table of rules, each of which may specify
+        the removal or replacement of an ending. The implementation
+        <code>LancasterStemmer</code> allows the user to load customized rules.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; porter("democratization")
+    res10: String = "democrat"
+    smile&gt; lancaster("democratization")
+    res11: String = "democr"
+    </code></pre>
+
+    <p>Different from stemming that commonly collapses derivationally
+        related words, lemmatization aims to remove inflectional endings
+        only and to return the base or dictionary form of a word, which is
+        known as the lemma.</p>
+
+    <h2 id="bag-of-words" class="title">Bag of Words</h2>
+
+    <p>The bag-of-words model is a simple representation of text
+        as the bag of its words, disregarding grammar and word
+        order but keeping multiplicity.</p>
+
+    <p>The method <code>bag(stemmer)</code> returns the map
+        of word to frequency. By default, the parameter <code>stemmer</code>
+        use Porter's algorithm. Passing <code>None</code> to disable stemming.
+        There is a similar function <code>bag2(stemmer)</code> that returns
+        a binary bag of words (<code>Set[String]</code>). That is, presence/absence
+        is used instead of frequencies.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; unicode.bag()
+res12: Map[String, Int] = Map(
+  "spokeswoman" -> 1,
+  "snow" -> 1,
+  "anim" -> 2,
+  "post" -> 1,
+  "footag" -> 1,
+  "move" -> 1,
+  "wait" -> 1,
+  "carib" -> 1,
+  "industri" -> 1,
+  "sunshin" -> 1,
+  "seen" -> 1,
+  "abc" -> 1,
+  "said" -> 2,
+  "soon" -> 1,
+  "warn" -> 1,
+  "pun" -> 1,
+  "polar" -> 1,
+  "bear" -> 1,
+  "90" -> 1,
+  "sight" -> 1,
+  "babcock" -> 2,
+  "u.s." -> 1,
+  "clear" -> 1,
+  "normal" -> 1,
+...
+    </code></pre>
+
+    <p>The function <code>vectorize(features, bag)</code> converts
+        a bag of words to a feature vector. The parameter
+        <code>features</code> is the token list used as features
+        in machine learning models. Generally it is not
+        a good practice to use all tokens in the corpus as features.
+        Therefore, we require the user to provide a list of selected
+        tokens as the features in <code>vectorize()</code>.
+        A overloaded version of <code>vectorize()</code> converts
+        a binary bag of words (<code>Set[String]</code>) to a sparse
+        integer vector, which elements are the indices of presented
+        feature tokens in ascending order. As most documents will typically
+        use a very small subset of the words used in the corpus,
+        this representation is very memory efficient and often used with
+        Maximum Entropy Classifier (<code>Maxent</code>).</p>
+
+    <p>In practice, the bag-of-words model is mainly used for
+        feature generation in document classification by calculating
+        various measures to characterize the text. The most common
+        feature is term frequency. However, a high raw term frequency
+        doesn't necessarily mean that the corresponding word is more
+        important. It is popular to normalize the term frequencies
+        by the inverse of document frequency, i.e. tf-idf (term
+        frequency-inverse document frequency).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+val lines = scala.io.Source.fromFile("data/text/movie.txt").getLines()
+val corpus = lines.map(_.bag()).toArray
+
+val features = Array("like", "good", "perform", "littl", "love", "bad", "best")
+val bags = corpus.map(vectorize(features, _))
+val data = tfidf(bags)
+    </code></pre>
+
+    <p>In the example, we load a file, of which each line is a document.
+        We define a short list of terms as the features (only for demo
+        purpose). Then we apply the function <code>vectorize()</code>
+        to convert the bag-of-words counts to the feature vectors.
+        Finally, we use the function <code>tfidf</code> to compute the
+        normalized feature vectors, which may be used in machine learning
+        algorithms.</p>
+
+    <p>For a new document in prediction phase, an overload version of <code>tfidf(bag, n, df)</code>
+        can be employed, where <code>bag</code> is the bag-of-words feature
+        vector of a document, <code>n</code> is the number of documents in
+        training corpus, and <code>df</code> is an array which element is the
+        the number of documents containing the given term in the corpus.</p>
+
+    <h2 id="phrase" class="title">Phrase/Collocation Extraction</h2>
+
+    <p>So far, we have treat words to be independent. But natural languages
+        include the expressions consisting of two or more words that correspond
+        to some conventional way of saying things. A collocation is a sequence of
+        words or terms that co-occur more often than would be expected by chance.
+        There are about six main types of collocations: adjective+noun, noun+noun,
+        verb+noun, adverb+adjective, verbs+prepositional, and verb+adverb.
+        Collocation extraction employs various computational linguistics
+        techniques to find collocations in a document or corpus that are
+        statistically significant.</p>
+
+    <p>Finding collocations requires first calculating the frequencies of words
+        and their appearance in the context of other words. Often the collection
+        of words will then requiring filtering to only retain useful content terms.
+        Each n-gram of words may then be scored according to some association measure,
+        in order to determine the relative likelihood of each n-gram being a collocation.</p>
+
+    <p>The functions <code>bigram(k, minFreq, text*)</code> and <code>bigram(p, minFreq, text*)</code>
+        can find bigrams in a document/corpus. The integer parameter <code>k</code> specifies how many
+        top bigrams to find. Alternatively, you may provide a double parameter <code>p</code>
+        to specify the p-value threshold. The parameter <code>minFreq</code> is the minimum
+        frequency of collocation in the corpus.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; bigram(10, 5, lines.toSeq: _*)
+[main] INFO smile.util.package$ - runtime: 255287.678705 ms
+res16: Array[collocation.BigramCollocation] = Array(
+  (special effects, 278, 3522.38),
+  (new york, 201, 2450.90),
+  (star wars, 153, 2016.87),
+  (high school, 132, 1432.43),
+  (science fiction, 105, 1408.87),
+  (phantom menace, 76, 1330.73),
+  (ve seen, 147, 1291.82),
+  (pulp fiction, 83, 1254.05),
+  (star trek, 100, 1209.88),
+  (hong kong, 61, 1088.61)
+)
+    </code></pre>
+
+    <p>In the output, the second column is the frequency of bigrams and
+        the third is the statistical test score.</p>
+
+    <p>To find the collocations of more than 2 words, the function
+        <code>ngram(maxNGramSize: Int, minFreq: Int, text: String*)</code>
+        can be used. This function uses an Apiori-like algorithm to
+        extract n-gram phrases. It takes a collection of texts and generates all n-grams of
+        length at most maxNGramSize that occur at least minFreq times in the
+        text.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; val turing = scala.io.Source.fromFile("data/text/turing.txt").getLines().mkString
+smile&gt; phrase = ngram(4, 4, turing)
+smile&gt; phrase(2)
+res19: Seq[NGram] = Buffer(
+  ([digital, computer], 32),
+  ([discrete-state, machine], 17),
+  ([imitation, game], 14),
+  ([storage, capacity], 11),
+  ([human, computer], 10),
+  ([machine, think], 9),
+  ([child, machine], 7),
+  ([scientific, induction], 6),
+  ([analytical, engine], 5),
+  ([lady, lovelace], 5),
+  ([someth, like], 5),
+  ([well-establish, fact], 5),
+  ([subject, matter], 4),
+  ([differential, analyser], 4),
+  ([manchester, machine], 4),
+  ([learn, machine], 4)
+)
+
+smile&gt; phrase(3)
+res20: Seq[NGram] = Buffer(
+  ([rule, of, conduct], 5),
+  ([winter, 's, day], 5),
+  ([law, of, behaviour], 5),
+  ([number, of, state], 5),
+  ([point, of, view], 4),
+  ([punishment, and, reward], 4),
+  ([machine, in, question], 4)
+)
+    </code></pre>
+
+    <p>The result is an array list of sets of n-grams. The i-th entry is the set of i-grams.</p>
+
+    <h2 id="keyword" class="title">Keyword Extraction</h2>
+
+    <p>Beyond finding phrases, keyword extraction is tasked with the automatic
+        identification of terms that best describe the subject of a document,
+        Keywords are the terms that represent the most relevant information
+        contained in the document, i.e. characterization of the topic discussed
+        in a document.</p>
+
+    <p>We provide a method <code>keywords(k: Int)</code> to returns top-k
+        keywords in a single document using word co-occurrence statistical
+        information. The below is the found keywords of Turing's famous paper
+        "Computing Machinery and Intelligence". The seminal paper on artificial
+        intelligence introduces the concept of what is now known as the Turing test.
+        As shown in the results, the algorithm works pretty well and captures
+        many important concepts in the paper such as "storage capacity", "machine",
+        "digital computer", "discrete-state machine", etc.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; turing.keywords(10)
+res21: Seq[NGram] = Buffer(
+  ([storage, capacity], 11),
+  ([machine], 197),
+  ([think], 45),
+  ([digital, computer], 32),
+  ([imitation, game], 14),
+  ([discrete-state, machine], 17),
+  ([teach], 11),
+  ([view], 20),
+  ([process], 17),
+  ([play], 15)
+)
+    </code></pre>
+
+    <p>This algorithm relies on co-occurrence probability and information theory.
+        Therefore, the article should be long enough to contain sufficient
+        statistical signals. In other words, it won't work on short text such as
+        tweets.</p>
+
+    <h2 id="pos" class="title">Part-of-Speech Tagging</h2>
+
+    <p>A part of speech (PoS) is a category of words which have similar
+        grammatical properties. Words that are assigned to the same part
+        of speech generally display similar behavior in terms of syntax &ndash;
+        they play similar roles within the grammatical structure of sentences
+        &ndash; and sometimes in terms of morphology, in that they undergo
+        inflection for similar properties. Commonly listed English parts of
+        speech are noun, verb, adjective, adverb, pronoun, preposition,
+        conjunction, interjection, etc. In Smile, we use the Penn Treebank
+        PoS tag set. The complete list can be found in the class
+        <a href="api/java/smile/nlp/pos/PennTreebankPOS.html"><code>smile.nlp.pos.PennTreebankPOS</code></a>.</p>
+
+    <p>PoS tagging is an important intermediate task to make sense of
+        some of the structure inherent in language without requiring
+        complete understanding. Smile implements a highly efficient
+        English PoS tagger based on hidden Markov model (HMM). Suppose
+        a string is a single sentence, simply call <code>postag</code>
+        on the string to return an array of (word, tag) pairs. Because
+        PoS tags are often used as features along with other attributes
+        in machine learning algorithms, the sentence is typically
+        already split into words. In this case, just call <code>postab(words)</code>
+        on an array of words.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; val sentence = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."""
+sentence: String = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."
+
+smile&gt; sentence.postag
+res1: Array[(String, pos.PennTreebankPOS)] = Array(
+  ("When", WRB),
+  ("airport", NN),
+  ("foreman", NN),
+  ("Scott", NNP),
+  ("Babcock", NNP),
+  ("went", VBD),
+  ("out", RP),
+  ("onto", IN),
+  ("the", DT),
+  ("runway", NN),
+  ("at", IN),
+  ("Wiley", NNP),
+  ("Post-Will", NNP),
+  ("Rogers", NNP),
+  ("Memorial", NNP),
+  ("Airport", NNP),
+  ("in", IN),
+  ("Utqiagvik", NNP),
+  (",", ,),
+  ("Alaska", NNP),
+  (",", ,),
+  ("on", IN),
+  ("Monday", NNP),
+  ("to", TO),
+...
+
+smile&gt; postag(sentence.words("none"))
+[main] INFO smile.util.package$ - runtime: 4.356543 ms
+res2: Array[pos.PennTreebankPOS] = Array(
+  WRB,
+  NN,
+  NN,
+  NNP,
+  NNP,
+  VBD,
+  RP,
+  IN,
+  DT,
+  NN,
+  IN,
+  NNP,
+  NNP,
+  NNP,
+  NNP,
+  NNP,
+  IN,
+  NNP,
+  ,,
+  NNP,
+  ,,
+  IN,
+  NNP,
+  TO,
+...
+    </code></pre>
+
+    <h2 id="naive-bayes" class="title">Naive Bayes</h2>
+
+    <p>After generating feature vectors of texts, many machine learning
+        algorithms can be applied. But there are several algorithms
+        are particularly popular in NLP, e.g. naive Bayes, maximum
+        entropy classifier, conditional random fields, etc.</p>
+
+    <p>A naive Bayes classifier is a simple probabilistic
+        classifier based on applying Bayes' theorem with strong (naive) independence
+        assumptions. Depending on the precise nature of the probability model, naive
+        Bayes classifiers can be trained very efficiently in a supervised learning
+        setting. In spite of their naive design and apparently over-simplified assumptions,
+        naive Bayes classifiers have worked quite well in many complex real-world
+        situations and are very popular in NLP.</p>
+
+    <p>For a general purpose naive Bayes classifier without any assumptions
+        about the underlying distribution of each variable, we don't provide
+        a learning method to infer the variable distributions from the training data.
+        Instead, the users can fit any appropriate distributions on the data by
+        themselves with various <code>Distribution</code> classes. Although the <code>predict</code>
+        method takes an array of double values as a general form of independent variables,
+        the users are free to use any discrete distributions to model categorical or
+        ordinal random variables.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def naiveBayes(priori: Array[Double], condprob: Array[Array[Distribution]]): NaiveBayes
+    </code></pre>
+
+    <p>For document classification in NLP, there are two different ways we can set
+        up an naive Bayes classifier: multinomial model and Bernoulli model. The
+        multinomial model generates one term from the vocabulary in each position
+        of the document. The multivariate Bernoulli model or Bernoulli model
+        generates an indicator for each term of the vocabulary, either indicating
+        presence of the term in the document or indicating absence.
+        Of the two models, the Bernoulli model is particularly sensitive to noise
+        features. A Bernoulli naive Bayes classifier requires some form of feature
+        selection or else its accuracy will be low.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def naiveBayes(x: Array[Array[Double]], y: Array[Int], model: NaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): NaiveBayes
+    </code></pre>
+
+    <p>The different generation models imply different estimation strategies and
+        different classification rules. The Bernoulli model estimates as the
+        fraction of documents of class that contain term. In contrast, the
+        multinomial model estimates as the fraction of tokens or fraction of
+        positions in documents of class that contain term. When classifying a
+        test document, the Bernoulli model uses binary occurrence information,
+        ignoring the number of occurrences, whereas the multinomial model keeps
+        track of multiple occurrences. As a result, the Bernoulli model typically
+        makes many mistakes when classifying long documents. However, it was reported
+        that the Bernoulli model works better in sentiment analysis.</p>
+
+    <p>The models also differ in how non-occurring terms are used in classification.
+        They do not affect the classification decision in the multinomial model;
+        but in the Bernoulli model the probability of nonoccurrence is factored
+        in when computing. This is because only the Bernoulli model models
+        absence of terms explicitly.</p>
+
+    <h2 id="maxent">Maximum Entropy Classifier</h2>
+
+    <p>Maximum entropy is a technique for learning
+        probability distributions from data. In maximum entropy models, the
+        observed data itself is assumed to be the testable information. Maximum
+        entropy models don't assume anything about the probability distribution
+        other than what have been observed and always choose the most uniform
+        distribution subject to the observed constraints.</p>
+
+    <p>Basically, maximum entropy classifier is another name of multinomial logistic
+        regression applied to categorical independent variables, which are
+        converted to binary dummy variables. Maximum entropy models are widely
+        used in natural language processing.  Here, we provide an implementation
+        which assumes that binary features are stored in a sparse array, of which
+        entries are the indices of nonzero features.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent
+    </code></pre>
+
+    <p>where <code>x</code> is the sparse training samples. Each sample is represented by a set of sparse
+        binary features. The features are stored in an integer array, of which
+        are the indices of nonzero features.
+        The parameter <code>p</code> is the dimension of feature space, and <code>lambda</code>
+        is the regularization factor.</p>
+
+    <p>Like naive Byes, maximum entropy classifier is often used in text
+        categorization tasks. Besides, it is also applied in sentence boundary
+        detection (is a period end of sentence or abbreviation?), sentiment
+        analysis, prepositional phrase attachment ambiguity resolution
+        (attach to verb or noun?), and parsing decisions in general.</p>
+
+    <h2 id="hmm" class="title">Hidden Markov Model</h2>
+
+    <p>Both naive Bayes and maximum entropy classifier ignore the sequence information
+        of text. In contrast, the hidden Markov model (HMM) is a sequence model.
+        A sequence model or sequence classifier is a model to assign a label or
+        class to each unit in a sequence, thus mapping a sequence of observations
+        to a sequence of labels. Given language consists of sequences
+        at many representational levels, sequence labeling tasks come up throughout
+        speech and language processing. These include part-of-speech tagging,
+        named entity recognition, and speech recognition among others.</p>
+
+    <p>An HMM is a probabilistic sequence model: given a sequence of units,
+        it computes a probability distribution over possible sequences of labels
+        and chooses the best label sequence. An HMM is a statistical Markov model
+        in which the system being modeled is assumed to be a Markov process with unobserved (hidden) states.
+        An HMM can be considered as the simplest dynamic Bayesian network.
+        In a regular Markov model, the state is directly visible to the observer,
+        and therefore the state transition probabilities are the only parameters.
+        In a hidden Markov model, the state is not directly visible, but output,
+        dependent on the state, is visible. Each state has a probability distribution
+        over the possible output tokens. Therefore the sequence of tokens generated
+        by an HMM gives some information about the sequence of states.</p>
+
+    <p>The below function trains a first-order hidden Markov model.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def hmm(observations: Array[Array[Int]], labels: Array[Array[Int]]): HMM[Int]
+    </code></pre>
+
+    <p>where <code>observations</code> is the observation sequences, of which symbols take
+        values in [0, n), where n is the number of unique symbols.
+        The parameter <code>labels</code> is the state labels of observations,
+        of which states take values in [0, p), where p is the number of hidden states.</p>
+
+    <h2 id="crf" class="title">Conditional Random Field</h2>
+
+    <p>As an alternative to the related HMM, conditional random fields (CRFs)
+        are also widely used in NLP. A conditional random field is a type of
+        discriminative undirected probabilistic graphical model.
+        It is used to encode known relationships between observations and construct
+        consistent interpretations. It is often used for labeling or parsing of
+        sequential data, such as natural language processing or biological sequences
+        and in computer vision.</p>
+
+    <p>A CRF is a Markov random field that was trained discriminatively.
+        Therefore it is not necessary to model the distribution over
+        always observed variables, which makes it possible to include
+        arbitrarily complicated features of the observed variables into the model.</p>
+
+    <p>Training CRF is usually done by maximum likelihood learning.
+        If all nodes have exponential family distributions and all
+        nodes are observed during training, this optimization is convex.
+        It can be solved for example using gradient descent algorithms,
+        or Quasi-Newton methods such as the L-BFGS algorithm.
+        On the other hand, if some variables are unobserved, the inference
+        problem has to be solved for these variables. Exact inference is
+        intractable in general graphs, so approximations have to be used.</p>
+
+    <p>We implement an algorithm that trains CRFs via gradient
+        tree boosting (Thomas G. Dietterich, Guohua Hao, and
+        Adam Ashenfelter. Gradient Tree Boosting for Training Conditional Random
+        Fields. JMLR, 2008). In tree boosting, the CRF potential functions
+        are represented as weighted sums of regression trees, which provide
+        compact representations of feature interactions. So the algorithm does
+        not explicitly consider the potentially large parameter space. As a result,
+        gradient tree boosting scales linearly in the order of the Markov model and in
+        the order of the feature interactions, rather than exponentially as
+        in previous algorithms based on iterative scaling and gradient descent.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def crf(sequences: Array[Array[Array[Double]]], labels: Array[Array[Int]], attributes: Array[Attribute], k: Int, eta: Double = 1.0, ntrees: Int = 100, maxNodes: Int = 100): CRF
+    </code></pre>
+
+    <p>where <code>sequences</code> is the observation attribute sequences,
+        <code>labels</code> is sequence labels,
+        <code>attributes</code> is the feature attributes,
+        <code>k</code> is the number of classes,
+        <code>eta</code> is the learning rate of potential function,
+        <code>ntrees</code> is the number of trees/iterations,
+        <code>maxNodes</code> is the maximum number of leaf nodes in the tree.</p>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="graph.html" title="Previous Section: Graph"><span>Graph</span></a>
+        <a class="btn-next-text" href="faq.html" title="Next Section: FAQ"><span>FAQ</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

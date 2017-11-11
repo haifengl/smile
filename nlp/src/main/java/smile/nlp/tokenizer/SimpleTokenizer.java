@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 
 /**
  * A word tokenizer that tokenizes English sentences with some differences from
- * TreebankWordTokenizer, noteably on handling not-contractions. If a period
+ * TreebankWordTokenizer, notably on handling not-contractions. If a period
  * serves as both the end of sentence and a part of abbreviation, e.g. etc. at
  * the end of sentence, it will generate tokens of "etc." and "." while
  * TreebankWordTokenizer will generate "etc" and ".".

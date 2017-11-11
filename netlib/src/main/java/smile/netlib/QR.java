@@ -92,9 +92,9 @@ public class QR extends smile.math.matrix.QR {
         int lwork = n;
         if (info.val == 0) {
             lwork = (int) work[0];
-            logger.info("LAPACK DORGQR returns work space size: {}", lwork);
+            logger.debug("LAPACK DORGQR returns work space size: {}", lwork);
         } else {
-            logger.info("LAPACK DORGQR error code: {}", info.val);
+            logger.warn("LAPACK DORGQR error code: {}", info.val);
         }
 
         lwork = Math.max(1, lwork);
@@ -151,9 +151,9 @@ public class QR extends smile.math.matrix.QR {
         int lwork = n;
         if (info.val == 0) {
             lwork = (int) work[0];
-            logger.info("LAPACK DORMQR returns work space size: {}", lwork);
+            logger.debug("LAPACK DORMQR returns work space size: {}", lwork);
         } else {
-            logger.info("LAPACK DORMQR error code: {}", info.val);
+            logger.warn("LAPACK DORMQR error code: {}", info.val);
         }
 
         lwork = Math.max(1, lwork);

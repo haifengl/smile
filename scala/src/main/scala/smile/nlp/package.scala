@@ -18,6 +18,7 @@ package smile
 
 import scala.language.implicitConversions
 import scala.collection.JavaConverters._
+import smile.nlp.dictionary.StopWords
 
 /** Natural language processing.
   *
@@ -57,10 +58,28 @@ package object nlp extends Operators {
 package nlp {
   import tokenizer.{SimpleSentenceSplitter, SimpleTokenizer}
   import keyword.CooccurrenceKeywordExtractor
+  import smile.nlp.dictionary.{EnglishPunctuations, EnglishStopWords}
+  import smile.nlp.normalizer.SimpleNormalizer
+  import smile.nlp.pos.{HMMPOSTagger, PennTreebankPOS}
+  import smile.nlp.stemmer.{PorterStemmer, Stemmer}
+  import smile.util.time
 
   private[nlp] class PimpedString(text: String) {
     val tokenizer = new SimpleTokenizer(true)
     val keywordExtractor = new CooccurrenceKeywordExtractor
+
+    /**
+      * Normalize Unicode text:
+      * <ul>
+      * <li>Apply Unicode normalization form NFKC.</li>
+      * <li>Strip, trim, normalize, and compress whitespace.</li>
+      * <li>Remove control and formatting characters.</li>
+      * <li>Normalize double and single quotes.</li>
+      * </ul>
+      */
+    def normalize: String = {
+      SimpleNormalizer.getInstance().normalize(text)
+    }
 
     /** A simple sentence splitter for English. Given a string, assumed to
       * be English text, it returns a list of strings, where each element is an
@@ -106,9 +125,82 @@ package nlp {
       * sentences. Any periods -- apart from those at the end of a string or before
       * newline -- are assumed to be part of the word they are attached to (e.g. for
       * abbreviations, etc), and are not separately tokenized.
+      *
+      * If the parameter filter is not "none", the method will also filter
+      * out stop words and punctuations. There is no definite list of stop
+      * words which all tools incorporate. The valid values of the parameter
+      * filter include
+      *   - "none": no filtering
+      *   - "default": the default English stop word list
+      *   - "comprehensive": a more comprehensive English stop word list
+      *   - "google": the stop words list used by Google search engine
+      *   - "mysql": the stop words list used by MySQL FullText feature
+      *   - custom stop word list: comma separated stop word list
       */
-    def words: Array[String] = {
-      tokenizer.split(text)
+    def words(filter: String = "default"): Array[String] = {
+      val tokens = tokenizer.split(text)
+
+      if (filter == "none") return tokens
+
+      val dict = filter.toLowerCase match {
+        case "default" => EnglishStopWords.DEFAULT
+        case "comprehensive" => EnglishStopWords.COMPREHENSIVE
+        case "google" => EnglishStopWords.GOOGLE
+        case "mysql" => EnglishStopWords.MYSQL
+        case _ => new StopWords {
+          val dict = filter.split(",").toSet
+
+          override def contains(word: String): Boolean = dict.contains(word)
+
+          override def size: Int = dict.size
+
+          override def iterator: java.util.Iterator[String] = dict.iterator.asJava
+        }
+      }
+
+      val punctuations = EnglishPunctuations.getInstance()
+      tokens.filter { word =>
+        !(dict.contains(word.toLowerCase) || punctuations.contains(word))
+      }
+    }
+
+    /** Returns the bag of words. The bag-of-words model is a simple
+      * representation of text as the bag of its words, disregarding
+      * grammar and word order but keeping multiplicity.
+      *
+      * @param filter stop list for filtering.
+      * @param stemmer stemmer to transform a word into its root form.
+      */
+    def bag(filter: String = "default", stemmer: Option[Stemmer] = Some(new PorterStemmer())): Map[String, Int] = {
+      val words = text.normalize.sentences.flatMap(_.words(filter))
+
+      val tokens = stemmer.map { stemmer =>
+        words.map(stemmer.stem(_))
+      }.getOrElse(words)
+
+      val map = tokens.map(_.toLowerCase).groupBy(identity)
+      map.map { case (k, v) => (k, v.length) }.withDefaultValue(0)
+    }
+
+    /** Returns the binary bag of words. Presence/absence is used instead
+      * of frequencies.
+      */
+    def bag2(stemmer: Option[Stemmer] = Some(new PorterStemmer())): Set[String] = {
+      val words = text.normalize.sentences.flatMap(_.words())
+
+      val tokens = stemmer.map { stemmer =>
+        words.map(stemmer.stem(_))
+      }.getOrElse(words)
+
+      tokens.map(_.toLowerCase).toSet
+    }
+
+    /** Returns the (word, part-of-speech) pairs.
+      * The text should be a single sentence.
+      */
+    def postag: Array[(String, PennTreebankPOS)] = {
+      val words = text.words("none")
+      words.zip(HMMPOSTagger.getDefault.tag(words))
     }
 
     /** Keyword extraction from a single document using word co-occurrence statistical information.

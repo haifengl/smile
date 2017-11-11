@@ -258,9 +258,9 @@ public class NLMatrix extends JMatrix {
         int lwork = n;
         if (info.val == 0) {
             lwork = (int) work[0];
-            logger.info("LAPACK DEGQRF returns work space size: {}", lwork);
+            logger.debug("LAPACK DEGQRF returns work space size: {}", lwork);
         } else {
-            logger.info("LAPACK DEGQRF error code: {}", info.val);
+            logger.warn("LAPACK DEGQRF error code: {}", info.val);
         }
 
         lwork = Math.max(1, lwork);
@@ -302,9 +302,9 @@ public class NLMatrix extends JMatrix {
         int lwork = 3 * mn + Math.max(mx, 5*mn*mn + 4 *mn);
         if (info.val == 0) {
             lwork = (int) work[0];
-            logger.info("LAPACK DGESDD returns work space size: {}", lwork);
+            logger.debug("LAPACK DGESDD returns work space size: {}", lwork);
         } else {
-            logger.info("LAPACK DGESDD error code: {}", info.val);
+            logger.warn("LAPACK DGESDD error code: {}", info.val);
         }
 
         lwork = Math.max(1, lwork);
@@ -350,9 +350,9 @@ public class NLMatrix extends JMatrix {
             if (info.val == 0) {
                 lwork = (int) work[0];
                 liwork = (int) iwork[0];
-                logger.info("LAPACK DSYEVR returns work space size: {}", lwork);
+                logger.debug("LAPACK DSYEVR returns work space size: {}", lwork);
             } else {
-                logger.info("LAPACK DSYEVR error code: {}", info.val);
+                logger.warn("LAPACK DSYEVR error code: {}", info.val);
             }
 
             lwork = Math.max(1, lwork);
@@ -393,9 +393,9 @@ public class NLMatrix extends JMatrix {
             int lwork = 4 * n;
             if (info.val == 0) {
                 lwork = (int) work[0];
-                logger.info("LAPACK DGEEV returns work space size: {}", lwork);
+                logger.debug("LAPACK DGEEV returns work space size: {}", lwork);
             } else {
-                logger.info("LAPACK DGEEV error code: {}", info.val);
+                logger.warn("LAPACK DGEEV error code: {}", info.val);
             }
 
             lwork = Math.max(1, lwork);
@@ -449,9 +449,9 @@ public class NLMatrix extends JMatrix {
             if (info.val == 0) {
                 lwork = (int) work[0];
                 liwork = (int) iwork[0];
-                logger.info("LAPACK DSYEVR returns work space size: {}", lwork);
+                logger.debug("LAPACK DSYEVR returns work space size: {}", lwork);
             } else {
-                logger.info("LAPACK DSYEVR error code: {}", info.val);
+                logger.warn("LAPACK DSYEVR error code: {}", info.val);
             }
 
             lwork = Math.max(1, lwork);
@@ -486,9 +486,9 @@ public class NLMatrix extends JMatrix {
             int lwork = 4 * n;
             if (info.val == 0) {
                 lwork = (int) work[0];
-                logger.info("LAPACK DGEEV returns work space size: {}", lwork);
+                logger.debug("LAPACK DGEEV returns work space size: {}", lwork);
             } else {
-                logger.info("LAPACK DGEEV error code: {}", info.val);
+                logger.warn("LAPACK DGEEV error code: {}", info.val);
             }
 
             lwork = Math.max(1, lwork);

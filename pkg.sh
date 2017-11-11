@@ -32,7 +32,7 @@ else
     echo "Unsupported OS: $OSTYPE"
 fi
 
-#sbt publish-signed
-#sbt ++2.10.6 scala/publish-signed
-#sbt ++2.11.8 scala/publish-signed
+#sbt publishSigned
+#sbt ++2.10.6 scala/publishSigned
+#sbt ++2.11.11 scala/publishSigned
 #check_error "Publishing"
