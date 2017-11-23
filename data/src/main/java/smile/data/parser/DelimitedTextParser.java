@@ -360,10 +360,6 @@ public class DelimitedTextParser {
 
         int ncols = attributes.length;
 
-        if (hasRowNames) {
-            ncols++;
-        }
-
         if (responseIndex >= 0) {
             ncols++;
         }
