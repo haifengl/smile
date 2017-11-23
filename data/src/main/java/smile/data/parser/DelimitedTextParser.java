@@ -327,29 +327,29 @@ public class DelimitedTextParser {
 
         String[] s = line.split(delimiter, 0);
 
+        int p = s.length - ignoredColumns.size();
+
+        if (p <= 0) {
+          throw new IllegalArgumentException("There are more ignored columns (" + ignoredColumns.size() + ") than columns in the file (" + s.length + ").");
+        }
+
+        if (responseIndex >= s.length) {
+          throw new ParseException("Invalid response variable index: " + responseIndex, responseIndex);
+        }
+
+        if (ignoredColumns.contains(responseIndex)) {
+          throw new IllegalArgumentException("The response variable is present in the list of ignored columns.");
+        }
+
+        if (p == 1) {
+          throw new IllegalArgumentException("All columns are ignored, except the response variable.");
+        }
+
+        if (responseIndex >= 0) {
+          p--;
+        }
+
         if (attributes == null) {
-            int p = s.length - ignoredColumns.size();
-
-            if (p <= 0) {
-                throw new IllegalArgumentException("There are more ignored columns (" + ignoredColumns.size() + ") than columns in the file (" + s.length + ").");
-            }
-
-            if (responseIndex >= s.length) {
-                throw new ParseException("Invalid response variable index: " + responseIndex, responseIndex);
-            }
-
-            if (ignoredColumns.contains(responseIndex)) {
-                throw new IllegalArgumentException("The response variable is present in the list of ignored columns.");
-            }
-
-            if (p == 1) {
-                throw new IllegalArgumentException("All columns are ignored, except the response variable.");
-            }
-
-            if (responseIndex >= 0) {
-                p--;
-            }
-
             attributes = new Attribute[p];
             for (int i = 0, k = 0; i < s.length; i++) {
                 if (!ignoredColumns.contains(i) && i != responseIndex) {
