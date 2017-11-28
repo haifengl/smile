@@ -64,11 +64,11 @@ public class BernoulliDistribution extends DiscreteDistribution {
      */
     public BernoulliDistribution(int[] data) {
         double k = 0.0;
-        for (int i : data) {
-            if (i == 1) {
+        for (int currentInteger : data) {
+            if (currentInteger == 1) {
                 k++;
-            } else if (i != 0) {
-                throw new IllegalArgumentException("Invalid value " + data[i]);
+            } else if (currentInteger != 0) {
+                throw new IllegalArgumentException("Invalid value " + currentInteger);
             }
         }
 
