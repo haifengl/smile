@@ -25,6 +25,8 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.text.ParseException;
 
+import java.util.ArrayList;
+import java.util.List;
 import smile.data.Attribute;
 import smile.data.AttributeDataset;
 import smile.data.NumericAttribute;
@@ -71,6 +73,10 @@ public class DelimitedTextParser {
      * The column index of dependent/response variable.
      */
     private int responseIndex = -1;
+    /**
+     * Indices of columns to ignore
+     */
+    private List<Integer> ignoredColumns = new ArrayList<>();
 
     /**
      * Constructor with default delimiter of white space, comment line
@@ -137,6 +143,31 @@ public class DelimitedTextParser {
         this.responseIndex = index;
         return this;
     }
+
+    /**
+     * Sets the list of column indices to ignore (starting at 0)
+     */
+    public DelimitedTextParser setIgnoredColumns(List<Integer> ignoredColumns) {
+        this.ignoredColumns = ignoredColumns;
+        return this;
+    }
+
+    /**
+     * Adds one columns index to ignore
+     */
+    public DelimitedTextParser addIgnoredColumn(int index) {
+        this.ignoredColumns.add(index);
+        return this;
+    }
+
+    /**
+     * Adds several column indices to ignore
+     */
+    public DelimitedTextParser addIgnoredColumns(List<Integer> ignoredColumns) {
+        this.ignoredColumns.addAll(ignoredColumns);
+        return this;
+    }
+
 
     /**
      * Returns if the dataset has row names (at column 0).
@@ -290,39 +321,50 @@ public class DelimitedTextParser {
             throw new IOException("Empty data source.");
         }
 
+        if (hasRowNames) {
+            addIgnoredColumn(0);
+        }
+
         String[] s = line.split(delimiter, 0);
 
+        int p = s.length - ignoredColumns.size();
+
+        if (p <= 0) {
+          throw new IllegalArgumentException("There are more ignored columns (" + ignoredColumns.size() + ") than columns in the file (" + s.length + ").");
+        }
+
+        if (responseIndex >= s.length) {
+          throw new ParseException("Invalid response variable index: " + responseIndex, responseIndex);
+        }
+
+        if (ignoredColumns.contains(responseIndex)) {
+          throw new IllegalArgumentException("The response variable is present in the list of ignored columns.");
+        }
+
+        if (p == 1) {
+          throw new IllegalArgumentException("All columns are ignored, except the response variable.");
+        }
+
+        if (responseIndex >= 0) {
+          p--;
+        }
+
         if (attributes == null) {
-            int p = s.length;
-            if (hasRowNames) {
-                p--;
-            }
-
-            if (responseIndex >= s.length) {
-                throw new ParseException("Invalid response variable index: " + responseIndex, responseIndex);
-            }
-
-            if (responseIndex >= 0) {
-                p--;
-            }
-
             attributes = new Attribute[p];
-            for (int i = 0; i < p; i++) {
-                attributes[i] = new NumericAttribute("V" + (i + 1));
+            for (int i = 0, k = 0; i < s.length; i++) {
+                if (!ignoredColumns.contains(i) && i != responseIndex) {
+                    attributes[k++] = new NumericAttribute("V" + (i + 1));
+                }
             }
         }
 
         int ncols = attributes.length;
-        int startColumn = 0;
-
-        if (hasRowNames) {
-            ncols++;
-            startColumn = 1;
-        }
 
         if (responseIndex >= 0) {
             ncols++;
         }
+
+        ncols += ignoredColumns.size();
 
         if (ncols != s.length)
             throw new ParseException(String.format("%d columns, expected %d", s.length, ncols), s.length);
@@ -330,11 +372,13 @@ public class DelimitedTextParser {
         AttributeDataset data = new AttributeDataset(name, attributes, response);
 
         if (hasColumnNames) {
-            for (int i = startColumn, k = 0; i < s.length; i++) {
-                if (i != responseIndex) {
-                    attributes[k++].setName(s[i]);
-                } else {
-                    response.setName(s[i]);
+            for (int i = 0, k = 0; i < s.length; i++) {
+                if (!ignoredColumns.contains(i)) {
+                    if (i != responseIndex) {
+                        attributes[k++].setName(s[i]);
+                    } else {
+                        response.setName(s[i]);
+                    }
                 }
             }
         } else {
@@ -342,14 +386,16 @@ public class DelimitedTextParser {
             double[] x = new double[attributes.length];
             double y = Double.NaN;
 
-            for (int i = startColumn, k = 0; i < s.length; i++) {
-                if (i == responseIndex) {
-                    y = response.valueOf(s[i]);
-                } else if (missing != null && missing.equalsIgnoreCase(s[i])) {
-                    x[k++] = Double.NaN;
-                } else {
-                    x[k] = attributes[k].valueOf(s[i]);
-                    k++;
+            for (int i = 0, k = 0; i < s.length; i++) {
+                if (!ignoredColumns.contains(i)) {
+                    if (i == responseIndex) {
+                        y = response.valueOf(s[i]);
+                    } else if (missing != null && missing.equalsIgnoreCase(s[i])) {
+                        x[k++] = Double.NaN;
+                    } else {
+                        x[k] = attributes[k].valueOf(s[i]);
+                        k++;
+                    }
                 }
             }
 
@@ -371,14 +417,16 @@ public class DelimitedTextParser {
             double[] x = new double[attributes.length];
             double y = Double.NaN;
 
-            for (int i = startColumn, k = 0; i < s.length; i++) {
-                if (i == responseIndex) {
-                    y = response.valueOf(s[i]);
-                } else if (missing != null && missing.equalsIgnoreCase(s[i])) {
-                    x[k++] = Double.NaN;
-                } else {
-                    x[k] = attributes[k].valueOf(s[i]);
-                    k++;
+            for (int i = 0, k = 0; i < s.length; i++) {
+                if (!ignoredColumns.contains(i)) {
+                    if (i == responseIndex) {
+                        y = response.valueOf(s[i]);
+                    } else if (missing != null && missing.equalsIgnoreCase(s[i])) {
+                        x[k++] = Double.NaN;
+                    } else {
+                        x[k] = attributes[k].valueOf(s[i]);
+                        k++;
+                    }
                 }
             }
 
