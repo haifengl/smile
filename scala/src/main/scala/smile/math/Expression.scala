@@ -22,14 +22,11 @@ import smile.util.Logging
 /**
  * Vector Expression.
  */
-sealed trait VectorExpression extends Traversable[Double] {
+sealed trait VectorExpression {
   def length: Int
   def apply(i: Int): Double
   def toArray: Array[Double]
   override def toString = runtime.ScalaRunTime.stringOf(toArray)
-  override def foreach[U](p: (Double) => U): Unit = {
-    for (i <- 0 until length) p(apply(i))
-  }
 
   def + (b: VectorExpression) = {
     if (length != b.length) throw new IllegalArgumentException(s"Vector sizes don't match: ${length} + ${b.length}")
