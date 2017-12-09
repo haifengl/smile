@@ -24,59 +24,13 @@ import org.junit.Test;
 import smile.data.AttributeDataset;
 import smile.data.parser.ArffParser;
 import smile.math.Math;
+import smile.validation.CrossValidation;
 
 /**
  * 
  * @author Sam Erickson
  */
 public class RNNTest {
-    private class SequentialCV {
-        /**
-         * The number of rounds of cross validation.
-         */
-        final int k;
-        /**
-         * The index of training instances.
-         */
-        final int[][] train;
-        /**
-         * The index of testing instances.
-         */
-        final int[][] test;
-        
-        public SequentialCV(int n, int k) {
-            if (n < 0) {
-                throw new IllegalArgumentException("Invalid sample size: " + n);
-            }
-
-            if (k < 0 || k > n) {
-                throw new IllegalArgumentException("Invalid number of CV rounds: " + k);
-            }
-
-            this.k = k;
-            
-
-            train = new int[k][];
-            test = new int[k][];
-
-            int chunk = n / k;
-            for (int i = 0; i < k; i++) {
-                int start = chunk * i;
-                int end = chunk * (i + 1);
-                if (i == k-1) end = n;
-
-                train[i] = new int[n - end + start];
-                test[i] = new int[end - start];
-                for (int j = 0, p = 0, q = 0; j < n; j++) {
-                    if (j >= start && j < end) {
-                        test[i][p++] = j;
-                    } else {
-                        train[i][q++] = j;
-                    }
-                }
-            }
-        }
-    }
     public RNNTest(){
     }
     @BeforeClass
@@ -95,9 +49,11 @@ public class RNNTest {
     public void tearDown() {
     }
     public void test(RNN.ActivationFunction activation, String dataset, String url, int response) {
+        Math.setSeed(27);
         System.out.println(dataset + "\t" + activation);
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(response);
+        int ct = 0;
         try {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile(url));
             double[] datay = data.toArray(new double[data.size()]);
@@ -118,7 +74,7 @@ public class RNNTest {
             
             int k = 10;
 
-            SequentialCV cv = new SequentialCV(n, k);
+            CrossValidation cv = new CrossValidation(n, k, false);
             double rss = 0.0;
             for (int i = 0; i < k; i++) {
                 double[][] trainx = smile.math.Math.slice(datax, cv.train[i]);
@@ -126,9 +82,11 @@ public class RNNTest {
                 double[][] testx = smile.math.Math.slice(datax, cv.test[i]);
                 double[] testy = smile.math.Math.slice(datay, cv.test[i]);
 
-                RNN rnn = new RNN(activation, 2, new int[]{datax[0].length, 10, 10, 1}, new boolean[]{false, true, true, false});
+                RNN rnn = new RNN(activation, 3, true, new int[]{datax[0].length, 10, 1}, new boolean[]{false, true, false});
+                rnn.setLearningRate(.01);
+                rnn.setMomentum(0);
+                rnn.setWeightDecay(0);
                 rnn.learn(trainx,trainy);
-                rnn.resetMemory();
 
                 for (int j = 0; j < testx.length; j++) {
                     double r = testy[j] - rnn.predict(testx[j]);
