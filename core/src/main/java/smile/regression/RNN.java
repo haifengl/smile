@@ -786,7 +786,7 @@ public class RNN implements Regression<double[]>, Serializable  {
      * stochastic gradient descent.
      *
      * @param x training instances.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * @param y the response values.
      * @return the error 
      */
     public double learn(double[][] x, double[] y) {
