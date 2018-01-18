@@ -109,8 +109,8 @@ res6: Double = 0.9604938271604938
 
     <pre class="prettyprint lang-scala"><code>
 val label = new NominalAttribute("class")
-val train = read.table("data/classification/toy/toy-train.txt", response=Some((label, 0)))
-val test = read.table("data/classification/toy/toy-test.txt", response=Some((label, 0)))
+val train = read.table("data/classification/toy/toy-train.txt", response = Some((label, 0)))
+val test = read.table("data/classification/toy/toy-test.txt", response = Some((label, 0)))
 
 val (x, y) = train.unzipInt
 val model = logit(x, y, 0.1, 0.001)
@@ -221,7 +221,7 @@ res5: RandomForest = smile.classification.RandomForest@2ac50ab0
     <pre class="prettyprint lang-scala"><code>
 val label = new NominalAttribute("class")
 val train = read.table("data/classification/toy/toy-train.txt",response = Some((label, 0)))
-val test = read.table("data/classification/toy/toy-test.txt", response= Some((label, 0)))
+val test = read.table("data/classification/toy/toy-test.txt", response = Some((label, 0)))
 
 val (x, y) = train.unzipInt
 val (testx, testy) = test.unzipInt

@@ -365,7 +365,7 @@
 
     <pre class="prettyprint lang-scala"><code>
     val label = new NominalAttribute("class")
-    val usps = read.table("data/usps/zip.train", response=Some(label, 0))
+    val usps = read.table("data/usps/zip.train", response = Some(label, 0))
     val umatrix = som(usps.unzip, 30, 30).umatrix
     hexmap(umatrix, Palette.heat(256))
     </code></pre>
