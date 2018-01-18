@@ -331,7 +331,7 @@
         The correlation matrix is recommended when variables are measured in different scales.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val pendigits = read.table("data/classification/pendigits.txt", Some((new NominalAttribute("class"), 16)))
+    val pendigits = read.table("data/classification/pendigits.txt", response = Some((new NominalAttribute("class"), 16)))
     val (x, y) = pendigits.unzipInt
     val pc = pca(x)
     screeplot(pc)
