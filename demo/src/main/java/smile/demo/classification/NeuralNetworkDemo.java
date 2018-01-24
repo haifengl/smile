@@ -64,7 +64,7 @@ public class NeuralNetworkDemo extends ClassificationDemo {
 
         try {
             epochs = Integer.parseInt(epochsField.getText().trim());
-            if (units <= 0) {
+            if (epochs <= 0) {
                 JOptionPane.showMessageDialog(this, "Invalid number of epochs: " + epochs, "Error", JOptionPane.ERROR_MESSAGE);
                 return null;
             }
