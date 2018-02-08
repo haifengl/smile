@@ -22,6 +22,8 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.concurrent.Callable;
+import java.util.stream.IntStream;
+
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
@@ -401,12 +403,10 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             }
             
             double sum = node.output * n;
+
             int p = attributes.length;
-            int[] variables = new int[p];
-            for (int i = 0; i < p; i++) {
-                variables[i] = i;
-            }
-            
+            int[] variables = IntStream.range(0, attributes.length).toArray();
+
             // Loop through features and compute the reduction of squared error,
             // which is trueCount * trueMean^2 + falseCount * falseMean^2 - count * parentMean^2                    
             if (mtry < p) {
