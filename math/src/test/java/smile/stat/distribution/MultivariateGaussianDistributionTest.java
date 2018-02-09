@@ -190,7 +190,30 @@ public class MultivariateGaussianDistributionTest {
         System.out.println("cdf");
         MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, sigma);
         for (int i = 0; i < x.length; i++) {
-            assertEquals(cdf[i], instance.cdf(x[i]), 1E-2);
+            assertEquals(cdf[i], instance.cdf(x[i]), 5E-3);
         }
+    }
+
+    /**
+     * Test of cdf method, of class MultivariateGaussian.
+     */
+    @Test
+    public void testCdf2() {
+        System.out.println("cdf2");
+        double[][] S = {
+                {3.260127902272362, 2.343938296424249, 0.1409050254343716, -0.1628775438743266},
+                {2.343938296424249, 4.213034991388330, 1.3997210599608563,  0.3373448510018783},
+                {0.1409050254343716, 1.3997210599608563, 4.6042485263677939,  0.0807267064408651},
+                {-0.1628775438743266, 0.3373448510018783, 0.0807267064408651,  5.4950949215890672}
+        };
+
+        double[] M = {-0.683477474844462,  1.480296478403701,  1.008431991316523,  0.448404211078558};
+        double[] X = {0.713919336274493, 0.584408785741822, 0.263119200077829, 0.732513610871908};
+
+        MultivariateGaussianDistribution mvn = new MultivariateGaussianDistribution(M, S);
+
+        //According to R, the result should be 0.0904191282120575
+        double tol = 0.001;
+        assertEquals(0.0904191282120575, mvn.cdf(X), 1E-3);
     }
 }
