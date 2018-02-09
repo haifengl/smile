@@ -384,7 +384,9 @@ public class RandomForest implements SoftClassifier<double[]>, Serializable {
                 }
             }
 
-            DecisionTree tree = new DecisionTree(attributes, x, y, maxNodes, nodeSize, mtry, rule, samples, order);
+            // samples will be changed during tree construction.
+            // make a copy so that we can estimate oob error correctly.
+            DecisionTree tree = new DecisionTree(attributes, x, y, maxNodes, nodeSize, mtry, rule, samples.clone(), order);
 
             // estimate OOB error
             int oob = 0;
