@@ -69,7 +69,7 @@ public class MersenneTwister implements RandomNumberGenerator {
     /**
      * Constructor.
      */
-    public MersenneTwister(int seed) {
+    public MersenneTwister(long seed) {
         setSeed(seed);
     }
 
