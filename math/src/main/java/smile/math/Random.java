@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 Haifeng Li
- *   
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -16,13 +16,13 @@
 
 package smile.math;
 
+import smile.math.random.MersenneTwister;
 import smile.math.random.RandomNumberGenerator;
-import smile.math.random.UniversalGenerator;
 
 /**
  * This is a high quality random number generator as a replacement of
  * the standard Random class of Java system.
- * 
+ *
  * @author Haifeng Li
  */
 public class Random {
@@ -33,14 +33,14 @@ public class Random {
      * Initialize with default random number generator engine.
      */
     public Random() {
-        this(new UniversalGenerator());
+        this(new MersenneTwister());
     }
 
     /**
      * Initialize with given seed for default random number generator engine.
      */
     public Random(long seed) {
-        this(new UniversalGenerator(seed));
+        this(new MersenneTwister(seed));
     }
 
     /**
@@ -52,6 +52,7 @@ public class Random {
 
     /**
      * Generator a random number uniformly distributed in [0, 1).
+     *
      * @return a pseudo random number
      */
     public double nextDouble() {
@@ -60,6 +61,7 @@ public class Random {
 
     /**
      * Generate n uniform random numbers in the range [0, 1)
+     *
      * @param d array of random numbers to be generated
      */
     public void nextDoubles(double[] d) {
@@ -68,6 +70,7 @@ public class Random {
 
     /**
      * Generate a uniform random number in the range [lo, hi)
+     *
      * @param lo lower limit of range
      * @param hi upper limit of range
      * @return a uniform random real in the range [lo, hi)
@@ -78,14 +81,15 @@ public class Random {
 
     /**
      * Generate n uniform random numbers in the range [lo, hi)
+     *
      * @param lo lower limit of range
      * @param hi upper limit of range
-     * @param d array of random numbers to be generated
+     * @param d  array of random numbers to be generated
      */
     public void nextDoubles(double[] d, double lo, double hi) {
         rng.nextDoubles(d);
 
-        double l = hi - lo;        
+        double l = hi - lo;
         int n = d.length;
         for (int i = 0; i < n; i++) {
             d[i] = lo + l * d[i];
@@ -105,7 +109,7 @@ public class Random {
     public int nextInt() {
         return rng.nextInt();
     }
-    
+
     /**
      * Returns a random integer in [0, n).
      */
