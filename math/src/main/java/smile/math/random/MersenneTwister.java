@@ -75,7 +75,7 @@ public class MersenneTwister implements RandomNumberGenerator {
 
     @Override
     public void setSeed(long seed) {
-        setSeed(seed % UniversalGenerator.BIG_PRIME);
+        setSeed((int)(seed % UniversalGenerator.BIG_PRIME));
     }
 
     public void setSeed(int seed) {
