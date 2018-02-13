@@ -585,6 +585,9 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 throw new IllegalStateException("Unsupported attribute type: " + attributes[j].getType());
             }
 
+            double attributeWeight = attributes[j].getWeight();
+            split.splitScore *= attributeWeight;
+
             return split;
         }
     
