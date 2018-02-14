@@ -16,8 +16,8 @@
 
 package smile.math;
 
-import smile.math.random.RandomNumberGenerator;
 import smile.math.random.UniversalGenerator;
+import smile.math.random.MersenneTwister;
 
 /**
  * This is a high quality random number generator as a replacement of
@@ -27,27 +27,23 @@ import smile.math.random.UniversalGenerator;
  */
 public class Random {
 
-    private RandomNumberGenerator rng;
+    private UniversalGenerator real;
+    private MersenneTwister twister;
 
     /**
      * Initialize with default random number generator engine.
      */
     public Random() {
-        this(new UniversalGenerator());
+        real = new UniversalGenerator();
+        twister = new MersenneTwister();
     }
 
     /**
      * Initialize with given seed for default random number generator engine.
      */
     public Random(long seed) {
-        this(new UniversalGenerator(seed));
-    }
-
-    /**
-     * Initialize with given random number generator engine.
-     */
-    public Random(RandomNumberGenerator rng) {
-        this.rng = rng;
+        real = new UniversalGenerator(seed);
+        twister = new MersenneTwister(seed);
     }
 
     /**
@@ -55,7 +51,7 @@ public class Random {
      * @return a pseudo random number
      */
     public double nextDouble() {
-        return rng.nextDouble();
+        return real.nextDouble();
     }
 
     /**
@@ -63,7 +59,7 @@ public class Random {
      * @param d array of random numbers to be generated
      */
     public void nextDoubles(double[] d) {
-        rng.nextDoubles(d);
+        real.nextDoubles(d);
     }
 
     /**
@@ -83,7 +79,7 @@ public class Random {
      * @param d array of random numbers to be generated
      */
     public void nextDoubles(double[] d, double lo, double hi) {
-        rng.nextDoubles(d);
+        real.nextDoubles(d);
 
         double l = hi - lo;        
         int n = d.length;
@@ -96,25 +92,26 @@ public class Random {
      * Initialize the random generator with a seed.
      */
     public void setSeed(long seed) {
-        rng.setSeed(seed);
+        real.setSeed(seed);
+        twister.setSeed(seed);
     }
 
     /**
      * Returns a random integer.
      */
     public int nextInt() {
-        return rng.nextInt();
+        return twister.nextInt();
     }
     
     /**
      * Returns a random integer in [0, n).
      */
     public int nextInt(int n) {
-        return rng.nextInt(n);
+        return twister.nextInt(n);
     }
 
     public long nextLong() {
-        return rng.nextLong();
+        return twister.nextLong();
     }
 
     /**
