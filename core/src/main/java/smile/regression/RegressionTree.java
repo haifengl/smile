@@ -607,7 +607,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             int tc = 0;
             int fc = 0;
             int[] trueSamples = new int[n];
-            //int[] falseSamples = new int[n];
+            int[] falseSamples = new int[n];
 
             if (attributes[node.splitFeature].getType() == Attribute.Type.NOMINAL) {
                 for (int i = 0; i < n; i++) {
@@ -617,7 +617,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                             tc += trueSamples[i];
                             samples[i] = 0;
                         } else {
-                            //falseSamples[i] = samples[i];
+                            falseSamples[i] = samples[i];
                             fc += samples[i];
                         }
                     }
@@ -630,7 +630,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                             tc += trueSamples[i];
                             samples[i] = 0;
                         } else {
-                            //falseSamples[i] = samples[i];
+                            falseSamples[i] = samples[i];
                             fc += samples[i];
                         }
                     }
@@ -654,7 +654,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 nextSplits.add(trueChild);
             }
 
-            falseChild = new TrainNode(node.falseChild, x, y, samples);
+            falseChild = new TrainNode(node.falseChild, x, y, falseSamples);
             if (fc > nodeSize && falseChild.findBestSplit()) {
                 nextSplits.add(falseChild);
             }
