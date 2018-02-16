@@ -802,7 +802,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             int tc = 0;
             int fc = 0;
             int[] trueSamples = new int[n];
-            //int[] falseSamples = new int[n];
+            int[] falseSamples = new int[n];
 
             for (int i = 0; i < n; i++) {
                 if (samples[i] > 0) {
@@ -811,7 +811,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                         tc += trueSamples[i];
                         samples[i] = 0;
                     } else {
-                        //falseSamples[i] = samples[i];
+                        falseSamples[i] = samples[i];
                         fc += samples[i];
                     }
                 }
@@ -829,7 +829,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 }
             }
 
-            falseChild = new SparseBinaryTrainNode(node.falseChild, x, y, samples);
+            falseChild = new SparseBinaryTrainNode(node.falseChild, x, y, falseSamples);
             if (fc > nodeSize && falseChild.findBestSplit()) {
                 if (nextSplits != null) {
                     nextSplits.add(falseChild);
