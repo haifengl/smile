@@ -46,16 +46,30 @@ public abstract class Linkage {
     void init(double[][] proximity) {
         size = proximity.length;
         this.proximity = new float[size * (size+1) / 2];
+
+        // row wise
+        /*
         for (int i = 0, k = 0; i < size; i++) {
             double[] pi = proximity[i];
             for (int j = 0; j <= i; j++, k++) {
                 this.proximity[k] = (float) pi[j];
             }
         }
+        */
+
+        // column wise
+        for (int j = 0, k = 0; j < size; j++) {
+            for (int i = j; i < size; i++, k++) {
+                this.proximity[k] = (float) proximity[i][j];
+            }
+        }
     }
 
     int index(int i, int j) {
-        return i > j ? i*(i+1)/2 + j : j*(j+1)/2 + i;
+        // row wise
+        // return i > j ? i*(i+1)/2 + j : j*(j+1)/2 + i;
+        // column wise
+        return i > j ? proximity.length - (size-j)*(size-j+1)/2 + i - j : proximity.length - (size-i)*(size-i+1)/2 + j - i;
     }
 
     /** Returns the proximity matrix size. */
