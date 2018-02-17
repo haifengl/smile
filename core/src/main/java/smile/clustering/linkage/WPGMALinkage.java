@@ -35,7 +35,7 @@ public class WPGMALinkage extends Linkage {
      * dissimilarity. To save space, we only need the lower half of matrix.
      */
     public WPGMALinkage(double[][] proximity) {
-        this.proximity = proximity;
+        init(proximity);
     }
 
     @Override
@@ -46,11 +46,11 @@ public class WPGMALinkage extends Linkage {
     @Override
     public void merge(int i, int j) {
         for (int k = 0; k < i; k++) {
-            proximity[i][k] = (proximity[i][k] + d(j, k)) / 2;
+            proximity[index(i, k)] = (d(i, k) + d(j, k)) / 2;
         }
 
-        for (int k = i+1; k < proximity.length; k++) {
-            proximity[k][i] = (proximity[k][i] + d(j, k)) / 2;
+        for (int k = i+1; k < size; k++) {
+            proximity[index(k, i)] = (d(k, i) + d(j, k)) / 2;
         }
     }
 }

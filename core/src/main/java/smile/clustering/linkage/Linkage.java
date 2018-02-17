@@ -29,30 +29,46 @@ package smile.clustering.linkage;
  * @author Haifeng Li
  */
 public abstract class Linkage {
-    /**
-     * The proximity matrix to store the pair-wise distance measure as
-     * dissimilarity between clusters. To save space, we only need the
-     * lower half of matrix. During the clustering, this matrix will be
-     * updated to reflect the dissimilarity of merged clusters.
-     */
-    double[][] proximity;
+    /** The data size. */
+    int size;
 
     /**
-     * Returns the proximity matrix.
+     * Linearized proximity matrix to store the pair-wise distance measure
+     * as dissimilarity between clusters. To save space, we only need the
+     * lower half of matrix. And we use float instead of double to save
+     * more space, which also help speed performance. During the
+     * clustering, this matrix will be updated to reflect the dissimilarity
+     * of merged clusters.
      */
-    public double[][] getProximity() {
-        return proximity;
+    float[] proximity;
+
+    /** Initialize the linkage with the lower triangular proximity matrix. */
+    void init(double[][] proximity) {
+        size = proximity.length;
+        this.proximity = new float[size * (size+1) / 2];
+        for (int i = 0, k = 0; i < size; i++) {
+            double[] pi = proximity[i];
+            for (int j = 0; j <= i; j++, k++) {
+                this.proximity[k] = (float) pi[j];
+            }
+        }
+    }
+
+    int index(int i, int j) {
+        return i > j ? i*(i+1)/2 + j : j*(j+1)/2 + i;
+    }
+
+    /** Returns the proximity matrix size. */
+    public int size() {
+        return size;
     }
 
     /**
      * Returns the distance/dissimilarity between two clusters/objects, which
      * are indexed by integers.
      */
-    double d(int i, int j) {
-        if (i > j)
-            return proximity[i][j];
-        else
-            return proximity[j][i];
+    public float d(int i, int j) {
+        return proximity[index(i, j)];
     }
 
     /**

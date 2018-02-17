@@ -36,12 +36,14 @@ public class UPGMCLinkage extends Linkage {
      * dissimilarity. To save space, we only need the lower half of matrix.
      */
     public UPGMCLinkage(double[][] proximity) {
-        this.proximity = proximity;
+        init(proximity);
         n = new int[proximity.length];
         for (int i = 0; i < n.length; i++) {
             n[i] = 1;
-            for (int j = 0; j < i; j++)
-                proximity[i][j] *= proximity[i][j];
+        }
+
+        for (int i = 0; i < this.proximity.length; i++) {
+            this.proximity[i] *= this.proximity[i];
         }
     }
 
@@ -52,18 +54,18 @@ public class UPGMCLinkage extends Linkage {
 
     @Override
     public void merge(int i, int j) {
-        double nij = n[i] + n[j];
+        float nij = n[i] + n[j];
 
         for (int k = 0; k < i; k++) {
-            proximity[i][k] = (proximity[i][k] * n[i] + proximity[j][k] * n[j] - proximity[j][i] * n[i] * n[j] / nij) / nij;
+            proximity[index(i, k)] = (d(i, k) * n[i] + d(j, k) * n[j] - d(j, i) * n[i] * n[j] / nij) / nij;
         }
 
         for (int k = i+1; k < j; k++) {
-            proximity[k][i] = (proximity[k][i] * n[i] + proximity[j][k] * n[j] - proximity[j][i] * n[i] * n[j] / nij) / nij;
+            proximity[index(k, i)] = (d(k, i) * n[i] + d(j, k) * n[j] - d(j, i) * n[i] * n[j] / nij) / nij;
         }
 
-        for (int k = j+1; k < proximity.length; k++) {
-            proximity[k][i] = (proximity[k][i] * n[i] + proximity[k][j] * n[j] - proximity[j][i] * n[i] * n[j] / nij) / nij;
+        for (int k = j+1; k < size; k++) {
+            proximity[index(k, i)] = (d(k, i) * n[i] + d(k, j) * n[j] - d(j, i) * n[i] * n[j] / nij) / nij;
         }
 
         n[i] += n[j];
