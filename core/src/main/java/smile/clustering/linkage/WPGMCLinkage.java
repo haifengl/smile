@@ -30,10 +30,9 @@ public class WPGMCLinkage extends Linkage {
      * dissimilarity. To save space, we only need the lower half of matrix.
      */
     public WPGMCLinkage(double[][] proximity) {
-        this.proximity = proximity;
-        for (int i = 0; i < proximity.length; i++) {
-            for (int j = 0; j < i; j++)
-                proximity[i][j] *= proximity[i][j];
+        init(proximity);
+        for (int i = 0; i < this.proximity.length; i++) {
+            this.proximity[i] *= this.proximity[i];
         }
     }
 
@@ -45,15 +44,15 @@ public class WPGMCLinkage extends Linkage {
     @Override
     public void merge(int i, int j) {
         for (int k = 0; k < i; k++) {
-            proximity[i][k] = (proximity[i][k] + proximity[j][k]) / 2 - proximity[j][i] / 4;
+            proximity[index(i, k)] = (d(i, k) + d(j, k)) / 2 - d(j, i) / 4;
         }
 
         for (int k = i+1; k < j; k++) {
-            proximity[k][i] = (proximity[k][i] + proximity[j][k]) / 2 - proximity[j][i] / 4;
+            proximity[index(k, i)] = (d(k, i) + d(j, k)) / 2 - d(j, i) / 4;
         }
 
-        for (int k = j+1; k < proximity.length; k++) {
-            proximity[k][i] = (proximity[k][i] + proximity[k][j]) / 2 - proximity[j][i] / 4;
+        for (int k = j+1; k < size; k++) {
+            proximity[index(k, i)] = (d(k, i) + d(k, j)) / 2 - d(j, i) / 4;
         }
     }
 }

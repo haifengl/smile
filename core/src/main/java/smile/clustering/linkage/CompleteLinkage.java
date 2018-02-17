@@ -30,7 +30,7 @@ public class CompleteLinkage extends Linkage {
      * dissimilarity. To save space, we only need the lower half of matrix.
      */
     public CompleteLinkage(double[][] proximity) {
-        this.proximity = proximity;
+        init(proximity);
     }
 
     @Override
@@ -41,11 +41,11 @@ public class CompleteLinkage extends Linkage {
     @Override
     public void merge(int i, int j) {
         for (int k = 0; k < i; k++) {
-            proximity[i][k] = Math.max(proximity[i][k], d(j, k));
+            proximity[index(i, k)] = Math.max(d(i, k), d(j, k));
         }
 
-        for (int k = i+1; k < proximity.length; k++) {
-            proximity[k][i] = Math.max(proximity[k][i], d(j, k));
+        for (int k = i+1; k < size; k++) {
+            proximity[index(k, i)] = Math.max(d(k, i), d(j, k));
         }
     }
 }
