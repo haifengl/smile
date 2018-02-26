@@ -6,6 +6,11 @@ import smile.clustering.distances.Binary_Distance
 
 class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: Binary_Distance) extends ScalaClusteringTypes
 {
+	type ClusterID = Int
+	type ID = Int
+	type BinaryVector = Array[Int]
+	type ClusterizedData = Array[(ClusterID, ID, BinaryVector)]
+
 	val dim = data.head._2.size
 
 	def sumTwoBinaryVector(vector1: Array[Int], vector2: Array[Int]) = for( i <- vector1.indices.toArray ) yield( vector1(i) + vector2(i) )
