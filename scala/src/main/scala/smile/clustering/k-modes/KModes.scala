@@ -2,10 +2,22 @@ package smile.clustering
 
 import scala.collection.mutable
 import scala.util.Random
-import smile.clustering.distances.Binary_Distance
-
-class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: Binary_Distance) extends ScalaClusteringTypes
-{
+import smile.clustering.distances.BinaryDistance
+/**
+ * K-Modes scala implementation. K-Modes is the binary equivalent for K-Means. The mean update for centroids is replace by the mode one which is a majority vote among element of each cluster. 
+ * Link towards linked articles or other implementation :
+ * - http://www.irma-international.org/viewtitle/10828/
+ * - https://www.ijecs.in/index.php/ijecs/article/download/3058/2834/
+ * - https://pypi.python.org/pypi/kmodes/
+ * @param data : the dataset with id
+ * @param k : number of clusters
+ * @param epsilon : distance between ancient modes and update modes under which we consider than the algorithm have converged, if and only if all every mode have converged
+ * @param jmax : number maximal of iteration
+ * @param metric : the dissimilarity measure used
+ *
+ **/
+class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: BinaryDistance) {
+	
 	type ClusterID = Int
 	type ID = Int
 	type BinaryVector = Array[Int]
@@ -13,7 +25,7 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 
 	val dim = data.head._2.size
 
-	def sumTwoBinaryVector(vector1: Array[Int], vector2: Array[Int]) = for( i <- vector1.indices.toArray ) yield( vector1(i) + vector2(i) )
+	def sumTwoBinaryVector(vector1: BinaryVector, vector2: BinaryVector) = for( i <- vector1.indices.toArray ) yield( vector1(i) + vector2(i) )
 
 	def apply : (ClusterizedData, mutable.HashMap[Int, Array[Int]]) = {
 		// Random initialization of modes and set their cardinalities to 0
@@ -59,9 +71,8 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 	}
 }
 
-object KModes extends ScalaClusteringTypes
-{
-	def run(data: Array[(ID, BinaryVector)], k: Int, epsilon: Double, jmax: Int, metric: Binary_Distance): (ClusterizedData, mutable.HashMap[Int, Array[Int]]) = {
+object KModes {
+	def run(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: BinaryDistance): (Array[(Int, Int, Array[Int])], mutable.HashMap[Int, Array[Int]]) = {
 		val kmodes = new KModes(data, k, epsilon, jmax, metric)
 		kmodes.apply
 	}
