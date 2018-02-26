@@ -20,7 +20,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     sbt docker:publishLocal 
     check_error "Packaging .tgz"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    sbt universal:package-osx-dmg
+    sbt universal:packageOsxDmg
     check_error "Packaging .dmg"
 elif [[ "$OSTYPE" == "cygwin" ]]; then
     sbt windows:packageBin
