@@ -2,7 +2,7 @@ package smile.clustering
 
 import scala.collection.mutable
 import scala.util.Random
-import smile.clustering.distances.BinaryDistance
+import smile.math.distance.BinaryDistance
 /**
  * K-Modes scala implementation. K-Modes is the binary equivalent for K-Means. The mean update for centroids is replace by the mode one which is a majority vote among element of each cluster. 
  * Link towards linked articles or other implementation :
@@ -15,6 +15,7 @@ import smile.clustering.distances.BinaryDistance
  * @param jmax : number maximal of iteration
  * @param metric : the dissimilarity measure used
  *
+ * @author Beck Gaël
  **/
 class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: BinaryDistance) {
 	
@@ -36,7 +37,7 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 		 **/
 		def obtainNearestModID(v: Array[Int]): ClusterID = kmodes.toArray.map{ case(clusterID, mod) => (clusterID, metric.distance(mod, v)) }.sortBy(_._2).head._1
 
-		val zeroMod = Array.fill(dim)(0)
+		val zeroMode = Array.fill(dim)(0)
 		var cpt = 0
 		var allModsHaveConverged = false
 		while( cpt < jmax && ! allModsHaveConverged )
@@ -46,7 +47,7 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 			// Cloning modes to later comparaison
 			val kModesBeforeUpdate = kmodes.clone
 			// Reinitialization of modes
-			kmodes.foreach{ case (clusterID, _) => kmodes(clusterID) = zeroMod }
+			kmodes.foreach{ case (clusterID, _) => kmodes(clusterID) = zeroMode }
 			kmodesCpt.foreach{ case (clusterID, _) => kmodesCpt(clusterID) = 0 }
 			// Updatating Modes
 			clusterized.foreach{ case (_, v, clusterID) =>
