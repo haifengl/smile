@@ -2,7 +2,7 @@ package smile.clustering.distances
 
 object DistanceUtils
 {
-	def chooseBinaryDistance(distanceAsStr: String): Binary_Distance =
+	def chooseBinaryDistance(distanceAsStr: String): BinaryDistance =
 	{
 		distanceAsStr match
 		{
