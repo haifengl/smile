@@ -33,6 +33,6 @@ else
 fi
 
 #sbt publishSigned
-#sbt ++2.10.6 scala/publishSigned
-#sbt ++2.11.11 scala/publishSigned
+#sbt ++2.10.7 scala/publishSigned
+#sbt ++2.11.12 scala/publishSigned
 #check_error "Publishing"
