@@ -6,7 +6,7 @@ package smile.math.distance
  **/
 class HammingDistance extends BinaryDistance {
 	/**
-	  * The famous hamming distance implemented in its fast mono thread scala version
+	  * The famous hamming distance
 	  */
 	override def distance(vector1: Array[Int], vector2: Array[Int]) : Double = {
 		var dh = 0D
