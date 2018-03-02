@@ -24,32 +24,24 @@ import java.text.ParseException;
  */
 public class NumericAttribute extends Attribute {
 
-    /**
-     * Constructor.
-     */
     public NumericAttribute(String name) {
         super(Type.NUMERIC, name);
     }
 
-    /**
-     * Constructor.
-     */
     public NumericAttribute(String name, double weight) {
         super(Type.NUMERIC, name, weight);
     }
 
-    /**
-     * Constructor.
-     */
     public NumericAttribute(String name, String description) {
         super(Type.NUMERIC, name, description);
     }
 
-    /**
-     * Constructor.
-     */
     public NumericAttribute(String name, String description, double weight) {
         super(Type.NUMERIC, name, description, weight);
+    }
+
+    public NumericAttribute(String name, double weight, double monoReg) {
+        super(Type.NUMERIC, name, null, weight, monoReg);
     }
 
     @Override

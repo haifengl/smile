@@ -84,6 +84,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
      * The attributes of independent variable.
      */
     private Attribute[] attributes;
+
     /**
      * Variable importance. Every time a split of a node is made on variable
      * the impurity criterion for the two descendent nodes is less than the
@@ -91,6 +92,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
      * over the tree gives a simple measure of variable importance.
      */
     private double[] importance;
+
     /**
      * The root of the regression tree
      */
@@ -259,6 +261,9 @@ public class RegressionTree implements Regression<double[]>, Serializable {
          * The split value.
          */
         double splitValue = Double.NaN;
+
+        double gain = 0.0;
+
         /**
          * Reduction in squared error compared to parent.
          */
@@ -422,6 +427,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                         node.splitFeature = split.splitFeature;
                         node.splitValue = split.splitValue;
                         node.splitScore = split.splitScore;
+                        node.gain = split.gain;
                         node.trueChildOutput = split.trueChildOutput;
                         node.falseChildOutput = split.falseChildOutput;
                     }
@@ -439,6 +445,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                             node.splitFeature = split.splitFeature;
                             node.splitValue = split.splitValue;
                             node.splitScore = split.splitScore;
+                            node.gain = split.gain;
                             node.trueChildOutput = split.trueChildOutput;
                             node.falseChildOutput = split.falseChildOutput;
                         }
@@ -450,6 +457,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                             node.splitFeature = split.splitFeature;
                             node.splitValue = split.splitValue;
                             node.splitScore = split.splitScore;
+                            node.gain = split.gain;
                             node.trueChildOutput = split.trueChildOutput;
                             node.falseChildOutput = split.falseChildOutput;
                         }
@@ -571,11 +579,30 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                         // sorting in priority queue, which treats smaller number with
                         // higher priority.
                         double gain = (trueCount * trueMean * trueMean + falseCount * falseMean * falseMean) - n * split.output * split.output;
-                        if (gain > split.splitScore) {
+
+                        Attribute attribute = attributes[j];
+                        double score = gain;
+                        double monoRegForFeature = attribute.getMonotonicRegression();
+
+                        // False child - larger values of feature
+                        if (monoRegForFeature > 0) {
+                            boolean isTargetDecreasing = trueMean > falseMean;
+                            if (isTargetDecreasing) {
+                                score *= 1 - Math.abs(monoRegForFeature);
+                            }
+                        } else if (monoRegForFeature < 0) {
+                            boolean isTargetDecreasing = trueMean < falseMean;
+                            if (isTargetDecreasing) {
+                                score *= 1 - Math.abs(monoRegForFeature);
+                            }
+                        } // monoRegForFeature == 0 - no monotonic regression
+
+                        if (score > split.splitScore) {
                             // new best split
+                            split.gain = gain;
                             split.splitFeature = j;
                             split.splitValue = (x[i][j] + prevx) / 2;
-                            split.splitScore = gain;
+                            split.splitScore = score;
                             split.trueChildOutput = trueMean;
                             split.falseChildOutput = falseMean;
                         }
@@ -643,6 +670,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 node.splitFeature = -1;
                 node.splitValue = Double.NaN;
                 node.splitScore = 0.0;
+                node.gain = 0.0;
                 return;
             }
 
@@ -659,7 +687,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 nextSplits.add(falseChild);
             }
 
-            importance[node.splitFeature] += node.splitScore;
+            importance[node.splitFeature] += node.gain;
         }
     }
 
@@ -833,7 +861,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 }
             }
 
-            importance[node.splitFeature] += node.splitScore;
+            importance[node.splitFeature] += node.gain;
 
         }
 
