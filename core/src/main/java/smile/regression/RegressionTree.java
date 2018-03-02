@@ -596,6 +596,9 @@ public class RegressionTree implements Regression<double[]>, Serializable {
          * Split the node into two children nodes. Returns true if split success.
          */
         public void split(PriorityQueue<TrainNode> nextSplits) {
+            if(nextSplits == null) {
+                throw new IllegalArgumentException("nextSplits cannot be null");
+            }
             if (node.splitFeature < 0) {
                 throw new IllegalStateException("Split a node with invalid feature.");
             }
@@ -648,20 +651,12 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
             trueChild = new TrainNode(node.trueChild, x, y, trueSamples);
             if (tc > nodeSize && trueChild.findBestSplit()) {
-                if (nextSplits != null) {
-                    nextSplits.add(trueChild);
-                } else {
-                    trueChild.split(null);
-                }
+                nextSplits.add(trueChild);
             }
 
             falseChild = new TrainNode(node.falseChild, x, y, samples);
             if (fc > nodeSize && falseChild.findBestSplit()) {
-                if (nextSplits != null) {
-                    nextSplits.add(falseChild);
-                } else {
-                    falseChild.split(null);
-                }
+                nextSplits.add(falseChild);
             }
 
             importance[node.splitFeature] += node.splitScore;
@@ -976,9 +971,6 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             }
         }
 
-        // Priority queue for best-first tree growing.
-        PriorityQueue<TrainNode> nextSplits = new PriorityQueue<>();
-
         int n = 0;
         double sum = 0.0;
         if (samples == null) {
@@ -1000,19 +992,22 @@ public class RegressionTree implements Regression<double[]>, Serializable {
         TrainNode trainRoot = new TrainNode(root, x, y, samples);
         // Now add splits to the tree until max tree size is reached
         if (trainRoot.findBestSplit()) {
+            // Priority queue for best-first tree growing.
+            PriorityQueue<TrainNode> nextSplits = new PriorityQueue<>();
+
             nextSplits.add(trainRoot);
-        }
 
-        // Pop best leaf from priority queue, split it, and push
-        // children nodes into the queue if possible.
-        for (int leaves = 1; leaves < this.maxNodes; leaves++) {
-            // parent is the leaf to split
-            TrainNode node = nextSplits.poll();
-            if (node == null) {
-                break;
+            // Pop best leaf from priority queue, split it, and push
+            // children nodes into the queue if possible.
+            for (int leaves = 1; leaves < this.maxNodes; leaves++) {
+                // parent is the leaf to split
+                TrainNode node = nextSplits.poll();
+                if (node == null) {
+                    break;
+                }
+
+                node.split(nextSplits); // Split the parent node into two children nodes
             }
-
-            node.split(nextSplits); // Split the parent node into two children nodes
         }
 
         if (output != null) {
