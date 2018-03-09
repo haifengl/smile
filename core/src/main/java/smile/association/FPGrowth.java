@@ -321,7 +321,6 @@ public class FPGrowth {
      */
     private long grow(PrintStream out, List<ItemSet> list, TotalSupportTree ttree, FPTree.Node node, int[] itemset, int support) {
         int n = 0;
-        node = node.parent;
         while (node != null) {
             n++;
             int[] newItemset = insert(itemset, node.id);
@@ -344,9 +343,9 @@ public class FPGrowth {
                 }
             }
 
-            n += grow(out, list, ttree, node, newItemset, support);
-
             node = node.parent;
+
+            n += grow(out, list, ttree, node, newItemset, support);
         }
 
         return n;
@@ -384,7 +383,7 @@ public class FPGrowth {
         
         if (header.node.next == null) {
             FPTree.Node node = header.node;
-            n += grow(out, list, ttree, node, itemset, support);
+            n += grow(out, list, ttree, node.parent, itemset, support);
         } else {
             // Count singles in linked list
             if (getLocalItemSupport(header.node, localItemSupport)) {
