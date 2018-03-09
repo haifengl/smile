@@ -317,6 +317,42 @@ public class FPGrowth {
     }
 
     /**
+     * Mines all combinations along a single path tree
+     */
+    private long grow(PrintStream out, List<ItemSet> list, TotalSupportTree ttree, FPTree.Node node, int[] itemset, int support) {
+        int n = 0;
+        node = node.parent;
+        while (node != null) {
+            n++;
+            int[] newItemset = insert(itemset, node.id);
+            if (list != null) {
+                synchronized (list) {
+                    list.add(new ItemSet(newItemset, support));
+                }
+            }
+            if (out != null) {
+                synchronized (out) {
+                    for (int i = 0; i < newItemset.length; i++) {
+                        out.format("%d ", newItemset[i]);
+                    }
+                    out.format("(%d)%n", support);
+                }
+            }
+            if (ttree != null) {
+                synchronized (ttree) {
+                    ttree.add(newItemset, support);
+                }
+            }
+
+            n += grow(out, list, ttree, node, newItemset, support);
+
+            node = node.parent;
+        }
+
+        return n;
+    }
+
+    /**
      * Mines FP-tree with respect to a single element in the header table.
      * @param header the header table item of interest.
      * @param itemset the item set represented by the current FP-tree.
@@ -348,36 +384,7 @@ public class FPGrowth {
         
         if (header.node.next == null) {
             FPTree.Node node = header.node;
-            while (node != null) {
-                FPTree.Node parent = node.parent;
-                int[] newItemset = itemset;
-                while (parent != null) {
-                    n++;
-                    newItemset = insert(newItemset, parent.id);
-                    if (list != null) {
-                        synchronized (list) {
-                            list.add(new ItemSet(newItemset, support));
-                        }
-                    }
-                    if (out != null) {
-                        synchronized (out) {
-                            for (int i = 0; i < newItemset.length; i++) {
-                                out.format("%d ", newItemset[i]);
-                            }
-                            out.format("(%d)%n", support);
-                        }
-                    }
-                    if (ttree != null) {
-                        synchronized (ttree) {
-                            ttree.add(newItemset, support);
-                        }
-                    }
-                    parent = parent.parent;
-                }
-
-                node = node.parent;
-            }
-            
+            n += grow(out, list, ttree, node, itemset, support);
         } else {
             // Count singles in linked list
             if (getLocalItemSupport(header.node, localItemSupport)) {
