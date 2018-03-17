@@ -1,7 +1,18 @@
 package smile.math.distance
 
+/**
+ * @author Beck Gaël
+ * Utilitary used in some binary distance measure essentially to build the contingency table
+ **/
 object BinaryUtils {
 
+	/**
+	 * Buil the contingency matrix (a, b, c, d) where for each bite i, j of vector 1 and 2 :
+	 *   - a is incremented if i = 1, j = 1
+	 *   - b is incremented if i = 1, j = 0
+	 *   - c is incremented if i = 0, j = 1
+	 *   - d is incremented if i = 0, j = 0
+	 **/
 	def contingencyTable(vector1: Array[Int], vector2: Array[Int]) = {
 
 	  val oneByte = 1
@@ -23,14 +34,14 @@ object BinaryUtils {
 	  (a, b, c, d)
 	}
 
-	def countOccFeat(data:Array[Array[Int]]) : Array[(Int, Int)] = {
+	/**
+	 * Count number of occurence for each binary features
+	 * @return Array[(numberOf0, numberOf1)]
+	 **/
+	def countOccFeat(data: Array[Array[Int]]): Array[(Int, Int)] = {
 		val nbTotData = data.size
 		val nbOne = data.map(_.map(_.toInt)).reduce( _.zip(_).map( x => x._1 + x._2) )
 		val nbZero = nbOne.map(nbTotData - _)
 		nbZero.zip(nbOne)
-	}
-
-	def genProb2Feat(nbOccFeatTab:Array[(Int, Int)], nbTotData:Int) : Array[(Double, Double)] = {
-		nbOccFeatTab.map{ case (a, b) => ((a * (a - 1D)) / (nbTotData * (nbTotData - 1D)), (b * (b - 1D)) / (nbTotData * (nbTotData - 1D)))}
 	}
 }

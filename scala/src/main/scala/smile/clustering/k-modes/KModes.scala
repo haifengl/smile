@@ -4,6 +4,7 @@ import scala.collection.mutable
 import scala.util.Random
 import smile.math.distance.BinaryDistance
 /**
+ * @author Beck Gaël
  * K-Modes scala implementation. K-Modes is the binary equivalent for K-Means. The mean update for centroids is replace by the mode one which is a majority vote among element of each cluster. 
  * Link towards linked articles or other implementation :
  * - http://www.irma-international.org/viewtitle/10828/
@@ -14,8 +15,6 @@ import smile.math.distance.BinaryDistance
  * @param epsilon : distance between ancient modes and update modes under which we consider than the algorithm have converged, if and only if all every mode have converged
  * @param jmax : number maximal of iteration
  * @param metric : the dissimilarity measure used
- *
- * @author Beck Gaël
  **/
 class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: BinaryDistance) {
 	

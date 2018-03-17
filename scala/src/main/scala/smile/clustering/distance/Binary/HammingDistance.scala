@@ -2,7 +2,8 @@ package smile.math.distance
 
 /**
  * @author Beck Gaël
- *
+ * Class which implement the Hamming distance which measure difference between each pair of bite.
+ * https://en.wikipedia.org/wiki/Hamming_distance
  **/
 class HammingDistance extends BinaryDistance {
 	/**
