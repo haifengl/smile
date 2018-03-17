@@ -2,7 +2,7 @@ package smile.math.distance
 
 /**
  * @author Beck Gaël
- *
+ * General trait for scala distance measures
  **/
 trait Distance extends Serializable
 {

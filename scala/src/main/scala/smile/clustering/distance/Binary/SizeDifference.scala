@@ -4,7 +4,7 @@ import scala.math.pow
 
 /**
  * @author Beck Gaël
- *
+ * Size Difference distance class extract from this survey : http://www.iiisci.org/journal/CV$/sci/pdfs/GS315JG.pdf
  **/
 class SizeDifference extends BinaryDistance {
 

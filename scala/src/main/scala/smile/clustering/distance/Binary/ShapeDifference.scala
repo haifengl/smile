@@ -3,7 +3,7 @@ package smile.math.distance
 import scala.math.pow
 /**
  * @author Beck Gaël
- *
+ * Shape Difference distance class extract from this survey : http://www.iiisci.org/journal/CV$/sci/pdfs/GS315JG.pdf
  **/
 class ShapeDifference extends BinaryDistance {
 	
