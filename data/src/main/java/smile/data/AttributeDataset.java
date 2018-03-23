@@ -16,6 +16,7 @@
 package smile.data;
 
 import java.util.Date;
+import java.util.HashSet;
 import smile.math.Math;
 
 /**
@@ -404,18 +405,18 @@ public class AttributeDataset extends Dataset<double[]> {
 
     /** Returns a new dataset without given columns. */
     public AttributeDataset remove(String... cols) {
-        Attribute[] attrs = new Attribute[cols.length];
-        int[] index = new int[cols.length];
-        for (int j = 0, i = 0; j < attributes.length; j++) {
-            boolean hit = false;
-            for (int k = 0; k < cols.length; k++) {
-                if (attributes[j].getName().equals(cols[k])) {
-                    hit = true;
-                    break;
-                }
-            }
+        HashSet<String> remains = new HashSet<>();
+        for (Attribute attr : attributes) {
+            remains.add(attr.getName());
+        }
+        for (String col : cols) {
+            remains.remove(col);
+        }
 
-            if (!hit) {
+        Attribute[] attrs = new Attribute[remains.size()];
+        int[] index = new int[remains.size()];
+        for (int j = 0, i = 0; j < attributes.length; j++) {
+            if (remains.contains(attributes[j].getName())) {
                 index[i] = j;
                 attrs[i] = attributes[j];
                 i++;
