@@ -46,11 +46,11 @@ public class MonotonicRegressionTreeTest {
             y[i] = function(features[0]);
         }
 
-        Attribute[] attributes = new Attribute[]{
-                new NumericAttribute("F1", 1, 1),
-        };
+        double[] monotonicRegression = new double[]{1};
 
-        RegressionTree regressionTree = new RegressionTree(attributes, x, y, 100);
+        RegressionTree regressionTree = new RegressionTree(
+                null, x, y, 100, 5, x[0].length, null, null,  null, monotonicRegression
+        );
 
         double[] monotonicX = IntStream.range(0, 100).mapToDouble(i -> i / 200d).toArray();
         double[] preds = Arrays.stream(monotonicX).map(input -> {

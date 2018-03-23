@@ -17,6 +17,7 @@ package smile.regression;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -92,6 +93,16 @@ public class RegressionTree implements Regression<double[]>, Serializable {
      * over the tree gives a simple measure of variable importance.
      */
     private double[] importance;
+
+    /**
+     * Values between [-1, 1] that represents monotonic regression coefficient for each attribute.
+     *
+     * It can be used to enforce model to keep monotonic relationship between target and the attribute.
+     * Positive value enforce target to be positively correlated with this feature.
+     * Positive value enforce target to be negatively correlated with this feature.
+     * Zero value turns off monotonic regression.
+     */
+    private double[] monotonicRegression;
 
     /**
      * The root of the regression tree
@@ -580,9 +591,8 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                         // higher priority.
                         double gain = (trueCount * trueMean * trueMean + falseCount * falseMean * falseMean) - n * split.output * split.output;
 
-                        Attribute attribute = attributes[j];
                         double score = gain;
-                        double monoRegForFeature = attribute.getMonotonicRegression();
+                        double monoRegForFeature = monotonicRegression[j];
 
                         // False child - larger values of feature
                         if (monoRegForFeature > 0) {
@@ -950,6 +960,10 @@ public class RegressionTree implements Regression<double[]>, Serializable {
      *                   samples[i] should be 0 or 1 to indicate if the instance is used for training.
      */
     public RegressionTree(Attribute[] attributes, double[][] x, double[] y, int maxNodes, int nodeSize, int mtry, int[][] order, int[] samples, NodeOutput output) {
+        this(attributes, x, y, maxNodes, nodeSize, mtry, order, samples, output, null);
+    }
+
+    public RegressionTree(Attribute[] attributes, double[][] x, double[] y, int maxNodes, int nodeSize, int mtry, int[][] order, int[] samples, NodeOutput output, double[] monotonicRegression) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -974,7 +988,13 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             }
         }
 
+        if (monotonicRegression == null) {
+            // initialized with zeros which is neutral monoreg value
+            monotonicRegression = new double[attributes.length];
+        }
+
         this.attributes = attributes;
+        this.monotonicRegression = monotonicRegression;
         this.maxNodes = maxNodes;
         this.nodeSize = nodeSize;
         this.mtry = mtry;
