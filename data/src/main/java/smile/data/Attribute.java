@@ -64,16 +64,6 @@ public abstract class Attribute implements Serializable {
     private double weight;
 
     /**
-     * Value between [-1, 1] that represents monotonic regression coefficient.
-     *
-     * It can be used to enforce model to keep monotonic relationship between target and this attribute.
-     * Positive value enforce target to be positively correlated with this feature.
-     * Positive value enforce target to be negatively correlated with this feature.
-     * Zero value turns off monotonic regression.
-     */
-    private double monotonicRegression;
-
-    /**
      * The name of attribute.
      */
     private String name;
@@ -96,15 +86,10 @@ public abstract class Attribute implements Serializable {
     }
 
     public Attribute(Type type, String name, String description, double weight) {
-        this(type, name, description, weight, 0);
-    }
-
-    public Attribute(Type type, String name, String description, double weight, double monoReg) {
         this.type = type;
         this.name = name;
         this.description = description;
         this.weight = weight;
-        this.monotonicRegression = monoReg;
     }
 
     public Type getType() {
@@ -131,10 +116,6 @@ public abstract class Attribute implements Serializable {
 
     public double getWeight() {
         return weight;
-    }
-
-    public double getMonotonicRegression() {
-        return monotonicRegression;
     }
 
     public Attribute setWeight(double weight) {
