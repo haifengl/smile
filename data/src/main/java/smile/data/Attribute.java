@@ -73,18 +73,30 @@ public abstract class Attribute implements Serializable {
      */
     private String description;
 
+    /**
+     * Constructor.
+     */
     public Attribute(Type type, String name) {
         this(type, name, 1.0);
     }
 
+    /**
+     * Constructor.
+     */
     public Attribute(Type type, String name, double weight) {
         this(type, name, null, weight);
     }
 
+    /**
+     * Constructor.
+     */
     public Attribute(Type type, String name, String description) {
         this(type, name, description, 1.0);
     }
 
+    /**
+     * Constructor.
+     */
     public Attribute(Type type, String name, String description, double weight) {
         this.type = type;
         this.name = name;
