@@ -90,6 +90,16 @@ public class RandomForest implements Regression<double[]>, Serializable {
     private double[] importance;
 
     /**
+     * Values between [-1, 1] that represents monotonic regression coefficient for each attribute.
+     *
+     * It can be used to enforce model to keep monotonic relationship between target and the attribute.
+     * Positive value enforce target to be positively correlated with this feature.
+     * Positive value enforce target to be negatively correlated with this feature.
+     * Zero value turns off monotonic regression.
+     */
+    private double[] monotonicRegression;
+
+    /**
      * Trainer for random forest.
      */
     public static class Trainer extends RegressionTrainer<double[]> {
@@ -226,6 +236,7 @@ public class RandomForest implements Regression<double[]>, Serializable {
          * Attribute properties.
          */
         Attribute[] attributes;
+
         /**
          * Training instances.
          */
@@ -255,6 +266,9 @@ public class RandomForest implements Regression<double[]>, Serializable {
          * The sampling rate.
          */
         double subsample = 1.0;
+
+        final double[] monotonicRegression;
+
         /**
          * Predictions of of out-of-bag samples.
          */
@@ -267,8 +281,9 @@ public class RandomForest implements Regression<double[]>, Serializable {
         /**
          * Constructor.
          */
-        TrainingTask(Attribute[] attributes, double[][] x, double[] y, int maxNodes, int nodeSize, int mtry, double subsample, int[][] order, double[] prediction, int[] oob) {
+        TrainingTask(Attribute[] attributes, double[][] x, double[] y, int maxNodes, int nodeSize, int mtry, double subsample, int[][] order, double[] prediction, int[] oob, double[] monotonicRegression) {
             this.attributes = attributes;
+            this.monotonicRegression = monotonicRegression;
             this.x = x;
             this.y = y;
             this.order = order;
@@ -305,7 +320,7 @@ public class RandomForest implements Regression<double[]>, Serializable {
                 }
             }
 
-            RegressionTree tree = new RegressionTree(attributes, x, y, maxNodes, nodeSize, mtry, order, samples, null);
+            RegressionTree tree = new RegressionTree(attributes, x, y, maxNodes, nodeSize, mtry, order, samples, null, monotonicRegression);
 
             for (int i = 0; i < n; i++) {
                 if (samples[i] == 0) {
@@ -411,7 +426,7 @@ public class RandomForest implements Regression<double[]>, Serializable {
      * Constructor. Learns a random forest for regression.
      *
      * @param attributes the attribute properties.
-     * @param x the training instances. 
+     * @param x the training instances.
      * @param y the response variable.
      * @param ntrees the number of trees.
      * @param mtry the number of input variables to be used to determine the decision
@@ -424,6 +439,26 @@ public class RandomForest implements Regression<double[]>, Serializable {
      *                  sampling without replacement.
      */
     public RandomForest(Attribute[] attributes, double[][] x, double[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample) {
+        this(attributes, x, y, ntrees, maxNodes, nodeSize, mtry, subsample, null);
+    }
+
+    /**
+     * Constructor. Learns a random forest for regression.
+     *
+     * @param attributes the attribute properties.
+     * @param x the training instances. 
+     * @param y the response variable.
+     * @param ntrees the number of trees.
+     * @param mtry the number of input variables to be used to determine the decision
+     * at a node of the tree. p/3 seems to give generally good performance,
+     * where dim is the number of variables.
+     * @param nodeSize the number of instances in a node below which the tree will
+     * not split, setting nodeSize = 5 generally gives good results.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+     *                  sampling without replacement.
+     */
+    public RandomForest(Attribute[] attributes, double[][] x, double[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample, double[] monotonicRegression) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -463,7 +498,7 @@ public class RandomForest implements Regression<double[]>, Serializable {
         int[][] order = SmileUtils.sort(attributes, x);
         List<TrainingTask> tasks = new ArrayList<>();
         for (int i = 0; i < ntrees; i++) {
-            tasks.add(new TrainingTask(attributes, x, y, maxNodes, nodeSize, mtry, subsample, order, prediction, oob));
+            tasks.add(new TrainingTask(attributes, x, y, maxNodes, nodeSize, mtry, subsample, order, prediction, oob, monotonicRegression));
         }
         
         try {
