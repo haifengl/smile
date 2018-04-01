@@ -16,6 +16,7 @@
 
 package smile
 
+import com.typesafe.scalalogging.LazyLogging
 import smile.math.distance.{EuclideanDistance, Distance, Metric}
 import smile.math.rbf.GaussianRadialBasis
 
@@ -23,7 +24,7 @@ import smile.math.rbf.GaussianRadialBasis
   *
   * @author Haifeng Li
   */
-package object util extends Logging {
+package object util extends LazyLogging {
   /** Measure running time of a function/block */
   object time {
     /** Print out switch. */

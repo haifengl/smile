@@ -17,3 +17,5 @@ scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Smile - Statistical Machi
 target in Compile in doc := baseDirectory.value / "../shell/src/universal/doc/api/scala"
 
 libraryDependencies += "com.thoughtworks.xstream" % "xstream" % "1.4.8"
+
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.8.0"

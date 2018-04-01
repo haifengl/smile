@@ -23,7 +23,7 @@ You can use the libraries through Maven central repository by adding the followi
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>1.5.0</version>
+      <version>1.5.1</version>
     </dependency>
 ```
 
@@ -31,7 +31,7 @@ For NLP, use the artifactId smile-nlp.
 
 For Scala API, please use
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "1.5.0"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "1.5.1"
 ```
 
 To enable machine optimized matrix computation, the users should add
@@ -40,7 +40,7 @@ the dependency of smile-netlib:
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-netlib</artifactId>
-      <version>1.5.0</version>
+      <version>1.5.1</version>
     </dependency>
 ```
 and also make their machine-optimized libblas3 (CBLAS) and liblapack3 (Fortran)
@@ -146,7 +146,7 @@ To use SmilePlot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>1.5.0</version>
+      <version>1.5.1</version>
     </dependency>
 ```
 
