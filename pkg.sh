@@ -20,7 +20,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     sbt docker:publishLocal 
     check_error "Packaging .tgz"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    sbt universal:package-osx-dmg
+    sbt universal:packageOsxDmg
     check_error "Packaging .dmg"
 elif [[ "$OSTYPE" == "cygwin" ]]; then
     sbt windows:packageBin
@@ -33,6 +33,6 @@ else
 fi
 
 #sbt publishSigned
-#sbt ++2.10.6 scala/publishSigned
-#sbt ++2.11.11 scala/publishSigned
+#sbt ++2.10.7 scala/publishSigned
+#sbt ++2.11.12 scala/publishSigned
 #check_error "Publishing"

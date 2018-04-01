@@ -16,8 +16,8 @@
 
 package smile.math
 
+import com.typesafe.scalalogging.LazyLogging
 import smile.math.matrix.{Matrix, DenseMatrix}
-import smile.util.Logging
 
 /**
  * Vector Expression.
@@ -614,7 +614,7 @@ case class MatrixDivMatrix(A: MatrixExpression, B: MatrixExpression) extends Mat
  * matrix multiplication chain is not associative.
  * @param dims Matrix A[i] has dimension dims[i-1] x dims[i] for i = 1..n
  */
-class MatrixOrderOptimization(dims: Array[Int]) extends Logging {
+class MatrixOrderOptimization(dims: Array[Int]) extends LazyLogging {
   val n = dims.length - 1
 
   // m[i,j] = Minimum number of scalar multiplications (i.e., cost)
