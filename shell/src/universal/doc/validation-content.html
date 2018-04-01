@@ -299,6 +299,9 @@ test2soft(x, y, testx, testy) { case (x, y) => randomForest(x, y) }
         The overall performance is taken to be the average of the performance
         on all <code>k</code> partitions.</p>
 
+    <p>The Java validation methods are defined in <a href="api/java/smile/validation/Validation.html"><code>smile.validation.Validation</code></a>.
+        The <a href="api/scala/smile/validation/index.html">Scala validation methods</a> are shown below:</p>
+
     <pre class="prettyprint lang-scala"><code>
     def cv[T](x: Array[T], y: Array[Int], k: Int, measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
 
