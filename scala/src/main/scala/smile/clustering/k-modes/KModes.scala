@@ -2,7 +2,7 @@ package smile.clustering
 
 import scala.collection.mutable
 import scala.util.Random
-import smile.math.distance.BinaryDistance
+import smile.math.distance.Distance
 /**
  * @author Beck Gaël
  * K-Modes scala implementation. K-Modes is the binary equivalent for K-Means. The mean update for centroids is replace by the mode one which is a majority vote among element of each cluster. 
@@ -16,7 +16,7 @@ import smile.math.distance.BinaryDistance
  * @param jmax : number maximal of iteration
  * @param metric : the dissimilarity measure used
  **/
-class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: BinaryDistance) {
+class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: Distance[Array[Int]]) {
 	
 	type ClusterID = Int
 	type ID = Int
@@ -34,7 +34,7 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 		/**
 		 * Return the nearest mode for a specific point
 		 **/
-		def obtainNearestModID(v: Array[Int]): ClusterID = kmodes.toArray.map{ case(clusterID, mod) => (clusterID, metric.distance(mod, v)) }.sortBy(_._2).head._1
+		def obtainNearestModID(v: Array[Int]): ClusterID = kmodes.toArray.map{ case(clusterID, mod) => (clusterID, metric.d(mod, v)) }.sortBy(_._2).head._1
 
 		val zeroMode = Array.fill(dim)(0)
 		var cpt = 0
@@ -57,7 +57,7 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 			// Updating modes
 			kmodes.foreach{ case (clusterID, mod) => kmodes(clusterID) = mod.map( v => if( v * 2 >= kmodesCpt(clusterID) ) 1 else 0 ) }
 			// Check if every mode have converged
-			allModsHaveConverged = kModesBeforeUpdate.forall{ case (clusterID, previousMod) => metric.distance(previousMod, kmodes(clusterID)) <= epsilon }
+			allModsHaveConverged = kModesBeforeUpdate.forall{ case (clusterID, previousMod) => metric.d(previousMod, kmodes(clusterID)) <= epsilon }
 
 			cpt += 1
 		}
@@ -72,7 +72,7 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 }
 
 object KModes {
-	def run(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: BinaryDistance): (Array[(Int, Int, Array[Int])], mutable.HashMap[Int, Array[Int]]) = {
+	def run(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: Distance[Array[Int]]): (Array[(Int, Int, Array[Int])], mutable.HashMap[Int, Array[Int]]) = {
 		val kmodes = new KModes(data, k, epsilon, jmax, metric)
 		kmodes.apply
 	}
