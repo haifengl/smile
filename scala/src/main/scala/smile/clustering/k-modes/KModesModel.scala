@@ -8,8 +8,7 @@ import _root_.smile.math.distance.{Distance, Hamming}
  * @author Beck Gaël
  * KMeans Model that keeps cluster centroids and cardinalities. And offer prediction functionalities
  **/
-class KModesModel(val centroids: mutable.HashMap[Int, Array[Int]], val cardinalities: mutable.HashMap[Int, Int]) extends BinaryClusteringTypes
-{
+class KModesModel(val centroids: mutable.HashMap[Int, Array[Int]], val cardinalities: mutable.HashMap[Int, Int]) extends BinaryClusteringTypes {
 	/**
 	 * Return the nearest mode for a specific point
 	 **/
