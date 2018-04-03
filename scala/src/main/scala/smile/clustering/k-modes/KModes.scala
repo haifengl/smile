@@ -2,7 +2,7 @@ package smile.clustering
 
 import scala.collection.mutable
 import scala.util.Random
-import smile.math.distance.Distance
+import smile.math.distance.{Distance, Hamming}
 /**
  * @author Beck Gaël
  * K-Modes scala implementation. K-Modes is the binary equivalent for K-Means. The mean update for centroids is replace by the mode one which is a majority vote among element of each cluster. This algorithm is Hamming oriented because the computation of the mode is the majority vote exclusively for Hamming distance. 
@@ -36,6 +36,13 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 		 **/
 		def obtainNearestModID(v: Array[Int]): ClusterID = kmodes.toArray.map{ case(clusterID, mod) => (clusterID, metric.d(mod, v)) }.sortBy(_._2).head._1
 
+		/**
+		 * Compute the similarity matrix and extract point which is the closest from all other point according to its dissimilarity measure
+		 **/
+		def obtainMode(arr: Array[Array[Int]]): Array[Int] = {
+			(for( v1 <- arr) yield( (v1, (for( v2 <- arr ) yield(metric.d(v1, v2))).reduce(_ + _) / arr.size) )).sortBy(_._2).head._1
+		}
+
 		val zeroMode = Array.fill(dim)(0)
 		var cpt = 0
 		var allModsHaveConverged = false
@@ -48,14 +55,28 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 			// Reinitialization of modes
 			kmodes.foreach{ case (clusterID, _) => kmodes(clusterID) = zeroMode }
 			kmodesCpt.foreach{ case (clusterID, _) => kmodesCpt(clusterID) = 0 }
-			// Updatating Modes
-			clusterized.foreach{ case (_, v, clusterID) =>
-			{
-				kmodes(clusterID) = sumTwoBinaryVector(kmodes(clusterID), v)
-				kmodesCpt(clusterID) += 1
-			}}
-			// Updating modes
-			kmodes.foreach{ case (clusterID, mod) => kmodes(clusterID) = mod.map( v => if( v * 2 >= kmodesCpt(clusterID) ) 1 else 0 ) }
+			
+			// Fast way if we use Hamming distance
+			if( metric.isInstanceOf[Hamming] ) {
+				// Updatating Modes
+				clusterized.foreach{ case (_, v, clusterID) =>
+				{
+					kmodes(clusterID) = sumTwoBinaryVector(kmodes(clusterID), v)
+					kmodesCpt(clusterID) += 1
+				}}
+				// Updating modes
+				kmodes.foreach{ case (clusterID, mod) => kmodes(clusterID) = mod.map( v => if( v * 2 >= kmodesCpt(clusterID) ) 1 else 0 ) }
+			}
+			// Define a mode by searching it through computation of the similarity matrix
+			else {
+				clusterized.groupBy{ case (_, _, clusterID) => clusterID }.foreach{ case (clusterID, aggregates) =>
+				{
+					val cluster = aggregates.map{ case (_, vector, _) => vector }
+					val mode = obtainMode(cluster)
+					kmodes(clusterID) = mode
+				}}
+			}
+
 			// Check if every mode have converged
 			allModsHaveConverged = kModesBeforeUpdate.forall{ case (clusterID, previousMod) => metric.d(previousMod, kmodes(clusterID)) <= epsilon }
 
