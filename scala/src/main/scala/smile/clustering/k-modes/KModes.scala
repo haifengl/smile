@@ -5,7 +5,7 @@ import scala.util.Random
 import smile.math.distance.Distance
 /**
  * @author Beck Gaël
- * K-Modes scala implementation. K-Modes is the binary equivalent for K-Means. The mean update for centroids is replace by the mode one which is a majority vote among element of each cluster. 
+ * K-Modes scala implementation. K-Modes is the binary equivalent for K-Means. The mean update for centroids is replace by the mode one which is a majority vote among element of each cluster. This algorithm is Hamming oriented because the computation of the mode is the majority vote exclusively for Hamming distance. 
  * Link towards linked articles or other implementation :
  * - http://www.irma-international.org/viewtitle/10828/
  * - https://www.ijecs.in/index.php/ijecs/article/download/3058/2834/
