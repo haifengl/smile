@@ -14,10 +14,10 @@ import smile.clustering.clusteringTypes.BinaryClusteringTypes
  * @param data : the dataset with id
  * @param k : number of clusters
  * @param epsilon : distance between ancient modes and update modes under which we consider than the algorithm have converged, if and only if all every mode have converged
- * @param jmax : number maximal of iteration
+ * @param maxIter : number maximal of iteration
  * @param metric : the dissimilarity measure used
  **/
-class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: Distance[Array[Int]]) extends BinaryClusteringTypes {
+class KModes(data: Array[(Int, Array[Int])], var k: Int, var epsilon: Double, var maxIter: Int, var metric: Distance[Array[Int]]) extends BinaryClusteringTypes {
 
 	val dim = data.head._2.size
 
@@ -42,7 +42,7 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 		val zeroMode = Array.fill(dim)(0)
 		var cpt = 0
 		var allModsHaveConverged = false
-		while( cpt < jmax && ! allModsHaveConverged )
+		while( cpt < maxIter && ! allModsHaveConverged )
 		{
 			// Allocation to modes
 			val clusterized = data.map{ case (id, v) => (id, v, obtainNearestModID(v)) }
@@ -79,13 +79,13 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 			cpt += 1
 		}
 
-		new KModesModel(kmodes, clusterCentroids)
+		new KModesModel(kmodes, clusterCentroids, metric)
 	}
 }
 
 object KModes extends BinaryClusteringTypes {
-	def run(data: Array[(ID, BinaryVector)], k: Int, epsilon: Double, jmax: Int, metric: Distance[Array[Int]]): KModesModel = {
-		val kmodes = new KModes(data, k, epsilon, jmax, metric)
+	def run(data: Array[(ID, BinaryVector)], k: Int, epsilon: Double, maxIter: Int, metric: Distance[Array[Int]]): KModesModel = {
+		val kmodes = new KModes(data, k, epsilon, maxIter, metric)
 		val kModesModel = kmodes.apply()
 		kModesModel
 	}
