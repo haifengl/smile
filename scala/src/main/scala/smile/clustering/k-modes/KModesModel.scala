@@ -8,18 +8,18 @@ import _root_.smile.math.distance.{Distance, Hamming}
  * @author Beck Gaël
  * KMeans Model that keeps cluster centroids and cardinalities. And offer prediction functionalities
  **/
-class KModesModel(val centroids: mutable.HashMap[Int, Array[Int]], val cardinalities: mutable.HashMap[Int, Int]) extends BinaryClusteringTypes {
+class KModesModel(val centroids: mutable.HashMap[Int, Array[Int]], val cardinalities: mutable.HashMap[Int, Int], val metric: Distance[Array[Int]]) extends BinaryClusteringTypes {
 	/**
 	 * Return the nearest mode for a specific point
 	 **/
-	def predict(v: Array[Int], metric: Distance[Array[Int]]): ClusterID = {
+	def predict(v: Array[Int]): ClusterID = {
 		centroids.toArray.map{ case(clusterID, centroid) => (clusterID, metric.d(centroid, v)) }.sortBy(_._2).head._1
 	}
 
 	/**
 	 * Return the nearest mode for a dataset
 	 **/
-	def predict(data: Array[Array[Int]], metric: Distance[Array[Int]]): Array[(ClusterID, BinaryVector)] = {
+	def predict(data: Array[Array[Int]]): Array[(ClusterID, BinaryVector)] = {
 		val centroidsAsArray = centroids.toArray
 
 		def predictCluster(v: Array[Int]) = {
