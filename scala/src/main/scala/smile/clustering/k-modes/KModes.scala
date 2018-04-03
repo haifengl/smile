@@ -1,8 +1,9 @@
-package smile.clustering
+package smile.clustering.kmodes
 
 import scala.collection.mutable
 import scala.util.Random
 import smile.math.distance.{Distance, Hamming}
+import smile.clustering.clusteringTypes.BinaryClusteringTypes
 /**
  * @author Beck Gaël
  * K-Modes scala implementation. K-Modes is the binary equivalent for K-Means. The mean update for centroids is replace by the mode one which is a majority vote among element of each cluster. This algorithm is Hamming oriented because the computation of the mode is the majority vote exclusively for Hamming distance. 
@@ -16,21 +17,16 @@ import smile.math.distance.{Distance, Hamming}
  * @param jmax : number maximal of iteration
  * @param metric : the dissimilarity measure used
  **/
-class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: Distance[Array[Int]]) {
-	
-	type ClusterID = Int
-	type ID = Int
-	type BinaryVector = Array[Int]
-	type ClusterizedData = Array[(ClusterID, ID, BinaryVector)]
+class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: Distance[Array[Int]]) extends BinaryClusteringTypes {
 
 	val dim = data.head._2.size
 
 	def sumTwoBinaryVector(vector1: BinaryVector, vector2: BinaryVector) = for( i <- vector1.indices.toArray ) yield( vector1(i) + vector2(i) )
 
-	def apply : (ClusterizedData, mutable.HashMap[Int, Array[Int]]) = {
+	def apply(): KModesModel = {
 		// Random initialization of modes and set their cardinalities to 0
 		val kmodes = mutable.HashMap((for( clusterID <- 0 until k ) yield( (clusterID, Array.fill(dim)(Random.nextInt(2))) )):_*)
-		val kmodesCpt = kmodes.map{ case (clusterID, _) => (clusterID, 0) }
+		val clusterCentroids = kmodes.map{ case (clusterID, _) => (clusterID, 0) }
 		/**
 		 * Return the nearest mode for a specific point
 		 **/
@@ -54,7 +50,7 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 			val kModesBeforeUpdate = kmodes.clone
 			// Reinitialization of modes
 			kmodes.foreach{ case (clusterID, _) => kmodes(clusterID) = zeroMode }
-			kmodesCpt.foreach{ case (clusterID, _) => kmodesCpt(clusterID) = 0 }
+			clusterCentroids.foreach{ case (clusterID, _) => clusterCentroids(clusterID) = 0 }
 			
 			// Fast way if we use Hamming distance
 			if( metric.isInstanceOf[Hamming] ) {
@@ -62,10 +58,10 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 				clusterized.foreach{ case (_, v, clusterID) =>
 				{
 					kmodes(clusterID) = sumTwoBinaryVector(kmodes(clusterID), v)
-					kmodesCpt(clusterID) += 1
+					clusterCentroids(clusterID) += 1
 				}}
 				// Updating modes
-				kmodes.foreach{ case (clusterID, mod) => kmodes(clusterID) = mod.map( v => if( v * 2 >= kmodesCpt(clusterID) ) 1 else 0 ) }
+				kmodes.foreach{ case (clusterID, mod) => kmodes(clusterID) = mod.map( v => if( v * 2 >= clusterCentroids(clusterID) ) 1 else 0 ) }
 			}
 			// Define a mode by searching it through computation of the similarity matrix
 			else {
@@ -83,18 +79,14 @@ class KModes(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int,
 			cpt += 1
 		}
 
-		val finalClustering = data.map{ case (id, v) =>
-		{
-			val clusterID = obtainNearestModID(v)
-			(clusterID, id, v)
-		}}
-		(finalClustering, kmodes)
+		new KModesModel(kmodes, clusterCentroids)
 	}
 }
 
-object KModes {
-	def run(data: Array[(Int, Array[Int])], k: Int, epsilon: Double, jmax: Int, metric: Distance[Array[Int]]): (Array[(Int, Int, Array[Int])], mutable.HashMap[Int, Array[Int]]) = {
+object KModes extends BinaryClusteringTypes {
+	def run(data: Array[(ID, BinaryVector)], k: Int, epsilon: Double, jmax: Int, metric: Distance[Array[Int]]): KModesModel = {
 		val kmodes = new KModes(data, k, epsilon, jmax, metric)
-		kmodes.apply
+		val kModesModel = kmodes.apply()
+		kModesModel
 	}
 }
