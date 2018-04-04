@@ -17,7 +17,7 @@ import smile.clustering.clusteringTypes.BinaryClusteringTypes
  * @param maxIter : number maximal of iteration
  * @param metric : the dissimilarity measure used
  **/
-class KModes(data: Array[(Int, Array[Int])], var k: Int, var epsilon: Double, var maxIter: Int, var metric: Distance[Array[Int]]) extends BinaryClusteringTypes {
+class KModes(data: Seq[(Int, Array[Int])], var k: Int, var epsilon: Double, var maxIter: Int, var metric: Distance[Array[Int]]) extends BinaryClusteringTypes {
 
 	val dim = data.head._2.size
 
@@ -35,7 +35,7 @@ class KModes(data: Array[(Int, Array[Int])], var k: Int, var epsilon: Double, va
 		/**
 		 * Compute the similarity matrix and extract point which is the closest from all other point according to its dissimilarity measure
 		 **/
-		def obtainMode(arr: Array[Array[Int]]): Array[Int] = {
+		def obtainMode(arr: Seq[Array[Int]]): Array[Int] = {
 			(for( v1 <- arr) yield( (v1, (for( v2 <- arr ) yield(metric.d(v1, v2))).reduce(_ + _) / arr.size) )).sortBy(_._2).head._1
 		}
 
@@ -84,7 +84,7 @@ class KModes(data: Array[(Int, Array[Int])], var k: Int, var epsilon: Double, va
 }
 
 object KModes extends BinaryClusteringTypes {
-	def run(data: Array[(ID, BinaryVector)], k: Int, epsilon: Double, maxIter: Int, metric: Distance[Array[Int]]): KModesModel = {
+	def run(data: Seq[(ID, BinaryVector)], k: Int, epsilon: Double, maxIter: Int, metric: Distance[Array[Int]]): KModesModel = {
 		val kmodes = new KModes(data, k, epsilon, maxIter, metric)
 		val kModesModel = kmodes.apply()
 		kModesModel
