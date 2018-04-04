@@ -19,7 +19,7 @@ class KModesModel(val centroids: mutable.HashMap[Int, Array[Int]], val cardinali
 	/**
 	 * Return the nearest mode for a dataset
 	 **/
-	def predict(data: Array[Array[Int]]): Array[(ClusterID, BinaryVector)] = {
+	def predict(data: Seq[Array[Int]]): Seq[(ClusterID, BinaryVector)] = {
 		val centroidsAsArray = centroids.toArray
 
 		def predictCluster(v: Array[Int]) = {
