@@ -17,6 +17,7 @@
 package smile.validation
 
 import scala.math.{max, log, sqrt}
+import smile.validation.NmiNormalizationNature._
 
  /**
    * Mutual Information score between two clusterings with optional normalization.
@@ -33,7 +34,7 @@ import scala.math.{max, log, sqrt}
    *
 	 * @author Beck Gaël
    */
-class MutualInformationScore(normalization: String = "sqrt") extends ClusterMeasure {
+class MutualInformationScore(normalization: Normalization = SQRT) extends ClusterMeasure {
 	/**
 	 * Normalize Sequences in order to prevent construction of a to big 'count' matrix
 	 * Ex: [4,5,6,6] -> [0,1,2,2]
@@ -82,9 +83,9 @@ class MutualInformationScore(normalization: String = "sqrt") extends ClusterMeas
 	override def measure(x: Array[Int], y: Array[Int]) = {
 		val (mi, hu, hv) = mutualInformation(x, y)
 		normalization match {
-			case "" => mi // no normalization
-			case "sqrt" => mi / sqrt(hu * hv)
-			case "max" => mi / max(hu, hv)
+			case STANDARD => mi // no normalization
+			case SQRT => mi / sqrt(hu * hv)
+			case MAX => mi / max(hu, hv)
 			case _ => throw new UnsupportedOperationException("Unsupported normalization type: " + normalization)
 		}
 	}
