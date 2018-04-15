@@ -352,6 +352,8 @@ final class FPTree {
             // sure that items are in the same order of header table.
             QuickSort.sort(o, freqItemset, m);
 
+            // Note that itemset may contain duplicated items. We should keep
+            // only one in case of getting incorrect support value.
             for (int i = 1; i < m; i++) {
                 if (freqItemset[i] == freqItemset[i - 1]) {
                     m--;
