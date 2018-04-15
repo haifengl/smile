@@ -237,14 +237,14 @@ final class FPTree {
         this.minSupport = minSupport;
 
         root = new Node();
-        
+
         numItems = frequency.length;
         for (int f : frequency) {
             if (f >= minSupport) {
                 numFreqItems++;
             }
         }
-        
+
         // It greatly improves the performance by making header table of
         // size numFreqItems instead of numItems. The reason is that numFreqItems
         // is usually much smaller than numItems and it is time consuming to
@@ -253,13 +253,22 @@ final class FPTree {
         for (int i = 0, j = 0; i < numItems; i++) {
             if (frequency[i] >= minSupport) {
                 HeaderTableItem header = new HeaderTableItem(i);
-                header.count = frequency[i];                        
+                header.count = frequency[i];
                 headerTable[j++] = header;
             }
         }
-        
+
         Arrays.sort(headerTable);
-        order = new int[numItems];
+
+        int m = 0;
+
+        for (int i = 0; i < headerTable.length; i++) {
+            if (m < headerTable[i].id) {
+                m = headerTable[i].id;
+            }
+        }
+
+        order = new int[m + 1];
         Arrays.fill(order, numItems);
         for (int i = 0; i < numFreqItems; i++) {
             order[headerTable[i].id] = i;
@@ -315,15 +324,25 @@ final class FPTree {
      */
     public void add(int[] itemset) {
         numTransactions++;
-        
+
         int m = 0;
         int t = itemset.length;
-        int[] o = new int[t];
+
         for (int i = 0; i < t; i++) {
-            int item = itemset[i];
-            o[i] = order[item];
-            if (itemSupport[item] >= minSupport) {
+            if (itemSupport[itemset[i]] >= minSupport) {
                 m++;
+            }
+        }
+
+        int[] freqItemset = new int[m];
+        int[] o = new int[m];
+
+        for (int i = 0, j = 0; i < t; i++) {
+            int item = itemset[i];
+            if (itemSupport[item] >= minSupport) {
+                o[j] = order[item];
+                freqItemset[j] = item;
+                j++;
             }
         }
 
@@ -331,20 +350,18 @@ final class FPTree {
             // Order all items in itemset in frequency descending order
             // Note that some items may have same frequency. We have to make
             // sure that items are in the same order of header table.
-            QuickSort.sort(o, itemset, t);
-            
-            // Note that itemset may contain duplicated items. We should keep
-            // only one in case of getting incorrect support value.
+            QuickSort.sort(o, freqItemset, m);
+
             for (int i = 1; i < m; i++) {
-                if (itemset[i] == itemset[i-1]) {
+                if (freqItemset[i] == freqItemset[i - 1]) {
                     m--;
                     for (int j = i; j < m; j++) {
-                        itemset[j] = itemset[j+1];
+                        freqItemset[j] = freqItemset[j + 1];
                     }
                 }
             }
-            
-            root.add(0, m, itemset, 1);
+
+            root.add(0, m, freqItemset, 1);
         }
     }
 
