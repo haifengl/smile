@@ -97,8 +97,6 @@ public class DecisionTreeTest {
         //Act
         DecisionTree tree = new DecisionTree(attributes, x, y, 3);
         
-        double[] importance = tree.importance();
-        
         //Assert
         assertEquals(Double.isNaN(tree.root.splitValue), true);
         

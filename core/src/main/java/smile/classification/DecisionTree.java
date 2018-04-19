@@ -114,7 +114,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
     /**
      * The root of the regression tree
      */
-    private Node root;
+    public Node root;
     /**
      * The splitting rule.
      */
@@ -445,10 +445,10 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
         }
 
         /**
-         * Finds the best attribute to split on at the current node. Returns
-         * true if a split exists to reduce squared error, false otherwise.
+		 * check if all of the samples
+		 * has the same label
          */
-        public boolean findBestSplit() {
+        public boolean isPure() {
             int label = -1;
             boolean pure = true;
             for (int i = 0; i < x.length; i++) {
@@ -589,6 +589,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
 
                     int trueLabel = Math.whichMax(trueCount[l]);
                     int falseLabel = Math.whichMax(falseCount);
+					double gain = impurity - (double) tc / n * impurity(trueCount[l], tc) - (double) fc / n * impurity(falseCount, fc);
 
                     if (gain > splitNode.splitScore) {
                         // new best split
