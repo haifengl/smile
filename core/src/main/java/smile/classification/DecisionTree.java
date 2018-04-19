@@ -967,10 +967,28 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
 
             for (int j = 0; j < p; j++) {
                 if (attributes[j] instanceof NumericAttribute) {
+                    // is it ok to use ArrayList here?
+                    List<Integer> nans = new ArrayList<>();
+                    int nonNanCount = 0;
                     for (int i = 0; i < n; i++) {
-                        a[i] = x[i][j];
+                        if (!Double.isNaN(x[i][j])) {
+                            a[i] = x[i][j];
+                            nonNanCount++;
+                        } else {
+                            // Question: should we put NaN values in the end of the sorting
+                            // or at the start ? (change the sign value of the MAX_VALUE)
+                            // what difference will make it?
+                            a[i] = Double.MAX_VALUE;
+                            nans.add(i);
+                        }
                     }
                     this.order[j] = QuickSort.sort(a);
+                    // fill the rest with non-comparable NaN values
+                    for (int nanIndex = 0; nanIndex < nans.size(); nanIndex++) {
+                        int globalIndex = nonNanCount + nanIndex;
+                        this.order[j][globalIndex] = nans.get(nanIndex);
+                    }
+                    
                 }
             }
         }
