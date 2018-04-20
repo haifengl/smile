@@ -18,7 +18,6 @@ package smile.classification;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.Map.Entry;
 
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
@@ -280,7 +279,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
         /**
          * The split value.
          */
-        double splitValue = Double.NaN;
+        double splitValue = Double.MIN_VALUE;
         /**
          * Reduction in splitting criterion.
          */
@@ -356,7 +355,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                         return falseChild.predict(x, posteriori);
                     }
                 } else if (attributes[splitFeature].getType() == Attribute.Type.NUMERIC) {
-                    if (x[splitFeature] <= splitValue) {
+                    if (Double.isNaN(x[splitFeature]) && Double.isNaN(splitValue) || x[splitFeature] <= splitValue) {
                         return trueChild.predict(x, posteriori);
                     } else {
                         return falseChild.predict(x, posteriori);
@@ -687,11 +686,8 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                 List<Integer> nanIndexes = new ArrayList<>();
                 for (int i = 0; i < n; i++) {
                     if (samples[i] > 0) {
-                        if (Double.isNaN(node.splitValue) && Double.isNaN(x[i][node.splitFeature])) {
-                            trueSamples[i] = samples[i];
-                            tc += trueSamples[i];
-                            samples[i] = 0;
-                        } else if (x[i][node.splitFeature] <= node.splitValue) {
+                        if ((Double.isNaN(node.splitValue) && Double.isNaN(x[i][node.splitFeature]))
+								|| x[i][node.splitFeature] <= node.splitValue) {
                             trueSamples[i] = samples[i];
                             tc += trueSamples[i];
                             samples[i] = 0;
@@ -721,7 +717,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
 
             if (tc < nodeSize || fc < nodeSize) {
                 node.splitFeature = -1;
-                node.splitValue = Double.NaN;
+                node.splitValue = Double.MIN_VALUE;
                 node.splitScore = 0.0;
                 return false;
             }
