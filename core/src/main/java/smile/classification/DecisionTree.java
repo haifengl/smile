@@ -684,21 +684,28 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                 }
             } else if (attributes[node.splitFeature].getType() == Attribute.Type.NUMERIC) {
                 List<Integer> nanIndexes = new ArrayList<>();
-                for (int i = 0; i < n; i++) {
-                    if (samples[i] > 0) {
-                        if ((Double.isNaN(node.splitValue) && Double.isNaN(x[i][node.splitFeature]))
-								|| x[i][node.splitFeature] <= node.splitValue) {
-                            trueSamples[i] = samples[i];
-                            tc += trueSamples[i];
-                            samples[i] = 0;
-                        } else if (!Double.isNaN(x[i][node.splitFeature])) {
-                            //falseSamples[i] = samples[i];
-                            fc += samples[i];
-                        } else {
-                            nanIndexes.add(i);
-                        }
-                    }
-                }
+				boolean isSplitValueNaN = Double.isNaN(node.splitValue);
+				for (int i = 0; i < n; i++) {
+					if(isSplitValueNaN) {
+						if(!Double.isNaN(x[i][node.splitFeature])){
+							trueSamples[i] = samples[i];
+							tc += trueSamples[i];
+							samples[i] = 0;
+						} else {
+							fc += samples[i];
+						}
+					} else {
+						if(Double.isNaN(x[i][node.splitFeature])) {
+							nanIndexes.add(i);
+						} else if(x[i][node.splitFeature] <= node.splitValue) {
+							trueSamples[i] = samples[i];
+							tc += trueSamples[i];
+							samples[i] = 0;
+						} else {
+							fc += samples[i];
+						}
+					}
+				}
                 if (tc > fc) {
                     for (int i : nanIndexes) {
                         trueSamples[i] = samples[i];
