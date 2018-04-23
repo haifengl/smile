@@ -298,7 +298,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                         return falseChild.predict(x);
                     }
                 } else if (attributes[splitFeature].getType() == Attribute.Type.NUMERIC) {
-                    if ((Double.isNaN(x[splitFeature] ) && Double.isNaN(splitValue)) || x[splitFeature] <= splitValue) {
+                    if (!((Double.isNaN(x[splitFeature]) && Double.isNaN(splitValue))) || x[splitFeature] <= splitValue) {
                         return trueChild.predict(x);
                     } else {
                         return falseChild.predict(x);

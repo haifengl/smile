@@ -329,7 +329,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                         return falseChild.predict(x);
                     }
                 } else if (attributes[splitFeature].getType() == Attribute.Type.NUMERIC) {
-                    if (x[splitFeature] <= splitValue) {
+                    if (!(Double.isNaN(x[splitFeature]) && Double.isNaN(splitValue)) || x[splitFeature] <= splitValue) {
                         return trueChild.predict(x);
                     } else {
                         return falseChild.predict(x);
@@ -355,7 +355,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                         return falseChild.predict(x, posteriori);
                     }
                 } else if (attributes[splitFeature].getType() == Attribute.Type.NUMERIC) {
-                    if (Double.isNaN(x[splitFeature]) && Double.isNaN(splitValue) || x[splitFeature] <= splitValue) {
+                    if (!(Double.isNaN(x[splitFeature]) && Double.isNaN(splitValue)) || x[splitFeature] <= splitValue) {
                         return trueChild.predict(x, posteriori);
                     } else {
                         return falseChild.predict(x, posteriori);
@@ -534,8 +534,6 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                         }
                     }
                 } catch (Exception ex) {
-                    // TODO: what is that for?
-                    // if there is no MulticoreExecutor
                     for (int j = 0; j < mtry; j++) {
                         Node split = findBestSplit(n, count, falseCount, impurity, variables[j]);
                         if (split.splitScore > node.splitScore) {
