@@ -444,8 +444,8 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
         }
 
         /**
-		 * check if all of the samples
-		 * has the same label
+		 * Check if all of the samples
+		 * have the same label
          */
         public boolean isPure() {
             int label = -1;
@@ -977,7 +977,6 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
 
             for (int j = 0; j < p; j++) {
                 if (attributes[j] instanceof NumericAttribute) {
-                    // is it ok to use ArrayList here?
                     List<Integer> nans = new ArrayList<>();
                     int nonNanCount = 0;
                     for (int i = 0; i < n; i++) {
