@@ -58,12 +58,20 @@ public class RegressionTreeTest {
     }
     
     @Test
-    public void nullTestImportance() {
+    public void testImportantFeatureWithNull() {
         
         //Arrange
         double[][] x =
-                { { 10D, 5}, { 10, 5}, { 20, 170}, { 20, 170}, { 20, 170}, { 50, 99},
-                        { 50, 99}, { 50, 99} };
+            {
+                { 10D, 5},
+                { 10, 5},
+                { 20, 170},
+                { 20, 170},
+                { 20, 170},
+                { 50, 99},
+                { 50, 99},
+                { 50, 99}
+            };
         
         double[] y = { 20, 20, 500, 500, 500, 100, 100, 100 };
         Attribute[] attributes = { new NumericAttribute("Feature A"), new NumericAttribute("Feature B") };
@@ -77,12 +85,20 @@ public class RegressionTreeTest {
         
     }
     @Test
-    public void nullTestImportanceCorrectRoot() {
+    public void testSplitValueNaN() {
 
         //Arrange
         double[][] x =
-                { { 10D, 5}, { 10, 5}, { 20, Double.NaN }, { 20, Double.NaN }, { 20, Double.NaN }, { Double.NaN , 99},
-                        { Double.NaN , 99}, { Double.NaN , 99} };
+            {
+                { 10D, 5},
+                { 10, 5},
+                { 20, Double.NaN },
+                { 20, Double.NaN },
+                { 20, Double.NaN },
+                { Double.NaN , 99},
+                { Double.NaN , 99},
+                { Double.NaN , 99}
+            };
 
         double[] y = { 20, 20, 500, 500, 500, 100, 100, 100 };
         Attribute[] attributes = { new NumericAttribute("Feature A"), new NumericAttribute("Feature B") };

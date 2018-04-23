@@ -58,13 +58,20 @@ public class DecisionTreeTest {
     
     
     @Test
-    public void nullTestImportance() {
+    public void testImportantFeatureWithNull() {
         
         //Arrange
         
         double[][] x =
-                { { 10D, Double.NaN }, { 20D, 1 }, { 10D, Double.NaN }, { 20D, 1 }, { 20D, 1 }, { 10D, Double.NaN },
-                        { 20D, Double.NaN } };
+			{
+				{ 10D, Double.NaN },
+				{ 20D, 1 },
+				{ 10D, Double.NaN },
+				{ 20D, 1 },
+				{ 20D, 1 },
+				{ 10D, Double.NaN },
+				{ 20D, Double.NaN }
+			};
         
         int[] y = { 1, 0, 1, 0, 0, 1, 1 };
         Attribute[] attributes = { new NumericAttribute("Feature A"), new NumericAttribute("Feature B") };
@@ -72,9 +79,6 @@ public class DecisionTreeTest {
         DecisionTree tree = new DecisionTree(attributes, x, y, 3);
         
         double[] importance = tree.importance();
-        for (int i = 0; i < importance.length; i++) {
-            System.out.println(importance[i]);
-        }
         
         //Assert
         assertEquals(importance[1] > importance[0], true);
@@ -83,14 +87,20 @@ public class DecisionTreeTest {
     
     
     @Test
-    public void nullTestRightRoot() {
+    public void testSplitValueNaN() {
         
         //Arrange
         
         double[][] x =
-                { { 10D, Double.NaN }, { 20D, 126 }, { 10D, Double.NaN }, { 20D, 78 }, { 20D, 156 },
-                        { 10D, Double.NaN },
-                        { 20D, Double.NaN } };
+			{
+				{ 10D, Double.NaN },
+				{ 20D, 126 },
+				{ 10D, Double.NaN },
+				{ 20D, 78 },
+				{ 20D, 156 },
+				{ 10D, Double.NaN },
+				{ 20D, Double.NaN }
+			};
         
         int[] y = { 1, 0, 1, 0, 0, 1, 1 };
         Attribute[] attributes = { new NumericAttribute("Feature A"), new NumericAttribute("Feature B") };

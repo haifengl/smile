@@ -277,7 +277,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
          */
         int splitFeature = -1;
         /**
-         * The split value.
+         * The split value. MIN_VALUE is just an initial value without further meaning.
          */
         double splitValue = Double.MIN_VALUE;
         /**
@@ -599,6 +599,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                 }
             } else if (attributes[j].getType() == Attribute.Type.NUMERIC) {
                 int[] trueCount = new int[k];
+				// MIN_VALUE is an initial value without further meaning
                 double prevx = Double.MIN_VALUE;
                 int prevy = -1;
 
@@ -634,6 +635,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                         if (gain > splitNode.splitScore) {
                             // new best split
                             splitNode.splitFeature = j;
+                            // if the splitValue is NaN taking NaN as a split value instead of the mean of values
                             splitNode.splitValue = Double.isNaN(x[i][j]) ? x[i][j] : (x[i][j] + prevx) / 2;
                             splitNode.splitScore = gain;
                             splitNode.trueChildOutput = trueLabel;
@@ -683,6 +685,10 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
             } else if (attributes[node.splitFeature].getType() == Attribute.Type.NUMERIC) {
                 List<Integer> nanIndexes = new ArrayList<>();
 				boolean isSplitValueNaN = Double.isNaN(node.splitValue);
+				// Treating NaNs(missing values):
+				//   if splitValue is not NaN, then put all of the NaN value into the branch
+				//     that has higher amount of examples in it.
+				//   if splitValue is NaN put all of NaNs into a false child and all of the others into true child
 				for (int i = 0; i < n; i++) {
 					if(isSplitValueNaN) {
 						if(!Double.isNaN(x[i][node.splitFeature])){
@@ -704,6 +710,8 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
 						}
 					}
 				}
+	
+				// put cases with NaN based on final true count and false count(whatever is higher)
                 if (tc > fc) {
                     for (int i : nanIndexes) {
                         trueSamples[i] = samples[i];
@@ -977,9 +985,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                             a[i] = x[i][j];
                             nonNanCount++;
                         } else {
-                            // Question: should we put NaN values in the end of the sorting
-                            // or at the start ? (change the sign value of the MAX_VALUE)
-                            // what difference will make it?
+							// put NaN value at the end of the ordering
                             a[i] = Double.MAX_VALUE;
                             nans.add(i);
                         }
