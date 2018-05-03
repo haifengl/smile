@@ -50,7 +50,9 @@ lazy val commonSettings = Seq(
           <url>http://haifengl.github.io/</url>
         </developer>
       </developers>
-  )
+  ),
+  EclipseKeys.withSource := true,
+  EclipseKeys.withJavadoc := true
 )
 
 lazy val nonPubishSettings = commonSettings ++ Seq(
