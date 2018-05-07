@@ -21,3 +21,9 @@ hs_err_pid*
 *.iml
 **/target
 
+.project
+.settings
+.cache-main
+.cache-tests
+.classpath
+*/.gitignore
