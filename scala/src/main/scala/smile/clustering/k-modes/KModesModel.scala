@@ -1,14 +1,17 @@
-package smile.clustering.kmodes
+package smile.clustering
 
 import _root_.scala.collection.mutable
-import _root_.smile.clustering.clusteringTypes.BinaryClusteringTypes
 import _root_.smile.math.distance.{Distance, Hamming}
 
 /**
  * @author Beck Gaël
  * KMeans Model that keeps cluster centroids and cardinalities. And offer prediction functionalities
  **/
-class KModesModel(val centroids: mutable.HashMap[Int, Array[Int]], val cardinalities: mutable.HashMap[Int, Int], val metric: Distance[Array[Int]]) extends BinaryClusteringTypes {
+class KModesModel(val centroids: mutable.HashMap[Int, Array[Int]], val cardinalities: mutable.HashMap[Int, Int], val metric: Distance[Array[Int]]) {
+
+	type ClusterID = Int
+	type BinaryVector = Array[Int]
+
 	/**
 	 * Return the nearest mode for a specific point
 	 **/
