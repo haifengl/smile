@@ -1,12 +1,12 @@
-package smile.clustering.kmodes
+package smile.clustering
 
 import scala.collection.mutable
 import scala.util.Random
 import smile.math.distance.{Distance, Hamming}
-import smile.clustering.clusteringTypes.BinaryClusteringTypes
 /**
  * @author Beck Gaël
- * K-Modes scala implementation. K-Modes is the binary equivalent for K-Means. The mean update for centroids is replace by the mode one which is a majority vote among element of each cluster. This algorithm is Hamming oriented because the computation of the mode is the majority vote exclusively for Hamming distance. 
+ * K-Modes scala implementation. K-Modes is the binary equivalent for K-Means. The mean update for centroids is replace by the mode one which is a majority vote among element of each cluster. This algorithm is Hamming oriented because the computation of the mode is the majority vote exclusively for Hamming distance, for other distance we have to compute the similarity matrix which is in O(n<sup>2</sup>).
+ * Complexity is O(k.t.n) with Hamming distance, quadratic with other metrics. 
  * Link towards linked articles or other implementation :
  * - http://www.irma-international.org/viewtitle/10828/
  * - https://www.ijecs.in/index.php/ijecs/article/download/3058/2834/
@@ -17,7 +17,10 @@ import smile.clustering.clusteringTypes.BinaryClusteringTypes
  * @param maxIter : number maximal of iteration
  * @param metric : the dissimilarity measure used
  **/
-class KModes(data: Seq[(Int, Array[Int])], var k: Int, var epsilon: Double, var maxIter: Int, var metric: Distance[Array[Int]]) extends BinaryClusteringTypes {
+class KModes(data: Seq[(Int, Array[Int])], var k: Int, var epsilon: Double, var maxIter: Int, var metric: Distance[Array[Int]]) {
+
+	type ClusterID = Int
+	type BinaryVector = Array[Int]
 
 	val dim = data.head._2.size
 
@@ -83,7 +86,11 @@ class KModes(data: Seq[(Int, Array[Int])], var k: Int, var epsilon: Double, var 
 	}
 }
 
-object KModes extends BinaryClusteringTypes {
+object KModes {
+
+	type ID = Int
+	type BinaryVector = Array[Int]	
+
 	def run(data: Seq[(ID, BinaryVector)], k: Int, epsilon: Double, maxIter: Int, metric: Distance[Array[Int]]): KModesModel = {
 		val kmodes = new KModes(data, k, epsilon, maxIter, metric)
 		val kModesModel = kmodes.apply()
