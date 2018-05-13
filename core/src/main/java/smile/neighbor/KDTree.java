@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.neighbor;
 
+import java.io.Serializable;
 import java.util.List;
 
 import smile.math.Math;
@@ -61,12 +62,13 @@ import smile.sort.HeapSelect;
  *
  * @author Haifeng Li
  */
-public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch<double[], E>, RNNSearch<double[], E> {
+public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch<double[], E>, RNNSearch<double[], E>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The root in the KD-tree.
      */
-    class Node {
+    class Node implements Serializable {
 
         /**
          * Number of dataset stored in this node.

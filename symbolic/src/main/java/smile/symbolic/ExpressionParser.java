@@ -21,6 +21,8 @@ import java.util.Stack;
 import java.util.Arrays;
 
 /**
+ * Parser for mathematical expressions.  Ensures expressions have valid syntax, converts String expressions to ArrayList
+ * token expressions in polish notation, and re-formats expressions.
  * @author Ernest DeFoy
  */
 public class ExpressionParser {
@@ -94,8 +96,11 @@ public class ExpressionParser {
         return true;
     }
 
-    // modifies the string to look more like it would if someone wrote the expression
-    // out on paper
+    /**
+     * Modifies the string to look more like it would if someone wrote the expression
+     * out on paper.
+     * @param s the mathematical expression.
+     */
     public String format(String s)
     {
         for(int i = 0; i < s.length(); i++) {
@@ -107,6 +112,12 @@ public class ExpressionParser {
         return s;
     }
 
+    /**
+     * Creates tokens in polish notation for and re-formats the expression, unless an expression without valid syntax
+     * is passed in.
+     * @param expression a mathematical expression.
+     * @return a modified version of the expression.
+     */
     public String parse(String expression) throws InvalidExpressionException {
 
         this.expression = expression;
@@ -124,6 +135,10 @@ public class ExpressionParser {
         return this.expression;
     }
 
+    /**
+     * Checks for syntax errors.
+     * @return Returns the expression's variable.
+     */
     private String check() throws InvalidExpressionException {
 
         expression = expression.replaceAll("\\s","");

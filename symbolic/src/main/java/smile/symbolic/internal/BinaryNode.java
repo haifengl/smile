@@ -17,6 +17,7 @@
 package smile.symbolic.internal;
 
 /**
+ * A node for binary operations.
  * @author Ernest DeFoy
  */
 abstract class BinaryNode extends Expression {
