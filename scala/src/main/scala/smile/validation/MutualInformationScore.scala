@@ -82,7 +82,7 @@ class MutualInformationScore(normalization: String = "sqrt") extends ClusterMeas
 	override def measure(x: Array[Int], y: Array[Int]) = {
 		val (mi, hu, hv) = mutualInformation(x, y)
 		normalization match {
-			case "" => mi // no normalization
+			case "mi" => mi // no normalization
 			case "sqrt" => mi / sqrt(hu * hv)
 			case "max" => mi / max(hu, hv)
 			case _ => throw new UnsupportedOperationException("Unsupported normalization type: " + normalization)
