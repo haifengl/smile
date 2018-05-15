@@ -22,6 +22,7 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.concurrent.Callable;
+
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
@@ -1231,5 +1232,13 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
         builder.append("}");
         return builder.toString();
+    }
+
+    /**
+     * Returs the root node.
+     * @return root node.
+     */
+    public Node getRoot() {
+        return root;
     }
 }
