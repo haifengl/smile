@@ -16,17 +16,15 @@
 package smile.math.distance
 
 /**
- * @author Beck Gaël
- * Class which implement the Hamming distance which measure difference between each pair of bite.
- * https://en.wikipedia.org/wiki/Hamming_distance
- **/
+  * Hamming distance between two bit strings. Note that we treat each integer
+	* in the input array as a bit string. In contrast, HammingDistance treats
+	* each integer in the input array as a single value.
+	*
+	* @author Beck Gaël
+  */
 class Hamming extends Distance[Array[Int]] {
-	/**
-	  * The famous hamming distance
-	  */
-	def d(vector1: Array[Int], vector2: Array[Int]) : Double = {
-		var dh = 0D
-		for( idx <- 0 until vector1.size ) dh += vector1(idx) ^ vector2(idx)
-		dh
+	override def d(x: Array[Int], y: Array[Int]): Double = {
+		require(x.length == y.length, "Arrays have different length")
+		x.zip(y).foldLeft(0) { (acc, pair) => acc + (pair._1 ^ pair._2) }
 	}
 }

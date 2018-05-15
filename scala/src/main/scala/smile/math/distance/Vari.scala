@@ -16,12 +16,17 @@
 package smile.math.distance
 
 /**
- * @author Beck Gaël
- * Vari distance class extract from this survey : http://www.iiisci.org/journal/CV$/sci/pdfs/GS315JG.pdf
- **/
+  * Vari distance class.
+	*
+	* <h2>References</h2>
+	*  - Seung-Seok Choi, et al. A Survey of Binary Similarity and Distance Measures.
+	*    http://www.iiisci.org/journal/CV$/sci/pdfs/GS315JG.pdf
+	*
+	* @author Beck Gaël
+  */
 class Vari extends Distance[Array[Int]] {
-	def d(vector1: Array[Int], vector2: Array[Int]) : Double = {
-		val (a,b,c,d) = BinaryUtils.contingencyTable(vector1, vector2)
+	override def d(x: Array[Int], y: Array[Int]): Double = {
+		val (a,b,c,d) = contingencyTable(x, y)
 		(b + c).toDouble / (4 * (a + b + c + d))
 	}	
 }

@@ -13,21 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.math.distance
+package smile.math
 
-import scala.math.pow
-
-/** Shape Difference distance.
-	*
-	* <h2>References</h2>
-	*  - Seung-Seok Choi, et al. A Survey of Binary Similarity and Distance Measures.
-	*    http://www.iiisci.org/journal/CV$/sci/pdfs/GS315JG.pdf
+/** Distance helper functions.
 	*
 	* @author Beck Gaël
 	*/
-class ShapeDifference extends Distance[Array[Int]] {
-	override def d(x: Array[Int], y: Array[Int]): Double = {
-		val (a, b, c, d) = contingencyTable(x, y)
-		((a + b + c + d) * (b + c) - pow(b - c, 2)) / pow(a + b + c + d, 2)
+package object distance {
+
+	/**
+	  * Build the contingency matrix (a, b, c, d) where for each bite i, j of vector 1 and 2 :
+	  *   - a is incremented if i = 1, j = 1
+	  *   - b is incremented if i = 1, j = 0
+	  *   - c is incremented if i = 0, j = 1
+	  *   - d is incremented if i = 0, j = 0
+	  */
+	def contingencyTable(x: Array[Int], y: Array[Int]) = {
+		require(x.length == y.length, "Arrays have different length")
+
+	  var (a,b,c,d) = (0, 0, 0, 0)
+
+		x.zip(y).foreach {
+			case (1, 1) => a += 1
+			case (1, 0) => b += 1
+			case (0, 1) => c += 1
+			case (0, 0) => d += 1
+			case (x, y) => throw new IllegalArgumentException("Invalid value ($x, $y)")
+		}
+
+	  (a, b, c, d)
 	}
 }
