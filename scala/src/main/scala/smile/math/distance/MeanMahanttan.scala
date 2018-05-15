@@ -15,14 +15,18 @@
  *******************************************************************************/
 package smile.math.distance
 
-/**
- * @author Beck Gaël
- * Mean Mahantan distance class, it varies from Manhattan distance by averaging by sum of contingency table values
- * Here is a survey including this distance : http://www.iiisci.org/journal/CV$/sci/pdfs/GS315JG.pdf
- **/
+/** Mean Mahantan distance. Compared to regular Manhattan distance, it normalizes
+	* the distance by the sum of contingency table values.
+	*
+	* <h2>References</h2>
+	*  - Seung-Seok Choi, et al. A Survey of Binary Similarity and Distance Measures.
+	*    http://www.iiisci.org/journal/CV$/sci/pdfs/GS315JG.pdf
+	*
+	* @author Beck Gaël
+  */
 class MeanMahanttan extends Distance[Array[Int]] {
-	def d(vector1: Array[Int], vector2: Array[Int]) : Double = {
-		val (a,b,c,d) = BinaryUtils.contingencyTable(vector1, vector2)
+	override def d(x: Array[Int], y: Array[Int]): Double = {
+		val (a,b,c,d) = contingencyTable(x, y)
 		(b + c).toDouble / (a + b + c + d)
 	}
 }
