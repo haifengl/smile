@@ -1,8 +1,24 @@
+/*******************************************************************************
+ * Copyright (c) 2010 Haifeng Li
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package smile.clustering
 
 import scala.collection.mutable
 import scala.util.Random
 import smile.math.distance.{Distance, Hamming}
+
 /**
  * @author Beck Gaël
  * K-Modes scala implementation. K-Modes is the binary equivalent for K-Means. The mean update for centroids is replace by the mode one which is a majority vote among element of each cluster. This algorithm is Hamming oriented because the computation of the mode is the majority vote exclusively for Hamming distance, for other distance we have to compute the similarity matrix which is in O(n<sup>2</sup>).
