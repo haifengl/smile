@@ -28,7 +28,8 @@ import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;
 
 /**
- * Use iris data set for demo and visualization purpose
+ * Use iris data set for demo and visualization purpose. 
+ * 
  * @author rayeaster
  */
 @SuppressWarnings("serial")
@@ -43,12 +44,12 @@ public class NaiveBayesDemo extends ClassificationDemo {
      */
     private int p = 2;
     /**
-     * demo variables chosen from original iris data feature for easy-to-understand visualization: like Sepal.Length and Petal.Width
+     * demo variables chosen from original iris data feature for easy-to-understand visualization: like Sepal.Length and Petal.Length
      */
     private static int[] pIdx = null;
 	
     static {
-    	pIdx = new int[] {1, 3};//this combination has the best training error among all 6 alternatives
+    	pIdx = new int[] {0, 2};//this combination has the best training error among all 6 alternatives
     	
     	datasetName = new String[]{
     	        "Iris"
@@ -110,7 +111,7 @@ public class NaiveBayesDemo extends ClassificationDemo {
     		}
     	}
     	
-        NaiveBayes nbc = new NaiveBayes(NaiveBayes.Model.MULTINOMIAL, k, p);
+        NaiveBayes nbc = new NaiveBayes(NaiveBayes.Model.POLYAURN, k, p);
         nbc.learn(trainData, label);
         
         for (int i = 0; i < label.length; i++) {
