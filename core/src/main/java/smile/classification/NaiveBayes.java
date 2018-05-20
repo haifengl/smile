@@ -524,7 +524,7 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
                 ntc[y][e.i] += e.x;
                 nt[y] += e.x;
             }
-        } else if (model == Model.MULTINOMIAL) {
+        } else if (model == Model.POLYAURN) {
             for (SparseArray.Entry e : x) {
                 ntc[y][e.i] += e.x * 2;
                 nt[y] += e.x * 2;
