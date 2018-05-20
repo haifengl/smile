@@ -26,7 +26,7 @@ package smile.math.distance
   */
 class Vari extends Distance[Array[Int]] {
 	override def d(x: Array[Int], y: Array[Int]): Double = {
-		val (a,b,c,d) = contingencyTable(x, y)
+		val (a, b, c, d) = contingency(x, y)
 		(b + c).toDouble / (4 * (a + b + c + d))
 	}	
 }

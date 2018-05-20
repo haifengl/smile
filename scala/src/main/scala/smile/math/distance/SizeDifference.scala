@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.math.distance
 
-import scala.math.pow
-
 /** Size Difference distance.
 	*
 	* <h2>References</h2>
@@ -27,7 +25,7 @@ import scala.math.pow
   */
 class SizeDifference extends Distance[Array[Int]] {
 	override def d(x: Array[Int], y: Array[Int]): Double = {
-		val (a,b,c,d) = contingencyTable(x, y)
-		pow(b + c, 2) / pow(a + b + c + d, 2)
+		val (a, b, c, d) = contingency(x, y)
+		math.pow(b + c, 2) / math.pow(a + b + c + d, 2)
 	}
 }
