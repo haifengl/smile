@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.math.distance
 
-import scala.math.pow
-
 /** Pattern difference distance.
 	*
 	* <h2>References</h2>
@@ -27,7 +25,7 @@ import scala.math.pow
   */
 class PatternDifference extends Distance[Array[Int]] {
 	override def d(x: Array[Int], y: Array[Int]): Double = {
-		val (a,b,c,d) = contingencyTable(x, y)
-		(4D * b * c) / pow(a + b + c + d, 2)
+		val (a, b, c, d) = contingency(x, y)
+		(4D * b * c) / math.pow(a + b + c + d, 2)
 	}
 }

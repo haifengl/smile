@@ -28,7 +28,7 @@ package object distance {
 	  *   - c is incremented if i = 0, j = 1
 	  *   - d is incremented if i = 0, j = 0
 	  */
-	def contingencyTable(x: Array[Int], y: Array[Int]) = {
+	def contingency(x: Array[Int], y: Array[Int]) = {
 		require(x.length == y.length, "Arrays have different length")
 
 	  var (a,b,c,d) = (0, 0, 0, 0)
