@@ -79,11 +79,12 @@ public class SVMDemo extends ClassificationDemo {
         SVM<double[]> svm = new SVM<>(new GaussianKernel(gamma), C);
         svm.learn(data, label);
         svm.finish();
-        
+
+        int[] pred = new int[label.length];
         for (int i = 0; i < label.length; i++) {
-            label[i] = svm.predict(data[i]);
+            pred[i] = svm.predict(data[i]);
         }
-        double trainError = error(label, label);
+        double trainError = error(label, pred);
 
         System.out.format("training error = %.2f%%\n", 100*trainError);
 

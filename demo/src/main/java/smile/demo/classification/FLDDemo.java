@@ -41,10 +41,11 @@ public class FLDDemo extends ClassificationDemo {
         int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
         
         FLD fisher = new FLD(data, label);
+        int[] pred = new int[label.length];
         for (int i = 0; i < label.length; i++) {
-            label[i] = fisher.predict(data[i]);
+            pred[i] = fisher.predict(data[i]);
         }
-        double trainError = error(label, label);
+        double trainError = error(label, pred);
 
         System.out.format("training error = %.2f%%\n", 100*trainError);
 
