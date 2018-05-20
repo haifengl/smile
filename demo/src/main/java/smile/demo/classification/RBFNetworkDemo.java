@@ -65,11 +65,11 @@ public class RBFNetworkDemo extends ClassificationDemo {
         double[][] centers = new double[k][];
         RadialBasisFunction basis = SmileUtils.learnGaussianRadialBasis(data, centers);
         RBFNetwork<double[]> rbf = new RBFNetwork<>(data, label, new EuclideanDistance(), basis, centers);
-        
+        int[] pred = new int[label.length];
         for (int i = 0; i < label.length; i++) {
-            label[i] = rbf.predict(data[i]);
+            pred[i] = rbf.predict(data[i]);
         }
-        double trainError = error(label, label);
+        double trainError = error(label, pred);
 
         System.out.format("training error = %.2f%%\n", 100*trainError);
 
