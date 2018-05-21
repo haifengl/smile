@@ -31,19 +31,13 @@ class KModesModel(val centroids: mutable.HashMap[Int, Array[Int]], val cardinali
 	 * Return the nearest mode for a specific point
 	 **/
 	def predict(v: Array[Int]): ClusterID = {
-		centroids.toArray.map{ case(clusterID, centroid) => (clusterID, metric.d(centroid, v)) }.sortBy(_._2).head._1
+		centroids.map{ case(clusterID, centroid) => (clusterID, metric.d(centroid, v)) }.minBy(_._2)._1
 	}
 
 	/**
 	 * Return the nearest mode for a dataset
 	 **/
 	def predict(data: Seq[Array[Int]]): Seq[(ClusterID, BinaryVector)] = {
-		val centroidsAsArray = centroids.toArray
-
-		def predictCluster(v: Array[Int]) = {
-			centroidsAsArray.map{ case(clusterID, centroid) => (clusterID, metric.d(centroid, v)) }.sortBy(_._2).head._1
-		}
-
-		data.map( v => (predictCluster(v), v) )
+		data.map( v => (predict(v), v) )
 	}
 }
