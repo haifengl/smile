@@ -97,7 +97,7 @@ class KModes(data: Array[Array[Int]], k: Int, epsilon: Double, maxIter: Int = 10
 		} else {
 			// search mode that is the data point closest to centroid
 			dist.zipWithIndex.zip(y).groupBy{ case (_, cluster) => cluster }.foreach { case (cluster, aggregates) =>
-				val mode = aggregates.sortBy(_._1).head._2
+				val mode = aggregates.minBy(_._1)._2
 				modes(cluster) = data(mode)
 			}
 		}
@@ -109,7 +109,7 @@ class KModes(data: Array[Array[Int]], k: Int, epsilon: Double, maxIter: Int = 10
 		* Return the nearest mode and distance for a specific point.
 		**/
 	private def nearest(x: Array[Int]): (Double, Int) = {
-		modes.map { mode => metric.d(mode, x) }.zipWithIndex.sortBy(_._1).head
+		modes.map { mode => metric.d(mode, x) }.zipWithIndex.minBy(_._1)
 	}
 
 	/**
