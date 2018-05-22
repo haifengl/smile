@@ -41,16 +41,17 @@ import smile.plot.ScatterPlot;
 @SuppressWarnings("serial")
 public abstract class ClassificationDemo extends JPanel implements Runnable, ActionListener, AncestorListener {
 
-    private static String[] datasetName = {
+    protected static String[] datasetName = {
         "Toy",
         "Big Toy",
     };
 
-    private static String[] datasource = {
+    protected static String[] datasource = {
         "classification/toy/toy-train.txt",
         "classification/toy/toy-test.txt"
     };
-
+    
+    protected static DelimitedTextParser parser = null;
     static AttributeDataset[] dataset = null;
     static int datasetIndex = 0;
 
@@ -65,9 +66,11 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
     public ClassificationDemo() {
         if (dataset == null) {
             dataset = new AttributeDataset[datasetName.length];
-            DelimitedTextParser parser = new DelimitedTextParser();
-            parser.setDelimiter("[\t ]+");
-            parser.setResponseIndex(new NominalAttribute("class"), 0);
+            if(parser == null) {
+                parser = new DelimitedTextParser();
+                parser.setDelimiter("[\t ]+");
+                parser.setResponseIndex(new NominalAttribute("class"), 0);            	
+            }
             try {
                 dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
             } catch (Exception e) {
@@ -107,13 +110,32 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
         } else {
             pointLegend = '.';
         }
+        
+        PlotCanvas canvas = paintOnCanvas(data, label);
+        add(canvas, BorderLayout.CENTER);
+    }
+    
+    /**
+     * paint given data with label on canvas
+     * @param data the data point(s) to paint, only support 2D or 3D features
+     * @param label the data label for classification
+     */
+    protected PlotCanvas paintOnCanvas(double[][] data, int[] label) {
         PlotCanvas canvas = ScatterPlot.plot(data, pointLegend);
         for (int i = 0; i < data.length; i++) {
             canvas.point(pointLegend, Palette.COLORS[label[i]], data[i]);
         }
-        add(canvas, BorderLayout.CENTER);
+        return canvas;
     }
-
+    
+    /**
+     * Get the class number dependent contour levels, typically we would have k - 1 contour levels for k class
+     * @return
+     */
+    protected double[] getContourLevels() {
+        return new double[]{0.5};	
+    }
+    
     /**
      * Returns the error rate.
      */
@@ -148,10 +170,8 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
         } else {
             pointLegend = '.';
         }
-        PlotCanvas canvas = ScatterPlot.plot(data, pointLegend);
-        for (int i = 0; i < data.length; i++) {
-            canvas.point(pointLegend, Palette.COLORS[label[i]], data[i]);
-        }
+        
+        PlotCanvas canvas = paintOnCanvas(data, label);
 
         double[] lower = canvas.getLowerBounds();
         double[] upper = canvas.getUpperBounds();
@@ -167,7 +187,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
         for (int i = 0; i < y.length; i++) {
             y[i] = lower[1] + step * (i+1);
         }
-
+        
         try {
         	double[][] f = learn(x, y);
 
@@ -179,11 +199,11 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
         			}
         		}
 
-        		double[] levels = {0.5};
+        		double[] levels = getContourLevels();
         		Contour contour = new Contour(x, y, f, levels);
         		contour.showLevelValue(false);
         		canvas.add(contour);
-
+                
         		BorderLayout layout = (BorderLayout) getLayout();
         		remove(layout.getLayoutComponent(BorderLayout.CENTER));
         		add(canvas, BorderLayout.CENTER);

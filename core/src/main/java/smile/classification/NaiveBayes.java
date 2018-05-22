@@ -40,7 +40,7 @@ import smile.math.SparseArray;
  * the users are free to use any discrete distributions to model categorical or
  * ordinal random variables.
  * <p>
- * For document classification in NLP, there are two different ways we can set
+ * For document classification in NLP, there are two major different ways we can set
  * up an naive Bayes classifier: multinomial model and Bernoulli model. The
  * multinomial model generates one term from the vocabulary in each position
  * of the document. The multivariate Bernoulli model or Bernoulli model
@@ -66,6 +66,10 @@ import smile.math.SparseArray;
  * but in the Bernoulli model the probability of nonoccurrence is factored
  * in when computing. This is because only the Bernoulli model models
  * absence of terms explicitly.
+ * <p>
+ * A third setting is Polya Urn model which simply 
+ * add twice for what is seen in training data instead of one time.
+ * See reference for more detail.
  *
  * @see Distribution
  * @see LDA
@@ -75,6 +79,7 @@ import smile.math.SparseArray;
  * <h2>References</h2>
  * <ol>
  * <li> Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze. Introduction to Information Retrieval, Chapter 13, 2009.</li>
+ * <li> Kevin P. Murphy. Machina Learning A Probability Perspective, Chapter 3, 2012.</li>
  * </ol>
  * 
  * @author Haifeng Li
@@ -110,7 +115,13 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
          * the vocabulary, either indicating presence of the term in the
          * document or indicating absence.
          */
-        BERNOULLI
+        BERNOULLI,
+
+        /**
+         * The document Polya Urn model is similar to MULTINOMIAL but different in the conditional probability update during learning.
+         * It simply add twice for what is seen in training data instead of one time.
+         */
+        POLYAURN
     }
 
     /**
@@ -477,6 +488,11 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
                 ntc[y][i] += x[i];
                 nt[y] += x[i];
             }
+        } else if (model == Model.POLYAURN) {
+            for (int i = 0; i < p; i++) {
+                ntc[y][i] += x[i] * 2;
+                nt[y] += x[i] * 2;
+            }
         } else {
             for (int i = 0; i < p; i++) {
                 if (x[i] > 0) {
@@ -507,6 +523,11 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
             for (SparseArray.Entry e : x) {
                 ntc[y][e.i] += e.x;
                 nt[y] += e.x;
+            }
+        } else if (model == Model.POLYAURN) {
+            for (SparseArray.Entry e : x) {
+                ntc[y][e.i] += e.x * 2;
+                nt[y] += e.x * 2;
             }
         } else {
             for (SparseArray.Entry e : x) {
@@ -548,6 +569,20 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
                 n++;
                 nc[y[i]]++;
             }
+        } else if (model == Model.POLYAURN) {
+            for (int i = 0; i < x.length; i++) {
+                if (x[i].length != p) {
+                    throw new IllegalArgumentException("Invalid input vector size: " + x[i].length);
+                }
+
+                for (int j = 0; j < p; j++) {
+                    ntc[y[i]][j] += x[i][j] * 2;
+                    nt[y[i]] += x[i][j] * 2;
+                }
+
+                n++;
+                nc[y[i]]++;
+            }
         } else {
             for (int i = 0; i < x.length; i++) {
                 if (x[i].length != p) {
@@ -578,7 +613,7 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
             }
         }
 
-        if (model == Model.MULTINOMIAL) {
+        if (model == Model.MULTINOMIAL || model == Model.POLYAURN) {
             for (int c = 0; c < k; c++) {
                 for (int t = 0; t < p; t++) {
                     condprob[c][t] = (ntc[c][t] + sigma) / (nt[c] + sigma * p);
@@ -635,6 +670,7 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
                         logprob += prob[i][j].logp(x[j]);
                         break;
                     case MULTINOMIAL:
+                    case POLYAURN:
                         if (x[j] > 0) {
                             logprob += x[j] * Math.log(condprob[i][j]);
                             any = true;
@@ -712,6 +748,7 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
                         logprob += prob[i][e.i].logp(e.x);
                         break;
                     case MULTINOMIAL:
+                    case POLYAURN:
                         if (e.x > 0) {
                             logprob += e.x * Math.log(condprob[i][e.i]);
                             any = true;
