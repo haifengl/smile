@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.classification;
 
+import smile.data.NumericAttribute;
 import smile.sort.QuickSort;
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
@@ -54,6 +55,63 @@ public class DecisionTreeTest {
     @After
     public void tearDown() {
     }
+    
+    
+    @Test
+    public void testImportantFeatureWithNull() {
+        
+        //Arrange
+        
+        double[][] x =
+			{
+				{ 10D, Double.NaN },
+				{ 20D, 1 },
+				{ 10D, Double.NaN },
+				{ 20D, 1 },
+				{ 20D, 1 },
+				{ 10D, Double.NaN },
+				{ 20D, Double.NaN }
+			};
+        
+        int[] y = { 1, 0, 1, 0, 0, 1, 1 };
+        Attribute[] attributes = { new NumericAttribute("Feature A"), new NumericAttribute("Feature B") };
+        //Act
+        DecisionTree tree = new DecisionTree(attributes, x, y, 3);
+        
+        double[] importance = tree.importance();
+        
+        //Assert
+        assertEquals(importance[1] > importance[0], true);
+        
+    }
+    
+    
+    @Test
+    public void testSplitValueNaN() {
+        
+        //Arrange
+        
+        double[][] x =
+			{
+				{ 10D, Double.NaN },
+				{ 20D, 126 },
+				{ 10D, Double.NaN },
+				{ 20D, 78 },
+				{ 20D, 156 },
+				{ 10D, Double.NaN },
+				{ 20D, Double.NaN }
+			};
+        
+        int[] y = { 1, 0, 1, 0, 0, 1, 1 };
+        Attribute[] attributes = { new NumericAttribute("Feature A"), new NumericAttribute("Feature B") };
+        //Act
+        DecisionTree tree = new DecisionTree(attributes, x, y, 3);
+        
+        //Assert
+        assertEquals(Double.isNaN(tree.root.splitValue), true);
+        
+    }
+    
     
     /**
      * Test of learn method, of class DecisionTree.

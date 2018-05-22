@@ -18,7 +18,6 @@ package smile.classification;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.Map.Entry;
 
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
@@ -114,7 +113,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
     /**
      * The root of the regression tree
      */
-    private Node root;
+    public Node root;
     /**
      * The splitting rule.
      */
@@ -278,9 +277,9 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
          */
         int splitFeature = -1;
         /**
-         * The split value.
+         * The split value. MIN_VALUE is just an initial value without further meaning.
          */
-        double splitValue = Double.NaN;
+        double splitValue = Double.MIN_VALUE;
         /**
          * Reduction in splitting criterion.
          */
@@ -330,7 +329,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                         return falseChild.predict(x);
                     }
                 } else if (attributes[splitFeature].getType() == Attribute.Type.NUMERIC) {
-                    if (x[splitFeature] <= splitValue) {
+                    if (!(Double.isNaN(x[splitFeature]) && Double.isNaN(splitValue)) || x[splitFeature] <= splitValue) {
                         return trueChild.predict(x);
                     } else {
                         return falseChild.predict(x);
@@ -356,7 +355,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                         return falseChild.predict(x, posteriori);
                     }
                 } else if (attributes[splitFeature].getType() == Attribute.Type.NUMERIC) {
-                    if (x[splitFeature] <= splitValue) {
+                    if (!(Double.isNaN(x[splitFeature]) && Double.isNaN(splitValue)) || x[splitFeature] <= splitValue) {
                         return trueChild.predict(x, posteriori);
                     } else {
                         return falseChild.predict(x, posteriori);
@@ -445,10 +444,10 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
         }
 
         /**
-         * Finds the best attribute to split on at the current node. Returns
-         * true if a split exists to reduce squared error, false otherwise.
+		 * Check if all of the samples
+		 * have the same label
          */
-        public boolean findBestSplit() {
+        public boolean isPure() {
             int label = -1;
             boolean pure = true;
             for (int i = 0; i < x.length; i++) {
@@ -461,6 +460,16 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                     }
                 }
             }
+            return pure;
+        }
+        
+        
+        /**
+         * Finds the best attribute to split on at the current node. Returns
+         * true if a split exists to reduce squared error, false otherwise.
+         */
+        public boolean findBestSplit() {
+            boolean pure = isPure();
             
             // Since all instances have same label, stop splitting.
             if (pure) {
@@ -577,7 +586,7 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
 
                     int trueLabel = Math.whichMax(trueCount[l]);
                     int falseLabel = Math.whichMax(falseCount);
-                    double gain = impurity - (double) tc / n * impurity(trueCount[l], tc) - (double) fc / n * impurity(falseCount, fc);
+					double gain = impurity - (double) tc / n * impurity(trueCount[l], tc) - (double) fc / n * impurity(falseCount, fc);
 
                     if (gain > splitNode.splitScore) {
                         // new best split
@@ -590,12 +599,14 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                 }
             } else if (attributes[j].getType() == Attribute.Type.NUMERIC) {
                 int[] trueCount = new int[k];
-                double prevx = Double.NaN;
+				// MIN_VALUE is an initial value without further meaning
+                double prevx = Double.MIN_VALUE;
                 int prevy = -1;
 
                 for (int i : order[j]) {
                     if (samples[i] > 0) {
-                        if (Double.isNaN(prevx) || x[i][j] == prevx || y[i] == prevy) {
+                        boolean xHasNotChanged = x[i][j] == prevx || (Double.isNaN(prevx) && Double.isNaN(x[i][j]));
+                        if (prevx == Double.MIN_VALUE || y[i] == prevy || xHasNotChanged) {
                             prevx = x[i][j];
                             prevy = y[i];
                             trueCount[y[i]] += samples[i];
@@ -624,7 +635,8 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                         if (gain > splitNode.splitScore) {
                             // new best split
                             splitNode.splitFeature = j;
-                            splitNode.splitValue = (x[i][j] + prevx) / 2;
+                            // if the splitValue is NaN taking NaN as a split value instead of the mean of values
+                            splitNode.splitValue = Double.isNaN(x[i][j]) ? x[i][j] : (x[i][j] + prevx) / 2;
                             splitNode.splitScore = gain;
                             splitNode.trueChildOutput = trueLabel;
                             splitNode.falseChildOutput = falseLabel;
@@ -671,25 +683,54 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
                     }
                 }
             } else if (attributes[node.splitFeature].getType() == Attribute.Type.NUMERIC) {
-                for (int i = 0; i < n; i++) {
-                    if (samples[i] > 0) {
-                        if (x[i][node.splitFeature] <= node.splitValue) {
-                            trueSamples[i] = samples[i];
-                            tc += trueSamples[i];
-                            samples[i] = 0;
-                        } else {
-                            //falseSamples[i] = samples[i];
-                            fc += samples[i];
-                        }
+                List<Integer> nanIndexes = new ArrayList<>();
+				boolean isSplitValueNaN = Double.isNaN(node.splitValue);
+				// Treating NaNs(missing values):
+				//   if splitValue is not NaN, then put all of the NaN value into the branch
+				//     that has higher amount of examples in it.
+				//   if splitValue is NaN put all of NaNs into a false child and all of the others into true child
+				for (int i = 0; i < n; i++) {
+					if(isSplitValueNaN) {
+						if(!Double.isNaN(x[i][node.splitFeature])){
+							trueSamples[i] = samples[i];
+							tc += trueSamples[i];
+							samples[i] = 0;
+						} else {
+							fc += samples[i];
+						}
+					} else {
+						if(Double.isNaN(x[i][node.splitFeature])) {
+							nanIndexes.add(i);
+						} else if(x[i][node.splitFeature] <= node.splitValue) {
+							trueSamples[i] = samples[i];
+							tc += trueSamples[i];
+							samples[i] = 0;
+						} else {
+							fc += samples[i];
+						}
+					}
+				}
+	
+				// put cases with NaN based on final true count and false count(whatever is higher)
+                if (tc > fc) {
+                    for (int i : nanIndexes) {
+                        trueSamples[i] = samples[i];
+                        tc += trueSamples[i];
+                        samples[i] = 0;
+                    }
+                } else {
+                    for (int i : nanIndexes) {
+                        fc += samples[i];
                     }
                 }
+                
             } else {
                 throw new IllegalStateException("Unsupported attribute type: " + attributes[node.splitFeature].getType());
             }
 
             if (tc < nodeSize || fc < nodeSize) {
                 node.splitFeature = -1;
-                node.splitValue = Double.NaN;
+                node.splitValue = Double.MIN_VALUE;
                 node.splitScore = 0.0;
                 return false;
             }
@@ -936,10 +977,25 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
 
             for (int j = 0; j < p; j++) {
                 if (attributes[j] instanceof NumericAttribute) {
+                    List<Integer> nans = new ArrayList<>();
+                    int nonNanCount = 0;
                     for (int i = 0; i < n; i++) {
-                        a[i] = x[i][j];
+                        if (!Double.isNaN(x[i][j])) {
+                            a[i] = x[i][j];
+                            nonNanCount++;
+                        } else {
+							// put NaN value at the end of the ordering
+                            a[i] = Double.MAX_VALUE;
+                            nans.add(i);
+                        }
                     }
                     this.order[j] = QuickSort.sort(a);
+                    // fill the rest with non-comparable NaN values
+                    for (int nanIndex = 0; nanIndex < nans.size(); nanIndex++) {
+                        int globalIndex = nonNanCount + nanIndex;
+                        this.order[j][globalIndex] = nans.get(nanIndex);
+                    }
+                    
                 }
             }
         }

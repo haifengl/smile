@@ -94,7 +94,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
     /**
      * The root of the regression tree
      */
-    private Node root;
+    public Node root;
     /**
      * The number of instances in a node below which the tree will
      * not split, setting nodeSize = 5 generally gives good results.
@@ -253,9 +253,9 @@ public class RegressionTree implements Regression<double[]>, Serializable {
          */
         int splitFeature = -1;
         /**
-         * The split value.
+         * The split value. MIN_VALUE is just an initial value without further meaning.
          */
-        double splitValue = Double.NaN;
+        double splitValue = Double.MIN_VALUE;
         /**
          * Reduction in squared error compared to parent.
          */
@@ -298,7 +298,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                         return falseChild.predict(x);
                     }
                 } else if (attributes[splitFeature].getType() == Attribute.Type.NUMERIC) {
-                    if (x[splitFeature] <= splitValue) {
+                    if (!((Double.isNaN(x[splitFeature]) && Double.isNaN(splitValue))) || x[splitFeature] <= splitValue) {
                         return trueChild.predict(x);
                     } else {
                         return falseChild.predict(x);
@@ -539,11 +539,13 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             } else if (attributes[j].getType() == Attribute.Type.NUMERIC) {
                 double trueSum = 0.0;
                 int trueCount = 0;
-                double prevx = Double.NaN;
+                // MIN_VALUE is an initial value without further meaning.
+                double prevx = Double.MIN_VALUE;
 
                 for (int i : order[j]) {
                     if (samples[i] > 0) {
-                        if (Double.isNaN(prevx) || x[i][j] == prevx) {
+                        boolean xHasNotChanged = x[i][j] == prevx || (Double.isNaN(prevx) && Double.isNaN(x[i][j]));
+                        if (prevx == Double.MIN_VALUE || xHasNotChanged) {
                             prevx = x[i][j];
                             trueSum += samples[i] * y[i];
                             trueCount += samples[i];
@@ -571,7 +573,8 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                         if (gain > split.splitScore) {
                             // new best split
                             split.splitFeature = j;
-                            split.splitValue = (x[i][j] + prevx) / 2;
+                            // if the splitValue is NaN taking NaN as a split value instead of the mean of values.
+                            split.splitValue = Double.isNaN(x[i][j]) ? x[i][j] : (x[i][j] + prevx) / 2;
                             split.splitScore = gain;
                             split.trueChildOutput = trueMean;
                             split.falseChildOutput = falseMean;
@@ -617,16 +620,45 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                     }
                 }
             } else if (attributes[node.splitFeature].getType() == Attribute.Type.NUMERIC) {
+                List<Integer> nanIndexes = new ArrayList<>();
                 for (int i = 0; i < n; i++) {
                     if (samples[i] > 0) {
-                        if (x[i][node.splitFeature] <= node.splitValue) {
-                            trueSamples[i] = samples[i];
-                            tc += trueSamples[i];
-                            samples[i] = 0;
+                        boolean isSplitValueNaN = Double.isNaN(node.splitValue);
+                        // Treating NaNs(missing values):
+                        //   if splitValue is not NaN, then put all of the NaN value into the branch
+                        //     that has higher amount of examples in it.
+                        //   if splitValue is NaN put all of NaNs into a false child and all of the others into true child
+                        if(isSplitValueNaN) {
+                            if(!Double.isNaN(x[i][node.splitFeature])){
+                                trueSamples[i] = samples[i];
+                                tc += trueSamples[i];
+                                samples[i] = 0;
+                            } else {
+                                fc += samples[i];
+                            }
                         } else {
-                            //falseSamples[i] = samples[i];
-                            fc += samples[i];
+                            if(Double.isNaN(x[i][node.splitFeature])) {
+                                nanIndexes.add(i);
+                            } else if(x[i][node.splitFeature] <= node.splitValue) {
+                                trueSamples[i] = samples[i];
+                                tc += trueSamples[i];
+                                samples[i] = 0;
+                            } else {
+                                fc += samples[i];
+                            }
                         }
+                    }
+                }
+                // put cases with NaN based on final true count and false count(whatever is higher)
+                if(tc > fc) {
+                    for(int i : nanIndexes) {
+                        trueSamples[i] = samples[i];
+                        tc += trueSamples[i];
+                        samples[i] = 0;
+                    }
+                } else {
+                    for(int i : nanIndexes) {
+                        fc += samples[i];
                     }
                 }
             } else {
@@ -635,7 +667,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             
             if (tc < nodeSize || fc < nodeSize) {
                 node.splitFeature = -1;
-                node.splitValue = Double.NaN;
+                node.splitValue = Double.MIN_VALUE;
                 node.splitScore = 0.0;
                 return false;
             }
@@ -960,13 +992,28 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
             double[] a = new double[n];
             this.order = new int[p][];
-
+            
             for (int j = 0; j < p; j++) {
                 if (attributes[j] instanceof NumericAttribute) {
+                    List<Integer> nans = new ArrayList<>();
+                    int nonNanCount = 0;
                     for (int i = 0; i < n; i++) {
-                        a[i] = x[i][j];
+                        if(!Double.isNaN(x[i][j])){
+                            a[i] = x[i][j];
+                            nonNanCount++;
+                        } else {
+                            // put NaN value at the end of the ordering
+                            a[i] = Double.MAX_VALUE;
+                            nans.add(i);
+                        }
                     }
                     this.order[j] = QuickSort.sort(a);
+    
+                    // fill the rest with non-comparable NaN values
+                    for (int nanIndex = 0; nanIndex < nans.size(); nanIndex++) {
+                        int globalIndex = nonNanCount + nanIndex;
+                        this.order[j][globalIndex] = nans.get(nanIndex);
+                    }
                 }
             }
         }

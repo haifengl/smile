@@ -20,7 +20,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.Attribute;
 import smile.data.AttributeDataset;
+import smile.data.NumericAttribute;
 import smile.data.parser.ArffParser;
 import smile.math.Math;
 import smile.sort.QuickSort;
@@ -53,6 +55,63 @@ public class RegressionTreeTest {
     
     @After
     public void tearDown() {
+    }
+    
+    @Test
+    public void testImportantFeatureWithNull() {
+        
+        //Arrange
+        double[][] x =
+            {
+                { 10D, 5},
+                { 10, 5},
+                { 20, 170},
+                { 20, 170},
+                { 20, 170},
+                { 50, 99},
+                { 50, 99},
+                { 50, 99}
+            };
+        
+        double[] y = { 20, 20, 500, 500, 500, 100, 100, 100 };
+        Attribute[] attributes = { new NumericAttribute("Feature A"), new NumericAttribute("Feature B") };
+        //Act
+        RegressionTree tree = new RegressionTree(attributes, x, y, 3, 2);
+        
+        double[] importance = tree.importance();
+        
+        //Assert
+        assertEquals(importance[1] > importance[0], true);
+        
+    }
+    @Test
+    public void testSplitValueNaN() {
+
+        //Arrange
+        double[][] x =
+            {
+                { 10D, 5},
+                { 10, 5},
+                { 20, Double.NaN },
+                { 20, Double.NaN },
+                { 20, Double.NaN },
+                { Double.NaN , 99},
+                { Double.NaN , 99},
+                { Double.NaN , 99}
+            };
+
+        double[] y = { 20, 20, 500, 500, 500, 100, 100, 100 };
+        Attribute[] attributes = { new NumericAttribute("Feature A"), new NumericAttribute("Feature B") };
+        //Act
+        RegressionTree tree = new RegressionTree(attributes, x, y, 3, 2);
+
+        double[] importance = tree.importance();
+        for (int i = 0; i < importance.length; i++) {
+            System.out.println(importance[i]);
+        }
+
+        //Assert
+        assertEquals(Double.isNaN(tree.root.splitValue), true);
     }
 
     /**
