@@ -125,7 +125,7 @@ Sentence Splitter and Tokenizer, Bigram Statistical Test, Phrase Extractor, Keyw
 Model Serialization
 ===================
 Most models support the Java `Serializable` interface (all classifiers do support `Serializable` interface) so that
-you can use them in Spark. For reading/writing the models in non-Java code, we suggest [XStream](http://xstream.codehaus.org) to serialize the trained models.
+you can use them in Spark. For reading/writing the models in non-Java code, we suggest [XStream](https://github.com/x-stream/xstream) to serialize the trained models.
 XStream is a simple library to serialize objects to XML and back again. XStream is easy to use and doesn't require mappings
 (actually requires no modifications to objects). [Protostuff](http://code.google.com/p/protostuff/) is a
 nice alternative that supports forward-backward compatibility (schema evolution) and validation.
