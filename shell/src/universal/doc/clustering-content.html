@@ -558,12 +558,12 @@
 
     <pre class="prettyprint lang-scala"><code>
     // DBSCAN with a customized data structure for neighborhood search
-    def dbscan[T](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBScan[T]
+    def dbscan[T](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBSCAN[T]
 
-    def dbscan[T](data: Array[T], distance: Metric[T], minPts: Int, radius: Double): DBScan[T]
+    def dbscan[T](data: Array[T], distance: Metric[T], minPts: Int, radius: Double): DBSCAN[T]
 
     // DBSCAN with Euclidean distance
-    def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBScan[Array[Double]]
+    def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBSCAN[Array[Double]]
     </code></pre>
 
     <p>DBSCAN requires two parameters: <code>radius</code> (i.e. neighborhood radius) and the

@@ -376,9 +376,9 @@ trait Operators {
     * @param minPts the minimum number of neighbors for a core data point.
     * @param radius the neighborhood radius.
     */
-  def dbscan[T <: Object](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBScan[T] = {
+  def dbscan[T <: Object](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBSCAN[T] = {
     time {
-      new DBScan[T](data, nns, minPts, radius)
+      new DBSCAN[T](data, nns, minPts, radius)
     }
   }
 
@@ -392,9 +392,9 @@ trait Operators {
     * @param minPts the minimum number of neighbors for a core data point.
     * @param radius the neighborhood radius.
    */
-  def dbscan[T <: Object](data: Array[T], distance: Metric[T], minPts: Int, radius: Double): DBScan[T] = {
+  def dbscan[T <: Object](data: Array[T], distance: Metric[T], minPts: Int, radius: Double): DBSCAN[T] = {
     time {
-      new DBScan[T](data, distance, minPts, radius)
+      new DBSCAN[T](data, distance, minPts, radius)
     }
   }
 
@@ -406,7 +406,7 @@ trait Operators {
     * @param minPts the minimum number of neighbors for a core data point.
     * @param radius the neighborhood radius.
     */
-  def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBScan[Array[Double]] = {
+  def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBSCAN[Array[Double]] = {
     time {
       dbscan(data, new EuclideanDistance, minPts, radius)
     }
