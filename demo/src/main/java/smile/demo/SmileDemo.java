@@ -47,7 +47,7 @@ import smile.demo.classification.RBFNetworkDemo;
 import smile.demo.classification.RDADemo;
 import smile.demo.classification.SVMDemo;
 import smile.demo.clustering.CLARANSDemo;
-import smile.demo.clustering.DBScanDemo;
+import smile.demo.clustering.DBSCANDemo;
 import smile.demo.clustering.DENCLUEDemo;
 import smile.demo.clustering.DeterministicAnnealingDemo;
 import smile.demo.clustering.GMeansDemo;
@@ -301,7 +301,7 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         algorithm = new DefaultMutableTreeNode(new CLARANSDemo());
         category.add(algorithm);
 
-        algorithm = new DefaultMutableTreeNode(new DBScanDemo());
+        algorithm = new DefaultMutableTreeNode(new DBSCANDemo());
         category.add(algorithm);
 
         algorithm = new DefaultMutableTreeNode(new DENCLUEDemo());
