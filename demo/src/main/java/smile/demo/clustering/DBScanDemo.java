@@ -104,12 +104,12 @@ public class DBScanDemo extends ClusteringDemo {
 
     @Override
     public String toString() {
-        return "DBScan";
+        return "DBSCAN";
     }
 
     public static void main(String argv[]) {
         ClusteringDemo demo = new DBScanDemo();
-        JFrame f = new JFrame("DBScan");
+        JFrame f = new JFrame("DBSCAN");
         f.setSize(new Dimension(1000, 1000));
         f.setLocationRelativeTo(null);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
