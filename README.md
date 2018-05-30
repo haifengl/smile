@@ -102,7 +102,7 @@ Support Vector Regression, Gaussian Process, Regression Trees, Gradient Boosting
 Genetic Algorithm based Feature Selection, Ensemble Learning based Feature Selection, Signal Noise ratio, Sum Squares ratio.
 
 * **Clustering**
-BIRCH, CLARANS, DBScan, DENCLUE, Deterministic Annealing, K-Means, X-Means, G-Means, Neural Gas, Growing Neural Gas, Hierarchical Clustering, Sequential Information Bottleneck, Self-Organizing Maps, Spectral Clustering, Minimum Entropy Clustering.
+BIRCH, CLARANS, DBSCAN, DENCLUE, Deterministic Annealing, K-Means, X-Means, G-Means, Neural Gas, Growing Neural Gas, Hierarchical Clustering, Sequential Information Bottleneck, Self-Organizing Maps, Spectral Clustering, Minimum Entropy Clustering.
 
 * **Association Rule & Frequent Itemset Mining**
 FP-growth mining algorithm
@@ -212,8 +212,8 @@ Demo Gallery
     <tr>
         <td width="50%">
             <figure>
-                <a href="http://haifengl.github.io/smile/gallery/smile-demo-dbscan.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-dbscan-small.png" alt="DBScan"></a>
-                <figcaption><h2>DBScan</h2></figcaption>
+                <a href="http://haifengl.github.io/smile/gallery/smile-demo-dbscan.png"><img src="http://haifengl.github.io/smile/gallery/smile-demo-dbscan-small.png" alt="DBSCAN"></a>
+                <figcaption><h2>DBSCAN</h2></figcaption>
             </figure>
         </td>
         <td width="50%">

@@ -52,7 +52,7 @@ public class DBScanTest {
     }
 
     /**
-     * Test of learn method, of class DBScan.
+     * Test of learn method, of class DBSCAN.
      */
     @Test
     public void testToy() {
