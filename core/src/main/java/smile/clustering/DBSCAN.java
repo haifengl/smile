@@ -88,7 +88,7 @@ import smile.math.distance.Metric;
  * 
  * @author Haifeng Li
  */
-public class DBScan <T> extends PartitionClustering<T> implements Serializable {
+public class DBSCAN<T> extends PartitionClustering<T> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -116,7 +116,7 @@ public class DBScan <T> extends PartitionClustering<T> implements Serializable {
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
      */
-    public DBScan(T[] data, Distance<T> distance, int minPts, double radius) {
+    public DBSCAN(T[] data, Distance<T> distance, int minPts, double radius) {
         this(data, new LinearSearch<>(data, distance), minPts, radius);
     }
 
@@ -128,7 +128,7 @@ public class DBScan <T> extends PartitionClustering<T> implements Serializable {
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
      */
-    public DBScan(T[] data, Metric<T> distance, int minPts, double radius) {
+    public DBSCAN(T[] data, Metric<T> distance, int minPts, double radius) {
         this(data, new CoverTree<>(data, distance), minPts, radius);
     }
 
@@ -139,7 +139,7 @@ public class DBScan <T> extends PartitionClustering<T> implements Serializable {
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
      */
-    public DBScan(T[] data, RNNSearch<T,T> nns, int minPts, double radius) {
+    public DBSCAN(T[] data, RNNSearch<T,T> nns, int minPts, double radius) {
         if (minPts < 1) {
             throw new IllegalArgumentException("Invalid minPts: " + minPts);
         }
