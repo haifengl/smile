@@ -81,7 +81,11 @@
             as much importance to recall as precision.</p></li>
     </ul>
 
-    <p>In Smile, the class label 1 is regarded as positive and all others are regarded as negative.</p>
+    <p>In Smile, the class label 1 is regarded as positive while 0 as negative. Note that
+        not all measures can be applied to multi-class data. If one applies such a measure
+        (e.g. specificity and sensitivity) on multi-class data regardlessly, the results may
+        not make sense and all others are regarded as negative. Note that in these situations,
+        only label 1 is regarded as positive and any other values are treated as negative class.</p>
 
     <p>The below example shows how to calculate the accuracy of a multi-class model.</p>
     <pre class="prettyprint lang-scala"><code>
@@ -168,6 +172,11 @@ res17: Double = 0.8650958
         the evaluation of a learning algorithm may be sensitive to sampling error.
         In what follows, we discuss various testing mechanisms.</p>
 
+    <p>We provide both Java and Scala helper functions for testing. The Java helper
+        functions are the static methods of the class <a href="api/java/smile/validation/Validation.html"><code>smile.validation.Validation</code></a>.
+        The Scala one are in the package object of <a href="api/scala/smile/validation/index.html"><code>smile.validation</code></a> and
+        can be accessed directly in the Shell.</p>
+
     <h3 id="hold-out">Hold-out Testing</h3>
 
     <p>Hold-out testing assume that all data
@@ -187,7 +196,7 @@ res17: Double = 0.8650958
     def test2soft[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => SoftClassifier[T]): SoftClassifier[T]
     </code></pre>
 
-    <p>The above methods takes a code block to train the model and apply it on the test data.
+    <p>The above Scala methods takes a code block to train the model and apply it on the test data.
         If the parameter <code>parTest</code> is true, the testing is performed parallely
         on multi cores. For some implementations that is not multi-threading safe, e.g. neural
         networks, this parameter should be set false. These methods return the trained model
@@ -271,6 +280,22 @@ res6: RandomForest = smile.classification.RandomForest@a24e874
 test2soft(x, y, testx, testy) { case (x, y) => lda(x, y) }
 test2soft(x, y, testx, testy) { case (x, y) => randomForest(x, y) }
     </code></pre>
+
+    <p>The Java helper functions are similar. Instead of taking a code block to train
+        the model, it takes a trained classifier and/or some classification measure(s).
+        There are also other <code>test</code> methods for regression.</p>
+
+    <pre class="prettyprint lang-java"><code>
+    // Tests a classifier on a validation set. Only accuracy is calculated.
+    public static &lt;T&gt; double test(Classifier&lt;T&gt; classifier, T[] x, int[] y);
+
+    // Tests a classifier on a validation set for given measure.
+    public static &lt;T&gt; double test(Classifier&lt;T&gt; classifier, T[] x, int[] y, ClassificationMeasure measure);
+
+    // Tests a classifier on a validation set for a given set of measure.
+    public static &lt;T&gt; double[] test(Classifier&lt;T&gt; classifier, T[] x, int[] y, ClassificationMeasure[] measures);
+    </code></pre>
+
 
     <h3 id="out-of-bag">Out-of-bag Error</h3>
 
@@ -375,6 +400,22 @@ Accuracy: 85.33%
 res7: Array[Double] = Array(0.8533333333333334)
     </code></pre>
 
+    <p>Java developers can use the below methods for cross validation. We need to provide
+        a <code>ClassifierTrainer</code> object to train the models during the validation.
+        The methods for regression have similar interface. For leave-one-out cross validation,
+        use the methods <code>loocv</code>.</p>
+
+    <pre class="prettyprint lang-java"><code>
+    // Cross validation a classifier. Only accuracy is calculated.
+    public static &lt;T&gt; double cv(int k, ClassifierTrainer&lt;T&gt; trainer, T[] x, int[] y);
+
+    // Cross validation a classifier for given measure.
+    public static &lt;T&gt; double cv(int k, ClassifierTrainer&lt;T&gt; trainer, T[] x, int[] y, ClassificationMeasure measure);
+
+    // Cross validation a classifier for a given set of measure.
+    public static &lt;T&gt; double[] cv(int k, ClassifierTrainer&lt;T&gt; trainer, T[] x, int[] y, ClassificationMeasure[] measures);
+    </code></pre>
+
     <h2 id="bootstrap">Bootstrap</h2>
 
     <p>Bootstrap is a general tool for assessing statistical accuracy. The basic
@@ -400,6 +441,21 @@ smile&gt; bootstrap(x, y, 100) { case (x, y) => lda(x, y) }
 Bootstrap average:
 Accuracy: 83.72%
 res8: Array[Double] = Array(0.8372408157995903)
+    </code></pre>
+
+    <p>Java developers can use the below methods for bootstrap validation. Instead
+        of an average value over all sample sets, we return the metric values
+        for each sample set, which can be used to calculate a variety of statistics.</p>
+
+    <pre class="prettyprint lang-java"><code>
+    // Bootstrap accuracy estimation of a classification model.
+    public static &lt;T&gt; double[] bootstrap(int k, ClassifierTrainer&lt;T&gt; trainer, T[] x, int[] y);
+
+    // Bootstrap performance estimation of a classification model for given measure.
+    public static &lt;T&gt; double[] bootstrap(int k, ClassifierTrainer&lt;T&gt; trainer, T[] x, int[] y, ClassificationMeasure measure);
+
+    // Bootstrap performance estimation of a classification model for a given set of measure.
+    public static &lt;T&gt; double[][] bootstrap(int k, ClassifierTrainer&lt;T&gt; trainer, T[] x, int[] y, ClassificationMeasure[] measures);
     </code></pre>
 
     <p>The bootstrap distribution of a parameter-estimator has been used to

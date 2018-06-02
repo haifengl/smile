@@ -550,23 +550,23 @@
 
     <p>Note that points in orange are outliers labeled by the algorithm.</p>
 
-    <h2 id="dbscan">DBScan</h2>
+    <h2 id="dbscan">DBSCAN</h2>
 
-    <p> DBScan (Density-Based Spatial Clustering of Applications with Noise)
+    <p> DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
         finds a number of clusters starting from the estimated density
         distribution of corresponding nodes.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    // DBScan with a customized data structure for neighborhood search
-    def dbscan[T](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBScan[T]
+    // DBSCAN with a customized data structure for neighborhood search
+    def dbscan[T](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBSCAN[T]
 
-    def dbscan[T](data: Array[T], distance: Metric[T], minPts: Int, radius: Double): DBScan[T]
+    def dbscan[T](data: Array[T], distance: Metric[T], minPts: Int, radius: Double): DBSCAN[T]
 
-    // DBScan with Euclidean distance
-    def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBScan[Array[Double]]
+    // DBSCAN with Euclidean distance
+    def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBSCAN[Array[Double]]
     </code></pre>
 
-    <p>DBScan requires two parameters: <code>radius</code> (i.e. neighborhood radius) and the
+    <p>DBSCAN requires two parameters: <code>radius</code> (i.e. neighborhood radius) and the
         number of minimum points required to form a cluster (<code>minPts</code>). It starts
         with an arbitrary starting point that has not been visited. This point's
         neighborhood is retrieved, and if it contains sufficient number of points,
@@ -581,10 +581,10 @@
         is retrieved and processed, leading to the discovery of a further cluster
         of noise.</p>
 
-    <p>DBScan visits each point of the database, possibly multiple times (e.g.,
+    <p>DBSCAN visits each point of the database, possibly multiple times (e.g.,
         as candidates to different clusters). For practical considerations, however,
         the time complexity is mostly governed by the number of nearest neighbor
-        queries. DBScan executes exactly one such query for each point, and if
+        queries. DBSCAN executes exactly one such query for each point, and if
         an indexing structure is used that executes such a neighborhood query
         in <code>O(log n)</code>, an overall runtime complexity of <code>O(n log n)</code> is obtained.</p>
 
@@ -596,43 +596,43 @@
     </code></pre>
 
     <p>The chameleon is a set of complicated spatial data of
-        arbitrary cluster shapes. With appropriate parameters, DBScan
+        arbitrary cluster shapes. With appropriate parameters, DBSCAN
         can discover the correct clusters and also identify outliers.</p>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/dbscan.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">DBScan</div>
+        <div class="caption" style="min-width: 480px;">DBSCAN</div>
     </div>
 
-    <p>DBScan has many advantages such as</p>
+    <p>DBSCAN has many advantages such as</p>
 
      <ul>
-         <li>DBScan does not need to know the number of clusters in the data
+         <li>DBSCAN does not need to know the number of clusters in the data
              a priori, as opposed to K-Means.</li>
 
-         <li>DBScan can find arbitrarily shaped clusters. It can even find clusters
+         <li>DBSCAN can find arbitrarily shaped clusters. It can even find clusters
              completely surrounded by (but not connected to) a different cluster.
              Due to the <code>MinPts</code> parameter, the so-called single-link effect
              (different clusters being connected by a thin line of points) is reduced.</li>
 
-         <li>DBScan has a notion of noise. Outliers are labeled as <code>Clustering.OUTLIER</code>,
+         <li>DBSCAN has a notion of noise. Outliers are labeled as <code>Clustering.OUTLIER</code>,
              which is <code>Integer.MAX_VALUE</code>.</li>
 
-         <li>DBScan requires just two parameters and is mostly insensitive to the
+         <li>DBSCAN requires just two parameters and is mostly insensitive to the
              ordering of the points in the database. (Only points sitting on the
              edge of two different clusters might swap cluster membership if the
              ordering of the points is changed, and the cluster assignment is unique
              only up to isomorphism.)</li>
      </ul>
 
-    <p>On the other hand, DBScan has the disadvantages of</p>
+    <p>On the other hand, DBSCAN has the disadvantages of</p>
 
     <ul>
         <li>In high dimensional space, the data are sparse everywhere
-            because of the curse of dimensionality. Therefore, DBScan doesn't
+            because of the curse of dimensionality. Therefore, DBSCAN doesn't
             work well on high-dimensional data in general.
 
-        <li>DBScan does not respond well to data sets with varying densities.
+        <li>DBSCAN does not respond well to data sets with varying densities.
     </ul>
 
     <h2 id="denclue">DENCLUE</h2>

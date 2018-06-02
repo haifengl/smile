@@ -14,7 +14,7 @@ least, they are good at communication with business people to understand the pro
 enhance data collection procedures to include relevant information.
 Keywords: deep learning (CNN, RNN)/neural networks, SVM, random forest, gradient boosting,
 logistic regression, Gaussian process, LASSO, PCA/Kernel PCA, IsoMap, LLE, t-SNE, MDS,
-K-Means, DBScan, SIB, SOM, association rule mining, hidden Markov model, conditional
+K-Means, DBSCAN, SIB, SOM, association rule mining, hidden Markov model, conditional
 random field, etc. Knowledge in NLP is big plus.
 
 Data Architects & Engineers who build and manage the big data infrastructure and tools

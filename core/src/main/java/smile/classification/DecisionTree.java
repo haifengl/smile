@@ -1109,4 +1109,12 @@ public class DecisionTree implements SoftClassifier<double[]>, Serializable {
         builder.append("}");
         return builder.toString();
     }
+
+    /**
+     * Returs the root node.
+     * @return root node.
+     */
+    public Node getRoot() {
+        return root;
+    }
 }

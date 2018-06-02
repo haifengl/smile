@@ -17,6 +17,7 @@
 package smile.symbolic.internal;
 
 /**
+ * Represents the trigonometric function Cosecant.
  * @author Ernest DeFoy
  */
 public class Cosecant extends UnaryNode {

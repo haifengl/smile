@@ -64,7 +64,7 @@ public class KNNDemo extends ClassificationDemo {
         for (int i = 0; i < label.length; i++) {
             pred[i] = knn.predict(data[i]);
         }
-        double trainError = error(pred, label);
+        double trainError = error(label, pred);
 
         System.out.format("training error = %.2f%%\n", 100*trainError);
 

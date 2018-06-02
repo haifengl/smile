@@ -1287,4 +1287,12 @@ public class RegressionTree implements Regression<double[]>, Serializable {
         builder.append("}");
         return builder.toString();
     }
+
+    /**
+     * Returs the root node.
+     * @return root node.
+     */
+    public Node getRoot() {
+        return root;
+    }
 }

@@ -1,11 +1,11 @@
 /*******************************************************************************
- * Copyright (c) 2017
+ * Copyright (c) 2010 Haifeng Li
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,25 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package smile.math.distance
 
-package smile.symbolic;
-
-/**
- * <code>Evaluation</code> computes the value of an expression for a particular value.
- *
- * @author Ernest DeFoy
- */
-public class Evaluation {
-
-    private String expression;
-    private String var;
-
-    public String getVar() {
-
-        return var;
-    }
-
-    public double evaluate(String expression, double val) throws InvalidExpressionException {
-        return 0.0;
-    }
+/** Pattern difference distance.
+	*
+	* <h2>References</h2>
+	*  - Seung-Seok Choi, et al. A Survey of Binary Similarity and Distance Measures.
+	*    http://www.iiisci.org/journal/CV$/sci/pdfs/GS315JG.pdf
+	*
+	* @author Beck Gaël
+  */
+class PatternDifference extends Distance[Array[Int]] {
+	override def d(x: Array[Int], y: Array[Int]): Double = {
+		val (a, b, c, d) = contingency(x, y)
+		(4D * b * c) / math.pow(a + b + c + d, 2)
+	}
 }

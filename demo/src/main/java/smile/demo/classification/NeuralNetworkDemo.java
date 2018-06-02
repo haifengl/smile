@@ -87,11 +87,12 @@ public class NeuralNetworkDemo extends ClassificationDemo {
         for (int i = 0; i < epochs; i++) {
             net.learn(data, label);
         }
-        
+
+        int[] pred = new int[label.length];
         for (int i = 0; i < label.length; i++) {
-            label[i] = net.predict(data[i]);
+            pred[i] = net.predict(data[i]);
         }
-        double trainError = error(label, label);
+        double trainError = error(label, pred);
 
         System.out.format("training error = %.2f%%\n", 100*trainError);
 
