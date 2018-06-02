@@ -317,16 +317,9 @@ public class FPGrowth {
     }
 
     /**
-     * Mines FP-tree with respect to a single element in the header table.
-     * @param header the header table item of interest.
-     * @param itemset the item set represented by the current FP-tree.
+     * Adds an item set to the result.
      */
-    private long grow(PrintStream out, List<ItemSet> list, TotalSupportTree ttree, HeaderTableItem header, int[] itemset, int[] localItemSupport, int[] prefixItemset) {
-        long n = 1;
-        int support = header.count;
-        int item = header.id;
-        itemset = insert(itemset, item);
-        
+    private void collect(PrintStream out, List<ItemSet> list, TotalSupportTree ttree, int[] itemset, int support) {
         if (list != null) {
             synchronized (list) {
                 list.add(new ItemSet(itemset, support));
@@ -345,39 +338,69 @@ public class FPGrowth {
                 ttree.add(itemset, support);
             }
         }
+    }
+
+    /**
+     * Mines all combinations along a single path tree
+     */
+    private long grow(PrintStream out, List<ItemSet> list, TotalSupportTree ttree, FPTree.Node node, int[] itemset, int support) {
+        int height = 0;
+        for (FPTree.Node currentNode = node; currentNode != null; currentNode = currentNode.parent) {
+            height ++;
+        }
+
+        int n = 0;
+        if (height > 0) {
+            int[] items = new int[height];
+            int i = 0;
+            for (FPTree.Node currentNode = node; currentNode != null; currentNode = currentNode.parent) {
+                items[i ++] = currentNode.id;
+            }
+
+            int[] itemIndexStack = new int[height];
+            int itemIndexStackPos = 0;
+            itemset = insert(itemset, items[itemIndexStack[itemIndexStackPos]]);
+            collect(out, list, ttree, itemset, support);
+            n ++;
+            while (itemIndexStack[0] < height - 1) {
+                if (itemIndexStack[itemIndexStackPos] < height - 1) {
+                    itemIndexStackPos ++;
+                    itemIndexStack[itemIndexStackPos] = itemIndexStack[itemIndexStackPos - 1] + 1;
+                    itemset = insert(itemset, items[itemIndexStack[itemIndexStackPos]]);
+                    collect(out, list, ttree, itemset, support);
+                    n ++;
+                } else {
+                    itemset = drop(itemset);
+                    if (itemset != null) {
+                        itemIndexStackPos --;
+                        itemIndexStack[itemIndexStackPos] = itemIndexStack[itemIndexStackPos] + 1;
+                        itemset[0] = items[itemIndexStack[itemIndexStackPos]];
+                        collect(out, list, ttree, itemset, support);
+                        n ++;
+                    }
+                }
+            }
+        }
+
+        return n;
+    }
+
+    /**
+     * Mines FP-tree with respect to a single element in the header table.
+     * @param header the header table item of interest.
+     * @param itemset the item set represented by the current FP-tree.
+     */
+    private long grow(PrintStream out, List<ItemSet> list, TotalSupportTree ttree, HeaderTableItem header, int[] itemset, int[] localItemSupport, int[] prefixItemset) {
+        long n = 1;
+        int support = header.count;
+        int item = header.id;
+        itemset = insert(itemset, item);
+
+        collect(out, list, ttree, itemset, support);
         
         if (header.node.next == null) {
             FPTree.Node node = header.node;
-            while (node != null) {
-                FPTree.Node parent = node.parent;
-                int[] newItemset = itemset;
-                while (parent != null) {
-                    n++;
-                    newItemset = insert(newItemset, parent.id);
-                    if (list != null) {
-                        synchronized (list) {
-                            list.add(new ItemSet(newItemset, support));
-                        }
-                    }
-                    if (out != null) {
-                        synchronized (out) {
-                            for (int i = 0; i < newItemset.length; i++) {
-                                out.format("%d ", newItemset[i]);
-                            }
-                            out.format("(%d)%n", support);
-                        }
-                    }
-                    if (ttree != null) {
-                        synchronized (ttree) {
-                            ttree.add(newItemset, support);
-                        }
-                    }
-                    parent = parent.parent;
-                }
-
-                node = node.parent;
-            }
-            
+            n += grow(out, list, ttree, node.parent, itemset, support);
         } else {
             // Count singles in linked list
             if (getLocalItemSupport(header.node, localItemSupport)) {
@@ -459,6 +482,24 @@ public class FPGrowth {
             System.arraycopy(itemset, 0, newItemset, 1, n - 1);
 
             return newItemset;
+        }
+    }
+
+    /**
+     * Drops an item form the front of an item set.
+     * @param itemset the original item set.
+     * @return the reduced item set or null if the original is empty
+     */
+    static int[] drop(int[] itemset) {
+        if (itemset.length >= 1) {
+            int n = itemset.length - 1;
+            int[] newItemset = new int[n];
+
+            System.arraycopy(itemset, 1, newItemset, 0, n);
+
+            return newItemset;
+        } else {
+            return null;
         }
     }
 }

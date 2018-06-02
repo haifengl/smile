@@ -53,6 +53,10 @@ public class FPGrowthTest {
         {1, 2, 3},
         {1, 2, 3}
     };
+
+    int[][] itemsets2 = {
+            {1, 2, 3, 4}
+    };
     
     public FPGrowthTest() {
     }
@@ -112,7 +116,19 @@ public class FPGrowthTest {
         long n = fpgrowth.learn(System.out);
         assertEquals(8, n);
     }
-    
+
+    /**
+     * Test of learn method, of class FPGrowth.
+     */
+    @Test
+    public void testSinglePath() {
+        System.out.println("singlePath");
+
+        FPGrowth fpgrowth = new FPGrowth(itemsets2, 1);
+        long n = fpgrowth.learn(System.out);
+        assertEquals(15, n);
+    }
+
     /**
      * Test of learn method, of class FPGrowth.
      */
