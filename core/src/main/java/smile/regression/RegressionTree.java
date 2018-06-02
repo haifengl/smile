@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 Haifeng Li
- *   
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -17,11 +17,13 @@ package smile.regression;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.LinkedList;
 import java.util.concurrent.Callable;
+import java.util.stream.IntStream;
 
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
@@ -71,11 +73,10 @@ import smile.util.MulticoreExecutor;
  * <p>
  * Some techniques such as bagging, boosting, and random forest use more than
  * one decision tree for their analysis.
- * 
+ *
+ * @author Haifeng Li
  * @see GradientTreeBoost
  * @see RandomForest
- *  
- * @author Haifeng Li
  */
 public class RegressionTree implements Regression<double[]>, Serializable {
     private static final long serialVersionUID = 1L;
@@ -84,6 +85,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
      * The attributes of independent variable.
      */
     private Attribute[] attributes;
+
     /**
      * Variable importance. Every time a split of a node is made on variable
      * the impurity criterion for the two descendent nodes is less than the
@@ -91,6 +93,17 @@ public class RegressionTree implements Regression<double[]>, Serializable {
      * over the tree gives a simple measure of variable importance.
      */
     private double[] importance;
+
+    /**
+     * Values between [-1, 1] that represents monotonic regression coefficient for each attribute.
+     *
+     * It can be used to enforce model to keep monotonic relationship between target and the attribute.
+     * Positive value enforce target to be positively correlated with this feature.
+     * Positive value enforce target to be negatively correlated with this feature.
+     * Zero value turns off monotonic regression.
+     */
+    private double[] monotonicRegression;
+
     /**
      * The root of the regression tree
      */
@@ -138,54 +151,55 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
         /**
          * Constructor.
-         * 
+         *
          * @param maxNodes the maximum number of leaf nodes in the tree.
          */
         public Trainer(int maxNodes) {
             if (maxNodes < 2) {
                 throw new IllegalArgumentException("Invalid maximum number of leaf nodes: " + maxNodes);
             }
-            
+
             this.maxNodes = maxNodes;
         }
-        
+
         /**
          * Constructor.
-         * 
+         *
          * @param attributes the attributes of independent variable.
-         * @param maxNodes the maximum number of leaf nodes in the tree.
+         * @param maxNodes   the maximum number of leaf nodes in the tree.
          */
         public Trainer(Attribute[] attributes, int maxNodes) {
             super(attributes);
-            
+
             if (maxNodes < 2) {
                 throw new IllegalArgumentException("Invalid maximum number of leaf nodes: " + maxNodes);
             }
-            
+
             this.maxNodes = maxNodes;
         }
-        
+
         /**
          * Constructor.
-         * 
+         *
          * @param numFeatures the number of features.
-         * @param maxNodes the maximum number of leaf nodes in the tree.
+         * @param maxNodes    the maximum number of leaf nodes in the tree.
          */
         public Trainer(int numFeatures, int maxNodes) {
             if (numFeatures <= 0) {
                 throw new IllegalArgumentException("Invalid number of sparse binary features: " + numFeatures);
             }
-            
+
             if (maxNodes < 2) {
                 throw new IllegalArgumentException("Invalid maximum number of leaf nodes: " + maxNodes);
             }
-            
+
             this.numFeatures = numFeatures;
             this.maxNodes = maxNodes;
         }
 
         /**
          * Sets the maximum number of leaf nodes in the tree.
+         *
          * @param maxNodes the maximum number of leaf nodes in the tree.
          */
         public Trainer setMaxNodes(int maxNodes) {
@@ -199,6 +213,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
         /**
          * Sets the minimum size of leaf nodes.
+         *
          * @param nodeSize the minimum size of leaf nodes..
          */
         public Trainer setNodeSize(int nodeSize) {
@@ -214,7 +229,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
         public RegressionTree train(double[][] x, double[] y) {
             return new RegressionTree(attributes, x, y, maxNodes, nodeSize);
         }
-        
+
         public RegressionTree train(int[][] x, double[] y) {
             if (numFeatures <= 0) {
                 return new RegressionTree(Math.max(x) + 1, x, y, maxNodes, nodeSize);
@@ -223,7 +238,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             }
         }
     }
-    
+
     /**
      * An interface to calculate node output. Note that samples[i] is the
      * number of sampling of dataset[i]. 0 means that the datum is not
@@ -233,12 +248,13 @@ public class RegressionTree implements Regression<double[]>, Serializable {
     public interface NodeOutput {
         /**
          * Calculate the node output.
+         *
          * @param samples the samples in the node.
          * @return the node output
          */
         public double calculate(int[] samples);
     }
-    
+
     /**
      * Regression tree node.
      */
@@ -256,6 +272,9 @@ public class RegressionTree implements Regression<double[]>, Serializable {
          * The split value.
          */
         double splitValue = Double.NaN;
+
+        double gain = 0.0;
+
         /**
          * Reduction in squared error compared to parent.
          */
@@ -372,6 +391,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
         /**
          * Calculate the node output for leaves.
+         *
          * @param output the output calculate functor.
          */
         public void calculateOutput(NodeOutput output) {
@@ -386,7 +406,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 }
             }
         }
-        
+
         /**
          * Finds the best attribute to split on at the current node. Returns
          * true if a split exists to reduce squared error, false otherwise.
@@ -400,19 +420,17 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             if (n <= nodeSize) {
                 return false;
             }
-            
+
             double sum = node.output * n;
+
             int p = attributes.length;
-            int[] variables = new int[p];
-            for (int i = 0; i < p; i++) {
-                variables[i] = i;
-            }
-            
+            int[] variables = IntStream.range(0, attributes.length).toArray();
+
             // Loop through features and compute the reduction of squared error,
             // which is trueCount * trueMean^2 + falseCount * falseMean^2 - count * parentMean^2                    
             if (mtry < p) {
                 Math.permutate(variables);
-                
+
                 // Random forest already runs on parallel.
                 for (int j = 0; j < mtry; j++) {
                     Node split = findBestSplit(n, sum, variables[j]);
@@ -420,6 +438,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                         node.splitFeature = split.splitFeature;
                         node.splitValue = split.splitValue;
                         node.splitScore = split.splitScore;
+                        node.gain = split.gain;
                         node.trueChildOutput = split.trueChildOutput;
                         node.falseChildOutput = split.falseChildOutput;
                     }
@@ -437,6 +456,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                             node.splitFeature = split.splitFeature;
                             node.splitValue = split.splitValue;
                             node.splitScore = split.splitScore;
+                            node.gain = split.gain;
                             node.trueChildOutput = split.trueChildOutput;
                             node.falseChildOutput = split.falseChildOutput;
                         }
@@ -448,16 +468,17 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                             node.splitFeature = split.splitFeature;
                             node.splitValue = split.splitValue;
                             node.splitScore = split.splitScore;
+                            node.gain = split.gain;
                             node.trueChildOutput = split.trueChildOutput;
                             node.falseChildOutput = split.falseChildOutput;
                         }
                     }
                 }
             }
-            
+
             return (node.splitFeature != -1);
         }
-        
+
         /**
          * Task to find the best split cutoff for attribute j at the current node.
          */
@@ -478,7 +499,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
             SplitTask(int n, double sum, int j) {
                 this.n = n;
-                this.sum = sum;                
+                this.sum = sum;
                 this.j = j;
             }
 
@@ -487,9 +508,10 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 return findBestSplit(n, sum, j);
             }
         }
-        
+
         /**
          * Finds the best split cutoff for attribute j at the current node.
+         *
          * @param n the number instances in this node.
          * @param j the attribute to split on.
          */
@@ -568,11 +590,29 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                         // sorting in priority queue, which treats smaller number with
                         // higher priority.
                         double gain = (trueCount * trueMean * trueMean + falseCount * falseMean * falseMean) - n * split.output * split.output;
-                        if (gain > split.splitScore) {
+
+                        double score = gain;
+                        double monoRegForFeature = monotonicRegression[j];
+
+                        // False child - larger values of feature
+                        if (monoRegForFeature > 0) {
+                            boolean isTargetDecreasing = trueMean > falseMean;
+                            if (isTargetDecreasing) {
+                                score *= 1 - Math.abs(monoRegForFeature);
+                            }
+                        } else if (monoRegForFeature < 0) {
+                            boolean isTargetDecreasing = trueMean < falseMean;
+                            if (isTargetDecreasing) {
+                                score *= 1 - Math.abs(monoRegForFeature);
+                            }
+                        } // monoRegForFeature == 0 - no monotonic regression
+
+                        if (score > split.splitScore) {
                             // new best split
+                            split.gain = gain;
                             split.splitFeature = j;
                             split.splitValue = (x[i][j] + prevx) / 2;
-                            split.splitScore = gain;
+                            split.splitScore = score;
                             split.trueChildOutput = trueMean;
                             split.falseChildOutput = falseMean;
                         }
@@ -588,11 +628,14 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
             return split;
         }
-    
+
         /**
          * Split the node into two children nodes. Returns true if split success.
          */
-        public boolean split(PriorityQueue<TrainNode> nextSplits) {
+        public void split(PriorityQueue<TrainNode> nextSplits) {
+            if(nextSplits == null) {
+                throw new IllegalArgumentException("nextSplits cannot be null");
+            }
             if (node.splitFeature < 0) {
                 throw new IllegalStateException("Split a node with invalid feature.");
             }
@@ -601,7 +644,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             int tc = 0;
             int fc = 0;
             int[] trueSamples = new int[n];
-            //int[] falseSamples = new int[n];
+            int[] falseSamples = new int[n];
 
             if (attributes[node.splitFeature].getType() == Attribute.Type.NOMINAL) {
                 for (int i = 0; i < n; i++) {
@@ -611,7 +654,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                             tc += trueSamples[i];
                             samples[i] = 0;
                         } else {
-                            //falseSamples[i] = samples[i];
+                            falseSamples[i] = samples[i];
                             fc += samples[i];
                         }
                     }
@@ -624,7 +667,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                             tc += trueSamples[i];
                             samples[i] = 0;
                         } else {
-                            //falseSamples[i] = samples[i];
+                            falseSamples[i] = samples[i];
                             fc += samples[i];
                         }
                     }
@@ -632,41 +675,32 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             } else {
                 throw new IllegalStateException("Unsupported attribute type: " + attributes[node.splitFeature].getType());
             }
-            
+
             if (tc < nodeSize || fc < nodeSize) {
                 node.splitFeature = -1;
                 node.splitValue = Double.NaN;
                 node.splitScore = 0.0;
-                return false;
-            }
-            
-            node.trueChild = new Node(node.trueChildOutput);
-            node.falseChild = new Node(node.falseChildOutput);
-            
-            trueChild = new TrainNode(node.trueChild, x, y, trueSamples);
-            if (tc > nodeSize && trueChild.findBestSplit()) {
-                if (nextSplits != null) {
-                    nextSplits.add(trueChild);
-                } else {
-                    trueChild.split(null);
-                }
+                node.gain = 0.0;
+                return;
             }
 
-            falseChild = new TrainNode(node.falseChild, x, y, samples);
-            if (fc > nodeSize && falseChild.findBestSplit()) {
-                if (nextSplits != null) {
-                    nextSplits.add(falseChild);
-                } else {
-                    falseChild.split(null);
-                }
+            node.trueChild = new Node(node.trueChildOutput);
+            node.falseChild = new Node(node.falseChildOutput);
+
+            trueChild = new TrainNode(node.trueChild, x, y, trueSamples);
+            if (tc > nodeSize && trueChild.findBestSplit()) {
+                nextSplits.add(trueChild);
             }
-            
-            importance[node.splitFeature] += node.splitScore;
-            
-            return true;
+
+            falseChild = new TrainNode(node.falseChild, x, y, falseSamples);
+            if (fc > nodeSize && falseChild.findBestSplit()) {
+                nextSplits.add(falseChild);
+            }
+
+            importance[node.splitFeature] += node.gain;
         }
     }
-    
+
     /**
      * Regression tree training node for sparse binary features.
      */
@@ -801,7 +835,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             int tc = 0;
             int fc = 0;
             int[] trueSamples = new int[n];
-            //int[] falseSamples = new int[n];
+            int[] falseSamples = new int[n];
 
             for (int i = 0; i < n; i++) {
                 if (samples[i] > 0) {
@@ -810,7 +844,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                         tc += trueSamples[i];
                         samples[i] = 0;
                     } else {
-                        //falseSamples[i] = samples[i];
+                        falseSamples[i] = samples[i];
                         fc += samples[i];
                     }
                 }
@@ -828,7 +862,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 }
             }
 
-            falseChild = new SparseBinaryTrainNode(node.falseChild, x, y, samples);
+            falseChild = new SparseBinaryTrainNode(node.falseChild, x, y, falseSamples);
             if (fc > nodeSize && falseChild.findBestSplit()) {
                 if (nextSplits != null) {
                     nextSplits.add(falseChild);
@@ -836,13 +870,14 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                     falseChild.split(null);
                 }
             }
-            
-            importance[node.splitFeature] += node.splitScore;
-            
+
+            importance[node.splitFeature] += node.gain;
+
         }
-        
+
         /**
          * Calculate the node output for leaves.
+         *
          * @param output the output calculate functor.
          */
         public void calculateOutput(NodeOutput output) {
@@ -858,13 +893,13 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             }
         }
     }
-    
+
     /**
      * Constructor. Learns a regression tree with (most) given number of leaves.
      * All attributes are assumed to be numeric.
      *
-     * @param x the training instances. 
-     * @param y the response variable.
+     * @param x        the training instances.
+     * @param y        the response variable.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      */
     public RegressionTree(double[][] x, double[] y, int maxNodes) {
@@ -875,8 +910,8 @@ public class RegressionTree implements Regression<double[]>, Serializable {
      * Constructor. Learns a regression tree with (most) given number of leaves.
      * All attributes are assumed to be numeric.
      *
-     * @param x the training instances.
-     * @param y the response variable.
+     * @param x        the training instances.
+     * @param y        the response variable.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      */
     public RegressionTree(double[][] x, double[] y, int maxNodes, int nodeSize) {
@@ -885,10 +920,11 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
     /**
      * Constructor. Learns a regression tree with (most) given number of leaves.
+     *
      * @param attributes the attribute properties.
-     * @param x the training instances. 
-     * @param y the response variable.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param x          the training instances.
+     * @param y          the response variable.
+     * @param maxNodes   the maximum number of leaf nodes in the tree.
      */
     public RegressionTree(Attribute[] attributes, double[][] x, double[] y, int maxNodes) {
         this(attributes, x, y, maxNodes, 5);
@@ -896,10 +932,11 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
     /**
      * Constructor. Learns a regression tree with (most) given number of leaves.
+     *
      * @param attributes the attribute properties.
-     * @param x the training instances.
-     * @param y the response variable.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param x          the training instances.
+     * @param y          the response variable.
+     * @param maxNodes   the maximum number of leaf nodes in the tree.
      */
     public RegressionTree(Attribute[] attributes, double[][] x, double[] y, int maxNodes, int nodeSize) {
         this(attributes, x, y, maxNodes, nodeSize, x[0].length, null, null, null);
@@ -907,21 +944,26 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
     /**
      * Constructor. Learns a regression tree for random forest and gradient tree boosting.
+     *
      * @param attributes the attribute properties.
-     * @param x the training instances. 
-     * @param y the response variable.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree will
-     * not split, setting nodeSize = 5 generally gives good results.
-     * @param mtry the number of input variables to pick to split on at each
-     * node. It seems that p/3 give generally good performance, where p
-     * is the number of variables.
-     * @param order  the index of training values in ascending order. Note
-     * that only numeric attributes need be sorted.
-     * @param samples the sample set of instances for stochastic learning.
-     * samples[i] should be 0 or 1 to indicate if the instance is used for training.
+     * @param x          the training instances.
+     * @param y          the response variable.
+     * @param maxNodes   the maximum number of leaf nodes in the tree.
+     * @param nodeSize   the number of instances in a node below which the tree will
+     *                   not split, setting nodeSize = 5 generally gives good results.
+     * @param mtry       the number of input variables to pick to split on at each
+     *                   node. It seems that p/3 give generally good performance, where p
+     *                   is the number of variables.
+     * @param order      the index of training values in ascending order. Note
+     *                   that only numeric attributes need be sorted.
+     * @param samples    the sample set of instances for stochastic learning.
+     *                   samples[i] should be 0 or 1 to indicate if the instance is used for training.
      */
     public RegressionTree(Attribute[] attributes, double[][] x, double[] y, int maxNodes, int nodeSize, int mtry, int[][] order, int[] samples, NodeOutput output) {
+        this(attributes, x, y, maxNodes, nodeSize, mtry, order, samples, output, null);
+    }
+
+    public RegressionTree(Attribute[] attributes, double[][] x, double[] y, int maxNodes, int nodeSize, int mtry, int[][] order, int[] samples, NodeOutput output, double[] monotonicRegression) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -945,13 +987,19 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 attributes[i] = new NumericAttribute("V" + (i + 1));
             }
         }
-                
+
+        if (monotonicRegression == null) {
+            // initialized with zeros which is neutral monoreg value
+            monotonicRegression = new double[attributes.length];
+        }
+
         this.attributes = attributes;
+        this.monotonicRegression = monotonicRegression;
         this.maxNodes = maxNodes;
         this.nodeSize = nodeSize;
         this.mtry = mtry;
         importance = new double[attributes.length];
-        
+
         if (order != null) {
             this.order = order;
         } else {
@@ -971,9 +1019,6 @@ public class RegressionTree implements Regression<double[]>, Serializable {
             }
         }
 
-        // Priority queue for best-first tree growing.
-        PriorityQueue<TrainNode> nextSplits = new PriorityQueue<>();
-
         int n = 0;
         double sum = 0.0;
         if (samples == null) {
@@ -989,27 +1034,30 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 sum += samples[i] * y[i];
             }
         }
-        
+
         root = new Node(sum / n);
-        
+
         TrainNode trainRoot = new TrainNode(root, x, y, samples);
         // Now add splits to the tree until max tree size is reached
         if (trainRoot.findBestSplit()) {
+            // Priority queue for best-first tree growing.
+            PriorityQueue<TrainNode> nextSplits = new PriorityQueue<>();
+
             nextSplits.add(trainRoot);
-        }
 
-        // Pop best leaf from priority queue, split it, and push
-        // children nodes into the queue if possible.
-        for (int leaves = 1; leaves < this.maxNodes; leaves++) {
-            // parent is the leaf to split
-            TrainNode node = nextSplits.poll();
-            if (node == null) {
-                break;
+            // Pop best leaf from priority queue, split it, and push
+            // children nodes into the queue if possible.
+            for (int leaves = 1; leaves < this.maxNodes; leaves++) {
+                // parent is the leaf to split
+                TrainNode node = nextSplits.poll();
+                if (node == null) {
+                    break;
+                }
+
+                node.split(nextSplits); // Split the parent node into two children nodes
             }
-
-            node.split(nextSplits); // Split the parent node into two children nodes
         }
-        
+
         if (output != null) {
             trainRoot.calculateOutput(output);
         }
@@ -1017,10 +1065,11 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
     /**
      * Constructor. Learns a regression tree on sparse binary samples.
+     *
      * @param numFeatures the number of sparse binary features.
-     * @param x the training instances of sparse binary features. 
-     * @param y the response variable.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param x           the training instances of sparse binary features.
+     * @param y           the response variable.
+     * @param maxNodes    the maximum number of leaf nodes in the tree.
      */
     public RegressionTree(int numFeatures, int[][] x, double[] y, int maxNodes) {
         this(numFeatures, x, y, maxNodes, 5);
@@ -1028,12 +1077,13 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
     /**
      * Constructor. Learns a regression tree on sparse binary samples.
+     *
      * @param numFeatures the number of sparse binary features.
-     * @param x the training instances of sparse binary features.
-     * @param y the response variable.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree will
-     * not split, setting nodeSize = 5 generally gives good results.
+     * @param x           the training instances of sparse binary features.
+     * @param y           the response variable.
+     * @param maxNodes    the maximum number of leaf nodes in the tree.
+     * @param nodeSize    the number of instances in a node below which the tree will
+     *                    not split, setting nodeSize = 5 generally gives good results.
      */
     public RegressionTree(int numFeatures, int[][] x, double[] y, int maxNodes, int nodeSize) {
         this(numFeatures, x, y, maxNodes, nodeSize, null, null);
@@ -1041,14 +1091,15 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
     /**
      * Constructor. Learns a regression tree on sparse binary samples.
+     *
      * @param numFeatures the number of sparse binary features.
-     * @param x the training instances. 
-     * @param y the response variable.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree will
-     * not split, setting nodeSize = 5 generally gives good results.
-     * @param samples the sample set of instances for stochastic learning.
-     * samples[i] should be 0 or 1 to indicate if the instance is used for training.
+     * @param x           the training instances.
+     * @param y           the response variable.
+     * @param maxNodes    the maximum number of leaf nodes in the tree.
+     * @param nodeSize    the number of instances in a node below which the tree will
+     *                    not split, setting nodeSize = 5 generally gives good results.
+     * @param samples     the sample set of instances for stochastic learning.
+     *                    samples[i] should be 0 or 1 to indicate if the instance is used for training.
      */
     public RegressionTree(int numFeatures, int[][] x, double[] y, int maxNodes, int nodeSize, int[] samples, NodeOutput output) {
         if (x.length != y.length) {
@@ -1068,7 +1119,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
         this.numFeatures = numFeatures;
         this.mtry = numFeatures;
         importance = new double[numFeatures];
-        
+
         // Priority queue for best-first tree growing.
         PriorityQueue<SparseBinaryTrainNode> nextSplits = new PriorityQueue<>();
 
@@ -1087,9 +1138,9 @@ public class RegressionTree implements Regression<double[]>, Serializable {
                 sum += samples[i] * y[i];
             }
         }
-        
+
         root = new Node(sum / n);
-        
+
         SparseBinaryTrainNode trainRoot = new SparseBinaryTrainNode(root, x, y, samples);
         // Now add splits to the tree until max tree size is reached
         if (trainRoot.findBestSplit()) {
@@ -1107,12 +1158,12 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
             node.split(nextSplits); // Split the parent node into two children nodes
         }
-        
+
         if (output != null) {
             trainRoot.calculateOutput(output);
         }
     }
-    
+
     /**
      * Returns the variable importance. Every time a split of a node is made
      * on variable the impurity criterion for the two descendent nodes is less
@@ -1124,14 +1175,15 @@ public class RegressionTree implements Regression<double[]>, Serializable {
     public double[] importance() {
         return importance;
     }
-        
+
     @Override
     public double predict(double[] x) {
         return root.predict(x);
     }
-    
+
     /**
      * Predicts the dependent variable of an instance with sparse binary features.
+     *
      * @param x the instance.
      * @return the predicted value of dependent variable.
      */
@@ -1142,7 +1194,8 @@ public class RegressionTree implements Regression<double[]>, Serializable {
     /**
      * Returns the maximum depth" of the tree -- the number of
      * nodes along the longest path from the root node
-     * down to the farthest leaf node.*/
+     * down to the farthest leaf node.
+     */
     public int maxDepth() {
         return maxDepth(root);
     }
@@ -1167,6 +1220,7 @@ public class RegressionTree implements Regression<double[]>, Serializable {
         int parent;
         int id;
         Node node;
+
         DotNode(int parent, int id, Node node) {
             this.parent = parent;
             this.id = id;
