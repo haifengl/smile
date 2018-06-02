@@ -15,17 +15,13 @@
  *******************************************************************************/
 package smile.regression;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import smile.data.AttributeDataset;
 import smile.data.parser.ArffParser;
-import smile.validation.LOOCV;
 import smile.math.Math;
 import smile.sort.QuickSort;
 import smile.validation.CrossValidation;
+import smile.validation.LOOCV;
 import smile.validation.Validation;
 
 /**
@@ -198,12 +194,49 @@ public class RandomForestTest {
             }
             
             double[] importance = forest.importance();
-            index = QuickSort.sort(importance);
+            int[] originalIndices = QuickSort.sort(importance);
             for (int i = importance.length; i-- > 0; ) {
-                System.out.format("%s importance is %.4f%n", data.attributes()[index[i]], importance[i]);
+                System.out.format("%s importance is %.4f%n", data.attributes()[originalIndices[i]], importance[i]);
             }
         } catch (Exception ex) {
             System.err.println(ex);
         }
     }
+
+    @Test
+    public void testRandomForestMerging() throws Exception {
+        System.out.println("Random forest merging");
+        ArffParser parser = new ArffParser();
+        parser.setResponseIndex(6);
+        AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
+        double[] datay = data.toArray(new double[data.size()]);
+        double[][] datax = data.toArray(new double[data.size()][]);
+
+        int n = datax.length;
+        int m = 3 * n / 4;
+        int[] index = Math.permutate(n);
+
+        double[][] trainx = new double[m][];
+        double[] trainy = new double[m];
+        for (int i = 0; i < m; i++) {
+            trainx[i] = datax[index[i]];
+            trainy[i] = datay[index[i]];
+        }
+
+        double[][] testx = new double[n-m][];
+        double[] testy = new double[n-m];
+        for (int i = m; i < n; i++) {
+            testx[i-m] = datax[index[i]];
+            testy[i-m] = datay[index[i]];
+        }
+
+        RandomForest forest1 = new RandomForest(data.attributes(), trainx, trainy, 100, n, 5, trainx[0].length / 3);
+        RandomForest forest2 = new RandomForest(data.attributes(), trainx, trainy, 100, n, 5, trainx[0].length / 3);
+        RandomForest merged = forest1.merge(forest2);
+
+        System.out.format("Forest 1 RMSE = %.4f%n", Validation.test(forest1, testx, testy));
+        System.out.format("Forest 2 RMSE = %.4f%n", Validation.test(forest2, testx, testy));
+        System.out.format("Merged RMSE = %.4f%n", Validation.test(merged, testx, testy));
+    }
+
 }

@@ -320,10 +320,10 @@ trait Operators {
   }
 
   /** Density-Based Spatial Clustering of Applications with Noise.
-    * DBScan finds a number of clusters starting from the estimated density
+    * DBSCAN finds a number of clusters starting from the estimated density
     * distribution of corresponding nodes.
     *
-    * DBScan requires two parameters: radius (i.e. neighborhood radius) and the
+    * DBSCAN requires two parameters: radius (i.e. neighborhood radius) and the
     * number of minimum points required to form a cluster (minPts). It starts
     * with an arbitrary starting point that has not been visited. This point's
     * neighborhood is retrieved, and if it contains sufficient number of points,
@@ -338,34 +338,34 @@ trait Operators {
     * is retrieved and processed, leading to the discovery of a further cluster
     * of noise.
     *
-    * DBScan visits each point of the database, possibly multiple times (e.g.,
+    * DBSCAN visits each point of the database, possibly multiple times (e.g.,
     * as candidates to different clusters). For practical considerations, however,
     * the time complexity is mostly governed by the number of nearest neighbor
-    * queries. DBScan executes exactly one such query for each point, and if
+    * queries. DBSCAN executes exactly one such query for each point, and if
     * an indexing structure is used that executes such a neighborhood query
     * in O(log n), an overall runtime complexity of O(n log n) is obtained.
     *
-    * DBScan has many advantages such as
+    * DBSCAN has many advantages such as
     *
-    *  - DBScan does not need to know the number of clusters in the data
+    *  - DBSCAN does not need to know the number of clusters in the data
     *    a priori, as opposed to k-means.
-    *  - DBScan can find arbitrarily shaped clusters. It can even find clusters
+    *  - DBSCAN can find arbitrarily shaped clusters. It can even find clusters
     *    completely surrounded by (but not connected to) a different cluster.
     *    Due to the MinPts parameter, the so-called single-link effect
     *    (different clusters being connected by a thin line of points) is reduced.
-    *  - DBScan has a notion of noise.
-    *  - DBScan requires just two parameters and is mostly insensitive to the
+    *  - DBSCAN has a notion of noise.
+    *  - DBSCAN requires just two parameters and is mostly insensitive to the
     *    ordering of the points in the database. (Only points sitting on the
     *    edge of two different clusters might swap cluster membership if the
     *    ordering of the points is changed, and the cluster assignment is unique
     *    only up to isomorphism.)
     *
-    * On the other hand, DBScan has the disadvantages of
+    * On the other hand, DBSCAN has the disadvantages of
     *
     *  - In high dimensional space, the data are sparse everywhere
-    *    because of the curse of dimensionality. Therefore, DBScan doesn't
+    *    because of the curse of dimensionality. Therefore, DBSCAN doesn't
     *    work well on high-dimensional data in general.
-    *  - DBScan does not respond well to data sets with varying densities.
+    *  - DBSCAN does not respond well to data sets with varying densities.
     *
     * ====References:====
     *  - Martin Ester, Hans-Peter Kriegel, Jorg Sander, Xiaowei Xu (1996-). A density-based algorithm for discovering clusters in large spatial databases with noise". KDD, 1996.
@@ -376,14 +376,14 @@ trait Operators {
     * @param minPts the minimum number of neighbors for a core data point.
     * @param radius the neighborhood radius.
     */
-  def dbscan[T <: Object](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBScan[T] = {
+  def dbscan[T <: Object](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBSCAN[T] = {
     time {
-      new DBScan[T](data, nns, minPts, radius)
+      new DBSCAN[T](data, nns, minPts, radius)
     }
   }
 
   /** Density-Based Spatial Clustering of Applications with Noise.
-    * DBScan finds a number of clusters starting from the estimated density
+    * DBSCAN finds a number of clusters starting from the estimated density
     * distribution of corresponding nodes.
     * Cover Tree is used for nearest neighbor search.
     *
@@ -392,21 +392,21 @@ trait Operators {
     * @param minPts the minimum number of neighbors for a core data point.
     * @param radius the neighborhood radius.
    */
-  def dbscan[T <: Object](data: Array[T], distance: Metric[T], minPts: Int, radius: Double): DBScan[T] = {
+  def dbscan[T <: Object](data: Array[T], distance: Metric[T], minPts: Int, radius: Double): DBSCAN[T] = {
     time {
-      new DBScan[T](data, distance, minPts, radius)
+      new DBSCAN[T](data, distance, minPts, radius)
     }
   }
 
-  /** DBSCan with Euclidean distance.
-    * DBScan finds a number of clusters starting from the estimated density
+  /** DBSCAN with Euclidean distance.
+    * DBSCAN finds a number of clusters starting from the estimated density
     * distribution of corresponding nodes.
     *
     * @param data the data set.
     * @param minPts the minimum number of neighbors for a core data point.
     * @param radius the neighborhood radius.
     */
-  def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBScan[Array[Double]] = {
+  def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBSCAN[Array[Double]] = {
     time {
       dbscan(data, new EuclideanDistance, minPts, radius)
     }

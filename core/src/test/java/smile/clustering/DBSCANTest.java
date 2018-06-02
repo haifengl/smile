@@ -30,9 +30,9 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class DBScanTest {
+public class DBSCANTest {
     
-    public DBScanTest() {
+    public DBSCANTest() {
     }
 
     @BeforeClass
@@ -52,7 +52,7 @@ public class DBScanTest {
     }
 
     /**
-     * Test of learn method, of class DBScan.
+     * Test of learn method, of class DBSCAN.
      */
     @Test
     public void testToy() {
@@ -93,7 +93,7 @@ public class DBScanTest {
             label[i] = 3;
         }
         
-        DBScan<double[]> dbscan = new DBScan<>(data, new KDTree<>(data, data), 200, 0.8);
+        DBSCAN<double[]> dbscan = new DBSCAN<>(data, new KDTree<>(data, data), 200, 0.8);
         System.out.println(dbscan);
         
         int[] size = dbscan.getClusterSize();

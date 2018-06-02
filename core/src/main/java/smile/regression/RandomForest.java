@@ -524,14 +524,43 @@ public class RandomForest implements Regression<double[]>, Serializable {
         if (m > 0) {
             error = Math.sqrt(error / m);
         }
-        
-        importance = new double[attributes.length];
+
+        importance = calculateImportance(trees, attributes.length);
+    }
+
+    /**
+     * Merges together two random forests and returns a new forest consisting of trees from both input forests.
+     */
+    public RandomForest merge(RandomForest other) {
+        if (this.importance.length != other.importance.length) {
+            throw new IllegalArgumentException("RandomForest have different sizes of feature vectors");
+        }
+
+        ArrayList<RegressionTree> mergedTrees = new ArrayList<>();
+        mergedTrees.addAll(this.trees);
+        mergedTrees.addAll(other.trees);
+
+        double weightedMergedError = ((this.error * this.trees.size()) + (other.error * other.trees.size())) / (this.trees.size() + other.trees.size());
+        double[] mergedImportance = calculateImportance(mergedTrees, this.importance.length);
+
+        return new RandomForest(mergedTrees, weightedMergedError, mergedImportance);
+    }
+
+    private RandomForest(List<RegressionTree> trees, double error, double[] importance) {
+        this.trees = trees;
+        this.error = error;
+        this.importance = importance;
+    }
+
+    private static double[] calculateImportance(List<RegressionTree> trees, int featuresCount) {
+        double[] importance = new double[featuresCount];
         for (RegressionTree tree : trees) {
             double[] imp = tree.importance();
             for (int i = 0; i < imp.length; i++) {
                 importance[i] += imp[i];
             }
         }
+        return importance;
     }
 
     /**

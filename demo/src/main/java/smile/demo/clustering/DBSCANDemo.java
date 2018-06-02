@@ -28,7 +28,7 @@ import javax.swing.JTextField;
 
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
-import smile.clustering.DBScan;
+import smile.clustering.DBSCAN;
 import smile.math.distance.EuclideanDistance;
 import smile.plot.ScatterPlot;
 
@@ -37,13 +37,13 @@ import smile.plot.ScatterPlot;
  * @author Haifeng Li
  */
 @SuppressWarnings("serial")
-public class DBScanDemo extends ClusteringDemo {
+public class DBSCANDemo extends ClusteringDemo {
     JTextField minPtsField;
     JTextField rangeField;
     int minPts = 10;
     double range = 10;
 
-    public DBScanDemo() {
+    public DBSCANDemo() {
         // Remove K TextFile
         optionPane.remove(optionPane.getComponentCount() - 1);
         optionPane.remove(optionPane.getComponentCount() - 1);
@@ -82,7 +82,7 @@ public class DBScanDemo extends ClusteringDemo {
         }
 
         long clock = System.currentTimeMillis();
-        DBScan<double[]> dbscan = new DBScan<>(dataset[datasetIndex], new EuclideanDistance(), minPts, range);
+        DBSCAN<double[]> dbscan = new DBSCAN<>(dataset[datasetIndex], new EuclideanDistance(), minPts, range);
         System.out.format("DBSCAN clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
         JPanel pane = new JPanel(new GridLayout(1, 2));
@@ -104,12 +104,12 @@ public class DBScanDemo extends ClusteringDemo {
 
     @Override
     public String toString() {
-        return "DBScan";
+        return "DBSCAN";
     }
 
     public static void main(String argv[]) {
-        ClusteringDemo demo = new DBScanDemo();
-        JFrame f = new JFrame("DBScan");
+        ClusteringDemo demo = new DBSCANDemo();
+        JFrame f = new JFrame("DBSCAN");
         f.setSize(new Dimension(1000, 1000));
         f.setLocationRelativeTo(null);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
