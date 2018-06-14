@@ -66,7 +66,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
     public ClassificationDemo() {
         if (dataset == null) {
             dataset = new AttributeDataset[datasetName.length];
-            if(parser == null) {
+            if (parser == null) {
                 parser = new DelimitedTextParser();
                 parser.setDelimiter("[\t ]+");
                 parser.setResponseIndex(new NominalAttribute("class"), 0);            	
