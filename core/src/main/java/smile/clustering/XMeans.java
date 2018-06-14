@@ -115,7 +115,7 @@ public class XMeans extends KMeans implements Serializable {
 
             int[] index = QuickSort.sort(score);
             for (int i = 0; i < k; i++) {
-                if (score[index[i]] <= 0.0) {
+                if (score[i] <= 0.0) {
                     centers.add(centroids[index[i]]);
                 }
             }
