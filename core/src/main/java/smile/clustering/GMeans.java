@@ -123,7 +123,7 @@ public class GMeans extends KMeans implements Serializable {
 
             int[] index = QuickSort.sort(score);
             for (int i = 0; i < k; i++) {
-                if (score[index[i]] <= 1.8692) {
+                if (score[i] <= 1.8692) {
                     centers.add(centroids[index[i]]);
                 }
             }
