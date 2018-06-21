@@ -80,7 +80,7 @@ public class FLDTest {
                     error++;
             }
 
-            System.out.format("FLD-Iris error = " + error + ", error rate = %.2f%n", 100.0 * error / n);
+            System.out.format("FLD-Iris error = " + error + ", error rate = %.2f%% %n", 100.0 * error / n);
             assertTrue(error <= 25);
         } catch (Exception ex) {
             System.err.println(ex);
@@ -113,7 +113,7 @@ public class FLDTest {
                 }
             }
 
-            System.out.format("FLD-USPS error = " + error + ",  error rate = %.2f%n", 100.0 * error / testy.length);
+            System.out.format("FLD-USPS error = " + error + ",  error rate = %.2f%% %n", 100.0 * error / testy.length);
             assertTrue(error <= 561);
         } catch (Exception ex) {
             System.err.println(ex);
@@ -145,7 +145,7 @@ public class FLDTest {
                     error++;
             }
 
-            System.out.format("FLD-Pendigits error = " + error + ", error rate = %.2f%n", 100.0 * error / n);
+            System.out.format("FLD-Pendigits error = " + error + ", error rate = %.2f%% %n", 100.0 * error / n);
             assertTrue(error <= 900);
         } catch (Exception ex) {
             System.err.println(ex);
@@ -166,7 +166,7 @@ public class FLDTest {
             double[][] testx = segtest.toArray(new double[segtest.size()][]);
             int[] testy = segtest.toArray(new int[segtest.size()]);
 
-            FLD fisher = new FLD(x, y, 6, 1E-8, Model.HIGH_DIM);
+            FLD fisher = new FLD(x, y, 6, 3*1E-7, Model.HIGH_DIM);
             
             int error = 0;
             for (int i = 0; i < testx.length; i++) {
@@ -175,7 +175,7 @@ public class FLDTest {
                 }
             }
 
-            System.out.format("FLD-Segmentation error = " + error + ", error rate = %.2f%n", 100.0 * error / testy.length);
+            System.out.format("FLD-Segmentation error = " + error + ", error rate = %.2f%% %n", 100.0 * error / testy.length);
             assertTrue(error <= 100);
         } catch (Exception ex) {
             System.err.println(ex);
