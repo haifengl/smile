@@ -470,7 +470,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
     private DenseMatrix getMappingVectorForLowDim(EVD eigen, DenseMatrix B, double[] s) {
     	DenseMatrix U = eigen.getEigenVectors();
     	DenseMatrix UB = U.atbmm(B);
-    	for (int i = 0; i < k; i++) {
+    	for (int i = 0; i < p; i++) {
             for (int j = 0; j < p; j++) {            	
             	UB.mul(i, j, s[j]);
             }

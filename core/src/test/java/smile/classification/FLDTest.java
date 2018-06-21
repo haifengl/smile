@@ -74,7 +74,7 @@ public class FLDTest {
             for (int i = 0; i < n; i++) {
                 double[][] trainx = Math.slice(x, loocv.train[i]);
                 int[] trainy = Math.slice(y, loocv.train[i]);
-                FLD fisher = new FLD(trainx, trainy, Model.LOW_DIM);
+                FLD fisher = new FLD(trainx, trainy);
 
                 if (y[loocv.test[i]] != fisher.predict(x[loocv.test[i]]))
                     error++;
