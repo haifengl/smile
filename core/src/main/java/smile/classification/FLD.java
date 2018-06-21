@@ -59,6 +59,11 @@ import smile.projection.Projection;
  * @see LDA
  * @see smile.projection.PCA
  * 
+ * <h2>References</h2>
+ * <ol>
+ * <li> Robust and Accurate Cancer Classification with Gene Expression Profiling http://alumni.cs.ucr.edu/~hli/paper/hli05tumor.pdf.</li>
+ * </ol>
+ * 
  * @author Haifeng Li
  */
 public class FLD implements Classifier<double[]>, Projection<double[]>, Serializable {
@@ -91,7 +96,30 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
     /**
      * Projected class mean vectors.
      */
-    private final double[][] smu;
+    private final double[][] smu;    
+    /** 
+     * flag to indicate which numerical calculation to use for training, 
+     * data set which has dimensions <b>less than or equals to 4</b> would take LOW_DIM model as default.
+     */
+    private final Model model;
+    
+    /**
+     * 
+     * For data set like Iris flower which has only 4 variables, 
+     * it is probably better that we directly calculate inv(S_t) * S_b which works on well on small dimension data set. 
+     * For other data with high dimensions, we might use a fast algorithm as described in the reference paper.
+     *
+     */
+    public enum Model{
+    	/**
+    	 * data set with low dimensions like Iris flower which has 4 features
+    	 */
+    	LOW_DIM,
+    	/**
+    	 * data set with high dimensions like USPS or Pendigits which has more than 15 features
+    	 */
+    	HIGH_DIM;
+    }
 
     /**
      * Trainer for Fisher's linear discriminant.
@@ -105,7 +133,11 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
          * A tolerance to decide if a covariance matrix is singular. The trainer
          * will reject variables whose variance is less than tol<sup>2</sup>.
          */
-        private double tol = 1E-4;
+        private double tol = 1E-4;   
+        /** 
+         * flag to indicate which numerical calculation to use for training
+         */
+        private Model model = Model.LOW_DIM;
 
         /**
          * Constructor. The dimensionality of mapped space will be k - 1,
@@ -145,9 +177,17 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
             return this;
         }
         
-        @Override
+        /**
+         * Sets the flag to indicate which numerical calculation to use for training
+         * @param model either LOW_DIM or HIGH_DIM
+         */
+        public void setModel(Model model) {
+			this.model = model;
+		}
+
+		@Override
         public FLD train(double[][] x, int[] y) {
-            return new FLD(x, y, L, tol);
+            return new FLD(x, y, L, tol, model);
         }
     }
     
@@ -155,9 +195,10 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
      * Constructor. Learn Fisher's linear discriminant.
      * @param x training instances.
      * @param y training labels in [0, k), where k is the number of classes.
+     * @param model flag to indicate which numerical calculation to use for training
      */
-    public FLD(double[][] x, int[] y) {
-        this(x, y, -1);
+    public FLD(double[][] x, int[] y, Model... model) {
+        this(x, y, -1, model);
     }
 
     /**
@@ -165,9 +206,10 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
      * @param x training instances.
      * @param y training labels in [0, k), where k is the number of classes.
      * @param L the dimensionality of mapped space.
+     * @param model flag to indicate which numerical calculation to use for training
      */
-    public FLD(double[][] x, int[] y, int L) {
-        this(x, y, L, 1E-4);
+    public FLD(double[][] x, int[] y, int L, Model... model) {
+        this(x, y, L, 1E-4, model);
     }
 
     /**
@@ -177,8 +219,20 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
      * @param L the dimensionality of mapped space.
      * @param tol a tolerance to decide if a covariance matrix is singular; it
      * will reject variables whose variance is less than tol<sup>2</sup>.
+     * @param model flag to indicate which numerical calculation to use for training
      */
-    public FLD(double[][] x, int[] y, int L, double tol) {
+    public FLD(double[][] x, int[] y, int L, double tol, Model... model) {
+    	if(model != null && model.length > 0) {
+        	this.model = model[0];    		
+    	}else {
+        	int dim = x[0].length;
+        	if(dim <= 4) {//use Iris flower dimension as a threshold
+        		this.model = Model.LOW_DIM;
+        	}else {
+        		this.model = Model.HIGH_DIM;
+        	}
+    	}
+    	
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -278,7 +332,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
         }
 
         T.setSymmetric(true);
-        EVD eigen = T.eigen();
+        EVD eigen = T.eigen();  
         
         tol = tol * tol;
         double[] s = eigen.getEigenValues();
@@ -286,24 +340,11 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
             if (s[i] < tol) {
                 throw new IllegalArgumentException("The covariance matrix is close to singular.");
             }
-
             s[i] = 1.0 / s[i];
-        }
+        }     
+        
+        DenseMatrix U = (this.model == Model.LOW_DIM)? getMappingVectorForLowDim(eigen, B, s) : getMappingVectorForHighDim(eigen, ni, n);
 
-        DenseMatrix U = eigen.getEigenVectors();
-        DenseMatrix UB = U.atbmm(B);
-
-        for (int i = 0; i < k; i++) {
-            for (int j = 0; j < p; j++) {
-                UB.mul(i, j, s[j]);
-            }
-        }
-
-        B = U.abmm(UB);
-        B.setSymmetric(true);
-        eigen = B.eigen();
-
-        U = eigen.getEigenVectors();
         scaling = Matrix.zeros(p, L);
         for (int j = 0; j < L; j++) {
             for (int i = 0; i < p; i++) {
@@ -371,5 +412,72 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
      */
     public DenseMatrix getProjection() {
         return scaling;
+    }
+    
+    /**
+     * Calculate the mapping vector for high dimension data set.
+     * @param eigen SVD calculator from covariance matrix
+     * @param ni empirical instance count for each class
+     * @param n total training instance count
+     * @return mapping vector calculated from reference paper
+     */
+    private DenseMatrix getMappingVectorForHighDim(EVD eigen, int[] ni, int n) {
+    	//
+        // calculate the square root of diagonal inverse of eigenvalue matrix from SVD of covariance matrix
+        //
+        DenseMatrix U = eigen.getEigenVectors();
+        DenseMatrix D = eigen.getD();
+        for (int i = 0; i < D.ncols(); i++) {
+        	D.set(i, i, Math.sqrt(D.get(i, i)));
+        }        
+        //
+        // multiply class mean matrix by priori probability
+        //
+        DenseMatrix M = mu.copy();
+        double[] priori = new double[k];
+        for (int i = 0; i < k; i++) {
+            priori[i] = (double) ni[i] / n;
+        }        
+        for (int i = 0; i < k; i++) {
+            for (int j = 0; j < p; j++) {
+            	M.mul(i, j, Math.sqrt(priori[i]));
+            }
+        }        
+        //
+        // calculate Moore-Penrose inverse for covariance matrix: U * D * U'
+        // and multiply the result with class mean matrix for SVD decomposition
+        //      
+        DenseMatrix Stplus = U.abmm(D.abmm(U.transpose()));
+        DenseMatrix StM = Stplus.abmm(M.transpose());
+        DenseMatrix St = StM.abmm(StM.transpose());
+        St.setSymmetric(true);        
+        EVD evd = St.eigen();
+        DenseMatrix Utilda = evd.getEigenVectors();        
+        //
+        // calculate the final mapping matrix
+        //
+        U = Stplus.abmm(Utilda);
+        return U;
+    }
+    
+    /**
+     * Calculate the mapping vector for low dimension data set.
+     * @param eigen SVD calculator from covariance matrix
+     * @param B between class scatter matrix
+     * @param s eigen value array from SVD of covariance matrix
+     * @return mapping vector calculated from inv(S_t) * S_b
+     */
+    private DenseMatrix getMappingVectorForLowDim(EVD eigen, DenseMatrix B, double[] s) {
+    	DenseMatrix U = eigen.getEigenVectors();
+    	DenseMatrix UB = U.atbmm(B);
+    	for (int i = 0; i < k; i++) {
+            for (int j = 0; j < p; j++) {            	
+            	UB.mul(i, j, s[j]);
+            }
+    	}
+    	B = U.abmm(UB);
+    	B.setSymmetric(true);
+    	eigen = B.eigen();
+    	return eigen.getEigenVectors();
     }
 }
