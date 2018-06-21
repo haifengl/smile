@@ -187,7 +187,7 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Batch Multinomial error = %d of %d, error rate = %.2f%%%n", error, total, 100.0 * error / total);
+        System.out.format("Batch Multinomial error = %d of %d, error rate = %.2f%n", error, total, 100.0 * error / total);
         assertTrue(error < 265);
     }
 
@@ -227,7 +227,7 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Online Multinomial error = %d of %d, error rate = %.2f%%%n", error, total, 100.0 * error / total);
+        System.out.format("Online Multinomial error = %d of %d, error rate = %.2f%n", error, total, 100.0 * error / total);
         assertTrue(error < 265);
     }
     
@@ -265,7 +265,7 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Batch PolyaUrn error = %d of %d, error rate = %.2f%%%n", error, total, 100.0 * error / total);
+        System.out.format("Batch PolyaUrn error = %d of %d, error rate = %.2f%n", error, total, 100.0 * error / total);
         assertTrue(error < 265);
     }
 
@@ -305,7 +305,7 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Online PolyaUrn error = %d of %d, error rate = %.2f%%%n", error, total, 100.0 * error / total);
+        System.out.format("Online PolyaUrn error = %d of %d, error rate = %.2f%n", error, total, 100.0 * error / total);
         assertTrue(error < 265);
     }
 
@@ -344,7 +344,7 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Batch Bernoulli error = %d of %d, error rate = %.2f%%%n", error, total, 100.0 * error / total);
+        System.out.format("Batch Bernoulli error = %d of %d, error rate = %.2f%n", error, total, 100.0 * error / total);
         assertTrue(error < 270);
     }
 
@@ -385,7 +385,7 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Online Bernoulli error = %d of %d, error rate = %.2f%%%n", error, total, 100.0 * error / total);
+        System.out.format("Online Bernoulli error = %d of %d, error rate = %.2f%n", error, total, 100.0 * error / total);
         assertTrue(error < 270);
     }
 }
