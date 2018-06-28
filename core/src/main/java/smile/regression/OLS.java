@@ -172,7 +172,7 @@ public class OLS implements Regression<double[]>, Serializable {
      * @param x a matrix containing the explanatory variables. NO NEED to include a constant column of 1s for bias.
      * @param y the response values.
      * @param SVD If true, use SVD to fit the model. Otherwise, use QR decomposition. SVD is slower than QR but
-     *            can handle rand-deficient matrix.
+     *            can handle rank-deficient matrix.
      */
     public OLS(double[][] x, double[] y, boolean SVD) {
         if (x.length != y.length) {
@@ -208,7 +208,7 @@ public class OLS implements Regression<double[]>, Serializable {
                 logger.warn("Matrix is not of full rank, try SVD instead");
                 SVD = true;
                 svd = X.svd();
-                Arrays.fill(w1, 0.0);
+                Arrays.fill(w1, 0.0);//re-init w1 with zero after exception caught
                 svd.solve(y, w1);
             }
         }
@@ -248,7 +248,7 @@ public class OLS implements Regression<double[]>, Serializable {
                 coefficients[i][0] = w1[i];
                 double s = svd.getSingularValues()[i];
                 if (!Math.isZero(s, 1E-10)) {
-                    double se = error / svd.getSingularValues()[i];
+                    double se = error / s;
                     coefficients[i][1] = se;
                     double t = w1[i] / se;
                     coefficients[i][2] = t;
