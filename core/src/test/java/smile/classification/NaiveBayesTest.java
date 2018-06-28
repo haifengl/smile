@@ -101,7 +101,7 @@ public class NaiveBayesTest {
      */
     @Test
     public void testPredict() {
-        System.out.println("predict");
+        System.out.println("---predict---");
         ArffParser arffParser = new ArffParser();
         arffParser.setResponseIndex(4);
         try {
@@ -158,7 +158,7 @@ public class NaiveBayesTest {
      */
     @Test
     public void testLearnMultinomial() {
-        System.out.println("batch learn Multinomial");
+        System.out.println("---batch learn Multinomial---");
 
         double[][] x = moviex;
         int[] y = moviey;
@@ -187,7 +187,7 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Multinomial error = %d of %d%n", error, total);
+        System.out.format("Batch Multinomial error = %d of %d, error rate = %.2f%% %n", error, total, 100.0 * error / total);
         assertTrue(error < 265);
     }
 
@@ -196,7 +196,7 @@ public class NaiveBayesTest {
      */
     @Test
     public void testLearnMultinomial2() {
-        System.out.println("online learn Multinomial");
+        System.out.println("---online learn Multinomial---");
 
         double[][] x = moviex;
         int[] y = moviey;
@@ -227,7 +227,85 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Multinomial error = %d of %d%n", error, total);
+        System.out.format("Online Multinomial error = %d of %d, error rate = %.2f%% %n", error, total, 100.0 * error / total);
+        assertTrue(error < 265);
+    }
+    
+    /**
+     * Test of learn method, of class SequenceNaiveBayes.
+     */
+    @Test
+    public void testLearnPolyaUrn() {
+        System.out.println("---batch learn PolyaUrn---");
+
+        double[][] x = moviex;
+        int[] y = moviey;
+        int n = x.length;
+        int k = 10;
+        CrossValidation cv = new CrossValidation(n, k);
+        int error = 0;
+        int total = 0;
+        for (int i = 0; i < k; i++) {
+            double[][] trainx = Math.slice(x, cv.train[i]);
+            int[] trainy = Math.slice(y, cv.train[i]);
+            NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.POLYAURN, 2, feature.length);
+
+            bayes.learn(trainx, trainy);
+
+            double[][] testx = Math.slice(x, cv.test[i]);
+            int[] testy = Math.slice(y, cv.test[i]);
+            for (int j = 0; j < testx.length; j++) {
+                int label = bayes.predict(testx[j]);
+                if (label != -1) {
+                    total++;
+                    if (testy[j] != label) {
+                        error++;
+                    }
+                }
+            }
+        }
+
+        System.out.format("Batch PolyaUrn error = %d of %d, error rate = %.2f%% %n", error, total, 100.0 * error / total);
+        assertTrue(error < 265);
+    }
+
+    /**
+     * Test of learn method, of class SequenceNaiveBayes.
+     */
+    @Test
+    public void testLearnPolyaUrn2() {
+        System.out.println("---online learn PolyaUrn---");
+
+        double[][] x = moviex;
+        int[] y = moviey;
+        int n = x.length;
+        int k = 10;
+        CrossValidation cv = new CrossValidation(n, k);
+        int error = 0;
+        int total = 0;
+        for (int i = 0; i < k; i++) {
+            double[][] trainx = Math.slice(x, cv.train[i]);
+            int[] trainy = Math.slice(y, cv.train[i]);
+            NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.POLYAURN, 2, feature.length);
+
+            for (int j = 0; j < trainx.length; j++) {
+                bayes.learn(trainx[j], trainy[j]);
+            }
+
+            double[][] testx = Math.slice(x, cv.test[i]);
+            int[] testy = Math.slice(y, cv.test[i]);
+            for (int j = 0; j < testx.length; j++) {
+                int label = bayes.predict(testx[j]);
+                if (label != -1) {
+                    total++;
+                    if (testy[j] != label) {
+                        error++;
+                    }
+                }
+            }
+        }
+
+        System.out.format("Online PolyaUrn error = %d of %d, error rate = %.2f%% %n", error, total, 100.0 * error / total);
         assertTrue(error < 265);
     }
 
@@ -236,7 +314,7 @@ public class NaiveBayesTest {
      */
     @Test
     public void testLearnBernoulli() {
-        System.out.println("batch learn Bernoulli");
+        System.out.println("---batch learn Bernoulli---");
 
         double[][] x = moviex;
         int[] y = moviey;
@@ -266,7 +344,7 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Bernoulli error = %d of %d%n", error, total);
+        System.out.format("Batch Bernoulli error = %d of %d, error rate = %.2f%% %n", error, total, 100.0 * error / total);
         assertTrue(error < 270);
     }
 
@@ -275,7 +353,7 @@ public class NaiveBayesTest {
      */
     @Test
     public void testLearnBernoulli2() {
-        System.out.println("online learn Bernoulli");
+        System.out.println("---online learn Bernoulli---");
 
         double[][] x = moviex;
         int[] y = moviey;
@@ -307,7 +385,7 @@ public class NaiveBayesTest {
             }
         }
 
-        System.out.format("Bernoulli error = %d of %d%n", error, total);
+        System.out.format("Online Bernoulli error = %d of %d, error rate = %.2f%% %n", error, total, 100.0 * error / total);
         assertTrue(error < 270);
     }
 }
