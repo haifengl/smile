@@ -125,7 +125,7 @@ public class QR {
    /**
      * Solve the least squares A*x = b.
      * @param b   right hand side of linear system.
-     * @param x   the output solution vector that minimizes the L2 norm of Q*R*x - b.
+     * @param x   the output solution vector that minimizes the L2 norm of A*x - b.
      * @exception  RuntimeException if matrix is rank deficient.
      */
     public void solve(double[] b, double[] x) {
