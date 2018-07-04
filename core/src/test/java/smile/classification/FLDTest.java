@@ -26,6 +26,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import scala.collection.parallel.immutable.ParSet;
 import smile.math.Math;
 import smile.validation.LOOCV;
 import static org.junit.Assert.*;
@@ -146,6 +148,40 @@ public class FLDTest {
             }
 
             System.out.format("FLD-Pendigits error = " + error + ", error rate = %.2f%% %n", 100.0 * error / n);
+            assertTrue(error <= 900);
+        } catch (Exception ex) {
+            System.err.println(ex);
+        }
+    }
+
+    /**
+     * Test of learn method, of class FDA.
+     */
+    @Test
+    public void testBreastCancer() {
+        System.out.println("---Breastcancer---");
+        DelimitedTextParser parser = new DelimitedTextParser();
+        parser.setResponseIndex(new NominalAttribute("class"), 1);
+        parser.setColumnNames(true);
+        parser.setDelimiter(",");
+        try {
+            AttributeDataset breastcancer = parser.parse(smile.data.parser.IOUtils.getTestDataFile("classification/breastcancer.csv"));
+            double[][] x = breastcancer.toArray(new double[breastcancer.size()][]);
+            int[] y = breastcancer.toArray(new int[breastcancer.size()]);
+
+            int n = x.length;
+            LOOCV loocv = new LOOCV(n);
+            int error = 0;
+            for (int i = 0; i < n; i++) {
+                double[][] trainx = Math.slice(x, loocv.train[i]);
+                int[] trainy = Math.slice(y, loocv.train[i]);
+                FLD fisher = new FLD(trainx, trainy, Model.HIGH_DIM);
+
+                if (y[loocv.test[i]] != fisher.predict(x[loocv.test[i]]))
+                    error++;
+            }
+
+            System.out.format("FLD-Breastcancer error = " + error + ", error rate = %.2f%% %n", 100.0 * error / n);
             assertTrue(error <= 900);
         } catch (Exception ex) {
             System.err.println(ex);
