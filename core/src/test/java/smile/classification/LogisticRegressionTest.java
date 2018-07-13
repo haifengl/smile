@@ -214,7 +214,7 @@ public class LogisticRegressionTest {
         ArffParser arffParser = new ArffParser();
         arffParser.setResponseIndex(19);
         try {
-        	AttributeDataset train = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-challenge.arff"));
+            AttributeDataset train = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-challenge.arff"));
             AttributeDataset test = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-test.arff"));
 
             double[][] x = train.toArray(new double[train.size()][]);

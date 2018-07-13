@@ -836,65 +836,65 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
 
 	@Override
 	public void learn(double[] x, int y) {
-        if (y < 0 || y >= k) {
-            throw new IllegalArgumentException("Invalid label");
-        }
+		if (y < 0 || y >= k) {
+			throw new IllegalArgumentException("Invalid label");
+		}
 
-        if (x.length != p) {
-            throw new IllegalArgumentException("Invalid input vector size: " + x.length);
-        }
-        
+		if (x.length != p) {
+			throw new IllegalArgumentException("Invalid input vector size: " + x.length);
+		}
+
 		if (k == 2) {
 			// calculate gradient for incoming data
 			double wx = dot(x, w);
 			double res = y - Math.logistic(wx);
-			
+
 			double[] g = new double[p + 1];
-            for (int j = 0; j < p; j++) {
-            	g[j] = step * res * x[j];
-            }
-            g[p] = step * res;
-            
-            // update the weights
-            for (int j = 0; j <= p; j++) {
-            	w[j] += g[j];
-                
-                // add regularization part
-                if(lambda != 0.0) {
-                	w[j] -= 2 * lambda * step * w[j];
-                }   
-            }                    
-		}else {
+			for (int j = 0; j < p; j++) {
+				g[j] = step * res * x[j];
+			}
+			g[p] = step * res;
+
+			// update the weights
+			for (int j = 0; j <= p; j++) {
+				w[j] += g[j];
+
+				// add regularization part
+				if (lambda != 0.0) {
+					w[j] -= 2 * lambda * step * w[j];
+				}
+			}
+		} else {
 			double[] prob = new double[k];
 			for (int j = 0; j < k; j++) {
-                prob[j] = dot(x, W[j]);
-            }
+				prob[j] = dot(x, W[j]);
+			}
 
-            softmax(prob);
-            
-            double[][] g = new double[k][p + 1];
-            double yi = 0.0;
-            for (int j = 0; j < k; j++) {
-                yi = (y == j ? 1.0 : 0.0) - prob[j];
+			softmax(prob);
 
-                for (int l = 0; l < p; l++) {
-                    g[j][l] = step * yi * x[l];
-                }
-                g[j][p] = step * yi;
-            }
-            
-            // update the weights
-            for (int j = 0; j < k; j++) {
-                for (int l = 0; l <= p; l++) {
-                	W[j][l] += g[j][l];
-                    
-                    // add regularization part
-                    if(lambda != 0.0) {
-                    	W[j][l] -= 2 * lambda * step * W[j][l];
-                    }   
-                }              	
-            }
-		}		
+			double[][] g = new double[k][p + 1];
+			double yi = 0.0;
+			for (int j = 0; j < k; j++) {
+				yi = (y == j ? 1.0 : 0.0) - prob[j];
+
+				for (int l = 0; l < p; l++) {
+					g[j][l] = step * yi * x[l];
+				}
+				g[j][p] = step * yi;
+			}
+
+			// update the weights
+			for (int j = 0; j < k; j++) {
+				for (int l = 0; l <= p; l++) {
+					W[j][l] += g[j][l];
+
+					// add regularization part
+					if (lambda != 0.0) {
+						W[j][l] -= 2 * lambda * step * W[j][l];
+					}
+				}
+			}
+		}
 	}	
 
 	/**
