@@ -17,6 +17,8 @@ package smile.data;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.stream.IntStream;
+
 import smile.math.Math;
 
 /**
@@ -158,6 +160,35 @@ public class AttributeDataset extends Dataset<double[]> {
     public AttributeDataset(String name, Attribute[] attributes, Attribute response) {
         super(name, response);
         this.attributes = attributes;
+    }
+
+    /**
+     * Constructor.
+     * @param name the name of dataset.
+     * @param x the data in this dataset.
+     * @param y the response data.
+     */
+    public AttributeDataset(String name, double[][] x, double[] y) {
+        this(name, IntStream.range(0, x[0].length).mapToObj(i -> new NumericAttribute("Var " + (i + 1))).toArray(NumericAttribute[]::new),
+                new NumericAttribute("response"));
+    }    
+
+    /**
+     * Constructor.
+     * @param name the name of dataset.
+     * @param attributes the list of attributes in this dataset.
+     * @param x the data in this dataset.
+     * @param response the attribute of response variable.
+     * @param y the response data.
+     */
+    public AttributeDataset(String name, Attribute[] attributes, double[][] x, Attribute response, double[] y) {
+        this(name, attributes, response);
+        if (x.length != y.length) {
+            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
+        }
+        for (int i = 0; i < x.length; i++) {
+            add(x[i], y[i]);
+        }
     }
 
     /**

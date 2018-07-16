@@ -18,8 +18,12 @@ package smile.regression;
 
 import java.io.Serializable;
 import java.util.Arrays;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import smile.data.Attribute;
+import smile.data.AttributeDataset;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
@@ -91,6 +95,10 @@ public class OLS implements Regression<double[]>, Serializable {
      * The linear weights.
      */
     private double[] w;
+    /**
+     * The variable attributes.
+     */
+    private Attribute[] attributes;
     /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
@@ -175,6 +183,26 @@ public class OLS implements Regression<double[]>, Serializable {
      *            can handle rank-deficient matrix.
      */
     public OLS(double[][] x, double[] y, boolean SVD) {
+        this(new AttributeDataset("OLS", x, y), SVD);
+    }
+
+    /**
+     * Constructor. Learn the ordinary least squares model.
+     * @param data the dataset containing the explanatory and response variables and their attributes. NO NEED to include a constant column of 1s for bias.
+     */
+    public OLS(AttributeDataset data) {
+        this(data, false);
+    }
+
+    /**
+     * Constructor. Learn the ordinary least squares model.
+     * @param data the dataset containing the explanatory and response variables and their attributes. NO NEED to include a constant column of 1s for bias.
+     * @param SVD If true, use SVD to fit the model. Otherwise, use QR decomposition. SVD is slower than QR but
+     *            can handle rank-deficient matrix.
+     */
+    public OLS(AttributeDataset data, boolean SVD) {
+        double[][] x = data.x();
+        double[] y = data.y();
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -184,6 +212,11 @@ public class OLS implements Regression<double[]>, Serializable {
         
         if (n <= p) {
             throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
+        }
+
+        attributes = data.attributes();
+        if (attributes.length != p) {
+            throw new IllegalArgumentException(String.format("There are %d variables, but %d variable attributes", attributes.length, p));
         }
 
         // weights and intercept
@@ -408,7 +441,7 @@ public class OLS implements Regression<double[]>, Serializable {
         builder.append("            Estimate        Std. Error        t value        Pr(>|t|)\n");
         builder.append(String.format("Intercept%11.4f%18.4f%15.4f%16.4f %s%n", coefficients[p][0], coefficients[p][1], coefficients[p][2], coefficients[p][3], significance(coefficients[p][3])));
         for (int i = 0; i < p; i++) {
-            builder.append(String.format("Var %d\t %11.4f%18.4f%15.4f%16.4f %s%n", i+1, coefficients[i][0], coefficients[i][1], coefficients[i][2], coefficients[i][3], significance(coefficients[i][3])));
+            builder.append(String.format("%s\t %11.4f%18.4f%15.4f%16.4f %s%n", attributes[i].getName(), coefficients[i][0], coefficients[i][1], coefficients[i][2], coefficients[i][3], significance(coefficients[i][3])));
         }
 
         builder.append("---------------------------------------------------------------------\n");
