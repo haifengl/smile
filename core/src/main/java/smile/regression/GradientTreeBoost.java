@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 import smile.data.Attribute;
+import smile.data.AttributeDataset;
 import smile.data.NumericAttribute;
 import smile.math.Math;
 import smile.sort.QuickSelect;
@@ -321,13 +322,36 @@ public class GradientTreeBoost implements Regression<double[]>, Serializable {
     public GradientTreeBoost(Attribute[] attributes, double[][] x, double[] y, int ntrees) {
         this(attributes, x, y, Loss.LeastAbsoluteDeviation, ntrees, 6, x.length < 2000 ? 0.005 : 0.05, 0.7);
     }
-    
+
     /**
      * Constructor. Learns a gradient tree boosting for regression.
      *
-     * @param attributes the attribute properties.
-     * @param x the training instances. 
-     * @param y the response variable.
+     * @param data the dataset.
+     * @param ntrees the number of iterations (trees).
+     */
+    public GradientTreeBoost(AttributeDataset data, int ntrees) {
+        this(data.attributes(), data.x(), data.y(), ntrees);
+    }
+
+    /**
+     * Constructor. Learns a gradient tree boosting for regression.
+     *
+     * @param data the dataset.
+     * @param loss loss function for regression. By default, least absolute
+     * deviation is employed for robust regression.
+     * @param ntrees the number of iterations (trees).
+     * @param maxNodes the number of leaves in each tree.
+     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+     * @param f the sampling fraction for stochastic tree boosting.
+     */
+    public GradientTreeBoost(AttributeDataset data, Loss loss, int ntrees, int maxNodes, double shrinkage, double f) {
+        this(data.attributes(), data.x(), data.y(), loss, ntrees, maxNodes, shrinkage, f);
+    }
+
+    /**
+     * Constructor. Learns a gradient tree boosting for regression.
+     *
+     * @param data the dataset.
      * @param loss loss function for regression. By default, least absolute
      * deviation is employed for robust regression.
      * @param ntrees the number of iterations (trees).
