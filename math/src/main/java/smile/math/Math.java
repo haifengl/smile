@@ -4411,7 +4411,7 @@ public class Math {
         // Current function value.
         double f = func.f(x, g);
 
-        logger.debug(String.format("L-BFGS: initial function value: %.5g", f));
+        logger.info(String.format("L-BFGS: initial function value: %.5g", f));
 
         double sum = 0.0;
         // Initial line search direction.
@@ -4444,7 +4444,7 @@ public class Math {
             }
 
             if (test < TOLX) {
-                logger.debug(String.format("L-BFGS: the function value after %3d iterations: %.5g", iter, f));
+                logger.info(String.format("L-BFGS: the function value after %3d iterations: %.5g", iter, f));
                 return f;
             }
 
@@ -4460,12 +4460,12 @@ public class Math {
             }
 
             if (test < gtol) {
-                logger.debug(String.format("L-BFGS: the function value after %3d iterations: %.5g", iter, f));
+                logger.info(String.format("L-BFGS: the function value after %3d iterations: %.5g", iter, f));
                 return f;
             }
 
             if (iter % 10 == 0) {
-                logger.debug(String.format("L-BFGS: the function value after %3d iterations: %.5g", iter, f));
+                logger.info(String.format("L-BFGS: the function value after %3d iterations: %.5g", iter, f));
             }
 
             double ys = dot(y[k], s[k]);
@@ -4570,7 +4570,7 @@ public class Math {
         // Calculate starting function value and gradient and initialize the
         // inverse Hessian to the unit matrix.
         double f = func.f(x, g);
-        logger.debug(String.format("BFGS: initial function value: %.5g", f));
+        logger.info(String.format("BFGS: initial function value: %.5g", f));
 
         double sum = 0.0;
         for (int i = 0; i < n; i++) {
@@ -4587,7 +4587,7 @@ public class Math {
             f = linesearch(func, x, f, g, xi, xnew, stpmax);
 
             if (iter % 10 == 0) {
-                logger.debug(String.format("BFGS: the function value after %3d iterations: %.5g", iter, f));
+                logger.info(String.format("BFGS: the function value after %3d iterations: %.5g", iter, f));
             }
 
             // update the line direction and current point.
@@ -4606,7 +4606,7 @@ public class Math {
             }
 
             if (test < TOLX) {
-                logger.debug(String.format("BFGS: the function value after %3d iterations: %.5g", iter, f));
+                logger.info(String.format("BFGS: the function value after %3d iterations: %.5g", iter, f));
                 return f;
             }
             
@@ -4625,7 +4625,7 @@ public class Math {
             }
 
             if (test < gtol) {
-                logger.debug(String.format("BFGS: the function value after %3d iterations: %.5g", iter, f));
+                logger.info(String.format("BFGS: the function value after %3d iterations: %.5g", iter, f));
                 return f;
             }
 
