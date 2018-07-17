@@ -170,7 +170,7 @@ public class AttributeDataset extends Dataset<double[]> {
      */
     public AttributeDataset(String name, double[][] x, double[] y) {
         this(name, IntStream.range(0, x[0].length).mapToObj(i -> new NumericAttribute("Var " + (i + 1))).toArray(NumericAttribute[]::new),
-                new NumericAttribute("response"));
+                x, new NumericAttribute("response"), y);
     }    
 
     /**
