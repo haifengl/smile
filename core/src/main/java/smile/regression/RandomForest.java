@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import smile.data.Attribute;
+import smile.data.AttributeDataset;
 import smile.data.NumericAttribute;
 import smile.math.Math;
 import smile.util.MulticoreExecutor;
@@ -379,6 +380,16 @@ public class RandomForest implements Regression<double[]>, Serializable {
     /**
      * Constructor. Learns a random forest for regression.
      *
+     * @param data the dataset
+     * @param ntrees the number of trees.
+     */
+    public RandomForest(AttributeDataset data, int ntrees) {
+        this(data.attributes(), data.x(), data.y(), ntrees);
+    }    
+
+    /**
+     * Constructor. Learns a random forest for regression.
+     *
      * @param attributes the attribute properties.
      * @param x the training instances.
      * @param y the response variable.
@@ -388,6 +399,17 @@ public class RandomForest implements Regression<double[]>, Serializable {
     public RandomForest(Attribute[] attributes, double[][] x, double[] y, int ntrees, int maxNodes) {
         this(attributes, x, y, ntrees, maxNodes, 5);
     }
+
+    /**
+     * Constructor. Learns a random forest for regression.
+     *
+     * @param data the dataset
+     * @param ntrees the number of trees.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     */
+    public RandomForest(AttributeDataset data, int ntrees, int maxNodes) {
+        this(data.attributes(), data.x(), data.y(), ntrees, maxNodes);
+    }    
 
     /**
      * Constructor. Learns a random forest for regression.
@@ -403,6 +425,19 @@ public class RandomForest implements Regression<double[]>, Serializable {
     public RandomForest(Attribute[] attributes, double[][] x, double[] y, int ntrees, int maxNodes, int nodeSize) {
         this(attributes, x, y, ntrees, maxNodes, nodeSize, x[0].length / 3);
     }
+
+    /**
+     * Constructor. Learns a random forest for regression.
+     *
+     * @param data the dataset
+     * @param ntrees the number of trees.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize the number of instances in a node below which the tree will
+     * not split, setting nodeSize = 5 generally gives good results.
+     */
+    public RandomForest(AttributeDataset data, int ntrees, int maxNodes, int nodeSize) {
+        this(data.attributes(), data.x(), data.y(), ntrees, maxNodes, nodeSize);
+    }    
 
     /**
      * Constructor. Learns a random forest for regression.
@@ -440,6 +475,24 @@ public class RandomForest implements Regression<double[]>, Serializable {
      */
     public RandomForest(Attribute[] attributes, double[][] x, double[] y, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample) {
         this(attributes, x, y, ntrees, maxNodes, nodeSize, mtry, subsample, null);
+    }
+
+    /**
+     * Constructor. Learns a random forest for regression.
+     *
+     * @param data the dataset
+     * @param ntrees the number of trees.
+     * @param mtry the number of input variables to be used to determine the decision
+     * at a node of the tree. p/3 seems to give generally good performance,
+     * where dim is the number of variables.
+     * @param nodeSize the number of instances in a node below which the tree will
+     * not split, setting nodeSize = 5 generally gives good results.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+     *                  sampling without replacement.
+     */
+    public RandomForest(AttributeDataset data, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample, double[] monotonicRegression) {
+        this(data.attributes(), data.x(), data.y(), ntrees, maxNodes, nodeSize, mtry, subsample, monotonicRegression);
     }
 
     /**

@@ -21,6 +21,7 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.data.Attribute;
+import smile.data.AttributeDataset;
 import smile.data.NumericAttribute;
 import smile.math.Math;
 import smile.util.SmileUtils;
@@ -204,6 +205,28 @@ public class AdaBoost implements SoftClassifier<double[]>, Serializable {
     public AdaBoost(Attribute[] attributes, double[][] x, int[] y, int ntrees) {
         this(attributes, x, y, ntrees, 2);
     }
+
+    /**
+     * Constructor. Learns AdaBoost with decision stumps.
+     *
+     * @param data the dataset
+     * @param ntrees the number of trees.
+     */
+    public AdaBoost(AttributeDataset data, int ntrees) {
+        this(data.attributes(), data.x(), data.labels(), ntrees);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param data the dataset
+     * @param ntrees the number of trees.
+     * @param maxNodes the maximum number of leaf nodes in the trees.
+     */
+    public AdaBoost(AttributeDataset data, int ntrees, int maxNodes) {
+        this(data.attributes(), data.x(), data.labels(), ntrees, maxNodes);
+    }
+
     /**
      * Constructor.
      *
