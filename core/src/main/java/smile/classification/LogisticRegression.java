@@ -75,7 +75,7 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class LogisticRegression implements SoftClassifier<double[]>, Serializable, OnlineClassifier<double[]> {
+public class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]>, Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(LogisticRegression.class);
 
@@ -112,7 +112,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
     /**
      * learning rate for stochastic gradient descent.
      */
-    double step = 5e-5;
+    double eta = 5e-5;
 
     /**
      * Trainer for logistic regression.
@@ -851,9 +851,9 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
 
 			double[] g = new double[p + 1];
 			for (int j = 0; j < p; j++) {
-				g[j] = step * res * x[j];
+				g[j] = eta * res * x[j];
 			}
-			g[p] = step * res;
+			g[p] = eta * res;
 
 			// update the weights
 			for (int j = 0; j <= p; j++) {
@@ -861,7 +861,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
 
 				// add regularization part
 				if (lambda != 0.0) {
-					w[j] -= 2 * lambda * step * w[j];
+					w[j] -= 2 * lambda * eta * w[j];
 				}
 			}
 		} else {
@@ -878,9 +878,9 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
 				yi = (y == j ? 1.0 : 0.0) - prob[j];
 
 				for (int l = 0; l < p; l++) {
-					g[j][l] = step * yi * x[l];
+					g[j][l] = eta * yi * x[l];
 				}
-				g[j][p] = step * yi;
+				g[j][p] = eta * yi;
 			}
 
 			// update the weights
@@ -890,7 +890,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
 
 					// add regularization part
 					if (lambda != 0.0) {
-						W[j][l] -= 2 * lambda * step * W[j][l];
+						W[j][l] -= 2 * lambda * eta * W[j][l];
 					}
 				}
 			}
@@ -899,10 +899,10 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
 
 	/**
 	 * Tune the fixed learning rate for stochastic gradient descent
-	 * @param step usually quite small to avoid oscillation, default is 5e-5
+	 * @param eta usually quite small to avoid oscillation, default is 5e-5
 	 */
-    public void setStep(double step) {
-		this.step = step;
+    public void setLearningRate(double eta) {
+		this.eta = eta;
 	}
 
 	/**
