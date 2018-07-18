@@ -849,15 +849,15 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
 			double wx = dot(x, w);
 			double res = y - Math.logistic(wx);
 
-			double[] g = new double[p + 1];
-			for (int j = 0; j < p; j++) {
-				g[j] = eta * res * x[j];
-			}
-			g[p] = eta * res;
-
 			// update the weights
 			for (int j = 0; j <= p; j++) {
-				w[j] += g[j];
+				double gj = 0;
+				if(j < p) {
+					gj = eta * res * x[j];
+				}else {
+					gj = eta * res;				
+				}
+				w[j] += gj;
 
 				// add regularization part
 				if (lambda != 0.0) {
@@ -872,21 +872,18 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
 
 			softmax(prob);
 
-			double[][] g = new double[k][p + 1];
-			double yi = 0.0;
-			for (int j = 0; j < k; j++) {
-				yi = (y == j ? 1.0 : 0.0) - prob[j];
-
-				for (int l = 0; l < p; l++) {
-					g[j][l] = eta * yi * x[l];
-				}
-				g[j][p] = eta * yi;
-			}
-
 			// update the weights
 			for (int j = 0; j < k; j++) {
 				for (int l = 0; l <= p; l++) {
-					W[j][l] += g[j][l];
+					double yi = (y == j ? 1.0 : 0.0) - prob[j];
+					double gjl = 0;
+					if(l < p) {
+						gjl = eta * yi * x[l];
+					}else {
+						gjl = eta * yi;				
+					}
+					
+					W[j][l] += gjl;
 
 					// add regularization part
 					if (lambda != 0.0) {
