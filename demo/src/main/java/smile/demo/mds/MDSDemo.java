@@ -153,10 +153,10 @@ public class MDSDemo extends JPanel implements Runnable, ActionListener {
             if (dataset[datasetIndex] == null) {
                 DelimitedTextParser parser = new DelimitedTextParser();
                 parser.setDelimiter("[\t]+");
-                parser.setRowNames(true);
+                parser.setRowNamesIndex(0);
                 parser.setColumnNames(true);
                 if (datasetIndex == 2 || datasetIndex == 3) {
-                    parser.setRowNames(false);
+                    parser.setRowNamesIndex(-1);
                 }
 
                 try {

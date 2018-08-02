@@ -123,7 +123,7 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
                     parser.setColumnNames(true);
                 }
                 if (datasetIndex == 1) {
-                    parser.setRowNames(true);
+                    parser.setRowNamesIndex(0);
                 }
                 if (datasetIndex == 0) {
                     parser.setResponseIndex(new NominalAttribute("class"), 4);
