@@ -75,7 +75,7 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class LogisticRegression implements SoftClassifier<double[]>, Serializable {
+public class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]>, Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(LogisticRegression.class);
 
@@ -103,6 +103,16 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
      * The linear weights for multi-class logistic regression.
      */
     private double[][] W;
+    
+    /**
+     * Regularization factor.
+     */
+    double lambda;
+    
+    /**
+     * learning rate for stochastic gradient descent.
+     */
+    double eta = 5e-5;
 
     /**
      * Trainer for logistic regression.
@@ -219,6 +229,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
         }
+        this.lambda = lambda;
 
         if (tol <= 0.0) {
             throw new IllegalArgumentException("Invalid tolerance: " + tol);            
@@ -823,7 +834,75 @@ public class LogisticRegression implements SoftClassifier<double[]>, Serializabl
         }
     }
 
-    /**
+	@Override
+	public void learn(double[] x, int y) {
+		if (y < 0 || y >= k) {
+			throw new IllegalArgumentException("Invalid label");
+		}
+
+		if (x.length != p) {
+			throw new IllegalArgumentException("Invalid input vector size: " + x.length);
+		}
+
+		if (k == 2) {
+			// calculate gradient for incoming data
+			double wx = dot(x, w);
+			double res = y - Math.logistic(wx);
+
+			// update the weights
+			for (int j = 0; j <= p; j++) {
+				double gj = 0;
+				if(j < p) {
+					gj = eta * res * x[j];
+				}else {
+					gj = eta * res;				
+				}
+				w[j] += gj;
+
+				// add regularization part
+				if (lambda != 0.0) {
+					w[j] -= 2 * lambda * eta * w[j];
+				}
+			}
+		} else {
+			double[] prob = new double[k];
+			for (int j = 0; j < k; j++) {
+				prob[j] = dot(x, W[j]);
+			}
+
+			softmax(prob);
+
+			// update the weights
+			for (int j = 0; j < k; j++) {
+				for (int l = 0; l <= p; l++) {
+					double yi = (y == j ? 1.0 : 0.0) - prob[j];
+					double gjl = 0;
+					if(l < p) {
+						gjl = eta * yi * x[l];
+					}else {
+						gjl = eta * yi;				
+					}
+					
+					W[j][l] += gjl;
+
+					// add regularization part
+					if (lambda != 0.0) {
+						W[j][l] -= 2 * lambda * eta * W[j][l];
+					}
+				}
+			}
+		}
+	}	
+
+	/**
+	 * Tune the fixed learning rate for stochastic gradient descent
+	 * @param eta usually quite small to avoid oscillation, default is 5e-5
+	 */
+    public void setLearningRate(double eta) {
+		this.eta = eta;
+	}
+
+	/**
      * Calculate softmax function without overflow.
      */
     private static void softmax(double[] prob) {
