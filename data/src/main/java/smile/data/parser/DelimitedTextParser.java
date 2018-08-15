@@ -62,9 +62,9 @@ public class DelimitedTextParser {
      */
     private boolean hasColumnNames = false;
     /**
-     * The dataset has row names at first column.
+     * The dataset has row names at this column.
      */
-    private boolean hasRowNames = false;
+    private int rowNameIndex = -1;
     /**
      * The attribute of dependent/response variable.
      */
@@ -170,17 +170,34 @@ public class DelimitedTextParser {
 
 
     /**
-     * Returns if the dataset has row names (at column 0).
+     * Returns if the dataset contains row names
      */
     public boolean hasRowNames() {
-        return hasRowNames;
+        return rowNameIndex >= 0;
+    }
+
+    /**
+     * Returns the index number for row names of dataset
+     */
+    public int getRowNameIndex() {
+        return rowNameIndex;
     }
 
     /**
      * Set if the dataset has row names (at column 0).
      */
     public DelimitedTextParser setRowNames(boolean hasRowNames) {
-        this.hasRowNames = hasRowNames;
+        if(hasRowNames){
+            setRowNamesIndex(0);
+        }
+        return this;
+    }
+
+    /**
+     * Sets the dataset row names index.
+     */
+    public DelimitedTextParser setRowNamesIndex(int index) {
+        this.rowNameIndex = index;
         return this;
     }
 
@@ -321,8 +338,8 @@ public class DelimitedTextParser {
             throw new IOException("Empty data source.");
         }
 
-        if (hasRowNames) {
-            addIgnoredColumn(0);
+        if (rowNameIndex >= 0) {
+            addIgnoredColumn(rowNameIndex);
         }
 
         String[] s = line.split(delimiter, 0);
@@ -382,7 +399,7 @@ public class DelimitedTextParser {
                 }
             }
         } else {
-            String rowName = hasRowNames ? s[0] : null;
+            String rowName = rowNameIndex >= 0 ? s[rowNameIndex] : null;
             double[] x = new double[attributes.length];
             double y = Double.NaN;
 
@@ -413,7 +430,7 @@ public class DelimitedTextParser {
                 throw new ParseException(String.format("%d columns, expected %d", s.length, ncols), s.length);
             }
 
-            String rowName = hasRowNames ? s[0] : null;
+            String rowName = rowNameIndex >= 0 ? s[rowNameIndex] : null;
             double[] x = new double[attributes.length];
             double y = Double.NaN;
 

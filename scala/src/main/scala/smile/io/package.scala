@@ -321,10 +321,10 @@ object read {
     * @param comment the start of comment lines
     * @param missing the missing value placeholder
     * @param header true if the first row is header/column names
-    * @param rowNames true if the first column is row id/names
+    * @param rowNamesIndex the index where the row names will be found if row names are there in dataset else -1
     * @return an attribute dataset
     */
-  def table(file: String, attributes: Array[Attribute] = null, response: Option[(Attribute, Int)] = None, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset = {
+  def table(file: String, attributes: Array[Attribute] = null, response: Option[(Attribute, Int)] = None, delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNamesIndex: Int): AttributeDataset = {
     val parser = new DelimitedTextParser
 
     response match {
@@ -336,13 +336,13 @@ object read {
       .setCommentStartWith(comment)
       .setMissingValuePlaceholder(missing)
       .setColumnNames(header)
-      .setRowNames(rowNames)
+      .setRowNamesIndex(rowNamesIndex)
       .parse(attributes, file)
   }
 
   /** Reads a CSV file  with response variable. */
-  def csv(file: String, attributes: Array[Attribute] = null, response: Option[(Attribute, Int)] = None, comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset = {
-    table(file, attributes, response, ",", comment, missing, header, rowNames)
+  def csv(file: String, attributes: Array[Attribute] = null, response: Option[(Attribute, Int)] = None, comment: String = "%", missing: String = "?", header: Boolean = false, rowNamesIndex: Int): AttributeDataset = {
+    table(file, attributes, response, ",", comment, missing, header, rowNamesIndex)
   }
 
   /** Reads GCT microarray gene expression file. */
