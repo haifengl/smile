@@ -120,7 +120,7 @@ public class ElasticNetTest {
 			rss += r * r;
 		}
 
-		System.out.println("LOOCV MSE = " + rss / n);
+		System.out.println("longley LOOCV MSE = " + rss / n);
 		assertEquals(3.0216389345925805, rss / n, 1E-4);
 	}
 
@@ -148,7 +148,7 @@ public class ElasticNetTest {
 				double[][] testx = Math.slice(datax, cv.test[i]);
 				double[] testy = Math.slice(datay, cv.test[i]);
 
-				ElasticNet elasticnet = new ElasticNet(trainx, trainy, 0.1, 0.9);
+				ElasticNet elasticnet = new ElasticNet(trainx, trainy, 50, 0.99999999999999999999);
 
 				for (int j = 0; j < testx.length; j++) {
 					double r = testy[j] - elasticnet.predict(testx[j]);
@@ -156,7 +156,7 @@ public class ElasticNetTest {
 				}
 			}
 
-			System.out.println("10-CV MSE = " + rss / n);
+			System.out.println("CPU 22-CV MSE = " + rss / n);
 		} catch (Exception ex) {
 			System.err.println(ex);
 		}
@@ -183,8 +183,6 @@ public class ElasticNetTest {
 			double[] testy = test.toArray(new double[test.size()]);
 
 			ElasticNet elasticnet = new ElasticNet(x, y, 10, 0.85);
-//            LASSO elasticnet = new LASSO(x, y, 10);
-//            RidgeRegression elasticnet = new RidgeRegression(x, y, 10); 
 
 			double testrss = 0;
 			int n = testx.length;
@@ -194,6 +192,84 @@ public class ElasticNetTest {
 			}
 
 			System.out.println("Prostate Test MSE = " + testrss / n);
+		} catch (Exception ex) {
+			System.err.println(ex);
+		}
+	}
+
+	/**
+	 * Test of learn method, of class LinearRegression.
+	 */
+	@Test
+	public void tesAbalone() {
+		System.out.println("---Abalone---");
+		DelimitedTextParser parser = new DelimitedTextParser();
+		parser.setResponseIndex(new NumericAttribute("ring"), 8);
+		parser.setColumnNames(false);
+		parser.setDelimiter(",");
+		parser.addIgnoredColumn(0);
+		try {
+			AttributeDataset train = parser.parse("abalone Train",
+					smile.data.parser.IOUtils.getTestDataFile("regression/abalone-train.data"));
+			AttributeDataset test = parser.parse("abalone Test",
+					smile.data.parser.IOUtils.getTestDataFile("regression/abalone-test.data"));
+
+			double[][] x = train.toArray(new double[train.size()][]);
+			double[] y = train.toArray(new double[train.size()]);
+			double[][] testx = test.toArray(new double[test.size()][]);
+			double[] testy = test.toArray(new double[test.size()]);
+
+			ElasticNet elasticnet = new ElasticNet(x, y, 1, 0.85);
+
+			double testrss = 0;
+			int n = testx.length;
+			for (int j = 0; j < testx.length; j++) {
+				double r = testy[j] - elasticnet.predict(testx[j]);
+				testrss += r * r;
+			}
+
+			System.out.println("Abalone Test MSE = " + testrss / n);
+		} catch (Exception ex) {
+			System.err.println(ex);
+		}
+	}
+
+	/**
+	 * Test of learn method, of class LinearRegression.
+	 */
+	@Test
+	public void tesDiabetes() {
+		System.out.println("---Diabetes---");
+		DelimitedTextParser parser = new DelimitedTextParser();
+		parser.setResponseIndex(new NumericAttribute("y"), 0);
+		parser.setColumnNames(true);
+		parser.setDelimiter(",");
+		try {
+			AttributeDataset data = parser.parse("diabetes",
+					smile.data.parser.IOUtils.getTestDataFile("regression/diabetes.csv"));
+			double[][] datax = data.toArray(new double[data.size()][]);
+			double[] datay = data.toArray(new double[data.size()]);
+
+			int n = datax.length;
+			int k = 40;
+
+			CrossValidation cv = new CrossValidation(n, k);
+			double rss = 0.0;
+			for (int i = 0; i < k; i++) {
+				double[][] trainx = Math.slice(datax, cv.train[i]);
+				double[] trainy = Math.slice(datay, cv.train[i]);
+				double[][] testx = Math.slice(datax, cv.test[i]);
+				double[] testy = Math.slice(datay, cv.test[i]);
+
+				ElasticNet elasticnet = new ElasticNet(trainx, trainy, 1000, 0.9999999999999999999999);
+
+				for (int j = 0; j < testx.length; j++) {
+					double r = testy[j] - elasticnet.predict(testx[j]);
+					rss += r * r;
+				}
+			}
+
+			System.out.println("Diabetes 40-CV MSE = " + rss / n);
 		} catch (Exception ex) {
 			System.err.println(ex);
 		}
