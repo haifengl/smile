@@ -103,6 +103,26 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
          */
         ONE_VS_ALL,
     };
+    
+    /**
+     * The type of posterior probability calibration.
+     */
+    public enum ScalingMethod {
+
+        /**
+         * Platt Scaling.
+         */
+        Platt,
+        /**
+         * Isotonic Regression Scaling.
+         */
+        IsotonicRegression,
+    };
+    
+    /**
+     * The method for posterior probability calibration.
+     */
+    private ScalingMethod scalingMethod = ScalingMethod.Platt;
 
     /**
      * The default value for K_tt + K_ss - 2 * K_ts if kernel is not positive.
@@ -401,6 +421,10 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
          * Platt Scaling for estimating posterior probabilities.
          */
         PlattScaling platt;
+        /**
+         * Isotonic Regression Scaling for estimating posterior probabilities.
+         */
+        IsotonicRegressionScaling isotonicRegression;
         /**
          * If minimax is called after update.
          */
@@ -946,6 +970,22 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
             platt = new PlattScaling(scores, y);
         }
 
+        /**
+         * After calling finish, the user should call this method
+         * to train Isotonic Scaling to estimate posteriori probabilities.
+         *
+         * @param x training samples.
+         * @param y training labels.
+         */
+        void trainIsotonicRegressionScaling(T[] x, int[] y) {
+            int l = y.length;
+            double[] scores = new double[l];
+            for (int i = 0; i < l; i++) {
+                scores[i] = predict(x[i]);
+            }
+            isotonicRegression = new IsotonicRegressionScaling(scores, y);
+        }
+
         void evict() {
             minmax();
             
@@ -1099,7 +1139,15 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
         return this;
     }
 
-    /** Support vector. */
+    public void setScalingMethod(ScalingMethod scalingMethod) {
+		this.scalingMethod = scalingMethod;
+	}
+
+	public ScalingMethod getScalingMethod() {
+		return scalingMethod;
+	}
+
+	/** Support vector. */
     public class SupportVector implements Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -1356,6 +1404,14 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
     }
 
     /**
+     * Indicates if Isotonic Regression scaling is available.
+     * @return true if Isotonic Regression Scaling is available
+     */
+    public boolean hasIsotonicRegressionScaling(){
+        return (svm.isotonicRegression != null);
+    }
+
+    /**
      * After calling finish, the user should call this method
      * to train Platt Scaling to estimate posteriori probabilities.
      *
@@ -1413,6 +1469,68 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
                 MulticoreExecutor.run(tasks);
             } catch (Exception e) {
                 logger.error("Failed to train Platt Scaling on multi-core", e);
+            }
+        }
+    }
+    
+    /**
+     * After calling finish, the user should call this method
+     * to train Isotonic Regression Scaling to estimate posteriori probabilities.
+     *
+     * @param x training samples.
+     * @param y training labels.
+     */
+
+    public void trainIsotonicRegressionScaling(T[] x, int[] y) {
+        if (k == 2) {
+            svm.trainIsotonicRegressionScaling(x, y);
+        } else if (strategy == Multiclass.ONE_VS_ALL) {
+            List<IsotonicRegressionScalingTask> tasks = new ArrayList<>(svms.size());
+
+            for (int m = 0; m < svms.size(); m++) {
+                LASVM s = svms.get(m);
+
+                int l = y.length;
+                int[] yi = new int[l];
+                for (int i = 0; i < l; i++) {
+                    if (y[i] == m)
+                        yi[i] = +1;
+                    else
+                        yi[i] = -1;
+                }
+
+                tasks.add(new IsotonicRegressionScalingTask(s, x, yi));
+            }
+
+            try {
+                MulticoreExecutor.run(tasks);
+            } catch (Exception e) {
+                logger.error("Failed to train Isotonic Regression Scaling on multi-core for one-vs-all", e);
+            }
+        } else {
+            List<IsotonicRegressionScalingTask> tasks = new ArrayList<>(svms.size());
+
+            for (int i = 0, m = 0; i < k; i++) {
+                for (int j = i + 1; j < k; j++, m++) {
+                    LASVM s = svms.get(m);
+
+                    int l = y.length;
+                    int[] yi = new int[l];
+                    for (int p = 0; p < l; p++) {
+                        if (y[p] == i)
+                            yi[p] = +1;
+                        else
+                            yi[p] = -1;
+                    }
+
+                    tasks.add(new IsotonicRegressionScalingTask(s, x, yi));
+                }
+            }
+
+            try {
+                MulticoreExecutor.run(tasks);
+            } catch (Exception e) {
+                logger.error("Failed to train Isotonic Regression Scaling on multi-core for one-vs-one", e);
             }
         }
     }
@@ -1477,6 +1595,27 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
         }
     }
 
+    /**
+     * Train Isotonic Regression Scaling.
+     */
+    class IsotonicRegressionScalingTask implements Callable<LASVM> {
+        LASVM svm;
+        T[] x;
+        int[] y;
+
+        IsotonicRegressionScalingTask(LASVM svm, T[] x, int[] y) {
+            this.svm = svm;
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public LASVM call() {
+            svm.trainIsotonicRegressionScaling(x, y);
+            return svm;
+        }
+    }
+
     @Override
     public int predict(T x) {
         if (k == 2) {
@@ -1531,14 +1670,17 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
         final double minProb = 1e-7;
         final double maxProb = 1 - minProb;
 
-        return Math.min(Math.max(svm.platt.predict(y), minProb), maxProb);
+        return Math.min(Math.max(scalingMethod == ScalingMethod.Platt? svm.platt.predict(y) : svm.isotonicRegression.predict(y), minProb), maxProb);
     }
 
     @Override
     public int predict(T x, double[] prob) {
         if (k == 2) {
-            if (svm.platt == null) {
+            if (scalingMethod == ScalingMethod.Platt && svm.platt == null) {
                 throw new UnsupportedOperationException("PlattScaling was not trained yet. Please call SVM.trainPlattScaling() first.");
+            }
+            if (scalingMethod == ScalingMethod.IsotonicRegression && svm.isotonicRegression == null) {
+                throw new UnsupportedOperationException("IsotonicScaling was not trained yet. Please call SVM.trainIsotonicScaling() first.");
             }
             // two class
             double y = svm.predict(x);
@@ -1555,8 +1697,11 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
             double maxf = Double.NEGATIVE_INFINITY;
             for (int i = 0; i < svms.size(); i++) {
                 LASVM svm = svms.get(i);
-                if (svm.platt == null) {
+                if (scalingMethod == ScalingMethod.Platt && svm.platt == null) {
                     throw new UnsupportedOperationException("PlattScaling was not trained yet. Please call SVM.trainPlattScaling() first.");
+                }
+                if (scalingMethod == ScalingMethod.IsotonicRegression && svm.isotonicRegression == null) {
+                    throw new UnsupportedOperationException("IsotonicScaling was not trained yet. Please call SVM.trainIsotonicScaling() first.");
                 }
                 double f = svm.predict(x);
                 prob[i] = posterior(svm, f);
@@ -1576,8 +1721,11 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
             for (int i = 0, m = 0; i < k; i++) {
                 for (int j = i + 1; j < k; j++, m++) {
                     LASVM svm = svms.get(m);
-                    if (svm.platt == null) {
+                    if (scalingMethod == ScalingMethod.Platt && svm.platt == null) {
                         throw new UnsupportedOperationException("PlattScaling was not trained yet. Please call SVM.trainPlattScaling() first.");
+                    }
+                    if (scalingMethod == ScalingMethod.IsotonicRegression && svm.isotonicRegression == null) {
+                        throw new UnsupportedOperationException("IsotonicScaling was not trained yet. Please call SVM.trainIsotonicScaling() first.");
                     }
 
                     double f = svm.predict(x);
