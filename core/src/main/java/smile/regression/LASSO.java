@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.SparseMatrix;
 import smile.math.matrix.BiconjugateGradient;
 import smile.math.matrix.Preconditioner;
 import smile.math.special.Beta;
@@ -535,7 +534,11 @@ public class LASSO  implements Regression<double[]>, Serializable {
         F = (TSS - RSS) * (n - p - 1) / (RSS * p);
         int df1 = p;
         int df2 = n - p - 1;
-        pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
+
+        if (df2 > 0)
+            pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
+        else
+            pvalue = Double.NaN;
     }
 
     /**
