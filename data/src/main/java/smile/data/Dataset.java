@@ -266,28 +266,7 @@ public class Dataset<E> implements Iterable<Datum<E>> {
      */
     @Override
     public Iterator<Datum<E>> iterator() {
-        return new Iterator<Datum<E>>() {
-
-            /**
-             * Current position.
-             */
-            int i = 0;
-
-            @Override
-            public boolean hasNext() {
-                return i < data.size();
-            }
-
-            @Override
-            public Datum<E> next() {
-                return get(i++);
-            }
-
-            @Override
-            public void remove() {
-                Dataset.this.remove(i);
-            }
-        };
+        return data.iterator();
     }
 
     /** Returns the response values. */
