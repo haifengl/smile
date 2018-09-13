@@ -33,6 +33,11 @@ import org.slf4j.LoggerFactory;
  * the parameters, but a Newton algorithm was later proposed that should
  * be more numerically stable, which is implemented in this class.
  *
+ * <h2>References</h2>
+ * <ol>
+ * <li> John Platt. Probabilistic Outputs for Support Vector Machines and Comparisons to Regularized Likelihood Methods. Advances in large margin classifiers. 10 (3): 61–74.</li>
+ * </ol>
+ *
  * @author Haifeng Li
  */
 public class PlattScaling implements Serializable {
