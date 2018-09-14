@@ -855,20 +855,12 @@ public class RegressionTree implements Regression<double[]>, Serializable {
 
             trueChild = new SparseBinaryTrainNode(node.trueChild, x, y, trueSamples);
             if (tc > nodeSize && trueChild.findBestSplit()) {
-                if (nextSplits != null) {
-                    nextSplits.add(trueChild);
-                } else {
-                    trueChild.split(null);
-                }
+                nextSplits.add(trueChild);
             }
 
             falseChild = new SparseBinaryTrainNode(node.falseChild, x, y, falseSamples);
             if (fc > nodeSize && falseChild.findBestSplit()) {
-                if (nextSplits != null) {
-                    nextSplits.add(falseChild);
-                } else {
-                    falseChild.split(null);
-                }
+                nextSplits.add(falseChild);
             }
 
             importance[node.splitFeature] += node.gain;
