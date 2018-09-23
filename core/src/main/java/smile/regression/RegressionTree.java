@@ -17,11 +17,18 @@ package smile.regression;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import smile.data.Attribute;
@@ -254,12 +261,20 @@ public class RegressionTree implements Regression<double[]> {
          */
         public double calculate(int[] samples);
     }
+	
+	/**
+	 * node number.
+	 */
+	private static AtomicInteger nodeNumber = new AtomicInteger(0);
 
-    /**
-     * Regression tree node.
-     */
-    class Node implements Serializable {
-
+	/**
+	 * Regression tree node.
+	 */
+	class Node implements Serializable {
+		/**
+		 * node index.
+		 */
+		int index = -1;
         /**
          * Predicted real value for this node.
          */
@@ -279,6 +294,10 @@ public class RegressionTree implements Regression<double[]> {
          * Reduction in squared error compared to parent.
          */
         double splitScore = 0.0;
+		/**
+		 * Parent node.
+		 */
+		Node parent = null;
         /**
          * Children node.
          */
@@ -295,20 +314,29 @@ public class RegressionTree implements Regression<double[]> {
          * Predicted output for children node.
          */
         double falseChildOutput = 0.0;
+		/**
+		 * response of validation data in this node if leaf, used for post pruning
+		 */
+		List<Double> response = new ArrayList<Double>();
+		/**
+		 * prediction of validation data in this node if leaf, used for post pruning
+		 */
+		List<Double> prediction = new ArrayList<Double>();
 
         /**
          * Constructor.
          */
         public Node(double output) {
             this.output = output;
+			this.index = nodeNumber.incrementAndGet();
         }
 
         /**
          * Evaluate the regression tree over an instance.
          */
-        public double predict(double[] x) {
+        public Node predict(double[] x) {
             if (trueChild == null && falseChild == null) {
-                return output;
+                return this;
             } else {
                 if (attributes[splitFeature].getType() == Attribute.Type.NOMINAL) {
                     if (Math.equals(x[splitFeature], splitValue)) {
@@ -331,9 +359,9 @@ public class RegressionTree implements Regression<double[]> {
         /**
          * Evaluate the regression tree over an instance.
          */
-        public double predict(int[] x) {
+        public Node predict(int[] x) {
             if (trueChild == null && falseChild == null) {
-                return output;
+                return this;
             } else if (x[splitFeature] == (int) splitValue) {
                 return trueChild.predict(x);
             } else {
@@ -341,6 +369,131 @@ public class RegressionTree implements Regression<double[]> {
             }
         }
     }
+	
+	/**
+	 * Starting at the leaves, each node is replaced with its most popular class. If
+	 * the prediction accuracy is not affected then the change is kept. While
+	 * somewhat naive, reduced error pruning has the advantage of simplicity and
+	 * speed.
+	 * 
+	 * @author rayeaster
+	 *
+	 */
+	public static class ReducedErrorPostPruning {
+
+		/**
+		 * post pruning using validation dataset
+		 * 
+		 * @param dt
+		 *            fully-grown Regression Tree
+		 * @param validatex
+		 *            validation dataset
+		 * @param validatey
+		 *            validation dataset repsonse
+		 */
+		public static void postPruning(RegressionTree dt, double[][] validatex, double[] validatey) {
+			Node root = dt.root;
+
+			List<Node> candidates = new LinkedList<Node>();
+			Set<Integer> flags = new HashSet<Integer>();
+
+			// update node for validate data
+			for (int i = 0; i < validatey.length; i++) {
+				double[] data = validatex[i];
+				predict(root, data, validatey[i], candidates, flags);
+			}
+
+			// from bottom-up
+			Comparator c = new Comparator<Node>() {
+
+				@Override
+				public int compare(Node o1, Node o2) {
+					return o1.index - o2.index;
+				}
+
+			};
+			candidates.sort(c);
+
+			// start post pruning
+			Node candidate = candidates.size() == 0 ? null : candidates.remove(candidates.size() - 1);
+			while (candidate != null) {
+				boolean prune = pruneSubTree(candidate, candidates, flags);
+				if (prune) {
+					candidates.sort(c);
+				}
+				candidate = candidates.size() == 0 ? null : candidates.remove(candidates.size() - 1);
+			}
+		}
+
+		private static Node predict(Node n, double[] x, double y, List<Node> candidates, Set<Integer> flags) {
+			Node ret = n.predict(x);
+			double prediction = ret.output;
+			if (ret.trueChild == null && ret.falseChild == null) {
+				ret.response.add(y);
+				ret.prediction.add(prediction);
+				if (ret.parent != null && flags.contains(ret.parent.index) == false) {
+					candidates.add(ret.parent);
+					flags.add(ret.parent.index);
+				}
+			}
+			return ret;
+		}
+
+		private static double[] getErrorAndTotal(Node n) {
+			double error = 0;
+			double total = 0;
+			if (n.trueChild == null && n.falseChild == null) {
+				for (int i = 0; i < n.response.size(); i++) {
+					double response = n.response.get(i);
+					double prediction = n.prediction.get(i);
+					error += Math.sqr(prediction - response);
+					total++;
+				}
+			}
+			return new double[] {error, total};
+		}
+
+		private static boolean pruneSubTree(Node n, List<Node> candidates, Set<Integer> flags) {
+			boolean ret = false;			
+			double outputResp = (n.trueChildOutput + n.falseChildOutput) / 2;
+			
+			// get error rate before prune
+			double[] trueErrorAndTotal = getErrorAndTotal(n.trueChild);
+			double[] falseErrorAndTotal = getErrorAndTotal(n.falseChild);
+			int total = (int) (trueErrorAndTotal[1] + falseErrorAndTotal[1]);
+			double errRateBefore = (double) (trueErrorAndTotal[0] + falseErrorAndTotal[0]) / (double) (total);
+			// get error rate after prune
+			double errorAfter = 0;
+			for (Double resp : n.trueChild.response) {
+				errorAfter += Math.sqr(outputResp - resp);
+			}
+			for (Double resp : n.falseChild.response) {
+				errorAfter += Math.sqr(outputResp - resp);
+			}
+			double errRateAfter = (double) (errorAfter) / (double) (total);
+			ret = errRateAfter < errRateBefore;
+			// prune the subtree and from bottom-up
+			if (ret) {
+				n.response.addAll(n.trueChild.response);
+				n.response.addAll(n.falseChild.response);
+				n.prediction = new ArrayList<Double>(total);
+				for (int i = 0; i < total; i++) {
+					n.prediction.add(outputResp);
+				}
+				n.trueChild = null;
+				n.falseChild = null;
+				n.trueChildOutput = -1;
+				n.falseChildOutput = -1;
+				n.output = outputResp;
+				if (n.parent != null && flags.contains(n.parent.index) == false) {
+					candidates.add(n.parent);
+					flags.add(n.parent.index);
+				}
+				System.out.println("pruning node #" + n.index);
+			}
+			return ret;
+		}
+	}
 
     /**
      * Regression tree node for training purpose.
@@ -686,6 +839,8 @@ public class RegressionTree implements Regression<double[]> {
 
             node.trueChild = new Node(node.trueChildOutput);
             node.falseChild = new Node(node.falseChildOutput);
+            node.trueChild.parent = node;
+            node.falseChild.parent = node;
 
             trueChild = new TrainNode(node.trueChild, x, y, trueSamples);
             if (tc > nodeSize && trueChild.findBestSplit()) {
@@ -852,6 +1007,8 @@ public class RegressionTree implements Regression<double[]> {
 
             node.trueChild = new Node(node.trueChildOutput);
             node.falseChild = new Node(node.falseChildOutput);
+            node.trueChild.parent = node;
+            node.falseChild.parent = node;
 
             trueChild = new SparseBinaryTrainNode(node.trueChild, x, y, trueSamples);
             if (tc > nodeSize && trueChild.findBestSplit()) {
@@ -1224,7 +1381,7 @@ public class RegressionTree implements Regression<double[]> {
 
     @Override
     public double predict(double[] x) {
-        return root.predict(x);
+        return root.predict(x).output;
     }
 
     /**
@@ -1234,7 +1391,7 @@ public class RegressionTree implements Regression<double[]> {
      * @return the predicted value of dependent variable.
      */
     public double predict(int[] x) {
-        return root.predict(x);
+        return root.predict(x).output;
     }
 
     /**

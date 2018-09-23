@@ -29,6 +29,7 @@ import smile.validation.LOOCV;
 import smile.validation.Validation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -193,6 +194,56 @@ public class RegressionTreeTest {
             for (int i = importance.length; i-- > 0; ) {
                 System.out.format("%s importance is %.4f%n", data.attributes()[index[i]], importance[i]);
             }
+        } catch (Exception ex) {
+            System.err.println(ex);
+        }
+    }
+    
+    /**
+     * Test of post pruning method, of class RegressionTree.
+     */
+    @Test
+    public void testWithPostPruning() {
+        System.out.println("---Post Pruning---");
+        ArffParser parser = new ArffParser();
+        parser.setResponseIndex(8);
+        try {
+            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/regression/puma8NH.arff"));
+
+            int splitTrain = 4 * data.size() / 5;
+            int splitIdx = 2 * data.size() / 5;
+            double[][] trainx = data.range(0, splitIdx).toArray(new double[splitIdx][]);
+            double[] trainy  = data.range(0, splitIdx).toArray(new double[splitIdx]);
+
+            double[][] validatex = data.range(splitIdx, splitTrain).toArray(new double[splitTrain - splitIdx][]);
+            double[] validatey  = data.range(splitIdx, splitTrain).toArray(new double[splitTrain - splitIdx]);            
+
+            double[][] testx = data.range(splitTrain, data.size()).toArray(new double[data.size() - splitTrain][]);
+            double[] testy  = data.range(splitIdx, data.size()).toArray(new double[data.size() - splitTrain]);
+
+            RegressionTree tree = new RegressionTree(data.attributes(), trainx, trainy, 20);
+            double mse1 = 0;
+            for (int j = 0; j < testx.length; j++) {
+                double r = testy[j] - tree.predict(testx[j]);
+                mse1 += r * r;
+            }
+            System.out.format("Puma RMSE = %.4f%n", Math.sqrt(mse1/testy.length));
+            
+            double[] importance = tree.importance();
+            int[] index = QuickSort.sort(importance);
+            for (int i = importance.length; i-- > 0; ) {
+                System.out.format("%s importance is %.4f%n", data.attributes()[index[i]], importance[i]);
+            }
+            
+            RegressionTree.ReducedErrorPostPruning.postPruning(tree, validatex, validatey);
+            double mse2 = 0;
+            for (int j = 0; j < testx.length; j++) {
+                double r = testy[j] - tree.predict(testx[j]);
+                mse2 += r * r;
+            }
+            System.out.format("After pruning Puma RMSE = %.4f%n", Math.sqrt(mse2/testy.length));
+            assertTrue(mse2 < mse1);
+            
         } catch (Exception ex) {
             System.err.println(ex);
         }
