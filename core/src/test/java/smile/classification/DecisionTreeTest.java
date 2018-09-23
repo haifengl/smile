@@ -130,9 +130,10 @@ public class DecisionTreeTest {
         try {
             AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
             AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
-
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
+            
+            int splitIdx = train.size() / 2;
+            double[][] x = train.range(0, splitIdx).toArray(new double[splitIdx][]);
+            int[] y  = train.range(0, splitIdx).toArray(new int[splitIdx]);
             double[][] testx = test.toArray(new double[test.size()][]);
             int[] testy = test.toArray(new int[test.size()]);
             
@@ -145,8 +146,26 @@ public class DecisionTreeTest {
                 }
             }
 
-            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
-            assertEquals(328, error);
+            double er1 = 100.0 * error / testx.length;
+            System.out.format("USPS error rate = %.2f%%%n", er1);
+            assertEquals(406, error);
+            
+            double[][] validx = train.range(splitIdx, train.size()).toArray(new double[train.size() - splitIdx][]);
+            int[] validy  = train.range(splitIdx, train.size()).toArray(new int[train.size() - splitIdx]);
+            DecisionTree.ReducedErrorPostPruning.postPruning(tree, validx, validy);
+            
+            error = 0;
+            for (int i = 0; i < testx.length; i++) {
+                if (tree.predict(testx[i]) != testy[i]) {
+                    error++;
+                }
+            }
+
+            double er2 = 100.0 * error / testx.length;
+            System.out.format("After pruning, USPS error rate = %.2f%%%n", er2);
+            assertEquals(361, error);
+            assertTrue(er2 < er1);
+            
         } catch (Exception ex) {
             System.err.println(ex);
         }

@@ -19,6 +19,8 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.IntPredicate;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map.Entry;
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
@@ -267,16 +269,25 @@ public class DecisionTree implements SoftClassifier<double[]> {
          */
         CLASSIFICATION_ERROR
     }
-    
-    /**
-     * Classification tree node.
-     */
-    class Node implements Serializable {
+	
+	/**
+	 * node number.
+	 */
+	private static AtomicInteger nodeNumber = new AtomicInteger(0);
 
+	/**
+	 * Classification tree node.
+	 */
+	class Node implements Serializable {
+		/**
+		 * node index.
+		 */
+		int index = -1;
         /**
          * Predicted class label for this node.
          */
         int output = -1;
+        
         /**
          * Posteriori probability based on sample ratios in this node.
          */
@@ -293,6 +304,10 @@ public class DecisionTree implements SoftClassifier<double[]> {
          * Reduction in splitting criterion.
          */
         double splitScore = 0.0;
+		/**
+		 * Parent node.
+		 */
+		Node parent = null;
         /**
          * Children node.
          */
@@ -303,9 +318,27 @@ public class DecisionTree implements SoftClassifier<double[]> {
         Node falseChild = null;
 
         /**
+         * Predicted output for children node.
+         */
+        int trueChildOutput = -1;
+        /**
+         * Predicted output for children node.
+         */
+        int falseChildOutput = -1;
+        /**
+         * response of validation data in this node if leaf, used for post pruning
+         */
+        List<Integer> response = new ArrayList<Integer>();
+        /**
+         * prediction of validation data in this node if leaf, used for post pruning
+         */
+        List<Integer> prediction = new ArrayList<Integer>();
+
+        /**
          * Constructor.
          */
         public Node() {
+            this.index = nodeNumber.incrementAndGet();
         }
 
         /**
@@ -314,6 +347,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
         public Node(int output, double[] posteriori) {
             this.output = output;
             this.posteriori = posteriori;
+            this.index = nodeNumber.incrementAndGet();
         }
 
         private void markAsLeaf() {
@@ -327,9 +361,9 @@ public class DecisionTree implements SoftClassifier<double[]> {
         /**
          * Evaluate the regression tree over an instance.
          */
-        public int predict(double[] x) {
-            if (isLeaf()) {
-                return output;
+        public Node predict(double[] x) {
+            if (isLeaf() || (trueChild == null && falseChild == null)) {
+                return this;
             } else {
                 if (attributes[splitFeature].getType() == Attribute.Type.NOMINAL) {
                     if (x[splitFeature] == splitValue) {
@@ -352,10 +386,10 @@ public class DecisionTree implements SoftClassifier<double[]> {
         /**
          * Evaluate the regression tree over an instance.
          */
-        public int predict(double[] x, double[] posteriori) {
-            if (isLeaf()) {
+        public Node predict(double[] x, double[] posteriori) {
+            if (isLeaf() || (trueChild == null && falseChild == null)) {
                 System.arraycopy(this.posteriori, 0, posteriori, 0, k);
-                return output;
+                return this;
             } else {
                 if (attributes[splitFeature].getType() == Attribute.Type.NOMINAL) {
                     if (x[splitFeature] == splitValue) {
@@ -379,6 +413,159 @@ public class DecisionTree implements SoftClassifier<double[]> {
             return falseChild == null;
         }
     }
+    
+	/**
+	 * Starting at the leaves, each node is replaced with its most popular class. If
+	 * the prediction accuracy is not affected then the change is kept. While
+	 * somewhat naive, reduced error pruning has the advantage of simplicity and
+	 * speed.
+	 * 
+	 * @author rayeaster
+	 *
+	 */
+	public static class ReducedErrorPostPruning {
+
+		/**
+		 * post pruning using validation dataset
+		 * 
+		 * @param dt
+		 *            fully-grown Decision Tree
+		 * @param validatex
+		 *            validation dataset
+		 * @param validatey
+		 *            validation dataset repsonse
+		 */
+		public static void postPruning(DecisionTree dt, double[][] validatex, int[] validatey) {
+			Node root = dt.root;
+
+			List<Node> candidates = new LinkedList<Node>();
+			Set<Integer> flags = new HashSet<Integer>();
+
+			// update node for validate data
+			for (int i = 0; i < validatey.length; i++) {
+				double[] data = validatex[i];
+				predict(root, data, validatey[i], candidates, flags);
+			}
+
+			// from bottom-up
+			Comparator c = new Comparator<Node>() {
+
+				@Override
+				public int compare(Node o1, Node o2) {
+					return o1.index - o2.index;
+				}
+
+			};
+			candidates.sort(c);
+
+			// start post pruning
+			Node candidate = candidates.size() == 0 ? null : candidates.remove(candidates.size() - 1);
+			while (candidate != null) {
+				boolean prune = pruneSubTree(candidate, candidates, flags);
+				if (prune) {
+					candidates.sort(c);
+				}
+				candidate = candidates.size() == 0 ? null : candidates.remove(candidates.size() - 1);
+			}
+		}
+
+		private static Node predict(Node n, double[] x, int y, List<Node> candidates, Set<Integer> flags) {
+			Node ret = n.predict(x);
+			int prediction = ret.output;
+			if (ret.trueChild == null && ret.falseChild == null) {
+				ret.response.add(y);
+				ret.prediction.add(prediction);
+				if (ret.parent != null && flags.contains(ret.parent.index) == false) {
+					candidates.add(ret.parent);
+					flags.add(ret.parent.index);
+				}
+			}
+			return ret;
+		}
+
+		private static int[] getErrorAndTotal(Node n) {
+			int error = 0;
+			int total = 0;
+			if (n.trueChild == null && n.falseChild == null) {
+				for (int i = 0; i < n.response.size(); i++) {
+					int response = n.response.get(i);
+					int prediction = n.prediction.get(i);
+					error += (response == prediction ? 0 : 1);
+					total++;
+				}
+			}
+			return new int[] { error, total };
+		}
+
+		private static boolean pruneSubTree(Node n, List<Node> candidates, Set<Integer> flags) {
+			boolean ret = false;
+
+			Map<Integer, Integer> respCount = new HashMap<Integer, Integer>();
+			for (Integer resp : n.trueChild.response) {
+				Integer cnt = respCount.get(resp);
+				if (cnt == null) {
+					respCount.put(resp, 1);
+				} else {
+					respCount.put(resp, cnt + 1);
+				}
+			}
+			for (Integer resp : n.falseChild.response) {
+				Integer cnt = respCount.get(resp);
+				if (cnt == null) {
+					respCount.put(resp, 1);
+				} else {
+					respCount.put(resp, cnt + 1);
+				}
+			}
+			int outputResp = n.output;
+			int maxRespCount = Integer.MIN_VALUE;
+			for (Entry<Integer, Integer> ent : respCount.entrySet()) {
+				if (ent.getValue() > maxRespCount) {
+					maxRespCount = ent.getValue();
+					outputResp = ent.getKey();
+				}
+			}
+			// get error rate before prune
+			int[] trueErrorAndTotal = getErrorAndTotal(n.trueChild);
+			int[] falseErrorAndTotal = getErrorAndTotal(n.falseChild);
+			int total = trueErrorAndTotal[1] + falseErrorAndTotal[1];
+			double errRateBefore = (double) (trueErrorAndTotal[0] + falseErrorAndTotal[0]) / (double) (total);
+			// get error rate after prune
+			int errorAfter = 0;
+			for (Integer resp : n.trueChild.response) {
+				if (!resp.equals(outputResp)) {
+					errorAfter++;
+				}
+			}
+			for (Integer resp : n.falseChild.response) {
+				if (!resp.equals(outputResp)) {
+					errorAfter++;
+				}
+			}
+			double errRateAfter = (double) (errorAfter) / (double) (total);
+			ret = errRateAfter < errRateBefore;
+			// prune the subtree and from bottom-up
+			if (ret) {
+				n.response.addAll(n.trueChild.response);
+				n.response.addAll(n.falseChild.response);
+				n.prediction = new ArrayList<Integer>(total);
+				for (int i = 0; i < total; i++) {
+					n.prediction.add(outputResp);
+				}
+				n.trueChild = null;
+				n.falseChild = null;
+				n.trueChildOutput = -1;
+				n.falseChildOutput = -1;
+				n.output = outputResp;
+				if (n.parent != null && flags.contains(n.parent.index) == false) {
+					candidates.add(n.parent);
+					flags.add(n.parent.index);
+				}
+				System.out.println("pruning node #" + n.index);
+			}
+			return ret;
+		}
+	}
 
     /**
      * Classification tree node for training purpose.
@@ -713,12 +900,15 @@ public class DecisionTree implements SoftClassifier<double[]> {
 
             node.trueChild = new Node(trueChildOutput, trueChildPosteriori);
             node.falseChild = new Node(falseChildOutput, falseChildPosteriori);
+            node.trueChild.parent = node;
+            node.falseChild.parent = node;
 
             int[] buffer = new int[high - split];
             partitionOrder(low, split, high, goesLeft, buffer);
 
             int leaves = 0;
-            TrainNode trueChild = new TrainNode(node.trueChild, x, y, samples, low, split);         
+            TrainNode trueChild = new TrainNode(node.trueChild, x, y, samples, low, split); 
+
             if (tc > nodeSize && trueChild.findBestSplit()) {
                 if (nextSplits != null) {
                     nextSplits.add(trueChild);
@@ -1172,7 +1362,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
     
     @Override
     public int predict(double[] x) {
-        return root.predict(x);
+        return root.predict(x).output;
     }
 
     /**
@@ -1183,7 +1373,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
      */
     @Override
     public int predict(double[] x, double[] posteriori) {
-        return root.predict(x, posteriori);
+        return root.predict(x, posteriori).output;
     }
 
     /**
