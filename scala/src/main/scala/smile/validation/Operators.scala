@@ -76,6 +76,15 @@ trait Operators {
     * one (assuming 'positive' ranks higher than 'negative').
     */
   def auc(truth: Array[Int], probability: Array[Double]): Double = AUC.measure(truth, probability)
+  /**
+    * MCC is a correlation coefficient between prediction and actual values.
+    * It is considered as a balanced measure for binary classification, even in unbalanced data sets.
+    * It varies between -1 and +1. 1 when there is perfect agreement between ground truth and prediction,
+    * -1 when there is a perfect disagreement between ground truth and predictions.
+    * MCC of 0 means the model is not better then random.
+    *
+    */
+  def mcc(truth: Array[Int], prediction: Array[Int]): Double = new MCCMeasure().measure(truth, prediction)
 
   /** Mean squared error. */
   def mse(truth: Array[Double], prediction: Array[Double]): Double = new MSE().measure(truth, prediction)
