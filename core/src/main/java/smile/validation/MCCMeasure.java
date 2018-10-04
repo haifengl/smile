@@ -43,7 +43,7 @@ public class MCCMeasure implements ClassificationMeasure {
         int fn = matrix[1][0];
 
         int numerator = (tp * tn - fp * fn);
-        double denominator = Math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn));
+        double denominator = Math.sqrt(tp + fp) * Math.sqrt(tp + fn) * Math.sqrt(tn + fp) * Math.sqrt(tn + fn);
 
         if (numerator == 0) {
             return 0;
