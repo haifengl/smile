@@ -142,6 +142,10 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
      * The tolerance of convergence test.
      */
     private double tol = 1E-3;
+    /**
+     * The max iteration count of convergence test.
+     */
+    private int maxIter = Integer.MAX_VALUE;
     
     /**
      * Trainer for support vector machines.
@@ -180,6 +184,10 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
          * The number of epochs of stochastic learning.
          */
         private int epochs = 2;
+        /**
+         * The max iteration count of convergence test.
+         */
+        private int maxIter = Integer.MAX_VALUE;
 
         /**
          * Constructor of trainer for binary SVMs.
@@ -290,6 +298,19 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
             this.epochs = epochs;
             return this;
         }
+
+        /**
+         * Sets the number of iterations for convergence test.
+         * @param maxIter the number of epochs of stochastic learning.
+         */
+        public Trainer<T> setMaxIter( int maxIter ) {
+            if (maxIter <= 0) {
+                throw new IllegalArgumentException("Invalid iterations for convergence test:" + maxIter);
+            }
+
+            this.maxIter = maxIter;
+            return this;
+        }
         
         @Override
         public SVM<T> train(T[] x, int[] y) {
@@ -317,6 +338,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
             }
             
             svm.setTolerance(tol);
+            svm.setMaxIter(maxIter);
             for (int i = 1; i <= epochs; i++) {
                 svm.learn(x, y, weight);
             }
@@ -867,6 +889,9 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
                 if (count % 1000 == 0) {
                     logger.info("finishing {} reprocess iterations.");
                 }
+                if (count >= maxIter ){
+                    break;
+                }
             }
             logger.info("SVM finished the reprocess.");
 
@@ -1090,6 +1115,14 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
         
         this.tol = tol;
         return this;
+    }
+
+    /**
+     * Sets the number of iterations for convergence test.
+     * @param maxIter the number of epochs of stochastic learning.
+     */
+    public void setMaxIter( int maxIter ) {
+        this.maxIter = maxIter;
     }
 
     /** Support vector. */
