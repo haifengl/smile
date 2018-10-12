@@ -461,7 +461,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
 			// start post pruning
 			Node candidate = candidates.size() == 0 ? null : candidates.remove(candidates.size() - 1);
 			while (candidate != null) {
-				boolean prune = pruneSubTree(candidate, candidates, flags);
+				boolean prune = pruneSubTree(dt, candidate, candidates, flags);
 				if (prune) {
 					candidates.sort(c);
 				}
@@ -497,7 +497,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
 			return new int[] { error, total };
 		}
 
-		private static boolean pruneSubTree(Node n, List<Node> candidates, Set<Integer> flags) {
+		private static boolean pruneSubTree(DecisionTree dt, Node n, List<Node> candidates, Set<Integer> flags) {
 			boolean ret = false;
 
 			Map<Integer, Integer> respCount = new HashMap<Integer, Integer>();
@@ -546,6 +546,8 @@ public class DecisionTree implements SoftClassifier<double[]> {
 			ret = errRateAfter < errRateBefore;
 			// prune the subtree and from bottom-up
 			if (ret) {
+				dt.importance[n.splitFeature] -= n.splitScore;
+				
 				n.response.addAll(n.trueChild.response);
 				n.response.addAll(n.falseChild.response);
 				n.prediction = new ArrayList<Integer>(total);
