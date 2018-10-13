@@ -148,7 +148,7 @@ public class ElasticNetTest {
 				double[][] testx = Math.slice(datax, cv.test[i]);
 				double[] testy = Math.slice(datay, cv.test[i]);
 
-				ElasticNet elasticnet = new ElasticNet(trainx, trainy, 50, 0.99999999999999999999);
+				ElasticNet elasticnet = new ElasticNet(trainx, trainy, 50, 0.79999999999999999999);
 
 				for (int j = 0; j < testx.length; j++) {
 					double r = testy[j] - elasticnet.predict(testx[j]);
@@ -156,7 +156,7 @@ public class ElasticNetTest {
 				}
 			}
 
-			System.out.println("CPU 22-CV MSE = " + rss / n);
+			System.out.println("CPU 10-CV RMSE = " + Math.sqrt(rss / n));
 		} catch (Exception ex) {
 			System.err.println(ex);
 		}
@@ -261,7 +261,7 @@ public class ElasticNetTest {
 				double[][] testx = Math.slice(datax, cv.test[i]);
 				double[] testy = Math.slice(datay, cv.test[i]);
 
-				ElasticNet elasticnet = new ElasticNet(trainx, trainy, 1000, 0.9999999999999999999999);
+				ElasticNet elasticnet = new ElasticNet(trainx, trainy, 1, 0.7999999999999999999999);
 
 				for (int j = 0; j < testx.length; j++) {
 					double r = testy[j] - elasticnet.predict(testx[j]);
@@ -269,7 +269,7 @@ public class ElasticNetTest {
 				}
 			}
 
-			System.out.println("Diabetes 40-CV MSE = " + rss / n);
+			System.out.println("Diabetes 40-CV RMSE = " + Math.sqrt(rss / n));
 		} catch (Exception ex) {
 			System.err.println(ex);
 		}
