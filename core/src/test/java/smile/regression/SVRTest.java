@@ -16,9 +16,13 @@
 
 package smile.regression;
 
+import smile.math.kernel.LinearKernel;
 import smile.math.kernel.PolynomialKernel;
 import smile.data.AttributeDataset;
+import smile.data.NumericAttribute;
 import smile.data.parser.ArffParser;
+import smile.data.parser.DelimitedTextParser;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -78,6 +82,7 @@ public class SVRTest {
                 double[] testy = Math.slice(datay, cv.test[i]);
 
                 SVR<double[]> svr = new SVR<>(trainx, trainy, new PolynomialKernel(3, 1.0, 1.0), 0.1, 1.0);
+//                SVR<double[]> svr = new SVR<>(trainx, trainy, new LinearKernel(), 0.1, 1.0);
 
                 for (int j = 0; j < testx.length; j++) {
                     double r = testy[j] - svr.predict(testx[j]);
@@ -90,4 +95,45 @@ public class SVRTest {
              System.err.println(ex);
          }
     }
+    
+    /**
+	 * Test of learn method, of class SVR with linear kernel.
+	 */
+	@Test
+	public void testLinearKernel() {
+		System.out.println("---Diabetes---");
+		DelimitedTextParser parser = new DelimitedTextParser();
+		parser.setResponseIndex(new NumericAttribute("y"), 0);
+		parser.setColumnNames(true);
+		parser.setDelimiter(",");
+		try {
+			AttributeDataset data = parser.parse("diabetes",
+					smile.data.parser.IOUtils.getTestDataFile("regression/diabetes.csv"));
+			double[][] datax = data.toArray(new double[data.size()][]);
+			double[] datay = data.toArray(new double[data.size()]);
+
+			int n = datax.length;
+			int k = 40;
+
+			CrossValidation cv = new CrossValidation(n, k);
+			double rss = 0.0;
+			for (int i = 0; i < k; i++) {
+				double[][] trainx = Math.slice(datax, cv.train[i]);
+				double[] trainy = Math.slice(datay, cv.train[i]);
+				double[][] testx = Math.slice(datax, cv.test[i]);
+				double[] testy = Math.slice(datay, cv.test[i]);
+
+				SVR<double[]> svr = new SVR<>(trainx, trainy, new LinearKernel(), 0.1, 1.0);
+
+				for (int j = 0; j < testx.length; j++) {
+					double r = testy[j] - svr.predict(testx[j]);
+					rss += r * r;
+				}
+			}
+
+			System.out.println("Diabetes 40-CV RMSE = " + Math.sqrt(rss / n));
+		} catch (Exception ex) {
+			System.err.println(ex);
+		}
+	}
 }
