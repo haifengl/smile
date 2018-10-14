@@ -50,7 +50,12 @@ import smile.projection.Projection;
  * the number of samples. In this case, the covariance estimates do not have
  * full rank, and so cannot be inverted. This is known as small sample size
  * problem.
- * 
+ *
+ * <h2>References</h2>
+ * <ol>
+ * <li> Robust and Accurate Cancer Classification with Gene Expression Profiling http://alumni.cs.ucr.edu/~hli/paper/hli05tumor.pdf.</li>
+ * </ol>
+ *
  * @see LDA
  * @see smile.projection.PCA
  * 
