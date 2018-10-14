@@ -862,10 +862,19 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T>, Serializ
          * @param epsgr the tolerance of convergence test.
          */
         void finish(double epsgr) {
-            logger.info("SVM finializes the training by reprocess.");
-            for (int count = 1; smo(null, null, epsgr); count++) {
+            finish(epsgr, Integer.MAX_VALUE);
+        }
+
+        /**
+         * Call reprocess until converge.
+         * @param epsgr the tolerance of convergence test.
+         * @param maxIter the maximum number of iterations.
+         */
+        void finish(double epsgr, int maxIter) {
+            logger.info("SVM is finalizing the training by reprocess.");
+            for (int count = 1; smo(null, null, epsgr) && count <= maxIter; count++) {
                 if (count % 1000 == 0) {
-                    logger.info("finishing {} reprocess iterations.");
+                    logger.info("finishing {} reprocess iterations.", count);
                 }
             }
             logger.info("SVM finished the reprocess.");
