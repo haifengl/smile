@@ -22,8 +22,12 @@ import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
 
 /**
- * FastICA is an efficient and popular algorithm for independent component
- * analysis invented by Aapo Hyvärinen at Helsinki University of Technology.
+ * Independent Component Analysis (ICA) is a computational method for separating
+ * a multivariate signal into additive subcomponents.
+ * <p>
+ * We use FastICA for this implementation, which is an efficient and popular
+ * algorithm for independent component analysis invented by Aapo Hyvärinen at
+ * Helsinki University of Technology.
  * <p>
  * Like most ICA algorithms, FastICA seeks an orthogonal rotation of prewhitened
  * data, through a fixed-point iteration scheme, that maximizes a measure of
@@ -48,7 +52,7 @@ import smile.math.matrix.EVD;
  * 
  * @author rayeaster
  */
-public class FastICA implements Projection<double[]>, Serializable {
+public class ICA implements Projection<double[]>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -104,7 +108,7 @@ public class FastICA implements Projection<double[]>, Serializable {
 	 * @param p
 	 *            target independent component count
 	 */
-	public FastICA(double[][] data, int p) {
+	public ICA(double[][] data, int p) {
 		this(data, p, 1E-5, 10000);
 	}
 
@@ -118,7 +122,7 @@ public class FastICA implements Projection<double[]>, Serializable {
 	 * @param maxIter
 	 *            maximum iteration on component search
 	 */
-	public FastICA(double[][] data, int p, double cong, int maxIter) {
+	public ICA(double[][] data, int p, double cong, int maxIter) {
 		int m = data.length;
 		this.n = data[0].length;
 		this.p = p;
@@ -220,18 +224,35 @@ public class FastICA implements Projection<double[]>, Serializable {
 		return y;
 	}
 
+	/**
+	 * 
+	 * @return the projection matrix
+	 */
 	public DenseMatrix getProjection() {
 		return projection;
 	}
 
+	/**
+	 * 
+	 * @return the functor {@link NegEntropyFunc} to get first or second order derivative
+	 */
 	public NegEntropyFunc getFuncMode() {
 		return funcMode;
 	}
 
+	/**
+	 * set the functor {@link NegEntropyFunc} to get first or second order derivative
+	 * @param funcMode
+	 */
 	public void setFuncMode(NegEntropyFunc funcMode) {
 		this.funcMode = funcMode;
 	}
 
+	/**
+	 * Before applying ICA, we need to do whitening against the raw dataset.
+	 * @param data
+	 * @return whitened dataset
+	 */
 	private DenseMatrix whiteData(double[][] data) {
 		int m = data.length;
 		// center data
@@ -275,18 +296,38 @@ public class FastICA implements Projection<double[]>, Serializable {
 		return ct.transpose();
 	}
 
+	/**
+	 * calculate first order derivative according to {@link NegEntropyFunc#LOGCOSH} functor
+	 * @param val
+	 * @return first order derivative according to {@link NegEntropyFunc#LOGCOSH} functor
+	 */
 	private double getDeriv1WithLOGCOSH(double val) {
 		return Math.tanh(val);
 	}
 
+	/**
+	 * calculate second order derivative according to {@link NegEntropyFunc#LOGCOSH} functor
+	 * @param val
+	 * @return second order derivative according to {@link NegEntropyFunc#LOGCOSH} functor
+	 */
 	private double getDeriv2WithLOGCOSH(double val) {
 		return 1 - Math.sqr(Math.tanh(val));
 	}
 
+	/**
+	 * calculate first order derivative according to {@link NegEntropyFunc#EXP} functor
+	 * @param val
+	 * @return first order derivative according to {@link NegEntropyFunc#EXP} functor
+	 */
 	private double getDeriv1WithEXP(double val) {
 		return val * Math.exp(-0.5 * Math.sqr(val));
 	}
 
+	/**
+	 * calculate second order derivative according to {@link NegEntropyFunc#EXP} functor
+	 * @param val
+	 * @return second order derivative according to {@link NegEntropyFunc#EXP} functor
+	 */
 	private double getDeriv2WithEXP(double val) {
 		return (1 - Math.sqr(val)) * Math.exp(-0.5 * Math.sqr(val));
 	}

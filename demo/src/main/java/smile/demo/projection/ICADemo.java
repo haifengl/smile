@@ -27,8 +27,8 @@ import javax.swing.JPanel;
 
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
-import smile.projection.FastICA;
-import smile.projection.FastICA.NegEntropyFunc;
+import smile.projection.ICA;
+import smile.projection.ICA.NegEntropyFunc;
 import smile.math.Math;
 
 /**
@@ -36,10 +36,10 @@ import smile.math.Math;
  * @author rayeaster
  */
 @SuppressWarnings("serial")
-public class FastICADemo extends ProjectionDemo {
+public class ICADemo extends ProjectionDemo {
     JComboBox<String> corBox;
 
-    public FastICADemo() {
+    public ICADemo() {
         corBox = new JComboBox<>();
         corBox.addItem("LOGCOSH");
         corBox.addItem("EXP");
@@ -70,7 +70,7 @@ public class FastICADemo extends ProjectionDemo {
         	icap = 2;
             break;
         }
-        FastICA fastICA = new FastICA(data, icap);
+        ICA fastICA = new ICA(data, icap);
         if(!logcosh) {
         	fastICA.setFuncMode(NegEntropyFunc.EXP);
         }
@@ -103,7 +103,7 @@ public class FastICADemo extends ProjectionDemo {
     }
 
     public static void main(String argv[]) {
-        FastICADemo demo = new FastICADemo();
+        ICADemo demo = new ICADemo();
         JFrame f = new JFrame("Independent Component Analysis");
         f.setSize(new Dimension(1000, 1000));
         f.setLocationRelativeTo(null);

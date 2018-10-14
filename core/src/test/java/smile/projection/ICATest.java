@@ -29,9 +29,9 @@ import smile.math.matrix.DenseMatrix;
  *
  * @author rayeaster
  */
-public class FastICATest {
+public class ICATest {
 
-    public FastICATest() {
+    public ICATest() {
     }
 
     @BeforeClass
@@ -63,7 +63,7 @@ public class FastICATest {
             AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
             double[][] x = iris.toArray(new double[iris.size()][]);
 
-            FastICA fastICA = new FastICA(x, 2);
+            ICA fastICA = new ICA(x, 2);
 
             double[][] p = fastICA.project(x);
             DenseMatrix ica = fastICA.getProjection();
