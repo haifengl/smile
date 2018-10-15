@@ -16,7 +16,7 @@
 
 package smile
 
-import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import smile.math.distance.{EuclideanDistance, Distance, Metric}
 import smile.math.rbf.GaussianRadialBasis
 
@@ -48,7 +48,7 @@ package object util extends LazyLogging {
     def apply[A](f: => A) = {
       val s = System.nanoTime
       val ret = f
-      if (echo) logger.info("runtime: {} ms", (System.nanoTime - s)/1e6)
+      if (echo) logger.info("runtime: {} ms", Double.box((System.nanoTime - s)/1e6))
       ret
     }
   }

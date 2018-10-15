@@ -16,7 +16,7 @@
 
 package smile.math
 
-import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import smile.math.matrix.{Matrix, DenseMatrix}
 
 /**
@@ -638,7 +638,7 @@ class MatrixOrderOptimization(dims: Array[Int]) extends LazyLogging {
     }
   }
 
-  logger.info("The minimum cost of matrix multiplication chain: {}", m(0)(n-1))
+  logger.info("The minimum cost of matrix multiplication chain: {}", Int.box(m(0)(n-1)))
 
   override def toString: String = {
     val sb = new StringBuilder
