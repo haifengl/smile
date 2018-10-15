@@ -18,4 +18,4 @@ target in Compile in doc := baseDirectory.value / "../shell/src/universal/doc/ap
 
 libraryDependencies += "com.thoughtworks.xstream" % "xstream" % "1.4.8"
 
-libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.8.0"
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
