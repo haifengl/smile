@@ -60,21 +60,22 @@ public class ICADemo extends ProjectionDemo {
 
         long clock = System.currentTimeMillis();
         int icap = 2;
-        switch(datasetIndex) {
+        switch (datasetIndex) {
         case 1: // USArrests
         case 2: // food
         case 4: // combo17
-        	icap = 3;
-        	break;
+            icap = 3;
+            break;
         default: // iris pendigits
-        	icap = 2;
+            icap = 2;
             break;
         }
         ICA fastICA = new ICA(data, icap);
-        if(!logcosh) {
-        	fastICA.setFuncMode(NegEntropyFunc.EXP);
+        if (!logcosh) {
+            fastICA.setFuncMode(NegEntropyFunc.EXP);
         }
-        System.out.format("Learn Independent Component Anaysis from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
+        System.out.format("Learn Independent Component Anaysis from %d samples in %dms\n", data.length,
+                System.currentTimeMillis() - clock);
 
         JPanel pane = new JPanel(new GridLayout(1, 1));
 
