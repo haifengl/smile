@@ -36,139 +36,139 @@ import smile.sort.QuickSort;
  * @author rayeaster
  */
 public class IsotonicRegressionScaling implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	/** setep-wise constant functions */
-	private static class StepwiseConsFunc {
-		double lowScore;
-		double highScore;
-		double val;
-		int weight = 1;
+    /** setep-wise constant functions */
+    private static class StepwiseConsFunc {
+        double lowScore;
+        double highScore;
+        double val;
+        int weight = 1;
 
-		StepwiseConsFunc next;
-		StepwiseConsFunc previous;
+        StepwiseConsFunc next;
+        StepwiseConsFunc previous;
 
-		StepwiseConsFunc(double lowScore, double highScore, double val) {
-			this.lowScore = lowScore;
-			this.highScore = highScore;
-			this.val = val;
-		}
+        StepwiseConsFunc(double lowScore, double highScore, double val) {
+            this.lowScore = lowScore;
+            this.highScore = highScore;
+            this.val = val;
+        }
 
-		void setNext(StepwiseConsFunc next) {
-			this.next = next;
-		}
+        void setNext(StepwiseConsFunc next) {
+            this.next = next;
+        }
 
-		void setPrevious(StepwiseConsFunc previous) {
-			this.previous = previous;
-		}
+        void setPrevious(StepwiseConsFunc previous) {
+            this.previous = previous;
+        }
 
-		public int getWeight() {
-			return weight;
-		}
+        public int getWeight() {
+            return weight;
+        }
 
-		public void setWeight(int weight) {
-			this.weight = weight;
-		}
+        public void setWeight(int weight) {
+            this.weight = weight;
+        }
 
-		boolean matchValue(double score) {
-			if (score > lowScore && score <= highScore) {
-				return true;
-			} else {
-				return false;
-			}
-		}
+        boolean matchValue(double score) {
+            if (score > lowScore && score <= highScore) {
+                return true;
+            } else {
+                return false;
+            }
+        }
 
-		double getVal() {
-			return this.val;
-		}
-	}
+        double getVal() {
+            return this.val;
+        }
+    }
 
-	private StepwiseConsFunc startConstantFuncs;
+    private StepwiseConsFunc startConstantFuncs;
 
-	/**
-	 * Trains the Isotonic Regression scaling.
-	 * 
-	 * @param scores
-	 *            The predicted scores.
-	 * @param yOO
-	 *            The training labels.
-	 */
-	public IsotonicRegressionScaling(double[] scores, int[] y) {
-		initStepwiseConstFuncs(scores, y);
+    /**
+     * Trains the Isotonic Regression scaling.
+     * 
+     * @param scores
+     *            The predicted scores.
+     * @param yOO
+     *            The training labels.
+     */
+    public IsotonicRegressionScaling(double[] scores, int[] y) {
+        initStepwiseConstFuncs(scores, y);
 
-		StepwiseConsFunc current = startConstantFuncs.next;
+        StepwiseConsFunc current = startConstantFuncs.next;
 
-		while (current != null) {
-			StepwiseConsFunc previous = current.previous;
-			while (previous != null) {
-				if (previous.getVal() >= current.getVal()) {
-					int weight = previous.getWeight() + current.getWeight();
-					double val = (previous.getWeight() * previous.getVal() + current.getWeight() * current.getVal())
-							/ weight;
-					StepwiseConsFunc newFunc = new StepwiseConsFunc(previous.lowScore, current.highScore, val);
-					newFunc.setWeight(weight);
+        while (current != null) {
+            StepwiseConsFunc previous = current.previous;
+            while (previous != null) {
+                if (previous.getVal() >= current.getVal()) {
+                    int weight = previous.getWeight() + current.getWeight();
+                    double val = (previous.getWeight() * previous.getVal() + current.getWeight() * current.getVal())
+                            / weight;
+                    StepwiseConsFunc newFunc = new StepwiseConsFunc(previous.lowScore, current.highScore, val);
+                    newFunc.setWeight(weight);
 
-					newFunc.next = current.next;
-					if(newFunc.next != null) {
-						newFunc.next.previous = newFunc;						
-					}
+                    newFunc.next = current.next;
+                    if (newFunc.next != null) {
+                        newFunc.next.previous = newFunc;
+                    }
 
-					newFunc.previous = previous.previous;
-					if(newFunc.previous != null) {
-						newFunc.previous.next = newFunc;						
-					}
+                    newFunc.previous = previous.previous;
+                    if (newFunc.previous != null) {
+                        newFunc.previous.next = newFunc;
+                    }
 
-					current = newFunc;
-					previous = current.previous;
-				} else {
-					previous = previous.previous;
-				}
-			}
-			current = current.next;
-		}
-	}
+                    current = newFunc;
+                    previous = current.previous;
+                } else {
+                    previous = previous.previous;
+                }
+            }
+            current = current.next;
+        }
+    }
 
-	private void initStepwiseConstFuncs(double[] scores, int[] y) {
-		double[] sortedScores = Arrays.copyOf(scores, scores.length);
-		int[] sortedY = Arrays.copyOf(y, y.length);
+    private void initStepwiseConstFuncs(double[] scores, int[] y) {
+        double[] sortedScores = Arrays.copyOf(scores, scores.length);
+        int[] sortedY = Arrays.copyOf(y, y.length);
 
-		QuickSort.sort(sortedScores, sortedY, sortedScores.length);
+        QuickSort.sort(sortedScores, sortedY, sortedScores.length);
 
-		StepwiseConsFunc previous = new StepwiseConsFunc(sortedScores[0], sortedScores[0], (double) sortedY[0]);
-		startConstantFuncs = previous;
+        StepwiseConsFunc previous = new StepwiseConsFunc(sortedScores[0], sortedScores[0], (double) sortedY[0]);
+        startConstantFuncs = previous;
 
-		for (int i = 1; i < sortedScores.length; i++) {
-			StepwiseConsFunc init = new StepwiseConsFunc(sortedScores[i], sortedScores[i], (double) sortedY[i]);
-			init.setPrevious(previous);
-			previous.setNext(init);
-			previous = init;
-		}
-	}
+        for (int i = 1; i < sortedScores.length; i++) {
+            StepwiseConsFunc init = new StepwiseConsFunc(sortedScores[i], sortedScores[i], (double) sortedY[i]);
+            init.setPrevious(previous);
+            previous.setNext(init);
+            previous = init;
+        }
+    }
 
-	/**
-	 * Returns the posterior probability estimate P(y = 1 | x).
-	 *
-	 * @param y
-	 *            the binary classifier output score.
-	 * @return the estimated probability.
-	 */
-	public double predict(double y) {
-		double ret = Double.NaN;
-		StepwiseConsFunc func = startConstantFuncs;
-		while (func != null) {
-			if (func.matchValue(y)) {
-				ret = func.getVal();
-				break;
-			}
-			func = func.next;
-		}
-		if (ret == Double.NaN) {
-			throw new IllegalArgumentException("fail to get the posteriori probability for given prediction: " + y);
-		}
-		return ret;
-	}
-	
-	/**
+    /**
+     * Returns the posterior probability estimate P(y = 1 | x).
+     *
+     * @param y
+     *            the binary classifier output score.
+     * @return the estimated probability.
+     */
+    public double predict(double y) {
+        double ret = Double.NaN;
+        StepwiseConsFunc func = startConstantFuncs;
+        while (func != null) {
+            if (func.matchValue(y)) {
+                ret = func.getVal();
+                break;
+            }
+            func = func.next;
+        }
+        if (ret == Double.NaN) {
+            throw new IllegalArgumentException("fail to get the posteriori probability for given prediction: " + y);
+        }
+        return ret;
+    }
+
+    /**
      * Estimates the multiclass probabilies.
      */
     public static void multiclass(int k, double[][] r, double[] p) {

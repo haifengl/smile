@@ -118,7 +118,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
          */
         IsotonicRegression,
     };
-    
+
     /**
      * The method for posterior probability calibration.
      */
@@ -1405,9 +1405,10 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
 
     /**
      * Indicates if Isotonic Regression scaling is available.
+     * 
      * @return true if Isotonic Regression Scaling is available
      */
-    public boolean hasIsotonicRegressionScaling(){
+    public boolean hasIsotonicRegressionScaling() {
         return (svm.isotonicRegression != null);
     }
 
@@ -1472,13 +1473,15 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
             }
         }
     }
-    
+
     /**
-     * After calling finish, the user should call this method
-     * to train Isotonic Regression Scaling to estimate posteriori probabilities.
+     * After calling finish, the user should call this method to train Isotonic
+     * Regression Scaling to estimate posteriori probabilities.
      *
-     * @param x training samples.
-     * @param y training labels.
+     * @param x
+     *            training samples.
+     * @param y
+     *            training labels.
      */
 
     public void trainIsotonicRegressionScaling(T[] x, int[] y) {
@@ -1680,7 +1683,8 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
                 throw new UnsupportedOperationException("PlattScaling was not trained yet. Please call SVM.trainPlattScaling() first.");
             }
             if (scalingMethod == ScalingMethod.IsotonicRegression && svm.isotonicRegression == null) {
-                throw new UnsupportedOperationException("IsotonicScaling was not trained yet. Please call SVM.trainIsotonicScaling() first.");
+                throw new UnsupportedOperationException(
+                        "IsotonicScaling was not trained yet. Please call SVM.trainIsotonicScaling() first.");
             }
             // two class
             double y = svm.predict(x);
@@ -1701,7 +1705,8 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
                     throw new UnsupportedOperationException("PlattScaling was not trained yet. Please call SVM.trainPlattScaling() first.");
                 }
                 if (scalingMethod == ScalingMethod.IsotonicRegression && svm.isotonicRegression == null) {
-                    throw new UnsupportedOperationException("IsotonicScaling was not trained yet. Please call SVM.trainIsotonicScaling() first.");
+                    throw new UnsupportedOperationException(
+                            "IsotonicScaling was not trained yet. Please call SVM.trainIsotonicScaling() first.");
                 }
                 double f = svm.predict(x);
                 prob[i] = posterior(svm, f);
@@ -1725,7 +1730,8 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
                         throw new UnsupportedOperationException("PlattScaling was not trained yet. Please call SVM.trainPlattScaling() first.");
                     }
                     if (scalingMethod == ScalingMethod.IsotonicRegression && svm.isotonicRegression == null) {
-                        throw new UnsupportedOperationException("IsotonicScaling was not trained yet. Please call SVM.trainIsotonicScaling() first.");
+                        throw new UnsupportedOperationException(
+                                "IsotonicScaling was not trained yet. Please call SVM.trainIsotonicScaling() first.");
                     }
 
                     double f = svm.predict(x);
