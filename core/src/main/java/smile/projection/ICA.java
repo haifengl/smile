@@ -18,6 +18,7 @@ package smile.projection;
 import java.io.Serializable;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
+import smile.stat.distribution.GaussianDistribution;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
 
@@ -67,7 +68,7 @@ public class ICA implements Projection<double[]>, Serializable {
     /**
      * constant to check if convergence on one component.
      */
-    private double convergence;
+    private double tolerance;
     /**
      * constant for maximum iteration for one component search.
      */
@@ -104,80 +105,109 @@ public class ICA implements Projection<double[]>, Serializable {
     }
 
     /**
-     * Constructor. Learn independent component analysis from the data.
+     * Constructor. Learn independent component analysis from the data. *
      * 
+     * @param data
+     *            train data set
      * @param p
      *            target independent component count
      */
     public ICA(double[][] data, int p) {
-        this(data, p, 1E-5, 10000);
+        this(data, p, 1E-5, 10000, NegEntropyFunc.LOGCOSH);
     }
 
     /**
      * Constructor. Learn independent component analysis from the data.
      * 
+     * @param data
+     *            train data set
      * @param p
      *            target independent component count
-     * @param cong
+     * @param tol
      *            convergence threshold on component search
      * @param maxIter
      *            maximum iteration on component search
+     * @param negfunc
+     *            see {@link NegEntropyFunc}
      */
-    public ICA(double[][] data, int p, double cong, int maxIter) {
+    public ICA(double[][] data, int p, double tol, int maxIter, NegEntropyFunc negfunc) {
         int m = data.length;
         this.n = data[0].length;
         this.p = p;
-        this.convergence = cong;
+        this.tolerance = tol;
         this.maxIter = maxIter;
 
         projection = Matrix.zeros(p, n);
-        DenseMatrix m1 = DenseMatrix.ones(m, 1);
 
-        DenseMatrix[] wps = new DenseMatrix[p];
+        GaussianDistribution g = new GaussianDistribution(0, 1);
+        double[][] wps = new double[p][n];
         for (int i = 0; i < p; i++) {
-            wps[i] = DenseMatrix.randn(1, n);
-            wps[i] = wps[i].div(wps[i].normFro());
+            for (int j = 0; j < n; j++) {
+                wps[i][j] = g.rand();
+            }
+            // normalize
+            double norm = Math.norm2(wps[i]);
+            for (int j = 0; j < n; j++) {
+                wps[i][j] /= norm;
+            }
         }
 
         DenseMatrix whitened = whiteData(data);
         for (int i = 0; i < p; i++) {
-            DenseMatrix lastwp = wps[i].copy();
+            double[] lastwp = wps[i];
 
             double diff = Double.MAX_VALUE;
             int iterCnt = 0;
-            while (diff > this.convergence) {
-                // step 1 calculate derivative from non-linear functions
-                DenseMatrix proj = lastwp.abmm(whitened.transpose());
-                DenseMatrix projFD = proj.copy();
-                for (int idx = 0; idx < projFD.nrows(); idx++) {
-                    for (int idxc = 0; idxc < projFD.ncols(); idxc++) {
-                        projFD.set(idx, idxc,
-                                funcMode == NegEntropyFunc.LOGCOSH ? getDeriv1WithLOGCOSH(projFD.get(idx, idxc))
-                                        : getDeriv1WithEXP(projFD.get(idx, idxc)));
-                    }
-                }
-                DenseMatrix projSD = proj.copy();
-                for (int idx = 0; idx < projSD.nrows(); idx++) {
-                    for (int idxc = 0; idxc < projSD.ncols(); idxc++) {
-                        projSD.set(idx, idxc,
-                                funcMode == NegEntropyFunc.LOGCOSH ? getDeriv2WithLOGCOSH(projSD.get(idx, idxc))
-                                        : getDeriv2WithEXP(projSD.get(idx, idxc)));
-                    }
-                }
-                DenseMatrix wp = (whitened.transpose().abmm(projFD.transpose())).transpose()
-                        .sub(projSD.abmm(m1).abmm(lastwp)).div(m);
-                // step 2 make sure independent components orthogonal
-                DenseMatrix sump = DenseMatrix.zeros(1, n);
-                for (int pi = 0; pi < i; pi++) {
-                    DenseMatrix mm = wps[pi].transpose().abmm(wps[pi]);
-                    sump.add(wp.abmm(mm));
-                }
-                wp = wp.sub(sump);
-                wp = wp.div(wp.normFro());
+            while (diff > this.tolerance) {
+                // step 1 calculate derivative of projection from non-linear functions
+                double[] proj = new double[m];
+                proj = whitened.ax(lastwp, proj);
 
-                // check if convergence
-                DenseMatrix dot = wp.abmm(lastwp.transpose());
-                diff = Math.abs(Math.abs(dot.array()[0][0]) - 1);
+                double[] projFD = new double[m];
+                for (int idx = 0; idx < m; idx++) {
+                    projFD[idx] = funcMode == NegEntropyFunc.LOGCOSH ? getDeriv1WithLOGCOSH(proj[idx])
+                            : getDeriv1WithEXP(proj[idx]);
+                }
+
+                double[] projSD = new double[m];
+                double sumProjSD = 0;
+                for (int idx = 0; idx < m; idx++) {
+                    projSD[idx] = funcMode == NegEntropyFunc.LOGCOSH ? getDeriv2WithLOGCOSH(proj[idx])
+                            : getDeriv2WithEXP(proj[idx]);
+                    sumProjSD += projSD[idx];
+                }
+
+                double[] wp = new double[n];
+                wp = whitened.transpose().ax(projFD, wp);
+                double[] sub = new double[n];
+                for (int idx = 0; idx < n; idx++) {
+                    sub[idx] = sumProjSD * lastwp[idx];
+                }
+                for (int idx = 0; idx < n; idx++) {
+                    wp[idx] -= sub[idx];
+                    wp[idx] /= m;
+                }
+
+                // step 2 make sure independent components orthogonal
+                double[] accumulated = new double[n];
+                for (int pi = 0; pi < i; pi++) {
+                    double dot = Math.dot(wp, wps[pi]);
+                    for (int idx = 0; idx < n; idx++) {
+                        accumulated[idx] += dot * wps[pi][idx];
+                    }
+                }
+                for (int idx = 0; idx < n; idx++) {
+                    wp[idx] -= accumulated[idx];
+                }
+
+                // normalize
+                double norm = Math.norm2(wp);
+                for (int j = 0; j < n; j++) {
+                    wp[j] /= norm;
+                }
+
+                // step 3 check if convergence
+                diff = Math.abs(Math.abs(Math.dot(wp, lastwp)) - 1);
 
                 lastwp = wp;
 
@@ -190,7 +220,7 @@ public class ICA implements Projection<double[]>, Serializable {
             }
             wps[i] = lastwp;
             for (int j = 0; j < n; j++) {
-                projection.set(i, j, lastwp.get(0, j));
+                projection.set(i, j, lastwp[j]);
             }
         }
 
@@ -199,15 +229,7 @@ public class ICA implements Projection<double[]>, Serializable {
 
     @Override
     public double[] project(double[] x) {
-        if (x.length != n) {
-            throw new IllegalArgumentException(
-                    String.format("Invalid input vector size: %d, expected: %d", x.length, n));
-        }
-
-        double[] y = new double[p];
-        projection.ax(x, y);
-        Math.minus(y, pmu);
-        return y;
+        return project(new double[][] { x })[0];
     }
 
     @Override
@@ -218,8 +240,10 @@ public class ICA implements Projection<double[]>, Serializable {
         }
 
         double[][] y = new double[x.length][p];
-        for (int i = 0; i < x.length; i++) {
-            projection.ax(x[i], y[i]);
+        DenseMatrix whitened = whiteData(x);
+        double[][] data = whitened.array();
+        for (int i = 0; i < data.length; i++) {
+            projection.ax(data[i], y[i]);
             Math.minus(y[i], pmu);
         }
         return y;
@@ -240,16 +264,6 @@ public class ICA implements Projection<double[]>, Serializable {
      */
     public NegEntropyFunc getFuncMode() {
         return funcMode;
-    }
-
-    /**
-     * set the functor {@link NegEntropyFunc} to get first or second order
-     * derivative
-     * 
-     * @param funcMode
-     */
-    public void setFuncMode(NegEntropyFunc funcMode) {
-        this.funcMode = funcMode;
     }
 
     /**
@@ -293,10 +307,9 @@ public class ICA implements Projection<double[]>, Serializable {
             v[i] = 1 / Math.sqrt(v[i]);
         }
         DenseMatrix V = DenseMatrix.diag(v);
-        DenseMatrix white = D.abmm(V).abmm(D.transpose());
+        DenseMatrix white = D.abmm(V).abtmm(D);
 
-        DenseMatrix ct = centered.transpose();
-        ct = white.abmm(ct);
+        DenseMatrix ct = white.abtmm(centered);
 
         return ct.transpose();
     }

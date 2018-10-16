@@ -22,12 +22,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-
-import smile.data.AttributeDataset;
-import smile.data.NumericAttribute;
-import smile.data.parser.DelimitedTextParser;
 import smile.math.Math;
 
 /**
@@ -277,58 +271,6 @@ public class PCATest {
             for (int j = 0; j < points[i].length; j++) {
                 assertEquals(Math.abs(points[i][j]), Math.abs(p[i][j]), 1E-5);
             }
-        }
-    }
-
-    /**
-     * Test of learn method, of PCA for mixed signals.
-     */
-    @Test
-    public void testWithMixedSignal() {
-        System.out.println("learn PCA with mixed signal...");
-
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setDelimiter(",");
-        parser.setResponseIndex(new NumericAttribute("class"), 3);
-        try {
-            AttributeDataset mixed = parser
-                    .parse(smile.data.parser.IOUtils.getTestDataFile("projection/mixed-signal/test_ica_X.csv"));
-            double[][] x = mixed.toArray(new double[mixed.size()][]);
-
-            PCA pca = new PCA(x);
-            pca.setProjection(3);
-
-            double[][] p = pca.project(x);
-            int size = mixed.size();
-
-            double[] p1 = new double[size];
-            for (int i = 0; i < size; i++) {
-                p1[i] = p[i][0];
-            }
-
-            double[] p2 = new double[size];
-            for (int i = 0; i < size; i++) {
-                p2[i] = p[i][1];
-            }
-
-            double[] p3 = new double[size];
-            for (int i = 0; i < size; i++) {
-                p3[i] = p[i][2];
-            }
-
-            // BufferedWriter bw = new BufferedWriter(new
-            // FileWriter("test_pca_reconstruct.csv"));
-            // for(int i = 0;i < size;i++) {
-            // StringBuilder sb = new StringBuilder();
-            // sb.append(p1[i]).append(",").append(p2[i]).append(",").append(p3[i]);
-            // bw.append(sb.toString());
-            // bw.newLine();
-            // }
-            // bw.flush();
-            // bw.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }

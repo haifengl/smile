@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.projection;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 
@@ -25,6 +27,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import smile.data.AttributeDataset;
+import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
 import smile.data.parser.ArffParser;
 import smile.data.parser.DelimitedTextParser;
@@ -59,112 +62,93 @@ public class ICATest {
      * Test of learn method, of FastICA.
      */
     @Test
-    public void testFastICA() {
-        System.out.println("learn FastICA...");
-
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
-            double[][] x = iris.toArray(new double[iris.size()][]);
-
-            ICA fastICA = new ICA(x, 2);
-
-            double[][] p = fastICA.project(x);
-            DenseMatrix ica = fastICA.getProjection();
-            double[][] icap = ica.array();
-            for (int i = 0; i < icap.length; i++) {
-                System.out.print("independent components:[");
-                for (int j = 0; j < icap[0].length; j++) {
-                    if (j > 0) {
-                        System.out.print(",");
-                    }
-                    System.out.print(icap[i][j]);
-                }
-                System.out.print("]");
-                System.out.println();
-            }
-
-            for (int i = 0; i < p.length; i++) {
-                System.out.print("projected points No." + (i + 1) + ":[");
-                for (int j = 0; j < p[0].length; j++) {
-                    if (j > 0) {
-                        System.out.print(",");
-                    }
-                    System.out.print(p[i][j]);
-                }
-                System.out.print("]");
-                System.out.println();
-            }
-
-            char space = ' ';
-            char point = 'x';
-            double[] colmax = smile.math.Math.colMax(p);
-            double[] colmin = smile.math.Math.colMin(p);
-            double range1 = colmax[0] - colmin[0];
-            double bucket1 = range1 / 10;
-            System.out.println("First Independent dimension scatter:");
-            for (int j = 0; j < p.length; j++) {
-                int bs = (int) ((p[j][0] - colmin[0]) / bucket1);
-                StringBuilder sp = new StringBuilder();
-                for (int i = 0; i < bs; i++) {
-                    sp.append(space);
-                }
-                System.out.print(sp.append(point).toString());
-            }
-            System.out.println();
-            System.out.println("Second Independent dimension scatter:");
-            double range2 = colmax[1] - colmin[1];
-            double bucket2 = range2 / 10;
-            for (int j = 0; j < p.length; j++) {
-                int bs = (int) ((p[j][1] - colmin[1]) / bucket2);
-                StringBuilder sp = new StringBuilder();
-                for (int i = 0; i < bs; i++) {
-                    sp.append(space);
-                }
-                System.out.print(sp.append(point).toString());
-            }
-            System.out.println();
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
-    }
-
-    /**
-     * Test of learn method, of FastICA.
-     */
-    @Test
     public void testWithMixedSignal() {
         System.out.println("learn ICA with mixed signal...");
 
         DelimitedTextParser parser = new DelimitedTextParser();
         parser.setDelimiter(",");
-        parser.setResponseIndex(new NumericAttribute("class"), 3);
+        parser.setResponseIndex(new NominalAttribute("class"), 3);
         try {
             AttributeDataset mixed = parser
                     .parse(smile.data.parser.IOUtils.getTestDataFile("projection/mixed-signal/test_ica_X.csv"));
             double[][] x = mixed.toArray(new double[mixed.size()][]);
+
+            parser.setResponseIndex(new NominalAttribute("class"), 1);
+            AttributeDataset signal1 = parser
+                    .parse(smile.data.parser.IOUtils.getTestDataFile("projection/mixed-signal/test_ica_s1.csv"));
+            double[][] s1 = signal1.toArray(new double[signal1.size()][]);// sinusoidal
+
+            AttributeDataset signal2 = parser
+                    .parse(smile.data.parser.IOUtils.getTestDataFile("projection/mixed-signal/test_ica_s2.csv"));
+            double[][] s2 = signal2.toArray(new double[signal2.size()][]);// square
+
+            AttributeDataset signal3 = parser
+                    .parse(smile.data.parser.IOUtils.getTestDataFile("projection/mixed-signal/test_ica_s3.csv"));
+            double[][] s3 = signal3.toArray(new double[signal3.size()][]);// sawtooth
 
             ICA fastICA = new ICA(x, 3);
 
             double[][] p = fastICA.project(x);
             int size = mixed.size();
 
-            double[] p1 = new double[size];
+            double[] p1 = new double[size];// sawtooth
             for (int i = 0; i < size; i++) {
                 p1[i] = p[i][0];
             }
 
-            double[] p2 = new double[size];
+            double[] p2 = new double[size];// square
             for (int i = 0; i < size; i++) {
                 p2[i] = p[i][1];
             }
 
-            double[] p3 = new double[size];
+            double[] p3 = new double[size];// sinusoidal
             for (int i = 0; i < size; i++) {
                 p3[i] = p[i][2];
             }
 
+            double[] o1 = new double[size];
+            for (int i = 0; i < size; i++) {
+                o1[i] = s1[i][0];
+            }
+
+            double[] o2 = new double[size];
+            for (int i = 0; i < size; i++) {
+                o2[i] = s2[i][0];
+            }
+
+            double[] o3 = new double[size];
+            for (int i = 0; i < size; i++) {
+                o3[i] = s3[i][0];
+            }
+
+            double mse1 = 0;
+            for (int i = 0; i < size; i++) {
+                double diff = p1[i] - o3[i];
+                mse1 += diff * diff;
+            }
+            double rmse1 = Math.sqrt(mse1 / size);
+            System.out.println("rmse for signal1 is " + rmse1);
+            assertTrue(rmse1 < 1);
+
+            double mse2 = 0;
+            for (int i = 0; i < size; i++) {
+                double diff = p2[i] - o2[i];
+                mse2 += diff * diff;
+            }
+            double rmse2 = Math.sqrt(mse2 / size);
+            System.out.println("rmse for signal2 is " + rmse2);
+            assertTrue(rmse2 < 1);
+
+            double mse3 = 0;
+            for (int i = 0; i < size; i++) {
+                double diff = p3[i] - o1[i];
+                mse3 += diff * diff;
+            }
+            double rmse3 = Math.sqrt(mse3 / size);
+            System.out.println("rmse for signal3 is " + rmse3);
+            assertTrue(rmse3 < 1);
+
+// for output un-mixing signals
             // BufferedWriter bw = new BufferedWriter(new
             // FileWriter("test_ica_reconstruct.csv"));
             // for(int i = 0;i < size;i++) {
