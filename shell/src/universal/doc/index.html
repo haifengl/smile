@@ -71,7 +71,7 @@
       }
 
       var page = getPageName();
-      if (typeof(page) != 'undefined' && page != null && page != "template.html" && page != "jupyter.html") {
+      if (typeof(page) != 'undefined' && page != null && page != "template.html") {
         if (page == "") page = "index-content.html";
         else page = page.replace('.html', '-content.html');
         ajaxLoad(page);
@@ -114,7 +114,7 @@
           <li><a href="overview.html">Overview</a></li>
           <li class="divider"></li>
           <li><a href="shell.html">Shell</a></li>
-          <li><a href="jupyter.html">Jupyter Notebook</a></li>
+          <li><a href="jupyter-notebook.html">Jupyter Notebook</a></li>
           <li><a href="data.html">Data</a></li>
           <li><a href="visualization.html">Visualization</a></li>
           <li class="divider"></li>
@@ -166,7 +166,6 @@
 </header>
 
 <div id="content" class="row">
-    <iframe src="jupyter-notebook.html"></iframe>
 </div>
 </div>
 
