@@ -200,11 +200,17 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
         private int epochs = 2;
 
         /**
+         * The method for posterior probability calibration.
+         */
+        private ScalingMethod scalingMethod = ScalingMethod.Platt;
+
+        /**
          * Constructor of trainer for binary SVMs.
          * @param kernel the kernel function.
          * @param C the soft margin penalty parameter.
+         * @param scaling {@link ScalingMethod}
          */
-        public Trainer(MercerKernel<T> kernel, double C) {
+        public Trainer(MercerKernel<T> kernel, double C, ScalingMethod scaling) {
             if (C < 0) {
                 throw new IllegalArgumentException("Invalid soft margin penalty: " + C);
             }
@@ -213,6 +219,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
             this.Cp = C;
             this.Cn = C;
             this.k = 2;
+            this.scalingMethod = scaling;
         }
 
         /**
@@ -220,8 +227,9 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
          * @param kernel the kernel function.
          * @param Cp the soft margin penalty parameter for positive instances.
          * @param Cn the soft margin penalty parameter for negative instances.
+         * @param scaling {@link ScalingMethod}
          */
-        public Trainer(MercerKernel<T> kernel, double Cp, double Cn) {
+        public Trainer(MercerKernel<T> kernel, double Cp, double Cn, ScalingMethod scaling) {
             if (Cp < 0) {
                 throw new IllegalArgumentException("Invalid postive instance soft margin penalty: " + Cp);
             }
@@ -234,6 +242,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
             this.Cp = Cp;
             this.Cn = Cn;
             this.k = 2;
+            this.scalingMethod = scaling;
         }
 
         /**
@@ -241,8 +250,9 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
          * @param kernel the kernel function.
          * @param C the soft margin penalty parameter.
          * @param k the number of classes.
+         * @param scaling {@link ScalingMethod} 
          */
-        public Trainer(MercerKernel<T> kernel, double C, int k, Multiclass strategy) {
+        public Trainer(MercerKernel<T> kernel, double C, int k, Multiclass strategy, ScalingMethod scaling) {
             if (C < 0) {
                 throw new IllegalArgumentException("Invalid soft margin penalty: " + C);
             }
@@ -256,6 +266,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
             this.Cn = C;
             this.k = k;
             this.strategy = strategy;
+            this.scalingMethod = scaling;
         }
 
         /**
@@ -264,8 +275,9 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
          * @param C the soft margin penalty parameter.
          * @param weight class weight. Must be positive. The soft margin penalty
          * of class i will be weight[i] * C.
+         * @param scaling {@link ScalingMethod}
          */
-        public Trainer(MercerKernel<T> kernel, double C, double[] weight, Multiclass strategy) {
+        public Trainer(MercerKernel<T> kernel, double C, double[] weight, Multiclass strategy, ScalingMethod scaling) {
             if (C < 0) {
                 throw new IllegalArgumentException("Invalid soft margin penalty: " + C);
             }
@@ -280,6 +292,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
             this.k = weight.length;
             this.weight = weight;
             this.strategy = strategy;
+            this.scalingMethod = scaling;
         }
 
         /**
@@ -325,12 +338,12 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
         public SVM<T> train(T[] x, int[] y, double[] weight) {
             SVM<T> svm = null;
             if (k == 2) {
-                svm = new SVM<>(kernel, Cp, Cn);
+                svm = new SVM<>(kernel, Cp, Cn, scalingMethod);
             } else {
                 if (this.weight == null) {
-                    svm = new SVM<>(kernel, Cp, k, strategy);
+                    svm = new SVM<>(kernel, Cp, k, strategy, scalingMethod);
                 } else {
-                    svm = new SVM<>(kernel, Cp, this.weight, strategy);
+                    svm = new SVM<>(kernel, Cp, this.weight, strategy, scalingMethod);
                 }
             }
             
@@ -1024,9 +1037,10 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
      * Constructor of binary SVM.
      * @param kernel the kernel function.
      * @param C the soft margin penalty parameter.
+     * @param scaling {@link ScalingMethod}
      */
-    public SVM(MercerKernel<T> kernel, double C) {
-        this(kernel, C, C);
+    public SVM(MercerKernel<T> kernel, double C, ScalingMethod... scaling) {
+        this(kernel, C, C, scaling);
     }
 
     /**
@@ -1034,8 +1048,9 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
      * @param kernel the kernel function.
      * @param Cp the soft margin penalty parameter for positive instances.
      * @param Cn the soft margin penalty parameter for negative instances.
+     * @param scaling {@link ScalingMethod}
      */
-    public SVM(MercerKernel<T> kernel, double Cp, double Cn) {
+    public SVM(MercerKernel<T> kernel, double Cp, double Cn, ScalingMethod... scaling) {
         if (Cp < 0.0) {
             throw new IllegalArgumentException("Invalid postive instance soft margin penalty: " + Cp);
         }
@@ -1046,6 +1061,9 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
         
         this.kernel = kernel;
         this.k = 2;
+        if (scaling.length > 0) {
+            this.scalingMethod = scaling[0];
+        }
         svm = new LASVM(Cp, Cn);
     }
 
@@ -1054,8 +1072,10 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
      * @param kernel the kernel function.
      * @param C the soft margin penalty parameter.
      * @param k the number of classes.
+     * @param strategy {@link Multiclass}
+     * @param scaling {@link ScalingMethod}
      */
-    public SVM(MercerKernel<T> kernel, double C, int k, Multiclass strategy) {
+    public SVM(MercerKernel<T> kernel, double C, int k, Multiclass strategy, ScalingMethod... scaling) {
         if (C < 0.0) {
             throw new IllegalArgumentException("Invalid soft margin penalty: " + C);
         }
@@ -1067,7 +1087,9 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
         this.kernel = kernel;
         this.k = k;
         this.strategy = strategy;
-        
+        if (scaling.length > 0) {
+            this.scalingMethod = scaling[0];
+        }
         if (strategy == Multiclass.ONE_VS_ALL) {
             svms = new ArrayList<>(k);
             for (int i = 0; i < k; i++) {
@@ -1089,8 +1111,10 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
      * @param C the soft margin penalty parameter
      * @param weight class weight. Must be positive. The soft margin penalty
      * of class i will be weight[i] * C.
+     * @param strategy {@link Multiclass}
+     * @param scaling {@link ScalingMethod}
      */
-    public SVM(MercerKernel<T> kernel, double C, double[] weight, Multiclass strategy) {
+    public SVM(MercerKernel<T> kernel, double C, double[] weight, Multiclass strategy, ScalingMethod... scaling) {
         if (C < 0.0) {
             throw new IllegalArgumentException("Invalid soft margin penalty: " + C);
         }
@@ -1109,6 +1133,9 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
         this.k = weight.length;
         this.strategy = strategy;
         this.wi = weight;
+        if (scaling.length > 0) {
+            this.scalingMethod = scaling[0];
+        }
         
         if (strategy == Multiclass.ONE_VS_ALL) {
             svms = new ArrayList<>(k);
@@ -1138,10 +1165,6 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
         this.tol = tol;
         return this;
     }
-
-    public void setScalingMethod(ScalingMethod scalingMethod) {
-		this.scalingMethod = scalingMethod;
-	}
 
 	public ScalingMethod getScalingMethod() {
 		return scalingMethod;
@@ -1400,7 +1423,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
      * @return true if Platt Scaling is available
      */
     public boolean hasPlattScaling(){
-        return (svm.platt != null);
+        return (svm != null && svm.platt != null) || (svms != null && svms.size() > 0 && svms.get(0).platt != null);
     }
 
     /**
@@ -1409,7 +1432,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
      * @return true if Isotonic Regression Scaling is available
      */
     public boolean hasIsotonicRegressionScaling() {
-        return (svm.isotonicRegression != null);
+        return (svm != null && svm.isotonicRegression != null) || (svms != null && svms.size() > 0 && svms.get(0).isotonicRegression != null);
     }
 
     /**

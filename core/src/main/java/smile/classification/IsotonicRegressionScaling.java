@@ -90,7 +90,7 @@ public class IsotonicRegressionScaling implements Serializable {
      * 
      * @param scores
      *            The predicted scores.
-     * @param yOO
+     * @param y
      *            The training labels.
      */
     public IsotonicRegressionScaling(double[] scores, int[] y) {

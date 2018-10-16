@@ -100,7 +100,7 @@ public class SVMTest {
             assertTrue(error <= 10);
 
             svm = new SVM<>(new GaussianKernel(1), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
-            // svm.setScalingMethod(ScalingMethod.IsotonicRegression);
+            // svm = new SVM<>(new GaussianKernel(1), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL, ScalingMethod.IsotonicRegression);
             svm.learn(x, y);
             svm.learn(x, y);
             svm.finish();
@@ -120,7 +120,7 @@ public class SVMTest {
             assertTrue(error <= 5);
 
             svm = new SVM<>(new GaussianKernel(1), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ONE);
-            // svm.setScalingMethod(ScalingMethod.IsotonicRegression);
+            // svm = new SVM<>(new GaussianKernel(1), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ONE, ScalingMethod.IsotonicRegression);
             svm.learn(x, y);
             svm.learn(x, y);
             svm.finish();
@@ -144,7 +144,7 @@ public class SVMTest {
             assertTrue(error <= 5);
 
             svm = new SVM<>(new PolynomialKernel(2), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
-            // svm.setScalingMethod(ScalingMethod.IsotonicRegression);
+            // svm = new SVM<>(new PolynomialKernel(2), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL, ScalingMethod.IsotonicRegression);
             svm.learn(x, y);
             svm.learn(x, y);
             svm.finish();
@@ -182,7 +182,7 @@ public class SVMTest {
             int[] testy = test.toArray(new int[0]);
             
             SVM<double[]> svm = new SVM<>(new GaussianKernel(8.0), 5.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
-            // svm.setScalingMethod(ScalingMethod.IsotonicRegression);
+            // SVM<double[]> svm = new SVM<>(new GaussianKernel(8.0), 5.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL, ScalingMethod.IsotonicRegression);
             svm.learn(x, y);
             svm.finish();
             // svm.trainIsotonicRegressionScaling(x, y);          
@@ -218,11 +218,11 @@ public class SVMTest {
             double[][] testx = test.toArray(new double[test.size()][]);
             int[] testy = test.toArray(new int[test.size()]);
             
-            SVM<double[]> svm = new SVM<>(new GaussianKernel(8.0), 5.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ONE);
-            svm.setScalingMethod(ScalingMethod.IsotonicRegression);
+            SVM<double[]> svm = new SVM<>(new GaussianKernel(8.0), 5.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ONE, ScalingMethod.IsotonicRegression);
             svm.learn(x, y);
             svm.finish();
-            svm.trainIsotonicRegressionScaling(x, y);  
+            svm.trainIsotonicRegressionScaling(x, y);
+            assertTrue(svm.hasIsotonicRegressionScaling());  
             
             int error = 0;
             for (int i = 0; i < testx.length; i++) {
