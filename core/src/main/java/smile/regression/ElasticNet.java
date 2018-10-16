@@ -215,40 +215,20 @@ public class ElasticNet implements Regression<double[]>, Serializable {
         return lambda;
     }
 
-    public void setLambda(double lambda) {
-        this.lambda = lambda;
-    }
-
     public double getLambda1() {
         return lambda1;
-    }
-
-    public void setLambda1(double lambda1) {
-        this.lambda1 = lambda1;
     }
 
     public double getLambda2() {
         return lambda2;
     }
 
-    public void setLambda2(double lambda2) {
-        this.lambda2 = lambda2;
-    }
-
     public double getLambda1p() {
         return lambda1p;
     }
 
-    public void setLambda1p(double lambda1p) {
-        this.lambda1p = lambda1p;
-    }
-
     public double getLambda2p() {
         return lambda2p;
-    }
-
-    public void setLambda2p(double lambda2p) {
-        this.lambda2p = lambda2p;
     }
 
     public int getP() {
