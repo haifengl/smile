@@ -131,7 +131,8 @@ public class FLDTest {
         DelimitedTextParser parser = new DelimitedTextParser();
         parser.setResponseIndex(new NominalAttribute("class"), 16);
         try {
-            AttributeDataset pendigits = parser.parse(smile.data.parser.IOUtils.getTestDataFile("classification/pendigits.txt"));
+            AttributeDataset pendigits = parser
+                    .parse(smile.data.parser.IOUtils.getTestDataFile("classification/pendigits.txt"));
             double[][] x = pendigits.toArray(new double[pendigits.size()][]);
             int[] y = pendigits.toArray(new int[pendigits.size()]);
 
@@ -165,7 +166,8 @@ public class FLDTest {
         parser.setColumnNames(true);
         parser.setDelimiter(",");
         try {
-            AttributeDataset breastcancer = parser.parse(smile.data.parser.IOUtils.getTestDataFile("classification/breastcancer.csv"));
+            AttributeDataset breastcancer = parser
+                    .parse(smile.data.parser.IOUtils.getTestDataFile("classification/breastcancer.csv"));
             double[][] x = breastcancer.toArray(new double[breastcancer.size()][]);
             int[] y = breastcancer.toArray(new int[breastcancer.size()]);
 
@@ -187,23 +189,25 @@ public class FLDTest {
             System.err.println(ex);
         }
     }
-    
+
     @Test
     public void testSegmentation() {
         System.out.println("---Segmentation---");
         ArffParser arffParser = new ArffParser();
         arffParser.setResponseIndex(19);
         try {
-            AttributeDataset seg = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-challenge.arff"));
-            AttributeDataset segtest = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-test.arff"));
-            
+            AttributeDataset seg = arffParser
+                    .parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-challenge.arff"));
+            AttributeDataset segtest = arffParser
+                    .parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-test.arff"));
+
             double[][] x = seg.toArray(new double[seg.size()][]);
             int[] y = seg.toArray(new int[seg.size()]);
             double[][] testx = segtest.toArray(new double[segtest.size()][]);
             int[] testy = segtest.toArray(new int[segtest.size()]);
 
-            FLD fisher = new FLD(x, y, 6, 3*1E-7, Model.HIGH_DIM);
-            
+            FLD fisher = new FLD(x, y, 6, 3 * 1E-7, Model.HIGH_DIM);
+
             int error = 0;
             for (int i = 0; i < testx.length; i++) {
                 if (fisher.predict(testx[i]) != testy[i]) {
@@ -211,7 +215,8 @@ public class FLDTest {
                 }
             }
 
-            System.out.format("FLD-Segmentation error = " + error + ", error rate = %.2f%% %n", 100.0 * error / testy.length);
+            System.out.format("FLD-Segmentation error = " + error + ", error rate = %.2f%% %n",
+                    100.0 * error / testy.length);
             assertTrue(error <= 100);
         } catch (Exception ex) {
             System.err.println(ex);
