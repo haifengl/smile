@@ -498,17 +498,17 @@ input.gsc-input, .gsc-input-box, .gsc-input-box-hover, .gsc-input-box-focus, .gs
 }
 @media only screen and (max-width: 990px) {
     .testimonial {
-        padding: 0 100px;
+        padding: 0 20px;
     }
 }
 @media only screen and (max-width: 767px) {
     .testimonial {
-        padding: 0 70px;
+        padding: 0 15px;
     }
 }
 @media only screen and (max-width: 480px) {
     .testimonial-content {
-        padding: 20px;
+        padding: 10px;
     }
     .testimonial-content:after {
         left: 44%;
