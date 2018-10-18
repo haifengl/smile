@@ -56,14 +56,14 @@ public class ElasticNet implements Regression<double[]>, Serializable {
     /**
      * corrected coefficients
      */
-    private double[] w = null;
+    private double[] w;
     /**
      * corrected intercept
      */
     private double b;
 
     /** reduced to lasso problem */
-    private LASSO lasso = null;
+    private LASSO lasso;
 
     /** scaling calculated from lambda2 */
     private double c;
@@ -135,10 +135,16 @@ public class ElasticNet implements Regression<double[]>, Serializable {
         return Math.dot(x, w) + b;
     }
 
+    /**
+     * @return the linear coefficients.
+     */
     public double[] coefficients() {
         return w;
     }
 
+    /**
+     * @return the reduced {@link LASSO} model
+     */
     public LASSO lasso() {
         return lasso;
     }
@@ -167,14 +173,13 @@ public class ElasticNet implements Regression<double[]>, Serializable {
     private double[][] getAugmentedData(double[][] x) {
         double[][] ret = new double[x.length + p][p];
         double padding = c * Math.sqrt(lambda2);
-        for (int i = 0; i < ret.length; i++) {
-            if (i <= x.length - 1) {
-                for (int j = 0; j < p; j++) {
-                    ret[i][j] = c * x[i][j];
-                }
-            } else {
-                ret[i][i - x.length] = padding;
+        for (int i = 0; i < x.length; i++) {
+            for (int j = 0; j < p; j++) {
+                ret[i][j] = c * x[i][j];
             }
+        }
+        for (int i = x.length; i < ret.length; i++) {
+            ret[i][i - x.length] = padding;
         }
         return ret;
     }
