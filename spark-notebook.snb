@@ -11,7 +11,7 @@
     "trusted" : true,
     "customLocalRepo" : "/tmp/repo",
     "customRepos" : [ "spartakus % default % http://dl.bintray.com/spark-clustering-notebook/maven % maven" ],
-    "customDeps" : [ "com.github.haifengl % smile-scala_2.11 % 1.1.0" ],
+    "customDeps" : [ "com.github.haifengl % smile-scala_2.11 % 1.5.2" ],
     "customImports" : null,
     "customArgs" : null,
     "customSparkConf" : null

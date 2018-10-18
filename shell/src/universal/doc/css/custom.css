@@ -194,7 +194,7 @@ footer a {
 .community ul {
   list-style: inside;
   padding-left: 0;
-}​
+}
 
 .col-right {
   text-align: center;
@@ -428,4 +428,98 @@ input.gsc-input, .gsc-input-box, .gsc-input-box-hover, .gsc-input-box-focus, .gs
 .gsc-tabsArea div {
   /*By default, Google custom search CSS sets it as AUTO, which shows scroll bars*/
   overflow: visible;
+}
+
+.testimonial {
+    padding: 0 25px;
+}
+.testimonial-content {
+    background: rgb(47, 164, 231);
+    padding: 20px 39px 10px;
+    border-radius: 20px;
+    position: relative;
+}
+.testimonial-description {
+    text-align: left;
+    margin-bottom: 0;
+    color:#fff;
+    font-size: 19px;
+}
+.testimonial-review {
+    text-align: right;
+}
+.testimonial-review > img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 12px;
+}
+.testimonial-review .testimonial-title {
+    display: inline-block;
+    font-size: 16px;
+    color:#fff;
+}
+.testimonial-review .testimonial-title > small {
+    font-size: 13px;
+    color:#fff;
+}
+.owl-carousel .owl-wrapper {
+    display: flex !important;
+}
+.owl-carousel .owl-item {
+    height: 100%;
+    align-self: center;
+}
+.owl-theme .owl-controls {
+    position: absolute;
+    top: 97%;
+    width: 100%;
+}
+.owl-theme .owl-controls .owl-buttons div {
+    background: transparent;
+    opacity: 1;
+    border: 2px solid #fff;
+}
+.owl-prev,
+.owl-next {
+    width: 52px;
+    height: 52px;
+    line-height: 45px;
+}
+.owl-prev:before,
+.owl-next:before {
+    content: "\f053";
+    font-family: "Font Awesome 5 Free"; font-weight: 900;
+}
+.owl-next:before {
+    content: "\f054"
+}
+.owl-theme .owl-controls .owl-prev {
+    position: absolute;
+    left: 0;
+}
+.owl-theme .owl-controls .owl-next {
+    position: absolute;
+    right: 0;
+}
+@media only screen and (max-width: 990px) {
+    .testimonial {
+        padding: 0 20px;
+    }
+}
+@media only screen and (max-width: 767px) {
+    .testimonial {
+        padding: 0 15px;
+    }
+}
+@media only screen and (max-width: 480px) {
+    .testimonial-content {
+        padding: 10px;
+    }
+    .testimonial-content:after {
+        left: 44%;
+    }
+    .testimonial-description {
+        font-size: 12px;
+    }
 }
