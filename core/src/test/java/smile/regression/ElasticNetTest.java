@@ -16,21 +16,17 @@
 
 package smile.regression;
 
-import static org.junit.Assert.*;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.classification.SVM;
 import smile.data.AttributeDataset;
 import smile.data.NumericAttribute;
 import smile.data.parser.ArffParser;
 import smile.data.parser.DelimitedTextParser;
 import smile.math.Math;
-import smile.math.kernel.LinearKernel;
 import smile.validation.CrossValidation;
 
 /**
@@ -203,53 +199,6 @@ public class ElasticNetTest {
             }
 
             System.out.println("Diabetes 40-CV RMSE = " + Math.sqrt(rss / n));
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
-    }
-
-    /**
-     * Test of learn method.
-     */
-    @Test
-    public void testWeather() {
-        System.out.println("Weather");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(4);
-        try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.arff"));
-            double[][] datax = data.toArray(new double[data.size()][]);
-            int[] datay = data.toArray(new int[data.size()]);
-
-            int n = datax.length;
-            int k = 10;
-
-            CrossValidation cv = new CrossValidation(n, k);
-            int error = 0;
-            int testSize = 0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                int[] trainy = Math.slice(datay, cv.train[i]);
-                double[] yd = new double[trainy.length];
-                for (int j = 0; j < yd.length; j++) {
-                    yd[j] = (double) trainy[j];
-                }
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                int[] testy = Math.slice(datay, cv.test[i]);
-                testSize = testx.length;
-
-                ElasticNet elasticnet = new ElasticNet(trainx, yd, 0.8, 0.2);
-
-                for (int j = 0; j < testx.length; j++) {
-                    int pred = elasticnet.predict(testx[j]) > 0 ? 1 : 0;
-                    if (pred != testy[j]) {
-                        error++;
-                    }
-                }
-            }
-
-            System.out.format("Weather 10-CV avg error rate =  %.2f%%%n", (100.0 * error / testSize) / k);
-            assertTrue(error <= 10);
         } catch (Exception ex) {
             System.err.println(ex);
         }
