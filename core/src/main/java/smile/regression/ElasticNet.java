@@ -18,8 +18,6 @@ package smile.regression;
 
 import java.io.Serializable;
 import smile.math.Math;
-import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
 
 /**
  * Elastic Net regularization. The elastic net is a regularized regression
@@ -43,27 +41,14 @@ import smile.math.matrix.DenseMatrix;
  */
 public class ElasticNet implements Regression<double[]>, Serializable {
     private static final long serialVersionUID = 1L;
-
-    /**
-     * hyperparameter for regularization
-     */
-    private double lambda = 0.1;
-    /**
-     * hyperparameter for L1 regularization portion
-     */
-    private double lambda1p = 1;
-    /**
-     * hyperparameter for L2 regularization portion
-     */
-    private double lambda2p = 0;
     /**
      * parameter for L1 regularization
      */
-    private double lambda1 = lambda1p * lambda;
+    private double lambda1 = 0.1;
     /**
      * parameter for L2 regularization
      */
-    private double lambda2 = (1 - lambda1p) * lambda;
+    private double lambda2 = 0.1;
     /**
      * The dimensionality.
      */
@@ -71,13 +56,17 @@ public class ElasticNet implements Regression<double[]>, Serializable {
     /**
      * corrected coefficients
      */
-    private double[] correctedW = null;
+    private double[] w = null;
     /**
      * corrected intercept
      */
-    private double correctedIntercept;
+    private double b;
 
-    private LASSO modifiedLasso = null;
+    /** reduced to lasso problem */
+    private LASSO lasso = null;
+
+    /** scaling calculated from lambda2 */
+    private double c;
 
     /**
      * Constructor. Learn the Elastic Net regularized least squares model.
@@ -87,13 +76,13 @@ public class ElasticNet implements Regression<double[]>, Serializable {
      *            a constant column of 1s for bias.
      * @param y
      *            the response values.
-     * @param lambda
-     *            the shrinkage/regularization parameter.
-     * @param lambda1p
-     *            the shrinkage/regularization portion for L1.
+     * @param lambda1
+     *            the shrinkage/regularization parameter for L1
+     * @param lambda2
+     *            the shrinkage/regularization parameter for L2
      */
-    public ElasticNet(double[][] x, double[] y, double lambda, double lambda1p) {
-        this(x, y, lambda, lambda1p, 1E-4, 1000);
+    public ElasticNet(double[][] x, double[] y, double lambda1, double lambda2) {
+        this(x, y, lambda1, lambda2, 1E-4, 1000);
     }
 
     /**
@@ -104,198 +93,90 @@ public class ElasticNet implements Regression<double[]>, Serializable {
      *            a constant column of 1s for bias.
      * @param y
      *            the response values.
-     * @param lambda
-     *            the shrinkage/regularization parameter.
-     * @param lambda1p
-     *            the shrinkage/regularization portion for L1.
+     * @param lambda1
+     *            the shrinkage/regularization parameter for L1
+     * @param lambda2
+     *            the shrinkage/regularization parameter for L2
      * @param tol
      *            the tolerance for stopping iterations (relative target duality
      *            gap).
      * @param maxIter
      *            the maximum number of IPM (Newton) iterations.
      */
-    public ElasticNet(double[][] x, double[] y, double lambda, double lambda1p, double tol, int maxIter) {
-        if (lambda1p <= 0) {
-            throw new IllegalArgumentException("wrong L1 regularization setting:" + lambda1p);
+    public ElasticNet(double[][] x, double[] y, double lambda1, double lambda2, double tol, int maxIter) {
+        if (lambda1 <= 0) {
+            throw new IllegalArgumentException("Please use Ridge instead, wrong L1 portion setting:" + lambda1);
         }
-        if (lambda < 0) {
-            throw new IllegalArgumentException("wrong regularization setting:" + lambda);
+        if (lambda2 <= 0) {
+            throw new IllegalArgumentException("Please use LASSO instead, wrong L2 portion setting:" + lambda2);
         }
-        this.lambda1p = lambda1p;
-        this.lambda2p = 1 - lambda1p;
-        this.lambda1 = lambda1p * lambda;
-        this.lambda2 = lambda2p * lambda;
+
+        this.lambda1 = lambda1;
+        this.lambda2 = lambda2;
+        this.c = 1 / Math.sqrt(1 + lambda2);
         this.p = x[0].length;
-        modifiedLasso = new LASSO(getModifiedData(x), getModifiedResponse(y), getModifiedLambda(), tol, maxIter);
+        lasso = new LASSO(getAugmentedData(x), getAugmentedResponse(y), this.lambda1 * c, tol, maxIter);
 
-        correctedW = new double[modifiedLasso.coefficients().length];
-        for (int i = 0; i < correctedW.length; i++) {
-            correctedW[i] = c() * modifiedLasso.coefficients()[i];
+        w = new double[lasso.coefficients().length];
+        double rescale = (1 / c);
+        for (int i = 0; i < w.length; i++) {
+            w[i] = rescale * lasso.coefficients()[i];
         }
-        correctedIntercept = c() * modifiedLasso.intercept();
-    }
-
-    /**
-     * Constructor. Learn the Elastic Net regularized least squares model.
-     * 
-     * @param x
-     *            a matrix containing the explanatory variables. The variables
-     *            should be centered and standardized. NO NEED to include a constant
-     *            column of 1s for bias.
-     * @param y
-     *            the response values.
-     * @param lambda
-     *            the shrinkage/regularization parameter.
-     * @param lambda1p
-     *            the shrinkage/regularization portion for L1.
-     */
-    public ElasticNet(Matrix x, double[] y, double lambda, double lambda1p) {
-        this(x, y, lambda, lambda1p, 1E-4, 1000);
-    }
-
-    /**
-     * Constructor. Learn the Elastic Net regularized least squares model.
-     * 
-     * @param x
-     *            a matrix containing the explanatory variables. The variables
-     *            should be centered and standardized. NO NEED to include a constant
-     *            column of 1s for bias.
-     * @param y
-     *            the response values.
-     * @param lambda
-     *            the shrinkage/regularization parameter.
-     * @param lambda1p
-     *            the shrinkage/regularization portion for L1.
-     * @param tol
-     *            the tolerance for stopping iterations (relative target duality
-     *            gap).
-     * @param maxIter
-     *            the maximum number of IPM (Newton) iterations.
-     */
-    public ElasticNet(Matrix x, double[] y, double lambda, double lambda1p, double tol, int maxIter) {
-        if (lambda1p <= 0) {
-            throw new IllegalArgumentException("wrong L1 regularization setting:" + lambda1p);
-        }
-        if (lambda < 0) {
-            throw new IllegalArgumentException("wrong regularization setting:" + lambda);
-        }
-        this.lambda1p = lambda1p;
-        this.lambda2p = 1 - lambda1p;
-        this.lambda1 = lambda1p * lambda;
-        this.lambda2 = lambda2p * lambda;
-        this.p = x.ncols();
-        modifiedLasso = new LASSO(getModifiedData(x), getModifiedResponse(y), getModifiedLambda(), tol, maxIter);
-
-        correctedW = new double[modifiedLasso.coefficients().length];
-        for (int i = 0; i < correctedW.length; i++) {
-            correctedW[i] = c() * modifiedLasso.coefficients()[i];
-        }
-        correctedIntercept = c() * modifiedLasso.intercept();
+        b = rescale * lasso.intercept();
     }
 
     @Override
     public double predict(double[] x) {
-        if (lambda2 == 0) {
-            return modifiedLasso.predict(x);
-        }
-
         if (x.length != p) {
             throw new IllegalArgumentException(
                     String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        return Math.dot(x, correctedW) + correctedIntercept;
+        return Math.dot(x, w) + b;
     }
 
-    public double[] getCorrectedW() {
-        return correctedW;
+    public double[] coefficients() {
+        return w;
     }
 
-    public double getLambda() {
-        return lambda;
+    public LASSO lasso() {
+        return lasso;
     }
 
-    public double getLambda1() {
-        return lambda1;
-    }
-
-    public double getLambda2() {
-        return lambda2;
-    }
-
-    public double getLambda1p() {
-        return lambda1p;
-    }
-
-    public double getLambda2p() {
-        return lambda2p;
-    }
-
-    public int getP() {
-        return p;
-    }
-
-    public LASSO getModifiedLasso() {
-        return modifiedLasso;
-    }
-
-    private double c() {
-        return 1 / Math.sqrt(1 + lambda2);
-    }
-
-    private double getModifiedLambda() {
-        return lambda1 * c();
-    }
-
-    private double[] getModifiedResponse(double[] y) {
-        if (lambda2 == 0) {
-            return y;
-        }
-
+    /**
+     * transform the original response array by padding 0 at the tail
+     * 
+     * @param y
+     *            original response array
+     * @return response array with padding 0 at tail
+     */
+    private double[] getAugmentedResponse(double[] y) {
         double[] ret = new double[y.length + p];
-        for (int i = 0; i < ret.length; i++) {
-            if (i <= y.length - 1) {
-                ret[i] = y[i];
-            } else {
-                ret[i] = 0;
-            }
-        }
+        System.arraycopy(y, 0, ret, 0, y.length);
         return ret;
     }
 
-    private double[][] getModifiedData(double[][] x) {
-        if (lambda2 == 0) {
-            return x;
-        }
-
+    /**
+     * transform the original data array by padding a weighted identity matrix and
+     * multiply a scaling
+     * 
+     * @param x
+     *            the original data array
+     * @return data with padding
+     */
+    private double[][] getAugmentedData(double[][] x) {
         double[][] ret = new double[x.length + p][p];
+        double padding = c * Math.sqrt(lambda2);
         for (int i = 0; i < ret.length; i++) {
             if (i <= x.length - 1) {
                 for (int j = 0; j < p; j++) {
-                    ret[i][j] = c() * x[i][j];
+                    ret[i][j] = c * x[i][j];
                 }
             } else {
-                ret[i][i - x.length] = c() * Math.sqrt(lambda2);
+                ret[i][i - x.length] = padding;
             }
         }
         return ret;
     }
 
-    private Matrix getModifiedData(Matrix x) {
-        if (lambda2 == 0) {
-            return x;
-        }
-
-        DenseMatrix ret = DenseMatrix.zeros(x.nrows() + p, p);
-        for (int i = 0; i < ret.nrows(); i++) {
-            if (i <= x.nrows() - 1) {
-                for (int j = 0; j < p; j++) {
-                    ret.set(i, j, c() * x.get(i, j));
-                }
-            } else {
-                ret.set(i, i - x.nrows(), c() * Math.sqrt(lambda2));
-            }
-        }
-        return ret;
-    }
 }

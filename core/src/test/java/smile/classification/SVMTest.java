@@ -30,6 +30,8 @@ import smile.math.Math;
 import smile.math.kernel.GaussianKernel;
 import smile.math.kernel.LinearKernel;
 import smile.math.kernel.PolynomialKernel;
+import smile.regression.ElasticNet;
+import smile.validation.CrossValidation;
 
 /**
  *
@@ -238,6 +240,50 @@ public class SVMTest {
             assertTrue(error < 95);
         } catch (Exception ex) {
             ex.printStackTrace();
+        }
+    }
+    
+    /**
+     * Test of learn method, of LinearKernel.
+     */
+    @Test
+    public void testWeather() {
+        System.out.println("Weather");
+        ArffParser parser = new ArffParser();
+        parser.setResponseIndex(4);
+        try {
+            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.arff"));
+            double[][] datax = data.toArray(new double[data.size()][]);
+            int[] datay = data.toArray(new int[data.size()]);
+
+            int n = datax.length;
+            int k = 10;
+
+            CrossValidation cv = new CrossValidation(n, k);
+            int error = 0;
+            int testSize = 0;
+            for (int i = 0; i < k; i++) {
+                double[][] trainx = Math.slice(datax, cv.train[i]);
+                int[] trainy = Math.slice(datay, cv.train[i]);
+                double[][] testx = Math.slice(datax, cv.test[i]);
+                int[] testy = Math.slice(datay, cv.test[i]);
+                testSize = testx.length;
+                
+                SVM<double[]> svm = new SVM<>(new LinearKernel(), 1.0);
+                svm.learn(trainx, trainy);
+                svm.finish();
+
+                for (int j = 0; j < testx.length; j++) {
+                    if (svm.predict(testx[j]) != testy[j]) {
+                        error++;
+                    }
+                }
+            }
+
+            System.out.format("Weather 10-CV avg error rate =  %.2f%%%n", (100.0 * error / testSize) / k);
+            assertTrue(error == 7);
+        } catch (Exception ex) {
+            System.err.println(ex);
         }
     }
 }
