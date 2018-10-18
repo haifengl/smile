@@ -63,16 +63,15 @@
           $.getScript("js/follow-sidebar.js");
 
           $("#testimonial-slider").owlCarousel({
-            items:1,
-            itemsDesktop: [1000,1],
-            itemsDesktopSmall: [979,1],
-            itemsTablet: [768,1],
+            items: 1,
+            singleItem: true,
             pagination: true,
             navigation: false,
             loop: true,
             autoPlay: true,
-            autoplayTimeout: 5000,
+            autoplayTimeout: 10000,
             autoplayHoverPause: true,
+            transitionStyle: "backSlide",
             touchDrag: true
           });
         });
