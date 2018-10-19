@@ -27,25 +27,27 @@ public class ConfusionMatrix {
 	private int[][] matrix;
 	
 	public ConfusionMatrix(int[] truth, int[] prediction) {
-		if(truth.length != prediction.length){
+		if (truth.length != prediction.length) {
 			 throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
 		}
 		
-		Set<Integer> ySet = new HashSet<>();
-		
-		for(int i = 0; i < truth.length; i++){
-			ySet.add(truth[i]);
-			// Sometimes, small test data doesn't have all the classes.
-			ySet.add(prediction[i]);
+		Set<Integer> y = new HashSet<>();
+
+		// Sometimes, small test data doesn't have all the classes.
+		for (int i = 0; i < truth.length; i++) {
+			y.add(truth[i]);
+			y.add(prediction[i]);
 		}
+
+		int k = 0;
+		for (int c : y) {
+			if (k < c) k = c;
+		}
+		matrix = new int[k+1][k+1];
 		
-		matrix = new int[ySet.size()][ySet.size()];
-		
-		for(int i = 0; i < truth.length; i++){
+		for (int i = 0; i < truth.length; i++) {
 			matrix[truth[i]][prediction[i]] += 1;
 		}
-		
-		ySet.clear();
 	}
 	
     public int[][] getMatrix() {
