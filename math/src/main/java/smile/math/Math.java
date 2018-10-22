@@ -24,6 +24,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.SortUtils;
@@ -2665,6 +2668,32 @@ public class Math {
             for (int k = 0; k <= j; k++) {
                 sigma[j][k] /= n;
                 sigma[k][j] = sigma[j][k];
+            }
+        }
+
+        return sigma;
+    }
+
+    /**
+     * Returns the sample covariance matrix.
+     * @param data sample matrix
+     * @param mu the known mean of data.
+     */
+    public static Matrix cov(Matrix data, double[] mu) {
+        DenseMatrix sigma = Matrix.zeros(data.ncols(), data.ncols());
+        for (int i = 0; i < data.nrows(); i++) {
+            for (int j = 0; j < mu.length; j++) {
+                for (int k = 0; k <= j; k++) {
+                    sigma.set(j, k, sigma.get(j, k) + (data.get(i, j) - mu[j]) * (data.get(i, k) - mu[k]));
+                }
+            }
+        }
+
+        int n = data.nrows() - 1;
+        for (int j = 0; j < mu.length; j++) {
+            for (int k = 0; k <= j; k++) {
+                sigma.set(j, k, sigma.get(j, k)/n);
+                sigma.set(k, j, sigma.get(j, k));
             }
         }
 

@@ -28,7 +28,6 @@ import javax.swing.JPanel;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.projection.ICA;
-import smile.projection.ICA.NegEntropyFunc;
 import smile.math.Math;
 
 /**
@@ -70,9 +69,11 @@ public class ICADemo extends ProjectionDemo {
             icap = 2;
             break;
         }
-        ICA fastICA = new ICA(data, icap);
-        if (!logcosh) {
-            fastICA.setFuncMode(NegEntropyFunc.EXP);
+        ICA fastICA = null;
+        if (logcosh) {
+            fastICA = new ICA(data, icap, 1E-5, 20000, new ICA.LogCoshNNF());
+        } else {
+            fastICA = new ICA(data, icap, 1E-5, 20000, new ICA.ExpNNF());
         }
         System.out.format("Learn Independent Component Anaysis from %d samples in %dms\n", data.length,
                 System.currentTimeMillis() - clock);

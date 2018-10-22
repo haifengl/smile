@@ -17,6 +17,7 @@ package smile.projection;
 
 import java.io.Serializable;
 import smile.math.Math;
+import smile.math.NonquadraticNonlinearFunc;
 import smile.math.matrix.Matrix;
 import smile.stat.distribution.GaussianDistribution;
 import smile.math.matrix.DenseMatrix;
@@ -60,11 +61,11 @@ public class ICA implements Projection<double[]>, Serializable {
     /**
      * The dimension of feature space.
      */
-    private int p;
+    private int C;
     /**
      * The dimension of input space.
      */
-    private int n;
+    private int m;
     /**
      * constant to check if convergence on one component.
      */
@@ -85,23 +86,53 @@ public class ICA implements Projection<double[]>, Serializable {
     /**
      * determine the functions to calculate derivative and second-order derivative
      */
-    private NegEntropyFunc funcMode = NegEntropyFunc.LOGCOSH;
+    private NonquadraticNonlinearFunc nnf;
 
     /**
-     * functions to calculate derivative and second-order derivative
+     * This function is described as a "good general-purpose function" in the
+     * original paper, and the default method used.
      */
-    public enum NegEntropyFunc {
-        /**
-         * This Negative Entropy function is described as a "good general-purpose
-         * contrast function" in the original paper, and the default method used.
-         */
-        LOGCOSH,
-        /**
-         * This is function according to the paper may be better than {@link #LOGCOSH}
-         * when the independent components are highly super-Gaussian, or when robustness
-         * is very important
-         */
-        EXP
+    public static class LogCoshNNF implements NonquadraticNonlinearFunc {
+
+        @Override
+        public double f(double x) {
+            return Math.log(Math.cosh(x));
+        }
+
+        @Override
+        public double g(double x) {
+            return Math.tanh(x);
+        }
+
+        @Override
+        public double g2(double x) {
+            return 1 - Math.sqr(Math.tanh(x));
+        }
+
+    }
+
+    /**
+     * This is function according to the paper may be better than {@link LogCoshNNF}
+     * when the independent components are highly super-Gaussian, or when robustness
+     * is very important
+     */
+    public static class ExpNNF implements NonquadraticNonlinearFunc {
+
+        @Override
+        public double f(double x) {
+            return (-1) * Math.exp(-0.5 * Math.sqr(x));
+        }
+
+        @Override
+        public double g(double x) {
+            return x * Math.exp(-0.5 * Math.sqr(x));
+        }
+
+        @Override
+        public double g2(double x) {
+            return (1 - Math.sqr(x)) * Math.exp(-0.5 * Math.sqr(x));
+        }
+
     }
 
     /**
@@ -113,7 +144,21 @@ public class ICA implements Projection<double[]>, Serializable {
      *            target independent component count
      */
     public ICA(double[][] data, int p) {
-        this(data, p, 1E-5, 10000, NegEntropyFunc.LOGCOSH);
+        this(data, p, 1E-5, 10000, new LogCoshNNF());
+    }
+
+    /**
+     * Constructor. Learn independent component analysis from the data. *
+     * 
+     * @param data
+     *            train data set
+     * @param p
+     *            target independent component count
+     * @param nnf
+     *            see {@link NonquadraticNonlinearFunc}
+     */
+    public ICA(double[][] data, int p, NonquadraticNonlinearFunc nnf) {
+        this(data, p, 1E-5, 10000, nnf);
     }
 
     /**
@@ -127,32 +172,39 @@ public class ICA implements Projection<double[]>, Serializable {
      *            convergence threshold on component search
      * @param maxIter
      *            maximum iteration on component search
-     * @param negfunc
-     *            see {@link NegEntropyFunc}
+     * @param nnf
+     *            see {@link NonquadraticNonlinearFunc}
      */
-    public ICA(double[][] data, int p, double tol, int maxIter, NegEntropyFunc negfunc) {
-        int m = data.length;
-        this.n = data[0].length;
-        this.p = p;
+    public ICA(double[][] data, int p, double tol, int maxIter, NonquadraticNonlinearFunc nnf) {
+        int n = data.length;// number of samples
+        this.m = data[0].length;// number of features/signals
+        this.C = p; // number of desired components
+        if (C < 1 || C > m) {
+            throw new IllegalArgumentException("Invalid dimension of feature space: " + C);
+        }
+
         this.tolerance = tol;
+        if (tolerance < 0) {
+            throw new IllegalArgumentException("Invalid tolerance for convergence check: " + tolerance);
+        }
         this.maxIter = maxIter;
 
-        projection = Matrix.zeros(p, n);
+        projection = Matrix.zeros(p, m);
 
         GaussianDistribution g = new GaussianDistribution(0, 1);
-        double[][] wps = new double[p][n];
+        double[][] wps = new double[p][m];
         for (int i = 0; i < p; i++) {
-            for (int j = 0; j < n; j++) {
+            for (int j = 0; j < m; j++) {
                 wps[i][j] = g.rand();
             }
             // normalize
             double norm = Math.norm2(wps[i]);
-            for (int j = 0; j < n; j++) {
+            for (int j = 0; j < m; j++) {
                 wps[i][j] /= norm;
             }
         }
 
-        DenseMatrix whitened = whiteData(data);
+        DenseMatrix X = whiteData(data);
         for (int i = 0; i < p; i++) {
             double[] lastwp = wps[i];
 
@@ -160,49 +212,47 @@ public class ICA implements Projection<double[]>, Serializable {
             int iterCnt = 0;
             while (diff > this.tolerance) {
                 // step 1 calculate derivative of projection from non-linear functions
-                double[] proj = new double[m];
-                proj = whitened.ax(lastwp, proj);
+                double[] proj = new double[n];
+                proj = X.ax(lastwp, proj);
 
-                double[] projFD = new double[m];
-                for (int idx = 0; idx < m; idx++) {
-                    projFD[idx] = funcMode == NegEntropyFunc.LOGCOSH ? getDeriv1WithLOGCOSH(proj[idx])
-                            : getDeriv1WithEXP(proj[idx]);
+                double[] projFD = new double[n];
+                for (int idx = 0; idx < n; idx++) {
+                    projFD[idx] = nnf.g(proj[idx]);
                 }
 
-                double[] projSD = new double[m];
+                double[] projSD = new double[n];
                 double sumProjSD = 0;
-                for (int idx = 0; idx < m; idx++) {
-                    projSD[idx] = funcMode == NegEntropyFunc.LOGCOSH ? getDeriv2WithLOGCOSH(proj[idx])
-                            : getDeriv2WithEXP(proj[idx]);
+                for (int idx = 0; idx < n; idx++) {
+                    projSD[idx] = nnf.g2((proj[idx]));
                     sumProjSD += projSD[idx];
                 }
 
-                double[] wp = new double[n];
-                wp = whitened.transpose().ax(projFD, wp);
-                double[] sub = new double[n];
-                for (int idx = 0; idx < n; idx++) {
+                double[] wp = new double[m];
+                wp = X.atx(projFD, wp);
+                double[] sub = new double[m];
+                for (int idx = 0; idx < m; idx++) {
                     sub[idx] = sumProjSD * lastwp[idx];
                 }
-                for (int idx = 0; idx < n; idx++) {
+                for (int idx = 0; idx < m; idx++) {
                     wp[idx] -= sub[idx];
-                    wp[idx] /= m;
+                    wp[idx] /= n;
                 }
 
                 // step 2 make sure independent components orthogonal
-                double[] accumulated = new double[n];
+                double[] accumulated = new double[m];
                 for (int pi = 0; pi < i; pi++) {
                     double dot = Math.dot(wp, wps[pi]);
-                    for (int idx = 0; idx < n; idx++) {
+                    for (int idx = 0; idx < m; idx++) {
                         accumulated[idx] += dot * wps[pi][idx];
                     }
                 }
-                for (int idx = 0; idx < n; idx++) {
+                for (int idx = 0; idx < m; idx++) {
                     wp[idx] -= accumulated[idx];
                 }
 
                 // normalize
                 double norm = Math.norm2(wp);
-                for (int j = 0; j < n; j++) {
+                for (int j = 0; j < m; j++) {
                     wp[j] /= norm;
                 }
 
@@ -219,7 +269,7 @@ public class ICA implements Projection<double[]>, Serializable {
                 }
             }
             wps[i] = lastwp;
-            for (int j = 0; j < n; j++) {
+            for (int j = 0; j < m; j++) {
                 projection.set(i, j, lastwp[j]);
             }
         }
@@ -229,19 +279,21 @@ public class ICA implements Projection<double[]>, Serializable {
 
     @Override
     public double[] project(double[] x) {
-        return project(new double[][] { x })[0];
+        double[] y = new double[C];
+        projection.ax(x, y);
+        return y;
     }
 
     @Override
     public double[][] project(double[][] x) {
-        if (x[0].length != n) {
+        if (x[0].length != m) {
             throw new IllegalArgumentException(
-                    String.format("Invalid input vector size: %d, expected: %d", x[0].length, n));
+                    String.format("Invalid input vector size: %d, expected: %d", x[0].length, m));
         }
 
-        double[][] y = new double[x.length][p];
-        DenseMatrix whitened = whiteData(x);
-        double[][] data = whitened.array();
+        double[][] y = new double[x.length][C];
+        DenseMatrix X = whiteData(x);
+        double[][] data = X.array();
         for (int i = 0; i < data.length; i++) {
             projection.ax(data[i], y[i]);
             Math.minus(y[i], pmu);
@@ -259,11 +311,11 @@ public class ICA implements Projection<double[]>, Serializable {
 
     /**
      * 
-     * @return the functor {@link NegEntropyFunc} to get first or second order
-     *         derivative
+     * @return the functor {@link NonquadraticNonlinearFunc} to get first or second
+     *         order derivative
      */
-    public NegEntropyFunc getFuncMode() {
-        return funcMode;
+    public NonquadraticNonlinearFunc getNonquadraticNonlinearFunc() {
+        return nnf;
     }
 
     /**
@@ -273,93 +325,26 @@ public class ICA implements Projection<double[]>, Serializable {
      * @return whitened dataset
      */
     private DenseMatrix whiteData(double[][] data) {
-        int m = data.length;
-        // center data
-        double[] mu = Math.colMeans(data);
-        DenseMatrix centered = Matrix.newInstance(data);
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                centered.sub(i, j, mu[j]);
-            }
-        }
-
         // covariance matrix on centered data.
-        DenseMatrix T = Matrix.zeros(n, n);
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                for (int l = 0; l <= j; l++) {
-                    T.add(j, l, centered.get(i, j) * centered.get(i, l));
-                }
-            }
-        }
-        for (int j = 0; j < n; j++) {
-            for (int l = 0; l <= j; l++) {
-                T.div(j, l, m);
-                T.set(l, j, T.get(j, l));
-            }
-        }
+        DenseMatrix centered = Matrix.newInstance(data);
+        DenseMatrix T = (DenseMatrix) Math.cov(centered, centered.colMeans());
 
         T.setSymmetric(true);
         EVD eigen = T.eigen();
-        DenseMatrix D = eigen.getEigenVectors();
-        double[] v = eigen.getEigenValues();
-        for (int i = 0; i < v.length; i++) {
-            v[i] = 1 / Math.sqrt(v[i]);
+        DenseMatrix E = eigen.getEigenVectors();
+        double[] d = eigen.getEigenValues();
+        double tol = tolerance * tolerance;
+        for (int i = 0; i < d.length; i++) {
+            if (d[i] < tol) {
+                throw new IllegalArgumentException("The covariance matrix is close to singular.");
+            }
+            d[i] = 1 / Math.sqrt(d[i]);
         }
-        DenseMatrix V = DenseMatrix.diag(v);
-        DenseMatrix white = D.abmm(V).abtmm(D);
+        DenseMatrix D = DenseMatrix.diag(d);
+        DenseMatrix white = E.abmm(D).abtmm(E);
 
-        DenseMatrix ct = white.abtmm(centered);
-
-        return ct.transpose();
-    }
-
-    /**
-     * calculate first order derivative according to {@link NegEntropyFunc#LOGCOSH}
-     * functor
-     * 
-     * @param val
-     * @return first order derivative according to {@link NegEntropyFunc#LOGCOSH}
-     *         functor
-     */
-    private double getDeriv1WithLOGCOSH(double val) {
-        return Math.tanh(val);
-    }
-
-    /**
-     * calculate second order derivative according to {@link NegEntropyFunc#LOGCOSH}
-     * functor
-     * 
-     * @param val
-     * @return second order derivative according to {@link NegEntropyFunc#LOGCOSH}
-     *         functor
-     */
-    private double getDeriv2WithLOGCOSH(double val) {
-        return 1 - Math.sqr(Math.tanh(val));
-    }
-
-    /**
-     * calculate first order derivative according to {@link NegEntropyFunc#EXP}
-     * functor
-     * 
-     * @param val
-     * @return first order derivative according to {@link NegEntropyFunc#EXP}
-     *         functor
-     */
-    private double getDeriv1WithEXP(double val) {
-        return val * Math.exp(-0.5 * Math.sqr(val));
-    }
-
-    /**
-     * calculate second order derivative according to {@link NegEntropyFunc#EXP}
-     * functor
-     * 
-     * @param val
-     * @return second order derivative according to {@link NegEntropyFunc#EXP}
-     *         functor
-     */
-    private double getDeriv2WithEXP(double val) {
-        return (1 - Math.sqr(val)) * Math.exp(-0.5 * Math.sqr(val));
+        DenseMatrix ct = centered.abtmm(white);
+        return ct;
     }
 
 }
