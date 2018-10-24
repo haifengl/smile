@@ -235,6 +235,7 @@ public class LASSO  implements Regression<double[]>, Serializable {
      * @param maxIter the maximum number of IPM (Newton) iterations.
      */
     public LASSO(double[][] x, double[] y, double lambda, double tol, int maxIter) {
+        this.lambda = lambda;
         int n = x.length;
         int p = x[0].length;
 
