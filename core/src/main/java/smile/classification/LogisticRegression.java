@@ -285,7 +285,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
             }
             
             if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + labels[i]+1);                 
+                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
             }
         }
 
