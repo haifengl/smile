@@ -193,7 +193,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
             }
             
             if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + labels[i]+1);                 
+                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
             }
         }
 
