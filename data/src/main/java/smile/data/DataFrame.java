@@ -29,14 +29,22 @@ import java.util.stream.IntStream;
  * @author Haifeng Li
  */
 public interface DataFrame extends Dataset<Row> {
-    /** Returns the number of columns. */
-    int numColumns();
-
     /** Returns all column names as an array. */
     String[] names();
 
     /** Returns all column types as an array. */
     Class[] types();
+    /**
+     * Returns the number of rows.
+     */
+    default int nrows() {
+        return size();
+    }
+
+    /**
+     * Returns the number of columns.
+     */
+    int ncols();
 
     /** Returns the structure of data frame. */
     default DataFrame structure() {
@@ -127,6 +135,18 @@ public interface DataFrame extends Dataset<Row> {
 
     /** Returns a new DataFrame without given column indices. */
     DataFrame drop(int... cols);
+
+    /**
+     * Returns a new DataFrame that combines this DataFrame
+     * with one more more other DataFrames by columns.
+     */
+    DataFrame bind(DataFrame... dataframes);
+
+    /**
+     * Returns a new DataFrame that combines this DataFrame
+     * with one more more additional vectors.
+     */
+    DataFrame bind(BaseVector... vectors);
 
     /** Returns a new DataFrame without given column names. */
     default DataFrame drop(String... cols) {
@@ -270,5 +290,13 @@ public interface DataFrame extends Dataset<Row> {
      */
     static <T> DataFrame of(Collection<T> data, Class<T> clazz) {
         return new DataFrameImpl(data, clazz);
+    }
+
+    /**
+     * Creates a default columnar implementation of DataFrame from a set of vectors.
+     * @param vectors The column vectors.
+     */
+    static DataFrame of(BaseVector... vectors) {
+        return new DataFrameImpl(Arrays.asList(vectors));
     }
 }

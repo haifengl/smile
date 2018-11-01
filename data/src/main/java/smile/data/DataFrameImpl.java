@@ -19,9 +19,9 @@ import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -58,7 +58,7 @@ class DataFrameImpl implements DataFrame {
             throw new IllegalArgumentException("Empty collection of columns");
         }
 
-        this.vectors = new ArrayList<BaseVector>(data);
+        this.vectors = new ArrayList<>(data);
         this.names = data.stream().map(v -> v.name()).collect(Collectors.toList());
         this.types = data.stream().map(v -> v.type()).collect(Collectors.toList());
 
@@ -175,11 +175,6 @@ class DataFrameImpl implements DataFrame {
     }
 
     @Override
-    public int numColumns() {
-        return names.size();
-    }
-
-    @Override
     public String[] names() {
         return names.toArray(new String[names.size()]);
     }
@@ -197,6 +192,11 @@ class DataFrameImpl implements DataFrame {
     @Override
     public int size() {
         return size;
+    }
+
+    @Override
+    public int ncols() {
+        return names.size();
     }
 
     @Override
@@ -244,6 +244,24 @@ class DataFrameImpl implements DataFrame {
         }
         sub.removeAll(drops);
         return new DataFrameImpl(sub);
+    }
+
+    @Override
+    public DataFrame bind(DataFrame... dataframes) {
+        List<BaseVector> all = new ArrayList<>(vectors);
+        for (DataFrame df : dataframes) {
+            for (int i = 0; i < df.ncols(); i++) {
+                all.add(df.column(i));
+            }
+        }
+        return new DataFrameImpl(all);
+    }
+
+    @Override
+    public DataFrame bind(BaseVector... vectors) {
+        List<BaseVector> all = new ArrayList<>(this.vectors);
+        Collections.addAll(all, vectors);
+        return new DataFrameImpl(all);
     }
 
     @Override
