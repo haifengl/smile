@@ -15,10 +15,8 @@
  *******************************************************************************/
 package smile.data;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-import java.util.Spliterator;
 import java.util.stream.Stream;
 
 /**
@@ -32,29 +30,30 @@ class DatasetImpl<T> implements Dataset<T> {
     /**
      * The data objects.
      */
-    private List<T> data;
+    private T[] data;
 
     /**
      * Constructor
      * @param data The underlying data collection.
      */
+    @SuppressWarnings("unchecked")
     public DatasetImpl(Collection<T> data) {
-        this.data = new ArrayList<>(data);
+        this.data = (T[]) new Object[data.size()];
+        this.data = data.toArray(this.data);
     }
 
     @Override
     public int size() {
-        return data.size();
+        return data.length;
     }
 
     @Override
     public T get(int i) {
-        return data.get(i);
+        return data[i];
     }
 
     @Override
     public Stream<T> stream() {
-        Spliterator<T> spliterator = new LocalDatasetSpliterator<>(this, Spliterator.ORDERED);
-        return java.util.stream.StreamSupport.stream(spliterator, true);
+        return Arrays.stream(data);
     }
 }
