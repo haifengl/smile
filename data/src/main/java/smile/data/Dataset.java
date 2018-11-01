@@ -15,7 +15,14 @@
  *******************************************************************************/
 package smile.data;
 
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
+
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 /**
@@ -38,6 +45,11 @@ public interface Dataset<T> {
      */
     int size();
 
+    /** Returns true if the dataset is empty. */
+    default boolean isEmpty() {
+        return size() == 0;
+    }
+
     /**
      * Returns the element at the specified position in this dataset.
      * @param i the index of the element to be returned.
@@ -59,11 +71,6 @@ public interface Dataset<T> {
      */
     Stream<T> stream();
 
-    /** Returns a dataset from a collection. */
-    static <T> Dataset<T> of(List<T> data) {
-        return new DatasetImpl<>(data);
-    }
-
     /**
      * Returns the string representation of the row.
      * @param numRows Number of rows to show
@@ -83,5 +90,44 @@ public interface Dataset<T> {
         }
 
         return sb.toString();
+    }
+
+    /** Returns a default implementation of Dataset from a collection. */
+    static <T> Dataset<T> of(Collection<T> data) {
+        return new DatasetImpl<>(data);
+    }
+
+    /**
+     * Returns a stream collector that accumulates elements into a Dataset.
+     *
+     * @param <T> the type of input elements to the reduction operation
+     */
+    static <T> Collector<T, List<T>, Dataset<T>> toDataset() {
+        return Collector.of(
+                // supplier
+                () -> new ArrayList<T>(),
+                // accumulator
+                (container, t) -> container.add(t),
+                // combiner
+                (c1, c2) -> { c1.addAll(c2); return c1; },
+                // finisher
+                (container) -> Dataset.of(container)
+        );
+    }
+
+    /**
+     * Returns a stream collector that accumulates elements into a Matrix.
+     */
+    static <T> Collector<double[], List<double[]>, DenseMatrix> toMatrix() {
+        return Collector.of(
+                // supplier
+                () -> new ArrayList<double[]>(),
+                // accumulator
+                (container, t) -> container.add(t),
+                // combiner
+                (c1, c2) -> { c1.addAll(c2); return c1; },
+                // finisher
+                (container) -> Matrix.newInstance(container.toArray(new double[container.size()][]))
+        );
     }
 }
