@@ -23,7 +23,7 @@ import java.util.Spliterator;
  *
  * @author Haifeng Li
  */
-public class LocalDatasetSpliterator<T> implements Spliterator<T> {
+class DatasetSpliterator<T> implements Spliterator<T> {
     /** The underlying Dataset. */
     private Dataset<T> data;
     /** These may be employed by Spliterator clients to control, specialize or simplify computation. */
@@ -38,7 +38,7 @@ public class LocalDatasetSpliterator<T> implements Spliterator<T> {
      * @param data the underlying Dataset.
      * @param additionalCharacteristics properties of this spliterator's source.
      */
-    public LocalDatasetSpliterator(Dataset<T> data, int additionalCharacteristics) {
+    public DatasetSpliterator(Dataset<T> data, int additionalCharacteristics) {
         if (data.distributed()) {
             throw new UnsupportedOperationException("The LocalDatasetSpliterator is applied to a distributed Dataset.");
         }
@@ -52,7 +52,7 @@ public class LocalDatasetSpliterator<T> implements Spliterator<T> {
     /**
      * Constructor.
      */
-    public LocalDatasetSpliterator(LocalDatasetSpliterator<T> spliterator, int origin, int fence) {
+    public DatasetSpliterator(DatasetSpliterator<T> spliterator, int origin, int fence) {
         this.data = spliterator.data;
         this.characteristics = spliterator.characteristics;
         this.origin = origin;
@@ -78,7 +78,7 @@ public class LocalDatasetSpliterator<T> implements Spliterator<T> {
         if (lo < mid) {
             origin = mid; // reset this Spliterator's origin
             // split out left half
-            return new LocalDatasetSpliterator<>(this, lo, mid);
+            return new DatasetSpliterator<>(this, lo, mid);
         }
 
         // too small to split
