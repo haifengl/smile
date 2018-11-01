@@ -62,7 +62,7 @@ lazy val nonPubishSettings = commonSettings ++ Seq(
 )
 
 lazy val root = project.in(file(".")).settings(nonPubishSettings: _*)
-  .aggregate(core, data, math, nd4j, netlib, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
+  .aggregate(core, data, arrow, math, nd4j, netlib, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
@@ -75,6 +75,8 @@ lazy val symbolic = project.in(file("symbolic")).settings(commonSettings: _*)
 lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph, netlib % "test")
 
 lazy val data = project.in(file("data")).settings(commonSettings: _*).dependsOn(math)
+
+lazy val arrow = project.in(file("arrow")).settings(commonSettings: _*).dependsOn(data)
 
 lazy val graph = project.in(file("graph")).settings(commonSettings: _*).dependsOn(math)
 
