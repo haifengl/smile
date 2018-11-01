@@ -39,13 +39,13 @@ import smile.math.matrix.Matrix;
  */
 class DataFrameImpl implements DataFrame {
     /** The column vectors. */
-    private final List<BaseVector> vectors;
+    private List<BaseVector> vectors;
     /** The column names. */
-    private final List<String> names;
+    private List<String> names;
     /** The column types. */
-    private final List<Class> types;
+    private List<Class> types;
     /** The column name -> index map. */
-    private final Map<String, Integer> columnIndex;
+    private Map<String, Integer> columnIndex;
     /** The number of rows. */
     private final int size;
 
@@ -77,7 +77,6 @@ class DataFrameImpl implements DataFrame {
             }
         }
 
-        columnIndex = new HashMap<>();
         initColumnIndex();
     }
 
@@ -88,14 +87,20 @@ class DataFrameImpl implements DataFrame {
      * @param <T> The type of elements.
      */
     @SuppressWarnings("unchecked")
-    public <T> DataFrameImpl(Collection<T> data, Class<T> clazz) throws java.beans.IntrospectionException {
-        this.size = data.size();
-        BeanInfo info = Introspector.getBeanInfo(clazz);
+    public <T> DataFrameImpl(Collection<T> data, Class<T> clazz) {
+        BeanInfo info;
+        try {
+            info = Introspector.getBeanInfo(clazz);
+        } catch (java.beans.IntrospectionException ex) {
+            throw new RuntimeException(ex);
+        }
+
         PropertyDescriptor[] props = info.getPropertyDescriptors();
 
-        vectors = new ArrayList<>(props.length);
-        names = new ArrayList<>(props.length);
-        types = new ArrayList<>(props.length);
+        this.size = data.size();
+        this.vectors = new ArrayList<>(props.length);
+        this.names = new ArrayList<>(props.length);
+        this.types = new ArrayList<>(props.length);
 
         for (PropertyDescriptor prop : props) {
             if (!prop.getName().equals("class")) {
@@ -153,12 +158,12 @@ class DataFrameImpl implements DataFrame {
             }
         }
 
-        columnIndex = new HashMap<>();
         initColumnIndex();
     }
 
     /** Initialize column index. */
     private void initColumnIndex() {
+        columnIndex = new HashMap<>();
         for (int i = 0; i < names.size(); i++) {
             columnIndex.put(names.get(i), i);
         }
@@ -196,7 +201,7 @@ class DataFrameImpl implements DataFrame {
 
     @Override
     public Stream<Row> stream() {
-        Spliterator<Row> spliterator = new LocalDatasetSpliterator<>(this, Spliterator.ORDERED);
+        Spliterator<Row> spliterator = new DatasetSpliterator<>(this, Spliterator.ORDERED);
         return java.util.stream.StreamSupport.stream(spliterator, true);
     }
 

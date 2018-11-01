@@ -15,12 +15,13 @@
  *******************************************************************************/
 package smile.data;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * An immutable collection of data organized into named columns.
@@ -36,6 +37,21 @@ public interface DataFrame extends Dataset<Row> {
 
     /** Returns all column types as an array. */
     Class[] types();
+
+    /** Returns the structure of data frame. */
+    default DataFrame structure() {
+        List<BaseVector> vectors = Arrays.asList(
+                new VectorImpl<>("Column", names()),
+                new VectorImpl<>("Type", types())
+        );
+
+        return new DataFrameImpl(vectors);
+    }
+
+    /** Returns the cell at (i, j). */
+    default Object get(int i, int j) {
+        return get(i).get(j);
+    }
 
     /**
      * Returns the index of a given column name.
@@ -119,6 +135,25 @@ public interface DataFrame extends Dataset<Row> {
     }
 
     /**
+     * Returns a stream collector that accumulates elements into a Dataset.
+     *
+     * @param <T> the type of input elements to the reduction operation
+     * @param clazz The class type of elements.
+     */
+    static <T> Collector<T, List<T>, DataFrame> toDataFrame(Class<T> clazz) {
+        return Collector.of(
+                // supplier
+                () -> new ArrayList<T>(),
+                // accumulator
+                (container, t) -> container.add(t),
+                // combiner
+                (c1, c2) -> { c1.addAll(c2); return c1; },
+                // finisher
+                (container) -> DataFrame.of(container, clazz)
+        );
+    }
+
+    /**
      * Return the matrix obtained by converting all the variables
      * in a data frame to numeric mode and then binding them together
      * as the columns of a matrix. Factors and ordered factors are
@@ -178,7 +213,7 @@ public interface DataFrame extends Dataset<Row> {
         }
 
         // Create SeparateLine
-        String sep = IntStream.of(colWidths).mapToObj(w -> string('-', w)).collect(Collectors.joining("+"));
+        String sep = IntStream.of(colWidths).mapToObj(w -> Utils.string('-', w)).collect(Collectors.joining("+"));
         sep = "+" + sep + "+\n";
         sb.append(sep);
 
@@ -187,9 +222,9 @@ public interface DataFrame extends Dataset<Row> {
         header.append('|');
         for (int i = 0; i < numCols; i++) {
             if (truncate) {
-                header.append(leftPad(names[i], colWidths[i], ' '));
+                header.append(Utils.leftPad(names[i], colWidths[i], ' '));
             } else {
-                header.append(rightPad(names[i], colWidths[i], ' '));
+                header.append(Utils.rightPad(names[i], colWidths[i], ' '));
             }
             header.append('|');
         }
@@ -203,9 +238,9 @@ public interface DataFrame extends Dataset<Row> {
             line.append('|');
             for (int i = 0; i < numCols; i++) {
                 if (truncate) {
-                    line.append(leftPad(row[i], colWidths[i], ' '));
+                    line.append(Utils.leftPad(row[i], colWidths[i], ' '));
                 } else {
-                    line.append(rightPad(row[i], colWidths[i], ' '));
+                    line.append(Utils.rightPad(row[i], colWidths[i], ' '));
                 }
                 line.append('|');
             }
@@ -227,53 +262,13 @@ public interface DataFrame extends Dataset<Row> {
         return sb.toString();
     }
 
-    /** Creates a local DataFrame. */
-    static <T> DataFrame of(Collection<T> data, Class<T> clazz) throws java.beans.IntrospectionException {
+    /**
+     * Creates a default columnar implementation of DataFrame from a collection.
+     * @param data The data collection.
+     * @param clazz The class type of elements.
+     * @param <T> The type of elements.
+     */
+    static <T> DataFrame of(Collection<T> data, Class<T> clazz) {
         return new DataFrameImpl(data, clazz);
-    }
-
-    /** Left pad a String with a specified character.
-     *
-     * @param str  the String to pad out, may be null
-     * @param size  the size to pad to
-     * @param padChar  the character to pad with
-     * @return left padded String or original String if no padding is necessary,
-     *         null if null String input
-     */
-    static String leftPad(String str, int size, char padChar) {
-        if (str == null)
-            return null;
-
-        int pads = size - str.length();
-        if (pads <= 0)
-            return str; // returns original String when possible
-
-        return string(padChar, pads).concat(str);
-    }
-
-    /** Right pad a String with a specified character.
-     *
-     * @param str  the String to pad out, may be null
-     * @param size  the size to pad to
-     * @param padChar  the character to pad with
-     * @return left padded String or original String if no padding is necessary,
-     *         null if null String input
-     */
-    static String rightPad(String str, int size, char padChar) {
-        if (str == null)
-            return null;
-
-        int pads = size - str.length();
-        if (pads <= 0)
-            return str; // returns original String when possible
-
-        return str.concat(string(padChar, pads));
-    }
-
-    /** Returns a string with a single repeated character to a specific length. */
-    static String string(char ch, int len) {
-        char[] chars = new char[len];
-        Arrays.fill(chars, ch);
-        return new String(chars);
     }
 }
