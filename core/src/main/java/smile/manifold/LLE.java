@@ -236,7 +236,7 @@ public class LLE {
      * we have (I - M)v = Wv + t(W)(v - Wv). As W is sparse and we can
      * compute only Wv and t(W)v efficiently.
      */
-    private static class IM extends Matrix {
+    private static class IM implements Matrix {
 
         Matrix Wt;
         double[] Wx;
@@ -244,10 +244,14 @@ public class LLE {
 
         public IM(Matrix Wt) {
             this.Wt = Wt;
-            setSymmetric(true);
 
             Wx = new double[Wt.nrows()];
             Wtx = new double[Wt.ncols()];
+        }
+
+        @Override
+        public boolean isSymmetric() {
+            return true;
         }
 
         @Override
