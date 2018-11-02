@@ -16,6 +16,8 @@
 
 package smile.math.distance;
 
+import java.io.Serializable;
+
 /**
  * An interface to calculate a distance measure between two objects. A distance
  * function maps pairs of points into the nonnegative reals and has to satisfy
@@ -29,9 +31,9 @@ package smile.math.distance;
  *
  * @author Haifeng Li
  */
-public interface Distance<T> {
+public interface Distance<T> extends Serializable {
     /**
      * Returns the distance measure between two objects.
      */
-    public double d(T x, T y);
+    double d(T x, T y);
 }

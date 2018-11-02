@@ -16,7 +16,6 @@
 
 package smile.math.distance;
 
-import java.io.Serializable;
 import java.util.BitSet;
 
 /**
@@ -29,7 +28,7 @@ import java.util.BitSet;
  *
  * @author Haifeng Li
  */
-public class HammingDistance<T> implements Metric<T[]>, Serializable {
+public class HammingDistance<T> implements Metric<T[]> {
     private static final long serialVersionUID = 1L;
 
     /**

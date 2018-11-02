@@ -16,6 +16,8 @@
 
 package smile.math.kernel;
 
+import java.io.Serializable;
+
 /**
  * A Mercer Kernel is a kernel that is positive semi-definite. When a kernel
  * is positive semi-definite, one may exploit the kernel trick, the idea of
@@ -31,10 +33,10 @@ package smile.math.kernel;
  * 
  * @author Haifeng Li
  */
-public interface MercerKernel<T> {
+public interface MercerKernel<T> extends Serializable {
 
     /**
      * Kernel function.
      */
-    public double k(T x, T y);
+    double k(T x, T y);
 }

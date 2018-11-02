@@ -24,6 +24,7 @@ import java.util.ArrayList;
  * @author Haifeng Li
  */
 public class MultivariateMixture extends AbstractMultivariateDistribution {
+    private static final long serialVersionUID = 1L;
 
     /**
      * A component in the mixture distribution is defined by a distribution
