@@ -71,7 +71,7 @@ import smile.validation.ClassificationMeasure;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements SoftClassifier<double[]>, Serializable {
+public class RandomForest implements SoftClassifier<double[]> {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(RandomForest.class);
 

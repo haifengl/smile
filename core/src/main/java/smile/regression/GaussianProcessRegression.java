@@ -16,7 +16,6 @@
 
 package smile.regression;
 
-import java.io.Serializable;
 import smile.math.Math;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
@@ -69,7 +68,7 @@ import smile.math.matrix.EVD;
  * </ol>
  * @author Haifeng Li
  */
-public class GaussianProcessRegression <T> implements Regression<T>, Serializable {
+public class GaussianProcessRegression <T> implements Regression<T> {
     private static final long serialVersionUID = 1L;
 
     /**

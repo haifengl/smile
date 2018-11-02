@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.clustering;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,7 +55,7 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class MEC <T> extends PartitionClustering<T> implements Serializable {
+public class MEC <T> extends PartitionClustering<T> {
     private static final long serialVersionUID = 1L;
 
     /**

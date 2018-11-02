@@ -17,14 +17,9 @@
 
 package smile.regression;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.matrix.Cholesky;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.QR;
 import smile.math.matrix.SVD;
 
 /**
@@ -47,7 +42,7 @@ import smile.math.matrix.SVD;
  *
  * @author Sam Erickson
  */
-public class RLS implements OnlineRegression<double[]>, Serializable {
+public class RLS implements OnlineRegression<double[]> {
     private static final long serialVersionUID = 1L;
 
     /**
