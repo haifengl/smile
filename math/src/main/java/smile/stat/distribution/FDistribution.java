@@ -34,7 +34,8 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class FDistribution extends AbstractDistribution {
-    
+    private static final long serialVersionUID = 1L;
+
     private int nu1;
     private int nu2;
     private double fac;

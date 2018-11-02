@@ -29,6 +29,8 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class EmpiricalDistribution extends DiscreteDistribution {
+    private static final long serialVersionUID = 1L;
+
     /**
      * The possible values of random variable.
      */

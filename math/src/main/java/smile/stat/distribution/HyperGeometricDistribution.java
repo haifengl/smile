@@ -39,6 +39,7 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class HyperGeometricDistribution extends DiscreteDistribution {
+    private static final long serialVersionUID = 1L;
 
     private int N;
     private int m;

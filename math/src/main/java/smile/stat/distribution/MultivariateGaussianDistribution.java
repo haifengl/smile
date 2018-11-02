@@ -28,6 +28,7 @@ import smile.math.matrix.DenseMatrix;
  * @author Haifeng Li
  */
 public class MultivariateGaussianDistribution extends AbstractMultivariateDistribution implements MultivariateExponentialFamily {
+    private static final long serialVersionUID = 1L;
 
     private static final double LOG2PIE = Math.log(2 * Math.PI * Math.E);
     double[] mu;
