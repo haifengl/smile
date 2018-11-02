@@ -16,7 +16,6 @@
 
 package smile.classification;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
@@ -56,7 +55,7 @@ import smile.math.matrix.EVD;
  * 
  * @author Haifeng Li
  */
-public class LDA implements SoftClassifier<double[]>, Serializable {
+public class LDA implements SoftClassifier<double[]> {
     private static final long serialVersionUID = 1L;
 
     /**

@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.regression;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +64,7 @@ import smile.math.special.Beta;
  * 
  * @author Haifeng Li
  */
-public class LASSO  implements Regression<double[]>, Serializable {
+public class LASSO  implements Regression<double[]> {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(LASSO.class);
 
