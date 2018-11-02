@@ -16,7 +16,6 @@
 
 package smile.clustering;
 
-import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Queue;
 import smile.clustering.linkage.Linkage;
@@ -52,7 +51,7 @@ import smile.sort.IntHeapSelect;
  * 
  * @author Haifeng Li
  */
-public class HierarchicalClustering implements Serializable {
+public class HierarchicalClustering {
     private static final long serialVersionUID = 1L;
 
     /**

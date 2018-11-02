@@ -100,7 +100,7 @@ import smile.validation.RegressionMeasure;
  * 
  * @author Haifeng Li
  */
-public class GradientTreeBoost implements Regression<double[]>, Serializable {
+public class GradientTreeBoost implements Regression<double[]> {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -351,7 +351,9 @@ public class GradientTreeBoost implements Regression<double[]>, Serializable {
     /**
      * Constructor. Learns a gradient tree boosting for regression.
      *
-     * @param data the dataset.
+     * @param attributes variable attributes.
+     * @param x the training samples.
+     * @param y the training sample responses.
      * @param loss loss function for regression. By default, least absolute
      * deviation is employed for robust regression.
      * @param ntrees the number of iterations (trees).
