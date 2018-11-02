@@ -38,6 +38,8 @@ import smile.math.special.Gamma;
  * @author Haifeng Li
  */
 public class ChiSquareDistribution extends AbstractDistribution implements ExponentialFamily {
+    private static final long serialVersionUID = 1L;
+
     /**
      * degrees of freedom.
      */

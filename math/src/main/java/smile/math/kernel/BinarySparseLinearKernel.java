@@ -16,8 +16,6 @@
 
 package smile.math.kernel;
 
-import java.io.Serializable;
-
 /**
  * The linear dot product kernel on sparse binary arrays in int[],
  * which are the indices of nonzero elements.
@@ -25,7 +23,7 @@ import java.io.Serializable;
  *
  * @author Haifeng Li
  */
-public class BinarySparseLinearKernel implements MercerKernel<int[]>, Serializable {
+public class BinarySparseLinearKernel implements MercerKernel<int[]> {
     private static final long serialVersionUID = 1L;
 
     /**

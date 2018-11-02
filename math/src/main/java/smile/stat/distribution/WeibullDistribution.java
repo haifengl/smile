@@ -61,6 +61,8 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class WeibullDistribution extends AbstractDistribution {
+    private static final long serialVersionUID = 1L;
+
     private double shape;
     private double scale;
     private double mean;

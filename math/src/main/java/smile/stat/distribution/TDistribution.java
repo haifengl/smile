@@ -34,6 +34,8 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class TDistribution extends AbstractDistribution {
+    private static final long serialVersionUID = 1L;
+
     private int nu;
     private double entropy;
     private double np;

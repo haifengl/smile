@@ -16,7 +16,6 @@
 
 package smile.math.kernel;
 
-import java.io.Serializable;
 import smile.math.Math;
 
 /**
@@ -26,7 +25,7 @@ import smile.math.Math;
  * 
  * @author Haifeng Li
  */
-public class PolynomialKernel implements MercerKernel<double[]>, Serializable {
+public class PolynomialKernel implements MercerKernel<double[]> {
     private static final long serialVersionUID = 1L;
 
     private int degree;

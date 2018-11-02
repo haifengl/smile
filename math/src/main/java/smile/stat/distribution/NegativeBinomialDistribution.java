@@ -49,6 +49,8 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class NegativeBinomialDistribution extends DiscreteDistribution {
+    private static final long serialVersionUID = 1L;
+
     /**
      * The number of failures until the experiment is stopped.
      */
