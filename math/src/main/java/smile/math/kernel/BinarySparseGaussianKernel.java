@@ -17,7 +17,6 @@
 package smile.math.kernel;
 
 import java.lang.Math;
-import java.io.Serializable;
 
 /**
  * The Gaussian Mercer Kernel. k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>,
@@ -29,7 +28,7 @@ import java.io.Serializable;
 
  * @author Haifeng Li
  */
-public class BinarySparseGaussianKernel implements MercerKernel<int[]>, Serializable {
+public class BinarySparseGaussianKernel implements MercerKernel<int[]> {
     private static final long serialVersionUID = 1L;
 
     /**

@@ -51,6 +51,8 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class LogisticDistribution extends AbstractDistribution {
+    private static final long serialVersionUID = 1L;
+
     private static final double PI_SQRT3 = Math.PI / Math.sqrt(3);
     private static final double PI2_3 = Math.PI * Math.PI / 3;
     private double mu;

@@ -49,6 +49,8 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class GammaDistribution extends AbstractDistribution implements ExponentialFamily {
+    private static final long serialVersionUID = 1L;
+
     private double theta;
     private double k;
     private double logTheta;

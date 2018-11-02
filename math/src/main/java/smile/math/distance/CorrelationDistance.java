@@ -16,7 +16,6 @@
 
 package smile.math.distance;
 
-import java.io.Serializable;
 import smile.math.Math;
 
 /**
@@ -24,7 +23,7 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public class CorrelationDistance implements Distance<double[]>, Serializable {
+public class CorrelationDistance implements Distance<double[]> {
     private static final long serialVersionUID = 1L;
 
     /**

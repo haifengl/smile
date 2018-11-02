@@ -54,6 +54,8 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class ExponentialDistribution extends AbstractDistribution implements ExponentialFamily {
+    private static final long serialVersionUID = 1L;
+
     private double lambda;
 
     /**
