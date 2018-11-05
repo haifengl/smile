@@ -200,8 +200,8 @@ class DataFrameImpl implements DataFrame {
     }
 
     @Override
-    public Stream<Row> stream() {
-        Spliterator<Row> spliterator = new DatasetSpliterator<>(this, Spliterator.ORDERED);
+    public Stream<Tuple> stream() {
+        Spliterator<Tuple> spliterator = new DatasetSpliterator<>(this, Spliterator.ORDERED);
         return java.util.stream.StreamSupport.stream(spliterator, true);
     }
 
@@ -265,7 +265,7 @@ class DataFrameImpl implements DataFrame {
     }
 
     @Override
-    public Row get(int i) {
+    public Tuple get(int i) {
         return new DataFrameRow(i);
     }
 
@@ -274,7 +274,7 @@ class DataFrameImpl implements DataFrame {
         throw new UnsupportedOperationException();
     }
 
-    class DataFrameRow implements Row {
+    class DataFrameRow implements Tuple {
         /** Row index. */
         int i;
 

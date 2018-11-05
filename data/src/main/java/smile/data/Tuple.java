@@ -19,17 +19,19 @@ package smile.data;
 import java.io.Serializable;
 
 /**
- * An immutable row in DataFrame. Allows both generic access by ordinal,
- * which will incur boxing overhead for primitives, as well as native primitive access.
+ * A tuple is an immutable finite ordered list (sequence) of elements.
+ * Allows both generic access by ordinal, which will incur boxing overhead
+ * for primitives, as well as native primitive access.
  *
- * It is invalid to use the native primitive interface to retrieve a value that is null, instead a
- * user must check `isNullAt` before attempting to retrieve a value that might be null.
+ * It is invalid to use the native primitive interface to retrieve a value
+ * that is null, instead a user must check `isNullAt` before attempting
+ * to retrieve a value that might be null.
  *
  * @author Haifeng Li
  */
-public interface Row extends Serializable {
-    /** Number of elements in the Row. */
-    public int size();
+public interface Tuple extends Serializable {
+    /** Number of elements in the Tuple. */
+    int size();
 
     /**
      * Returns the value at position i. If the value is null, null is returned.
@@ -196,10 +198,10 @@ public interface Row extends Serializable {
      * @throws IllegalArgumentException when a field `name` does not exist.
      */
     default int fieldIndex(String name) {
-        throw new UnsupportedOperationException("fieldIndex on a Row without schema is undefined.");
+        throw new UnsupportedOperationException("fieldIndex on a Tuple without schema is undefined.");
     }
 
-    /** Returns true if there are any NULL values in this row. */
+    /** Returns true if there are any NULL values in this tuple. */
     default boolean anyNull() {
         for (int i = 0; i < size(); i++) {
             if (isNullAt(i)) return true;
@@ -208,7 +210,7 @@ public interface Row extends Serializable {
     }
 
     /**
-     * Returns the string representation of the row.
+     * Returns the string representation of the tuple.
      * @param delimiter field delimiter.
      */
     default String toString(String delimiter) {
