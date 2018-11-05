@@ -28,7 +28,7 @@ import java.util.stream.IntStream;
  *
  * @author Haifeng Li
  */
-public interface DataFrame extends Dataset<Row> {
+public interface DataFrame extends Dataset<Tuple> {
     /** Returns all column names as an array. */
     String[] names();
 
