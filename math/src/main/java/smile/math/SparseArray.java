@@ -95,7 +95,12 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
     public Iterator<Entry> iterator() {
         return array.iterator();
     }
-    
+
+    /** Sorts the array elements such that the indices are in ascending order. */
+    public void sort() {
+        array.sort((a, b) -> a.i - b.i);
+    }
+
     /**
      * Returns the value of i-th entry.
      * @param i the index of entry.
