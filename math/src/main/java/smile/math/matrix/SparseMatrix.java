@@ -15,7 +15,11 @@
  *******************************************************************************/
 package smile.math.matrix;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Scanner;
 import smile.math.Math;
 
 /**
@@ -495,5 +499,84 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         }
 
         return d;
+    }
+
+    /**
+     * Parses a sparse matrix from a file in Harwell-Boeing Exchange Format.
+     * For details, see
+     * <a href="http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html">http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html</a>.
+     * Note that our implementation supports only real-valued matrix and we ignore
+     * the optional right hand side vectors.
+     * <p>
+     * The first line contains three integers, which are the number of rows,
+     * the number of columns, and the number of nonzero entries in the matrix.
+     * <p>
+     * Following the first line, there are m + 1 integers that are the indices of
+     * columns, where m is the number of columns. Then there are n integers that
+     * are the row indices of nonzero entries, where n is the number of nonzero
+     * entries. Finally, there are n float numbers that are the values of nonzero
+     * entries.
+     *
+     * @param path the input file path.
+     *
+     * @author Haifeng Li
+     */
+    public static SparseMatrix from(String path) throws IOException {
+        int nrows = 0, ncols = 0, n = 0;
+        int[] colIndex;
+        int[] rowIndex;
+        double[] data;
+
+        try (FileInputStream stream = new FileInputStream(path);
+             Scanner scanner = new Scanner(stream)) {
+            String line = scanner.nextLine();
+            String[] tokens = line.split("\\s+");
+            if (tokens.length == 3) {
+                try {
+                    nrows = Integer.parseInt(tokens[0]);
+                    ncols = Integer.parseInt(tokens[1]);
+                    n = Integer.parseInt(tokens[2]);
+                } catch (Exception ex) {
+                }
+            }
+
+            if (n == 0) {
+                // Harwell-Boeing Exchange Format. We ignore first two lines.
+                line = scanner.nextLine().trim();
+                tokens = line.split("\\s+");
+                int RHSCRD = Integer.parseInt(tokens[4]);
+
+                line = scanner.nextLine().trim();
+                if (!line.startsWith("R")) {
+                    throw new UnsupportedOperationException("SparseMatrixParser supports only real-valued matrix.");
+                }
+
+                tokens = line.split("\\s+");
+                nrows = Integer.parseInt(tokens[1]);
+                ncols = Integer.parseInt(tokens[2]);
+                n = Integer.parseInt(tokens[3]);
+
+                line = scanner.nextLine();
+                if (RHSCRD > 0) {
+                    line = scanner.nextLine();
+                }
+            }
+
+            colIndex = new int[ncols + 1];
+            rowIndex = new int[n];
+            data = new double[n];
+            for (int i = 0; i <= ncols; i++) {
+                colIndex[i] = scanner.nextInt() - 1;
+            }
+            for (int i = 0; i < n; i++) {
+                rowIndex[i] = scanner.nextInt() - 1;
+            }
+            for (int i = 0; i < n; i++) {
+                data[i] = scanner.nextDouble();
+            }
+        }
+
+        SparseMatrix matrix = new SparseMatrix(nrows, ncols, data, rowIndex, colIndex);
+        return matrix;
     }
 }
