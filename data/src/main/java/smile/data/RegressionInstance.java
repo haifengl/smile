@@ -27,5 +27,5 @@ public interface RegressionInstance<T> extends Instance<T> {
     /**
      * Returns the response of instance.
      */
-    public double y();
+    double y();
 }

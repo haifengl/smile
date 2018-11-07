@@ -20,10 +20,8 @@ import java.io.Serializable;
 import java.util.stream.BaseStream;
 
 /**
- * An immutable vector.
- *
- * It is invalid to use the native primitive interface to retrieve a value that is null, instead a
- * user must check `isNullAt` before attempting to retrieve a value that might be null.
+ * Base interface for immutable named vectors, which are sequences of elements supporting
+ * random access and sequential stream operations.
  *
  * @author Haifeng Li
  */

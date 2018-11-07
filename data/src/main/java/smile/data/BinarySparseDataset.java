@@ -90,7 +90,8 @@ public interface BinarySparseDataset extends Dataset<int[]> {
      * item which are the indices of nonzero elements.
      *
      * @param path the input file path.
-     * @throws java.io.IOException
+     * @exception IOException if stream to file cannot be read or closed.
+     * @exception ParseException if an entry is not an integer.
      */
     static BinarySparseDataset from(String path) throws IOException, ParseException {
         try (Stream<String> stream = Files.lines(Paths.get(path))) {

@@ -27,20 +27,20 @@ public interface Instance <T> {
     /**
      * Returns the instance.
      */
-    public T x();
+    T x();
 
     /**
      * Return the (optional) name associated with instance.
      * Note that this is not the class label.
      */
-    default public String name() {
+    default String name() {
         return null;
     }
 
     /**
      * Return the (optional) weight associated with instance.
      */
-    default public double weight() {
+    default double weight() {
         return 1.0;
     }
 }
