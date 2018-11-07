@@ -13,34 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-
-package smile.data;
+package smile.data.formula;
 
 /**
- * An immutable instance.
- *
- * @param <T> the type of instance.
+ * All columns not otherwise in the formula.
  *
  * @author Haifeng Li
  */
-public interface Instance <T> {
-    /**
-     * Returns the instance.
-     */
-    T x();
-
-    /**
-     * Return the (optional) name associated with instance.
-     * Note that this is not the class label.
-     */
-    default String name() {
-        return null;
-    }
-
-    /**
-     * Return the (optional) weight associated with instance.
-     */
-    default double weight() {
-        return 1.0;
-    }
+public class Rest implements Term {
 }

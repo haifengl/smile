@@ -14,33 +14,11 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.data;
-
 /**
- * An immutable instance.
- *
- * @param <T> the type of instance.
+ * The formula interface symbolically specifies the predictors
+ * and the response. It is commonly used to generate design matrices
+ * for modeling.
  *
  * @author Haifeng Li
  */
-public interface Instance <T> {
-    /**
-     * Returns the instance.
-     */
-    T x();
-
-    /**
-     * Return the (optional) name associated with instance.
-     * Note that this is not the class label.
-     */
-    default String name() {
-        return null;
-    }
-
-    /**
-     * Return the (optional) weight associated with instance.
-     */
-    default double weight() {
-        return 1.0;
-    }
-}
+package smile.data.formula;

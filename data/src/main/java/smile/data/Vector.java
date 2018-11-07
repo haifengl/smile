@@ -16,14 +16,10 @@
 
 package smile.data;
 
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * An immutable vector.
- *
- * It is invalid to use the native primitive interface to retrieve a value that is null, instead a
- * user must check `isNullAt` before attempting to retrieve a value that might be null.
+ * An immutable generic vector.
  *
  * @author Haifeng Li
  */

@@ -13,34 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package smile.data.formula;
 
-package smile.data;
+import java.util.List;
+import smile.data.DataFrame;
+import smile.data.Dataset;
+import smile.data.Instance;
 
 /**
- * An immutable instance.
- *
- * @param <T> the type of instance.
+ * A formula specifies the predictors and the response of a model.
+ * Given a context (e.g. DataFrame), the formula can be used to
+ * generate the model data.
  *
  * @author Haifeng Li
  */
-public interface Instance <T> {
-    /**
-     * Returns the instance.
-     */
-    T x();
+public class Formula {
+    /** The response term. */
+    private Term y;
+    /** The predictor terms. */
+    private List<Term> x;
 
     /**
-     * Return the (optional) name associated with instance.
-     * Note that this is not the class label.
+     * Constructor.
+     * @param y the response term.
+     * @param x the predictor terms.
      */
-    default String name() {
-        return null;
+    public Formula(Term y, List<Term> x) {
+        this.y = y;
+        this.x = x;
     }
 
     /**
-     * Return the (optional) weight associated with instance.
+     * Apply the formula on a DataFrame to generate the model data.
      */
-    default double weight() {
-        return 1.0;
+    public Dataset<Instance> apply(DataFrame df) {
+        throw new UnsupportedOperationException();
     }
 }

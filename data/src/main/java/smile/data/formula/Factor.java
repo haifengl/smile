@@ -13,34 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package smile.data.formula;
 
-package smile.data;
+import smile.data.Tuple;
 
 /**
- * An immutable instance.
- *
- * @param <T> the type of instance.
+ * A factor is a term that generates single value
+ * when applied to a data object (e.g. Tuple).
  *
  * @author Haifeng Li
  */
-public interface Instance <T> {
-    /**
-     * Returns the instance.
-     */
-    T x();
+public interface Factor extends Term {
+    /** The name of factor. */
+    String name();
 
-    /**
-     * Return the (optional) name associated with instance.
-     * Note that this is not the class label.
-     */
-    default String name() {
-        return null;
-    }
-
-    /**
-     * Return the (optional) weight associated with instance.
-     */
-    default double weight() {
-        return 1.0;
-    }
+    /** Apply the factor formula on the a tuple. */
+    double apply(Tuple tuple);
 }

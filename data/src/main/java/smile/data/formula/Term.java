@@ -13,34 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package smile.data.formula;
 
-package smile.data;
+import java.util.List;
+import java.util.Set;
 
 /**
- * An immutable instance.
+ * A model consists of a series of terms separated by + operators.
+ * The terms themselves consist of variable and factor names
+ * separated by : operators. Such a term is interpreted as the
+ * interaction of all the variables and factors appearing in the term.
  *
- * @param <T> the type of instance.
+ * While formulae usually involve just variable and factor names,
+ * they can also involve arithmetic expressions.
  *
  * @author Haifeng Li
  */
-public interface Instance <T> {
-    /**
-     * Returns the instance.
-     */
-    T x();
+public interface Term {
+    /** Returns the list of factors after expanding the term. */
+    List<Factor> factors();
 
-    /**
-     * Return the (optional) name associated with instance.
-     * Note that this is not the class label.
-     */
-    default String name() {
-        return null;
-    }
-
-    /**
-     * Return the (optional) weight associated with instance.
-     */
-    default double weight() {
-        return 1.0;
-    }
+    /** Returns the list of tokens used in this term. */
+    Set<String> tokens();
 }

@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.data;
 
+import smile.math.Math;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -180,6 +182,39 @@ public interface DataFrame extends Dataset<Tuple> {
      * replaced by their internal codes.
      */
     smile.math.matrix.Matrix toMatrix();
+
+    /** Returns statistic summary. */
+    /*
+    default DataFrame summary() {
+        Attribute[] attr = {
+                new NumericAttribute("min"),
+                new NumericAttribute("q1"),
+                new NumericAttribute("median"),
+                new NumericAttribute("mean"),
+                new NumericAttribute("q3"),
+                new NumericAttribute("max"),
+        };
+
+        AttributeDataset stat = new AttributeDataset(name + " Summary", attr);
+
+        for (int i = 0; i < ncols(); i++) {
+            double[] x = column(i).vector();
+            double[] s = new double[attr.length];
+            s[0] = Math.min(x);
+            s[1] = Math.q1(x);
+            s[2] = Math.median(x);
+            s[3] = Math.mean(x);
+            s[4] = Math.q3(x);
+            s[5] = Math.max(x);
+            Row datum = new Row(s);
+            datum.name = attributes[i].getName();
+            datum.description = attributes[i].getDescription();
+            stat.add(datum);
+        }
+
+        return stat;
+    }
+    */
 
     /**
      * Returns the string representation of top rows.

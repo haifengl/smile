@@ -13,34 +13,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package smile.data.formula;
 
-package smile.data;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import smile.data.Tuple;
 
 /**
- * An immutable instance.
- *
- * @param <T> the type of instance.
+ * A plain token term refers to a raw variable in the context,
+ * e.g. a column name of DataFrame.
  *
  * @author Haifeng Li
  */
-public interface Instance <T> {
-    /**
-     * Returns the instance.
-     */
-    T x();
+public class Token implements Factor {
+    /** Raw factor. */
+    private String token;
 
     /**
-     * Return the (optional) name associated with instance.
-     * Note that this is not the class label.
+     * Constructor.
+     *
+     * @param token the raw variable name.
      */
-    default String name() {
-        return null;
+    public Token(String token) {
+        this.token = token;
     }
 
-    /**
-     * Return the (optional) weight associated with instance.
-     */
-    default double weight() {
-        return 1.0;
+    @Override
+    public String name() {
+        return token;
+    }
+
+    @Override
+    public List<Factor> factors() {
+        return Collections.singletonList(this);
+    }
+
+    @Override
+    public Set<String> tokens() {
+        return Collections.singleton(token);
+    }
+
+    @Override
+    public double apply(Tuple tuple) {
+        return tuple.getAs(token);
     }
 }

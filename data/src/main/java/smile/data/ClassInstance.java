@@ -27,5 +27,5 @@ public interface ClassInstance<T> extends Instance<T> {
     /**
      * Returns the class label of instance.
      */
-    public int y();
+    int y();
 }

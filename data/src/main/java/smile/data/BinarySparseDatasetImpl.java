@@ -67,7 +67,7 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
             for (int i = 1; i < x.length; i++) {
                 colSize[x[i]]++;
                 if (x[i] == x[i - 1]) {
-                    throw new IllegalArgumentException(String.format("Duplicated indices of nonzero elements: %d in row %d", x[i]));
+                    throw new IllegalArgumentException(String.format("Duplicated indices of nonzero elements: %d in a row", x[i]));
                 }
             }
         }
@@ -84,13 +84,13 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
     }
 
     @Override
-    public Stream<int[]> stream() {
-        return Arrays.stream(data);
+    public int ncols() {
+        return ncols;
     }
 
     @Override
-    public int ncols() {
-        return ncols;
+    public Stream<int[]> stream() {
+        return Arrays.stream(data);
     }
 
     @Override
