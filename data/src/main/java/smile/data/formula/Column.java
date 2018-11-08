@@ -21,27 +21,28 @@ import java.util.Set;
 import smile.data.Tuple;
 
 /**
- * A plain token term refers to a raw variable in the context,
- * e.g. a column name of DataFrame.
+ * A column in a DataFrame.
+ *
+ * @param <R> the type of output data objects.
  *
  * @author Haifeng Li
  */
-public class Token implements Factor {
-    /** Raw factor. */
-    private String token;
+public class Column<R> implements Factor<Tuple, R> {
+    /** Column name. */
+    private String name;
 
     /**
      * Constructor.
      *
-     * @param token the raw variable name.
+     * @param name the column name.
      */
-    public Token(String token) {
-        this.token = token;
+    public Column(String name) {
+        this.name = name;
     }
 
     @Override
     public String name() {
-        return token;
+        return name;
     }
 
     @Override
@@ -50,12 +51,12 @@ public class Token implements Factor {
     }
 
     @Override
-    public Set<String> tokens() {
-        return Collections.singleton(token);
+    public Set<String> variables() {
+        return Collections.singleton(name);
     }
 
     @Override
-    public double apply(Tuple tuple) {
-        return tuple.getAs(token);
+    public R apply(Tuple tuple) {
+        return tuple.getAs(name);
     }
 }

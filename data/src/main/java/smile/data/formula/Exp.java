@@ -26,26 +26,26 @@ import smile.data.Tuple;
  *
  * @author Haifeng Li
  */
-public class Exp implements Factor {
+public class Exp<T> implements Factor<T, Double> {
     /** The operand factor of exp expression. */
-    private Factor child;
+    private Factor<T, Double> child;
 
     /**
      * Constructor.
      *
      * @param factor the factor that exp function is applied to.
      */
-    public Exp(Factor factor) {
+    public Exp(Factor<T, Double> factor) {
         this.child = factor;
     }
 
     /**
      * Constructor.
      *
-     * @param token the variable that exp function is applied to.
+     * @param column the column that exp function is applied to.
      */
-    public Exp(String token) {
-        this.child = new Token(token);
+    public Exp(String column) {
+        this.child = new Column(column);
     }
 
     @Override
@@ -59,12 +59,12 @@ public class Exp implements Factor {
     }
 
     @Override
-    public Set<String> tokens() {
-        return child.tokens();
+    public Set<String> variables() {
+        return child.variables();
     }
 
     @Override
-    public double apply(Tuple tuple) {
-        return Math.exp(child.apply(tuple));
+    public Double apply(T o) {
+        return Math.exp(child.apply(o));
     }
 }

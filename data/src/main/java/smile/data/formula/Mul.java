@@ -27,11 +27,11 @@ import smile.data.Tuple;
  *
  * @author Haifeng Li
  */
-public class Mul implements Factor {
+public class Mul<T> implements Factor<T, Double> {
     /** The first factor. */
-    private Factor a;
+    private Factor<T, Double> a;
     /** The second factor. */
-    private Factor b;
+    private Factor<T, Double> b;
 
     /**
      * Constructor.
@@ -39,7 +39,7 @@ public class Mul implements Factor {
      * @param a the first factor.
      * @param b the second factor.
      */
-    public Mul(Factor a, Factor b) {
+    public Mul(Factor<T, Double> a, Factor<T, Double> b) {
         this.a = a;
         this.b = b;
     }
@@ -51,8 +51,8 @@ public class Mul implements Factor {
      * @param b the second variable.
      */
     public Mul(String a, String b) {
-        this.a = new Token(a);
-        this.b = new Token(b);
+        this.a = new Column(a);
+        this.b = new Column(b);
     }
 
     @Override
@@ -66,14 +66,14 @@ public class Mul implements Factor {
     }
 
     @Override
-    public Set<String> tokens() {
-        Set<String> t = new HashSet<>(a.tokens());
-        t.addAll(b.tokens());
+    public Set<String> variables() {
+        Set<String> t = new HashSet<>(a.variables());
+        t.addAll(b.variables());
         return t;
     }
 
     @Override
-    public double apply(Tuple tuple) {
-        return a.apply(tuple) * b.apply(tuple);
+    public Double apply(T o) {
+        return a.apply(o) * b.apply(o);
     }
 }
