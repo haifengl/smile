@@ -13,31 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data;
+package smile.data.type;
+
+import java.text.ParseException;
 
 /**
- * String data type.
+ * Integer data type.
  *
  * @author Haifeng Li
  */
-public class StringType implements DataType {
+public class IntegerType implements DataType {
 
     /** Singleton instance. */
-    static StringType instance = new StringType();
+    static IntegerType instance = new IntegerType();
 
     /**
      * Private constructor for singleton design pattern.
      */
-    private StringType() {
+    private IntegerType() {
     }
 
     @Override
     public String name() {
-        return "string";
+        return "integer";
     }
 
     @Override
-    public String valueOf(String s) {
-        return s;
+    public String toString() {
+        return name();
+    }
+
+    @Override
+    public Integer valueOf(String s) throws ParseException {
+        return Integer.valueOf(s);
     }
 }

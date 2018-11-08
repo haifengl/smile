@@ -13,29 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data;
+package smile.data.type;
 
 import java.text.ParseException;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 /**
- * Date data type.
+ * DateTime data type.
  *
  * @author Haifeng Li
  */
-public class DateType implements DataType {
+public class DateTimeType implements DataType {
     /** Date format pattern. */
     private String pattern;
     /** Date formatter. */
     private DateTimeFormatter formatter;
 
     /**
-     * Constructor with the ISO date formatter that formats
-     * or parses a date without an offset, such as '2011-12-03'.
+     * Constructor with the ISO date time formatter that formats
+     * or parses a date without an offset, such as '2011-12-03T10:15:30'.
      */
-    public DateType() {
-        pattern = "uuuu-MM-dd";
-        formatter = DateTimeFormatter.ISO_LOCAL_DATE;
+    public DateTimeType() {
+        pattern = "uuuu-MM-dd'T'HH:mm:ss";
+        formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
     }
 
     /**
@@ -45,23 +45,28 @@ public class DateType implements DataType {
      *                For example, "d MMM uuuu" will format 2011-12-03
      *                as '3 Dec 2011'.
      */
-    public DateType(String pattern) {
+    public DateTimeType(String pattern) {
         this.pattern = pattern;
         formatter = DateTimeFormatter.ofPattern(pattern);
     }
 
     @Override
     public String name() {
-        return String.format("date[%s]", pattern);
+        return String.format("datetime[%s]", pattern);
+    }
+
+    @Override
+    public String toString() {
+        return name();
     }
 
     @Override
     public String toString(Object o) {
-        return formatter.format((LocalDate) o);
+        return formatter.format((LocalDateTime) o);
     }
 
     @Override
-    public LocalDate valueOf(String s) throws ParseException {
-        return LocalDate.parse(s, formatter);
+    public LocalDateTime valueOf(String s) throws ParseException {
+        return LocalDateTime.parse(s, formatter);
     }
 }

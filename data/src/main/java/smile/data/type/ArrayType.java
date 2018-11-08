@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data;
+package smile.data.type;
 
 import java.text.ParseException;
 import java.util.Arrays;
@@ -46,6 +46,11 @@ public class ArrayType implements DataType {
     @Override
     public String name() {
         return String.format("array[%s]", type.name());
+    }
+
+    @Override
+    public String toString() {
+        return name();
     }
 
     @Override

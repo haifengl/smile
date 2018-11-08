@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data;
+package smile.data.type;
 
 import java.io.Serializable;
 import java.text.ParseException;

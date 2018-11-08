@@ -13,35 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data;
+package smile.data.type;
 
 /**
- * A field in a Struct data type.
+ * String data type.
  *
  * @author Haifeng Li
  */
-public class StructField {
-    /** Field name. */
-    public final String name;
-    /** Field data type. */
-    public final DataType type;
+public class StringType implements DataType {
+
+    /** Singleton instance. */
+    static StringType instance = new StringType();
 
     /**
-     * Constructor with the ISO date formatter that formats
-     * or parses a date without an offset, such as '2011-12-03'.
+     * Private constructor for singleton design pattern.
      */
-    public StructField(String name, DataType type) {
-        this.name = name;
-        this.type = type;
+    private StringType() {
+    }
+
+    @Override
+    public String name() {
+        return "string";
     }
 
     @Override
     public String toString() {
-        return String.format("%s : %s", name, type.name());
+        return name();
     }
 
-    /** Returns the string representation of the field with given value. */
-    public String toString(Object o) {
-        return String.format("%s : %s", name, type.toString(o));
+    @Override
+    public String valueOf(String s) {
+        return s;
     }
 }
