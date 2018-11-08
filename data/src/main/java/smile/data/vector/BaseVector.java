@@ -14,7 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.data;
+package smile.data.vector;
 
 import java.io.Serializable;
 import java.util.stream.BaseStream;

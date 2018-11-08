@@ -14,32 +14,43 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.data;
+package smile.data.vector;
 
-import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
 /**
- * An immutable double vector.
+ * An immutable generic vector.
  *
  * @author Haifeng Li
  */
-public interface DoubleVector extends BaseVector<Double, DoubleStream> {
+public interface Vector<T> extends BaseVector<T, Stream<T>> {
     @Override
-    default Class<Double> type() {
-        return double.class;
+    default Class<?> type() {
+        return stream().filter(v -> v != null)
+                .findFirst()
+                .map(v -> (Class) v.getClass())
+                .orElse(Object.class);
     }
 
-    /**
-     * Returns the value at position i.
-     */
-    double getDouble(int i);
+    /** Checks whether the value at position i is null. */
+    default boolean isNullAt(int i) {
+        return get(i) == null;
+    }
 
-    /** Creates a named double vector.
+    /** Returns true if there are any NULL values in this row. */
+    default boolean anyNull() {
+        for (int i = 0; i < size(); i++) {
+            if (isNullAt(i)) return true;
+        }
+        return false;
+    }
+
+    /** Creates a named vector.
      *
      * @param name the name of vector.
      * @param vector the data of vector.
      */
-    static DoubleVector of(String name, double[] vector) {
-        return new DoubleVectorImpl(name, vector);
+    static <T> Vector<T> of(String name, T[] vector) {
+        return new VectorImpl<>(name, vector);
     }
 }

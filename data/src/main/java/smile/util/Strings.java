@@ -23,6 +23,11 @@ import java.util.Arrays;
  * @author Haifeng Li
  */
 public class Strings {
+    /** Utility classes should not have public constructors. */
+    private Strings() {
+
+    }
+
     /** Left pad a String with a specified character.
      *
      * @param str  the String to pad out, may be null

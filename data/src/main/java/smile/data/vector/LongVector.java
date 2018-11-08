@@ -14,32 +14,32 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.data;
+package smile.data.vector;
 
-import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 /**
- * An immutable integer vector.
+ * An immutable long vector.
  *
  * @author Haifeng Li
  */
-public interface IntVector extends BaseVector<Integer, IntStream> {
+public interface LongVector extends BaseVector<Long, LongStream> {
     @Override
-    default Class<Integer> type() {
-        return int.class;
+    default Class<Long> type() {
+        return long.class;
     }
 
     /**
      * Returns the value at position i.
      */
-    int getInt(int i);
+    long getLong(int i);
 
-    /** Creates a named integer vector.
+    /** Creates a named long vector.
      *
      * @param name the name of vector.
      * @param vector the data of vector.
      */
-    static IntVector of(String name, int[] vector) {
-        return new IntVectorImpl(name, vector);
+    static LongVector of(String name, long[] vector) {
+        return new LongVectorImpl(name, vector);
     }
 }

@@ -14,30 +14,35 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.data;
+package smile.data.vector;
 
 import java.util.Arrays;
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 /**
- * An immutable vector.
+ * An immutable integer vector.
  *
  * @author Haifeng Li
  */
-class VectorImpl<T> implements Vector<T> {
+class IntVectorImpl implements IntVector {
     /** The name of vector. */
     private String name;
     /** The vector data. */
-    private T[] vector;
+    private int[] vector;
 
     /** Constructor. */
-    public VectorImpl(String name, T[] vector) {
+    public IntVectorImpl(String name, int[] vector) {
         this.name = name;
         this.vector = vector;
     }
 
     @Override
-    public T get(int i) {
+    public int getInt(int i) {
+        return vector[i];
+    }
+
+    @Override
+    public Integer get(int i) {
         return vector[i];
     }
 
@@ -52,7 +57,7 @@ class VectorImpl<T> implements Vector<T> {
     }
 
     @Override
-    public Stream<T> stream() {
+    public IntStream stream() {
         return Arrays.stream(vector);
     }
 }

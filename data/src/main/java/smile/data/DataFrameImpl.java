@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
+import smile.data.vector.*;
 import smile.math.matrix.Matrix;
 
 /**
@@ -110,7 +111,7 @@ class DataFrameImpl implements DataFrame {
                         throw new RuntimeException(ex);
                     }
                 }).toArray();
-                IntVector vector = new IntVectorImpl(name, values);
+                IntVector vector = IntVector.of(name, values);
                 vectors.add(vector);
             } else if (type == long.class) {
                 long[] values = data.stream().mapToLong(o -> {
@@ -120,7 +121,7 @@ class DataFrameImpl implements DataFrame {
                         throw new RuntimeException(ex);
                     }
                 }).toArray();
-                LongVector vector = new LongVectorImpl(name, values);
+                LongVector vector = LongVector.of(name, values);
                 vectors.add(vector);
             } else if (type == double.class) {
                 double[] values = data.stream().mapToDouble(o -> {
@@ -130,7 +131,7 @@ class DataFrameImpl implements DataFrame {
                         throw new RuntimeException(ex);
                     }
                 }).toArray();
-                DoubleVector vector = new DoubleVectorImpl(name, values);
+                DoubleVector vector = DoubleVector.of(name, values);
                 vectors.add(vector);
             } else {
                 T[] values = (T[]) data.stream().map(o -> {
@@ -140,7 +141,7 @@ class DataFrameImpl implements DataFrame {
                         throw new RuntimeException(ex);
                     }
                 }).toArray();
-                Vector<T> vector = new VectorImpl<>(name, values);
+                Vector<T> vector = Vector.of(name, values);
                 vectors.add(vector);
             }
         }
@@ -171,7 +172,7 @@ class DataFrameImpl implements DataFrame {
                             throw new RuntimeException(ex);
                         }
                     }).toArray();
-                    IntVector vector = new IntVectorImpl(name, values);
+                    IntVector vector = IntVector.of(name, values);
                     vectors.add(vector);
                 } else if (type == long.class) {
                     Method read = prop.getReadMethod();
@@ -182,7 +183,7 @@ class DataFrameImpl implements DataFrame {
                             throw new RuntimeException(ex);
                         }
                     }).toArray();
-                    LongVector vector = new LongVectorImpl(name, values);
+                    LongVector vector = LongVector.of(name, values);
                     vectors.add(vector);
                 } else if (type == double.class) {
                     Method read = prop.getReadMethod();
@@ -193,7 +194,7 @@ class DataFrameImpl implements DataFrame {
                             throw new RuntimeException(ex);
                         }
                     }).toArray();
-                    DoubleVector vector = new DoubleVectorImpl(name, values);
+                    DoubleVector vector = DoubleVector.of(name, values);
                     vectors.add(vector);
                 } else {
                     Method read = prop.getReadMethod();
@@ -204,7 +205,7 @@ class DataFrameImpl implements DataFrame {
                             throw new RuntimeException(ex);
                         }
                     }).toArray();
-                    Vector<T> vector = new VectorImpl<>(name, values);
+                    Vector<T> vector = Vector.of(name, values);
                     vectors.add(vector);
                 }
             }

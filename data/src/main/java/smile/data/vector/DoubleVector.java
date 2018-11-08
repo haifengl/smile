@@ -14,50 +14,32 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.data;
+package smile.data.vector;
 
-import java.util.Arrays;
-import java.util.stream.LongStream;
+import java.util.stream.DoubleStream;
 
 /**
- * An immutable long vector.
+ * An immutable double vector.
  *
  * @author Haifeng Li
  */
-class LongVectorImpl implements LongVector {
-    /** The name of vector. */
-    private String name;
-    /** The vector data. */
-    private long[] vector;
-
-    /** Constructor. */
-    public LongVectorImpl(String name, long[] vector) {
-        this.name = name;
-        this.vector = vector;
+public interface DoubleVector extends BaseVector<Double, DoubleStream> {
+    @Override
+    default Class<Double> type() {
+        return double.class;
     }
 
-    @Override
-    public long getLong(int i) {
-        return vector[i];
-    }
+    /**
+     * Returns the value at position i.
+     */
+    double getDouble(int i);
 
-    @Override
-    public Long get(int i) {
-        return vector[i];
-    }
-
-    @Override
-    public String name() {
-        return name;
-    }
-
-    @Override
-    public int size() {
-        return vector.length;
-    }
-
-    @Override
-    public LongStream stream() {
-        return Arrays.stream(vector);
+    /** Creates a named double vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     */
+    static DoubleVector of(String name, double[] vector) {
+        return new DoubleVectorImpl(name, vector);
     }
 }

@@ -15,11 +15,7 @@
  *******************************************************************************/
 package smile.data;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.stream.IntStream;
-
-import smile.math.Math;
+import smile.data.type.StructType;
 
 /**
  * A dataset of fixed number of attributes. All attribute values are stored as
