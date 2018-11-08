@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data;
+package smile.util;
 
 import java.util.Arrays;
 
 /**
- * An immutable collection of data organized into named columns.
+ * String utility functions.
  *
  * @author Haifeng Li
  */
-public class Utils {
+public class Strings {
     /** Left pad a String with a specified character.
      *
      * @param str  the String to pad out, may be null
@@ -39,7 +39,7 @@ public class Utils {
         if (pads <= 0)
             return str; // returns original String when possible
 
-        return string(padChar, pads).concat(str);
+        return fill(padChar, pads).concat(str);
     }
 
     /** Right pad a String with a specified character.
@@ -58,11 +58,11 @@ public class Utils {
         if (pads <= 0)
             return str; // returns original String when possible
 
-        return str.concat(string(padChar, pads));
+        return str.concat(fill(padChar, pads));
     }
 
     /** Returns a string with a single repeated character to a specific length. */
-    public static String string(char ch, int len) {
+    public static String fill(char ch, int len) {
         char[] chars = new char[len];
         Arrays.fill(chars, ch);
         return new String(chars);
