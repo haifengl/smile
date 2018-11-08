@@ -26,26 +26,26 @@ import smile.data.Tuple;
  *
  * @author Haifeng Li
  */
-public class Log implements Factor {
+public class Log<T> implements Factor<T, Double> {
     /** The operand factor of log expression. */
-    private Factor child;
+    private Factor<T, Double> child;
 
     /**
      * Constructor.
      *
      * @param factor the factor that log function is applied to.
      */
-    public Log(Factor factor) {
+    public Log(Factor<T, Double> factor) {
         this.child = factor;
     }
 
     /**
      * Constructor.
      *
-     * @param token the variable that log function is applied to.
+     * @param column the variable that log function is applied to.
      */
-    public Log(String token) {
-        this.child = new Token(token);
+    public Log(String column) {
+        this.child = new Column(column);
     }
 
     @Override
@@ -59,12 +59,12 @@ public class Log implements Factor {
     }
 
     @Override
-    public Set<String> tokens() {
-        return child.tokens();
+    public Set<String> variables() {
+        return child.variables();
     }
 
     @Override
-    public double apply(Tuple tuple) {
-        return Math.log(child.apply(tuple));
+    public Double apply(T o) {
+        return Math.log(child.apply(o));
     }
 }

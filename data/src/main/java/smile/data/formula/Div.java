@@ -27,11 +27,11 @@ import smile.data.Tuple;
  *
  * @author Haifeng Li
  */
-public class Div implements Factor {
+public class Div<T> implements Factor<T, Double> {
     /** The numerator factor. */
-    private Factor a;
+    private Factor<T, Double> a;
     /** The denominator factor. */
-    private Factor b;
+    private Factor<T, Double> b;
 
     /**
      * Constructor.
@@ -39,7 +39,7 @@ public class Div implements Factor {
      * @param a the numerator factor.
      * @param b the denominator factor.
      */
-    public Div(Factor a, Factor b) {
+    public Div(Factor<T, Double> a, Factor<T, Double> b) {
         this.a = a;
         this.b = b;
     }
@@ -51,8 +51,8 @@ public class Div implements Factor {
      * @param b the denominator variable.
      */
     public Div(String a, String b) {
-        this.a = new Token(a);
-        this.b = new Token(b);
+        this.a = new Column(a);
+        this.b = new Column(b);
     }
 
     @Override
@@ -66,14 +66,14 @@ public class Div implements Factor {
     }
 
     @Override
-    public Set<String> tokens() {
-        Set<String> t = new HashSet<>(a.tokens());
-        t.addAll(b.tokens());
+    public Set<String> variables() {
+        Set<String> t = new HashSet<>(a.variables());
+        t.addAll(b.variables());
         return t;
     }
 
     @Override
-    public double apply(Tuple tuple) {
-        return a.apply(tuple) / b.apply(tuple);
+    public Double apply(T o) {
+        return a.apply(o) / b.apply(o);
     }
 }

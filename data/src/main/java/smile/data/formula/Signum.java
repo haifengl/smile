@@ -26,26 +26,26 @@ import smile.data.Tuple;
  *
  * @author Haifeng Li
  */
-public class Signum implements Factor {
+public class Signum<T> implements Factor<T, Double> {
     /** The operand factor of signum expression. */
-    private Factor child;
+    private Factor<T, Double> child;
 
     /**
      * Constructor.
      *
      * @param factor the factor that signum function is applied to.
      */
-    public Signum(Factor factor) {
+    public Signum(Factor<T, Double> factor) {
         this.child = factor;
     }
 
     /**
      * Constructor.
      *
-     * @param token the variable that signum function is applied to.
+     * @param column the variable that signum function is applied to.
      */
-    public Signum(String token) {
-        this.child = new Token(token);
+    public Signum(String column) {
+        this.child = new Column(column);
     }
 
     @Override
@@ -59,12 +59,12 @@ public class Signum implements Factor {
     }
 
     @Override
-    public Set<String> tokens() {
-        return child.tokens();
+    public Set<String> variables() {
+        return child.variables();
     }
 
     @Override
-    public double apply(Tuple tuple) {
-        return Math.signum(child.apply(tuple));
+    public Double apply(T o) {
+        return Math.signum(child.apply(o));
     }
 }

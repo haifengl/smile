@@ -26,26 +26,26 @@ import smile.data.Tuple;
  *
  * @author Haifeng Li
  */
-public class Ceil implements Factor {
+public class Ceil<T> implements Factor<T, Double> {
     /** The operand factor of ceil expression. */
-    private Factor child;
+    private Factor<T, Double> child;
 
     /**
      * Constructor.
      *
      * @param factor the factor that ceil function is applied to.
      */
-    public Ceil(Factor factor) {
+    public Ceil(Factor<T, Double> factor) {
         this.child = factor;
     }
 
     /**
      * Constructor.
      *
-     * @param token the variable that ceil function is applied to.
+     * @param column the variable that ceil function is applied to.
      */
-    public Ceil(String token) {
-        this.child = new Token(token);
+    public Ceil(String column) {
+        this.child = new Column(column);
     }
 
     @Override
@@ -59,12 +59,12 @@ public class Ceil implements Factor {
     }
 
     @Override
-    public Set<String> tokens() {
-        return child.tokens();
+    public Set<String> variables() {
+        return child.variables();
     }
 
     @Override
-    public double apply(Tuple tuple) {
-        return Math.ceil(child.apply(tuple));
+    public Double apply(T o) {
+        return Math.ceil(child.apply(o));
     }
 }

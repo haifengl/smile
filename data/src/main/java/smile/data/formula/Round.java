@@ -26,26 +26,26 @@ import smile.data.Tuple;
  *
  * @author Haifeng Li
  */
-public class Round implements Factor {
+public class Round<T> implements Factor<T, Long> {
     /** The operand factor of round expression. */
-    private Factor child;
+    private Factor<T, Double> child;
 
     /**
      * Constructor.
      *
      * @param factor the factor that round function is applied to.
      */
-    public Round(Factor factor) {
+    public Round(Factor<T, Double> factor) {
         this.child = factor;
     }
 
     /**
      * Constructor.
      *
-     * @param token the variable that round function is applied to.
+     * @param column the variable that round function is applied to.
      */
-    public Round(String token) {
-        this.child = new Token(token);
+    public Round(String column) {
+        this.child = new Column(column);
     }
 
     @Override
@@ -59,12 +59,12 @@ public class Round implements Factor {
     }
 
     @Override
-    public Set<String> tokens() {
-        return child.tokens();
+    public Set<String> variables() {
+        return child.variables();
     }
 
     @Override
-    public double apply(Tuple tuple) {
-        return Math.round(child.apply(tuple));
+    public Long apply(T o) {
+        return Math.round(child.apply(o));
     }
 }

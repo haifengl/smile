@@ -15,49 +15,39 @@
  *******************************************************************************/
 package smile.data.formula;
 
+import java.util.function.Function;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import smile.data.Tuple;
-
 /**
- * The term of a - b subtraction expression.
+ * A property of a Java object.
+ *
+ * @param <T> the type of object.
+ * @param <R> the type of property.
  *
  * @author Haifeng Li
  */
-public class Sub<T> implements Factor<T, Double> {
-    /** The left factor. */
-    private Factor<T, Double> a;
-    /** The right factor. */
-    private Factor<T, Double> b;
+public class Property<T, R> implements Factor<T, R> {
+    /** Property name. */
+    private String name;
+    /** Function to get the property. */
+    private Function<? super T,? extends R> getter;
 
     /**
      * Constructor.
      *
-     * @param a the first factor.
-     * @param b the second factor.
+     * @param name the property name.
+     * @param getter the function to retrieve the property.
      */
-    public Sub(Factor<T, Double> a, Factor<T, Double> b) {
-        this.a = a;
-        this.b = b;
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param a the first variable.
-     * @param b the second variable.
-     */
-    public Sub(String a, String b) {
-        this.a = new Column(a);
-        this.b = new Column(b);
+    public Property(String name, Function<? super T,? extends R> getter) {
+        this.name = name;
+        this.getter = getter;
     }
 
     @Override
     public String name() {
-        return String.format("%s - %s", a.name(), b.name());
+        return name;
     }
 
     @Override
@@ -67,13 +57,11 @@ public class Sub<T> implements Factor<T, Double> {
 
     @Override
     public Set<String> variables() {
-        Set<String> t = new HashSet<>(a.variables());
-        t.addAll(b.variables());
-        return t;
+        return Collections.singleton(name);
     }
 
     @Override
-    public Double apply(T o) {
-        return a.apply(o) - b.apply(o);
+    public R apply(T o) {
+        return getter.apply(o);
     }
 }

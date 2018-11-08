@@ -26,26 +26,26 @@ import smile.data.Tuple;
  *
  * @author Haifeng Li
  */
-public class Sqrt implements Factor {
+public class Sqrt<T> implements Factor<T, Double> {
     /** The operand factor of sqrt expression. */
-    private Factor child;
+    private Factor<T, Double> child;
 
     /**
      * Constructor.
      *
      * @param factor the factor that sqrt function is applied to.
      */
-    public Sqrt(Factor factor) {
+    public Sqrt(Factor<T, Double> factor) {
         this.child = factor;
     }
 
     /**
      * Constructor.
      *
-     * @param token the variable that sqrt function is applied to.
+     * @param column the variable that sqrt function is applied to.
      */
-    public Sqrt(String token) {
-        this.child = new Token(token);
+    public Sqrt(String column) {
+        this.child = new Column(column);
     }
 
     @Override
@@ -59,12 +59,12 @@ public class Sqrt implements Factor {
     }
 
     @Override
-    public Set<String> tokens() {
-        return child.tokens();
+    public Set<String> variables() {
+        return child.variables();
     }
 
     @Override
-    public double apply(Tuple tuple) {
-        return Math.sqrt(child.apply(tuple));
+    public Double apply(T o) {
+        return Math.sqrt(child.apply(o));
     }
 }

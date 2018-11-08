@@ -19,10 +19,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A model consists of a series of terms separated by + operators.
- * The terms themselves consist of variable and factor names
- * separated by : operators. Such a term is interpreted as the
- * interaction of all the variables and factors appearing in the term.
+ * A model consists of a series of terms. The terms themselves
+ * consist of a single factor or can be expanded to multiple
+ * factors including the the interaction of multiple factors.
  *
  * While formulae usually involve just variable and factor names,
  * they can also involve arithmetic expressions.
@@ -33,6 +32,6 @@ public interface Term {
     /** Returns the list of factors after expanding the term. */
     List<Factor> factors();
 
-    /** Returns the list of tokens used in this term. */
-    Set<String> tokens();
+    /** Returns the list of variables used in this term. */
+    Set<String> variables();
 }
