@@ -32,9 +32,9 @@ import smile.math.Math;
 public class AttributeDataset /*extends Dataset<double[]>*/ {
 
     /**
-     * The list of attributes.
+     * The schema of data.
      */
-    private Attribute[] attributes;
+    private StructType schema;
 
     /**
      * Constructor.
@@ -72,8 +72,8 @@ public class AttributeDataset /*extends Dataset<double[]>*/ {
     /**
      * Returns the list of attributes in this dataset.
      */
-    public Attribute[] attributes() {
-        return attributes;
+    public StructType schema() {
+        return schema;
     }
 
     /** Returns statistic summary. */
