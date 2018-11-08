@@ -18,6 +18,7 @@ package smile.data;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -88,6 +89,62 @@ class DataFrameImpl implements DataFrame {
      */
     @SuppressWarnings("unchecked")
     public <T> DataFrameImpl(Collection<T> data, Class<T> clazz) {
+        this.size = data.size();
+        this.vectors = new ArrayList<>();
+        this.names = new ArrayList<>();
+        this.types = new ArrayList<>();
+
+        Field[] fields = clazz.getFields();
+        for (Field field : fields) {
+            String name = field.getName();
+            names.add(name);
+
+            Class<?> type = field.getType();
+            types.add(type);
+
+            if (type == int.class) {
+                int[] values = data.stream().mapToInt(o -> {
+                    try {
+                        return (Integer) field.get(o);
+                    } catch (ReflectiveOperationException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }).toArray();
+                IntVector vector = new IntVectorImpl(name, values);
+                vectors.add(vector);
+            } else if (type == long.class) {
+                long[] values = data.stream().mapToLong(o -> {
+                    try {
+                        return (Long) field.get(o);
+                    } catch (ReflectiveOperationException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }).toArray();
+                LongVector vector = new LongVectorImpl(name, values);
+                vectors.add(vector);
+            } else if (type == double.class) {
+                double[] values = data.stream().mapToDouble(o -> {
+                    try {
+                        return (Double) field.get(o);
+                    } catch (ReflectiveOperationException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }).toArray();
+                DoubleVector vector = new DoubleVectorImpl(name, values);
+                vectors.add(vector);
+            } else {
+                T[] values = (T[]) data.stream().map(o -> {
+                    try {
+                        return (T) field.get(o);
+                    } catch (ReflectiveOperationException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }).toArray();
+                Vector<T> vector = new VectorImpl<>(name, values);
+                vectors.add(vector);
+            }
+        }
+
         BeanInfo info;
         try {
             info = Introspector.getBeanInfo(clazz);
@@ -96,11 +153,6 @@ class DataFrameImpl implements DataFrame {
         }
 
         PropertyDescriptor[] props = info.getPropertyDescriptors();
-
-        this.size = data.size();
-        this.vectors = new ArrayList<>(props.length);
-        this.names = new ArrayList<>(props.length);
-        this.types = new ArrayList<>(props.length);
 
         for (PropertyDescriptor prop : props) {
             if (!prop.getName().equals("class")) {
