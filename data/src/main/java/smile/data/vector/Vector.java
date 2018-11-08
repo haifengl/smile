@@ -23,7 +23,7 @@ import java.util.stream.Stream;
  *
  * @author Haifeng Li
  */
-public interface Vector<T> extends BaseVector<T, Stream<T>> {
+public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
     @Override
     default Class<?> type() {
         return stream().filter(v -> v != null)

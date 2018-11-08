@@ -23,7 +23,7 @@ import java.util.stream.LongStream;
  *
  * @author Haifeng Li
  */
-public interface LongVector extends BaseVector<Long, LongStream> {
+public interface LongVector extends BaseVector<Long, Long, LongStream> {
     @Override
     default Class<Long> type() {
         return long.class;

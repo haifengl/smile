@@ -23,7 +23,7 @@ import java.util.stream.DoubleStream;
  *
  * @author Haifeng Li
  */
-public interface DoubleVector extends BaseVector<Double, DoubleStream> {
+public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
     @Override
     default Class<Double> type() {
         return double.class;
