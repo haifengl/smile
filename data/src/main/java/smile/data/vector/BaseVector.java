@@ -23,9 +23,13 @@ import java.util.stream.BaseStream;
  * Base interface for immutable named vectors, which are sequences of elements supporting
  * random access and sequential stream operations.
  *
+ * @param <T>  the type of vector elements.
+ * @param <TS> the type of stream elements.
+ * @param <S>  the type of stream.
+ *
  * @author Haifeng Li
  */
-public interface BaseVector<T, S extends BaseStream<T, S>> extends Serializable {
+public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializable {
     /** Return the (optional) name associated with vector. */
     String name();
 

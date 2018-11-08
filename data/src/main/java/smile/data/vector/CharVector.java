@@ -16,41 +16,30 @@
 
 package smile.data.vector;
 
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 /**
- * An immutable generic vector.
+ * An immutable char vector.
  *
  * @author Haifeng Li
  */
-public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
+public interface CharVector extends BaseVector<Character, Integer, IntStream> {
     @Override
-    default Class<?> type() {
-        return stream().filter(v -> v != null)
-                .findFirst()
-                .map(v -> (Class) v.getClass())
-                .orElse(Object.class);
+    default Class<Integer> type() {
+        return int.class;
     }
 
-    /** Checks whether the value at position i is null. */
-    default boolean isNullAt(int i) {
-        return get(i) == null;
-    }
+    /**
+     * Returns the value at position i.
+     */
+    char getChar(int i);
 
-    /** Returns true if there are any NULL values in this row. */
-    default boolean anyNull() {
-        for (int i = 0; i < size(); i++) {
-            if (isNullAt(i)) return true;
-        }
-        return false;
-    }
-
-    /** Creates a named vector.
+    /** Creates a named char vector.
      *
      * @param name the name of vector.
      * @param vector the data of vector.
      */
-    static <T> Vector<T> of(String name, T[] vector) {
-        return new VectorImpl<>(name, vector);
+    static CharVector of(String name, char[] vector) {
+        return new CharVectorImpl(name, vector);
     }
 }

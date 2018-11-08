@@ -16,30 +16,47 @@
 
 package smile.data.vector;
 
-import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 
 /**
- * An immutable double vector.
+ * An immutable boolean vector.
  *
  * @author Haifeng Li
  */
-public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
-    @Override
-    default Class<Double> type() {
-        return double.class;
+class BooleanVectorImpl implements BooleanVector {
+    /** The name of vector. */
+    private String name;
+    /** The vector data. */
+    private boolean[] vector;
+
+    /** Constructor. */
+    public BooleanVectorImpl(String name, boolean[] vector) {
+        this.name = name;
+        this.vector = vector;
     }
 
-    /**
-     * Returns the value at position i.
-     */
-    double getDouble(int i);
+    @Override
+    public boolean getBoolean(int i) {
+        return vector[i];
+    }
 
-    /** Creates a named double vector.
-     *
-     * @param name the name of vector.
-     * @param vector the data of vector.
-     */
-    static DoubleVector of(String name, double[] vector) {
-        return new DoubleVectorImpl(name, vector);
+    @Override
+    public Boolean get(int i) {
+        return vector[i];
+    }
+
+    @Override
+    public String name() {
+        return name;
+    }
+
+    @Override
+    public int size() {
+        return vector.length;
+    }
+
+    @Override
+    public IntStream stream() {
+        return IntStream.range(0, vector.length).map(i -> vector[i] ? 1 : 0);
     }
 }

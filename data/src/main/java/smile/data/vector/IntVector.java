@@ -23,7 +23,7 @@ import java.util.stream.IntStream;
  *
  * @author Haifeng Li
  */
-public interface IntVector extends BaseVector<Integer, IntStream> {
+public interface IntVector extends BaseVector<Integer, Integer, IntStream> {
     @Override
     default Class<Integer> type() {
         return int.class;

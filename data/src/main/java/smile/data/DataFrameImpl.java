@@ -106,7 +106,7 @@ class DataFrameImpl implements DataFrame {
             if (type == int.class) {
                 int[] values = data.stream().mapToInt(o -> {
                     try {
-                        return (Integer) field.get(o);
+                        return field.getInt(o);
                     } catch (ReflectiveOperationException ex) {
                         throw new RuntimeException(ex);
                     }
@@ -116,7 +116,7 @@ class DataFrameImpl implements DataFrame {
             } else if (type == long.class) {
                 long[] values = data.stream().mapToLong(o -> {
                     try {
-                        return (Long) field.get(o);
+                        return field.getLong(o);
                     } catch (ReflectiveOperationException ex) {
                         throw new RuntimeException(ex);
                     }
@@ -126,7 +126,7 @@ class DataFrameImpl implements DataFrame {
             } else if (type == double.class) {
                 double[] values = data.stream().mapToDouble(o -> {
                     try {
-                        return (Double) field.get(o);
+                        return field.getDouble(o);
                     } catch (ReflectiveOperationException ex) {
                         throw new RuntimeException(ex);
                     }

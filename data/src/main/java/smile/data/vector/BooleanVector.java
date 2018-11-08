@@ -16,41 +16,30 @@
 
 package smile.data.vector;
 
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 /**
- * An immutable generic vector.
+ * An immutable boolean vector.
  *
  * @author Haifeng Li
  */
-public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
+public interface BooleanVector extends BaseVector<Boolean, Integer, IntStream> {
     @Override
-    default Class<?> type() {
-        return stream().filter(v -> v != null)
-                .findFirst()
-                .map(v -> (Class) v.getClass())
-                .orElse(Object.class);
+    default Class<Boolean> type() {
+        return boolean.class;
     }
 
-    /** Checks whether the value at position i is null. */
-    default boolean isNullAt(int i) {
-        return get(i) == null;
-    }
+    /**
+     * Returns the value at position i.
+     */
+    boolean getBoolean(int i);
 
-    /** Returns true if there are any NULL values in this row. */
-    default boolean anyNull() {
-        for (int i = 0; i < size(); i++) {
-            if (isNullAt(i)) return true;
-        }
-        return false;
-    }
-
-    /** Creates a named vector.
+    /** Creates a named boolean vector.
      *
      * @param name the name of vector.
      * @param vector the data of vector.
      */
-    static <T> Vector<T> of(String name, T[] vector) {
-        return new VectorImpl<>(name, vector);
+    static BooleanVector of(String name, boolean[] vector) {
+        return new BooleanVectorImpl(name, vector);
     }
 }
