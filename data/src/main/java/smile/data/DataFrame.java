@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import smile.data.vector.*;
 import smile.math.Math;
 import smile.util.Strings;
 
@@ -51,8 +52,8 @@ public interface DataFrame extends Dataset<Tuple> {
     /** Returns the structure of data frame. */
     default DataFrame structure() {
         List<BaseVector> vectors = Arrays.asList(
-                new VectorImpl<>("Column", names()),
-                new VectorImpl<>("Type", types())
+                Vector.of("Column", names()),
+                Vector.of("Type", types())
         );
 
         return new DataFrameImpl(vectors);
