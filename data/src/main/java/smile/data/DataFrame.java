@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.data;
 
-import smile.math.Math;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,6 +22,8 @@ import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import smile.math.Math;
+import smile.util.Strings;
 
 /**
  * An immutable collection of data organized into named columns.
@@ -268,7 +268,7 @@ public interface DataFrame extends Dataset<Tuple> {
         }
 
         // Create SeparateLine
-        String sep = IntStream.of(colWidths).mapToObj(w -> Utils.string('-', w)).collect(Collectors.joining("+"));
+        String sep = IntStream.of(colWidths).mapToObj(w -> Strings.fill('-', w)).collect(Collectors.joining("+"));
         sep = "+" + sep + "+\n";
         sb.append(sep);
 
@@ -277,9 +277,9 @@ public interface DataFrame extends Dataset<Tuple> {
         header.append('|');
         for (int i = 0; i < numCols; i++) {
             if (truncate) {
-                header.append(Utils.leftPad(names[i], colWidths[i], ' '));
+                header.append(Strings.leftPad(names[i], colWidths[i], ' '));
             } else {
-                header.append(Utils.rightPad(names[i], colWidths[i], ' '));
+                header.append(Strings.rightPad(names[i], colWidths[i], ' '));
             }
             header.append('|');
         }
@@ -293,9 +293,9 @@ public interface DataFrame extends Dataset<Tuple> {
             line.append('|');
             for (int i = 0; i < numCols; i++) {
                 if (truncate) {
-                    line.append(Utils.leftPad(row[i], colWidths[i], ' '));
+                    line.append(Strings.leftPad(row[i], colWidths[i], ' '));
                 } else {
-                    line.append(Utils.rightPad(row[i], colWidths[i], ' '));
+                    line.append(Strings.rightPad(row[i], colWidths[i], ' '));
                 }
                 line.append('|');
             }

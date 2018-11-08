@@ -15,7 +15,7 @@
  *******************************************************************************/
 
 /**
- * Utilitiy functions used in many places and multicore executor.
+ * Utility functions used in many places and multicore executor.
  * 
  * @author Haifeng Li
  */
