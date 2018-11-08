@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data;
+package smile.data.type;
 
 /**
  * To get a specific data type, users should use singleton objects
@@ -23,28 +23,28 @@ package smile.data;
  */
 public class DataTypes {
     /** Boolean data type. */
-    public static smile.data.BooleanType BooleanType = smile.data.BooleanType.instance;
+    public static smile.data.type.BooleanType BooleanType = smile.data.type.BooleanType.instance;
     /** Integer data type. */
-    public static smile.data.IntegerType IntegerType = smile.data.IntegerType.instance;
+    public static smile.data.type.IntegerType IntegerType = smile.data.type.IntegerType.instance;
     /** Long data type. */
-    public static smile.data.LongType LongType = smile.data.LongType.instance;
+    public static smile.data.type.LongType LongType = smile.data.type.LongType.instance;
     /** Double data type. */
-    public static smile.data.DoubleType DoubleType = smile.data.DoubleType.instance;
+    public static smile.data.type.DoubleType DoubleType = smile.data.type.DoubleType.instance;
     /** String data type. */
-    public static smile.data.StringType StringType = smile.data.StringType.instance;
+    public static smile.data.type.StringType StringType = smile.data.type.StringType.instance;
     /** Date data type with ISO format. */
-    public static smile.data.DateType DateType = new smile.data.DateType();
+    public static smile.data.type.DateType DateType = new smile.data.type.DateType();
     /** DateTime data type with ISO format. */
-    public static smile.data.DateTimeType DateTimeType = new smile.data.DateTimeType();
+    public static smile.data.type.DateTimeType DateTimeType = new smile.data.type.DateTimeType();
 
     /** Date data type with customized format. */
-    public static smile.data.DateType date(String pattern) {
-        return new smile.data.DateType(pattern);
+    public static smile.data.type.DateType date(String pattern) {
+        return new smile.data.type.DateType(pattern);
     }
 
     /** DateTime data type with customized format. */
-    public static smile.data.DateTimeType datetime(String pattern) {
-        return new smile.data.DateTimeType(pattern);
+    public static smile.data.type.DateTimeType datetime(String pattern) {
+        return new smile.data.type.DateTimeType(pattern);
     }
 
     /** Creates a nominal data type. */

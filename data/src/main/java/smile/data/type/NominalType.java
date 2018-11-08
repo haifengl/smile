@@ -13,28 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data;
+package smile.data.type;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
 /**
- * Ordinal data type. Ordinal variables take on a limited
- * number of ordered values; Similar to nominal values,
- * ordinal values are categorical. Different from nominal values,
- * ordinal values may be ranked in some numerically
- * meaningful way. For example, strongly disagree to strong agree may be
- * defined as 1 to 5.
+ * Nominal data type. Nominal variables take on a limited
+ * number of unordered values; such variables are often referred to
+ * as categorical variables.
  *
- * Both integer and character variables can be made into ordinal,
+ * Both integer and character variables can be made into nominal,
  * but a nominal's levels will always be character values.
  *
  * @author Haifeng Li
  */
-public class OrdinalType implements DataType {
+public class NominalType implements DataType {
     /**
-     * The string values of the ordinal attribute.
+     * The string values of the nominal attribute.
      */
     private String[] levels;
     /**
@@ -44,9 +41,9 @@ public class OrdinalType implements DataType {
 
     /**
      * Constructor.
-     * @param values the levels of ordinal values.
+     * @param values the levels of nominal values.
      */
-    public OrdinalType(String... values) {
+    public NominalType(String... values) {
         this.levels = values;
         for (int i = 0; i < values.length; i++) {
             map.put(values[i], i);
@@ -55,9 +52,9 @@ public class OrdinalType implements DataType {
 
     /**
      * Constructor.
-     * @param values the levels of ordinal values.
+     * @param values the levels of nominal values.
      */
-    public OrdinalType(int... values) {
+    public NominalType(int... values) {
         this.levels = new String[values.length];
         this.levels = Arrays.stream(values).mapToObj(v -> String.valueOf(v)).collect(Collectors.toList()).toArray(this.levels);
 
@@ -68,7 +65,17 @@ public class OrdinalType implements DataType {
 
     @Override
     public String name() {
-        return String.format("ordinal%s", Arrays.toString(levels));
+        return String.format("nominal%s", Arrays.toString(levels));
+    }
+
+    @Override
+    public String toString() {
+        return name();
+    }
+
+    @Override
+    public String toString(Object o) {
+        return levels[(Integer) o];
     }
 
     @Override
@@ -76,10 +83,12 @@ public class OrdinalType implements DataType {
         return map.get(s);
     }
 
+    /** Returns the number of levels. */
     public int size() {
         return levels.length;
     }
 
+    /** Returns the levels. */
     public String[] levels() {
         return levels;
     }

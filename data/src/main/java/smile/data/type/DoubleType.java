@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 Haifeng Li
- *
+ *   
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ *  
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -13,33 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data;
+package smile.data.type;
 
 import java.text.ParseException;
 
 /**
- * Long data type.
+ * Double data type.
  *
  * @author Haifeng Li
  */
-public class LongType implements DataType {
+public class DoubleType implements DataType {
 
     /** Singleton instance. */
-    static LongType instance = new LongType();
+    static DoubleType instance = new DoubleType();
 
     /**
      * Private constructor for singleton design pattern.
      */
-    private LongType() {
+    private DoubleType() {
     }
 
     @Override
     public String name() {
-        return "long";
+        return "double";
     }
 
     @Override
-    public Long valueOf(String s) throws ParseException {
-        return Long.valueOf(s);
+    public String toString() {
+        return name();
+    }
+
+    @Override
+    public Double valueOf(String s) throws ParseException {
+        return Double.valueOf(s);
     }
 }

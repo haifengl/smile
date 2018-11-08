@@ -13,33 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data;
+package smile.data.type;
 
 import java.text.ParseException;
 
 /**
- * Boolean data type.
+ * Long data type.
  *
  * @author Haifeng Li
  */
-public class BooleanType implements DataType {
+public class LongType implements DataType {
 
     /** Singleton instance. */
-    static BooleanType instance = new BooleanType();
+    static LongType instance = new LongType();
 
     /**
      * Private constructor for singleton design pattern.
      */
-    private BooleanType() {
+    private LongType() {
     }
 
     @Override
     public String name() {
-        return "boolean";
+        return "long";
     }
 
     @Override
-    public Boolean valueOf(String s) throws ParseException {
-        return Boolean.valueOf(s);
+    public String toString() {
+        return name();
+    }
+
+    @Override
+    public Long valueOf(String s) throws ParseException {
+        return Long.valueOf(s);
     }
 }

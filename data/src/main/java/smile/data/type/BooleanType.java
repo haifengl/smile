@@ -13,33 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data;
+package smile.data.type;
 
 import java.text.ParseException;
 
 /**
- * Integer data type.
+ * Boolean data type.
  *
  * @author Haifeng Li
  */
-public class IntegerType implements DataType {
+public class BooleanType implements DataType {
 
     /** Singleton instance. */
-    static IntegerType instance = new IntegerType();
+    static BooleanType instance = new BooleanType();
 
     /**
      * Private constructor for singleton design pattern.
      */
-    private IntegerType() {
+    private BooleanType() {
     }
 
     @Override
     public String name() {
-        return "integer";
+        return "boolean";
     }
 
     @Override
-    public Integer valueOf(String s) throws ParseException {
-        return Integer.valueOf(s);
+    public String toString() {
+        return name();
+    }
+
+    @Override
+    public Boolean valueOf(String s) throws ParseException {
+        return Boolean.valueOf(s);
     }
 }

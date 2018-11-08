@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data;
+package smile.data.type;
 
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import smile.data.Tuple;
 
 /**
  * Struct data type is determined by the fixed order of the fields
@@ -54,6 +55,11 @@ public class StructType implements DataType {
     @Override
     public String name() {
         return String.format("struct[%s]", Arrays.toString(fields));
+    }
+
+    @Override
+    public String toString() {
+        return name();
     }
 
     @Override
