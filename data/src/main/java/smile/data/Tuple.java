@@ -34,16 +34,30 @@ public interface Tuple extends Serializable {
     int size();
 
     /**
-     * Returns the value at position i. If the value is null, null is returned.
+     * Returns the value at position i. The value may be null.
      */
     default Object apply(int i) {
         return get(i);
     }
 
     /**
-     * Returns the value at position i. If the value is null, null is returned.
+     * Returns the value by field name. The value may be null.
+     */
+    default Object apply(String field) {
+        return get(field);
+    }
+
+    /**
+     * Returns the value at position i. The value may be null.
      */
     Object get(int i);
+
+    /**
+     * Returns the value by field name. The value may be null.
+     */
+    default Object get(String field) {
+        return get(fieldIndex(field));
+    }
 
     /** Checks whether the value at position i is null. */
     default boolean isNullAt(int i) {

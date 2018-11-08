@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 Haifeng Li
- *   
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -16,49 +16,51 @@
 package smile.data;
 
 import java.text.ParseException;
+import java.util.Arrays;
 
 /**
- * Numeric attribute. Numeric attributes can be real or integer numbers.
+ * Array of primitive data type.
  *
  * @author Haifeng Li
  */
-public class NumericAttribute extends Attribute {
+public class ArrayType implements DataType {
+    /** Element data type. */
+    private DataType type;
 
     /**
      * Constructor.
+     * @param type element data type.
      */
-    public NumericAttribute(String name) {
-        super(Type.NUMERIC, name);
+    public ArrayType(DataType type) {
+        this.type = type;
     }
 
     /**
      * Constructor.
+     * @param type element data type in string representation.
      */
-    public NumericAttribute(String name, double weight) {
-        super(Type.NUMERIC, name, weight);
-    }
-
-    /**
-     * Constructor.
-     */
-    public NumericAttribute(String name, String description) {
-        super(Type.NUMERIC, name, description);
-    }
-
-    /**
-     * Constructor.
-     */
-    public NumericAttribute(String name, String description, double weight) {
-        super(Type.NUMERIC, name, description, weight);
+    public ArrayType(String type) {
+        this.type = DataType.of(type);
     }
 
     @Override
-    public String toString(double x) {
-        return Double.toString(x);
+    public String name() {
+        return String.format("array[%s]", type.name());
     }
 
     @Override
-    public double valueOf(String s) throws ParseException {
-        return Double.valueOf(s);
+    public String toString(Object o) {
+        return String.format("[%s]", Arrays.toString((Object[]) o));
+    }
+
+    @Override
+    public Object[] valueOf(String s) throws ParseException {
+        // strip surrounding []
+        String[] elements = s.substring(1, s.length() - 1).split(",");
+        Object[] array = new Object[elements.length];
+        for (int i = 0; i < elements.length; i++) {
+            array[i] = type.valueOf(elements[i]);
+        }
+        return array;
     }
 }
