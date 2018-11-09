@@ -21,8 +21,7 @@ public class GroupKFoldTest {
             int[] trainGroups = Math.unique(Arrays.stream(split.train[i]).map(x -> groups[x]).toArray());
             int[] testGroups = Math.unique(Arrays.stream(split.test[i]).map(x -> groups[x]).toArray());
 
-            boolean anyTrainGroupInTestFold = Arrays
-                    .stream(trainGroups)
+            boolean anyTrainGroupInTestFold = Arrays.stream(trainGroups)
                     .anyMatch(trGroup -> Arrays.stream(testGroups).anyMatch(teGroup -> trGroup == teGroup));
 
             assertFalse(anyTrainGroupInTestFold);
