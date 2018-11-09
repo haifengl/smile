@@ -18,9 +18,10 @@ package smile.data.formula;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import smile.data.type.DataType;
 
 /**
- * Remove a factor from the fromula.
+ * Remove a factor from the formula.
  *
  * @author Haifeng Li
  */
@@ -55,5 +56,10 @@ public class Remove<T, R> implements Factor<T, R> {
     @Override
     public R apply(T o) {
         throw new UnsupportedOperationException("Remove.apply() should never be called");
+    }
+
+    @Override
+    public DataType type() {
+        throw new UnsupportedOperationException("Remove.type() should never be called");
     }
 }

@@ -24,10 +24,18 @@ package smile.data.type;
 public class DataTypes {
     /** Boolean data type. */
     public static smile.data.type.BooleanType BooleanType = smile.data.type.BooleanType.instance;
+    /** Char data type. */
+    public static smile.data.type.CharType CharType = smile.data.type.CharType.instance;
+    /** Byte data type. */
+    public static smile.data.type.ByteType ByteType = smile.data.type.ByteType.instance;
+    /** Short data type. */
+    public static smile.data.type.ShortType ShortType = smile.data.type.ShortType.instance;
     /** Integer data type. */
     public static smile.data.type.IntegerType IntegerType = smile.data.type.IntegerType.instance;
     /** Long data type. */
     public static smile.data.type.LongType LongType = smile.data.type.LongType.instance;
+    /** Float data type. */
+    public static smile.data.type.FloatType FloatType = smile.data.type.FloatType.instance;
     /** Double data type. */
     public static smile.data.type.DoubleType DoubleType = smile.data.type.DoubleType.instance;
     /** String data type. */
@@ -57,13 +65,13 @@ public class DataTypes {
         return new OrdinalType(values);
     }
 
-    /** Creates an array data type. */
-    public static ArrayType array(DataType type) {
-        return new ArrayType(type);
+    /** Creates an object data type. */
+    public static ObjectType object(Class clazz) {
+        return new ObjectType(clazz);
     }
 
     /** Creates an array data type. */
-    public static ArrayType array(String type) {
+    public static ArrayType array(DataType type) {
         return new ArrayType(type);
     }
 

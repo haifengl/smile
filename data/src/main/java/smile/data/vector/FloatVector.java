@@ -16,6 +16,9 @@
 
 package smile.data.vector;
 
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+
 import java.util.stream.DoubleStream;
 
 /**
@@ -25,8 +28,8 @@ import java.util.stream.DoubleStream;
  */
 public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
     @Override
-    default Class<Float> type() {
-        return float.class;
+    default DataType type() {
+        return DataTypes.FloatType;
     }
 
     /**

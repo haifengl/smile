@@ -42,17 +42,21 @@ public interface DataType extends Serializable {
     }
 
     /** Returns a DataType from its string representation. */
-    static DataType of(String s) {
+    static DataType of(String s) throws ClassNotFoundException {
         switch (s) {
             case "boolean": return DataTypes.BooleanType;
+            case "char": return DataTypes.CharType;
+            case "byte": return DataTypes.ByteType;
+            case "short": return DataTypes.ShortType;
             case "integer": return DataTypes.IntegerType;
             case "long": return DataTypes.LongType;
+            case "float": return DataTypes.FloatType;
             case "double": return DataTypes.DoubleType;
             case "string": return DataTypes.StringType;
             case "date": return DataTypes.DateType;
             case "datetime": return DataTypes.DateTimeType;
             default:
-                Pattern pattern = Pattern.compile("(date|datetime|nominal|ordinal|array|product)\\[([^\\[\\]]*)\\]");
+                Pattern pattern = Pattern.compile("(date|datetime|nominal|ordinal|object|array|product)\\[([^\\[\\]]*)\\]");
                 Matcher matcher = pattern.matcher(s);
                 if (matcher.matches()) {
                     String type = matcher.group(1);
@@ -63,6 +67,7 @@ public interface DataType extends Serializable {
                         case "nominal": return DataTypes.nominal(value.split(","));
                         case "ordinal": return DataTypes.ordinal(value.split(","));
                         case "array": return DataTypes.array(value);
+                        case "object": return DataTypes.object(Class.forName(value));
                         case "struct":
                             String[] elements = value.split(",");
                             StructField[] fields = new StructField[elements.length];

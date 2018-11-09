@@ -18,6 +18,7 @@ package smile.data.vector;
 
 import java.io.Serializable;
 import java.util.stream.BaseStream;
+import smile.data.type.DataType;
 
 /**
  * Base interface for immutable named vectors, which are sequences of elements supporting
@@ -34,7 +35,7 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
     String name();
 
     /** Returns the element type. */
-    Class<?> type();
+    DataType type();
 
     /** Number of elements in the vector. */
     int size();

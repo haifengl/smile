@@ -15,6 +15,9 @@
  *******************************************************************************/
 package smile.data.formula;
 
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -55,5 +58,10 @@ public class Round<T> implements Factor<T, Long> {
     @Override
     public Long apply(T o) {
         return Math.round(child.apply(o));
+    }
+
+    @Override
+    public DataType type() {
+        return DataTypes.LongType;
     }
 }

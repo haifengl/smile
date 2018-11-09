@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import smile.data.type.DataType;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.data.vector.*;
 import smile.math.Math;
 import smile.util.Strings;
@@ -32,11 +35,27 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
 public interface DataFrame extends Dataset<Tuple> {
-    /** Returns all column names as an array. */
-    String[] names();
+    /** Returns the schema of DataFrame. */
+    StructType schema();
 
-    /** Returns all column types as an array. */
-    Class[] types();
+    /** Returns the column names. */
+    default String[] names() {
+        StructField[] fields = schema().fields();
+        return Arrays.stream(fields)
+                .map(field -> field.name)
+                .collect(Collectors.toList())
+                .toArray(new String[fields.length]);
+    }
+
+    /** Returns the column types. */
+    default DataType[] types() {
+        StructField[] fields = schema().fields();
+        return Arrays.stream(fields)
+                .map(field -> field.type)
+                .collect(Collectors.toList())
+                .toArray(new DataType[fields.length]);
+    }
+
     /**
      * Returns the number of rows.
      */

@@ -15,6 +15,9 @@
  *******************************************************************************/
 package smile.data.formula;
 
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -62,5 +65,10 @@ public class Add<T> implements Factor<T, Double> {
     @Override
     public Double apply(T o) {
         return a.apply(o) + b.apply(o);
+    }
+
+    @Override
+    public DataType type() {
+        return DataTypes.DoubleType;
     }
 }

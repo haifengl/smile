@@ -16,6 +16,9 @@
 
 package smile.data.vector;
 
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+
 import java.util.stream.IntStream;
 
 /**
@@ -25,8 +28,8 @@ import java.util.stream.IntStream;
  */
 public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
     @Override
-    default Class<Short> type() {
-        return short.class;
+    default DataType type() {
+        return DataTypes.ShortType;
     }
 
     /**

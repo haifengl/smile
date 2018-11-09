@@ -16,6 +16,9 @@
 
 package smile.data.vector;
 
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+
 import java.util.stream.IntStream;
 
 /**
@@ -25,8 +28,8 @@ import java.util.stream.IntStream;
  */
 public interface ByteVector extends BaseVector<Byte, Integer, IntStream> {
     @Override
-    default Class<Byte> type() {
-        return byte.class;
+    default DataType type() {
+        return DataTypes.ByteType;
     }
 
     /**

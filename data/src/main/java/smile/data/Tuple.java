@@ -80,6 +80,16 @@ public interface Tuple extends Serializable {
      * @throws ClassCastException when data type does not match.
      * @throws NullPointerException when value is null.
      */
+    default char getChar(int i) {
+        return getAs(i);
+    }
+
+    /**
+     * Returns the value at position i as a primitive byte.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
     default byte getByte(int i) {
         return getAs(i);
     }

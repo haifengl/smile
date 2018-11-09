@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.data.formula;
 
+import smile.data.type.DataType;
+
 /**
  * A factor is a term that generates single value
  * when applied to a data object (e.g. Tuple).
@@ -27,4 +29,7 @@ package smile.data.formula;
 public interface Factor<T, R> extends Term {
     /** Apply the factor formula on the a data object. */
     R apply(T o);
+
+    /** Returns the data type of output values. */
+    DataType type();
 }
