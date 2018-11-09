@@ -46,7 +46,7 @@ public class Property<T, R> implements Factor<T, R> {
     }
 
     @Override
-    public String name() {
+    public String toString() {
         return name;
     }
 

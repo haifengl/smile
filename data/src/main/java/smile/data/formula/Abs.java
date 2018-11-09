@@ -18,7 +18,6 @@ package smile.data.formula;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import smile.data.Tuple;
 
 /**
  * The term of abs function.
@@ -38,18 +37,9 @@ public class Abs<T> implements Factor<T, Double> {
         this.child = factor;
     }
 
-    /**
-     * Constructor.
-     *
-     * @param column the variable that abs function is applied to.
-     */
-    public Abs(String column) {
-        this.child = new Column(column);
-    }
-
     @Override
-    public String name() {
-        return String.format("abs(%s)", child.name());
+    public String toString() {
+        return String.format("abs(%s)", child);
     }
 
     @Override

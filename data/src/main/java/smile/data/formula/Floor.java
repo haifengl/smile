@@ -19,8 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import smile.data.Tuple;
-
 /**
  * The term of floor function.
  *
@@ -39,18 +37,9 @@ public class Floor<T> implements Factor<T, Double> {
         this.child = factor;
     }
 
-    /**
-     * Constructor.
-     *
-     * @param column the variable that floor function is applied to.
-     */
-    public Floor(String column) {
-        this.child = new Column(column);
-    }
-
     @Override
-    public String name() {
-        return String.format("floor(%s)", child.name());
+    public String toString() {
+        return String.format("floor(%s)", child);
     }
 
     @Override
