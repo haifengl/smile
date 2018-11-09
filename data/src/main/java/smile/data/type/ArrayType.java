@@ -35,14 +35,6 @@ public class ArrayType implements DataType {
         this.type = type;
     }
 
-    /**
-     * Constructor.
-     * @param type element data type in string representation.
-     */
-    public ArrayType(String type) {
-        this.type = DataType.of(type);
-    }
-
     @Override
     public String name() {
         return String.format("array[%s]", type.name());

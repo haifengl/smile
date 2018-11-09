@@ -13,55 +13,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data.formula;
-
-import smile.data.type.DataType;
-import smile.data.type.DataTypes;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+package smile.data.type;
 
 /**
- * The term of log10 function.
+ * Object data type.
  *
  * @author Haifeng Li
  */
-public class Log10<T> implements Factor<T, Double> {
-    /** The operand factor of log10 expression. */
-    private Factor<T, Double> child;
+public class ObjectType implements DataType {
+
+    /** Object Class. */
+    private Class clazz;
 
     /**
      * Constructor.
-     *
-     * @param factor the factor that log10 function is applied to.
+     * @param clazz the class of objects.
      */
-    public Log10(Factor<T, Double> factor) {
-        this.child = factor;
+    public ObjectType(Class clazz) {
+        this.clazz = clazz;
+    }
+
+    /**
+     * Returns the class of objects.
+     * This is different from Object.getClass(), which returns
+     * ObjectType.class.
+     */
+    public Class getObjectClass() {
+        return clazz;
+    }
+
+    @Override
+    public String name() {
+        return String.format("class[%s]", clazz.getName());
     }
 
     @Override
     public String toString() {
-        return String.format("log10(%s)", child);
+        return name();
     }
 
     @Override
-    public List<Factor> factors() {
-        return Collections.singletonList(this);
-    }
-
-    @Override
-    public Set<String> variables() {
-        return child.variables();
-    }
-
-    @Override
-    public Double apply(T o) {
-        return Math.log10(child.apply(o));
-    }
-
-    @Override
-    public DataType type() {
-        return DataTypes.DoubleType;
+    public Object valueOf(String s) {
+        return s;
     }
 }

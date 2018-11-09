@@ -15,6 +15,9 @@
  *******************************************************************************/
 package smile.data.formula;
 
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+
 import java.util.function.Function;
 import java.util.Collections;
 import java.util.List;
@@ -33,6 +36,8 @@ public class Property<T, R> implements Factor<T, R> {
     private String name;
     /** Function to get the property. */
     private Function<? super T,? extends R> getter;
+    /** The class of return type. */
+    private Class<R> clazz;
 
     /**
      * Constructor.
@@ -40,9 +45,10 @@ public class Property<T, R> implements Factor<T, R> {
      * @param name the property name.
      * @param getter the function to retrieve the property.
      */
-    public Property(String name, Function<? super T,? extends R> getter) {
+    public Property(String name, Function<? super T,? extends R> getter, Class<R> clazz) {
         this.name = name;
         this.getter = getter;
+        this.clazz = clazz;
     }
 
     @Override
@@ -63,5 +69,10 @@ public class Property<T, R> implements Factor<T, R> {
     @Override
     public R apply(T o) {
         return getter.apply(o);
+    }
+
+    @Override
+    public DataType type() {
+        return DataTypes.object(clazz);
     }
 }

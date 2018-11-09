@@ -15,6 +15,9 @@
  *******************************************************************************/
 package smile.data.formula;
 
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -55,5 +58,10 @@ public class Floor<T> implements Factor<T, Double> {
     @Override
     public Double apply(T o) {
         return Math.floor(child.apply(o));
+    }
+
+    @Override
+    public DataType type() {
+        return DataTypes.DoubleType;
     }
 }

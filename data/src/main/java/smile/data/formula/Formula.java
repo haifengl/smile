@@ -15,38 +15,30 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import java.util.List;
 import smile.data.DataFrame;
-import smile.data.Dataset;
-import smile.data.Instance;
 
 /**
- * A formula specifies the predictors and the response of a model.
- * Given a context (e.g. DataFrame), the formula can be used to
- * generate the model data.
+ * A formula extracts the variables from a context
+ * (e.g. Java Class or DataFrame).
  *
  * @author Haifeng Li
  */
 public class Formula {
-    /** The response term. */
-    private Term y;
     /** The predictor terms. */
-    private List<Term> x;
+    private Term[] x;
 
     /**
      * Constructor.
-     * @param y the response term.
      * @param x the predictor terms.
      */
-    public Formula(Term y, List<Term> x) {
-        this.y = y;
+    public Formula(Term... x) {
         this.x = x;
     }
 
     /**
      * Apply the formula on a DataFrame to generate the model data.
      */
-    public Dataset<Instance> apply(DataFrame df) {
+    public DataFrame apply(DataFrame df) {
         throw new UnsupportedOperationException();
     }
 }

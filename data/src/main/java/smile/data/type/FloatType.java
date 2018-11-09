@@ -13,23 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data.formula;
+package smile.data.type;
 
-import smile.data.type.DataType;
+import java.text.ParseException;
 
 /**
- * A factor is a term that generates single value
- * when applied to a data object (e.g. Tuple).
- *
- * @param <T> the type of input data objects.
- * @param <R> the type of output data objects.
+ * Float data type.
  *
  * @author Haifeng Li
  */
-public interface Factor<T, R> extends Term {
-    /** Apply the factor formula on the a data object. */
-    R apply(T o);
+public class FloatType implements DataType {
 
-    /** Returns the data type of output values. */
-    DataType type();
+    /** Singleton instance. */
+    static FloatType instance = new FloatType();
+
+    /**
+     * Private constructor for singleton design pattern.
+     */
+    private FloatType() {
+    }
+
+    @Override
+    public String name() {
+        return "float";
+    }
+
+    @Override
+    public String toString() {
+        return name();
+    }
+
+    @Override
+    public Float valueOf(String s) throws ParseException {
+        return Float.valueOf(s);
+    }
 }

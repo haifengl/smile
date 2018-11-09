@@ -17,6 +17,8 @@
 package smile.data.vector;
 
 import java.util.stream.IntStream;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
 
 /**
  * An immutable boolean vector.
@@ -25,8 +27,8 @@ import java.util.stream.IntStream;
  */
 public interface BooleanVector extends BaseVector<Boolean, Integer, IntStream> {
     @Override
-    default Class<Boolean> type() {
-        return boolean.class;
+    default DataType type() {
+        return DataTypes.BooleanType;
     }
 
     /**

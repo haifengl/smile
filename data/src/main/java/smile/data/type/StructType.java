@@ -33,8 +33,6 @@ public class StructType implements DataType {
 
     /** Struct fields. */
     private final StructField[] fields;
-    /** Field name to type map. */
-    private final Map<String, DataType> types;
     /** Field name to index map. */
     private final Map<String, Integer> index;
 
@@ -43,13 +41,21 @@ public class StructType implements DataType {
      */
     public StructType(StructField... fields) {
         this.fields = fields;
-        this.types = new HashMap<>();
         this.index = new HashMap<>();
         for (int i = 0; i < fields.length; i++) {
             StructField field = fields[i];
-            types.put(field.name, field.type);
             index.put(field.name, i);
         }
+    }
+
+    /** Returns the fields. */
+    public StructField[] fields() {
+        return fields;
+    }
+
+    /** Returns the index of a field. */
+    public int fieldIndex(String field) {
+        return index.get(field);
     }
 
     @Override
@@ -78,7 +84,7 @@ public class StructType implements DataType {
         final Object[] array = new Object[fields.length];
         for (String element : elements) {
             String[] field = element.split(":");
-            DataType type = types.get(field[0]);
+            DataType type = fields[index.get(field[0])].type;
             Object value = type.valueOf(field[1]);
             int i = index.get(field[0]);
             array[i] = value;

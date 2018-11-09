@@ -15,21 +15,38 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import smile.data.type.DataType;
+import java.util.List;
+import smile.data.DataFrame;
+import smile.data.Dataset;
+import smile.data.Instance;
 
 /**
- * A factor is a term that generates single value
- * when applied to a data object (e.g. Tuple).
- *
- * @param <T> the type of input data objects.
- * @param <R> the type of output data objects.
+ * A model specifies the predictors and the response.
+ * Given a context (e.g. DataFrame), the formula can be used to
+ * generate the model data.
  *
  * @author Haifeng Li
  */
-public interface Factor<T, R> extends Term {
-    /** Apply the factor formula on the a data object. */
-    R apply(T o);
+public class Model {
+    /** The response variable. */
+    private Factor y;
+    /** The predictor terms. */
+    private List<Term> x;
 
-    /** Returns the data type of output values. */
-    DataType type();
+    /**
+     * Constructor.
+     * @param y the response variable.
+     * @param x the predictor terms.
+     */
+    public Model(Factor y, List<Term> x) {
+        this.y = y;
+        this.x = x;
+    }
+
+    /**
+     * Apply the formula on a DataFrame to generate the model data.
+     */
+    public Dataset<Instance> apply(DataFrame df) {
+        throw new UnsupportedOperationException();
+    }
 }
