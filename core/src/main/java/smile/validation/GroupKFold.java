@@ -22,9 +22,20 @@ import smile.sort.QuickSort;
 
 import java.util.Arrays;
 
+/**
+ * GroupKfold is a cross validation technique that splits the data by respecting additional information about groups.
+ * Each sample belongs to a certain group and each group can have multiple samples. The goal of the split is then
+ * to assure that no samples from the same group are present in the training and testing subsets in a single fold.
+ * This is useful when the i.i.d. assumption is known to be broken by the underlying process generating the data.
+ * E.g. when we have multiple samples by the same user and want to make sure that the model learns the concept
+ * we are interested in rather than user-specific features that don't generalize to unseen users, this approach could
+ * be used. The implementation is inspired by scikit-learn's implementation of sklearn.model_selection.GroupKFold.
+ *
+ * @author Nejc Ilenic
+ */
 public class GroupKFold {
     /**
-     * The number of rounds of group K-fold.
+     * The number of folds.
      */
     public final int k;
     /**
@@ -41,7 +52,7 @@ public class GroupKFold {
             throw new IllegalArgumentException("Invalid sample size: " + n);
         }
 
-        if (k < 0 || k > n) {
+        if (k < 0) {
             throw new IllegalArgumentException("Invalid number of folds: " + k);
         }
 
@@ -49,44 +60,68 @@ public class GroupKFold {
             throw new IllegalArgumentException("Groups array must be of size n, but length is " + groups.length);
         }
 
-        this.k = k;
-        this.train = new int[k][];
-        this.test = new int[k][];
+        int[] uniqueGroups = Math.unique(groups);
+        Arrays.sort(uniqueGroups);
+        int numGroups = uniqueGroups.length;
 
-        int numGroups = Math.unique(groups).length;
         if (k > numGroups) {
             throw new IllegalArgumentException("Number of splits mustn't be greater than number of groups");
         }
-
-        // sort the groups by number of samples so that we can distribute samples from largest groups first
-        int[] numSamplesPerGroup = Arrays
-                .stream(Histogram.histogram(groups, numGroups)[2])
-                .mapToInt(x -> (int) x)
-                .toArray();
-        int[] toOriginalGroupIndex = QuickSort.sort(numSamplesPerGroup);
-
-        // distribute samples into k folds one group at a time, from the largest to the lightest group
-        int[] numSamplesPerFold = new int[k];
-        int[] groupToFoldIndex = new int[numGroups];
-
-        for (int i = numSamplesPerGroup.length - 1; i >= 0; i--) {
-            int lightestFoldIndex = Math.whichMin(numSamplesPerFold);
-            numSamplesPerFold[lightestFoldIndex] += numSamplesPerGroup[i];
-            groupToFoldIndex[toOriginalGroupIndex[i]] = lightestFoldIndex;
+        for (int i = 0; i < numGroups; i++) {
+            if (uniqueGroups[i] != i) {
+                throw new IllegalArgumentException(
+                        "Invalid encoding of groups, all group indices between [0, numGroups) have to exist");
+            }
         }
 
+        this.k = k;
+        this.train = new int[k][];
+        this.test = new int[k][];
+        TestFolds testFolds = this.calculateTestFolds(groups, numGroups);
+
         for (int i = 0; i < k; i++) {
-            train[i] = new int[n - numSamplesPerFold[i]];
-            test[i] = new int[numSamplesPerFold[i]];
+            train[i] = new int[n - testFolds.numTestSamplesPerFold[i]];
+            test[i] = new int[testFolds.numTestSamplesPerFold[i]];
 
             for (int j = 0, trainIndex = 0, testIndex = 0; j < n; j++) {
-                if (groupToFoldIndex[groups[j]] == i) {
+                if (testFolds.groupToTestFoldIndex[groups[j]] == i) {
                     test[i][testIndex++] = j;
                 }
                 else {
                     train[i][trainIndex++] = j;
                 }
             }
+        }
+    }
+
+    private TestFolds calculateTestFolds(int[] groups, int numGroups) {
+        // sort the groups by number of samples so that we can distribute test samples from largest groups first
+        int[] numSamplesPerGroup = Arrays.stream(Histogram.histogram(groups, numGroups)[2])
+                .mapToInt(x -> (int) x)
+                .toArray();
+
+        int[] toOriginalGroupIndex = QuickSort.sort(numSamplesPerGroup);
+
+        // distribute test samples into k folds one group at a time, from the largest to the smallest group,
+        // always putting test samples into the fold with the fewest samples
+        int[] numTestSamplesPerFold = new int[k];
+        int[] groupToTestFoldIndex = new int[numGroups];
+
+        for (int i = numGroups - 1; i >= 0; i--) {
+            int smallestFoldIndex = Math.whichMin(numTestSamplesPerFold);
+            numTestSamplesPerFold[smallestFoldIndex] += numSamplesPerGroup[i];
+            groupToTestFoldIndex[toOriginalGroupIndex[i]] = smallestFoldIndex;
+        }
+
+        return new TestFolds(numTestSamplesPerFold, groupToTestFoldIndex);
+    }
+
+    private class TestFolds {
+        private final int[] numTestSamplesPerFold;
+        private final int[] groupToTestFoldIndex;
+        private TestFolds(int[] numTestSamplesPerFold, int[] groupToTestFoldIndex) {
+            this.numTestSamplesPerFold = numTestSamplesPerFold;
+            this.groupToTestFoldIndex = groupToTestFoldIndex;
         }
     }
 }
