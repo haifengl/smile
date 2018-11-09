@@ -19,8 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import smile.data.Tuple;
-
 /**
  * The term of round function.
  *
@@ -39,18 +37,9 @@ public class Round<T> implements Factor<T, Long> {
         this.child = factor;
     }
 
-    /**
-     * Constructor.
-     *
-     * @param column the variable that round function is applied to.
-     */
-    public Round(String column) {
-        this.child = new Column(column);
-    }
-
     @Override
-    public String name() {
-        return String.format("round(%s)", child.name());
+    public String toString() {
+        return String.format("round(%s)", child);
     }
 
     @Override

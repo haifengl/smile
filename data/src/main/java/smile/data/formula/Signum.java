@@ -19,8 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import smile.data.Tuple;
-
 /**
  * The term of signum function.
  *
@@ -39,18 +37,9 @@ public class Signum<T> implements Factor<T, Double> {
         this.child = factor;
     }
 
-    /**
-     * Constructor.
-     *
-     * @param column the variable that signum function is applied to.
-     */
-    public Signum(String column) {
-        this.child = new Column(column);
-    }
-
     @Override
-    public String name() {
-        return String.format("signum(%s)", child.name());
+    public String toString() {
+        return String.format("signum(%s)", child);
     }
 
     @Override

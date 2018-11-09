@@ -41,7 +41,7 @@ public class Column<R> implements Factor<Tuple, R> {
     }
 
     @Override
-    public String name() {
+    public String toString() {
         return name;
     }
 

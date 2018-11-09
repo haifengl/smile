@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import smile.data.Tuple;
 
 /**
  * The term of a + b add expression.
@@ -43,20 +42,9 @@ public class Add<T> implements Factor<T, Double> {
         this.b = b;
     }
 
-    /**
-     * Constructor.
-     *
-     * @param a the first variable.
-     * @param b the second variable.
-     */
-    public Add(String a, String b) {
-        this.a = new Column(a);
-        this.b = new Column(b);
-    }
-
     @Override
-    public String name() {
-        return String.format("%s + %s", a.name(), b.name());
+    public String toString() {
+        return String.format("%s + %s", a, b);
     }
 
     @Override

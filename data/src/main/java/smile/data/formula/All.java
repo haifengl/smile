@@ -15,10 +15,35 @@
  *******************************************************************************/
 package smile.data.formula;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
 /**
- * Created by hli on 11/5/18.
+ * All columns not otherwise in the formula.
  *
  * @author Haifeng Li
  */
-public class Interaction {
+public class All implements Term {
+    /**
+     * Constructor.
+     */
+    public All() {
+
+    }
+
+    @Override
+    public String toString() {
+        return ".";
+    }
+
+    @Override
+    public List<Factor> factors() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Set<String> variables() {
+        return Collections.emptySet();
+    }
 }

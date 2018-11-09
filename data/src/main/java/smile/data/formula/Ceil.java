@@ -19,8 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import smile.data.Tuple;
-
 /**
  * The term of ceil function.
  *
@@ -39,18 +37,9 @@ public class Ceil<T> implements Factor<T, Double> {
         this.child = factor;
     }
 
-    /**
-     * Constructor.
-     *
-     * @param column the variable that ceil function is applied to.
-     */
-    public Ceil(String column) {
-        this.child = new Column(column);
-    }
-
     @Override
-    public String name() {
-        return String.format("ceil(%s)", child.name());
+    public String toString() {
+        return String.format("ceil(%s)", child);
     }
 
     @Override

@@ -16,51 +16,44 @@
 package smile.data.formula;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * The term of a - b subtraction expression.
+ * Remove a factor from the fromula.
  *
  * @author Haifeng Li
  */
-public class Sub<T> implements Factor<T, Double> {
-    /** The left factor. */
-    private Factor<T, Double> a;
-    /** The right factor. */
-    private Factor<T, Double> b;
+public class Remove<T, R> implements Factor<T, R> {
+    /** The factor to remove. */
+    private Factor<T, R> factor;
 
     /**
      * Constructor.
      *
-     * @param a the first factor.
-     * @param b the second factor.
+     * @param factor the factor to remove.
      */
-    public Sub(Factor<T, Double> a, Factor<T, Double> b) {
-        this.a = a;
-        this.b = b;
+    public Remove(Factor<T, R> factor) {
+        this.factor = factor;
     }
 
     @Override
     public String toString() {
-        return String.format("%s - %s", a, b);
+        return String.format("- %s", factor);
     }
 
     @Override
     public List<Factor> factors() {
-        return Collections.singletonList(this);
+        return Collections.singletonList(factor);
     }
 
     @Override
     public Set<String> variables() {
-        Set<String> t = new HashSet<>(a.variables());
-        t.addAll(b.variables());
-        return t;
+        return factor.variables();
     }
 
     @Override
-    public Double apply(T o) {
-        return a.apply(o) - b.apply(o);
+    public R apply(T o) {
+        throw new UnsupportedOperationException("Remove.apply() should never be called");
     }
 }

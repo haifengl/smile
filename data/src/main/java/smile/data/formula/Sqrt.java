@@ -19,8 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import smile.data.Tuple;
-
 /**
  * The term of sqrt function.
  *
@@ -39,18 +37,9 @@ public class Sqrt<T> implements Factor<T, Double> {
         this.child = factor;
     }
 
-    /**
-     * Constructor.
-     *
-     * @param column the variable that sqrt function is applied to.
-     */
-    public Sqrt(String column) {
-        this.child = new Column(column);
-    }
-
     @Override
-    public String name() {
-        return String.format("sqrt(%s)", child.name());
+    public String toString() {
+        return String.format("sqrt(%s)", child);
     }
 
     @Override

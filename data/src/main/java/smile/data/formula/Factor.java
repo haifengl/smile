@@ -25,9 +25,6 @@ package smile.data.formula;
  * @author Haifeng Li
  */
 public interface Factor<T, R> extends Term {
-    /** The name of factor. */
-    String name();
-
     /** Apply the factor formula on the a data object. */
     R apply(T o);
 }

@@ -19,8 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import smile.data.Tuple;
-
 /**
  * The term of exp function.
  *
@@ -39,18 +37,9 @@ public class Exp<T> implements Factor<T, Double> {
         this.child = factor;
     }
 
-    /**
-     * Constructor.
-     *
-     * @param column the column that exp function is applied to.
-     */
-    public Exp(String column) {
-        this.child = new Column(column);
-    }
-
     @Override
-    public String name() {
-        return String.format("exp(%s)", child.name());
+    public String toString() {
+        return String.format("exp(%s)", child);
     }
 
     @Override

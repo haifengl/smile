@@ -19,8 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import smile.data.Tuple;
-
 /**
  * The term of log10 function.
  *
@@ -39,18 +37,9 @@ public class Log10<T> implements Factor<T, Double> {
         this.child = factor;
     }
 
-    /**
-     * Constructor.
-     *
-     * @param column the variable that log10 function is applied to.
-     */
-    public Log10(String column) {
-        this.child = new Column(column);
-    }
-
     @Override
-    public String name() {
-        return String.format("log10(%s)", child.name());
+    public String toString() {
+        return String.format("log10(%s)", child);
     }
 
     @Override
