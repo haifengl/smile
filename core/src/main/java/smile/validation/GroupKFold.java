@@ -61,12 +61,13 @@ public class GroupKFold {
         }
 
         int[] uniqueGroups = Math.unique(groups);
-        Arrays.sort(uniqueGroups);
         int numGroups = uniqueGroups.length;
 
         if (k > numGroups) {
             throw new IllegalArgumentException("Number of splits mustn't be greater than number of groups");
         }
+
+        Arrays.sort(uniqueGroups);
         for (int i = 0; i < numGroups; i++) {
             if (uniqueGroups[i] != i) {
                 throw new IllegalArgumentException(

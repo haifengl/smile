@@ -27,4 +27,44 @@ public class GroupKFoldTest {
             assertFalse(anyTrainGroupInTestFold);
         }
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidNParameter() {
+        int n = -1;
+        int k = 3;
+        int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
+        GroupKFold split = new GroupKFold(n, k, groups);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidKParameter() {
+        int n = 10;
+        int k = -1;
+        int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
+        GroupKFold split = new GroupKFold(n, k, groups);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidGroupsParameter() {
+        int n = 10;
+        int k = 3;
+        int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 4};
+        GroupKFold split = new GroupKFold(n, k, groups);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidGroupsNParameters() {
+        int n = 9;
+        int k = 3;
+        int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
+        GroupKFold split = new GroupKFold(n, k, groups);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidGroupsKParameters() {
+        int n = 10;
+        int k = 4;
+        int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
+        GroupKFold split = new GroupKFold(n, k, groups);
+    }
 }
