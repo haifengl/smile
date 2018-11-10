@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.data.formula;
 
+import smile.data.type.StructType;
+
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,11 +56,11 @@ public class Cross<T> implements Term {
 
     @Override
     public String toString() {
-        return String.format("(%s)^2", factors.stream().map(f -> f.toString()).collect(Collectors.joining(" + ")));
+        return String.format("(%s)^2", factors.stream().map(Factor::toString).collect(Collectors.joining(" + ")));
     }
 
     @Override
-    public List<Factor> factors() {
+    public List<? extends Factor> factors() {
         List<Factor> crossings = new ArrayList<>(factors);
         int n = factors.size();
         for (int i = 0; i < n; i++) {
@@ -75,5 +77,10 @@ public class Cross<T> implements Term {
     @Override
     public Set<String> variables() {
         return factors.stream().flatMap(f -> f.variables().stream()).collect(Collectors.toSet());
+    }
+
+    @Override
+    public void bind(StructType schema) {
+        factors.stream().forEach(factor -> factor.bind(schema));
     }
 }

@@ -15,7 +15,15 @@
  *******************************************************************************/
 package smile.data.formula;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import smile.data.DataFrame;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 
 /**
  * A formula extracts the variables from a context
@@ -25,20 +33,60 @@ import smile.data.DataFrame;
  */
 public class Formula {
     /** The predictor terms. */
-    private Term[] x;
+    private Term[] terms;
 
     /**
      * Constructor.
-     * @param x the predictor terms.
+     * @param terms the predictor terms.
      */
-    public Formula(Term... x) {
-        this.x = x;
+    public Formula(Term... terms) {
+        this.terms = terms;
     }
 
     /**
      * Apply the formula on a DataFrame to generate the model data.
      */
     public DataFrame apply(DataFrame df) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    /** Returns the schema of formula after binding to a DataFrame. */
+    public StructType schema(DataFrame df) {
+        Arrays.stream(terms).forEach(term -> term.bind(df.schema()));
+        List<Factor> factors = Arrays.stream(terms)
+                .filter(term -> !(term instanceof All) && !(term instanceof Remove))
+                .flatMap(term -> term.factors().stream())
+                .collect(Collectors.toList());
+
+        List<Factor> removes = Arrays.stream(terms)
+                .filter(term -> term instanceof Remove)
+                .flatMap(term -> term.factors().stream())
+                .collect(Collectors.toList());
+
+        Set<String> variables = factors.stream()
+            .flatMap(factor -> factor.variables().stream())
+            .collect(Collectors.toSet());
+
+        List<Factor> all = Arrays.stream(terms)
+                .filter(term -> term instanceof All)
+                .flatMap(term -> term.factors().stream())
+                .filter(factor -> !variables.contains(factor.name()))
+                .collect(Collectors.toList());
+
+        all.addAll(factors);
+        all.removeAll(removes);
+
+        List<StructField> fields = all.stream()
+                .map(factor -> new StructField(factor.toString(), factor.type()))
+                .collect(Collectors.toList());
+        return new StructType(fields);
+    }
+
+    /**
+     * Apply the formula on a DataFrame to generate the model data.
+     */
+    public <T> DataFrame apply(Collection<T> objects) {
         throw new UnsupportedOperationException();
     }
 }

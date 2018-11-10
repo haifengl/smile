@@ -17,6 +17,8 @@
 package smile.data.vector;
 
 import java.util.stream.DoubleStream;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
 
 /**
  * An immutable double vector.
@@ -25,8 +27,8 @@ import java.util.stream.DoubleStream;
  */
 public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
     @Override
-    default Class<Double> type() {
-        return double.class;
+    default DataType type() {
+        return DataTypes.DoubleType;
     }
 
     /**

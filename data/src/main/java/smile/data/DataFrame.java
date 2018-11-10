@@ -151,7 +151,7 @@ public interface DataFrame extends Dataset<Tuple> {
 
     /** Selects a new DataFrame with given column names. */
     default DataFrame select(String... cols) {
-        int[] indices = Arrays.asList(cols).stream().mapToInt(col -> columnIndex(col)).toArray();
+        int[] indices = Arrays.asList(cols).stream().mapToInt(this::columnIndex).toArray();
         return select(indices);
     }
 
@@ -172,7 +172,7 @@ public interface DataFrame extends Dataset<Tuple> {
 
     /** Returns a new DataFrame without given column names. */
     default DataFrame drop(String... cols) {
-        int[] indices = Arrays.asList(cols).stream().mapToInt(col -> columnIndex(col)).toArray();
+        int[] indices = Arrays.asList(cols).stream().mapToInt(this::columnIndex).toArray();
         return drop(indices);
     }
 

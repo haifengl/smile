@@ -17,6 +17,8 @@
 package smile.data.vector;
 
 import java.util.stream.LongStream;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
 
 /**
  * An immutable long vector.
@@ -25,8 +27,8 @@ import java.util.stream.LongStream;
  */
 public interface LongVector extends BaseVector<Long, Long, LongStream> {
     @Override
-    default Class<Long> type() {
-        return long.class;
+    default DataType type() {
+        return DataTypes.LongType;
     }
 
     /**

@@ -17,6 +17,7 @@ package smile.data.formula;
 
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.StructType;
 
 import java.util.Collections;
 import java.util.List;
@@ -41,12 +42,22 @@ public class Floor<T> implements Factor<T, Double> {
     }
 
     @Override
-    public String toString() {
-        return String.format("floor(%s)", child);
+    public String name() {
+        return String.format("floor(%s)", child.name());
     }
 
     @Override
-    public List<Factor> factors() {
+    public String toString() {
+        return name();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return name().equals(o);
+    }
+
+    @Override
+    public List<? extends Factor> factors() {
         return Collections.singletonList(this);
     }
 
@@ -63,5 +74,10 @@ public class Floor<T> implements Factor<T, Double> {
     @Override
     public DataType type() {
         return DataTypes.DoubleType;
+    }
+
+    @Override
+    public void bind(StructType schema) {
+        child.bind(schema);
     }
 }

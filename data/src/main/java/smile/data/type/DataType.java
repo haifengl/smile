@@ -17,6 +17,9 @@ package smile.data.type;
 
 import java.io.Serializable;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,8 +33,8 @@ public interface DataType extends Serializable {
     String name();
 
     /**
-     * Returns the value of a string of this attribute.
-     * @param s a string value of this attribute.
+     * Returns the value from its string representation.
+     * @param s the string representation of a value of this type.
      */
     Object valueOf(String s) throws ParseException;
 
@@ -66,7 +69,7 @@ public interface DataType extends Serializable {
                         case "datetime": return DataTypes.datetime(value);
                         case "nominal": return DataTypes.nominal(value.split(","));
                         case "ordinal": return DataTypes.ordinal(value.split(","));
-                        case "array": return DataTypes.array(value);
+                        case "array": return DataTypes.array(DataType.of(value));
                         case "object": return DataTypes.object(Class.forName(value));
                         case "struct":
                             String[] elements = value.split(",");
@@ -80,5 +83,39 @@ public interface DataType extends Serializable {
                 }
         }
         throw new IllegalArgumentException(String.format("Unknown data type: %s", s));
+    }
+
+    /** Returns the DataType of a class. */
+    static DataType of(Class clazz) {
+        if (clazz == int.class)
+            return DataTypes.IntegerType;
+        else if (clazz == double.class)
+            return DataTypes.DoubleType;
+        else if (clazz == long.class)
+            return DataTypes.LongType;
+        else if (clazz == float.class)
+            return DataTypes.FloatType;
+        else if (clazz == boolean.class)
+            return DataTypes.BooleanType;
+        else if (clazz == short.class)
+            return DataTypes.ShortType;
+        else if (clazz == byte.class)
+            return DataTypes.ByteType;
+        else if (clazz == char.class)
+            return DataTypes.CharType;
+        else if (clazz == String.class)
+            return DataTypes.StringType;
+        else if (clazz == LocalDate.class)
+            return DataTypes.DateType;
+        else if (clazz == LocalDateTime.class)
+            return DataTypes.DateTimeType;
+        else if (clazz.isEnum())
+            return DataTypes.nominal(Arrays.stream(clazz.getEnumConstants())
+                    .map(Object::toString)
+                    .toArray(String[]::new));
+        else if (clazz.isArray())
+            return DataTypes.array(DataType.of(clazz.getComponentType()));
+        else
+            return DataTypes.object(clazz);
     }
 }

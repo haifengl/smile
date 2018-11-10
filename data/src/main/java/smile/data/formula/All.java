@@ -15,9 +15,11 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import smile.data.type.StructType;
 
 /**
  * All columns not otherwise in the formula.
@@ -25,6 +27,8 @@ import java.util.Set;
  * @author Haifeng Li
  */
 public class All implements Term {
+    /** All columns in the schema. */
+    private List<Column> columns;
     /**
      * Constructor.
      */
@@ -38,12 +42,21 @@ public class All implements Term {
     }
 
     @Override
-    public List<Factor> factors() {
-        return Collections.emptyList();
+    public List<Column> factors() {
+        return columns;
     }
 
     @Override
     public Set<String> variables() {
-        return Collections.emptySet();
+        return columns.stream().map(Column::name).collect(Collectors.toSet());
+    }
+
+    @Override
+    public void bind(StructType schema) {
+        columns = Arrays.stream(schema.fields())
+                .map(field -> new Column(field.name))
+                .collect(Collectors.toList());
+
+        columns.forEach(column -> column.bind(schema));
     }
 }

@@ -17,6 +17,8 @@
 package smile.data.vector;
 
 import java.util.stream.IntStream;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
 
 /**
  * An immutable integer vector.
@@ -25,8 +27,8 @@ import java.util.stream.IntStream;
  */
 public interface IntVector extends BaseVector<Integer, Integer, IntStream> {
     @Override
-    default Class<Integer> type() {
-        return int.class;
+    default DataType type() {
+        return DataTypes.IntegerType;
     }
 
     /**
