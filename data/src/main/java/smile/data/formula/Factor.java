@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import java.util.Set;
 import smile.data.type.DataType;
 
 /**
@@ -28,7 +27,7 @@ import smile.data.type.DataType;
  * @author Haifeng Li
  */
 public interface Factor<T, R> extends Term {
-    /** Apply the factor formula on the a data object. */
+    /** Apply the factor formula on a data object. */
     R apply(T o);
 
     /** Returns the name of factor. */

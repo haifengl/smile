@@ -59,7 +59,7 @@ public interface DataType extends Serializable {
             case "date": return DataTypes.DateType;
             case "datetime": return DataTypes.DateTimeType;
             default:
-                Pattern pattern = Pattern.compile("(date|datetime|nominal|ordinal|object|array|product)\\[([^\\[\\]]*)\\]");
+                Pattern pattern = Pattern.compile("(date|datetime|nominal|ordinal|object|array|struct)\\[([^\\[\\]]*)\\]");
                 Matcher matcher = pattern.matcher(s);
                 if (matcher.matches()) {
                     String type = matcher.group(1);
@@ -110,9 +110,11 @@ public interface DataType extends Serializable {
         else if (clazz == LocalDateTime.class)
             return DataTypes.DateTimeType;
         else if (clazz.isEnum())
-            return DataTypes.nominal(Arrays.stream(clazz.getEnumConstants())
+            return DataTypes.nominal(
+                    Arrays.stream(clazz.getEnumConstants())
                     .map(Object::toString)
-                    .toArray(String[]::new));
+                    .toArray(String[]::new)
+            );
         else if (clazz.isArray())
             return DataTypes.array(DataType.of(clazz.getComponentType()));
         else

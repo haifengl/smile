@@ -17,11 +17,11 @@ package smile.data.formula;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import smile.data.DataFrame;
+import smile.data.Tuple;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 
@@ -34,6 +34,10 @@ import smile.data.type.StructType;
 public class Formula {
     /** The predictor terms. */
     private Term[] terms;
+    /** The factors after binding to a schema and expanding the terms. */
+    private Factor[] factors;
+    /** The formula output schema. */
+    private StructType schema;
 
     /**
      * Constructor.
@@ -51,9 +55,43 @@ public class Formula {
         throw new UnsupportedOperationException();
     }
 
-    /** Returns the schema of formula after binding to a DataFrame. */
-    public StructType schema(DataFrame df) {
-        Arrays.stream(terms).forEach(term -> term.bind(df.schema()));
+    public Tuple apply(Tuple t) {
+        if (schema == null) {
+            schema = schema(t.schema());
+        }
+
+        return new Tuple() {
+            @Override
+            public StructType schema() {
+                return schema;
+            }
+
+            @Override
+            public int size() {
+                return schema.fields().length;
+            }
+
+            @Override
+            public Object get(int i) {
+                return factors[i].apply(t);
+            }
+
+            @Override
+            public int fieldIndex(String name) {
+                return schema.fieldIndex(name);
+            }
+
+            @Override
+            public String toString() {
+                return toString(",");
+            }
+        };
+    }
+
+    /** Returns the schema of formula after binding to an input type. */
+    public StructType schema(StructType inputType) {
+        Arrays.stream(terms).forEach(term -> term.bind(inputType));
+
         List<Factor> factors = Arrays.stream(terms)
                 .filter(term -> !(term instanceof All) && !(term instanceof Remove))
                 .flatMap(term -> term.factors().stream())
@@ -76,6 +114,7 @@ public class Formula {
 
         all.addAll(factors);
         all.removeAll(removes);
+        this.factors = all.toArray(new Factor[all.size()]);
 
         List<StructField> fields = all.stream()
                 .map(factor -> new StructField(factor.toString(), factor.type()))
