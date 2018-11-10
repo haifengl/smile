@@ -17,6 +17,7 @@
 package smile.data;
 
 import java.io.Serializable;
+import smile.data.type.StructType;
 
 /**
  * A tuple is an immutable finite ordered list (sequence) of elements.
@@ -32,6 +33,9 @@ import java.io.Serializable;
 public interface Tuple extends Serializable {
     /** Number of elements in the Tuple. */
     int size();
+
+    /** Returns the schema of tuple. */
+    StructType schema();
 
     /**
      * Returns the value at position i. The value may be null.

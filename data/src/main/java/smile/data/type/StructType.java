@@ -86,7 +86,7 @@ public class StructType implements DataType {
         Tuple t = (Tuple) o;
         String s = Arrays.stream(fields)
                 .map(field -> String.format("%s : %s", field.name, field.type.toString(t.get(field.name))))
-                .collect(Collectors.joining(","));
+                .collect(Collectors.joining(",\n"));
         return String.format("{%s}", s);
     }
 
@@ -107,6 +107,11 @@ public class StructType implements DataType {
             @Override
             public int size() {
                 return array.length;
+            }
+
+            @Override
+            public StructType schema() {
+                return StructType.this;
             }
 
             @Override
