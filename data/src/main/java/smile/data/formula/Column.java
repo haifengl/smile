@@ -19,6 +19,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import smile.data.Tuple;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+import smile.data.type.StructType;
 
 /**
  * A column in a DataFrame.
@@ -29,7 +32,11 @@ import smile.data.Tuple;
  */
 public class Column<R> implements Factor<Tuple, R> {
     /** Column name. */
-    private String name;
+    private final String name;
+    /** Data type of column. Only available after calling bind(). */
+    private DataType type;
+    /** Column index after binding to a schema. */
+    private int index = -1;
 
     /**
      * Constructor.
@@ -41,12 +48,22 @@ public class Column<R> implements Factor<Tuple, R> {
     }
 
     @Override
+    public String name() {
+        return name;
+    }
+
+    @Override
     public String toString() {
         return name;
     }
 
     @Override
-    public List<Factor> factors() {
+    public boolean equals(Object o) {
+        return name().equals(o);
+    }
+
+    @Override
+    public List<Column> factors() {
         return Collections.singletonList(this);
     }
 
@@ -57,6 +74,20 @@ public class Column<R> implements Factor<Tuple, R> {
 
     @Override
     public R apply(Tuple tuple) {
-        return tuple.getAs(name);
+        return tuple.getAs(index);
+    }
+
+    @Override
+    public DataType type() {
+        if (type == null)
+            throw new IllegalStateException(String.format("Column(%s) is not bound to a schema yet.", name));
+
+        return type;
+    }
+
+    @Override
+    public void bind(StructType schema) {
+        index = schema.fieldIndex(name);
+        type = schema.fields()[index].type;
     }
 }

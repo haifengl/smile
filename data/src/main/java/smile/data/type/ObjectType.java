@@ -21,6 +21,8 @@ package smile.data.type;
  * @author Haifeng Li
  */
 public class ObjectType implements DataType {
+    /** Singleton instance. */
+    static ObjectType instance = new ObjectType(Object.class);
 
     /** Object Class. */
     private Class clazz;

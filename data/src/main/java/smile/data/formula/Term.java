@@ -18,6 +18,8 @@ package smile.data.formula;
 import java.util.List;
 import java.util.Set;
 
+import smile.data.type.StructType;
+
 /**
  * A model consists of a series of terms. The terms themselves
  * consist of a single factor or can be expanded to multiple
@@ -29,8 +31,11 @@ import java.util.Set;
  * @author Haifeng Li
  */
 public interface Term {
+    /** Binds the term to a schema. */
+    void bind(StructType schema);
+
     /** Returns the list of factors after expanding the term. */
-    List<Factor> factors();
+    List<? extends Factor> factors();
 
     /** Returns the list of variables used in this term. */
     Set<String> variables();

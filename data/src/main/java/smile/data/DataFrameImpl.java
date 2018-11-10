@@ -20,6 +20,8 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +31,8 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
+
+import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.*;
@@ -95,10 +99,7 @@ class DataFrameImpl implements DataFrame {
         Field[] fields = clazz.getFields();
         for (Field field : fields) {
             String name = field.getName();
-            names.add(name);
-
             Class<?> type = field.getType();
-            types.add(type);
 
             if (type == int.class) {
                 int[] values = data.stream().mapToInt(o -> {
@@ -110,6 +111,7 @@ class DataFrameImpl implements DataFrame {
                 }).toArray();
                 IntVector vector = IntVector.of(name, values);
                 columns.add(vector);
+                structFields.add(new StructField(name, DataTypes.IntegerType));
             } else if (type == long.class) {
                 long[] values = data.stream().mapToLong(o -> {
                     try {
@@ -120,6 +122,7 @@ class DataFrameImpl implements DataFrame {
                 }).toArray();
                 LongVector vector = LongVector.of(name, values);
                 columns.add(vector);
+                structFields.add(new StructField(name, DataTypes.LongType));
             } else if (type == double.class) {
                 double[] values = data.stream().mapToDouble(o -> {
                     try {
@@ -130,6 +133,7 @@ class DataFrameImpl implements DataFrame {
                 }).toArray();
                 DoubleVector vector = DoubleVector.of(name, values);
                 columns.add(vector);
+                structFields.add(new StructField(name, DataTypes.DoubleType));
             } else {
                 T[] values = (T[]) data.stream().map(o -> {
                     try {
@@ -140,6 +144,13 @@ class DataFrameImpl implements DataFrame {
                 }).toArray();
                 Vector<T> vector = Vector.of(name, values);
                 columns.add(vector);
+                if (type == String.class) {
+                    structFields.add(new StructField(name, DataTypes.StringType));
+                } else if (type == LocalDate.class) {
+                    structFields.add(new StructField(name, DataTypes.DateType));
+                } else if (type == LocalDateTime.class) {
+                    structFields.add(new StructField(name, DataTypes.DateTimeType));
+                }
             }
         }
 
@@ -155,10 +166,7 @@ class DataFrameImpl implements DataFrame {
         for (PropertyDescriptor prop : props) {
             if (!prop.getName().equals("class")) {
                 String name = prop.getName();
-                names.add(name);
-
                 Class<?> type = prop.getPropertyType();
-                types.add(type);
 
                 if (type == int.class) {
                     Method read = prop.getReadMethod();
@@ -171,6 +179,7 @@ class DataFrameImpl implements DataFrame {
                     }).toArray();
                     IntVector vector = IntVector.of(name, values);
                     columns.add(vector);
+                    structFields.add(new StructField(name, DataTypes.IntegerType));
                 } else if (type == long.class) {
                     Method read = prop.getReadMethod();
                     long[] values = data.stream().mapToLong(o -> {
@@ -182,6 +191,7 @@ class DataFrameImpl implements DataFrame {
                     }).toArray();
                     LongVector vector = LongVector.of(name, values);
                     columns.add(vector);
+                    structFields.add(new StructField(name, DataTypes.LongType));
                 } else if (type == double.class) {
                     Method read = prop.getReadMethod();
                     double[] values = data.stream().mapToDouble(o -> {
@@ -193,6 +203,7 @@ class DataFrameImpl implements DataFrame {
                     }).toArray();
                     DoubleVector vector = DoubleVector.of(name, values);
                     columns.add(vector);
+                    structFields.add(new StructField(name, DataTypes.DoubleType));
                 } else {
                     Method read = prop.getReadMethod();
                     T[] values = (T[]) data.stream().map(o -> {

@@ -59,7 +59,7 @@ public class OrdinalType implements DataType {
      */
     public OrdinalType(int... values) {
         this.levels = new String[values.length];
-        this.levels = Arrays.stream(values).mapToObj(v -> String.valueOf(v)).collect(Collectors.toList()).toArray(this.levels);
+        this.levels = Arrays.stream(values).mapToObj(String::valueOf).toArray(String[]::new);
 
         for (int i = 0; i < values.length; i++) {
             map.put(this.levels[i], i);

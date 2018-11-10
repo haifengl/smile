@@ -16,7 +16,10 @@
 
 package smile.data.vector;
 
+import java.util.Objects;
 import java.util.stream.Stream;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
 
 /**
  * An immutable generic vector.
@@ -25,11 +28,13 @@ import java.util.stream.Stream;
  */
 public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
     @Override
-    default Class<?> type() {
-        return stream().filter(v -> v != null)
+    default DataType type() {
+        return stream()
+                .filter(Objects::nonNull)
                 .findFirst()
-                .map(v -> (Class) v.getClass())
-                .orElse(Object.class);
+                .map(Object::getClass)
+                .map(DataType::of)
+                .orElse(DataTypes.ObjectType);
     }
 
     /** Checks whether the value at position i is null. */
