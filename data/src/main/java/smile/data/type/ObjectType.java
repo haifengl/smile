@@ -58,4 +58,13 @@ public class ObjectType implements DataType {
     public Object valueOf(String s) {
         return s;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof ObjectType) {
+            return clazz == ((ObjectType) o).getObjectClass();
+        }
+
+        return false;
+    }
 }

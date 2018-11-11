@@ -47,4 +47,9 @@ public class BooleanType implements DataType {
     public Boolean valueOf(String s) throws ParseException {
         return Boolean.valueOf(s);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof BooleanType;
+    }
 }

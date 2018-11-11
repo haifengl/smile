@@ -69,4 +69,8 @@ public class DateType implements DataType {
     public LocalDate valueOf(String s) throws ParseException {
         return LocalDate.parse(s, formatter);
     }
-}
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof DateType;
+    }}

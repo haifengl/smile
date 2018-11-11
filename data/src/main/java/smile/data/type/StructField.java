@@ -44,4 +44,14 @@ public class StructField {
     public String toString(Object o) {
         return String.format("%s : %s", name, type.toString(o));
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof StructField) {
+            StructField f = (StructField) o;
+            return name.equals(f.name) && type.equals(f.type);
+        }
+
+        return false;
+    }
 }

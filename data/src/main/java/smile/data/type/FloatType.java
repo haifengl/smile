@@ -47,4 +47,9 @@ public class FloatType implements DataType {
     public Float valueOf(String s) throws ParseException {
         return Float.valueOf(s);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof FloatType;
+    }
 }

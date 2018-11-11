@@ -48,4 +48,9 @@ public class CharType implements DataType {
         if (s == null || s.length() == 0) return null;
         return s.charAt(0);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof CharType;
+    }
 }

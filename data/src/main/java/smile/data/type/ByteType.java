@@ -47,4 +47,9 @@ public class ByteType implements DataType {
     public Byte valueOf(String s) throws ParseException {
         return Byte.valueOf(s);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof ByteType;
+    }
 }

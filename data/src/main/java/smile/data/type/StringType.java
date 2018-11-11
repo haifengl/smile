@@ -45,4 +45,9 @@ public class StringType implements DataType {
     public String valueOf(String s) {
         return s;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof StringType;
+    }
 }
