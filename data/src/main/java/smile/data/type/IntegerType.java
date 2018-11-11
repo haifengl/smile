@@ -47,4 +47,9 @@ public class IntegerType implements DataType {
     public Integer valueOf(String s) throws ParseException {
         return Integer.valueOf(s);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof IntegerType;
+    }
 }

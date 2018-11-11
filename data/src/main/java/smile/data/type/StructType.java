@@ -125,4 +125,21 @@ public class StructType implements DataType {
             }
         };
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof StructType) {
+            StructType t = (StructType) o;
+
+            if (fields.length == t.fields.length) {
+                for (int i = 0; i < fields.length; i++) {
+                    if (!fields[i].equals(t.fields[i]))
+                        return false;
+                }
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

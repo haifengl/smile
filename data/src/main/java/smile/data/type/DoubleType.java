@@ -47,4 +47,9 @@ public class DoubleType implements DataType {
     public Double valueOf(String s) throws ParseException {
         return Double.valueOf(s);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof DoubleType;
+    }
 }

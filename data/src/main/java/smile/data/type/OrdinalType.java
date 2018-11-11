@@ -95,4 +95,21 @@ public class OrdinalType implements DataType {
     public String[] levels() {
         return levels;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof OrdinalType) {
+            OrdinalType t = (OrdinalType) o;
+
+            if (levels.length == t.levels.length) {
+                for (int i = 0; i < levels.length; i++) {
+                    if (!levels[i].equals(t.levels[i]))
+                        return false;
+                }
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

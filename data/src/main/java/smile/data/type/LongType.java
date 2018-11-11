@@ -47,4 +47,9 @@ public class LongType implements DataType {
     public Long valueOf(String s) throws ParseException {
         return Long.valueOf(s);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof LongType;
+    }
 }
