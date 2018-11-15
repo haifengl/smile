@@ -41,9 +41,9 @@ public class DataTypes {
     /** String data type. */
     public static smile.data.type.StringType StringType = smile.data.type.StringType.instance;
     /** Date data type with ISO format. */
-    public static smile.data.type.DateType DateType = new smile.data.type.DateType();
+    public static smile.data.type.DateType DateType = smile.data.type.DateType.instance;
     /** DateTime data type with ISO format. */
-    public static smile.data.type.DateTimeType DateTimeType = new smile.data.type.DateTimeType();
+    public static smile.data.type.DateTimeType DateTimeType = smile.data.type.DateTimeType.instance;
     /** Plain Object data type. */
     public static smile.data.type.ObjectType ObjectType = smile.data.type.ObjectType.instance;
 
@@ -55,16 +55,6 @@ public class DataTypes {
     /** DateTime data type with customized format. */
     public static smile.data.type.DateTimeType datetime(String pattern) {
         return new smile.data.type.DateTimeType(pattern);
-    }
-
-    /** Creates a nominal data type. */
-    public static NominalType nominal(String... values) {
-        return new NominalType(values);
-    }
-
-    /** Creates an ordinal data type. */
-    public static OrdinalType ordinal(String... values) {
-        return new OrdinalType(values);
     }
 
     /** Creates an object data type of a given class. */
