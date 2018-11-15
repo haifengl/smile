@@ -26,11 +26,9 @@ import smile.data.type.StructType;
 /**
  * A column in a DataFrame.
  *
- * @param <R> the type of output data objects.
- *
  * @author Haifeng Li
  */
-public class Column<R> implements Factor<Tuple, R> {
+public class Column implements Factor {
     /** Column name. */
     private final String name;
     /** Data type of column. Only available after calling bind(). */
@@ -73,8 +71,8 @@ public class Column<R> implements Factor<Tuple, R> {
     }
 
     @Override
-    public R apply(Tuple tuple) {
-        return tuple.getAs(index);
+    public Object apply(Tuple o) {
+        return o.get(index);
     }
 
     @Override

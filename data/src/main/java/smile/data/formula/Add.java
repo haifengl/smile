@@ -15,25 +15,29 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import smile.data.type.DataType;
-import smile.data.type.DataTypes;
-import smile.data.type.StructType;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+
+import smile.data.Tuple;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+import smile.data.type.StructType;
 
 /**
  * The term of a + b add expression.
  *
  * @author Haifeng Li
  */
-public class Add<T> implements Factor<T, Double> {
+public class Add implements Factor {
     /** The left factor. */
-    private Factor<T, Double> a;
+    private Factor a;
     /** The right factor. */
-    private Factor<T, Double> b;
+    private Factor b;
+    /** The lambda of apply(). */
+    private Function<Tuple, Double> f;
 
     /**
      * Constructor.
@@ -41,7 +45,7 @@ public class Add<T> implements Factor<T, Double> {
      * @param a the first factor.
      * @param b the second factor.
      */
-    public Add(Factor<T, Double> a, Factor<T, Double> b) {
+    public Add(Factor a, Factor b) {
         this.a = a;
         this.b = b;
     }
@@ -74,8 +78,8 @@ public class Add<T> implements Factor<T, Double> {
     }
 
     @Override
-    public Double apply(T o) {
-        return a.apply(o) + b.apply(o);
+    public Double apply(Tuple o) {
+        return (double) a.apply(o) + (double) b.apply(o);
     }
 
     @Override
@@ -87,5 +91,8 @@ public class Add<T> implements Factor<T, Double> {
     public void bind(StructType schema) {
         a.bind(schema);
         b.bind(schema);
+        if (a.type() != DataTypes.DoubleType || b.type() != DataTypes.DoubleType) {
+            throw new IllegalStateException(String.format("Invalid expression: %s + %s", a.type(), b.type()));
+        }
     }
 }

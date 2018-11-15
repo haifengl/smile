@@ -18,6 +18,7 @@ package smile.data.formula;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.StructType;
 
@@ -26,16 +27,16 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class Remove<T, R> implements Factor<T, R> {
+public class Remove implements Factor {
     /** The factor to remove. */
-    private Factor<T, R> factor;
+    private Factor factor;
 
     /**
      * Constructor.
      *
      * @param factor the factor to remove.
      */
-    public Remove(Factor<T, R> factor) {
+    public Remove(Factor factor) {
         this.factor = factor;
     }
 
@@ -65,7 +66,7 @@ public class Remove<T, R> implements Factor<T, R> {
     }
 
     @Override
-    public R apply(T o) {
+    public Object apply(Tuple o) {
         throw new UnsupportedOperationException("Remove.apply() should never be called");
     }
 

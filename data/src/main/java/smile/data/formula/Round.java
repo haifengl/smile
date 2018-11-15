@@ -15,29 +15,33 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import smile.data.type.DataType;
-import smile.data.type.DataTypes;
-import smile.data.type.StructType;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+
+import smile.data.Tuple;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+import smile.data.type.StructType;
 
 /**
  * The term of round function.
  *
  * @author Haifeng Li
  */
-public class Round<T> implements Factor<T, Long> {
+public class Round implements Factor {
     /** The operand factor of round expression. */
-    private Factor<T, Double> child;
+    private Factor child;
+    /** The lambda of apply(). */
+    private Function<Tuple, Long> f;
 
     /**
      * Constructor.
      *
      * @param factor the factor that round function is applied to.
      */
-    public Round(Factor<T, Double> factor) {
+    public Round(Factor factor) {
         this.child = factor;
     }
 
@@ -67,11 +71,6 @@ public class Round<T> implements Factor<T, Long> {
     }
 
     @Override
-    public Long apply(T o) {
-        return Math.round(child.apply(o));
-    }
-
-    @Override
     public DataType type() {
         return DataTypes.LongType;
     }
@@ -79,5 +78,30 @@ public class Round<T> implements Factor<T, Long> {
     @Override
     public void bind(StructType schema) {
         child.bind(schema);
+
+        if (child.type() == DataTypes.DoubleType) {
+            f = this::applyPrimitive;
+        } else if (child.type() == DataTypes.ObjectType) {
+            f = this::applyObject;
+        } else {
+            throw new IllegalStateException(String.format("Invalid expression: ceil(%s)", child.type()));
+        }
+    }
+
+    @Override
+    public Long apply(Tuple o) {
+        return f.apply(o);
+    }
+
+    /** Apply on double. */
+    private Long applyPrimitive(Tuple o) {
+        return Math.round((double) child.apply(o));
+    }
+
+    /** Apply on Double. */
+    private Long applyObject(Tuple o) {
+        Object x = child.apply(o);
+        if (x == null) return null;
+        else return Math.round((double) x);
     }
 }

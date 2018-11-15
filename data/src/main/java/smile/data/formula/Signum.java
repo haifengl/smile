@@ -15,29 +15,33 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import smile.data.type.DataType;
-import smile.data.type.DataTypes;
-import smile.data.type.StructType;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+
+import smile.data.Tuple;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+import smile.data.type.StructType;
 
 /**
  * The term of signum function.
  *
  * @author Haifeng Li
  */
-public class Signum<T> implements Factor<T, Double> {
+public class Signum implements Factor {
     /** The operand factor of signum expression. */
-    private Factor<T, Double> child;
+    private Factor child;
+    /** The lambda of apply(). */
+    private Function<Tuple, Double> f;
 
     /**
      * Constructor.
      *
      * @param factor the factor that signum function is applied to.
      */
-    public Signum(Factor<T, Double> factor) {
+    public Signum(Factor factor) {
         this.child = factor;
     }
 
@@ -67,17 +71,53 @@ public class Signum<T> implements Factor<T, Double> {
     }
 
     @Override
-    public Double apply(T o) {
+    public Double apply(Tuple o) {
         return Math.signum(child.apply(o));
     }
 
     @Override
     public DataType type() {
-        return DataTypes.DoubleType;
+        return child.type();
     }
 
     @Override
     public void bind(StructType schema) {
         child.bind(schema);
+
+        if (child.type() == DataTypes.DoubleType) {
+            f = this::applyPrimitiveDouble;
+        } else if (child.type() == DataTypes.ObjectType) {
+            f = this::applyObjectDouble;
+        } else if (child.type() == DataTypes.FloatType) {
+            f = this::applyPrimitiveFloat;
+        } else if (child.type() == DataTypes.ObjectType) {
+            f = this::applyObjectFloat;
+        } else {
+            throw new IllegalStateException(String.format("Invalid expression: ceil(%s)", child.type()));
+        }
+    }
+
+    /** Apply on double. */
+    private Double applyPrimitiveDouble(Tuple o) {
+        return Math.signum((double) child.apply(o));
+    }
+
+    /** Apply on Double. */
+    private Double applyObjectDouble(Tuple o) {
+        Object x = child.apply(o);
+        if (x == null) return null;
+        else return Math.signum((double) x);
+    }
+
+    /** Apply on double. */
+    private Float applyPrimitiveFloat(Tuple o) {
+        return Math.signum((float) child.apply(o));
+    }
+
+    /** Apply on Double. */
+    private Float applyObjectFloat(Tuple o) {
+        Object x = child.apply(o);
+        if (x == null) return null;
+        else return Math.signum((float) x);
     }
 }

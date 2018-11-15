@@ -36,7 +36,7 @@ public class Property<T, R> implements Factor<T, R> {
     /** Property name. */
     private String name;
     /** Function to get the property. */
-    private Function<? super T,? extends R> getter;
+    private Function<? super T, ? extends R> getter;
     /** The class of return type. */
     private Class<R> clazz;
 
@@ -78,7 +78,7 @@ public class Property<T, R> implements Factor<T, R> {
     }
 
     @Override
-    public R apply(T o) {
+    public Object apply(Object o) {
         return getter.apply(o);
     }
 

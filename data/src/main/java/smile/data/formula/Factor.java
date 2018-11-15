@@ -15,20 +15,30 @@
  *******************************************************************************/
 package smile.data.formula;
 
+import smile.data.Tuple;
 import smile.data.type.DataType;
 
 /**
  * A factor is a term that generates single value
  * when applied to a data object (e.g. Tuple).
  *
- * @param <T> the type of input data objects.
- * @param <R> the type of output data objects.
- *
  * @author Haifeng Li
  */
-public interface Factor<T, R> extends Term {
+public interface Factor extends Term {
     /** Apply the factor formula on a data object. */
-    R apply(T o);
+    Object apply(Tuple o);
+
+    /** Apply the factor formula on a data object. */
+    double applyAsDouble(Tuple o);
+
+    /** Apply the factor formula on a data object. */
+    float applyAsFloat(Tuple o);
+
+    /** Apply the factor formula on a data object. */
+    int applyAsInt(Tuple o);
+
+    /** Apply the factor formula on a data object. */
+    long applyAsLong(Tuple o);
 
     /** Returns the name of factor. */
     String name();

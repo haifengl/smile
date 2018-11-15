@@ -37,9 +37,9 @@ import java.util.stream.Collectors;
  *
  * @author Haifeng Li
  */
-public class Cross<T> implements Term {
+public class Cross implements Term {
     /** The children factors. */
-    private List<Factor<T, Double>> factors;
+    private List<Factor> factors;
 
     /**
      * Constructor.
@@ -47,7 +47,7 @@ public class Cross<T> implements Term {
      * @param factors the factors to be crossed.
      */
     @SafeVarargs
-    public Cross(Factor<T, Double>... factors) {
+    public Cross(Factor... factors) {
         if (factors.length < 2) {
             throw new IllegalArgumentException("Cross constructor takes at least two factors");
         }
@@ -64,10 +64,9 @@ public class Cross<T> implements Term {
         List<Factor> crossings = new ArrayList<>(factors);
         int n = factors.size();
         for (int i = 0; i < n; i++) {
-            Factor<T, Double> fi = factors.get(i);
+            Factor fi = factors.get(i);
             for (int j = i + 1; j < n; j++) {
-                Factor<T, Double> fj = factors.get(j);
-                Factor cross = new Mul<>(fi, fj);
+                Factor cross = new Mul<>(fi, factors.get(j));
                 crossings.add(cross);
             }
         }
