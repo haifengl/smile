@@ -24,6 +24,9 @@ import java.time.format.DateTimeFormatter;
  * @author Haifeng Li
  */
 public class DateType implements DataType {
+    /** Default instance. */
+    static DateType instance = new DateType();
+
     /** Date format pattern. */
     private String pattern;
     /** Date formatter. */

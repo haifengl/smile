@@ -24,7 +24,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The base type of DataFrame columns.
+ * The data type in the sense of .
+ *
+ * @see DiscreteMeasure
+ * @see ContinuousMeasure
  *
  * @author Haifeng Li
  */
@@ -67,8 +70,6 @@ public interface DataType extends Serializable {
                     switch (type) {
                         case "date": return DataTypes.date(value);
                         case "datetime": return DataTypes.datetime(value);
-                        case "nominal": return DataTypes.nominal(value.split(","));
-                        case "ordinal": return DataTypes.ordinal(value.split(","));
                         case "array": return DataTypes.array(DataType.of(value));
                         case "object": return DataTypes.object(Class.forName(value));
                         case "struct":
@@ -109,12 +110,6 @@ public interface DataType extends Serializable {
             return DataTypes.DateType;
         else if (clazz == LocalDateTime.class)
             return DataTypes.DateTimeType;
-        else if (clazz.isEnum())
-            return DataTypes.nominal(
-                    Arrays.stream(clazz.getEnumConstants())
-                    .map(Object::toString)
-                    .toArray(String[]::new)
-            );
         else if (clazz.isArray())
             return DataTypes.array(DataType.of(clazz.getComponentType()));
         else
