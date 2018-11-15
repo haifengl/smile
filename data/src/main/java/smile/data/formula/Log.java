@@ -15,29 +15,33 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import smile.data.type.DataType;
-import smile.data.type.DataTypes;
-import smile.data.type.StructType;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+
+import smile.data.Tuple;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+import smile.data.type.StructType;
 
 /**
  * The term of log function.
  *
  * @author Haifeng Li
  */
-public class Log<T> implements Factor<T, Double> {
+public class Log implements Factor {
     /** The operand factor of log expression. */
-    private Factor<T, Double> child;
+    private Factor child;
+    /** The lambda of apply(). */
+    private Function<Tuple, Double> f;
 
     /**
      * Constructor.
      *
      * @param factor the factor that log function is applied to.
      */
-    public Log(Factor<T, Double> factor) {
+    public Log(Factor factor) {
         this.child = factor;
     }
 
@@ -67,11 +71,6 @@ public class Log<T> implements Factor<T, Double> {
     }
 
     @Override
-    public Double apply(T o) {
-        return Math.log(child.apply(o));
-    }
-
-    @Override
     public DataType type() {
         return DataTypes.DoubleType;
     }
@@ -79,5 +78,30 @@ public class Log<T> implements Factor<T, Double> {
     @Override
     public void bind(StructType schema) {
         child.bind(schema);
+
+        if (child.type() == DataTypes.DoubleType) {
+            f = this::applyPrimitive;
+        } else if (child.type() == DataTypes.ObjectType) {
+            f = this::applyObject;
+        } else {
+            throw new IllegalStateException(String.format("Invalid expression: ceil(%s)", child.type()));
+        }
+    }
+
+    @Override
+    public Double apply(Tuple o) {
+        return f.apply(o);
+    }
+
+    /** Apply on double. */
+    private Double applyPrimitive(Tuple o) {
+        return Math.log((double) child.apply(o));
+    }
+
+    /** Apply on Double. */
+    private Double applyObject(Tuple o) {
+        Object x = child.apply(o);
+        if (x == null) return null;
+        else return Math.log((double) x);
     }
 }

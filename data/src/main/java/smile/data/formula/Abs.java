@@ -18,6 +18,9 @@ package smile.data.formula;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+
+import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructType;
@@ -27,16 +30,18 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class Abs<T> implements Factor<T, Double> {
+public class Abs implements Factor {
     /** The operand factor of abs expression. */
-    private Factor<T, Double> child;
+    private Factor child;
+    /** The lambda of apply(). */
+    private Function<Tuple, Double> f;
 
     /**
      * Constructor.
      *
      * @param factor the factor that abs function is applied to.
      */
-    public Abs(Factor<T, Double> factor) {
+    public Abs(Factor factor) {
         this.child = factor;
     }
 
@@ -66,17 +71,47 @@ public class Abs<T> implements Factor<T, Double> {
     }
 
     @Override
-    public Double apply(T o) {
-        return Math.abs(child.apply(o));
+    public Object apply(Tuple o) {
+        if (o == null) return null;
+
+        Object x = child.apply(o);
+        if (x instanceof Double) return Math.abs((Double) x);
+        else if (x instanceof Integer) return Math.abs((Integer) x);
+        else if (x instanceof Float) return Math.abs((Float) x);
+        else if (x instanceof Long) return Math.abs((Long) x);
+        else throw new IllegalArgumentException("Invalid argument for abs(): " + x);
+    }
+
+    @Override
+    public double applyAsDouble(Tuple o) {
+        return Math.abs(child.applyAsDouble(o));
+    }
+
+    @Override
+    public int applyAsInt(Tuple o) {
+        return Math.abs(child.applyAsInt(o));
+    }
+
+    @Override
+    public float applyAsFloat(Tuple o) {
+        return Math.abs(child.applyAsFloat(o));
+    }
+
+    @Override
+    public long applyAsLong(Tuple o) {
+        return Math.abs(child.applyAsLong(o));
     }
 
     @Override
     public DataType type() {
-        return DataTypes.DoubleType;
+        return child.type();
     }
 
     @Override
     public void bind(StructType schema) {
         child.bind(schema);
+        if (child.type() != DataTypes.DoubleType && child.type() != DataTypes.IntegerType && child.type() != DataTypes.FloatType && child.type() != DataTypes.LongType) {
+            throw new IllegalStateException(String.format("Invalid expression: abs(%s)", child.type()));
+        }
     }
 }
