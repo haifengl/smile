@@ -16,6 +16,8 @@
 
 package smile.data.vector;
 
+import smile.data.type.ContinuousMeasure;
+
 import java.util.Arrays;
 import java.util.stream.DoubleStream;
 
@@ -29,11 +31,23 @@ class DoubleVectorImpl implements DoubleVector {
     private String name;
     /** The vector data. */
     private double[] vector;
+    /** The scale of measure. */
+    private ContinuousMeasure scale;
 
     /** Constructor. */
     public DoubleVectorImpl(String name, double[] vector) {
         this.name = name;
         this.vector = vector;
+    }
+
+    @Override
+    public ContinuousMeasure getScale() {
+        return scale;
+    }
+
+    @Override
+    public void setScale(ContinuousMeasure scale) {
+        this.scale = scale;
     }
 
     @Override

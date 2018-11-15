@@ -16,6 +16,8 @@
 
 package smile.data.vector;
 
+import smile.data.type.ContinuousMeasure;
+
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
@@ -29,11 +31,23 @@ class FloatVectorImpl implements FloatVector {
     private String name;
     /** The vector data. */
     private float[] vector;
+    /** The scale of measure. */
+    private ContinuousMeasure scale;
 
     /** Constructor. */
     public FloatVectorImpl(String name, float[] vector) {
         this.name = name;
         this.vector = vector;
+    }
+
+    @Override
+    public ContinuousMeasure getScale() {
+        return scale;
+    }
+
+    @Override
+    public void setScale(ContinuousMeasure scale) {
+        this.scale = scale;
     }
 
     @Override

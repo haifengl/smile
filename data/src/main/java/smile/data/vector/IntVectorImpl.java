@@ -16,6 +16,8 @@
 
 package smile.data.vector;
 
+import smile.data.type.DiscreteMeasure;
+
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -29,11 +31,23 @@ class IntVectorImpl implements IntVector {
     private String name;
     /** The vector data. */
     private int[] vector;
+    /** The scale of measure. */
+    private DiscreteMeasure scale;
 
     /** Constructor. */
     public IntVectorImpl(String name, int[] vector) {
         this.name = name;
         this.vector = vector;
+    }
+
+    @Override
+    public DiscreteMeasure getScale() {
+        return scale;
+    }
+
+    @Override
+    public void setScale(DiscreteMeasure scale) {
+        this.scale = scale;
     }
 
     @Override

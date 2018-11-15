@@ -16,6 +16,8 @@
 
 package smile.data.vector;
 
+import smile.data.type.DiscreteMeasure;
+
 import java.util.stream.IntStream;
 
 /**
@@ -28,11 +30,23 @@ class ShortVectorImpl implements ShortVector {
     private String name;
     /** The vector data. */
     private short[] vector;
+    /** The scale of measure. */
+    private DiscreteMeasure scale;
 
     /** Constructor. */
     public ShortVectorImpl(String name, short[] vector) {
         this.name = name;
         this.vector = vector;
+    }
+
+    @Override
+    public DiscreteMeasure getScale() {
+        return scale;
+    }
+
+    @Override
+    public void setScale(DiscreteMeasure scale) {
+        this.scale = scale;
     }
 
     @Override

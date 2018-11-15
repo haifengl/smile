@@ -16,6 +16,7 @@
 
 package smile.data.vector;
 
+import smile.data.type.ContinuousMeasure;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 
@@ -31,6 +32,12 @@ public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
     default DataType type() {
         return DataTypes.FloatType;
     }
+
+    /** Returns the scale of measure. Returns null if unknown. */
+    ContinuousMeasure getScale();
+
+    /** Sets the (optional) scale of measure. */
+    void setScale(ContinuousMeasure scale);
 
     /**
      * Returns the value at position i.
