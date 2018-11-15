@@ -17,6 +17,8 @@
 package smile.data.vector;
 
 import java.util.stream.DoubleStream;
+
+import smile.data.type.ContinuousMeasure;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 
@@ -30,6 +32,12 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
     default DataType type() {
         return DataTypes.DoubleType;
     }
+
+    /** Returns the scale of measure. Returns null if unknown. */
+    ContinuousMeasure getScale();
+
+    /** Sets the (optional) scale of measure. */
+    void setScale(ContinuousMeasure scale);
 
     /**
      * Returns the value at position i.
