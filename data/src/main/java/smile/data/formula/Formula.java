@@ -77,6 +77,26 @@ public class Formula {
             }
 
             @Override
+            public int getInt(int i) {
+                return factors[i].applyAsInt(t);
+            }
+
+            @Override
+            public long getLong(int i) {
+                return factors[i].applyAsLong(t);
+            }
+
+            @Override
+            public float getFloat(int i) {
+                return factors[i].applyAsFloat(t);
+            }
+
+            @Override
+            public double getDouble(int i) {
+                return factors[i].applyAsDouble(t);
+            }
+
+            @Override
             public int fieldIndex(String name) {
                 return schema.fieldIndex(name);
             }
@@ -120,12 +140,5 @@ public class Formula {
                 .map(factor -> new StructField(factor.toString(), factor.type()))
                 .collect(Collectors.toList());
         return new StructType(fields);
-    }
-
-    /**
-     * Apply the formula on a DataFrame to generate the model data.
-     */
-    public <T> DataFrame apply(Collection<T> objects) {
-        throw new UnsupportedOperationException();
     }
 }

@@ -18,7 +18,6 @@ package smile.data;
 import java.util.*;
 import java.util.stream.Stream;
 
-import smile.math.Math;
 import smile.math.SparseArray;
 import smile.math.matrix.SparseMatrix;
 

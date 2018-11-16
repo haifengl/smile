@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.SparseArray;
 import smile.math.matrix.SparseMatrix;
 
@@ -74,7 +74,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
             double sum = 0.0;
 
             for (SparseArray.Entry e : x) {
-                sum += Math.sqr(e.x);
+                sum += MathEx.sqr(e.x);
             }
 
             sum = Math.sqrt(sum);

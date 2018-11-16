@@ -25,6 +25,7 @@ package smile.util;
  */
 /**  */
 public interface ToFloatFunction<T> {
+    /** Applies this function to the given argument. */
     float applyAsFloat(T o);
 }
 

@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.data.formula;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
@@ -30,7 +31,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public interface Term {
+public interface Term extends Serializable {
     /** Binds the term to a schema. */
     void bind(StructType schema);
 
