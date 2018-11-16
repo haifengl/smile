@@ -16,7 +16,7 @@
 
 package smile.plot;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * A histogram is a graphical display of tabulated frequencies, shown as bars.
@@ -336,8 +336,8 @@ public class Histogram extends BarPlot {
         Histogram histogram = new Histogram(data);
         histogram.setID(id);
 
-        double[] lowerBound = {Math.min(data), 0};
-        double[] upperBound = {Math.max(data), 0};
+        double[] lowerBound = {MathEx.min(data), 0};
+        double[] upperBound = {MathEx.max(data), 0};
         
         double[][] freq = histogram.getHistogram();
         for (int i = 0; i < freq.length; i++) {
@@ -372,8 +372,8 @@ public class Histogram extends BarPlot {
         Histogram histogram = new Histogram(data, k);
         histogram.setID(id);
 
-        double[] lowerBound = {Math.min(data), 0};
-        double[] upperBound = {Math.max(data), 0};
+        double[] lowerBound = {MathEx.min(data), 0};
+        double[] upperBound = {MathEx.max(data), 0};
         
         double[][] freq = histogram.getHistogram();
         for (int i = 0; i < freq.length; i++) {
@@ -421,8 +421,8 @@ public class Histogram extends BarPlot {
         Histogram histogram = new Histogram(data, breaks, prob);
         histogram.setID(id);
 
-        double[] lowerBound = {Math.min(data), 0};
-        double[] upperBound = {Math.max(data), 0};
+        double[] lowerBound = {MathEx.min(data), 0};
+        double[] upperBound = {MathEx.max(data), 0};
         
         double[][] freq = histogram.getHistogram();
         for (int i = 0; i < freq.length; i++) {
@@ -455,8 +455,8 @@ public class Histogram extends BarPlot {
         Histogram histogram = new Histogram(data);
         histogram.setID(id);
 
-        double[] lowerBound = {Math.min(data) - 0.5, 0};
-        double[] upperBound = {Math.max(data) + 0.5, 0};
+        double[] lowerBound = {MathEx.min(data) - 0.5, 0};
+        double[] upperBound = {MathEx.max(data) + 0.5, 0};
         double[][] freq = histogram.getHistogram();
         for (int i = 0; i < freq.length; i++) {
             if (freq[i][1] > upperBound[1]) {
@@ -490,8 +490,8 @@ public class Histogram extends BarPlot {
         Histogram histogram = new Histogram(data, k);
         histogram.setID(id);
 
-        double[] lowerBound = {Math.min(data) - 0.5, 0};
-        double[] upperBound = {Math.max(data) + 0.5, 0};
+        double[] lowerBound = {MathEx.min(data) - 0.5, 0};
+        double[] upperBound = {MathEx.max(data) + 0.5, 0};
         double[][] freq = histogram.getHistogram();
         for (int i = 0; i < freq.length; i++) {
             if (freq[i][1] > upperBound[1]) {
@@ -527,8 +527,8 @@ public class Histogram extends BarPlot {
         Histogram histogram = new Histogram(data, breaks);
         histogram.setID(id);
 
-        double[] lowerBound = {Math.min(data) - 0.5, 0};
-        double[] upperBound = {Math.max(data) + 0.5, 0};
+        double[] lowerBound = {MathEx.min(data) - 0.5, 0};
+        double[] upperBound = {MathEx.max(data) + 0.5, 0};
         double[][] freq = histogram.getHistogram();
         for (int i = 0; i < freq.length; i++) {
             if (freq[i][1] > upperBound[1]) {

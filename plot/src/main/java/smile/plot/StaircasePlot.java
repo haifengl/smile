@@ -17,7 +17,7 @@
 package smile.plot;
 
 import java.awt.Color;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Staircase plot is a special case of line which is most useful to display
@@ -94,8 +94,8 @@ public class StaircasePlot extends Plot {
             throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
         }
 
-        double[] lowerBound = Math.colMin(data);
-        double[] upperBound = Math.colMax(data);
+        double[] lowerBound = MathEx.colMin(data);
+        double[] upperBound = MathEx.colMax(data);
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
         StaircasePlot plot = new StaircasePlot(data);

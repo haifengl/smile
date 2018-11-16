@@ -16,7 +16,7 @@
 package smile.plot;
 
 import java.awt.Color;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.QuickSort;
 
 /**
@@ -481,8 +481,8 @@ public class Histogram3D extends Plot {
     public static PlotCanvas plot(double[][] data, Color[] palette) {
         Histogram3D histogram = new Histogram3D(data, palette);
 
-        double[] min = Math.colMin(data);
-        double[] max = Math.colMax(data);
+        double[] min = MathEx.colMin(data);
+        double[] max = MathEx.colMax(data);
         double[] lowerBound = {min[0], min[1], 0};
         double[] upperBound = {max[0], max[1], 0};
         double[][] freq = histogram.getHistogram();
@@ -539,8 +539,8 @@ public class Histogram3D extends Plot {
     public static PlotCanvas plot(double[][] data, int xbins, int ybins, boolean prob, Color[] palette) {
         Histogram3D histogram = new Histogram3D(data, xbins, ybins, prob, palette);
 
-        double[] min = Math.colMin(data);
-        double[] max = Math.colMax(data);
+        double[] min = MathEx.colMin(data);
+        double[] max = MathEx.colMax(data);
         double[] lowerBound = {min[0], min[1], 0};
         double[] upperBound = {max[0], max[1], 0};
         double[][] freq = histogram.getHistogram();
@@ -576,8 +576,8 @@ public class Histogram3D extends Plot {
     public static PlotCanvas plot(double[][] data, int xbins, int ybins, Color[] palette) {
         Histogram3D histogram = new Histogram3D(data, xbins, ybins, palette);
 
-        double[] min = Math.colMin(data);
-        double[] max = Math.colMax(data);
+        double[] min = MathEx.colMin(data);
+        double[] max = MathEx.colMax(data);
         double[] lowerBound = {min[0], min[1], 0};
         double[] upperBound = {max[0], max[1], 0};
         double[][] freq = histogram.getHistogram();

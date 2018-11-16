@@ -18,7 +18,7 @@ package smile.plot;
 
 import java.awt.Color;
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Hexmap is a variant of heat map by replacing rectangle cells with hexagon cells.
@@ -139,8 +139,8 @@ public class Hexmap extends Plot {
         
         if (i > 0) {
             Arrays.sort(values, 0, i);
-            min = values[(int)Math.round(0.01 * i)];
-            max = values[(int)Math.round(0.99 * (i-1))];
+            min = values[(int) Math.round(0.01 * i)];
+            max = values[(int) Math.round(0.99 * (i-1))];
             width = (max - min) / palette.length;
         }
     }
@@ -162,7 +162,7 @@ public class Hexmap extends Plot {
                 int xi = x + i;
                 int yj = y + j;
                 if (xi >= 0 && xi < hexagon[0].length && yj >= 0 && yj < hexagon.length) {
-                    if (Math.contains(hexagon[yj][xi], coord)) {
+                    if (MathEx.contains(hexagon[yj][xi], coord)) {
                         return labels[yj][xi];
                     }
                 }
@@ -223,13 +223,13 @@ public class Hexmap extends Plot {
         double log = Math.log10(Math.abs(max));
         int decimal = 1;
         if (log < 0) decimal = (int) -log + 1;
-        g.drawTextBaseRatio(String.valueOf(Math.round(max, decimal)), 0.0, 1.0, start);
+        g.drawTextBaseRatio(String.valueOf(MathEx.round(max, decimal)), 0.0, 1.0, start);
 
         start[1] = 0.15 - height;
         log = Math.log10(Math.abs(min));
         decimal = 1;
         if (log < 0) decimal = (int) -log + 1;
-        g.drawTextBaseRatio(String.valueOf(Math.round(min, decimal)), 0.0, 0.0, start);
+        g.drawTextBaseRatio(String.valueOf(MathEx.round(min, decimal)), 0.0, 0.0, start);
 
         g.setColor(c);
     }

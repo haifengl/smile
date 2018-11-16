@@ -17,7 +17,7 @@
 package smile.plot;
 
 import java.awt.Color;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * A wire frame model specifies each edge of the physical object where two
@@ -76,8 +76,8 @@ public class Wireframe extends Plot {
      * @param vertices a n-by-2 or n-by-3 array which are coordinates of n vertices.
      */
     public static PlotCanvas plot(double[][] vertices, int[][] edges) {
-        double[] lowerBound = Math.colMin(vertices);
-        double[] upperBound = Math.colMax(vertices);
+        double[] lowerBound = MathEx.colMin(vertices);
+        double[] upperBound = MathEx.colMax(vertices);
 
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
@@ -95,8 +95,8 @@ public class Wireframe extends Plot {
      * end points of each edge.
      */
     public static PlotCanvas plot(String id, double[][] vertices, int[][] edges) {
-        double[] lowerBound = Math.colMin(vertices);
-        double[] upperBound = Math.colMax(vertices);
+        double[] lowerBound = MathEx.colMin(vertices);
+        double[] upperBound = MathEx.colMax(vertices);
 
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 

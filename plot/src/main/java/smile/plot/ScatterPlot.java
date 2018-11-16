@@ -20,7 +20,7 @@ import java.awt.Color;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The data is displayed as a collection of points.
@@ -158,7 +158,7 @@ public class ScatterPlot extends Plot {
         }
         
         // class label set.
-        int[] id = Math.unique(y);
+        int[] id = MathEx.unique(y);
         Arrays.sort(id);
 
         classLookupTable = new HashMap<>(id.length);
@@ -247,8 +247,8 @@ public class ScatterPlot extends Plot {
             throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
         }
 
-        double[] lowerBound = Math.colMin(data);
-        double[] upperBound = Math.colMax(data);
+        double[] lowerBound = MathEx.colMin(data);
+        double[] upperBound = MathEx.colMax(data);
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
         ScatterPlot plot = new ScatterPlot(data);
@@ -281,8 +281,8 @@ public class ScatterPlot extends Plot {
             throw new IllegalArgumentException("The number of points and that of labels are not same.");
         }
 
-        double[] lowerBound = Math.colMin(data);
-        double[] upperBound = Math.colMax(data);
+        double[] lowerBound = MathEx.colMin(data);
+        double[] upperBound = MathEx.colMax(data);
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
         ScatterPlot plot = new ScatterPlot(data, labels);
@@ -311,8 +311,8 @@ public class ScatterPlot extends Plot {
             throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
         }
 
-        double[] lowerBound = Math.colMin(data);
-        double[] upperBound = Math.colMax(data);
+        double[] lowerBound = MathEx.colMin(data);
+        double[] upperBound = MathEx.colMax(data);
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
         ScatterPlot plot = new ScatterPlot(data);
@@ -377,8 +377,8 @@ public class ScatterPlot extends Plot {
             throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
         }
 
-        double[] lowerBound = Math.colMin(data);
-        double[] upperBound = Math.colMax(data);
+        double[] lowerBound = MathEx.colMin(data);
+        double[] upperBound = MathEx.colMax(data);
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
         ScatterPlot plot = new ScatterPlot(data, legend);
@@ -444,8 +444,8 @@ public class ScatterPlot extends Plot {
             throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
         }
 
-        double[] lowerBound = Math.colMin(data);
-        double[] upperBound = Math.colMax(data);
+        double[] lowerBound = MathEx.colMin(data);
+        double[] upperBound = MathEx.colMax(data);
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
         ScatterPlot plot = new ScatterPlot(data, legend);
@@ -514,8 +514,8 @@ public class ScatterPlot extends Plot {
             throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
         }
 
-        double[] lowerBound = Math.colMin(data);
-        double[] upperBound = Math.colMax(data);
+        double[] lowerBound = MathEx.colMin(data);
+        double[] upperBound = MathEx.colMax(data);
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
         ScatterPlot plot = new ScatterPlot(data, y, legend, palette);
@@ -583,8 +583,8 @@ public class ScatterPlot extends Plot {
             throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
         }
 
-        double[] lowerBound = Math.colMin(data);
-        double[] upperBound = Math.colMax(data);
+        double[] lowerBound = MathEx.colMin(data);
+        double[] upperBound = MathEx.colMax(data);
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
         ScatterPlot plot = new ScatterPlot(data, y, legend, palette);

@@ -17,7 +17,7 @@ package smile.plot;
 
 import java.awt.Color;
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.SparseMatrix;
 
 /**
@@ -265,7 +265,7 @@ public class SparseMatrixPlot extends Plot {
             if (log < 0) {
                 decimal = (int) -log + 1;
             }
-            g.drawTextBaseRatio(String.valueOf(Math.round(max, decimal)), 0.0, 1.0, start);
+            g.drawTextBaseRatio(String.valueOf(MathEx.round(max, decimal)), 0.0, 1.0, start);
 
             start[1] = 0.15 - height;
             log = Math.log10(Math.abs(min));
@@ -273,7 +273,7 @@ public class SparseMatrixPlot extends Plot {
             if (log < 0) {
                 decimal = (int) -log + 1;
             }
-            g.drawTextBaseRatio(String.valueOf(Math.round(min, decimal)), 0.0, 0.0, start);
+            g.drawTextBaseRatio(String.valueOf(MathEx.round(min, decimal)), 0.0, 0.0, start);
         }
 
         g.setColor(c);

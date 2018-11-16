@@ -18,7 +18,7 @@ package smile.plot;
 
 import java.awt.Color;
 import java.awt.Stroke;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Line plot is a special scatter plot which connects points by straight lines.
@@ -111,8 +111,8 @@ public class LinePlot extends ScatterPlot {
      * coordinates will be [0, n), where n is the length of y.
      */
     public static PlotCanvas plot(String id, double[] y) {
-        double[] lowerBound = {0, Math.min(y)};
-        double[] upperBound = {y.length, Math.max(y)};
+        double[] lowerBound = {0, MathEx.min(y)};
+        double[] upperBound = {y.length, MathEx.max(y)};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
         canvas.base.extendBound(1);
 
@@ -146,8 +146,8 @@ public class LinePlot extends ScatterPlot {
      * @param style the stroke style of line.
      */
     public static PlotCanvas plot(String id, double[] y, Line.Style style) {
-        double[] lowerBound = {0, Math.min(y)};
-        double[] upperBound = {y.length, Math.max(y)};
+        double[] lowerBound = {0, MathEx.min(y)};
+        double[] upperBound = {y.length, MathEx.max(y)};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
         canvas.base.extendBound(1);
 
@@ -183,8 +183,8 @@ public class LinePlot extends ScatterPlot {
      * @param color the color of line.
      */
     public static PlotCanvas plot(String id, double[] y, Line.Style style, Color color) {
-        double[] lowerBound = {0, Math.min(y)};
-        double[] upperBound = {y.length, Math.max(y)};
+        double[] lowerBound = {0, MathEx.min(y)};
+        double[] upperBound = {y.length, MathEx.max(y)};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
         canvas.base.extendBound(1);
 
@@ -221,8 +221,8 @@ public class LinePlot extends ScatterPlot {
             throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
         }
 
-        double[] lowerBound = Math.colMin(data);
-        double[] upperBound = Math.colMax(data);
+        double[] lowerBound = MathEx.colMin(data);
+        double[] upperBound = MathEx.colMax(data);
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
         LinePlot plot = new LinePlot(data, style);
@@ -253,8 +253,8 @@ public class LinePlot extends ScatterPlot {
             throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
         }
 
-        double[] lowerBound = Math.colMin(data);
-        double[] upperBound = Math.colMax(data);
+        double[] lowerBound = MathEx.colMin(data);
+        double[] upperBound = MathEx.colMax(data);
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
         LinePlot plot = new LinePlot(data, style);

@@ -18,7 +18,7 @@ package smile.plot;
 
 import java.awt.Color;
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * A heat map is a graphical representation of data where the values taken by
@@ -190,8 +190,8 @@ public class Heatmap extends Plot {
         
         if (i > 0) {
             Arrays.sort(values, 0, i);
-            min = values[(int)Math.round(0.01 * i)];
-            max = values[(int)Math.round(0.99 * (i-1))];
+            min = values[(int) Math.round(0.01 * i)];
+            max = values[(int) Math.round(0.99 * (i-1))];
             width = (max - min) / palette.length;
         }
     }
@@ -294,7 +294,7 @@ public class Heatmap extends Plot {
         if (log < 0) {
             decimal = (int) -log + 1;
         }
-        g.drawTextBaseRatio(String.valueOf(Math.round(max, decimal)), 0.0, 1.0, start);
+        g.drawTextBaseRatio(String.valueOf(MathEx.round(max, decimal)), 0.0, 1.0, start);
 
         start[1] = 0.15 - height;
         log = Math.log10(Math.abs(min));
@@ -302,7 +302,7 @@ public class Heatmap extends Plot {
         if (log < 0) {
             decimal = (int) -log + 1;
         }
-        g.drawTextBaseRatio(String.valueOf(Math.round(min, decimal)), 0.0, 0.0, start);
+        g.drawTextBaseRatio(String.valueOf(MathEx.round(min, decimal)), 0.0, 0.0, start);
 
         g.setColor(c);
     }
@@ -355,8 +355,8 @@ public class Heatmap extends Plot {
      * @param z a data matrix to be shown in pseudo heat map.
      */
     public static PlotCanvas plot(double[] x, double[] y, double[][] z) {
-        double[] lowerBound = {Math.min(x), Math.min(y)};
-        double[] upperBound = {Math.max(x), Math.max(y)};
+        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
+        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
         canvas.add(new Heatmap(x, y, z));
 
@@ -374,8 +374,8 @@ public class Heatmap extends Plot {
      * @param palette the color palette.
      */
     public static PlotCanvas plot(double[] x, double[] y, double[][] z, Color[] palette) {
-        double[] lowerBound = {Math.min(x), Math.min(y)};
-        double[] upperBound = {Math.max(x), Math.max(y)};
+        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
+        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
         canvas.add(new Heatmap(x, y, z, palette));
 

@@ -17,7 +17,7 @@ package smile.plot;
 
 import java.awt.Color;
 import java.awt.Font;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Label is a single line text.
@@ -179,7 +179,7 @@ public class Label extends Shape {
     public static String coordToString(double... c) {
         StringBuilder builder = new StringBuilder("(");
         for (int i = 0; i < c.length; i++) {
-            builder.append(Math.round(c[i], 2)).append(",");
+            builder.append(MathEx.round(c[i], 2)).append(",");
         }
 
         if (c.length > 0) {
