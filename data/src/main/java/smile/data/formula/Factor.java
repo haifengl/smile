@@ -25,20 +25,28 @@ import smile.data.type.DataType;
  * @author Haifeng Li
  */
 public interface Factor extends Term {
-    /** Apply the factor formula on a data object. */
+    /** Applies the factor formula on a data object. */
     Object apply(Tuple o);
 
-    /** Apply the factor formula on a data object. */
-    double applyAsDouble(Tuple o);
+    /** Applies the factor formula on a data object and produces an double-valued result. */
+    default double applyAsDouble(Tuple o) {
+        throw new UnsupportedOperationException();
+    }
 
-    /** Apply the factor formula on a data object. */
-    float applyAsFloat(Tuple o);
+    /** Applies the factor formula on a data object and produces an float-valued result. */
+    default float applyAsFloat(Tuple o) {
+        throw new UnsupportedOperationException();
+    }
 
-    /** Apply the factor formula on a data object. */
-    int applyAsInt(Tuple o);
+    /** Applies the factor formula on a data object and produces an int-valued result. */
+    default int applyAsInt(Tuple o) {
+        throw new UnsupportedOperationException();
+    }
 
-    /** Apply the factor formula on a data object. */
-    long applyAsLong(Tuple o);
+    /** Applies the factor formula on a data object and produces an long-valued result. */
+    default long applyAsLong(Tuple o) {
+        throw new UnsupportedOperationException();
+    }
 
     /** Returns the name of factor. */
     String name();

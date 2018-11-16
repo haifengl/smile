@@ -36,8 +36,10 @@ public class Add implements Factor {
     private Factor a;
     /** The right factor. */
     private Factor b;
-    /** The lambda of apply(). */
-    private Function<Tuple, Double> f;
+    /** The data type of output. */
+    private DataType type;
+    /** The lambda to get int value with type promotion. */
+    private Function<Tuple, Object> f;
 
     /**
      * Constructor.
@@ -78,21 +80,55 @@ public class Add implements Factor {
     }
 
     @Override
-    public Double apply(Tuple o) {
-        return (double) a.apply(o) + (double) b.apply(o);
+    public Object apply(Tuple o) {
+        Object x = a.apply(o);
+        Object y = b.apply(o);
+
+        if (x == null || y == null)
+            return null;
+
+        return f.apply(o);
+    }
+
+    @Override
+    public int applyAsInt(Tuple o) {
+        return a.applyAsInt(o) + b.applyAsInt(o);
+    }
+
+    @Override
+    public long applyAsLong(Tuple o) {
+        return a.applyAsLong(o) + b.applyAsLong(o);
+    }
+
+    @Override
+    public float applyAsFloat(Tuple o) {
+        return a.applyAsFloat(o) + b.applyAsFloat(o);
+    }
+
+    @Override
+    public double applyAsDouble(Tuple o) {
+        return a.applyAsDouble(o) + b.applyAsDouble(o);
     }
 
     @Override
     public DataType type() {
-        return DataTypes.DoubleType;
+        return type;
     }
 
     @Override
     public void bind(StructType schema) {
         a.bind(schema);
         b.bind(schema);
-        if (a.type() != DataTypes.DoubleType || b.type() != DataTypes.DoubleType) {
-            throw new IllegalStateException(String.format("Invalid expression: %s + %s", a.type(), b.type()));
+        type = DataType.prompt(a.type(), b.type());
+
+        if (type == DataTypes.IntegerType) {
+            f = (Tuple o) -> (int) a.apply(o) + (int) b.apply(o);
+        } else if (type == DataTypes.LongType) {
+            f = (Tuple o) -> (long) a.apply(o) + (long) b.apply(o);
+        } else if (type == DataTypes.FloatType) {
+            f = (Tuple o) -> (float) a.apply(o) + (float) b.apply(o);
+        } else if (type == DataTypes.DoubleType) {
+            f = (Tuple o) -> (double) a.apply(o) + (double) b.apply(o);
         }
     }
 }
