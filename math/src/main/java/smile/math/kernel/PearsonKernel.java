@@ -17,14 +17,13 @@
 package smile.math.kernel;
 
 import java.lang.Math;
-import java.io.Serializable;
 
 /**
  * The Pearson Mercer Kernel.
 
  * @author Diego Catalano
  */
-public class PearsonKernel implements MercerKernel<double[]>, Serializable {
+public class PearsonKernel implements MercerKernel<double[]> {
     private static final long serialVersionUID = 1L;
     
     private double omega;

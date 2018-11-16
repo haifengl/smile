@@ -19,6 +19,7 @@ package smile.regression;
 import smile.math.kernel.PolynomialKernel;
 import smile.data.AttributeDataset;
 import smile.data.parser.ArffParser;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

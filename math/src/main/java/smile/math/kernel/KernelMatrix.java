@@ -29,5 +29,5 @@ public interface KernelMatrix {
      * Returns the element k(x<sub>i</sub>, x<sub>j</sub>) of kernel matrix for
      * a given dataset.
      */
-    public double k(int i, int j);
+    double k(int i, int j);
 }

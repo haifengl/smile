@@ -37,5 +37,5 @@ public interface DiscreteExponentialFamily {
      * @param posteriori the posteriori probability.
      * @return the (unnormalized) weight of this distribution in the mixture.
      */
-    public DiscreteMixture.Component M(int[] x , double[] posteriori);
+    DiscreteMixture.Component M(int[] x , double[] posteriori);
 }

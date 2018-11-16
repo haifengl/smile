@@ -49,5 +49,5 @@ public interface ExponentialFamily {
      * @param posteriori the posteriori probability.
      * @return the (unnormalized) weight of this distribution in the mixture.
      */
-    public Mixture.Component M(double[] x , double[] posteriori);
+    Mixture.Component M(double[] x , double[] posteriori);
 }

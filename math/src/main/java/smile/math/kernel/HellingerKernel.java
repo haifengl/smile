@@ -17,14 +17,13 @@
 package smile.math.kernel;
 
 import java.lang.Math;
-import java.io.Serializable;
 
 /**
  * The Hellinger Mercer Kernel.
 
  * @author Diego Catalano
  */
-public class HellingerKernel implements MercerKernel<double[]>, Serializable {
+public class HellingerKernel implements MercerKernel<double[]> {
     private static final long serialVersionUID = 1L;
     
     /**

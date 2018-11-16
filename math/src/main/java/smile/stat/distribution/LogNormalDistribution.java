@@ -32,6 +32,8 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class LogNormalDistribution extends AbstractDistribution {
+    private static final long serialVersionUID = 1L;
+
     private double mu;
     private double sigma;
     private double mean;

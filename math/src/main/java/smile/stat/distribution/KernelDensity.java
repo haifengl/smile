@@ -29,6 +29,7 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class KernelDensity implements Distribution {
+    private static final long serialVersionUID = 1L;
 
     /**
      * The samples to estimate the density function.
