@@ -18,7 +18,6 @@ package smile.data.formula;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 import smile.data.Tuple;
 import smile.data.type.DataType;
@@ -33,8 +32,6 @@ import smile.data.type.StructType;
 public class Abs implements Factor {
     /** The operand factor of abs expression. */
     private Factor child;
-    /** The lambda of apply(). */
-    private Function<Tuple, Double> f;
 
     /**
      * Constructor.
@@ -72,9 +69,9 @@ public class Abs implements Factor {
 
     @Override
     public Object apply(Tuple o) {
-        if (o == null) return null;
-
         Object x = child.apply(o);
+        if (x == null) return null;
+
         if (x instanceof Double) return Math.abs((Double) x);
         else if (x instanceof Integer) return Math.abs((Integer) x);
         else if (x instanceof Float) return Math.abs((Float) x);
@@ -83,13 +80,13 @@ public class Abs implements Factor {
     }
 
     @Override
-    public double applyAsDouble(Tuple o) {
-        return Math.abs(child.applyAsDouble(o));
+    public int applyAsInt(Tuple o) {
+        return Math.abs(child.applyAsInt(o));
     }
 
     @Override
-    public int applyAsInt(Tuple o) {
-        return Math.abs(child.applyAsInt(o));
+    public long applyAsLong(Tuple o) {
+        return Math.abs(child.applyAsLong(o));
     }
 
     @Override
@@ -98,8 +95,8 @@ public class Abs implements Factor {
     }
 
     @Override
-    public long applyAsLong(Tuple o) {
-        return Math.abs(child.applyAsLong(o));
+    public double applyAsDouble(Tuple o) {
+        return Math.abs(child.applyAsDouble(o));
     }
 
     @Override
@@ -110,7 +107,14 @@ public class Abs implements Factor {
     @Override
     public void bind(StructType schema) {
         child.bind(schema);
-        if (child.type() != DataTypes.DoubleType && child.type() != DataTypes.IntegerType && child.type() != DataTypes.FloatType && child.type() != DataTypes.LongType) {
+        if (child.type() != DataTypes.DoubleType &&
+            child.type() != DataTypes.FloatType &&
+            child.type() != DataTypes.IntegerType &&
+            child.type() != DataTypes.LongType &&
+            child.type() != DataTypes.object(Double.class) &&
+            child.type() != DataTypes.object(Float.class) &&
+            child.type() != DataTypes.object(Integer.class) &&
+            child.type() != DataTypes.object(Long.class)) {
             throw new IllegalStateException(String.format("Invalid expression: abs(%s)", child.type()));
         }
     }

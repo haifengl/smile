@@ -18,10 +18,15 @@ package smile.data.formula;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.ToDoubleFunction;
+import java.util.function.ToIntFunction;
+import java.util.function.ToLongFunction;
+
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructType;
+import smile.util.ToFloatFunction;
 
 /**
  * A column in a DataFrame.
@@ -35,6 +40,14 @@ public class Column implements Factor {
     private DataType type;
     /** Column index after binding to a schema. */
     private int index = -1;
+    /** The lambda to get int value with type promotion. */
+    private ToIntFunction<Tuple> getInt;
+    /** The lambda to get int value with type promotion. */
+    private ToLongFunction<Tuple> getLong;
+    /** The lambda to get int value with type promotion. */
+    private ToFloatFunction<Tuple> getFloat;
+    /** The lambda to get int value with type promotion. */
+    private ToDoubleFunction<Tuple> getDouble;
 
     /**
      * Constructor.
@@ -76,6 +89,26 @@ public class Column implements Factor {
     }
 
     @Override
+    public int applyAsInt(Tuple o) {
+        return getInt.applyAsInt(o);
+    }
+
+    @Override
+    public long applyAsLong(Tuple o) {
+        return getLong.applyAsLong(o);
+    }
+
+    @Override
+    public float applyAsFloat(Tuple o) {
+        return getFloat.applyAsFloat(o);
+    }
+
+    @Override
+    public double applyAsDouble(Tuple o) {
+        return getDouble.applyAsDouble(o);
+    }
+
+    @Override
     public DataType type() {
         if (type == null)
             throw new IllegalStateException(String.format("Column(%s) is not bound to a schema yet.", name));
@@ -87,5 +120,36 @@ public class Column implements Factor {
     public void bind(StructType schema) {
         index = schema.fieldIndex(name);
         type = schema.fields()[index].type;
+
+        if (type == DataTypes.IntegerType) {
+            getInt = (Tuple o) -> o.getInt(index);
+            getLong = (Tuple o) -> o.getInt(index);
+            getFloat = (Tuple o) -> o.getInt(index);
+            getDouble = (Tuple o) -> o.getInt(index);
+        } else if (type == DataTypes.ShortType) {
+            getInt = (Tuple o) -> o.getShort(index);
+            getLong = (Tuple o) -> o.getShort(index);
+            getFloat = (Tuple o) -> o.getShort(index);
+            getDouble = (Tuple o) -> o.getShort(index);
+        } else if (type == DataTypes.ByteType) {
+            getInt = (Tuple o) -> o.getByte(index);
+            getLong = (Tuple o) -> o.getByte(index);
+            getFloat = (Tuple o) -> o.getByte(index);
+            getDouble = (Tuple o) -> o.getByte(index);
+        } else if (type == DataTypes.CharType) {
+            getInt = (Tuple o) -> o.getChar(index);
+            getLong = (Tuple o) -> o.getChar(index);
+            getFloat = (Tuple o) -> o.getChar(index);
+            getDouble = (Tuple o) -> o.getChar(index);
+        } else if (type == DataTypes.LongType) {
+            getLong = (Tuple o) -> o.getChar(index);
+            getFloat = (Tuple o) -> o.getChar(index);
+            getDouble = (Tuple o) -> o.getChar(index);
+        } else if (type == DataTypes.FloatType) {
+            getFloat = (Tuple o) -> o.getChar(index);
+            getDouble = (Tuple o) -> o.getChar(index);
+        } else if (type == DataTypes.DoubleType) {
+            getDouble = (Tuple o) -> o.getChar(index);
+        }
     }
 }

@@ -18,7 +18,6 @@ package smile.data.formula;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 import smile.data.Tuple;
 import smile.data.type.DataType;
@@ -33,8 +32,6 @@ import smile.data.type.StructType;
 public class Ceil implements Factor {
     /** The operand factor of ceil expression. */
     private Factor child;
-    /** The lambda of apply(). */
-    private Function<Tuple, Double> f;
 
     /**
      * Constructor.
@@ -72,18 +69,14 @@ public class Ceil implements Factor {
 
     @Override
     public DataType type() {
-        return DataTypes.DoubleType;
+        return child.type();
     }
 
     @Override
     public void bind(StructType schema) {
         child.bind(schema);
 
-        if (child.type() == DataTypes.DoubleType) {
-            f = this::applyPrimitive;
-        } else if (child.type() == DataTypes.ObjectType) {
-            f = this::applyObject;
-        } else {
+        if (child.type() != DataTypes.DoubleType && child.type() != DataTypes.object(Double.class)) {
             throw new IllegalStateException(String.format("Invalid expression: ceil(%s)", child.type()));
         }
     }
@@ -95,16 +88,6 @@ public class Ceil implements Factor {
 
     @Override
     public Double apply(Tuple o) {
-        return f.apply(o);
-    }
-
-    /** Apply on double. */
-    private double applyPrimitive(Tuple o) {
-        return Math.ceil((double) child.apply(o));
-    }
-
-    /** Apply on Double. */
-    private Double applyObject(Tuple o) {
         Object x = child.apply(o);
         if (x == null) return null;
         else return Math.ceil((double) x);

@@ -18,7 +18,6 @@ package smile.data.formula;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 import smile.data.Tuple;
 import smile.data.type.DataType;
@@ -33,8 +32,6 @@ import smile.data.type.StructType;
 public class Log10 implements Factor {
     /** The operand factor of log10 expression. */
     private Factor child;
-    /** The lambda of apply(). */
-    private Function<Tuple, Double> f;
 
     /**
      * Constructor.
@@ -79,27 +76,18 @@ public class Log10 implements Factor {
     public void bind(StructType schema) {
         child.bind(schema);
 
-        if (child.type() == DataTypes.DoubleType) {
-            f = this::applyPrimitive;
-        } else if (child.type() == DataTypes.ObjectType) {
-            f = this::applyObject;
-        } else {
-            throw new IllegalStateException(String.format("Invalid expression: ceil(%s)", child.type()));
+        if (child.type() != DataTypes.DoubleType && child.type() != DataTypes.object(Double.class)) {
+            throw new IllegalStateException(String.format("Invalid expression: log10(%s)", child.type()));
         }
     }
 
     @Override
+    public double applyAsDouble(Tuple o) {
+        return Math.log10(child.applyAsDouble(o));
+    }
+
+    @Override
     public Double apply(Tuple o) {
-        return f.apply(o);
-    }
-
-    /** Apply on double. */
-    private Double applyPrimitive(Tuple o) {
-        return Math.log10((double) child.apply(o));
-    }
-
-    /** Apply on Double. */
-    private Double applyObject(Tuple o) {
         Object x = child.apply(o);
         if (x == null) return null;
         else return Math.log10((double) x);

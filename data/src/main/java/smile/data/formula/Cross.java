@@ -66,7 +66,7 @@ public class Cross implements Term {
         for (int i = 0; i < n; i++) {
             Factor fi = factors.get(i);
             for (int j = i + 1; j < n; j++) {
-                Factor cross = new Mul<>(fi, factors.get(j));
+                Factor cross = new Mul(fi, factors.get(j));
                 crossings.add(cross);
             }
         }

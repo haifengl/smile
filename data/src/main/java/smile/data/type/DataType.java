@@ -115,4 +115,72 @@ public interface DataType extends Serializable {
         else
             return DataTypes.object(clazz);
     }
+
+    /**
+     * Type promotion when apply to expressions. First, all byte, short,
+     * and char values are promoted to int. Then, if one operand is a long,
+     * the whole expression is promoted to long. If one operand is a float,
+     * the entire expression is promoted to float. If any of the operands
+     * is double, the result is double.
+     */
+    static DataType prompt(DataType a, DataType b) {
+        if (!isInt(a) && !isLong(a) && !isFloat(a) && !isDouble(a))
+            throw new IllegalArgumentException(String.format("Invalid data type for type promotion: %s", a));
+
+        if (!isInt(b) && !isLong(b) && !isFloat(b) && !isDouble(b))
+            throw new IllegalArgumentException(String.format("Invalid data type for type promotion: %s", b));
+
+        if (isDouble(a) || isDouble(b))
+            return DataTypes.DoubleType;
+
+        if (isFloat(a) || isFloat(b))
+            return DataTypes.FloatType;
+
+        if (isLong(a) || isLong(b))
+            return DataTypes.LongType;
+
+        return DataTypes.IntegerType;
+    }
+
+    /**
+     * Returns true if the given type is of int, short, byte, char,
+     * either primitive or boxed.
+     */
+    static boolean isInt(DataType t) {
+        return t == DataTypes.IntegerType ||
+               t == DataTypes.ShortType ||
+               t == DataTypes.ByteType ||
+               t == DataTypes.CharType ||
+               t == DataTypes.object(Integer.class) ||
+               t == DataTypes.object(Short.class) ||
+               t == DataTypes.object(Byte.class) ||
+               t == DataTypes.object(Character.class);
+    }
+
+    /**
+     * Returns true if the given type is of long,
+     * either primitive or boxed.
+     */
+    static boolean isLong(DataType t) {
+        return t == DataTypes.LongType ||
+               t == DataTypes.object(Long.class);
+    }
+
+    /**
+     * Returns true if the given type is of float,
+     * either primitive or boxed.
+     */
+    static boolean isFloat(DataType t) {
+        return t == DataTypes.FloatType ||
+               t == DataTypes.object(Float.class);
+    }
+
+    /**
+     * Returns true if the given type is of double,
+     * either primitive or boxed.
+     */
+    static boolean isDouble(DataType t) {
+        return t == DataTypes.DoubleType ||
+               t == DataTypes.object(Double.class);
+    }
 }
