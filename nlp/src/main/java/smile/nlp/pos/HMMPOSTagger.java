@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Part-of-speech tagging with hidden Markov model.
@@ -327,11 +327,11 @@ public class HMMPOSTagger implements POSTagger, Serializable {
             }                
         }
 
-        Math.unitize1(pi);
+        MathEx.unitize1(pi);
         for (int i = 0; i < numStates; i++) {
-            Math.unitize1(a[i]);
-            Math.unitize1(b[i]);
-            Math.unitize1(c[i]);
+            MathEx.unitize1(a[i]);
+            MathEx.unitize1(b[i]);
+            MathEx.unitize1(c[i]);
         }
         
         return new HMMPOSTagger(symbol, suffix, pi, a, b, c);
