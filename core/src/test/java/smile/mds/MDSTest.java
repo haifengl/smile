@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -114,12 +114,12 @@ public class MDSTest {
                 System.out.print(mds.getEigenValues()[i] + " ");
         }
         System.out.println();
-        assertTrue(Math.equals(eigs, mds.getEigenValues(), 1E-4));
+        assertTrue(MathEx.equals(eigs, mds.getEigenValues(), 1E-4));
 
         double[][] coords = mds.getCoordinates();
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
-                assertEquals(Math.abs(points[i][j]), Math.abs(coords[i][j]), 1E-2);
+                assertEquals(MathEx.abs(points[i][j]), MathEx.abs(coords[i][j]), 1E-2);
             }
         }
     }
@@ -157,12 +157,12 @@ public class MDSTest {
         };
 
         MDS mds = new MDS(eurodist, 2, true);
-        assertTrue(Math.equals(eigs, mds.getEigenValues(), 1E-1));
+        assertTrue(MathEx.equals(eigs, mds.getEigenValues(), 1E-1));
 
         double[][] coords = mds.getCoordinates();
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
-                assertEquals(Math.abs(points[i][j]), Math.abs(coords[i][j]), 1E-2);
+                assertEquals(MathEx.abs(points[i][j]), MathEx.abs(coords[i][j]), 1E-2);
             }
         }
     }

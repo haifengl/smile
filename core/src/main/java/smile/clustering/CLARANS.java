@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.distance.Distance;
 import smile.util.MulticoreExecutor;
 
@@ -89,7 +89,7 @@ public class CLARANS <T> extends PartitionClustering<T> {
      * @param k the number of clusters.
      */
     public CLARANS(T[] data, Distance<T> distance, int k) {
-        this(data, distance, k, (int) Math.round(0.0125 * k * (data.length - k)));
+        this(data, distance, k, (int) MathEx.round(0.0125 * k * (data.length - k)));
     }
     
     /**
@@ -100,7 +100,7 @@ public class CLARANS <T> extends PartitionClustering<T> {
      * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
      */
     public CLARANS(T[] data, Distance<T> distance, int k, int maxNeighbor) {
-        this(data, distance, k, maxNeighbor, Math.max(2, MulticoreExecutor.getThreadPoolSize()));        
+        this(data, distance, k, maxNeighbor, MathEx.max(2, MulticoreExecutor.getThreadPoolSize()));
     }
     
     /**
@@ -230,12 +230,12 @@ public class CLARANS <T> extends PartitionClustering<T> {
     private double getRandomNeighbor(T[] data, T[] medoids, int[] y, double[] d) {
         int n = data.length;
 
-        int index = Math.randomInt(k);
+        int index = MathEx.randomInt(k);
         T medoid = null;
         boolean dup;
         do {
             dup = false;
-            medoid = data[Math.randomInt(n)];
+            medoid = data[MathEx.randomInt(n)];
             for (int i = 0; i < k; i++) {
                 if (medoid == medoids[i]) {
                     dup = true;
@@ -266,7 +266,7 @@ public class CLARANS <T> extends PartitionClustering<T> {
             }
         }
 
-        return Math.sum(d);
+        return MathEx.sum(d);
     }
     
     /**
@@ -325,7 +325,7 @@ public class CLARANS <T> extends PartitionClustering<T> {
         sb.append(String.format("CLARANS distortion: %.5f%n", distortion));
         sb.append(String.format("Clusters of %d data points:%n", y.length));
         for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
+            int r = (int) MathEx.round(1000.0 * size[i] / y.length);
             sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
         

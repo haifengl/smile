@@ -25,7 +25,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.validation.LOOCV;
 import static org.junit.Assert.*;
 
@@ -69,8 +69,8 @@ public class NeuralNetworkTest {
 
             int n = x.length;
             int p = x[0].length;
-            double[] mu = Math.colMeans(x);
-            double[] sd = Math.colSds(x);
+            double[] mu = MathEx.colMeans(x);
+            double[] sd = MathEx.colSds(x);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < p; j++) {
                     x[i][j] = (x[i][j] - mu[j]) / sd[j];
@@ -80,8 +80,8 @@ public class NeuralNetworkTest {
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
                 NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.CROSS_ENTROPY, NeuralNetwork.ActivationFunction.SOFTMAX, x[0].length, 10, 3);
                 for (int j = 0; j < 20; j++) {
                     net.learn(trainx, trainy);
@@ -121,8 +121,8 @@ public class NeuralNetworkTest {
 
             int n = x.length;
             int p = x[0].length;
-            double[] mu = Math.colMeans(x);
-            double[] sd = Math.colSds(x);
+            double[] mu = MathEx.colMeans(x);
+            double[] sd = MathEx.colSds(x);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < p; j++) {
                     x[i][j] = (x[i][j] - mu[j]) / sd[j];
@@ -132,8 +132,8 @@ public class NeuralNetworkTest {
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
                 NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.CROSS_ENTROPY, NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, x[0].length, 10, 1);
                 for (int j = 0; j < 30; j++) {
                     net.learn(trainx, trainy);
@@ -168,8 +168,8 @@ public class NeuralNetworkTest {
             int[] testy = test.toArray(new int[0]);
             
             int p = x[0].length;
-            double[] mu = Math.colMin(x);
-            double[] sd = Math.colMax(x);
+            double[] mu = MathEx.colMin(x);
+            double[] sd = MathEx.colMax(x);
             for (int i = 0; i < x.length; i++) {
                 for (int j = 0; j < p; j++) {
                     x[i][j] = (x[i][j] - mu[j]) / sd[j];
@@ -182,7 +182,7 @@ public class NeuralNetworkTest {
                 }
             }
 
-            NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.CROSS_ENTROPY, NeuralNetwork.ActivationFunction.SOFTMAX, x[0].length, 30, Math.max(y)+1);
+            NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.CROSS_ENTROPY, NeuralNetwork.ActivationFunction.SOFTMAX, x[0].length, 30, MathEx.max(y)+1);
             for (int j = 0; j < 20; j++) {
                 net.learn(x, y);
             }
@@ -218,8 +218,8 @@ public class NeuralNetworkTest {
             int[] testy = test.toArray(new int[0]);
             
             int p = x[0].length;
-            double[] mu = Math.colMin(x);
-            double[] sd = Math.colMax(x);
+            double[] mu = MathEx.colMin(x);
+            double[] sd = MathEx.colMax(x);
             for (int i = 0; i < x.length; i++) {
                 for (int j = 0; j < p; j++) {
                     x[i][j] = (x[i][j] - mu[j]) / sd[j];
@@ -232,7 +232,7 @@ public class NeuralNetworkTest {
                 }
             }
 
-            NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.LEAST_MEAN_SQUARES, NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, x[0].length, 30, Math.max(y)+1);
+            NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.LEAST_MEAN_SQUARES, NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, x[0].length, 30, MathEx.max(y)+1);
             for (int j = 0; j < 30; j++) {
                 net.learn(x, y);
             }
@@ -267,8 +267,8 @@ public class NeuralNetworkTest {
             int[] testy = test.toArray(new int[test.size()]);
             
             int p = x[0].length;
-            double[] mu = Math.colMeans(x);
-            double[] sd = Math.colSds(x);
+            double[] mu = MathEx.colMeans(x);
+            double[] sd = MathEx.colSds(x);
             for (int i = 0; i < x.length; i++) {
                 for (int j = 0; j < p; j++) {
                     x[i][j] = (x[i][j] - mu[j]) / sd[j];
@@ -281,7 +281,7 @@ public class NeuralNetworkTest {
                 }
             }
 
-            NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.CROSS_ENTROPY, NeuralNetwork.ActivationFunction.SOFTMAX, x[0].length, 40, Math.max(y)+1);
+            NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.CROSS_ENTROPY, NeuralNetwork.ActivationFunction.SOFTMAX, x[0].length, 40, MathEx.max(y)+1);
             for (int j = 0; j < 30; j++) {
                 net.learn(x, y);
             }
@@ -316,8 +316,8 @@ public class NeuralNetworkTest {
             int[] testy = test.toArray(new int[test.size()]);
             
             int p = x[0].length;
-            double[] mu = Math.colMeans(x);
-            double[] sd = Math.colSds(x);
+            double[] mu = MathEx.colMeans(x);
+            double[] sd = MathEx.colSds(x);
             for (int i = 0; i < x.length; i++) {
                 for (int j = 0; j < p; j++) {
                     x[i][j] = (x[i][j] - mu[j]) / sd[j];
@@ -330,7 +330,7 @@ public class NeuralNetworkTest {
                 }
             }
 
-            NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.LEAST_MEAN_SQUARES, NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, x[0].length, 40, Math.max(y)+1);
+            NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.LEAST_MEAN_SQUARES, NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, x[0].length, 40, MathEx.max(y)+1);
             for (int j = 0; j < 30; j++) {
                 net.learn(x, y);
             }

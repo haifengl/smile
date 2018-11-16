@@ -20,7 +20,7 @@ import smile.validation.Validation;
 import smile.validation.CrossValidation;
 import smile.data.AttributeDataset;
 import smile.data.parser.ArffParser;
-import smile.math.Math;
+import smile.math.MathEx;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -68,10 +68,10 @@ public class GradientTreeBoostTest {
             double rss = 0.0;
             double ad = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 GradientTreeBoost boost = new GradientTreeBoost(data.attributes(), trainx, trainy, loss, 100, 6, 0.05, 0.7);
 
@@ -151,7 +151,7 @@ public class GradientTreeBoostTest {
 
             int n = datax.length;
             int m = 3 * n / 4;
-            int[] index = Math.permutate(n);
+            int[] index = MathEx.permutate(n);
             
             double[][] trainx = new double[m][];
             double[] trainy = new double[m];            

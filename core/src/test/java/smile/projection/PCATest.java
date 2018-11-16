@@ -21,7 +21,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -170,19 +170,19 @@ public class PCATest {
         };
         PCA pca = new PCA(USArrests);
         pca.setProjection(4);
-        assertTrue(Math.equals(prop, pca.getVarianceProportion(), 1E-7));
-        assertTrue(Math.equals(cumprop, pca.getCumulativeVarianceProportion(), 1E-7));
+        assertTrue(MathEx.equals(prop, pca.getVarianceProportion(), 1E-7));
+        assertTrue(MathEx.equals(cumprop, pca.getCumulativeVarianceProportion(), 1E-7));
 
         for (int i = 0; i < loadings.length; i++) {
             for (int j = 0; j < loadings[i].length; j++) {
-                assertEquals(Math.abs(loadings[i][j]), Math.abs(pca.getLoadings().get(i, j)), 1E-5);
+                assertEquals(MathEx.abs(loadings[i][j]), MathEx.abs(pca.getLoadings().get(i, j)), 1E-5);
             }
         }
 
         double[][] p = pca.project(USArrests);
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {
-                assertEquals(Math.abs(points[i][j]), Math.abs(p[i][j]), 1E-5);
+                assertEquals(MathEx.abs(points[i][j]), MathEx.abs(p[i][j]), 1E-5);
             }
         }
     }
@@ -256,19 +256,19 @@ public class PCATest {
 
         PCA pca = new PCA(USArrests, true);
         pca.setProjection(4);
-        assertTrue(Math.equals(prop, pca.getVarianceProportion(), 1E-7));
-        assertTrue(Math.equals(cumprop, pca.getCumulativeVarianceProportion(), 1E-7));
+        assertTrue(MathEx.equals(prop, pca.getVarianceProportion(), 1E-7));
+        assertTrue(MathEx.equals(cumprop, pca.getCumulativeVarianceProportion(), 1E-7));
 
         for (int i = 0; i < loadings.length; i++) {
             for (int j = 0; j < loadings[i].length; j++) {
-                assertEquals(Math.abs(loadings[i][j]), Math.abs(pca.getLoadings().get(i, j)), 1E-5);
+                assertEquals(MathEx.abs(loadings[i][j]), MathEx.abs(pca.getLoadings().get(i, j)), 1E-5);
             }
         }
 
         double[][] p = pca.project(USArrests);
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {
-                assertEquals(Math.abs(points[i][j]), Math.abs(p[i][j]), 1E-5);
+                assertEquals(MathEx.abs(points[i][j]), MathEx.abs(p[i][j]), 1E-5);
             }
         }
     }

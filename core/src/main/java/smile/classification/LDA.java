@@ -17,7 +17,7 @@
 package smile.classification;
 
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
@@ -203,7 +203,7 @@ public class LDA implements SoftClassifier<double[]> {
         }
 
         // class label set.
-        int[] labels = Math.unique(y);
+        int[] labels = MathEx.unique(y);
         Arrays.sort(labels);
         
         for (int i = 0; i < labels.length; i++) {
@@ -239,7 +239,7 @@ public class LDA implements SoftClassifier<double[]> {
         // The number of instances in each class.
         int[] ni = new int[k];
         // Common mean vector.
-        double[] mean = Math.colMeans(x);
+        double[] mean = MathEx.colMeans(x);
         // Common covariance.
         DenseMatrix C = Matrix.zeros(p, p);
         // Class mean vectors.
@@ -269,7 +269,7 @@ public class LDA implements SoftClassifier<double[]> {
         this.priori = priori;
         ct = new double[k];
         for (int i = 0; i < k; i++) {
-            ct[i] = Math.log(priori[i]);
+            ct[i] = MathEx.log(priori[i]);
         }
         
         for (int i = 0; i < n; i++) {
@@ -359,7 +359,7 @@ public class LDA implements SoftClassifier<double[]> {
         if (posteriori != null) {
             double sum = 0.0;
             for (int i = 0; i < k; i++) {
-                posteriori[i] = Math.exp(posteriori[i] - max);
+                posteriori[i] = MathEx.exp(posteriori[i] - max);
                 sum += posteriori[i];
             }
             

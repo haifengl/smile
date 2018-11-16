@@ -17,8 +17,6 @@ package smile.association;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +29,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -140,7 +138,7 @@ public class ARMTest {
 
         int[][] data = dataList.toArray(new int[dataList.size()][]);
 
-        int n = Math.max(data);
+        int n = MathEx.max(data);
         System.out.format("%d transactions, %d items%n", data.length, n);
         
         ARM instance = new ARM(data, 20);
@@ -189,7 +187,7 @@ public class ARMTest {
 
         int[][] data = dataList.toArray(new int[dataList.size()][]);
 
-        int n = Math.max(data);
+        int n = MathEx.max(data);
         System.out.format("%d transactions, %d items%n", data.length, n);
         
         ARM instance = new ARM(data, 0.003);

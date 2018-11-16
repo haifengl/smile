@@ -24,7 +24,7 @@ import org.junit.Test;
 import smile.data.AttributeDataset;
 import smile.data.parser.ArffParser;
 import smile.validation.CrossValidation;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * 
@@ -59,10 +59,10 @@ public class NeuralNetworkTest {
             
             int n = datax.length;
             int p = datax[0].length;
-            double[] mux = Math.colMeans(datax);
-            double[] sdx = Math.colSds(datax);
-            double muy = Math.mean(datay);
-            double sdy = Math.sd(datay);
+            double[] mux = MathEx.colMeans(datax);
+            double[] sdx = MathEx.colSds(datax);
+            double muy = MathEx.mean(datay);
+            double sdy = MathEx.sd(datay);
             for (int i = 0; i < n; i++) {
                 datay[i]=(datay[i]-muy)/sdy;
                 for (int j = 0; j < p; j++) {
@@ -76,10 +76,10 @@ public class NeuralNetworkTest {
             double rss = 0.0;
             double ad = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = smile.math.Math.slice(datax, cv.train[i]);
-                double[] trainy = smile.math.Math.slice(datay, cv.train[i]);
-                double[][] testx = smile.math.Math.slice(datax, cv.test[i]);
-                double[] testy = smile.math.Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 NeuralNetwork neuralNetwork = new NeuralNetwork(activation,new int[]{datax[0].length,10,10,1});
                 neuralNetwork.learn(trainx,trainy);

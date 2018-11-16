@@ -24,7 +24,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.DoubleArrayList;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.kernel.MercerKernel;
 import smile.util.MulticoreExecutor;
 
@@ -295,7 +295,7 @@ public class SVR<T> implements Regression<T> {
         }
 
         minmax();
-        int phase = Math.min(n, 1000);
+        int phase = MathEx.min(n, 1000);
         for (int count = 1; smo(tol); count++) {
             if (count % phase == 0) {
                 logger.info("SVR finishes {} SMO iterations", count);
@@ -472,7 +472,7 @@ public class SVR<T> implements Regression<T> {
             
             double gj = -v.g[0];
             if (v.alpha[0] > 0.0 && gj < gi) {
-                double gain = -Math.sqr(gi - gj) / curv;
+                double gain = -MathEx.sqr(gi - gj) / curv;
                 if (gain < best) {
                     best = gain;
                     j = v;
@@ -483,7 +483,7 @@ public class SVR<T> implements Regression<T> {
             
             gj = v.g[1];
             if (v.alpha[1] < v.C && gj < gi) {
-                double gain = -Math.sqr(gi - gj) / curv;
+                double gain = -MathEx.sqr(gi - gj) / curv;
                 if (gain < best) {
                     best = gain;
                     j = v;

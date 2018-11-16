@@ -16,7 +16,7 @@
 package smile.projection;
 
 import java.io.Serializable;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
@@ -143,7 +143,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
         }
 
         mean = K.rowMeans();
-        mu = Math.mean(mean);
+        mu = MathEx.mean(mean);
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
@@ -170,7 +170,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
         projection = Matrix.zeros(p, n);
         for (int j = 0; j < p; j++) {
             latent[j] = eigen.getEigenValues()[j];
-            double s = Math.sqrt(latent[j]);
+            double s = MathEx.sqrt(latent[j]);
             for (int i = 0; i < n; i++) {
                 projection.set(j, i, eigen.getEigenVectors().get(i, j) / s);
             }
@@ -218,7 +218,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
             y[i] = kernel.k(x, data[i]);
         }
 
-        double my = Math.mean(y);
+        double my = MathEx.mean(y);
         for (int i = 0; i < n; i++) {
             y[i] = y[i] - my - mean[i] + mu;
         }
@@ -238,7 +238,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
                 y[i][j] = kernel.k(x[i], data[j]);
             }
 
-            double my = Math.mean(y[i]);
+            double my = MathEx.mean(y[i]);
             for (int j = 0; j < n; j++) {
                 y[i][j] = y[i][j] - my - mean[j] + mu;
             }

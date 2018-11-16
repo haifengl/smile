@@ -18,7 +18,7 @@ package smile.regression;
 import org.junit.*;
 import smile.data.AttributeDataset;
 import smile.data.parser.ArffParser;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.QuickSort;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
@@ -84,8 +84,8 @@ public class RandomForestTest {
         LOOCV loocv = new LOOCV(n);
         double rss = 0.0;
         for (int i = 0; i < n; i++) {
-            double[][] trainx = Math.slice(longley, loocv.train[i]);
-            double[] trainy = Math.slice(y, loocv.train[i]);
+            double[][] trainx = MathEx.slice(longley, loocv.train[i]);
+            double[] trainy = MathEx.slice(y, loocv.train[i]);
             
             try {
                 RandomForest forest = new RandomForest(trainx, trainy, 300, n, 3, 2);
@@ -117,10 +117,10 @@ public class RandomForestTest {
             double rss = 0.0;
             double ad = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 RandomForest forest = new RandomForest(data.attributes(), trainx, trainy, 200, n, 5, trainx[0].length/3);
                 System.out.format("OOB error rate = %.4f%n", forest.error());
@@ -128,11 +128,11 @@ public class RandomForestTest {
                 for (int j = 0; j < testx.length; j++) {
                     double r = testy[j] - forest.predict(testx[j]);
                     rss += r * r;
-                    ad += Math.abs(r);
+                    ad += MathEx.abs(r);
                 }
             }
 
-            System.out.format("10-CV RMSE = %.4f \t AbsoluteDeviation = %.4f%n", Math.sqrt(rss/n), ad/n);
+            System.out.format("10-CV RMSE = %.4f \t AbsoluteDeviation = %.4f%n", MathEx.sqrt(rss/n), ad/n);
          } catch (Exception ex) {
              System.err.println(ex);
          }
@@ -169,7 +169,7 @@ public class RandomForestTest {
 
             int n = datax.length;
             int m = 3 * n / 4;
-            int[] index = Math.permutate(n);
+            int[] index = MathEx.permutate(n);
             
             double[][] trainx = new double[m][];
             double[] trainy = new double[m];            
@@ -214,7 +214,7 @@ public class RandomForestTest {
 
         int n = datax.length;
         int m = 3 * n / 4;
-        int[] index = Math.permutate(n);
+        int[] index = MathEx.permutate(n);
 
         double[][] trainx = new double[m][];
         double[] trainy = new double[m];

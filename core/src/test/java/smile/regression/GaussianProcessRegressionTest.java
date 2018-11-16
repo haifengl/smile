@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.clustering.KMeans;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 import smile.data.AttributeDataset;
 import smile.data.parser.ArffParser;
@@ -84,14 +84,14 @@ public class GaussianProcessRegressionTest {
             104.6, 108.4, 110.8, 112.6, 114.2, 115.7, 116.9
         };
 
-        Math.standardize(longley);
+        MathEx.standardize(longley);
 
         int n = longley.length;
         LOOCV loocv = new LOOCV(n);
         double rss = 0.0;
         for (int i = 0; i < n; i++) {
-            double[][] trainx = Math.slice(longley, loocv.train[i]);
-            double[] trainy = Math.slice(y, loocv.train[i]);
+            double[][] trainx = MathEx.slice(longley, loocv.train[i]);
+            double[] trainy = MathEx.slice(y, loocv.train[i]);
             GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(8.0), 0.2);
 
             double r = y[loocv.test[i]] - rkhs.predict(longley[loocv.test[i]]);
@@ -113,7 +113,7 @@ public class GaussianProcessRegressionTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
-            Math.standardize(datax);
+            MathEx.standardize(datax);
             
             int n = datax.length;
             int k = 10;
@@ -123,10 +123,10 @@ public class GaussianProcessRegressionTest {
             double sparseRSS30 = 0.0;
             double nystromRSS30 = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(47.02), 0.1);
 
@@ -135,7 +135,7 @@ public class GaussianProcessRegressionTest {
                 double r0 = 0.0;
                 for (int l = 0; l < centers.length; l++) {
                     for (int j = 0; j < l; j++) {
-                        r0 += Math.distance(centers[l], centers[j]);
+                        r0 += MathEx.distance(centers[l], centers[j]);
                     }
                 }
                 r0 /= (2 * centers.length);
@@ -176,7 +176,7 @@ public class GaussianProcessRegressionTest {
             double[][] x = data.toArray(new double[data.size()][]);
             double[] y = data.toArray(new double[data.size()]);
 
-            int[] perm = Math.permutate(x.length);
+            int[] perm = MathEx.permutate(x.length);
             double[][] datax = new double[4000][];
             double[] datay = new double[datax.length];
             for (int i = 0; i < datax.length; i++) {
@@ -191,10 +191,10 @@ public class GaussianProcessRegressionTest {
             double rss = 0.0;
             double sparseRSS30 = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(34.866), 0.1);
 
@@ -203,7 +203,7 @@ public class GaussianProcessRegressionTest {
                 double r0 = 0.0;
                 for (int l = 0; l < centers.length; l++) {
                     for (int j = 0; j < l; j++) {
-                        r0 += Math.distance(centers[l], centers[j]);
+                        r0 += MathEx.distance(centers[l], centers[j]);
                     }
                 }
                 r0 /= (2 * centers.length);
@@ -237,14 +237,14 @@ public class GaussianProcessRegressionTest {
         try {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/regression/ailerons.arff"));
             double[][] x = data.toArray(new double[data.size()][]);
-            Math.standardize(x);
+            MathEx.standardize(x);
 
             double[] y = data.toArray(new double[data.size()]);
             for (int i = 0; i < y.length; i++) {
                 y[i] *= 10000;
             }
 
-            int[] perm = Math.permutate(x.length);
+            int[] perm = MathEx.permutate(x.length);
             double[][] datax = new double[4000][];
             double[] datay = new double[datax.length];
             for (int i = 0; i < datax.length; i++) {
@@ -259,10 +259,10 @@ public class GaussianProcessRegressionTest {
             double rss = 0.0;
             double sparseRSS30 = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(183.96), 0.1);
 
@@ -271,7 +271,7 @@ public class GaussianProcessRegressionTest {
                 double r0 = 0.0;
                 for (int l = 0; l < centers.length; l++) {
                     for (int j = 0; j < l; j++) {
-                        r0 += Math.distance(centers[l], centers[j]);
+                        r0 += MathEx.distance(centers[l], centers[j]);
                     }
                 }
                 r0 /= (2 * centers.length);
@@ -306,9 +306,9 @@ public class GaussianProcessRegressionTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/regression/bank32nh.arff"));
             double[] y = data.toArray(new double[data.size()]);
             double[][] x = data.toArray(new double[data.size()][]);
-            Math.standardize(x);
+            MathEx.standardize(x);
 
-            int[] perm = Math.permutate(x.length);
+            int[] perm = MathEx.permutate(x.length);
             double[][] datax = new double[4000][];
             double[] datay = new double[datax.length];
             for (int i = 0; i < datax.length; i++) {
@@ -323,10 +323,10 @@ public class GaussianProcessRegressionTest {
             double rss = 0.0;
             double sparseRSS30 = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(55.3), 0.1);
 
@@ -335,7 +335,7 @@ public class GaussianProcessRegressionTest {
                 double r0 = 0.0;
                 for (int l = 0; l < centers.length; l++) {
                     for (int j = 0; j < l; j++) {
-                        r0 += Math.distance(centers[l], centers[j]);
+                        r0 += MathEx.distance(centers[l], centers[j]);
                     }
                 }
                 r0 /= (2 * centers.length);
@@ -371,7 +371,7 @@ public class GaussianProcessRegressionTest {
             double[] y = data.toArray(new double[data.size()]);
             double[][] x = data.toArray(new double[data.size()][]);
 
-            int[] perm = Math.permutate(x.length);
+            int[] perm = MathEx.permutate(x.length);
             double[][] datax = new double[4000][];
             double[] datay = new double[datax.length];
             for (int i = 0; i < datax.length; i++) {
@@ -386,10 +386,10 @@ public class GaussianProcessRegressionTest {
             double rss = 0.0;
             double sparseRSS30 = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(38.63), 0.1);
 
@@ -398,7 +398,7 @@ public class GaussianProcessRegressionTest {
                 double r0 = 0.0;
                 for (int l = 0; l < centers.length; l++) {
                     for (int j = 0; j < l; j++) {
-                        r0 += Math.distance(centers[l], centers[j]);
+                        r0 += MathEx.distance(centers[l], centers[j]);
                     }
                 }
                 r0 /= (2 * centers.length);
@@ -434,7 +434,7 @@ public class GaussianProcessRegressionTest {
             double[] y = data.toArray(new double[data.size()]);
             double[][] x = data.toArray(new double[data.size()][]);
 
-            int[] perm = Math.permutate(x.length);
+            int[] perm = MathEx.permutate(x.length);
             double[][] datax = new double[4000][];
             double[] datay = new double[datax.length];
             for (int i = 0; i < datax.length; i++) {
@@ -449,10 +449,10 @@ public class GaussianProcessRegressionTest {
             double rss = 0.0;
             double sparseRSS30 = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(34.97), 0.1);
 
@@ -461,7 +461,7 @@ public class GaussianProcessRegressionTest {
                 double r0 = 0.0;
                 for (int l = 0; l < centers.length; l++) {
                     for (int j = 0; j < l; j++) {
-                        r0 += Math.distance(centers[l], centers[j]);
+                        r0 += MathEx.distance(centers[l], centers[j]);
                     }
                 }
                 r0 /= (2 * centers.length);

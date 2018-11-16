@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.QuickSort;
 import smile.stat.distribution.GaussianDistribution;
 
@@ -76,7 +76,7 @@ public class GMeans extends KMeans {
 
         distortion = 0.0;
         for (int i = 0; i < n; i++) {
-            distortion += Math.squaredDistance(data[i], centroids[0]);
+            distortion += MathEx.squaredDistance(data[i], centroids[0]);
         }
         logger.info(String.format("G-Means distortion with %d clusters: %.5f", k, distortion));
 
@@ -107,14 +107,14 @@ public class GMeans extends KMeans {
                 for (int j = 0; j < d; j++) {
                     v[j] = kmeans[i].centroids[0][j] - kmeans[i].centroids[1][j];
                 }
-                double vp = Math.dot(v, v);
+                double vp = MathEx.dot(v, v);
                 double[] x = new double[size[i]];
                 for (int j = 0; j < x.length; j++) {
-                    x[j] = Math.dot(subset[j], v) / vp;
+                    x[j] = MathEx.dot(subset[j], v) / vp;
                 }
                 
                 // normalize to mean 0 and variance 1.
-                Math.standardize(x);
+                MathEx.standardize(x);
 
                 score[i] = AndersonDarling(x);
                 logger.info(String.format("Cluster %3d\tAnderson-Darling adjusted test statistic: %3.4f", i, score[i]));
@@ -193,7 +193,7 @@ public class GMeans extends KMeans {
 
         double A = 0.0;
         for (int i = 0; i < n; i++) {
-            A -= (2*i+1) * (Math.log(x[i]) + Math.log(1-x[n-i-1]));
+            A -= (2*i+1) * (MathEx.log(x[i]) + MathEx.log(1-x[n-i-1]));
         }
 
         A = A / n - n;
@@ -209,7 +209,7 @@ public class GMeans extends KMeans {
         sb.append(String.format("G-Means distortion: %.5f%n", distortion));
         sb.append(String.format("Clusters of %d data points of dimension %d:%n", y.length, centroids[0].length));
         for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
+            int r = (int) MathEx.round(1000.0 * size[i] / y.length);
             sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
         

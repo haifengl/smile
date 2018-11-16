@@ -21,7 +21,7 @@ import smile.graph.AdjacencyList;
 import smile.graph.Graph;
 import smile.graph.Graph.Edge;
 import smile.math.distance.EuclideanDistance;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
@@ -167,8 +167,8 @@ public class IsoMap {
             }
         }
 
-        double[] mean = Math.rowMeans(D);
-        double mu = Math.mean(mean);
+        double[] mean = MathEx.rowMeans(D);
+        double mu = MathEx.mean(mean);
 
         DenseMatrix B = Matrix.zeros(n, n);
         for (int i = 0; i < n; i++) {

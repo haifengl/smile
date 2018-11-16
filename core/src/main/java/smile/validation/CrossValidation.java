@@ -16,7 +16,7 @@
 
 package smile.validation;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Cross-validation is a technique for assessing how the results of a
@@ -74,7 +74,7 @@ public class CrossValidation {
 
         int[] index;
         if (permutate){
-            index = Math.permutate(n);
+            index = MathEx.permutate(n);
         }
         else{
             index = new int[n];

@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.validation;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.classification.Classifier;
 import smile.classification.ClassifierTrainer;
 import smile.regression.Regression;
@@ -172,8 +172,8 @@ public class Validation {
         
         LOOCV loocv = new LOOCV(n);
         for (int i = 0; i < n; i++) {
-            T[] trainx = Math.slice(x, loocv.train[i]);
-            int[] trainy = Math.slice(y, loocv.train[i]);
+            T[] trainx = MathEx.slice(x, loocv.train[i]);
+            int[] trainy = MathEx.slice(y, loocv.train[i]);
             
             Classifier<T> classifier = trainer.train(trainx, trainy);
 
@@ -199,12 +199,12 @@ public class Validation {
         int n = x.length;        
         LOOCV loocv = new LOOCV(n);
         for (int i = 0; i < n; i++) {
-            T[] trainx = Math.slice(x, loocv.train[i]);
-            double[] trainy = Math.slice(y, loocv.train[i]);
+            T[] trainx = MathEx.slice(x, loocv.train[i]);
+            double[] trainy = MathEx.slice(y, loocv.train[i]);
             
             Regression<T> model = trainer.train(trainx, trainy);
 
-            rmse += Math.sqr(model.predict(x[loocv.test[i]]) - y[loocv.test[i]]);
+            rmse += MathEx.sqr(model.predict(x[loocv.test[i]]) - y[loocv.test[i]]);
         }
         
         return Math.sqrt(rmse / n);
@@ -226,8 +226,8 @@ public class Validation {
         
         LOOCV loocv = new LOOCV(n);
         for (int i = 0; i < n; i++) {
-            T[] trainx = Math.slice(x, loocv.train[i]);
-            int[] trainy = Math.slice(y, loocv.train[i]);
+            T[] trainx = MathEx.slice(x, loocv.train[i]);
+            int[] trainy = MathEx.slice(y, loocv.train[i]);
             
             Classifier<T> classifier = trainer.train(trainx, trainy);
 
@@ -253,8 +253,8 @@ public class Validation {
         
         LOOCV loocv = new LOOCV(n);
         for (int i = 0; i < n; i++) {
-            T[] trainx = Math.slice(x, loocv.train[i]);
-            int[] trainy = Math.slice(y, loocv.train[i]);
+            T[] trainx = MathEx.slice(x, loocv.train[i]);
+            int[] trainy = MathEx.slice(y, loocv.train[i]);
             
             Classifier<T> classifier = trainer.train(trainx, trainy);
 
@@ -286,8 +286,8 @@ public class Validation {
         
         LOOCV loocv = new LOOCV(n);
         for (int i = 0; i < n; i++) {
-            T[] trainx = Math.slice(x, loocv.train[i]);
-            double[] trainy = Math.slice(y, loocv.train[i]);
+            T[] trainx = MathEx.slice(x, loocv.train[i]);
+            double[] trainy = MathEx.slice(y, loocv.train[i]);
             
             Regression<T> model = trainer.train(trainx, trainy);
 
@@ -313,8 +313,8 @@ public class Validation {
         
         LOOCV loocv = new LOOCV(n);
         for (int i = 0; i < n; i++) {
-            T[] trainx = Math.slice(x, loocv.train[i]);
-            double[] trainy = Math.slice(y, loocv.train[i]);
+            T[] trainx = MathEx.slice(x, loocv.train[i]);
+            double[] trainy = MathEx.slice(y, loocv.train[i]);
             
             Regression<T> model = trainer.train(trainx, trainy);
 
@@ -350,8 +350,8 @@ public class Validation {
         
         CrossValidation cv = new CrossValidation(n, k);
         for (int i = 0; i < k; i++) {
-            T[] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
+            T[] trainx = MathEx.slice(x, cv.train[i]);
+            int[] trainy = MathEx.slice(y, cv.train[i]);
             
             Classifier<T> classifier = trainer.train(trainx, trainy);
 
@@ -383,8 +383,8 @@ public class Validation {
         
         CrossValidation cv = new CrossValidation(n, k);
         for (int i = 0; i < k; i++) {
-            T[] trainx = Math.slice(x, cv.train[i]);
-            double[] trainy = Math.slice(y, cv.train[i]);
+            T[] trainx = MathEx.slice(x, cv.train[i]);
+            double[] trainy = MathEx.slice(y, cv.train[i]);
             
             Regression<T> model = trainer.train(trainx, trainy);
 
@@ -417,8 +417,8 @@ public class Validation {
         
         CrossValidation cv = new CrossValidation(n, k);
         for (int i = 0; i < k; i++) {
-            T[] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
+            T[] trainx = MathEx.slice(x, cv.train[i]);
+            int[] trainy = MathEx.slice(y, cv.train[i]);
             
             Classifier<T> classifier = trainer.train(trainx, trainy);
 
@@ -451,8 +451,8 @@ public class Validation {
         
         CrossValidation cv = new CrossValidation(n, k);
         for (int i = 0; i < k; i++) {
-            T[] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
+            T[] trainx = MathEx.slice(x, cv.train[i]);
+            int[] trainy = MathEx.slice(y, cv.train[i]);
             
             Classifier<T> classifier = trainer.train(trainx, trainy);
 
@@ -491,8 +491,8 @@ public class Validation {
         
         CrossValidation cv = new CrossValidation(n, k);
         for (int i = 0; i < k; i++) {
-            T[] trainx = Math.slice(x, cv.train[i]);
-            double[] trainy = Math.slice(y, cv.train[i]);
+            T[] trainx = MathEx.slice(x, cv.train[i]);
+            double[] trainy = MathEx.slice(y, cv.train[i]);
             
             Regression<T> model = trainer.train(trainx, trainy);
 
@@ -525,8 +525,8 @@ public class Validation {
         
         CrossValidation cv = new CrossValidation(n, k);
         for (int i = 0; i < k; i++) {
-            T[] trainx = Math.slice(x, cv.train[i]);
-            double[] trainy = Math.slice(y, cv.train[i]);
+            T[] trainx = MathEx.slice(x, cv.train[i]);
+            double[] trainy = MathEx.slice(y, cv.train[i]);
             
             Regression<T> model = trainer.train(trainx, trainy);
 
@@ -565,8 +565,8 @@ public class Validation {
         
         Bootstrap bootstrap = new Bootstrap(n, k);
         for (int i = 0; i < k; i++) {
-            T[] trainx = Math.slice(x, bootstrap.train[i]);
-            int[] trainy = Math.slice(y, bootstrap.train[i]);
+            T[] trainx = MathEx.slice(x, bootstrap.train[i]);
+            int[] trainy = MathEx.slice(y, bootstrap.train[i]);
             
             Classifier<T> classifier = trainer.train(trainx, trainy);
 
@@ -606,8 +606,8 @@ public class Validation {
         
         Bootstrap bootstrap = new Bootstrap(n, k);
         for (int i = 0; i < k; i++) {
-            T[] trainx = Math.slice(x, bootstrap.train[i]);
-            double[] trainy = Math.slice(y, bootstrap.train[i]);
+            T[] trainx = MathEx.slice(x, bootstrap.train[i]);
+            double[] trainy = MathEx.slice(y, bootstrap.train[i]);
             
             Regression<T> model = trainer.train(trainx, trainy);
 
@@ -648,8 +648,8 @@ public class Validation {
         
         Bootstrap bootstrap = new Bootstrap(n, k);
         for (int i = 0; i < k; i++) {
-            T[] trainx = Math.slice(x, bootstrap.train[i]);
-            int[] trainy = Math.slice(y, bootstrap.train[i]);
+            T[] trainx = MathEx.slice(x, bootstrap.train[i]);
+            int[] trainy = MathEx.slice(y, bootstrap.train[i]);
             
             Classifier<T> classifier = trainer.train(trainx, trainy);
 
@@ -691,8 +691,8 @@ public class Validation {
         
         Bootstrap bootstrap = new Bootstrap(n, k);
         for (int i = 0; i < k; i++) {
-            T[] trainx = Math.slice(x, bootstrap.train[i]);
-            int[] trainy = Math.slice(y, bootstrap.train[i]);
+            T[] trainx = MathEx.slice(x, bootstrap.train[i]);
+            int[] trainy = MathEx.slice(y, bootstrap.train[i]);
             
             Classifier<T> classifier = trainer.train(trainx, trainy);
 
@@ -735,8 +735,8 @@ public class Validation {
         
         Bootstrap bootstrap = new Bootstrap(n, k);
         for (int i = 0; i < k; i++) {
-            T[] trainx = Math.slice(x, bootstrap.train[i]);
-            double[] trainy = Math.slice(y, bootstrap.train[i]);
+            T[] trainx = MathEx.slice(x, bootstrap.train[i]);
+            double[] trainy = MathEx.slice(y, bootstrap.train[i]);
             
             Regression<T> model = trainer.train(trainx, trainy);
 
@@ -778,8 +778,8 @@ public class Validation {
         
         Bootstrap bootstrap = new Bootstrap(n, k);
         for (int i = 0; i < k; i++) {
-            T[] trainx = Math.slice(x, bootstrap.train[i]);
-            double[] trainy = Math.slice(y, bootstrap.train[i]);
+            T[] trainx = MathEx.slice(x, bootstrap.train[i]);
+            double[] trainy = MathEx.slice(y, bootstrap.train[i]);
             
             Regression<T> model = trainer.train(trainx, trainy);
 

@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -105,8 +105,8 @@ public class BootstrapTest {
             }
         }
 
-        System.out.format("Train coverage: %d\t%d\t%d%n", Math.min(trainhit), Math.median(trainhit), Math.max(trainhit));
-        System.out.format("Test coverage: %d\t%d\t%d%n", Math.min(testhit), Math.median(testhit), Math.max(testhit));
+        System.out.format("Train coverage: %d\t%d\t%d%n", MathEx.min(trainhit), MathEx.median(trainhit), MathEx.max(trainhit));
+        System.out.format("Test coverage: %d\t%d\t%d%n", MathEx.min(testhit), MathEx.median(testhit), MathEx.max(testhit));
 
         for (int j = 0; j < n; j++) {
             assertTrue(trainhit[j] > 60);

@@ -16,7 +16,7 @@
 
 package smile.validation;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The bootstrap is a general tool for assessing statistical accuracy. The basic
@@ -65,7 +65,7 @@ public class Bootstrap {
             int hits = 0;
 
             for (int i = 0; i < n; i++) {
-                int r = Math.randomInt(n);
+                int r = MathEx.randomInt(n);
                 train[j][i] = r;
                 if (!hit[r]) {
                     hits++;

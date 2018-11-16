@@ -18,7 +18,7 @@ package smile.neighbor;
 import java.io.Serializable;
 import java.util.List;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.HeapSelect;
 
 /**
@@ -265,7 +265,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
                     continue;
                 }
 
-                double distance = Math.squaredDistance(q, keys[index[idx]]);
+                double distance = MathEx.squaredDistance(q, keys[index[idx]]);
                 if (distance < neighbor.distance) {
                     neighbor.key = keys[index[idx]];
                     neighbor.value = data[index[idx]];
@@ -310,7 +310,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
                     continue;
                 }
 
-                double distance = Math.squaredDistance(q, keys[index[idx]]);
+                double distance = MathEx.squaredDistance(q, keys[index[idx]]);
                 Neighbor<double[], E> datum = heap.peek();
                 if (distance < datum.distance) {
                     datum.distance = distance;
@@ -357,7 +357,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
                     continue;
                 }
 
-                double distance = Math.distance(q, keys[index[idx]]);
+                double distance = MathEx.distance(q, keys[index[idx]]);
                 if (distance <= radius) {
                     neighbors.add(new Neighbor<>(keys[index[idx]], data[index[idx]], index[idx], distance));
                 }

@@ -18,13 +18,11 @@ package smile.association;
 import java.util.Set;
 import java.util.HashSet;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -162,7 +160,7 @@ public class FPGrowthTest {
 
         int[][] data = dataList.toArray(new int[dataList.size()][]);
 
-        int n = Math.max(data);
+        int n = MathEx.max(data);
         System.out.format("%d transactions, %d items%n", data.length, n);
         
         long time = System.currentTimeMillis();
@@ -215,7 +213,7 @@ public class FPGrowthTest {
 
         int[][] data = dataList.toArray(new int[dataList.size()][]);
 
-        int n = Math.max(data);
+        int n = MathEx.max(data);
         System.out.format("%d transactions, %d items%n", data.length, n);
         
         long time = System.currentTimeMillis();

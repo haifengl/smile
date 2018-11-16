@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.util.MulticoreExecutor;
 
 /**
@@ -115,7 +115,7 @@ public class KMeans extends PartitionClustering<double[]> {
         int bestCluster = 0;
 
         for (int i = 0; i < k; i++) {
-            double dist = Math.squaredDistance(x, centroids[i]);
+            double dist = MathEx.squaredDistance(x, centroids[i]);
             if (dist < minDist) {
                 minDist = dist;
                 bestCluster = i;

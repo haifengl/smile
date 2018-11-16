@@ -16,7 +16,7 @@
 
 package smile.validation;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Root mean squared error.
@@ -34,10 +34,10 @@ public class RMSE implements RegressionMeasure {
         int n = truth.length;
         double rss = 0.0;
         for (int i = 0; i < n; i++) {
-            rss += Math.sqr(truth[i] - prediction[i]);
+            rss += MathEx.sqr(truth[i] - prediction[i]);
         }
 
-        return Math.sqrt(rss/n);
+        return MathEx.sqrt(rss/n);
     }
 
     @Override

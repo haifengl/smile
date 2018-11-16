@@ -26,7 +26,7 @@ import smile.data.AttributeDataset;
 import smile.data.NominalAttribute;
 import smile.data.parser.ArffParser;
 import smile.data.parser.DelimitedTextParser;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 import smile.math.kernel.LinearKernel;
 import smile.math.kernel.PolynomialKernel;
@@ -83,7 +83,7 @@ public class SVMTest {
             double[][] x = iris.toArray(new double[iris.size()][]);
             int[] y = iris.toArray(new int[iris.size()]);
 
-            SVM<double[]> svm = new SVM<>(new LinearKernel(), 10.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
+            SVM<double[]> svm = new SVM<>(new LinearKernel(), 10.0, MathEx.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
             svm.learn(x, y);
             svm.learn(x, y);
             svm.finish();
@@ -97,7 +97,7 @@ public class SVMTest {
             System.out.println("Linear ONE vs. ALL error = " + error);
             assertTrue(error <= 10);
 
-            svm = new SVM<>(new GaussianKernel(1), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
+            svm = new SVM<>(new GaussianKernel(1), 1.0, MathEx.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
             svm.learn(x, y);
             svm.learn(x, y);
             svm.finish();
@@ -115,7 +115,7 @@ public class SVMTest {
             System.out.println("Gaussian ONE vs. ALL error = " + error);
             assertTrue(error <= 5);
 
-            svm = new SVM<>(new GaussianKernel(1), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ONE);
+            svm = new SVM<>(new GaussianKernel(1), 1.0, MathEx.max(y) + 1, SVM.Multiclass.ONE_VS_ONE);
             svm.learn(x, y);
             svm.learn(x, y);
             svm.finish();
@@ -135,7 +135,7 @@ public class SVMTest {
             System.out.println("Gaussian ONE vs. ONE error = " + error);
             assertTrue(error <= 5);
 
-            svm = new SVM<>(new PolynomialKernel(2), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
+            svm = new SVM<>(new PolynomialKernel(2), 1.0, MathEx.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
             svm.learn(x, y);
             svm.learn(x, y);
             svm.finish();
@@ -171,7 +171,7 @@ public class SVMTest {
             double[][] testx = test.toArray(new double[0][]);
             int[] testy = test.toArray(new int[0]);
             
-            SVM<double[]> svm = new SVM<>(new GaussianKernel(8.0), 5.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
+            SVM<double[]> svm = new SVM<>(new GaussianKernel(8.0), 5.0, MathEx.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
             svm.learn(x, y);
             svm.finish();
             
@@ -206,7 +206,7 @@ public class SVMTest {
             double[][] testx = test.toArray(new double[test.size()][]);
             int[] testy = test.toArray(new int[test.size()]);
             
-            SVM<double[]> svm = new SVM<>(new GaussianKernel(8.0), 5.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ONE);
+            SVM<double[]> svm = new SVM<>(new GaussianKernel(8.0), 5.0, MathEx.max(y) + 1, SVM.Multiclass.ONE_VS_ONE);
             svm.learn(x, y);
             svm.finish();
             
@@ -222,7 +222,7 @@ public class SVMTest {
             
             System.out.println("USPS one more epoch...");
             for (int i = 0; i < x.length; i++) {
-                int j = Math.randomInt(x.length);
+                int j = MathEx.randomInt(x.length);
                 svm.learn(x[j], y[j]);
             }
             

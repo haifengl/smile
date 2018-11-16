@@ -25,7 +25,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 
 /**
@@ -43,7 +43,7 @@ public class KDTreeTest {
         for (int i = 0; i < data.length; i++) {
             data[i] = new double[10];
             for (int j = 0; j < data[i].length; j++)
-                data[i][j] = Math.random();
+                data[i][j] = MathEx.random();
         }
 
         kdtree = new KDTree<>(data, data);

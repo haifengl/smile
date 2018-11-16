@@ -26,7 +26,6 @@ import smile.data.type.DataType;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.*;
-import smile.math.MathEx;
 import smile.util.Strings;
 
 /**

@@ -29,7 +29,7 @@ import smile.data.parser.DelimitedTextParser;
 import smile.gap.BitString;
 import smile.validation.Accuracy;
 import smile.validation.ClassificationMeasure;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -83,7 +83,7 @@ public class GAFeatureSelectionTest {
             BitString[] result = instance.learn(size, generation, trainer, measure, x, y, testx, testy);
             
             for (BitString bits : result) {
-                System.out.format("%.2f%% %d ", 100*bits.fitness(), Math.sum(bits.bits()));
+                System.out.format("%.2f%% %d ", 100*bits.fitness(), MathEx.sum(bits.bits()));
                 for (int i = 0; i < x[0].length; i++) {
                     System.out.print(bits.bits()[i] + " ");
                 }

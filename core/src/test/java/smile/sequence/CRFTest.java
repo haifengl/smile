@@ -18,7 +18,6 @@ package smile.sequence;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.util.ArrayList;
 
@@ -31,6 +30,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
+import smile.math.MathEx;
 
 /**
  *
@@ -233,7 +233,7 @@ public class CRFTest {
 
     @Before
     public void setUp() {
-        smile.math.Math.setSeed(54217137L);
+        MathEx.setSeed(54217137L);
     }
 
     @After

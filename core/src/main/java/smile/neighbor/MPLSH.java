@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 import smile.math.IntArrayList;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.HeapSelect;
 import smile.stat.distribution.GaussianDistribution;
 
@@ -147,7 +147,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
                     a[i][j] = gaussian.rand();
                 }
 
-                b[i] = Math.random(0, r);
+                b[i] = MathEx.random(0, r);
             }
 
             ArrayList<HashEntry> list = new ArrayList<>();
@@ -798,7 +798,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
         data = new ArrayList<>();
         c = new int[k];
         for (int i = 0; i < c.length; i++) {
-            c[i] = Math.randomInt(P);
+            c[i] = MathEx.randomInt(P);
         }
 
         hash = new ArrayList<>(L);
@@ -1012,7 +1012,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
             }
 
             double[] key = keys.get(index);
-            double dist = Math.distance(q, key);
+            double dist = MathEx.distance(q, key);
             if (dist < heap.peek().distance) {
                 heap.add(new Neighbor<>(key, data.get(index), index, dist));
                 hit++;
@@ -1072,7 +1072,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
                                 continue;
                             }
 
-                            double distance = Math.distance(q, e.key);
+                            double distance = MathEx.distance(q, e.key);
                             if (distance <= radius) {
                                 boolean existed = false;
                                 for (Neighbor<double[], E> n : neighbors) {

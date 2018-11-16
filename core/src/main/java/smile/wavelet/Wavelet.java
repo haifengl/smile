@@ -16,7 +16,7 @@
 package smile.wavelet;
 
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * A wavelet is a wave-like oscillation with an amplitude that starts out at
@@ -141,7 +141,7 @@ public class Wavelet {
     public void transform(double[] a) {
         int n = a.length;
 
-        if (!Math.isPower2(n)) {
+        if (!MathEx.isPower2(n)) {
             throw new IllegalArgumentException("The data vector size is not a power of 2.");
         }
 
@@ -160,7 +160,7 @@ public class Wavelet {
     public void inverse(double[] a) {
         int n = a.length;
 
-        if (!Math.isPower2(n)) {
+        if (!MathEx.isPower2(n)) {
             throw new IllegalArgumentException("The data vector size is not a power of 2.");
         }
 
@@ -168,7 +168,7 @@ public class Wavelet {
             throw new IllegalArgumentException("The data vector size is less than wavelet coefficient size.");
         }
 
-        int start = n >> (int) Math.floor(Math.log2(n/(ncof-1)));
+        int start = n >> (int) Math.floor(MathEx.log2(n/(ncof-1)));
         for (int nn = start; nn <= n; nn <<= 1) {
             backward(a, nn);
         }

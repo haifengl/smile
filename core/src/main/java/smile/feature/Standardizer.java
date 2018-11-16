@@ -16,7 +16,7 @@
 
 package smile.feature;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.data.Attribute;
 
 /**
@@ -55,15 +55,15 @@ public class Standardizer extends FeatureTransform {
 
     @Override
     public void learn(Attribute[] attributes, double[][] data) {
-        mu = Math.colMeans(data);
-        std = Math.colSds(data);
+        mu = MathEx.colMeans(data);
+        std = MathEx.colSds(data);
 
         for (int i = 0; i < std.length; i++) {
             if (attributes[i].getType() != Attribute.Type.NUMERIC) {
                 mu[i] = Double.NaN;
             }
 
-            if (Math.isZero(std[i])) {
+            if (MathEx.isZero(std[i])) {
                 std[i] = 1.0;
             }
         }

@@ -16,7 +16,7 @@
 
 package smile.regression;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.Cholesky;
 import smile.math.matrix.DenseMatrix;
@@ -197,8 +197,8 @@ public class RidgeRegression implements Regression<double[]> {
             throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
         }
 
-        ym = Math.mean(y);                
-        center = Math.colMeans(x);
+        ym = MathEx.mean(y);
+        center = MathEx.colMeans(x);
         
         DenseMatrix X = Matrix.zeros(n, p);
         for (int i = 0; i < n; i++) {
@@ -210,13 +210,13 @@ public class RidgeRegression implements Regression<double[]> {
         scale = new double[p];
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
-                scale[j] += Math.sqr(X.get(i, j));
+                scale[j] += MathEx.sqr(X.get(i, j));
             }
-            scale[j] = Math.sqrt(scale[j] / n);
+            scale[j] = MathEx.sqrt(scale[j] / n);
         }
 
         for (int j = 0; j < p; j++) {
-            if (!Math.isZero(scale[j])) {
+            if (!MathEx.isZero(scale[j])) {
                 for (int i = 0; i < n; i++) {
                     X.div(i, j, scale[j]);
                 }
@@ -235,27 +235,27 @@ public class RidgeRegression implements Regression<double[]> {
         cholesky.solve(w);
         
         for (int j = 0; j < p; j++) {
-            if (!Math.isZero(scale[j])) {
+            if (!MathEx.isZero(scale[j])) {
                 w[j] /= scale[j];
             }
         }
-        b = ym - Math.dot(w, center);
+        b = ym - MathEx.dot(w, center);
 
         double[] yhat = new double[n];
         Matrix.newInstance(x).ax(w, yhat);
 
         double TSS = 0.0;
         RSS = 0.0;
-        double ybar = Math.mean(y);
+        double ybar = MathEx.mean(y);
         residuals = new double[n];
         for (int i = 0; i < n; i++) {
             double r = y[i] - yhat[i] - b;
             residuals[i] = r;
-            RSS += Math.sqr(r);
-            TSS += Math.sqr(y[i] - ybar);
+            RSS += MathEx.sqr(r);
+            TSS += MathEx.sqr(y[i] - ybar);
         }
 
-        error = Math.sqrt(RSS / (n - p - 1));
+        error = MathEx.sqrt(RSS / (n - p - 1));
         df = n - p - 1;
 
         RSquared = 1.0 - RSS / TSS;
@@ -271,7 +271,7 @@ public class RidgeRegression implements Regression<double[]> {
         coefficients = new double[p][4];
         for (int i = 0; i < p; i++) {
             coefficients[i][0] = w[i];
-            double se = error * Math.sqrt(inv.get(i, i));
+            double se = error * MathEx.sqrt(inv.get(i, i));
             coefficients[i][1] = se;
             double t = w[i] / se;
             coefficients[i][2] = t;
@@ -306,7 +306,7 @@ public class RidgeRegression implements Regression<double[]> {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        return Math.dot(x, w) + b;
+        return MathEx.dot(x, w) + b;
     }
 
     /**
@@ -413,7 +413,7 @@ public class RidgeRegression implements Regression<double[]> {
         double[] r = residuals.clone();
         builder.append("\nResiduals:\n");
         builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
-        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", Math.min(r), Math.q1(r), Math.median(r), Math.q3(r), Math.max(r)));
+        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", MathEx.min(r), MathEx.q1(r), MathEx.median(r), MathEx.q3(r), MathEx.max(r)));
 
         builder.append("\nCoefficients:\n");
         builder.append("            Estimate        Std. Error        t value        Pr(>|t|)\n");

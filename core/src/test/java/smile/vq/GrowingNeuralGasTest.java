@@ -21,7 +21,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.data.AttributeDataset;
 import smile.data.NominalAttribute;
 import smile.data.parser.DelimitedTextParser;
@@ -73,7 +73,7 @@ public class GrowingNeuralGasTest {
             
             GrowingNeuralGas gng = new GrowingNeuralGas(x[0].length);
             for (int i = 0; i < 10; i++) {
-                int[] index = Math.permutate(x.length);
+                int[] index = MathEx.permutate(x.length);
                 for (int j = 0; j < x.length; j++) {
                     gng.update(x[index[j]]);
                 }

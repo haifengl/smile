@@ -17,7 +17,7 @@
 package smile.feature;
 
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The ratio of between-groups to within-groups sum of squares is a univariate
@@ -45,7 +45,7 @@ public class SumSquaresRatio  implements FeatureRanking {
         }
 
         // class label set.
-        int[] labels = Math.unique(y);
+        int[] labels = MathEx.unique(y);
         Arrays.sort(labels);
         
         for (int i = 0; i < labels.length; i++) {
@@ -91,8 +91,8 @@ public class SumSquaresRatio  implements FeatureRanking {
         for (int i = 0; i < n; i++) {
             int yi = y[i];
             for (int j = 0; j < p; j++) {
-                bss[j] += Math.sqr(condmu[yi][j] - mu[j]);
-                wss[j] += Math.sqr(x[i][j] - condmu[yi][j]);
+                bss[j] += MathEx.sqr(condmu[yi][j] - mu[j]);
+                wss[j] += MathEx.sqr(x[i][j] - condmu[yi][j]);
             }
         }
 

@@ -21,7 +21,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -156,12 +156,12 @@ public class IsotonicMDSTest {
 
         IsotonicMDS mds = new IsotonicMDS(swiss, 2);
 
-        double sign = Math.signum(points[0][0] / mds.getCoordinates()[0][0]);
+        double sign = MathEx.signum(points[0][0] / mds.getCoordinates()[0][0]);
         for (int i = 0; i < points.length; i++) {
             points[i][0] *= sign;
         }
 
-        sign = Math.signum(points[0][1] / mds.getCoordinates()[0][1]);
+        sign = MathEx.signum(points[0][1] / mds.getCoordinates()[0][1]);
         for (int i = 0; i < points.length; i++) {
             points[i][1] *= sign;
         }
@@ -178,6 +178,6 @@ public class IsotonicMDSTest {
                 System.out.print(mds.getCoordinates()[i][j] + " ");
             System.out.println();
         }
-        assertTrue(Math.equals(points, mds.getCoordinates(), 1E-6));
+        assertTrue(MathEx.equals(points, mds.getCoordinates(), 1E-6));
     }
 }

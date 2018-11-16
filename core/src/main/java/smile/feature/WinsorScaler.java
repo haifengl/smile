@@ -16,7 +16,7 @@
 
 package smile.feature;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.data.Attribute;
 import smile.sort.QuickSelect;
 
@@ -117,7 +117,7 @@ public class WinsorScaler extends Scaler {
 
                 lo[j] = QuickSelect.select(x, i1);
                 hi[j] = QuickSelect.select(x, i2) - lo[j];
-                if (Math.isZero(hi[j])) {
+                if (MathEx.isZero(hi[j])) {
                     throw new IllegalArgumentException("Attribute " + j + " has constant values in the given range.");
                 }
             }

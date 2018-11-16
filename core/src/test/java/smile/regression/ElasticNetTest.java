@@ -26,7 +26,7 @@ import smile.data.AttributeDataset;
 import smile.data.NumericAttribute;
 import smile.data.parser.ArffParser;
 import smile.data.parser.DelimitedTextParser;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.validation.CrossValidation;
 
 /**
@@ -72,10 +72,10 @@ public class ElasticNetTest {
             CrossValidation cv = new CrossValidation(n, k);
             double rss = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 ElasticNet elasticnet = new ElasticNet(trainx, trainy, 0.8, 0.2);
 
@@ -85,7 +85,7 @@ public class ElasticNetTest {
                 }
             }
 
-            System.out.println("CPU 10-CV RMSE = " + Math.sqrt(rss / n));
+            System.out.println("CPU 10-CV RMSE = " + MathEx.sqrt(rss / n));
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -185,10 +185,10 @@ public class ElasticNetTest {
             CrossValidation cv = new CrossValidation(n, k);
             double rss = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 ElasticNet elasticnet = new ElasticNet(trainx, trainy, 0.8, 0.2);
 
@@ -198,7 +198,7 @@ public class ElasticNetTest {
                 }
             }
 
-            System.out.println("Diabetes 40-CV RMSE = " + Math.sqrt(rss / n));
+            System.out.println("Diabetes 40-CV RMSE = " + MathEx.sqrt(rss / n));
         } catch (Exception ex) {
             System.err.println(ex);
         }

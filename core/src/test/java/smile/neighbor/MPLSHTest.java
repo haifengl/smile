@@ -26,7 +26,7 @@ import org.junit.Test;
 import smile.data.AttributeDataset;
 import smile.data.NominalAttribute;
 import smile.data.parser.DelimitedTextParser;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 
 /**
@@ -60,7 +60,7 @@ public class MPLSHTest {
         }
         
         double[][] train = new double[500][];
-        int[] index = Math.permutate(x.length);
+        int[] index = MathEx.permutate(x.length);
         for (int i = 0; i < train.length; i++) {
             train[i] = x[index[i]];
         }

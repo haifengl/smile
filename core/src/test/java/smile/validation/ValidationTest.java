@@ -31,7 +31,7 @@ import smile.data.AttributeDataset;
 import smile.data.NominalAttribute;
 import smile.data.parser.ArffParser;
 import smile.data.parser.DelimitedTextParser;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 import smile.math.rbf.RadialBasisFunction;
 
@@ -98,7 +98,7 @@ public class ValidationTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
-            Math.standardize(datax);
+            MathEx.standardize(datax);
 
             int n = datax.length;
             int m = 3 * n / 4;
@@ -107,7 +107,7 @@ public class ValidationTest {
             double[][] testx = new double[n-m][];
             double[] testy = new double[n-m];
             
-            int[] index = Math.permutate(n);
+            int[] index = MathEx.permutate(n);
             for (int i = 0; i < m; i++) {
                 x[i] = datax[index[i]];
                 y[i] = datay[index[i]];
@@ -166,7 +166,7 @@ public class ValidationTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
-            Math.standardize(datax);
+            MathEx.standardize(datax);
 
             int n = datax.length;
             int m = 3 * n / 4;
@@ -175,7 +175,7 @@ public class ValidationTest {
             double[][] testx = new double[n-m][];
             double[] testy = new double[n-m];
             
-            int[] index = Math.permutate(n);
+            int[] index = MathEx.permutate(n);
             for (int i = 0; i < m; i++) {
                 x[i] = datax[index[i]];
                 y[i] = datay[index[i]];
@@ -233,7 +233,7 @@ public class ValidationTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] y = data.toArray(new double[data.size()]);
             double[][] x = data.toArray(new double[data.size()][]);
-            Math.standardize(x);
+            MathEx.standardize(x);
 
             RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
@@ -282,7 +282,7 @@ public class ValidationTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] y = data.toArray(new double[data.size()]);
             double[][] x = data.toArray(new double[data.size()][]);
-            Math.standardize(x);
+            MathEx.standardize(x);
 
             RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
@@ -329,7 +329,7 @@ public class ValidationTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] y = data.toArray(new double[data.size()]);
             double[][] x = data.toArray(new double[data.size()][]);
-            Math.standardize(x);
+            MathEx.standardize(x);
 
             RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
@@ -376,7 +376,7 @@ public class ValidationTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] y = data.toArray(new double[data.size()]);
             double[][] x = data.toArray(new double[data.size()][]);
-            Math.standardize(x);
+            MathEx.standardize(x);
 
             RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
@@ -405,8 +405,8 @@ public class ValidationTest {
             ClassifierTrainer<double[]> trainer = new LDA.Trainer();
             double[] accuracy = Validation.bootstrap(100, trainer, x, y);
             
-            System.out.println("100-fold bootstrap accuracy average = " + Math.mean(accuracy));
-            System.out.println("100-fold bootstrap accuracy std.dev = " + Math.sd(accuracy));
+            System.out.println("100-fold bootstrap accuracy average = " + MathEx.mean(accuracy));
+            System.out.println("100-fold bootstrap accuracy std.dev = " + MathEx.sd(accuracy));
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -424,13 +424,13 @@ public class ValidationTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] y = data.toArray(new double[data.size()]);
             double[][] x = data.toArray(new double[data.size()][]);
-            Math.standardize(x);
+            MathEx.standardize(x);
 
             RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
             double[] rmse = Validation.bootstrap(100, trainer, x, y);
-            System.out.println("100-fold bootstrap RMSE average = " + Math.mean(rmse));
-            System.out.println("100-fold bootstrap RMSE std.dev = " + Math.sd(rmse));
+            System.out.println("100-fold bootstrap RMSE average = " + MathEx.mean(rmse));
+            System.out.println("100-fold bootstrap RMSE std.dev = " + MathEx.sd(rmse));
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -461,7 +461,7 @@ public class ValidationTest {
             }
             
             System.out.println("On average:");
-            double[] avg = Math.colMeans(results);
+            double[] avg = MathEx.colMeans(results);
             for (int j = 0; j < measures.length; j++) {
                 System.out.format("%s = %.4f\t", measures[j], avg[j]);
             }
@@ -482,16 +482,16 @@ public class ValidationTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] y = data.toArray(new double[data.size()]);
             double[][] x = data.toArray(new double[data.size()][]);
-            Math.standardize(x);
+            MathEx.standardize(x);
 
             RBFNetwork.Trainer<double[]> trainer = new RBFNetwork.Trainer<>(new EuclideanDistance());
             trainer.setNumCenters(20);
             RegressionMeasure[] measures = {new RMSE(), new MeanAbsoluteDeviation()};
             double[][] results = Validation.bootstrap(100, trainer, x, y, measures);
-            System.out.println("100-fold bootstrap RMSE average = " + Math.mean(results[0]));
-            System.out.println("100-fold bootstrap RMSE std.dev = " + Math.sd(results[0]));
-            System.out.println("100-fold bootstrap AbsoluteDeviation average = " + Math.mean(results[1]));
-            System.out.println("100-fold bootstrap AbsoluteDeviation std.dev = " + Math.sd(results[1]));
+            System.out.println("100-fold bootstrap RMSE average = " + MathEx.mean(results[0]));
+            System.out.println("100-fold bootstrap RMSE std.dev = " + MathEx.sd(results[0]));
+            System.out.println("100-fold bootstrap AbsoluteDeviation average = " + MathEx.mean(results[1]));
+            System.out.println("100-fold bootstrap AbsoluteDeviation std.dev = " + MathEx.sd(results[1]));
         } catch (Exception ex) {
             System.err.println(ex);
         }

@@ -20,7 +20,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
+import smile.math.MathEx;
 
 import static org.junit.Assert.*;
 
@@ -162,7 +162,7 @@ public class SammonMappingTest {
         double[][] coords = sammon.getCoordinates();
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
-                assertEquals(Math.abs(points[i][j]), Math.abs(coords[i][j]), 1E-2);
+                assertEquals(MathEx.abs(points[i][j]), MathEx.abs(coords[i][j]), 1E-2);
             }
         }
     }

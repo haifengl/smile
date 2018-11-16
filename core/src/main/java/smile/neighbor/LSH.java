@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import smile.math.IntArrayList;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.HeapSelect;
 import smile.stat.distribution.GaussianDistribution;
 
@@ -201,7 +201,7 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
                     a[i][j] = gaussian.rand();
                 }
 
-                b[i] = Math.random(0, w);
+                b[i] = MathEx.random(0, w);
             }
 
             table = new HashEntry[H];
@@ -452,8 +452,8 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
         r1 = new int[k];
         r2 = new int[k];
         for (int i = 0; i < k; i++) {
-            r1[i] = Math.randomInt(MAX_HASH_RND);
-            r2[i] = Math.randomInt(MAX_HASH_RND);
+            r1[i] = MathEx.randomInt(MAX_HASH_RND);
+            r2[i] = MathEx.randomInt(MAX_HASH_RND);
         }
 
         hash = new ArrayList<>(L);
@@ -503,7 +503,7 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
             if (q == key && identicalExcluded) {
                 continue;
             }
-            double distance = Math.distance(q, key);
+            double distance = MathEx.distance(q, key);
             if (distance < neighbor.distance) {
                 neighbor.index = index;
                 neighbor.distance = distance;
@@ -536,7 +536,7 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
                 continue;
             }
 
-            double distance = Math.distance(q, key);
+            double distance = MathEx.distance(q, key);
             if (distance < heap.peek().distance) {
                 heap.add(new Neighbor<>(key, data.get(index), index, distance));
                 hit++;
@@ -570,7 +570,7 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
                 continue;
             }
 
-            double distance = Math.distance(q, key);
+            double distance = MathEx.distance(q, key);
             if (distance <= radius) {
                 neighbors.add(new Neighbor<>(key, data.get(index), index, distance));
             }

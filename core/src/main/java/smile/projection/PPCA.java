@@ -16,7 +16,7 @@
 package smile.projection;
 
 import java.io.Serializable;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Cholesky;
@@ -105,7 +105,7 @@ public class PPCA implements Projection<double[]>, Serializable {
 
         double[] y = new double[projection.nrows()];
         projection.ax(x, y);
-        Math.minus(y, pmu);
+        MathEx.minus(y, pmu);
         return y;
     }
 
@@ -118,7 +118,7 @@ public class PPCA implements Projection<double[]>, Serializable {
         double[][] y = new double[x.length][projection.nrows()];
         for (int i = 0; i < x.length; i++) {
             projection.ax(x[i], y[i]);
-            Math.minus(y[i], pmu);
+            MathEx.minus(y[i], pmu);
         }
         return y;
     }
@@ -132,7 +132,7 @@ public class PPCA implements Projection<double[]>, Serializable {
         int m = data.length;
         int n = data[0].length;
 
-        mu = Math.colMeans(data);
+        mu = MathEx.colMeans(data);
         DenseMatrix cov = Matrix.zeros(n, n);
         for (int l = 0; l < m; l++) {
             for (int i = 0; i < n; i++) {
@@ -163,7 +163,7 @@ public class PPCA implements Projection<double[]>, Serializable {
         loading = Matrix.zeros(n, k);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < k; j++) {
-                loading.set(i, j, evectors.get(i, j) * Math.sqrt(evalues[j] - noise));
+                loading.set(i, j, evectors.get(i, j) * MathEx.sqrt(evalues[j] - noise));
             }
         }
 

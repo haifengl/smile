@@ -19,7 +19,7 @@ package smile.feature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.data.Attribute;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Normalize samples individually to unit norm. Each sample (i.e. each row of
@@ -97,20 +97,20 @@ public class Normalizer extends FeatureTransform {
 
         switch (norm) {
             case L1:
-                scale = Math.norm1(x);
+                scale = MathEx.norm1(x);
                 break;
             case L2:
-                scale = Math.norm2(x);
+                scale = MathEx.norm2(x);
                 break;
             case Inf:
-                scale = Math.normInf(x);
+                scale = MathEx.normInf(x);
                 break;
             default:
                 throw new IllegalStateException("Unknown type of norm: " + norm);
         }
 
         double[] y = copy ? new double[x.length] : x;
-        if (Math.isZero(scale)) {
+        if (MathEx.isZero(scale)) {
             if (y != x) {
                 System.arraycopy(x, 0, y, 0, x.length);
             }
