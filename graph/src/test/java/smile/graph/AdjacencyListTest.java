@@ -23,8 +23,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import smile.math.Math;
-import smile.math.matrix.SparseMatrix;
+import smile.math.MathEx;
 
 /**
  *
@@ -340,7 +339,7 @@ public class AdjacencyListTest {
         graph.addEdge(9, 12);
         graph.addEdge(11, 12);
 
-        assertTrue(Math.equals(ts, graph.sortdfs()));
+        assertTrue(MathEx.equals(ts, graph.sortdfs()));
     }
 
     /**
@@ -363,7 +362,7 @@ public class AdjacencyListTest {
         graph.addEdge(5, 4);
 
         int[][] cc2 = graph.dfs();
-        assertTrue(Math.equals(cc, cc2));
+        assertTrue(MathEx.equals(cc, cc2));
     }
 
     /**
@@ -414,7 +413,7 @@ public class AdjacencyListTest {
         graph.addEdge(9, 12);
         graph.addEdge(11, 12);
 
-        assertTrue(Math.equals(ts, graph.sortbfs()));
+        assertTrue(MathEx.equals(ts, graph.sortbfs()));
     }
 
     /**
@@ -437,7 +436,7 @@ public class AdjacencyListTest {
         graph.addEdge(5, 4);
 
         int[][] cc2 = graph.bfs();
-        assertTrue(Math.equals(cc, cc2));
+        assertTrue(MathEx.equals(cc, cc2));
     }
 
     /**
@@ -470,6 +469,6 @@ public class AdjacencyListTest {
 
         double[][] wt2 = graph.dijkstra();
         
-        assertTrue(Math.equals(wt, wt2));
+        assertTrue(MathEx.equals(wt, wt2));
     }
 }
