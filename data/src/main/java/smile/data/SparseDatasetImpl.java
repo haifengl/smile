@@ -35,6 +35,8 @@ import smile.math.matrix.SparseMatrix;
  * @author Haifeng Li
  */
 class SparseDatasetImpl implements SparseDataset {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseDatasetImpl.class);
+
     /**
      * The data objects.
      */
@@ -74,26 +76,26 @@ class SparseDatasetImpl implements SparseDataset {
         for (SparseArray x : data) {
             x.sort(); // sort array index into ascending order.
 
-            n += x.size();
             int i = -1; // index of previous element
             for (SparseArray.Entry e : x) {
                 if (e.i < 0) {
                     throw new IllegalArgumentException(String.format("Negative index of nonzero element: %d", e.i));
                 }
 
-                if (ncols <= e.i) {
-                    ncols = e.i + 1;
-                    int[] newColSize = new int[3 * ncols / 2];
-                    System.arraycopy(colSize, 0, newColSize, 0, colSize.length);
-                    colSize = newColSize;
-                }
-
-                colSize[e.i]++;
                 if (e.i == i) {
-                    throw new IllegalArgumentException(String.format("Duplicated indices of nonzero elements: %d in a row", e.i));
-                }
+                    logger.warn(String.format("Ignore duplicated indices: %d in [%s]", e, x));
+                } else {
+                    if (ncols <= e.i) {
+                        ncols = e.i + 1;
+                        int[] newColSize = new int[3 * ncols / 2];
+                        System.arraycopy(colSize, 0, newColSize, 0, colSize.length);
+                        colSize = newColSize;
+                    }
 
-                i = e.i;
+                    colSize[e.i]++;
+                    n++;
+                    i = e.i;
+                }
             }
         }
     }
@@ -124,7 +126,7 @@ class SparseDatasetImpl implements SparseDataset {
     }
 
     @Override
-    public SparseMatrix toSparseMatrix() {
+    public SparseMatrix toMatrix() {
         int[] pos = new int[ncols];
         int[] colIndex = new int[ncols + 1];
         for (int i = 0; i < ncols; i++) {

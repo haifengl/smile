@@ -166,7 +166,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     /**
      * Returns the number of nonzero values.
      */
-    public int size() {
+    public int length() {
         return colIndex[ncols];
     }
 
@@ -309,7 +309,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         }
 
         int m = nrows;
-        int anz = size();
+        int anz = length();
         int n = B.ncols;
         int[] Bp = B.colIndex;
         int[] Bi = B.rowIndex;
