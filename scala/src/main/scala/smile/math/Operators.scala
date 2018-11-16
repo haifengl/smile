@@ -309,7 +309,7 @@ private[math] abstract class PimpedArrayLike[T: ClassTag] {
     */
   def sample(n: Int): Array[T] = {
     val perm = a.indices.toArray
-    Math.permutate(perm)
+    MathEx.permutate(perm)
     (0 until n).map(i => a(perm(i))).toArray
   }
 

@@ -279,10 +279,10 @@ case class LogVector(x: VectorExpression) extends VectorExpression {
 
 case class Log2Vector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
-  override def apply(i: Int): Double = Math.log2(x(i))
+  override def apply(i: Int): Double = MathEx.log2(x(i))
   override lazy val toArray: Array[Double] = {
     val z = new Array[Double](x.length)
-    for (i <- 0 until x.length) z(i) = Math.log2(x(i))
+    for (i <- 0 until x.length) z(i) = MathEx.log2(x(i))
     z
   }
 }
@@ -798,12 +798,12 @@ case class LogMatrix(A: MatrixExpression) extends MatrixExpression {
 case class Log2Matrix(A: MatrixExpression) extends MatrixExpression {
   override def nrows: Int = A.nrows
   override def ncols: Int = A.ncols
-  override def apply(i: Int, j: Int): Double = Math.log2(A(i, j))
+  override def apply(i: Int, j: Int): Double = MathEx.log2(A(i, j))
   override lazy val toMatrix: DenseMatrix = {
     val z = Matrix.zeros(A.nrows, A.ncols)
     for (j <- 0 until ncols)
       for (i <- 0 until nrows)
-        z(i, j) = Math.log2(A(i, j))
+        z(i, j) = MathEx.log2(A(i, j))
     z
   }
 }

@@ -16,9 +16,9 @@
 
 package smile.validation
 
-import smile.classification.{SoftClassifier, Classifier}
+import smile.classification.{Classifier, SoftClassifier}
+import smile.math.MathEx
 import smile.regression.Regression
-import smile.math.Math
 import smile.util._
 
 /** Model validation.
@@ -270,8 +270,8 @@ trait Operators {
     val split = new LOOCV(n)
     for (i <- 0 until n) {
       print(s"loocv ${i+1}...")
-      val trainx = Math.slice[T](x, split.train(i))
-      val trainy = Math.slice(y, split.train(i))
+      val trainx = MathEx.slice[T](x, split.train(i))
+      val trainy = MathEx.slice(y, split.train(i))
       val model = trainer(trainx, trainy)
       predictions(split.test(i)) = model.predict(x(split.test(i)))
     }
@@ -300,8 +300,8 @@ trait Operators {
     val split = new LOOCV(n)
     for (i <- 0 until n) {
       print(s"loocv ${i+1}...")
-      val trainx = Math.slice[T](x, split.train(i))
-      val trainy = Math.slice(y, split.train(i))
+      val trainx = MathEx.slice[T](x, split.train(i))
+      val trainy = MathEx.slice(y, split.train(i))
       val model = trainer(trainx, trainy)
       predictions(split.test(i)) = model.predict(x(split.test(i)))
     }
@@ -339,8 +339,8 @@ trait Operators {
     val split = new CrossValidation(n, k)
     for (i <- 0 until k) {
       print(s"cv ${i+1}...")
-      val trainx = Math.slice[T](x, split.train(i))
-      val trainy = Math.slice(y, split.train(i))
+      val trainx = MathEx.slice[T](x, split.train(i))
+      val trainy = MathEx.slice(y, split.train(i))
       val model = trainer(trainx, trainy)
       split.test(i).foreach { j =>
         predictions(j) = model.predict(x(j))
@@ -372,8 +372,8 @@ trait Operators {
     val split = new CrossValidation(n, k)
     for (i <- 0 until k) {
       print(s"cv ${i+1}...")
-      val trainx = Math.slice[T](x, split.train(i))
-      val trainy = Math.slice(y, split.train(i))
+      val trainx = MathEx.slice[T](x, split.train(i))
+      val trainy = MathEx.slice(y, split.train(i))
       val model = trainer(trainx, trainy)
       split.test(i).foreach { j =>
         predictions(j) = model.predict(x(j))
@@ -408,8 +408,8 @@ trait Operators {
     val m = measuresOrAccuracy(measures)
     val results = (0 until k).map { i =>
       print(s"bootstrap ${i+1}...")
-      val trainx = Math.slice[T](x, split.train(i))
-      val trainy = Math.slice(y, split.train(i))
+      val trainx = MathEx.slice[T](x, split.train(i))
+      val trainy = MathEx.slice(y, split.train(i))
       val model = trainer(trainx, trainy)
 
       val nt = split.test(i).length
@@ -428,7 +428,7 @@ trait Operators {
       }.toArray
     }.toArray
 
-    val avg = Math.colMeans(results)
+    val avg = MathEx.colMeans(results)
     println("Bootstrap average:")
     for (i <- 0 until avg.length) {
       println(f"${m(i)}%s: ${100*avg(i)}%.2f%%")
@@ -452,8 +452,8 @@ trait Operators {
     val m = measuresOrRMSE(measures)
     val results = (0 until k).map { i =>
       print(s"bootstrap ${i+1}...")
-      val trainx = Math.slice[T](x, split.train(i))
-      val trainy = Math.slice(y, split.train(i))
+      val trainx = MathEx.slice[T](x, split.train(i))
+      val trainy = MathEx.slice(y, split.train(i))
       val model = trainer(trainx, trainy)
 
       val nt = split.test(i).length
@@ -472,7 +472,7 @@ trait Operators {
       }.toArray
     }.toArray
 
-    val avg = Math.colMeans(results)
+    val avg = MathEx.colMeans(results)
     println("Bootstrap average:")
     for (i <- 0 until avg.length) {
       println(f"${m(i)}%s: ${avg(i)}%.4f")
