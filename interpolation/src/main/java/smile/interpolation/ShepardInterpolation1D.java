@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.interpolation;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Shepard interplation is a special case of normalized radial basis function

@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.interpolation;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.rbf.GaussianRadialBasis;
@@ -114,7 +114,7 @@ public class RBFInterpolation {
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
             for (int j = 0; j <= i; j++) {
-                double r = rbf.f(Math.distance(x[i], x[j]));
+                double r = rbf.f(MathEx.distance(x[i], x[j]));
                 G.set(i, j, r);
                 G.set(j, i, r);
                 sum += 2 * r;
@@ -148,7 +148,7 @@ public class RBFInterpolation {
 
         double sum = 0.0, sumw = 0.0;
         for (int i = 0; i < this.x.length; i++) {
-            double f = rbf.f(Math.distance(x, this.x[i]));
+            double f = rbf.f(MathEx.distance(x, this.x[i]));
             sumw += w[i] * f;
             sum += f;
         }
