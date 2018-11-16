@@ -19,7 +19,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * A contour plot is a graphical technique for representing a 3-dimensional
@@ -450,8 +450,8 @@ public class Contour extends Plot {
             z = zz;
         }
 
-        zMin = Math.min(z);
-        zMax = Math.max(z);
+        zMin = MathEx.min(z);
+        zMax = MathEx.max(z);
 
         contours = new ArrayList<>(numLevels);
 
@@ -974,7 +974,7 @@ public class Contour extends Plot {
             if (log < 0) {
                 decimal = (int) -log + 1;
             }
-            g.drawTextBaseRatio(String.valueOf(Math.round(levels[levels.length-1], decimal)), 0.0, 1.0, start);
+            g.drawTextBaseRatio(String.valueOf(MathEx.round(levels[levels.length-1], decimal)), 0.0, 1.0, start);
 
             start[1] = 0.15 - height;
             log = Math.log10(Math.abs(levels[0]));
@@ -982,7 +982,7 @@ public class Contour extends Plot {
             if (log < 0) {
                 decimal = (int) -log + 1;
             }
-            g.drawTextBaseRatio(String.valueOf(Math.round(levels[0], decimal)), 0.0, 0.0, start);
+            g.drawTextBaseRatio(String.valueOf(MathEx.round(levels[0], decimal)), 0.0, 0.0, start);
 
             g.setColor(c);
         }
@@ -1025,8 +1025,8 @@ public class Contour extends Plot {
      * @param z a matrix.
      */
     public static PlotCanvas plot(double[] x, double[] y, double[][] z) {
-        double[] lowerBound = {Math.min(x), Math.min(y)};
-        double[] upperBound = {Math.max(x), Math.max(y)};
+        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
+        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
         canvas.add(new Contour(x, y, z));
 
@@ -1038,8 +1038,8 @@ public class Contour extends Plot {
      * @param z a matrix.
      */
     public static PlotCanvas plot(double[] x, double[] y, double[][] z, double[] levels, Color[] palette) {
-        double[] lowerBound = {Math.min(x), Math.min(y)};
-        double[] upperBound = {Math.max(x), Math.max(y)};
+        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
+        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
         canvas.add(new Contour(x, y, z, levels, palette));
 

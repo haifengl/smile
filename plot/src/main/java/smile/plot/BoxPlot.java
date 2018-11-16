@@ -17,7 +17,7 @@ package smile.plot;
 
 import java.awt.Color;
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * A boxplot is a convenient way of graphically depicting groups of numerical
@@ -203,8 +203,8 @@ public class BoxPlot extends Plot {
      * @param data a sample set.
      */
     public static PlotCanvas plot(double[] data) {
-        double[] lowerBound = {0, Math.min(data)};
-        double[] upperBound = {1, Math.max(data)};
+        double[] lowerBound = {0, MathEx.min(data)};
+        double[] upperBound = {1, MathEx.max(data)};
 
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
         canvas.add(new BoxPlot(data));
@@ -220,8 +220,8 @@ public class BoxPlot extends Plot {
      * @param data a data matrix of which each row will create a box plot.
      */
     public static PlotCanvas plot(double[]... data) {
-        double[] lowerBound = {0, Math.min(data)};
-        double[] upperBound = {data.length, Math.max(data)};
+        double[] lowerBound = {0, MathEx.min(data)};
+        double[] upperBound = {data.length, MathEx.max(data)};
 
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
         canvas.add(new BoxPlot(data));
@@ -242,8 +242,8 @@ public class BoxPlot extends Plot {
             throw new IllegalArgumentException("Data size and label size don't match.");
         }
 
-        double[] lowerBound = {0, Math.min(data)};
-        double[] upperBound = {data.length, Math.max(data)};
+        double[] lowerBound = {0, MathEx.min(data)};
+        double[] upperBound = {data.length, MathEx.max(data)};
 
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
         canvas.add(new BoxPlot(labels, data));

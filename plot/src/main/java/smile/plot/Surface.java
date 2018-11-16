@@ -16,7 +16,7 @@
 package smile.plot;
 
 import java.awt.Color;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.QuickSort;
 
 /**
@@ -77,8 +77,8 @@ public class Surface extends Plot {
      * Initialization.
      */
     private void init(double[][] z) {
-        max = Math.max(z);
-        min = Math.min(z);
+        max = MathEx.max(z);
+        min = MathEx.min(z);
         if (palette != null) {
             width = (max - min) / palette.length;
         }
@@ -142,8 +142,8 @@ public class Surface extends Plot {
      * Initialization.
      */
     private void init(double[] x, double[] y, double[][] z) {
-        max = Math.max(z);
-        min = Math.min(z);
+        max = MathEx.max(z);
+        min = MathEx.min(z);
         if (palette != null) {
             width = (max - min) / palette.length;
         }
@@ -335,8 +335,8 @@ public class Surface extends Plot {
      * surface will be set to 0.5, 1.5, 2.5, ...
      */
     public static PlotCanvas plot(double[][] z) {
-        double[] lowerBound = {0, 0, Math.min(z)};
-        double[] upperBound = {z.length, z[0].length, Math.max(z)};
+        double[] lowerBound = {0, 0, MathEx.min(z)};
+        double[] upperBound = {z.length, z[0].length, MathEx.max(z)};
 
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
@@ -353,8 +353,8 @@ public class Surface extends Plot {
      * @param palette the color palette.
      */
     public static PlotCanvas plot(double[][] z, Color[] palette) {
-        double[] lowerBound = {0, 0, Math.min(z)};
-        double[] upperBound = {z.length, z[0].length, Math.max(z)};
+        double[] lowerBound = {0, 0, MathEx.min(z)};
+        double[] upperBound = {z.length, z[0].length, MathEx.max(z)};
 
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
@@ -371,8 +371,8 @@ public class Surface extends Plot {
      * @param z the z-axis values of surface.
      */
     public static PlotCanvas plot(double[] x, double[] y, double[][] z) {
-        double[] lowerBound = {Math.min(x), Math.min(y), Math.min(z)};
-        double[] upperBound = {Math.max(x), Math.max(y), Math.max(z)};
+        double[] lowerBound = {MathEx.min(x), MathEx.min(y), MathEx.min(z)};
+        double[] upperBound = {MathEx.max(x), MathEx.max(y), MathEx.max(z)};
 
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
@@ -390,8 +390,8 @@ public class Surface extends Plot {
      * @param palette the color palette.
      */
     public static PlotCanvas plot(double[] x, double[] y, double[][] z, Color[] palette) {
-        double[] lowerBound = {Math.min(x), Math.min(y), Math.min(z)};
-        double[] upperBound = {Math.max(x), Math.max(y), Math.max(z)};
+        double[] lowerBound = {MathEx.min(x), MathEx.min(y), MathEx.min(z)};
+        double[] upperBound = {MathEx.max(x), MathEx.max(y), MathEx.max(z)};
 
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 

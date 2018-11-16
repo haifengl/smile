@@ -17,7 +17,7 @@ package smile.plot;
 
 import java.awt.Color;
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.stat.distribution.Distribution;
 import smile.stat.distribution.DiscreteDistribution;
 import smile.stat.distribution.GaussianDistribution;
@@ -173,8 +173,8 @@ public class QQPlot extends Plot {
      * @param x a sample set.
      */
     public static PlotCanvas plot(double[] x) {
-        double[] lowerBound = {Math.min(x), GaussianDistribution.getInstance().quantile(1 / (x.length + 1.0))};
-        double[] upperBound = {Math.max(x), GaussianDistribution.getInstance().quantile(x.length / (x.length + 1.0))};
+        double[] lowerBound = {MathEx.min(x), GaussianDistribution.getInstance().quantile(1 / (x.length + 1.0))};
+        double[] upperBound = {MathEx.max(x), GaussianDistribution.getInstance().quantile(x.length / (x.length + 1.0))};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
         canvas.add(new QQPlot(x));
         return canvas;
@@ -188,8 +188,8 @@ public class QQPlot extends Plot {
      * @param d a distribution.
      */
     public static PlotCanvas plot(double[] x, Distribution d) {
-        double[] lowerBound = {Math.min(x), d.quantile(1 / (x.length + 1.0))};
-        double[] upperBound = {Math.max(x), d.quantile(x.length / (x.length + 1.0))};
+        double[] lowerBound = {MathEx.min(x), d.quantile(1 / (x.length + 1.0))};
+        double[] upperBound = {MathEx.max(x), d.quantile(x.length / (x.length + 1.0))};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
         canvas.add(new QQPlot(x, d));
         return canvas;
@@ -202,8 +202,8 @@ public class QQPlot extends Plot {
      * @param y a sample set.
      */
     public static PlotCanvas plot(double[] x, double[] y) {
-        double[] lowerBound = {Math.min(x), Math.min(y)};
-        double[] upperBound = {Math.max(x), Math.max(y)};
+        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
+        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
         canvas.add(new QQPlot(x, y));
         return canvas;
@@ -217,8 +217,8 @@ public class QQPlot extends Plot {
      * @param d a distribution.
      */
     public static PlotCanvas plot(int[] x, DiscreteDistribution d) {
-        double[] lowerBound = {Math.min(x), d.quantile(1 / (x.length + 1.0))};
-        double[] upperBound = {Math.max(x), d.quantile(x.length / (x.length + 1.0))};
+        double[] lowerBound = {MathEx.min(x), d.quantile(1 / (x.length + 1.0))};
+        double[] upperBound = {MathEx.max(x), d.quantile(x.length / (x.length + 1.0))};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
         canvas.add(new QQPlot(x, d));
         return canvas;
@@ -231,8 +231,8 @@ public class QQPlot extends Plot {
      * @param y a sample set.
      */
     public static PlotCanvas plot(int[] x, int[] y) {
-        double[] lowerBound = {Math.min(x), Math.min(y)};
-        double[] upperBound = {Math.max(x), Math.max(y)};
+        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
+        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
         canvas.add(new QQPlot(x, y));
         return canvas;

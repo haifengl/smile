@@ -16,7 +16,7 @@
 package smile.plot;
 
 import java.awt.Color;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * A barplot draws bars with heights proportional to the value.
@@ -234,8 +234,8 @@ public class BarPlot extends Plot {
      * @param data a vector of which values will determine the heights of bars.
      */
     public static PlotCanvas plot(String id, double[] data) {
-        double[] lowerBound = {0, Math.min(data)};
-        double[] upperBound = {data.length, Math.max(data)};
+        double[] lowerBound = {0, MathEx.min(data)};
+        double[] upperBound = {data.length, MathEx.max(data)};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
         BarPlot plot = new BarPlot(data);
@@ -268,8 +268,8 @@ public class BarPlot extends Plot {
             throw new IllegalArgumentException("Data size and label size don't match.");
         }
 
-        double[] lowerBound = {0, Math.min(data)};
-        double[] upperBound = {data.length, Math.max(data)};
+        double[] lowerBound = {0, MathEx.min(data)};
+        double[] upperBound = {data.length, MathEx.max(data)};
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
 
         BarPlot plot = new BarPlot(labels, data);
@@ -309,8 +309,8 @@ public class BarPlot extends Plot {
             throw new IllegalArgumentException("Dataset is not 2-dimensional.");
         }
 
-        double[] lowerBound = Math.colMin(data);
-        double[] upperBound = Math.colMax(data);
+        double[] lowerBound = MathEx.colMin(data);
+        double[] upperBound = MathEx.colMax(data);
         PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
         canvas.getAxis(0).setGridVisible(false);
         BarPlot plot = new BarPlot(data);
