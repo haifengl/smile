@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.math.kernel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The linear dot product kernel. When using a linear kernel, input space is
@@ -39,6 +39,6 @@ public class LinearKernel implements MercerKernel<double[]> {
 
     @Override
     public double k(double[] x, double[] y) {
-        return Math.dot(x, y);
+        return MathEx.dot(x, y);
     }
 }

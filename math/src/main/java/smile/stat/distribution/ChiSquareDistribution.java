@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.special.Gamma;
 
 /**

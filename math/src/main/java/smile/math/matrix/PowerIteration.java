@@ -17,7 +17,7 @@ package smile.math.matrix;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The power iteration (also known as power method) is an eigenvalue algorithm
@@ -41,7 +41,7 @@ public class PowerIteration {
      * @return the largest eigen value.
      */
     public static double eigen(Matrix A, double[] v) {
-        return eigen(A, v, smile.math.Math.max(1.0E-10, A.nrows() * Math.EPSILON));
+        return eigen(A, v, Math.max(1.0E-10, A.nrows() * MathEx.EPSILON));
     }
 
     /**
@@ -142,7 +142,7 @@ public class PowerIteration {
         }
 
         int n = A.nrows();
-        tol = Math.max(tol, Math.EPSILON * n);
+        tol = Math.max(tol, MathEx.EPSILON * n);
 
         double[] z = new double[n];
         double lambda = ax(A, v, z, p);

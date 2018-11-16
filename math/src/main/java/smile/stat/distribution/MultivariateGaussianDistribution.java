@@ -16,7 +16,7 @@
 package smile.stat.distribution;
 
 import smile.math.matrix.Cholesky;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 
@@ -132,7 +132,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
      */
     public MultivariateGaussianDistribution(double[][] data, boolean diagonal) {
         this.diagonal = diagonal;
-        mu = Math.colMeans(data);
+        mu = MathEx.colMeans(data);
 
         if (diagonal) {
             sigma = Matrix.zeros(data[0].length, data[0].length);
@@ -146,7 +146,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
                 sigma.div(j, j, (data.length - 1));
             }
         } else {
-            sigma = Matrix.newInstance(Math.cov(data, mu));
+            sigma = Matrix.newInstance(MathEx.cov(data, mu));
         }
 
         numParameters = mu.length + mu.length * (mu.length + 1) / 2;
@@ -208,7 +208,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         }
 
         double[] v = x.clone();
-        Math.minus(v, mu);
+        MathEx.minus(v, mu);
         double result = sigmaInv.xax(v) / -2.0;
         return result - pdfConstant;
     }
@@ -238,7 +238,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         double errMax = 0.001;
 
         double[] v = x.clone();
-        Math.minus(v, mu);
+        MathEx.minus(v, mu);
 
         double p = 0.0;
         double varSum = 0.0;
@@ -254,7 +254,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         double err = 2 * errMax;
         int N;
         for (N = 1; err > errMax && N <= Nmax; N++) {
-            double[] w = Math.random(dim - 1);
+            double[] w = MathEx.random(dim - 1);
             for (int i = 1; i < dim; i++) {
                 y[i - 1] = GaussianDistribution.getInstance().quantile(w[i - 1] * e[i - 1]);
                 double q = 0.0;
@@ -284,8 +284,8 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         for (int i = 0; i < mu.length; i++) {
             double u, v, q;
             do {
-                u = Math.random();
-                v = 1.7156 * (Math.random() - 0.5);
+                u = MathEx.random();
+                v = 1.7156 * (MathEx.random() - 0.5);
                 double x = u - 0.449871;
                 double y = Math.abs(v) + 0.386595;
                 q = x * x + y * (0.19600 * y - 0.25472 * x);
@@ -303,7 +303,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
             }
         }
 
-        Math.plus(pt, mu);
+        MathEx.plus(pt, mu);
 
         return pt;
     }

@@ -20,7 +20,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.matrix.*;
 
 import static org.junit.Assert.*;
 
@@ -28,9 +27,9 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class MathTest {
+public class MathExTest {
 
-    public MathTest() {
+    public MathExTest() {
     }
 
     @BeforeClass
@@ -52,10 +51,10 @@ public class MathTest {
     @Test
     public void testIsZero() {
         System.out.println("isZero");
-        assertEquals(true, Math.isZero(0.0));
-        assertEquals(true, Math.isZero(Double.MIN_VALUE));
-        assertEquals(true, Math.isZero(Double.MIN_NORMAL));
-        assertEquals(false, Math.isZero(Math.EPSILON));
+        assertEquals(true, MathEx.isZero(0.0));
+        assertEquals(true, MathEx.isZero(Double.MIN_VALUE));
+        assertEquals(true, MathEx.isZero(Double.MIN_NORMAL));
+        assertEquals(false, MathEx.isZero(MathEx.EPSILON));
     }
 
     /**
@@ -64,22 +63,22 @@ public class MathTest {
     @Test
     public void testIsPower2() {
         System.out.println("isPower2");
-        assertEquals(false, Math.isPower2(-1));
-        assertEquals(false, Math.isPower2(0));
-        assertEquals(true, Math.isPower2(1));
-        assertEquals(true, Math.isPower2(2));
-        assertEquals(false, Math.isPower2(3));
-        assertEquals(true, Math.isPower2(4));
-        assertEquals(true, Math.isPower2(8));
-        assertEquals(true, Math.isPower2(16));
-        assertEquals(true, Math.isPower2(32));
-        assertEquals(true, Math.isPower2(64));
-        assertEquals(true, Math.isPower2(128));
-        assertEquals(true, Math.isPower2(256));
-        assertEquals(true, Math.isPower2(512));
-        assertEquals(true, Math.isPower2(1024));
-        assertEquals(true, Math.isPower2(65536));
-        assertEquals(true, Math.isPower2(131072));
+        assertEquals(false, MathEx.isPower2(-1));
+        assertEquals(false, MathEx.isPower2(0));
+        assertEquals(true, MathEx.isPower2(1));
+        assertEquals(true, MathEx.isPower2(2));
+        assertEquals(false, MathEx.isPower2(3));
+        assertEquals(true, MathEx.isPower2(4));
+        assertEquals(true, MathEx.isPower2(8));
+        assertEquals(true, MathEx.isPower2(16));
+        assertEquals(true, MathEx.isPower2(32));
+        assertEquals(true, MathEx.isPower2(64));
+        assertEquals(true, MathEx.isPower2(128));
+        assertEquals(true, MathEx.isPower2(256));
+        assertEquals(true, MathEx.isPower2(512));
+        assertEquals(true, MathEx.isPower2(1024));
+        assertEquals(true, MathEx.isPower2(65536));
+        assertEquals(true, MathEx.isPower2(131072));
     }
 
     /**
@@ -88,10 +87,10 @@ public class MathTest {
     @Test
     public void testLog2() {
         System.out.println("log2");
-        assertEquals(0, Math.log2(1), 1E-6);
-        assertEquals(1, Math.log2(2), 1E-6);
-        assertEquals(1.584963, Math.log2(3), 1E-6);
-        assertEquals(2, Math.log2(4), 1E-6);
+        assertEquals(0, MathEx.log2(1), 1E-6);
+        assertEquals(1, MathEx.log2(2), 1E-6);
+        assertEquals(1.584963, MathEx.log2(3), 1E-6);
+        assertEquals(2, MathEx.log2(4), 1E-6);
     }
 
     /**
@@ -100,10 +99,10 @@ public class MathTest {
     @Test
     public void testSqr() {
         System.out.println("sqr");
-        assertEquals(0, Math.sqr(0), 1E-10);
-        assertEquals(1, Math.sqr(1), 1E-10);
-        assertEquals(4, Math.sqr(2), 1E-10);
-        assertEquals(9, Math.sqr(3), 1E-10);
+        assertEquals(0, MathEx.sqr(0), 1E-10);
+        assertEquals(1, MathEx.sqr(1), 1E-10);
+        assertEquals(4, MathEx.sqr(2), 1E-10);
+        assertEquals(9, MathEx.sqr(3), 1E-10);
     }
 
     /**
@@ -112,11 +111,11 @@ public class MathTest {
     @Test
     public void testFactorial() {
         System.out.println("factorial");
-        assertEquals(1.0, Math.factorial(0), 1E-7);
-        assertEquals(1.0, Math.factorial(1), 1E-7);
-        assertEquals(2.0, Math.factorial(2), 1E-7);
-        assertEquals(6.0, Math.factorial(3), 1E-7);
-        assertEquals(24.0, Math.factorial(4), 1E-7);
+        assertEquals(1.0, MathEx.factorial(0), 1E-7);
+        assertEquals(1.0, MathEx.factorial(1), 1E-7);
+        assertEquals(2.0, MathEx.factorial(2), 1E-7);
+        assertEquals(6.0, MathEx.factorial(3), 1E-7);
+        assertEquals(24.0, MathEx.factorial(4), 1E-7);
     }
 
     /**
@@ -125,11 +124,11 @@ public class MathTest {
     @Test
     public void testLogFactorial() {
         System.out.println("logFactorial");
-        assertEquals(0.0, Math.logFactorial(0), 1E-7);
-        assertEquals(0.0, Math.logFactorial(1), 1E-7);
-        assertEquals(Math.log(2.0), Math.logFactorial(2), 1E-7);
-        assertEquals(Math.log(6.0), Math.logFactorial(3), 1E-7);
-        assertEquals(Math.log(24.0), Math.logFactorial(4), 1E-7);
+        assertEquals(0.0, MathEx.logFactorial(0), 1E-7);
+        assertEquals(0.0, MathEx.logFactorial(1), 1E-7);
+        assertEquals(Math.log(2.0), MathEx.logFactorial(2), 1E-7);
+        assertEquals(Math.log(6.0), MathEx.logFactorial(3), 1E-7);
+        assertEquals(Math.log(24.0), MathEx.logFactorial(4), 1E-7);
     }
 
     /**
@@ -138,11 +137,11 @@ public class MathTest {
     @Test
     public void testChoose() {
         System.out.println("choose");
-        assertEquals(1.0, Math.choose(10, 0), 1E-7);
-        assertEquals(10.0, Math.choose(10, 1), 1E-7);
-        assertEquals(45.0, Math.choose(10, 2), 1E-7);
-        assertEquals(120.0, Math.choose(10, 3), 1E-7);
-        assertEquals(210.0, Math.choose(10, 4), 1E-7);
+        assertEquals(1.0, MathEx.choose(10, 0), 1E-7);
+        assertEquals(10.0, MathEx.choose(10, 1), 1E-7);
+        assertEquals(45.0, MathEx.choose(10, 2), 1E-7);
+        assertEquals(120.0, MathEx.choose(10, 3), 1E-7);
+        assertEquals(210.0, MathEx.choose(10, 4), 1E-7);
     }
 
     /**
@@ -151,11 +150,11 @@ public class MathTest {
     @Test
     public void testLogChoose() {
         System.out.println("logChoose");
-        assertEquals(0.0, Math.logChoose(10, 0), 1E-6);
-        assertEquals(2.302585, Math.logChoose(10, 1), 1E-6);
-        assertEquals(3.806662, Math.logChoose(10, 2), 1E-6);
-        assertEquals(4.787492, Math.logChoose(10, 3), 1E-6);
-        assertEquals(5.347108, Math.logChoose(10, 4), 1E-6);
+        assertEquals(0.0, MathEx.logChoose(10, 0), 1E-6);
+        assertEquals(2.302585, MathEx.logChoose(10, 1), 1E-6);
+        assertEquals(3.806662, MathEx.logChoose(10, 2), 1E-6);
+        assertEquals(4.787492, MathEx.logChoose(10, 3), 1E-6);
+        assertEquals(5.347108, MathEx.logChoose(10, 4), 1E-6);
     }
 
     /**
@@ -165,13 +164,13 @@ public class MathTest {
     public void testRandom() {
         System.out.println("random");
         double[] prob = {0.473646292, 0.206116725, 0.009308497, 0.227844687, 0.083083799};
-        int[] sample = Math.random(prob, 300);
+        int[] sample = MathEx.random(prob, 300);
         double[][] hist = Histogram.histogram(sample, 5);
         double[] p = new double[5];
         for (int i = 0; i < 5; i++) {
             p[i] = hist[2][i] / 300.0;
         }
-        assertTrue(Math.KullbackLeiblerDivergence(prob, p) < 0.05);
+        assertTrue(MathEx.KullbackLeiblerDivergence(prob, p) < 0.05);
     }
 
     /**
@@ -183,7 +182,7 @@ public class MathTest {
         double[] prob = {0.473646292, 0.206116725, 0.009308497, 0.227844687, 0.083083799};
         int[] sample = new int[300];
         for (int i = 0; i < 300; i++) {
-            sample[i] = Math.random(prob);
+            sample[i] = MathEx.random(prob);
         }
 
         double[][] hist = Histogram.histogram(sample, 5);
@@ -192,7 +191,7 @@ public class MathTest {
             p[i] = hist[2][i] / 300.0;
         }
 
-        assertTrue(Math.KullbackLeiblerDivergence(prob, p) < 0.05);
+        assertTrue(MathEx.KullbackLeiblerDivergence(prob, p) < 0.05);
     }
 
     /**
@@ -205,7 +204,7 @@ public class MathTest {
         int b = 0;
         int c = 1;
         int expResult = -1;
-        int result = Math.min(a, b, c);
+        int result = MathEx.min(a, b, c);
         assertEquals(expResult, result);
     }
 
@@ -219,7 +218,7 @@ public class MathTest {
         int b = 0;
         int c = 1;
         int expResult = 1;
-        int result = Math.max(a, b, c);
+        int result = MathEx.max(a, b, c);
         assertEquals(expResult, result);
     }
 
@@ -230,7 +229,7 @@ public class MathTest {
     public void testMin_doubleArr() {
         System.out.println("min");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
-        assertEquals(-2.196822, Math.min(x), 1E-7);
+        assertEquals(-2.196822, MathEx.min(x), 1E-7);
     }
 
     /**
@@ -240,7 +239,7 @@ public class MathTest {
     public void testMax_doubleArr() {
         System.out.println("max");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
-        assertEquals(1.0567679, Math.max(x), 1E-7);
+        assertEquals(1.0567679, MathEx.max(x), 1E-7);
     }
 
     /**
@@ -254,7 +253,7 @@ public class MathTest {
             {-0.2648886, -0.89044952, 0.3700456},
             {-0.6391588, 0.44947578, 0.6240573}
         };
-        assertEquals(-0.89044952, Math.min(A), 1E-7);
+        assertEquals(-0.89044952, MathEx.min(A), 1E-7);
     }
 
     /**
@@ -268,7 +267,7 @@ public class MathTest {
             {-0.2648886, -0.89044952, 0.3700456},
             {-0.6391588, 0.44947578, 0.6240573}
         };
-        assertEquals(0.7220180, Math.max(A), 1E-7);
+        assertEquals(0.7220180, MathEx.max(A), 1E-7);
     }
 
     /**
@@ -287,7 +286,7 @@ public class MathTest {
                 {0.07121225, -0.8904495, 0.4494758},
                 {0.68819970, 0.3700456, 0.6240573}
         };
-        assertTrue(Math.equals(Math.transpose(A), B, 1E-7));
+        assertTrue(MathEx.equals(MathEx.transpose(A), B, 1E-7));
     }
 
     /**
@@ -303,7 +302,7 @@ public class MathTest {
         };
         double[] r = {0.07121225, -0.89044952, -0.6391588};
 
-        double[] result = Math.rowMin(A);
+        double[] result = MathEx.rowMin(A);
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7);
         }
@@ -322,7 +321,7 @@ public class MathTest {
         };
         double[] r = {0.7220180, 0.3700456, 0.6240573};
 
-        double[] result = Math.rowMax(A);
+        double[] result = MathEx.rowMax(A);
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7);
         }
@@ -341,7 +340,7 @@ public class MathTest {
         };
         double[] r = {1.4814300, -0.7852925, 0.4343743};
 
-        double[] result = Math.rowSums(A);
+        double[] result = MathEx.rowSums(A);
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7);
         }
@@ -360,7 +359,7 @@ public class MathTest {
         };
         double[] r = {0.4938100, -0.2617642, 0.1447914};
 
-        double[] result = Math.rowMeans(A);
+        double[] result = MathEx.rowMeans(A);
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7);
         }
@@ -379,7 +378,7 @@ public class MathTest {
         };
         double[] r = {-0.6391588, -0.89044952, 0.3700456};
 
-        double[] result = Math.colMin(A);
+        double[] result = MathEx.colMin(A);
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7);
         }
@@ -398,7 +397,7 @@ public class MathTest {
         };
         double[] r = {0.7220180, 0.44947578, 0.6881997};
 
-        double[] result = Math.colMax(A);
+        double[] result = MathEx.colMax(A);
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7);
         }
@@ -417,7 +416,7 @@ public class MathTest {
         };
         double[] r = {-0.1820294, -0.3697615, 1.6823026};
 
-        double[] result = Math.colSums(A);
+        double[] result = MathEx.colSums(A);
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7);
         }
@@ -436,7 +435,7 @@ public class MathTest {
         };
         double[] r = {-0.06067647, -0.12325383, 0.56076753};
 
-        double[] result = Math.colMeans(A);
+        double[] result = MathEx.colMeans(A);
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7);
         }
@@ -449,7 +448,7 @@ public class MathTest {
     public void testSum_doubleArr() {
         System.out.println("sum");
         double[] data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-        assertEquals(45, Math.sum(data), 1E-6);
+        assertEquals(45, MathEx.sum(data), 1E-6);
     }
 
     /**
@@ -459,7 +458,7 @@ public class MathTest {
     public void testMean_doubleArr() {
         System.out.println("mean");
         double[] data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-        assertEquals(5, Math.mean(data), 1E-6);
+        assertEquals(5, MathEx.mean(data), 1E-6);
     }
 
     /**
@@ -469,7 +468,7 @@ public class MathTest {
     public void testVar_doubleArr() {
         System.out.println("var");
         double[] data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-        assertEquals(7.5, Math.var(data), 1E-6);
+        assertEquals(7.5, MathEx.var(data), 1E-6);
     }
 
     /**
@@ -479,7 +478,7 @@ public class MathTest {
     public void testSd() {
         System.out.println("sd");
         double[] data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-        assertEquals(2.73861, Math.sd(data), 1E-5);
+        assertEquals(2.73861, MathEx.sd(data), 1E-5);
     }
 
     /**
@@ -494,11 +493,11 @@ public class MathTest {
             {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0},
         };
 
-        data = Math.transpose(data);
+        data = MathEx.transpose(data);
 
-        assertEquals(2.73861, Math.colSds(data)[0], 1E-5);
-        assertEquals(2.73861, Math.colSds(data)[1], 1E-5);
-        assertEquals(2.73861, Math.colSds(data)[2], 1E-5);
+        assertEquals(2.73861, MathEx.colSds(data)[0], 1E-5);
+        assertEquals(2.73861, MathEx.colSds(data)[1], 1E-5);
+        assertEquals(2.73861, MathEx.colSds(data)[2], 1E-5);
     }
 
     /**
@@ -508,7 +507,7 @@ public class MathTest {
     public void testMad() {
         System.out.println("mad");
         double[] data = {1, 1, 2, 2, 4, 6, 9};
-        assertEquals(1.0, Math.mad(data), 1E-5);
+        assertEquals(1.0, MathEx.mad(data), 1E-5);
     }
 
     /**
@@ -519,7 +518,7 @@ public class MathTest {
         System.out.println("distance");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
         double[] y = {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300};
-        assertEquals(2.422302, Math.distance(x, y), 1E-6);
+        assertEquals(2.422302, MathEx.distance(x, y), 1E-6);
     }
 
     /**
@@ -530,7 +529,7 @@ public class MathTest {
         System.out.println("squaredDistance");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
         double[] y = {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300};
-        assertEquals(5.867547, Math.squaredDistance(x, y), 1E-6);
+        assertEquals(5.867547, MathEx.squaredDistance(x, y), 1E-6);
     }
 
     /**
@@ -541,7 +540,7 @@ public class MathTest {
         System.out.println("dot");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
         double[] y = {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300};
-        assertEquals(3.350726, Math.dot(x, y), 1E-6);
+        assertEquals(3.350726, MathEx.dot(x, y), 1E-6);
     }
 
     /**
@@ -552,7 +551,7 @@ public class MathTest {
         System.out.println("cov");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
         double[] y = {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300};
-        assertEquals(0.5894983, Math.cov(x, y), 1E-7);
+        assertEquals(0.5894983, MathEx.cov(x, y), 1E-7);
     }
 
     /**
@@ -563,7 +562,7 @@ public class MathTest {
         System.out.println("cor");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
         double[] y = {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300};
-        assertEquals(0.4686847, Math.cor(x, y), 1E-7);
+        assertEquals(0.4686847, MathEx.cor(x, y), 1E-7);
     }
 
     /**
@@ -574,7 +573,7 @@ public class MathTest {
         System.out.println("spearman");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
         double[] y = {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300};
-        assertEquals(0.3, Math.spearman(x, y), 1E-7);
+        assertEquals(0.3, MathEx.spearman(x, y), 1E-7);
     }
 
     /**
@@ -585,7 +584,7 @@ public class MathTest {
         System.out.println("kendall");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
         double[] y = {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300};
-        assertEquals(0.2, Math.kendall(x, y), 1E-7);
+        assertEquals(0.2, MathEx.kendall(x, y), 1E-7);
     }
 
     /**
@@ -595,7 +594,7 @@ public class MathTest {
     public void testNorm1_doubleArr() {
         System.out.println("norm1");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
-        assertEquals(4.638106, Math.norm1(x), 1E-6);
+        assertEquals(4.638106, MathEx.norm1(x), 1E-6);
     }
 
     /**
@@ -605,7 +604,7 @@ public class MathTest {
     public void testNorm2_doubleArr() {
         System.out.println("norm2");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
-        assertEquals(2.647086, Math.norm2(x), 1E-6);
+        assertEquals(2.647086, MathEx.norm2(x), 1E-6);
     }
 
     /**
@@ -615,7 +614,7 @@ public class MathTest {
     public void testNormInf_doubleArr() {
         System.out.println("normInf");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
-        assertEquals(2.196822, Math.normInf(x), 1E-6);
+        assertEquals(2.196822, MathEx.normInf(x), 1E-6);
     }
 
     /**
@@ -625,7 +624,7 @@ public class MathTest {
     public void testNorm_doubleArr() {
         System.out.println("norm");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
-        assertEquals(2.647086, Math.norm(x), 1E-6);
+        assertEquals(2.647086, MathEx.norm(x), 1E-6);
     }
 
     /**
@@ -635,9 +634,9 @@ public class MathTest {
     public void testStandardize() {
         System.out.println("standardize");
         double[] data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-        Math.standardize(data);
-        assertEquals(0, Math.mean(data), 1E-7);
-        assertEquals(1, Math.sd(data), 1E-7);
+        MathEx.standardize(data);
+        assertEquals(0, MathEx.mean(data), 1E-7);
+        assertEquals(1, MathEx.sd(data), 1E-7);
     }
 
     /**
@@ -647,8 +646,8 @@ public class MathTest {
     public void testUnitize() {
         System.out.println("unitize");
         double[] data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-        Math.unitize(data);
-        assertEquals(1, Math.norm(data), 1E-7);
+        MathEx.unitize(data);
+        assertEquals(1, MathEx.norm(data), 1E-7);
     }
 
     /**
@@ -658,8 +657,8 @@ public class MathTest {
     public void testUnitize1() {
         System.out.println("unitize1");
         double[] data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-        Math.unitize1(data);
-        assertEquals(1, Math.norm1(data), 1E-7);
+        MathEx.unitize1(data);
+        assertEquals(1, MathEx.norm1(data), 1E-7);
     }
 
     /**
@@ -669,8 +668,8 @@ public class MathTest {
     public void testUnitize2() {
         System.out.println("unitize2");
         double[] data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-        Math.unitize2(data);
-        assertEquals(1, Math.norm2(data), 1E-7);
+        MathEx.unitize2(data);
+        assertEquals(1, MathEx.norm2(data), 1E-7);
     }
 
     /**
@@ -687,7 +686,7 @@ public class MathTest {
             0.0093026, 0.0110689, 0.0128418, 0.0146194, 0.0164005, 0.0199696};
 
         double[] result = new double[r.length];
-        assertEquals(p0, Math.GoodTuring(r, Nr, result), 1E-7);
+        assertEquals(p0, MathEx.GoodTuring(r, Nr, result), 1E-7);
         for (int i = 0; i < r.length; i++) {
             assertEquals(p[i], result[i], 1E-7);
         }
@@ -705,9 +704,9 @@ public class MathTest {
             {-0.6391588, 0.44947578, 0.6240573}
         };
 
-        double[][] B = Math.clone(A);
+        double[][] B = MathEx.clone(A);
 
-        assertTrue(Math.equals(A, B));
+        assertTrue(MathEx.equals(A, B));
         assertTrue(A != B);
         for (int i = 0; i < A.length; i++) {
             assertTrue(A[i] != B[i]);
@@ -723,8 +722,8 @@ public class MathTest {
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
         double[] y = {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300};
         double[] z = {-3.9749544, -1.6219752, 0.9094410, 0.1106760, -0.0071785};
-        Math.plus(x, y);
-        assertTrue(Math.equals(x, z));
+        MathEx.plus(x, y);
+        assertTrue(MathEx.equals(x, z));
     }
 
     /**
@@ -736,8 +735,8 @@ public class MathTest {
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
         double[] y = {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300};
         double[] z = {-0.4186894, -0.2900074, -0.9957886, 2.0028598, 0.7778815};
-        Math.minus(x, y);
-        assertTrue(Math.equals(x, z));
+        MathEx.minus(x, y);
+        assertTrue(MathEx.equals(x, z));
     }
 
     /**
@@ -753,7 +752,7 @@ public class MathTest {
                 return x * x * x + x * x - 5 * x + 3;
             }
         };
-        double result = Math.root(func, -4, -2, 1E-7);
+        double result = MathEx.root(func, -4, -2, 1E-7);
         assertEquals(-3, result, 1E-7);
     }
 
@@ -775,7 +774,7 @@ public class MathTest {
                 return 3 * x * x + 2 * x - 5;
             }
         };
-        double result = Math.root(func, -4, -2, 1E-7);
+        double result = MathEx.root(func, -4, -2, 1E-7);
         assertEquals(-3, result, 1E-7);
     }
 
@@ -818,7 +817,7 @@ public class MathTest {
             x[j + 1 - 1] = 1.e0;
         }
 
-        double result = Math.min(func, 5, x, 0.0001);
+        double result = MathEx.min(func, 5, x, 0.0001);
         assertEquals(3.2760183604E-14, result, 1E-15);
     }
 
@@ -861,7 +860,7 @@ public class MathTest {
             x[j + 1 - 1] = 1.e0;
         }
 
-        double result = Math.min(func, x, 0.0001);
+        double result = MathEx.min(func, x, 0.0001);
         assertEquals(2.95793E-10, result, 1E-15);
     }
 }

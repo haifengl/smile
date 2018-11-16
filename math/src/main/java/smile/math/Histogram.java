@@ -90,8 +90,8 @@ public class Histogram {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
         
-        int min = Math.min(data);
-        int max = Math.max(data);
+        int min = MathEx.min(data);
+        int max = MathEx.max(data);
         int span = max - min + 1;
         
         int width = 1;
@@ -173,8 +173,8 @@ public class Histogram {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
         
-        float min = Math.min(data);
-        float max = Math.max(data);
+        float min = MathEx.min(data);
+        float max = MathEx.max(data);
         float span = max - min;
         if (span == 0) {
             span = k;
@@ -241,8 +241,8 @@ public class Histogram {
      * count.
      */
     public static double[][] histogram(double[] data, int k) {
-        double min = Math.min(data);
-        double max = Math.max(data);
+        double min = MathEx.min(data);
+        double max = MathEx.max(data);
         double span = max - min;
         if (span == 0) {
             span = k;
@@ -308,7 +308,7 @@ public class Histogram {
      * @return the breakpoints between histogram cells
      */
     public static double[] breaks(double[] x, double h) {
-        return breaks(Math.min(x), Math.max(x), h);
+        return breaks(MathEx.min(x), MathEx.max(x), h);
     }
     
     /**
@@ -347,7 +347,7 @@ public class Histogram {
      * @return the breakpoints between histogram cells
      */
     public static double[] breaks(double[] x, int k) {
-        return breaks(Math.min(x), Math.max(x), k);
+        return breaks(MathEx.min(x), MathEx.max(x), k);
     }
     
     /**
@@ -381,8 +381,8 @@ public class Histogram {
             throw new IllegalArgumentException("Invalid bin width: " + h);
         }
         
-        double max = Math.max(x);
-        double min = Math.min(x);
+        double max = MathEx.max(x);
+        double min = MathEx.min(x);
         
         return (int) Math.ceil((max-min) / h);
     }
@@ -406,7 +406,7 @@ public class Histogram {
      * @return the number of bins
      */
     public static int sturges(int n) {
-        int k = (int) Math.ceil(Math.log2(n) + 1);
+        int k = (int) Math.ceil(MathEx.log2(n) + 1);
         if (k < 5) k = 5;
         return k;
     }
@@ -417,7 +417,7 @@ public class Histogram {
      * @return the number of bins
      */
     public static int scott(double[] x) {
-        double h = Math.ceil(3.5 * Math.sd(x) / Math.pow(x.length, 1.0/3));
+        double h = Math.ceil(3.5 * MathEx.sd(x) / Math.pow(x.length, 1.0/3));
         return bins(x, h);
     }
 }

@@ -16,7 +16,7 @@
 package smile.stat.distribution;
 
 import smile.math.special.Gamma;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The Gamma distribution is a continuous probability distributions with
@@ -101,7 +101,7 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
         mu /= data.length;
         s = Math.log(mu) - s / data.length;
 
-        k = (3 - s + Math.sqrt((Math.sqr(s - 3) + 24 * s))) / (12 * s);
+        k = (3 - s + Math.sqrt((MathEx.sqr(s - 3) + 24 * s))) / (12 * s);
         theta = mu / k;
 
         logTheta = Math.log(theta);

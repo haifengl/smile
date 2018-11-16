@@ -18,7 +18,7 @@ package smile.math.matrix;
 
 import java.io.Serializable;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.stat.distribution.GaussianDistribution;
 
 /**
@@ -240,7 +240,7 @@ public interface Matrix extends Serializable {
      * Returns the diagonal elements.
      */
     default double[] diag() {
-        int n = smile.math.Math.min(nrows(), ncols());
+        int n = Math.min(nrows(), ncols());
 
         double[] d = new double[n];
         for (int i = 0; i < n; i++) {

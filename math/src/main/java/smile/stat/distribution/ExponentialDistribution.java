@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * An exponential distribution describes the times between events in a Poisson
@@ -80,7 +80,7 @@ public class ExponentialDistribution extends AbstractDistribution implements Exp
             }
         }
 
-        double mean = Math.mean(data);
+        double mean = MathEx.mean(data);
         if (mean == 0) {
             throw new IllegalArgumentException("Samples are all zeros.");
         }
@@ -127,7 +127,7 @@ public class ExponentialDistribution extends AbstractDistribution implements Exp
 
     @Override
     public double rand() {
-        return -1 / lambda * Math.log(Math.random());
+        return -1 / lambda * Math.log(MathEx.random());
     }
 
     @Override

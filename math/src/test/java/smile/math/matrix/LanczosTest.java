@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -69,7 +69,7 @@ public class LanczosTest {
         Matrix a = Matrix.newInstance(A);
         a.setSymmetric(true);
         EVD result = Lanczos.eigen(a, 3);
-        assertTrue(Math.equals(eigenValues, result.getEigenValues(), 1E-7));
+        assertTrue(MathEx.equals(eigenValues, result.getEigenValues(), 1E-7));
 
         assertEquals(eigenVectors.length,    result.getEigenVectors().nrows());
         assertEquals(eigenVectors[0].length, result.getEigenVectors().ncols());
@@ -143,7 +143,7 @@ public class LanczosTest {
         };
 
         SVD result = Matrix.newInstance(A).svd(3);
-        assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
+        assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().nrows());
         assertEquals(U[0].length, result.getU().ncols());
@@ -201,7 +201,7 @@ public class LanczosTest {
         };
 
         SVD result = Matrix.newInstance(A).svd(7);
-        assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
+        assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().nrows());
         assertEquals(U[0].length, result.getU().ncols());
@@ -258,7 +258,7 @@ public class LanczosTest {
         };
 
         SVD result = Matrix.newInstance(A).svd(6);
-        assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
+        assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().nrows());
         assertEquals(U[0].length, result.getU().ncols());
@@ -314,7 +314,7 @@ public class LanczosTest {
         };
 
         SVD result = Matrix.newInstance(A).svd(5);
-        assertTrue(Math.equals(s, result.getSingularValues(), 1E-7));
+        assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().nrows());
         assertEquals(U[0].length, result.getU().ncols());
@@ -381,7 +381,7 @@ public class LanczosTest {
         };
 
         SVD result = new SparseMatrix(A).svd(9);
-        assertTrue(Math.equals(s, result.getSingularValues(), 1E-5));
+        assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-5));
 
         assertEquals(Ut[0].length, result.getU().nrows());
         assertEquals(Ut.length, result.getU().ncols());

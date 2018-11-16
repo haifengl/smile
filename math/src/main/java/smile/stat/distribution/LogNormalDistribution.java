@@ -16,7 +16,7 @@
 package smile.stat.distribution;
 
 import smile.math.special.Erf;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * A log-normal distribution is a probability distribution of a random variable
@@ -69,8 +69,8 @@ public class LogNormalDistribution extends AbstractDistribution {
             x[i] = Math.log(data[i]);
         }
 
-        this.mu = Math.mean(x);
-        this.sigma = Math.sd(x);
+        this.mu = MathEx.mean(x);
+        this.sigma = MathEx.sd(x);
 
         mean = Math.exp(mu + sigma * sigma / 2);
         var = (Math.exp(mu * mu) - 1) * Math.exp(2 * mu + sigma * sigma);

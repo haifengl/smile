@@ -21,7 +21,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
+import smile.math.MathEx;
 import static org.junit.Assert.*;
 
 /**
@@ -33,7 +33,7 @@ public class HeapSortTest {
     double[] big = new double[1000000];
     public HeapSortTest() {
         for (int i = 0; i < big.length; i++)
-            big[i] = Math.random();
+            big[i] = MathEx.random();
     }
 
     @BeforeClass
@@ -62,16 +62,16 @@ public class HeapSortTest {
 
         int[] data1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         HeapSort.sort(data1);
-        assertTrue(Math.equals(data, data1));
+        assertTrue(MathEx.equals(data, data1));
         int[] data2 = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
         HeapSort.sort(data2);
-        assertTrue(Math.equals(data, data2));
+        assertTrue(MathEx.equals(data, data2));
         int[] data3 = {0, 1, 2, 3, 5, 4, 6, 7, 8, 9};
         HeapSort.sort(data3);
-        assertTrue(Math.equals(data, data3));
+        assertTrue(MathEx.equals(data, data3));
         int[] data4 = {4, 1, 2, 3, 0, 5, 6, 7, 8, 9};
         HeapSort.sort(data4);
-        assertTrue(Math.equals(data, data4));
+        assertTrue(MathEx.equals(data, data4));
     }
 
     /**
@@ -84,16 +84,16 @@ public class HeapSortTest {
 
         float[] data1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         HeapSort.sort(data1);
-        assertTrue(Math.equals(data, data1));
+        assertTrue(MathEx.equals(data, data1));
         float[] data2 = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
         HeapSort.sort(data2);
-        assertTrue(Math.equals(data, data2));
+        assertTrue(MathEx.equals(data, data2));
         float[] data3 = {0, 1, 2, 3, 5, 4, 6, 7, 8, 9};
         HeapSort.sort(data3);
-        assertTrue(Math.equals(data, data3));
+        assertTrue(MathEx.equals(data, data3));
         float[] data4 = {4, 1, 2, 3, 0, 5, 6, 7, 8, 9};
         HeapSort.sort(data4);
-        assertTrue(Math.equals(data, data4));
+        assertTrue(MathEx.equals(data, data4));
     }
 
     /**
@@ -106,16 +106,16 @@ public class HeapSortTest {
 
         double[] data1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         HeapSort.sort(data1);
-        assertTrue(Math.equals(data, data1));
+        assertTrue(MathEx.equals(data, data1));
         double[] data2 = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
         HeapSort.sort(data2);
-        assertTrue(Math.equals(data, data2));
+        assertTrue(MathEx.equals(data, data2));
         double[] data3 = {0, 1, 2, 3, 5, 4, 6, 7, 8, 9};
         HeapSort.sort(data3);
-        assertTrue(Math.equals(data, data3));
+        assertTrue(MathEx.equals(data, data3));
         double[] data4 = {4, 1, 2, 3, 0, 5, 6, 7, 8, 9};
         HeapSort.sort(data4);
-        assertTrue(Math.equals(data, data4));
+        assertTrue(MathEx.equals(data, data4));
     }
 
     /**
@@ -128,16 +128,16 @@ public class HeapSortTest {
 
         Integer[] data1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         HeapSort.sort(data1);
-        assertTrue(Math.equals(data, data1));
+        assertTrue(MathEx.equals(data, data1));
         Integer[] data2 = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
         HeapSort.sort(data2);
-        assertTrue(Math.equals(data, data2));
+        assertTrue(MathEx.equals(data, data2));
         Integer[] data3 = {0, 1, 2, 3, 5, 4, 6, 7, 8, 9};
         HeapSort.sort(data3);
-        assertTrue(Math.equals(data, data3));
+        assertTrue(MathEx.equals(data, data3));
         Integer[] data4 = {4, 1, 2, 3, 0, 5, 6, 7, 8, 9};
         HeapSort.sort(data4);
-        assertTrue(Math.equals(data, data4));
+        assertTrue(MathEx.equals(data, data4));
     }
 
     /**

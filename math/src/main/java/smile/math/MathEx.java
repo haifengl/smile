@@ -29,11 +29,10 @@ import smile.sort.QuickSort;
 import smile.sort.SortUtils;
 
 /**
- * A collection of useful mathematical functions. The following functions are
+ * Extra basic numeric functions. The following functions are
  * included:
  * <ul>
- * <li> scalar functions: Besides all methods in java.lang.Math are included
- * for convenience, sqr, factorial, logFractorial, choose, logChoose, log2 are
+ * <li> scalar functions: sqr, factorial, logFractorial, choose, logChoose, log2 are
  * provided.
  * <li> vector functions: min, max, mean, sum, var, sd, cov, L<sub>1</sub> norm,
  * L<sub>2</sub> norm, L<sub>&infin;</sub> norm, normalize, unitize, cor, Spearman
@@ -47,17 +46,9 @@ import smile.sort.SortUtils;
  *
  * @author Haifeng Li
  */
-public class Math {
-    private static final Logger logger = LoggerFactory.getLogger(Math.class);
+public class MathEx {
+    private static final Logger logger = LoggerFactory.getLogger(MathEx.class);
 
-    /**
-     * The base of the natural logarithms.
-     */
-    public static final double E = java.lang.Math.E;
-    /**
-     * The ratio of the circumference of a circle to its diameter.
-     */
-    public static final double PI = java.lang.Math.PI;
     /**
      * The machine precision for the double type, which is the difference between 1
      * and the smallest value greater than 1 that is representable for the double type.
@@ -108,6 +99,7 @@ public class Math {
                 // Note that this may or may not be the main thread.
                 firstRNG = false;
                 return new smile.math.Random();
+
             } else {
                 // Make sure other threads not to use the same seed.
                 // This is very important for some algorithms such as random forest.
@@ -204,410 +196,19 @@ public class Math {
     /**
      * Private constructor.
      */
-    private Math() {
-    }
-
-    /**
-     * Returns the absolute value of a double value.
-     */
-    public static double abs(double a) {
-        return java.lang.Math.abs(a);
-    }
-
-    /**
-     * Returns the absolute value of a float value.
-     */
-    public static float abs(float a) {
-        return java.lang.Math.abs(a);
-    }
-
-    /**
-     * Returns the absolute value of an int value.
-     */
-    public static int abs(int a) {
-        return java.lang.Math.abs(a);
-    }
-
-    /**
-     * Returns the absolute value of a long value.
-     */
-    public static long abs(long a) {
-        return java.lang.Math.abs(a);
-    }
-
-    /**
-     * Returns the arc cosine of an angle, in the range of 0.0 through pi.
-     */
-    public static double acos(double a) {
-        return java.lang.Math.acos(a);
-    }
-
-    /**
-     * Returns the arc sine of an angle, in the range of -pi/2 through pi/2.
-     */
-    public static double asin(double a) {
-        return java.lang.Math.asin(a);
-    }
-
-    /**
-     * Returns the arc tangent of an angle, in the range of -pi/2 through pi/2.
-     */
-    public static double atan(double a) {
-        return java.lang.Math.atan(a);
-    }
-
-    /**
-     * Converts rectangular coordinates (x, y) to polar (r, theta).
-     */
-    public static double atan2(double y, double x) {
-        return java.lang.Math.atan2(y, x);
-    }
-
-    /**
-     * Returns the cube root of a double value.
-     */
-    public static double cbrt(double a) {
-        return java.lang.Math.cbrt(a);
-    }
-
-    /**
-     * Returns the smallest (closest to negative infinity) double value that
-     * is greater than or equal to the argument and is equal to a mathematical
-     * integer.
-     */
-    public static double ceil(double a) {
-        return java.lang.Math.ceil(a);
-    }
-
-    /**
-     * Returns the first floating-point argument with the sign of the second
-     * floating-point argument.
-     */
-    public static double copySign(double magnitude, double sign) {
-        return java.lang.Math.copySign(magnitude, sign);
-    }
-
-    /**
-     * Returns the first floating-point argument with the sign of the second
-     * floating-point argument.
-     */
-    public static float copySign(float magnitude, float sign) {
-        return java.lang.Math.copySign(magnitude, sign);
-    }
-
-    /**
-     * Returns the trigonometric cosine of an angle.
-     */
-    public static double cos(double a) {
-        return java.lang.Math.cos(a);
-    }
-
-    /**
-     * Returns the hyperbolic cosine of a double value.
-     */
-    public static double cosh(double x) {
-        return java.lang.Math.cosh(x);
-    }
-
-    /**
-     * Returns Euler's number e raised to the power of a double value.
-     */
-    public static double exp(double a) {
-        return java.lang.Math.exp(a);
-    }
-
-    /**
-     * Returns e<sup>x</sup>-1.
-     */
-    public static double expm1(double x) {
-        return java.lang.Math.expm1(x);
-    }
-
-    /**
-     * Returns the largest (closest to positive infinity) double value that
-     * is less than or equal to the argument and is equal to a mathematical
-     * integer.
-     */
-    public static double floor(double a) {
-        return java.lang.Math.floor(a);
-    }
-
-    /**
-     * Returns the unbiased exponent used in the representation of a double. 
-     */
-    public static int getExponent(double d) {
-        return java.lang.Math.getExponent(d);
-    }
-
-    /**
-     * Returns the unbiased exponent used in the representation of a float.
-     */
-    public static int getExponent(float f) {
-        return java.lang.Math.getExponent(f);
-    }
-
-    /**
-     * Returns sqrt(x2 +y2) without intermediate overflow or underflow.
-     */
-    public static double hypot(double x, double y) {
-        return java.lang.Math.hypot(x, y);
-    }
-
-    /**
-     * Computes the remainder operation on two arguments as prescribed by the IEEE 754 standard.
-     */
-    public static double IEEEremainder(double f1, double f2) {
-        return java.lang.Math.IEEEremainder(f1, f2);
-    }
-
-    /**
-     * Returns the natural logarithm (base e) of a double value.
-     */
-    public static double log(double a) {
-        return java.lang.Math.log(a);
-    }
-
-    /**
-     * Returns the base 10 logarithm of a double value.
-     */
-    public static double log10(double a) {
-        return java.lang.Math.log10(a);
-    }
-
-    /**
-     * Returns the natural logarithm of the sum of the argument and 1.
-     */
-    public static double log1p(double x) {
-        return java.lang.Math.log1p(x);
-    }
-
-    /**
-     * Returns the greater of two double values.
-     */
-    public static double max(double a, double b) {
-        return java.lang.Math.max(a, b);
-    }
-
-    /**
-     * Returns the greater of two float values.
-     */
-    public static float max(float a, float b) {
-        return java.lang.Math.max(a, b);
-    }
-
-    /**
-     * Returns the greater of two int values.
-     */
-    public static int max(int a, int b) {
-        return java.lang.Math.max(a, b);
-    }
-
-    /**
-     * Returns the greater of two long values.
-     */
-    public static long max(long a, long b) {
-        return java.lang.Math.max(a, b);
-    }
-
-    /**
-     * Returns the smaller of two double values.
-     */
-    public static double min(double a, double b) {
-        return java.lang.Math.min(a, b);
-    }
-
-    /**
-     * Returns the smaller of two float values.
-     */
-    public static float min(float a, float b) {
-        return java.lang.Math.min(a, b);
-    }
-
-    /**
-     * Returns the smaller of two int values.
-     */
-    public static int min(int a, int b) {
-        return java.lang.Math.min(a, b);
-    }
-
-    /**
-     * Returns the smaller of two long values.
-     */
-    public static long min(long a, long b) {
-        return java.lang.Math.min(a, b);
-    }
-
-    /**
-     * Returns the floating-point number adjacent to the first argument in
-     * the direction of the second argument.
-     */
-    public static double nextAfter(double start, double direction) {
-        return java.lang.Math.nextAfter(start, direction);
-    }
-
-    /**
-     * Returns the floating-point number adjacent to the first argument in
-     * the direction of the second argument.
-     */
-    public static float nextAfter(float start, double direction) {
-        return java.lang.Math.nextAfter(start, direction);
-    }
-
-    /**
-     * Returns the floating-point value adjacent to d in the direction
-     * of positive infinity.
-     */
-    public static double nextUp(double d) {
-        return java.lang.Math.nextUp(d);
-    }
-
-    /**
-     * Returns the floating-point value adjacent to f in the direction
-     * of positive infinity.
-     */
-    public static float nextUp(float f) {
-        return java.lang.Math.nextUp(f);
-    }
-
-    /**
-     * Returns the value of the first argument raised to the power of the second argument.
-     */
-    public static double pow(double a, double b) {
-        return java.lang.Math.pow(a, b);
-    }
-
-    /**
-     * Returns the double value that is closest in value to the argument and is equal to a mathematical integer.
-     */
-    public static double rint(double a) {
-        return java.lang.Math.rint(a);
-    }
-
-    /**
-     * Returns the closest long to the argument.
-     */
-    public static long round(double a) {
-        return java.lang.Math.round(a);
-    }
-
-    /**
-     * Returns the closest int to the argument.
-     */
-    public static int round(float a) {
-        return java.lang.Math.round(a);
-    }
-
-    /**
-     * Returns d x 2<sup>scaleFactor</sup> rounded as if performed by a single
-     * correctly rounded floating-point multiply to a member of the double value
-     * set. 
-     */
-    public static double scalb(double d, int scaleFactor) {
-        return java.lang.Math.scalb(d, scaleFactor);
-    }
-
-    /**
-     * Returns f x 2<sup>scaleFactor</sup> rounded as if performed by a single
-     * correctly rounded floating-point multiply to a member of the float value
-     * set.
-     */
-    public static float scalb(float f, int scaleFactor) {
-        return java.lang.Math.scalb(f, scaleFactor);
-    }
-
-    /**
-     * Returns the signum of the argument; zero if the argument is
-     * zero, 1.0 if the argument is greater than zero, -1.0 if the argument
-     * is less than zero.
-     */
-    public static double signum(double d) {
-        return java.lang.Math.signum(d);
-    }
-
-    /**
-     * Returns the signum function of the argument; zero if the argument is
-     * zero, 1.0f if the argument is greater than zero, -1.0f if the argument
-     * is less than zero.
-     */
-    public static float signum(float f) {
-        return java.lang.Math.signum(f);
-    }
-
-    /**
-     * Returns the trigonometric sine of an angle.
-     */
-    public static double sin(double a) {
-        return java.lang.Math.sin(a);
-    }
-
-    /**
-     * Returns the hyperbolic sine of a double value.
-     */
-    public static double sinh(double x) {
-        return java.lang.Math.sinh(x);
-    }
-
-    /**
-     * Returns the correctly rounded positive square root of a double value.
-     */
-    public static double sqrt(double a) {
-        return java.lang.Math.sqrt(a);
-    }
-
-    /**
-     * Returns the trigonometric tangent of an angle.
-     */
-    public static double tan(double a) {
-        return java.lang.Math.tan(a);
-    }
-
-    /**
-     * Returns the hyperbolic tangent of a double value.
-     */
-    public static double tanh(double x) {
-        return java.lang.Math.tanh(x);
-    }
-
-    /**
-     * Converts an angle measured in radians to an approximately equivalent
-     * angle measured in degrees.
-     */
-    public static double toDegrees(double angrad) {
-        return java.lang.Math.toDegrees(angrad);
-    }
-
-    /**
-     * Converts an angle measured in degrees to an approximately equivalent
-     * angle measured in radians.
-     */
-    public static double toRadians(double angdeg) {
-        return java.lang.Math.toRadians(angdeg);
-    }
-
-    /**
-     * Returns the size of an ulp of the argument.
-     */
-    public static double ulp(double d) {
-        return java.lang.Math.ulp(d);
-    }
-
-    /**
-     * * Returns the size of an ulp of the argument.
-     */
-    public static float ulp(float f) {
-        return java.lang.Math.ulp(f);
+    private MathEx() {
     }
 
     /**
      * log(2), used in log2().
      */
-    private static final double LOG2 = java.lang.Math.log(2);
+    private static final double LOG2 = Math.log(2);
 
     /**
      * Log of base 2.
      */
     public static double log2(double x) {
-        return java.lang.Math.log(x) / LOG2;
+        return Math.log(x) / LOG2;
     }
 
     /**
@@ -662,9 +263,9 @@ public class Math {
      */
     public static double round(double x, int decimal) {
         if (decimal < 0) {
-            return round(x / pow(10, -decimal)) * pow(10, -decimal);
+            return Math.round(x / Math.pow(10, -decimal)) * Math.pow(10, -decimal);
         } else {
-            return round(x * pow(10, decimal)) / pow(10, decimal);
+            return Math.round(x * Math.pow(10, decimal)) / Math.pow(10, decimal);
         }
     }
 
@@ -726,7 +327,7 @@ public class Math {
             throw new IllegalArgumentException(String.format("Invalid n = %d, k = %d", n, k));
         }
 
-        return Math.logFactorial(n) - Math.logFactorial(k) - Math.logFactorial(n - k);
+        return logFactorial(n) - logFactorial(k) - logFactorial(n - k);
     }
 
     /**
@@ -1212,42 +813,42 @@ public class Math {
      * minimum of 3 integers
      */
     public static int min(int a, int b, int c) {
-        return min(min(a, b), c);
+        return Math.min(Math.min(a, b), c);
     }
 
     /**
      * minimum of 3 floats
      */
     public static double min(float a, float b, float c) {
-        return min(min(a, b), c);
+        return Math.min(Math.min(a, b), c);
     }
 
     /**
      * minimum of 3 doubles
      */
     public static double min(double a, double b, double c) {
-        return min(min(a, b), c);
+        return Math.min(Math.min(a, b), c);
     }
 
     /**
      * maximum of 3 integers
      */
     public static int max(int a, int b, int c) {
-        return max(max(a, b), c);
+        return Math.max(Math.max(a, b), c);
     }
 
     /**
      * maximum of 3 floats
      */
     public static float max(float a, float b, float c) {
-        return max(max(a, b), c);
+        return Math.max(Math.max(a, b), c);
     }
 
     /**
      * maximum of 3 doubles
      */
     public static double max(double a, double b, double c) {
-        return max(max(a, b), c);
+        return Math.max(Math.max(a, b), c);
     }
 
     /**
@@ -1684,7 +1285,7 @@ public class Math {
 
         int n = data.length - 1;
         for (int i = 0; i < p; i++) {
-            sumsq[i] = java.lang.Math.sqrt(sumsq[i] / n - (sum[i] / data.length) * (sum[i] / n));
+            sumsq[i] = Math.sqrt(sumsq[i] / n - (sum[i] / data.length) * (sum[i] / n));
         }
 
         return sumsq;
@@ -1911,21 +1512,21 @@ public class Math {
      * Returns the standard deviation of an array.
      */
     public static double sd(int[] x) {
-        return sqrt(var(x));
+        return Math.sqrt(var(x));
     }
 
     /**
      * Returns the standard deviation of an array.
      */
     public static double sd(float[] x) {
-        return sqrt(var(x));
+        return Math.sqrt(var(x));
     }
 
     /**
      * Returns the standard deviation of an array.
      */
     public static double sd(double[] x) {
-        return sqrt(var(x));
+        return Math.sqrt(var(x));
     }
 
     /**
@@ -2214,24 +1815,24 @@ public class Math {
         double sum = 0.0;
         while (e1 != null && e2 != null) {
             if (e1.i == e2.i) {
-                sum += Math.sqr(e1.x - e2.x);
+                sum += sqr(e1.x - e2.x);
                 e1 = it1.hasNext() ? it1.next() : null;
                 e2 = it2.hasNext() ? it2.next() : null;
             } else if (e1.i > e2.i) {
-                sum += Math.sqr(e2.x);
+                sum += sqr(e2.x);
                 e2 = it2.hasNext() ? it2.next() : null;
             } else {
-                sum += Math.sqr(e1.x);
+                sum += sqr(e1.x);
                 e1 = it1.hasNext() ? it1.next() : null;
             }
         }
         
         while (it1.hasNext()) {
-            sum += Math.sqr(it1.next().x);
+            sum += sqr(it1.next().x);
         }
 
         while (it2.hasNext()) {
-            sum += Math.sqr(it2.next().x);
+            sum += sqr(it2.next().x);
         }
         
         return sum;
@@ -2643,7 +2244,7 @@ public class Math {
      * Returns the sample covariance matrix.
      */
     public static double[][] cov(double[][] data) {
-        return cov(data, Math.colMeans(data));
+        return cov(data, colMeans(data));
     }
 
     /**
@@ -2691,7 +2292,7 @@ public class Math {
             return Double.NaN;
         }
 
-        return Sxy / java.lang.Math.sqrt(Sxx * Syy);
+        return Sxy / Math.sqrt(Sxx * Syy);
     }
 
     /**
@@ -2714,7 +2315,7 @@ public class Math {
             return Double.NaN;
         }
 
-        return Sxy / java.lang.Math.sqrt(Sxx * Syy);
+        return Sxy / Math.sqrt(Sxx * Syy);
     }
 
     /**
@@ -2737,14 +2338,14 @@ public class Math {
             return Double.NaN;
         }
 
-        return Sxy / java.lang.Math.sqrt(Sxx * Syy);
+        return Sxy / Math.sqrt(Sxx * Syy);
     }
 
     /**
      * Returns the sample correlation matrix.
      */
     public static double[][] cor(double[][] data) {
-        return cor(data, Math.colMeans(data));
+        return cor(data, colMeans(data));
     }
 
     /**
@@ -2757,7 +2358,7 @@ public class Math {
         int n = data[0].length;
         double[] sd = new double[n];
         for (int i = 0; i < n; i++) {
-            sd[i] = sqrt(sigma[i][i]);
+            sd[i] = Math.sqrt(sigma[i][i]);
         }
 
         for (int i = 0; i < n; i++) {
@@ -2833,7 +2434,7 @@ public class Math {
 
         double d = 0.0;
         for (int j = 0; j < n; j++) {
-            d += Math.sqr(wksp1[j] - wksp2[j]);
+            d += sqr(wksp1[j] - wksp2[j]);
         }
 
         int en = n;
@@ -2869,7 +2470,7 @@ public class Math {
 
         double d = 0.0;
         for (int j = 0; j < n; j++) {
-            d += Math.sqr(wksp1[j] - wksp2[j]);
+            d += sqr(wksp1[j] - wksp2[j]);
         }
 
         int en = n;
@@ -2905,7 +2506,7 @@ public class Math {
 
         double d = 0.0;
         for (int j = 0; j < n; j++) {
-            d += Math.sqr(wksp1[j] - wksp2[j]);
+            d += sqr(wksp1[j] - wksp2[j]);
         }
 
         int en = n;
@@ -3125,7 +2726,7 @@ public class Math {
 
         for (int j = 0; j < p; j++) {
             double scale = max[j] - min[j];
-            if (!Math.isZero(scale)) {
+            if (!isZero(scale)) {
                 for (int i = 0; i < n; i++) {
                     x[i][j] = (x[i][j] - min[j]) / scale;
                 }
@@ -3154,11 +2755,11 @@ public class Math {
         double[] scale = new double[p];
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
-                scale[j] += Math.sqr(x[i][j]);
+                scale[j] += sqr(x[i][j]);
             }
             scale[j] = Math.sqrt(scale[j] / (n-1));
 
-            if (!Math.isZero(scale[j])) {
+            if (!isZero(scale[j])) {
                 for (int i = 0; i < n; i++) {
                     x[i][j] /= scale[j];
                 }
@@ -3193,14 +2794,14 @@ public class Math {
         double[] scale = new double[p];
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
-                scale[j] += Math.sqr(x[i][j]);
+                scale[j] += sqr(x[i][j]);
             }
             scale[j] = Math.sqrt(scale[j]);
         }
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
-                if (!Math.isZero(scale[j])) {
+                if (!isZero(scale[j])) {
                     x[i][j] /= scale[j];
                 }
             }
@@ -3313,7 +2914,7 @@ public class Math {
         meanY /= len;
         for (int i = 0; i < len; ++i) {
             XYs += (logR[i] - meanX) * (logZ[i] - meanY);
-            Xsquares += Math.sqr(logR[i] - meanX);
+            Xsquares += sqr(logR[i] - meanX);
         }
 
         double slope = XYs / Xsquares;
@@ -3330,7 +2931,7 @@ public class Math {
             if (!indiffValsSeen) {
                 int n = Nr[row(r, r[j] + 1)];
                 double x = (r[j] + 1) * n / (double) Nr[j];
-                if (Math.abs(x - y) <= CONFID_FACTOR * Math.sqrt(Math.sqr(r[j] + 1.0) * n / Math.sqr(Nr[j]) * (1 + n / (double) Nr[j]))) {
+                if (Math.abs(x - y) <= CONFID_FACTOR * Math.sqrt(sqr(r[j] + 1.0) * n / sqr(Nr[j]) * (1 + n / (double) Nr[j]))) {
                     indiffValsSeen = true;
                 } else {
                     p[j] = x;
@@ -3519,7 +3120,7 @@ public class Math {
 
     /** Tests if a floating number is zero with given epsilon. */
     public static boolean isZero(float x, float epsilon) {
-        return abs(x) < epsilon;
+        return Math.abs(x) < epsilon;
     }
 
     /** Tests if a floating number is zero. */
@@ -3529,7 +3130,7 @@ public class Math {
 
     /** Tests if a floating number is zero with given epsilon. */
     public static boolean isZero(double x, double epsilon) {
-        return abs(x) < epsilon;
+        return Math.abs(x) < epsilon;
     }
 
     /**
@@ -3990,7 +3591,7 @@ public class Math {
                 e = d = b - a;
             }
 
-            if (abs(fc) < abs(fb)) {
+            if (Math.abs(fc) < Math.abs(fb)) {
                 a = b;
                 b = c;
                 c = a;
@@ -3999,19 +3600,19 @@ public class Math {
                 fc = fa;
             }
 
-            tol = 2.0 * EPSILON * abs(b) + 0.5 * tol;
+            tol = 2.0 * EPSILON * Math.abs(b) + 0.5 * tol;
             xm = 0.5 * (c - b);
 
             if (iter % 10 == 0) {
                 logger.info(String.format("Brent: the root after %3d iterations: %.5g, error = %.5g", iter, b, xm));
             }
 
-            if (abs(xm) <= tol || fb == 0.0) {
+            if (Math.abs(xm) <= tol || fb == 0.0) {
                 logger.info(String.format("Brent: the root after %3d iterations: %.5g, error = %.5g", iter, b, xm));
                 return b;
             }
 
-            if (abs(e) >= tol && abs(fa) > abs(fb)) {
+            if (Math.abs(e) >= tol && Math.abs(fa) > Math.abs(fb)) {
                 s = fb / fa;
                 if (a == c) {
                     p = 2.0 * xm * s;
@@ -4027,9 +3628,9 @@ public class Math {
                     q = -q;
                 }
 
-                p = abs(p);
-                double min1 = 3.0 * xm * q - abs(tol * q);
-                double min2 = abs(e * q);
+                p = Math.abs(p);
+                double min1 = 3.0 * xm * q - Math.abs(tol * q);
+                double min2 = Math.abs(e * q);
                 if (2.0 * p < (min1 < min2 ? min1 : min2)) {
                     e = d;
                     d = p / q;
@@ -4044,10 +3645,10 @@ public class Math {
 
             a = b;
             fa = fb;
-            if (abs(d) > tol) {
+            if (Math.abs(d) > tol) {
                 b += d;
             } else {
-                b += copySign(tol, xm);
+                b += Math.copySign(tol, xm);
             }
             fb = func.f(b);
         }
@@ -4112,12 +3713,12 @@ public class Math {
             xl = x2;
         }
         double rts = 0.5 * (x1 + x2);
-        double dxold = abs(x2 - x1);
+        double dxold = Math.abs(x2 - x1);
         double dx = dxold;
         double f = func.f(rts);
         double df = func.df(rts);
         for (int iter = 1; iter <= maxIter; iter++) {
-            if ((((rts - xh) * df - f) * ((rts - xl) * df - f) > 0.0) || (abs(2.0 * f) > abs(dxold * df))) {
+            if ((((rts - xh) * df - f) * ((rts - xl) * df - f) > 0.0) || (Math.abs(2.0 * f) > Math.abs(dxold * df))) {
                 dxold = dx;
                 dx = 0.5 * (xh - xl);
                 rts = xl + dx;
@@ -4140,7 +3741,7 @@ public class Math {
                 logger.info(String.format("Newton-Raphson: the root after %3d iterations: %.5g, error = %.5g", iter, rts, dx));
             }
 
-            if (abs(dx) < tol) {
+            if (Math.abs(dx) < tol) {
                 logger.info(String.format("Newton-Raphson: the root after %3d iterations: %.5g, error = %.5g", iter, rts, dx));
                 return rts;
             }
@@ -4244,7 +3845,7 @@ public class Math {
         // Calculate minimum step.
         double test = 0.0;
         for (int i = 0; i < n; i++) {
-            double temp = abs(p[i]) / max(xold[i], 1.0);
+            double temp = Math.abs(p[i]) / Math.max(xold[i], 1.0);
             if (temp > test) {
                 test = temp;
             }
@@ -4289,9 +3890,9 @@ public class Math {
                         if (disc < 0.0) {
                             tmpalam = 0.5 * alam;
                         } else if (b <= 0.0) {
-                            tmpalam = (-b + sqrt(disc)) / (3.0 * a);
+                            tmpalam = (-b + Math.sqrt(disc)) / (3.0 * a);
                         } else {
-                            tmpalam = -slope / (b + sqrt(disc));
+                            tmpalam = -slope / (b + Math.sqrt(disc));
                         }
                     }
                     if (tmpalam > 0.5 * alam) {
@@ -4301,7 +3902,7 @@ public class Math {
             }
             alam2 = alam;
             f2 = f;
-            alam = max(tmpalam, 0.1 * alam);
+            alam = Math.max(tmpalam, 0.1 * alam);
         }
     }
 
@@ -4421,7 +4022,7 @@ public class Math {
         }
 
         // Upper limit for line search step.
-        double stpmax = STPMX * max(sqrt(sum), n);
+        double stpmax = STPMX * Math.max(Math.sqrt(sum), n);
 
         for (int iter = 1, k = 0; iter <= maxIter; iter++) {
             linesearch(func, x, f, g, xi, xnew, stpmax);
@@ -4437,7 +4038,7 @@ public class Math {
             // Test for convergence on x.
             double test = 0.0;
             for (int i = 0; i < n; i++) {
-                double temp = abs(s[k][i]) / max(abs(x[i]), 1.0);
+                double temp = Math.abs(s[k][i]) / Math.max(Math.abs(x[i]), 1.0);
                 if (temp > test) {
                     test = temp;
                 }
@@ -4450,10 +4051,10 @@ public class Math {
 
             // Test for convergence on zero gradient.
             test = 0.0;
-            double den = max(f, 1.0);
+            double den = Math.max(f, 1.0);
 
             for (int i = 0; i < n; i++) {
-                double temp = abs(g[i]) * max(abs(x[i]), 1.0) / den;
+                double temp = Math.abs(g[i]) * Math.max(Math.abs(x[i]), 1.0) / den;
                 if (temp > test) {
                     test = temp;
                 }
@@ -4580,7 +4181,7 @@ public class Math {
             sum += x[i] * x[i];
         }
 
-        double stpmax = STPMX * max(sqrt(sum), n);
+        double stpmax = STPMX * Math.max(Math.sqrt(sum), n);
 
         for (int iter = 1; iter <= maxIter; iter++) {
             // The new function evaluation occurs in line search.
@@ -4599,7 +4200,7 @@ public class Math {
             // Test for convergence on x.
             test = 0.0;
             for (int i = 0; i < n; i++) {
-                temp = abs(xi[i]) / max(abs(x[i]), 1.0);
+                temp = Math.abs(xi[i]) / Math.max(Math.abs(x[i]), 1.0);
                 if (temp > test) {
                     test = temp;
                 }
@@ -4615,10 +4216,10 @@ public class Math {
             func.f(x, g);
 
             // Test for convergence on zero gradient.
-            den = max(f, 1.0);
+            den = Math.max(f, 1.0);
             test = 0.0;
             for (int i = 0; i < n; i++) {
-                temp = abs(g[i]) * max(abs(x[i]), 1.0) / den;
+                temp = Math.abs(g[i]) * Math.max(Math.abs(x[i]), 1.0) / den;
                 if (temp > test) {
                     test = temp;
                 }
@@ -4649,7 +4250,7 @@ public class Math {
             }
 
             // Skip upudate if fac is not sufficiently positive.
-            if (fac > sqrt(EPSILON * sumdg * sumxi)) {
+            if (fac > Math.sqrt(EPSILON * sumdg * sumxi)) {
                 fac = 1.0 / fac;
                 fad = 1.0 / fae;
 

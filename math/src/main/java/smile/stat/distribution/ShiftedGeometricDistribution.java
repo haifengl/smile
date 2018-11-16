@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The "shifted" geometric distribution is a discrete probability distribution of the
@@ -50,7 +50,7 @@ public class ShiftedGeometricDistribution extends DiscreteDistribution implement
         }
 
         this.p = p;
-        entropy = (-p * Math.log2(p) - (1 - p) * Math.log2(1 - p)) / p;
+        entropy = (-p * MathEx.log2(p) - (1 - p) * MathEx.log2(1 - p)) / p;
     }
 
     /**
@@ -67,7 +67,7 @@ public class ShiftedGeometricDistribution extends DiscreteDistribution implement
         }
 
         p = data.length / sum;
-        entropy = (-p * Math.log2(p) - (1 - p) * Math.log2(1 - p)) / p;
+        entropy = (-p * MathEx.log2(p) - (1 - p) * MathEx.log2(1 - p)) / p;
     }
 
     /**

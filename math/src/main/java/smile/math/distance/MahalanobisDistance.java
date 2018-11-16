@@ -16,7 +16,6 @@
 
 package smile.math.distance;
 
-import smile.math.Math;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 

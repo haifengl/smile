@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.special.Beta;
 
 /**
@@ -127,7 +127,7 @@ public class BinomialDistribution extends DiscreteDistribution {
         if (k < 0 || k > n) {
             return 0.0;
         } else {
-            return Math.floor(0.5 + Math.exp(Math.logFactorial(n) - Math.logFactorial(k) - Math.logFactorial(n - k))) * Math.pow(p, k) * Math.pow(1.0 - p, n - k);
+            return Math.floor(0.5 + Math.exp(MathEx.logFactorial(n) - MathEx.logFactorial(k) - MathEx.logFactorial(n - k))) * Math.pow(p, k) * Math.pow(1.0 - p, n - k);
         }
     }
 
@@ -136,8 +136,8 @@ public class BinomialDistribution extends DiscreteDistribution {
         if (k < 0 || k > n) {
             return Double.NEGATIVE_INFINITY;
         } else {
-            return Math.logFactorial(n) - Math.logFactorial(k)
-                    - Math.logFactorial(n - k) + k * Math.log(p) + (n - k) * Math.log(1.0 - p);
+            return MathEx.logFactorial(n) - MathEx.logFactorial(k)
+                 - MathEx.logFactorial(n - k) + k * Math.log(p) + (n - k) * Math.log(1.0 - p);
         }
     }
 
@@ -280,7 +280,7 @@ public class BinomialDistribution extends DiscreteDistribution {
 
             // binomial constants, necessary for computing function values f(k)
             l_pq = Math.log(p);
-            c_pm = mode * l_pq - Math.logFactorial(mode) - Math.logFactorial(n - mode);
+            c_pm = mode * l_pq - MathEx.logFactorial(mode) - MathEx.logFactorial(n - mode);
 
             // function values f(k) = p(k)/p(mode) at k = k2, k4, k1, k5
             f2 = f(k2, n, l_pq, c_pm);
@@ -389,7 +389,7 @@ public class BinomialDistribution extends DiscreteDistribution {
                 // acceptance-rejection test of candidate X from the original area
                 // test, whether  W <= BinomialF(k),    with  W = U*h(x)  and  U -- U(0, 1)
                 // log BinomialF(X) = (X - mode)*log(p/q) - log X!(n - X)! + log mode!(n - mode)!
-                if (Math.log(W) <= X * l_pq - Math.logFactorial(X) - Math.logFactorial(n - X) - c_pm) {
+                if (Math.log(W) <= X * l_pq - MathEx.logFactorial(X) - MathEx.logFactorial(n - X) - c_pm) {
                     return X;
                 }
             }
@@ -397,7 +397,7 @@ public class BinomialDistribution extends DiscreteDistribution {
 
         // used by BinomialPatchwork
         private double f(int k, int n, double l_pq, double c_pm) {
-            return Math.exp(k * l_pq - Math.logFactorial(k) - Math.logFactorial(n - k) - c_pm);
+            return Math.exp(k * l_pq - MathEx.logFactorial(k) - MathEx.logFactorial(n - k) - c_pm);
         }
     }
 
@@ -422,7 +422,7 @@ public class BinomialDistribution extends DiscreteDistribution {
                 mode--;    // mode
             }
             r1 = p / (1.0 - p);
-            modeValue = Math.exp(Math.logFactorial(n) - Math.logFactorial(mode) - Math.logFactorial(n - mode) + mode * Math.log(p) + (n - mode) * Math.log(1. - p));
+            modeValue = Math.exp(MathEx.logFactorial(n) - MathEx.logFactorial(mode) - MathEx.logFactorial(n - mode) + mode * Math.log(p) + (n - mode) * Math.log(1. - p));
         }
 
         /**

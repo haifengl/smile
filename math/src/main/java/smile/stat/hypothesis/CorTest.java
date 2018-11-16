@@ -19,7 +19,7 @@ package smile.stat.hypothesis;
 import smile.math.special.Beta;
 import smile.math.special.Erf;
 import smile.math.special.Gamma;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.QuickSort;
 
 /**
@@ -216,7 +216,7 @@ public class CorTest {
 
         double d = 0.0;
         for (int j = 0; j < n; j++) {
-            d += Math.sqr(wksp1[j] - wksp2[j]);
+            d += MathEx.sqr(wksp1[j] - wksp2[j]);
         }
 
         int en = n;

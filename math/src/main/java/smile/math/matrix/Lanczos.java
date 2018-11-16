@@ -17,7 +17,7 @@ package smile.math.matrix;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The Lanczos algorithm is a direct algorithm devised by Cornelius Lanczos
@@ -70,7 +70,7 @@ public class Lanczos {
             throw new IllegalArgumentException("k is larger than the size of A: " + k + " > " + A.nrows());
         }
 
-        if (kappa <= Math.EPSILON) {
+        if (kappa <= MathEx.EPSILON) {
             throw new IllegalArgumentException("Invalid tolerance: kappa = " + kappa);
         }
 
@@ -82,8 +82,8 @@ public class Lanczos {
         int intro = 0;
 
         // roundoff estimate for dot product of two unit vectors
-        double eps = Math.EPSILON * Math.sqrt(n);
-        double reps = Math.sqrt(Math.EPSILON);
+        double eps = MathEx.EPSILON * Math.sqrt(n);
+        double reps = Math.sqrt(MathEx.EPSILON);
         double eps34 = reps * Math.sqrt(reps);
         kappa = Math.max(kappa, eps34);
 
@@ -125,18 +125,18 @@ public class Lanczos {
 
         // normalize starting vector
         double t = 1.0 / rnm;
-        Math.scale(t, wptr[0], wptr[1]);
-        Math.scale(t, wptr[3]);
+        MathEx.scale(t, wptr[0], wptr[1]);
+        MathEx.scale(t, wptr[3]);
 
         // take the first step
         A.ax(wptr[3], wptr[0]);
-        alf[0] = Math.dot(wptr[0], wptr[3]);
-        Math.axpy(-alf[0], wptr[1], wptr[0]);
-        t = Math.dot(wptr[0], wptr[3]);
-        Math.axpy(-t, wptr[1], wptr[0]);
+        alf[0] = MathEx.dot(wptr[0], wptr[3]);
+        MathEx.axpy(-alf[0], wptr[1], wptr[0]);
+        t = MathEx.dot(wptr[0], wptr[3]);
+        MathEx.axpy(-t, wptr[1], wptr[0]);
         alf[0] += t;
-        Math.copy(wptr[0], wptr[4]);
-        rnm = Math.norm(wptr[0]);
+        MathEx.copy(wptr[0], wptr[4]);
+        rnm = MathEx.norm(wptr[0]);
         double anorm = rnm + Math.abs(alf[0]);
         double tol = reps * anorm;
 
@@ -172,8 +172,8 @@ public class Lanczos {
 
             // a single Lanczos step
             for (j = first; j < last; j++) {
-                Math.swap(wptr, 1, 2);
-                Math.swap(wptr, 3, 4);
+                MathEx.swap(wptr, 1, 2);
+                MathEx.swap(wptr, 3, 4);
 
                 store(q, j - 1, wptr[2]);
                 if (j - 1 < 2) {
@@ -196,18 +196,18 @@ public class Lanczos {
 
                 if (enough) {
                     // These lines fix a bug that occurs with low-rank matrices
-                    Math.swap(wptr, 1, 2);
+                    MathEx.swap(wptr, 1, 2);
                     break;
                 }
 
                 // take a lanczos step
                 t = 1.0 / rnm;
-                Math.scale(t, wptr[0], wptr[1]);
-                Math.scale(t, wptr[3]);
+                MathEx.scale(t, wptr[0], wptr[1]);
+                MathEx.scale(t, wptr[3]);
                 A.ax(wptr[3], wptr[0]);
-                Math.axpy(-rnm, wptr[2], wptr[0]);
-                alf[j] = Math.dot(wptr[0], wptr[3]);
-                Math.axpy(-alf[j], wptr[1], wptr[0]);
+                MathEx.axpy(-rnm, wptr[2], wptr[0]);
+                alf[j] = MathEx.dot(wptr[0], wptr[3]);
+                MathEx.axpy(-alf[j], wptr[1], wptr[0]);
 
                 // orthogonalize against initial lanczos vectors
                 if (j <= 2 && (Math.abs(alf[j - 1]) > 4.0 * Math.abs(alf[j]))) {
@@ -215,23 +215,23 @@ public class Lanczos {
                 }
 
                 for (int i = 0; i < Math.min(ll, j - 1); i++) {
-                    t = Math.dot(p[i], wptr[0]);
-                    Math.axpy(-t, q[i], wptr[0]);
+                    t = MathEx.dot(p[i], wptr[0]);
+                    MathEx.axpy(-t, q[i], wptr[0]);
                     eta[i] = eps;
                     oldeta[i] = eps;
                 }
 
                 // extended local reorthogonalization
-                t = Math.dot(wptr[0], wptr[4]);
-                Math.axpy(-t, wptr[2], wptr[0]);
+                t = MathEx.dot(wptr[0], wptr[4]);
+                MathEx.axpy(-t, wptr[2], wptr[0]);
                 if (bet[j] > 0.0) {
                     bet[j] = bet[j] + t;
                 }
-                t = Math.dot(wptr[0], wptr[3]);
-                Math.axpy(-t, wptr[1], wptr[0]);
+                t = MathEx.dot(wptr[0], wptr[3]);
+                MathEx.axpy(-t, wptr[1], wptr[0]);
                 alf[j] = alf[j] + t;
-                Math.copy(wptr[0], wptr[4]);
-                rnm = Math.norm(wptr[0]);
+                MathEx.copy(wptr[0], wptr[4]);
+                rnm = MathEx.norm(wptr[0]);
                 anorm = bet[j] + Math.abs(alf[j]) + rnm;
                 tol = reps * anorm;
 
@@ -321,7 +321,7 @@ public class Lanczos {
      */
     private static double startv(Matrix A, double[][] q, double[][] wptr, int step) {
         // get initial vector; default is random
-        double rnm = Math.dot(wptr[0], wptr[0]);
+        double rnm = MathEx.dot(wptr[0], wptr[0]);
         double[] r = wptr[0];
         for (int id = 0; id < 3; id++) {
             if (id > 0 || step > 0 || rnm == 0) {
@@ -329,12 +329,12 @@ public class Lanczos {
                     r[i] = Math.random() - 0.5;
                 }
             }
-            Math.copy(wptr[0], wptr[3]);
+            MathEx.copy(wptr[0], wptr[3]);
 
             // apply operator to put r in range (essential if m singular)
             A.ax(wptr[3], wptr[0]);
-            Math.copy(wptr[0], wptr[3]);
-            rnm = Math.dot(wptr[0], wptr[3]);
+            MathEx.copy(wptr[0], wptr[3]);
+            rnm = MathEx.dot(wptr[0], wptr[3]);
             if (rnm > 0.0) {
                 break;
             }
@@ -348,16 +348,16 @@ public class Lanczos {
 
         if (step > 0) {
             for (int i = 0; i < step; i++) {
-                double t = Math.dot(wptr[3], q[i]);
-                Math.axpy(-t, q[i], wptr[0]);
+                double t = MathEx.dot(wptr[3], q[i]);
+                MathEx.axpy(-t, q[i], wptr[0]);
             }
 
             // make sure q[step] is orthogonal to q[step-1]
-            double t = Math.dot(wptr[4], wptr[0]);
-            Math.axpy(-t, wptr[2], wptr[0]);
-            Math.copy(wptr[0], wptr[3]);
-            t = Math.dot(wptr[3], wptr[0]);
-            if (t <= Math.EPSILON * rnm) {
+            double t = MathEx.dot(wptr[4], wptr[0]);
+            MathEx.axpy(-t, wptr[2], wptr[0]);
+            MathEx.copy(wptr[0], wptr[3]);
+            t = MathEx.dot(wptr[3], wptr[0]);
+            if (t <= MathEx.EPSILON * rnm) {
                 t = 0.0;
             }
             rnm = t;
@@ -435,19 +435,19 @@ public class Lanczos {
                     tq = 0.0;
                     tr = 0.0;
                     for (int i = ll; i < step; i++) {
-                        t = -Math.dot(qa, Q[i]);
+                        t = -MathEx.dot(qa, Q[i]);
                         tq += Math.abs(t);
-                        Math.axpy(t, Q[i], q);
-                        t = -Math.dot(ra, Q[i]);
+                        MathEx.axpy(t, Q[i], q);
+                        t = -MathEx.dot(ra, Q[i]);
                         tr += Math.abs(t);
-                        Math.axpy(t, Q[i], r);
+                        MathEx.axpy(t, Q[i], r);
                     }
-                    Math.copy(q, qa);
-                    t = -Math.dot(r, qa);
+                    MathEx.copy(q, qa);
+                    t = -MathEx.dot(r, qa);
                     tr += Math.abs(t);
-                    Math.axpy(t, q, r);
-                    Math.copy(r, ra);
-                    rnm = Math.sqrt(Math.dot(ra, r));
+                    MathEx.axpy(t, q, r);
+                    MathEx.copy(r, ra);
+                    rnm = Math.sqrt(MathEx.dot(ra, r));
                     if (tq <= reps1 && tr <= reps1 * rnm) {
                         flag = false;
                     }
@@ -538,10 +538,10 @@ public class Lanczos {
                 bnd[i] = bnd[i] * (bnd[i] / gap);
             }
 
-            if (bnd[i] <= 16.0 * Math.EPSILON * Math.abs(ritz[i])) {
+            if (bnd[i] <= 16.0 * MathEx.EPSILON * Math.abs(ritz[i])) {
                 neig++;
                 if (!enough[0]) {
-                    enough[0] = -Math.EPSILON < ritz[i] && ritz[i] < Math.EPSILON;
+                    enough[0] = -MathEx.EPSILON < ritz[i] && ritz[i] < MathEx.EPSILON;
                 }
             }
         }
@@ -549,7 +549,7 @@ public class Lanczos {
         logger.info("Lancozs method found {} converged eigenvalues of the {}-by-{} matrix", neig, step + 1, step + 1);
         if (neig != 0) {
             for (int i = 0; i <= step; i++) {
-                if (bnd[i] <= 16.0 * Math.EPSILON * Math.abs(ritz[i])) {
+                if (bnd[i] <= 16.0 * MathEx.EPSILON * Math.abs(ritz[i])) {
                     logger.info("ritz[{}] = {}", i, ritz[i]);
                 }
             }
@@ -566,7 +566,7 @@ public class Lanczos {
         if (null == q[j]) {
             q[j] = s.clone();
         } else {
-            Math.copy(s, q[j]);
+            MathEx.copy(s, q[j]);
         }
     }
 }

@@ -17,7 +17,7 @@
 package smile.stat.distribution;
 
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Kernel density estimation is a non-parametric way of estimating the
@@ -63,8 +63,8 @@ public class KernelDensity implements Distribution {
      */
     public KernelDensity(double[] x) {
         this.x = x;
-        this.mean = Math.mean(x);
-        this.var = Math.var(x);
+        this.mean = MathEx.mean(x);
+        this.var = MathEx.var(x);
         this.sd = Math.sqrt(var);
 
         Arrays.sort(x);
@@ -87,8 +87,8 @@ public class KernelDensity implements Distribution {
 
         this.x = x;
         this.h = h;
-        this.mean = Math.mean(x);
-        this.var = Math.var(x);
+        this.mean = MathEx.mean(x);
+        this.var = MathEx.var(x);
         this.sd = Math.sqrt(var);
         gaussian = new GaussianDistribution(0, h);
 

@@ -16,7 +16,7 @@
 
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * This is the base class of univariate distributions. Both rejection
@@ -54,8 +54,8 @@ public abstract class AbstractDistribution implements Distribution {
         double x;
         double y;
         do {
-            x = xmin + Math.random() * (xmax - xmin);
-            y = Math.random() * pmax;
+            x = xmin + MathEx.random() * (xmax - xmin);
+            y = MathEx.random() * pmax;
         } while (p(x) < y);
 
         return x;
@@ -78,7 +78,7 @@ public abstract class AbstractDistribution implements Distribution {
      * effort, e.g. the ziggurat algorithm and rejection sampling.
      */
     protected double inverseTransformSampling() {
-        double u = Math.random();
+        double u = MathEx.random();
         return quantile(u);
     }
     

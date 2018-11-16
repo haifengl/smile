@@ -16,7 +16,7 @@
 
 package smile.math.kernel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.SparseArray;
 
 /**
@@ -65,7 +65,7 @@ public class SparseHyperbolicTangentKernel implements MercerKernel<SparseArray> 
 
     @Override
     public double k(SparseArray x, SparseArray y) {
-        double dot = Math.dot(x, y);
+        double dot = MathEx.dot(x, y);
         return Math.tanh(scale * dot + offset);
     }
 }

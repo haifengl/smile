@@ -20,7 +20,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
+import smile.math.MathEx;
 
 import static org.junit.Assert.*;
 
@@ -196,7 +196,7 @@ public class JMatrixTest {
         JMatrix a = new JMatrix(A);
         JMatrix b = new JMatrix(B);
         JMatrix c = a.add(b);
-        assertTrue(Math.equals(C, c.array(), 1E-7));
+        assertTrue(MathEx.equals(C, c.array(), 1E-7));
     }
 
     /**
@@ -223,7 +223,7 @@ public class JMatrixTest {
         JMatrix a = new JMatrix(A);
         JMatrix b = new JMatrix(B);
         JMatrix c = a.sub(b);
-        assertTrue(Math.equals(C, c.array(), 1E-7));
+        assertTrue(MathEx.equals(C, c.array(), 1E-7));
     }
 
     /**
@@ -260,8 +260,8 @@ public class JMatrixTest {
 
         JMatrix a = new JMatrix(A);
         JMatrix b = new JMatrix(B);
-        assertTrue(Math.equals(a.abmm(b).array(), C, 1E-7));
-        assertTrue(Math.equals(a.abtmm(b).array(), D, 1E-7));
-        assertTrue(Math.equals(a.atbmm(b).array(), E, 1E-7));
+        assertTrue(MathEx.equals(a.abmm(b).array(), C, 1E-7));
+        assertTrue(MathEx.equals(a.abtmm(b).array(), D, 1E-7));
+        assertTrue(MathEx.equals(a.atbmm(b).array(), E, 1E-7));
     }
 }

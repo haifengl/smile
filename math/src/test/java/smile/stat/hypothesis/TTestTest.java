@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -161,7 +161,7 @@ public class TTestTest {
         double[] x = {44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1};
         double[] y  = {2.6,  3.1,  2.5,  5.0,  3.6,  4.0,  5.2,  2.8,  3.8};
 
-        TTest result = TTest.test(Math.cor(x,y), x.length-2);
+        TTest result = TTest.test(MathEx.cor(x,y), x.length-2);
         assertEquals(7, result.df, 1E-10);
         assertEquals(1.8411, result.t, 1E-4);
         assertEquals(0.1082, result.pvalue, 1E-4);

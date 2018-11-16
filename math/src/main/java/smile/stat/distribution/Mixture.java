@@ -18,7 +18,7 @@ package smile.stat.distribution;
 
 import java.util.List;
 import java.util.ArrayList;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * A finite mixture model is a probabilistic model for density estimation using a
@@ -168,7 +168,7 @@ public class Mixture extends AbstractDistribution {
         if (components.isEmpty())
             throw new IllegalStateException("Mixture is empty!");
 
-        double r = Math.random();
+        double r = MathEx.random();
 
         double p = 0.0;
         for (Component g : components) {

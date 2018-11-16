@@ -16,7 +16,7 @@
 
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.special.Erf;
 
 /**
@@ -93,8 +93,8 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
      * Constructor. Mean and standard deviation will be estimated from the data by MLE.
      */
     public GaussianDistribution(double[] data) {
-        mu = Math.mean(data);
-        sigma = Math.sd(data);
+        mu = MathEx.mean(data);
+        sigma = MathEx.sd(data);
         variance = sigma * sigma;
 
         entropy = Math.log(sigma) + LOG2PIE_2;
@@ -153,8 +153,8 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
 
         } else {
             do {
-                x = Math.random(-1, 1);
-                y = Math.random(-1, 1);
+                x = MathEx.random(-1, 1);
+                y = MathEx.random(-1, 1);
                 r = x * x + y * y;
             } while (r >= 1.0);
 
@@ -190,9 +190,9 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
 
         double y, r, x;
 
-        double u = Math.random();
+        double u = MathEx.random();
         while (u == 0.0) {
-            u = Math.random();
+            u = MathEx.random();
         }
         
         y = u - 0.5;

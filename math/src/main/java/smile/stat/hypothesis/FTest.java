@@ -17,7 +17,7 @@
 package smile.stat.hypothesis;
 
 import smile.math.special.Beta;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * F test of the hypothesis that two independent samples come from normal
@@ -64,8 +64,8 @@ public class FTest {
         int n1 = x.length;
         int n2 = y.length;
 
-        double var1 = Math.var(x);
-        double var2 = Math.var(y);
+        double var1 = MathEx.var(x);
+        double var2 = MathEx.var(y);
 
         int df1, df2;
         double f;

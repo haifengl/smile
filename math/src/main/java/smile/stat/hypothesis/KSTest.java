@@ -18,7 +18,7 @@ package smile.stat.hypothesis;
 
 import java.util.Arrays;
 import smile.stat.distribution.Distribution;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The Kolmogorov-Smirnov test (K-S test) is a form of minimum distance
@@ -124,12 +124,12 @@ public class KSTest {
         }
 
         if (q > 0.3) {
-            double f = -0.392699081698724155 * Math.sqr(1. - q);
+            double f = -0.392699081698724155 * MathEx.sqr(1. - q);
             double y = invxlogx(f);
             double t;
             do {
                 double logy = Math.log(y);
-                double ff = f / Math.sqr(1. + Math.pow(y, 4) + Math.pow(y, 12));
+                double ff = f / MathEx.sqr(1. + Math.pow(y, 4) + Math.pow(y, 12));
                 double u = (y * logy - ff) / (1. + logy);
                 t = u / Math.max(0.5, 1. - 0.5 * u / (y * (1. + logy)));
                 y -= t;

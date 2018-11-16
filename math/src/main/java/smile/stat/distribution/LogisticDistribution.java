@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The logistic distribution is a continuous probability distribution whose

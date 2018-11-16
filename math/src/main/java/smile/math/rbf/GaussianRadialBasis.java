@@ -17,7 +17,7 @@
 package smile.math.rbf;
 
 import java.io.Serializable;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Gaussian RBF. &phi;(r) = e<sup>-0.5 * r<sup>2</sup> / r<sup>2</sup><sub>0</sub></sup>

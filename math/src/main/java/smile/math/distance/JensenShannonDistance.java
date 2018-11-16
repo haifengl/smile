@@ -16,7 +16,7 @@
 
 package smile.math.distance;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The Jensen-Shannon divergence is a popular method of measuring the
@@ -55,6 +55,6 @@ public class JensenShannonDistance implements Metric<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        return Math.sqrt(Math.JensenShannonDivergence(x, y));
+        return Math.sqrt(MathEx.JensenShannonDivergence(x, y));
     }
 }

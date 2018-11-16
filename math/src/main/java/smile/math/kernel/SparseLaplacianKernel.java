@@ -16,7 +16,7 @@
 
 package smile.math.kernel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.SparseArray;
 
 /**
@@ -51,6 +51,6 @@ public class SparseLaplacianKernel implements MercerKernel<SparseArray> {
 
     @Override
     public double k(SparseArray x, SparseArray y) {
-        return Math.exp(-gamma * Math.distance(x, y));
+        return Math.exp(-gamma * MathEx.distance(x, y));
     }
 }

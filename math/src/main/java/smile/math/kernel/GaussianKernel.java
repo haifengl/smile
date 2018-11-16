@@ -16,7 +16,7 @@
 
 package smile.math.kernel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The Gaussian Mercer Kernel. k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>,
@@ -56,6 +56,6 @@ public class GaussianKernel implements MercerKernel<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        return Math.exp(-gamma * Math.squaredDistance(x, y));
+        return Math.exp(-gamma * MathEx.squaredDistance(x, y));
     }
 }

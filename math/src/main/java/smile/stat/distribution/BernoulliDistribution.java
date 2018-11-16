@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Bernoulli distribution is a discrete probability distribution, which takes
@@ -56,7 +56,7 @@ public class BernoulliDistribution extends DiscreteDistribution {
         this.p = p;
         q = 1 - p;
 
-        entropy = -p * Math.log2(p) - q * Math.log2(q);
+        entropy = -p * MathEx.log2(p) - q * MathEx.log2(q);
     }
 
     /**
@@ -76,7 +76,7 @@ public class BernoulliDistribution extends DiscreteDistribution {
         p = (double) k / data.length;
         q = 1 - p;
 
-        entropy = -p * Math.log2(p) - q * Math.log2(q);
+        entropy = -p * MathEx.log2(p) - q * MathEx.log2(q);
     }
 
     /**
@@ -95,7 +95,7 @@ public class BernoulliDistribution extends DiscreteDistribution {
         p = (double) k / data.length;
         q = 1 - p;
 
-        entropy = -p * Math.log2(p) - q * Math.log2(q);
+        entropy = -p * MathEx.log2(p) - q * MathEx.log2(q);
     }
 
     /**
@@ -138,7 +138,7 @@ public class BernoulliDistribution extends DiscreteDistribution {
 
     @Override
     public double rand() {
-        if (Math.random() < q) {
+        if (MathEx.random() < q) {
             return 0;
         } else {
             return 1;

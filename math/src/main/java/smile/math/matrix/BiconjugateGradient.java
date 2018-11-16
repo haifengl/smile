@@ -18,7 +18,7 @@ package smile.math.matrix;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The biconjugate gradient method is an algorithm to
@@ -256,7 +256,7 @@ public class BiconjugateGradient {
             } else if (itol == 3 || itol == 4) {
                 zm1nrm = znrm;
                 znrm = snorm(z, itol);
-                if (Math.abs(zm1nrm - znrm) > Math.EPSILON * znrm) {
+                if (Math.abs(zm1nrm - znrm) > MathEx.EPSILON * znrm) {
                     dxnrm = Math.abs(ak) * snorm(p, itol);
                     err = znrm / Math.abs(zm1nrm - znrm) * dxnrm;
                 } else {
