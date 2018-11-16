@@ -22,7 +22,7 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.plot.Histogram;
 import smile.plot.PlotCanvas;
 
@@ -39,8 +39,8 @@ public class HistogramDemo extends JPanel {
         for (int j = 0; j < data.length; j++) {
             double x, y, r;
             do {
-                x = 2 * (Math.random() - 0.5);
-                y = 2 * (Math.random() - 0.5);
+                x = 2 * (MathEx.random() - 0.5);
+                y = 2 * (MathEx.random() - 0.5);
                 r = x * x + y * y;
             } while (r >= 1.0);
 
@@ -56,8 +56,8 @@ public class HistogramDemo extends JPanel {
         for (int j = 0; j < data.length; j++) {
             double x, y, r;
             do {
-                x = 2 * (Math.random() - 0.5);
-                y = 2 * (Math.random() - 0.5);
+                x = 2 * (MathEx.random() - 0.5);
+                y = 2 * (MathEx.random() - 0.5);
                 r = x * x + y * y;
             } while (r >= 1.0);
 
@@ -68,7 +68,7 @@ public class HistogramDemo extends JPanel {
         canvas.histogram("Dataset 2", data, smile.math.Histogram.breaks(-6/100., 6/100., 30), Color.RED);
 
         double[] prob = {0.2, 0.3, 0.1, 0.05, 0.2, 0.15};
-        int[] data2 = Math.random(prob, 1000);
+        int[] data2 = MathEx.random(prob, 1000);
 
         canvas = Histogram.plot(data2, 6);
         canvas.setTitle("Sampling with Uneuqal Probabilities");

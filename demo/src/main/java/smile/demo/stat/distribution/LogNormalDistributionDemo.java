@@ -30,7 +30,7 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.plot.Histogram;
 import smile.plot.PlotCanvas;
 import smile.plot.Line;
@@ -61,7 +61,7 @@ public class LogNormalDistributionDemo extends JPanel implements ChangeListener 
             labelTable.put(new Integer(i), new JLabel(String.valueOf(i/10)));
         }
 
-        sigmaSlider = new JSlider(0, 20, (int) Math.round(sigma * 10));
+        sigmaSlider = new JSlider(0, 20, (int) MathEx.round(sigma * 10));
         sigmaSlider.addChangeListener(this);
         sigmaSlider.setLabelTable(labelTable);
         sigmaSlider.setMajorTickSpacing(10);

@@ -21,7 +21,7 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.plot.Histogram;
 import smile.plot.PlotCanvas;
 import smile.plot.Surface;
@@ -168,11 +168,11 @@ public class MultivariateGaussianMixtureDemo extends JPanel {
         double[] data100 = new double[500000];
         for (int i = 0; i < data100.length; i++) {
             double[] x = g100.rand();
-            data100[i] = Math.norm(x);
+            data100[i] = MathEx.norm(x);
         }
 
-        System.out.println(Math.mean(data100));
-        System.out.println(Math.sd(data100));
+        System.out.println(MathEx.mean(data100));
+        System.out.println(MathEx.sd(data100));
 
         JFrame frame = new JFrame("Norm of Samples of Gaussian Mixture of Dimension 100");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

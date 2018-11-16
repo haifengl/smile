@@ -29,7 +29,7 @@ import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.projection.KPCA;
 import smile.projection.PCA;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 
 /**
@@ -61,7 +61,7 @@ public class KPCADemo extends ProjectionDemo {
             int n = 0;
             for (int i = 0; i < data.length; i++) {
                 for (int j = 0; j < i; j++, n++) {
-                    gamma[datasetIndex] += Math.squaredDistance(data[i], data[j]);
+                    gamma[datasetIndex] += MathEx.squaredDistance(data[i], data[j]);
                 }
             }
 
@@ -87,7 +87,7 @@ public class KPCADemo extends ProjectionDemo {
         pca.setProjection(2);
         double[][] y = pca.project(data);
 
-        PlotCanvas plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {
@@ -105,7 +105,7 @@ public class KPCADemo extends ProjectionDemo {
         pca.setProjection(3);
         y = pca.project(data);
 
-        plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {
@@ -123,7 +123,7 @@ public class KPCADemo extends ProjectionDemo {
         KPCA<double[]> kpca = new KPCA<>(data, new GaussianKernel(gamma[datasetIndex]), 2);
 
         y = kpca.getCoordinates();
-        plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {
@@ -143,7 +143,7 @@ public class KPCADemo extends ProjectionDemo {
         System.out.format("Learn KPCA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
         y = kpca.getCoordinates();
-        plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {

@@ -27,7 +27,7 @@ import smile.vq.SOM;
 import smile.data.AttributeDataset;
 import smile.data.NominalAttribute;
 import smile.data.parser.DelimitedTextParser;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.mds.IsotonicMDS;
 import smile.mds.MDS;
 import smile.mds.SammonMapping;
@@ -119,7 +119,7 @@ public class HexmapDemo extends JPanel {
                         }
                     }
                     
-                    int sum = Math.sum(count);
+                    int sum = MathEx.sum(count);
                     if (sum == 0.0) {
                         labels[i][j] = "no samples";
                     } else {
@@ -142,7 +142,7 @@ public class HexmapDemo extends JPanel {
             double[][] proximity = new double[m*n][m*n];
             for (int i = 0; i < m*n; i++) {
                 for (int j = 0; j < m*n; j++) {
-                    proximity[i][j] = Math.distance(map[i/n][i%n], map[j/n][j%n]);
+                    proximity[i][j] = MathEx.distance(map[i/n][i%n], map[j/n][j%n]);
                 }
             }
             

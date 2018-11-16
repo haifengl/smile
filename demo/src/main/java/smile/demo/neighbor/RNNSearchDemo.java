@@ -35,7 +35,7 @@ import javax.swing.JSlider;
 import javax.swing.JTextField;
 
 import smile.plot.PlotCanvas;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
@@ -129,11 +129,11 @@ public class RNNSearchDemo extends JPanel implements Runnable, ActionListener {
         for (int i = 0; i < n; i++) {
             data[i] = new double[dimension];
             for (int j = 0; j < dimension; j++) {
-                data[i][j] = Math.random();
+                data[i][j] = MathEx.random();
             }
         }
 
-        int[] perm = Math.permutate(n);
+        int[] perm = MathEx.permutate(n);
 
         System.out.println("Building searching data structure...");
         long time = System.currentTimeMillis();
@@ -149,14 +149,14 @@ public class RNNSearchDemo extends JPanel implements Runnable, ActionListener {
         int coverBuild = (int) (System.currentTimeMillis() - time);
 
         time = System.currentTimeMillis();
-        LSH<double[]> lsh = new LSH<>(dimension, 5, (int) Math.log2(dimension), 4 * radius, 1017881);
+        LSH<double[]> lsh = new LSH<>(dimension, 5, (int) MathEx.log2(dimension), 4 * radius, 1017881);
         for (int i = 0; i < n; i++) {
             lsh.put(data[i], data[i]);
         }
         int lshBuild = (int) (System.currentTimeMillis() - time);
 
         time = System.currentTimeMillis();
-        MPLSH<double[]> mplsh = new MPLSH<>(dimension, 3, (int) Math.log2(n), 4 * radius, 1017881);
+        MPLSH<double[]> mplsh = new MPLSH<>(dimension, 3, (int) MathEx.log2(n), 4 * radius, 1017881);
         for (int i = 0; i < n; i++) {
             mplsh.put(data[i], data[i]);
         }

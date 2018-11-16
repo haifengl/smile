@@ -24,7 +24,7 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.plot.Histogram;
 import smile.plot.PlotCanvas;
 import smile.plot.QQPlot;
@@ -80,7 +80,7 @@ public class ExponentialFamilyMixtureDemo extends JPanel {
         canvas.setTitle("Mixture of Gaussian, Exponential, and Gamma");
         add(canvas);
 
-        double width = (Math.max(data) - Math.min(data)) / 50;
+        double width = (MathEx.max(data) - MathEx.min(data)) / 50;
         double[][] p = new double[400][2];
         for (int i = 0; i < p.length; i++) {
             p[i][0] = -10 + i*0.1;
@@ -138,7 +138,7 @@ public class ExponentialFamilyMixtureDemo extends JPanel {
         PlotCanvas canvas = Histogram.plot(data, 50);
         frame.add(canvas);
 
-        double width = (Math.max(data) - Math.min(data)) / 50;
+        double width = (MathEx.max(data) - MathEx.min(data)) / 50;
         double[][] p = new double[400][2];
         for (int i = 0; i < p.length; i++) {
             p[i][0] = -10 + i*0.1;

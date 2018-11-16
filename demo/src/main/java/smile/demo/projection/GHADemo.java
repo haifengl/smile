@@ -26,7 +26,7 @@ import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.projection.GHA;
 import smile.projection.PCA;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -41,7 +41,7 @@ public class GHADemo extends ProjectionDemo {
     @Override
     public JComponent learn() {
         JPanel pane = new JPanel(new GridLayout(2, 2));
-        double[][] data = Math.clone(dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]));
+        double[][] data = MathEx.clone(dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]));
         String[] names = dataset[datasetIndex].toArray(new String[dataset[datasetIndex].size()]);
         if (names[0] == null) {
             names = null;
@@ -54,7 +54,7 @@ public class GHADemo extends ProjectionDemo {
         pca.setProjection(2);
         double[][] y = pca.project(data);
 
-        PlotCanvas plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {
@@ -72,7 +72,7 @@ public class GHADemo extends ProjectionDemo {
         pca.setProjection(3);
         y = pca.project(data);
 
-        plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {
@@ -102,7 +102,7 @@ public class GHADemo extends ProjectionDemo {
         }
         System.out.format("Learn GHA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
         y = gha.project(data);
-        plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {
@@ -132,7 +132,7 @@ public class GHADemo extends ProjectionDemo {
         }
         System.out.format("Learn GHA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
         y = gha.project(data);
-        plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {

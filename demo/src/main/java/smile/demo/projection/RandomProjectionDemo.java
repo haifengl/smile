@@ -28,7 +28,7 @@ import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.projection.PCA;
 import smile.projection.RandomProjection;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -60,7 +60,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
         pca.setProjection(2);
         double[][] y = pca.project(data);
 
-        PlotCanvas plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {
@@ -78,7 +78,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
         pca.setProjection(3);
         y = pca.project(data);
 
-        plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {
@@ -104,7 +104,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
         }
 
         y = rp.project(data);
-        plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {
@@ -130,7 +130,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
         }
 
         y = rp.project(data);
-        plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {

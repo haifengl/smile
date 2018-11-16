@@ -24,7 +24,7 @@ import smile.data.parser.DelimitedTextParser;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.manifold.TSNE;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.projection.PCA;
 
 /**
@@ -89,7 +89,7 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
 
         double[][] y = tsne.getCoordinates();
 
-        PlotCanvas plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
 
         for (int i = 0; i < y.length; i++) {
             plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);

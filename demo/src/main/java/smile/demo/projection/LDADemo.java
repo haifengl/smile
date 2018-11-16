@@ -34,7 +34,7 @@ import smile.data.NominalAttribute;
 import smile.data.parser.DelimitedTextParser;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
-import smile.math.Math;
+import smile.math.MathEx;
 
 @SuppressWarnings("serial")
 public class LDADemo extends JPanel implements Runnable, ActionListener {
@@ -96,18 +96,18 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
         }
         
         int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
-        int min = Math.min(label);
+        int min = MathEx.min(label);
         for (int i = 0; i < label.length; i++) {
             label[i] -= min;
         }
 
         long clock = System.currentTimeMillis();
-        FLD lda = new FLD(data, label, Math.unique(label).length > 3 ? 3 : 2);
+        FLD lda = new FLD(data, label, MathEx.unique(label).length > 3 ? 3 : 2);
         System.out.format("Learn LDA from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
         double[][] y = lda.project(data);
 
-        PlotCanvas plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {

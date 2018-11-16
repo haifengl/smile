@@ -20,7 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.stat.distribution.MultivariateGaussianDistribution;
 
 /**
@@ -72,7 +72,7 @@ public class ToyData {
         }
 
         for (int i = 0; i < n; i++) {
-            samples[i] = gauss[Math.random(prob)].rand();
+            samples[i] = gauss[MathEx.random(prob)].rand();
         }
 
         for (int i = 0; i < k; i++) {
@@ -80,7 +80,7 @@ public class ToyData {
         }
 
         for (int i = 0; i < n; i++) {
-            samples[n + i] = gauss[Math.random(prob)].rand();
+            samples[n + i] = gauss[MathEx.random(prob)].rand();
         }
 
         return samples;

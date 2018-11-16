@@ -28,7 +28,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import smile.plot.PlotCanvas;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.plot.Surface;
 import smile.stat.distribution.MultivariateGaussianDistribution;
 
@@ -100,8 +100,8 @@ public class MultivariateGaussianDistributionDemo extends JPanel implements Chan
     @Override
     public void stateChanged(ChangeEvent e) {
         if (e.getSource() == sigma1Slider || e.getSource() == sigma2Slider) {
-            sigma[0] = Math.sqr(sigma1Slider.getValue() / 10.0);
-            sigma[1] = Math.sqr(sigma2Slider.getValue() / 10.0);
+            sigma[0] = MathEx.sqr(sigma1Slider.getValue() / 10.0);
+            sigma[1] = MathEx.sqr(sigma2Slider.getValue() / 10.0);
             if (sigma[0] == 0) sigma[0] = 0.01;
             if (sigma[1] == 0) sigma[1] = 0.01;
 

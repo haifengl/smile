@@ -32,7 +32,7 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 
 import smile.plot.PlotCanvas;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
@@ -119,11 +119,11 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         for (int i = 0; i < n; i++) {
             data[i] = new double[dimension];
             for (int j = 0; j < dimension; j++) {
-                data[i][j] = Math.random();
+                data[i][j] = MathEx.random();
             }
         }
 
-        int[] perm = Math.permutate(n);
+        int[] perm = MathEx.permutate(n);
 
         System.out.println("Building searching data structure...");
         long time = System.currentTimeMillis();
@@ -163,7 +163,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         int coverSearch = (int) (System.currentTimeMillis() - time);
 
         time = System.currentTimeMillis();
-        LSH<double[]> lsh = new LSH<>(dimension, 5, (int) Math.ceil(Math.log2(dimension)), 4 * radius, 1017881);
+        LSH<double[]> lsh = new LSH<>(dimension, 5, (int) Math.ceil(MathEx.log2(dimension)), 4 * radius, 1017881);
         for (int i = 0; i < n; i++) {
             lsh.put(data[i], data[i]);
         }
@@ -181,7 +181,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         System.out.format("The recall of LSH is %.1f%%\n", lshRecall * 100);
 
         time = System.currentTimeMillis();
-        MPLSH<double[]> mplsh = new MPLSH<>(dimension, 5, (int) Math.ceil(Math.log2(n)), 4 * radius, 1017881);
+        MPLSH<double[]> mplsh = new MPLSH<>(dimension, 5, (int) Math.ceil(MathEx.log2(n)), 4 * radius, 1017881);
         for (int i = 0; i < n; i++) {
             mplsh.put(data[i], data[i]);
         }
