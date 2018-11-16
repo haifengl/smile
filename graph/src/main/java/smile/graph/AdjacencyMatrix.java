@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import smile.sort.PriorityQueue;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * An adjacency matrix representation of a graph. Only simple graph is supported.
@@ -564,7 +564,7 @@ public class AdjacencyMatrix implements Graph {
      * @return the adjacency matrix
      */
     public double[][] toArray() {
-        return Math.clone(graph);
+        return MathEx.clone(graph);
     }
     
     /**

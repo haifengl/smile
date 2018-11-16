@@ -23,7 +23,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -339,7 +339,7 @@ public class AdjacencyMatrixTest {
         graph.addEdge(9, 12);
         graph.addEdge(11, 12);
 
-        assertTrue(Math.equals(ts, graph.sortdfs()));
+        assertTrue(MathEx.equals(ts, graph.sortdfs()));
     }
 
     /**
@@ -362,7 +362,7 @@ public class AdjacencyMatrixTest {
         graph.addEdge(5, 4);
 
         int[][] cc2 = graph.dfs();
-        assertTrue(Math.equals(cc, cc2));
+        assertTrue(MathEx.equals(cc, cc2));
     }
 
     /**
@@ -392,7 +392,7 @@ public class AdjacencyMatrixTest {
         graph.addEdge(9, 12);
         graph.addEdge(11, 12);
 
-        assertTrue(Math.equals(ts, graph.sortbfs()));
+        assertTrue(MathEx.equals(ts, graph.sortbfs()));
     }
 
     /**
@@ -415,7 +415,7 @@ public class AdjacencyMatrixTest {
         graph.addEdge(5, 4);
 
         int[][] cc2 = graph.bfs();
-        assertTrue(Math.equals(cc, cc2));
+        assertTrue(MathEx.equals(cc, cc2));
     }
 
     /**
@@ -448,7 +448,7 @@ public class AdjacencyMatrixTest {
 
         double[][] wt2 = graph.dijkstra();
         
-        assertTrue(Math.equals(wt, wt2));
+        assertTrue(MathEx.equals(wt, wt2));
     }
     /**
      * Test of dijkstra method, of class AdjacencyMatrix.
@@ -479,6 +479,6 @@ public class AdjacencyMatrixTest {
         double maxFlow = graph.pushRelabel(flow, 0, 5);
         
         assertEquals(4.0, maxFlow, 1E-1);
-        assertTrue(Math.equals(flow, results));
+        assertTrue(MathEx.equals(flow, results));
     }
 }
