@@ -16,7 +16,7 @@
 package smile.projection;
 
 import java.io.Serializable;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 import smile.stat.distribution.GaussianDistribution;
@@ -104,7 +104,7 @@ public class RandomProjection implements Projection<double[]>, Serializable {
             double scale = Math.sqrt(3);
             for (int i = 0; i < p; i++) {
                 for (int j = 0; j < n; j++) {
-                    projection.set(i, j, scale * (Math.random(prob) - 1));
+                    projection.set(i, j, scale * (MathEx.random(prob) - 1));
                 }
             }
         } else {
@@ -118,13 +118,13 @@ public class RandomProjection implements Projection<double[]>, Serializable {
 
             // Make the columns of the projection matrix orthogonal
             // by modified Gram-Schmidt algorithm.
-            Math.unitize(proj[0]);
+            MathEx.unitize(proj[0]);
             for (int i = 1; i < p; i++) {
                 for (int j = 0; j < i; j++) {
-                    double t = -Math.dot(proj[i], proj[j]);
-                    Math.axpy(t, proj[j], proj[i]);
+                    double t = -MathEx.dot(proj[i], proj[j]);
+                    MathEx.axpy(t, proj[j], proj[i]);
                 }
-                Math.unitize(proj[i]);
+                MathEx.unitize(proj[i]);
             }
             projection = Matrix.newInstance(proj);
         }

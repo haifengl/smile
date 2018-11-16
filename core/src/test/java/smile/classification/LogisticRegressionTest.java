@@ -25,7 +25,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.validation.LOOCV;
 import static org.junit.Assert.*;
 
@@ -79,8 +79,8 @@ public class LogisticRegressionTest {
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
                 LogisticRegression logit = new LogisticRegression(trainx, trainy);
 
                 if (y[loocv.test[i]] != logit.predict(x[loocv.test[i]]))
@@ -120,8 +120,8 @@ public class LogisticRegressionTest {
             int error = 0;
             LogisticRegression logit = null;
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
 
                 int sgdIdx = (int) (trainx.length * 0.95);    
                 double[][] bx = new double[sgdIdx][trainx[0].length];
@@ -152,7 +152,7 @@ public class LogisticRegressionTest {
                 for(int isgd = 0;isgd < ysgd.length;isgd++) {
                 	idxsgd[isgd] = isgd;
                 }
-                Math.permutate(idxsgd);            
+                MathEx.permutate(idxsgd);
                 for(int a = 0;a < ysgd.length;a++) {
                 	logit.learn(xsgd[idxsgd[a]], ysgd[idxsgd[a]]);
                 }                
@@ -185,8 +185,8 @@ public class LogisticRegressionTest {
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
                 LogisticRegression logit = new LogisticRegression(trainx, trainy);
 
                 if (y[loocv.test[i]] != logit.predict(x[loocv.test[i]]))
@@ -264,7 +264,7 @@ public class LogisticRegressionTest {
             for(int i = 0;i < ysgd.length;i++) {
             	idx[i] = i;
             }
-            Math.permutate(idx);            
+            MathEx.permutate(idx);
             for(int i = 0;i < ysgd.length;i++) {
             	logit.learn(xsgd[idx[i]], ysgd[idx[i]]);
             }
@@ -346,7 +346,7 @@ public class LogisticRegressionTest {
             for(int i = 0;i < ysgd.length;i++) {
             	idx[i] = i;
             }
-            Math.permutate(idx);            
+            MathEx.permutate(idx);
             for(int i = 0;i < ysgd.length;i++) {
             	logit.learn(xsgd[idx[i]], ysgd[idx[i]]);
             }

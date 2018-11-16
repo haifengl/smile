@@ -27,7 +27,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.util.SmileUtils;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
@@ -87,14 +87,14 @@ public class RBFNetworkTest {
     public void testLearn() {
         System.out.println("learn");
 
-        Math.standardize(longley);
+        MathEx.standardize(longley);
 
         int n = longley.length;
         LOOCV loocv = new LOOCV(n);
         double rss = 0.0;
         for (int i = 0; i < n; i++) {
-            double[][] trainx = Math.slice(longley, loocv.train[i]);
-            double[] trainy = Math.slice(y, loocv.train[i]);
+            double[][] trainx = MathEx.slice(longley, loocv.train[i]);
+            double[] trainy = MathEx.slice(y, loocv.train[i]);
             double[][] centers = new double[10][];
             RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
             RBFNetwork<double[]> rbf = new RBFNetwork<>(trainx, trainy, new EuclideanDistance(), basis, centers);
@@ -118,7 +118,7 @@ public class RBFNetworkTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
-            Math.standardize(datax);
+            MathEx.standardize(datax);
 
             int n = datax.length;
             int k = 10;
@@ -126,10 +126,10 @@ public class RBFNetworkTest {
             CrossValidation cv = new CrossValidation(n, k);
             double rss = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 double[][] centers = new double[20][];
                 RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
@@ -167,10 +167,10 @@ public class RBFNetworkTest {
             CrossValidation cv = new CrossValidation(n, k);
             double rss = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 double[][] centers = new double[20][];
                 RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
@@ -199,7 +199,7 @@ public class RBFNetworkTest {
         try {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/regression/ailerons.arff"));
             double[][] datax = data.toArray(new double[data.size()][]);
-            Math.standardize(datax);
+            MathEx.standardize(datax);
 
             double[] datay = data.toArray(new double[data.size()]);
             for (int i = 0; i < datay.length; i++) {
@@ -212,10 +212,10 @@ public class RBFNetworkTest {
             CrossValidation cv = new CrossValidation(n, k);
             double rss = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 double[][] centers = new double[20][];
                 RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
@@ -245,7 +245,7 @@ public class RBFNetworkTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/regression/bank32nh.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
-            Math.standardize(datax);
+            MathEx.standardize(datax);
 
             int n = datax.length;
             int k = 10;
@@ -253,10 +253,10 @@ public class RBFNetworkTest {
             CrossValidation cv = new CrossValidation(n, k);
             double rss = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 double[][] centers = new double[20][];
                 RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);

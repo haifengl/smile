@@ -17,7 +17,7 @@ package smile.classification;
 
 import smile.sort.QuickSort;
 import smile.data.Attribute;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.validation.LOOCV;
 import smile.data.parser.ArffParser;
 import smile.data.AttributeDataset;
@@ -72,8 +72,8 @@ public class RandomForestTest {
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
                 
                 RandomForest forest = new RandomForest(weather.attributes(), trainx, trainy, 100);
                 if (y[loocv.test[i]] != forest.predict(x[loocv.test[i]]))
@@ -104,8 +104,8 @@ public class RandomForestTest {
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
                 
                 RandomForest forest = new RandomForest(iris.attributes(), trainx, trainy, 100);
                 if (y[loocv.test[i]] != forest.predict(x[loocv.test[i]]))
@@ -173,13 +173,13 @@ public class RandomForestTest {
             
             for (double[] xi : x) {
                 for (int i = 0; i < xi.length; i++) {
-                    xi[i] = Math.round(255*(xi[i]+1)/2);
+                    xi[i] = MathEx.round(255*(xi[i]+1)/2);
                 }
             }
             
             for (double[] xi : testx) {
                 for (int i = 0; i < xi.length; i++) {
-                    xi[i] = Math.round(255*(xi[i]+1)/2);
+                    xi[i] = MathEx.round(255*(xi[i]+1)/2);
                 }
             }
             

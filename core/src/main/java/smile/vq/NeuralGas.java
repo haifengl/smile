@@ -19,7 +19,7 @@ import java.util.Arrays;
 
 import smile.clustering.ClusteringDistance;
 import smile.clustering.PartitionClustering;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Neural Gas soft competitive learning algorithm. The Neural Gas is inspired
@@ -89,7 +89,7 @@ public class NeuralGas extends PartitionClustering<double[]> {
 
         @Override
         public int compareTo(Neuron o) {
-            return (int) Math.signum(dist - o.dist);
+            return (int) MathEx.signum(dist - o.dist);
         }
     }
 
@@ -99,7 +99,7 @@ public class NeuralGas extends PartitionClustering<double[]> {
      * of clusters.
      */
     public NeuralGas(double[][] data, int k) {
-        this(data, k, Math.min(10, Math.max(1, k/2)), 0.01, 0.5, 0.005, 25);
+        this(data, k, MathEx.min(10, MathEx.max(1, k/2)), 0.01, 0.5, 0.005, 25);
     }
 
     /**
@@ -177,18 +177,18 @@ public class NeuralGas extends PartitionClustering<double[]> {
 
         for (int t = 0; t < steps; t++) {
             double tf = (double) t / steps;
-            double lambda = lambda_i * Math.pow(lambda_f / lambda_i, tf);
-            double eps = eps_i * Math.pow(eps_f / eps_i, tf);
+            double lambda = lambda_i * MathEx.pow(lambda_f / lambda_i, tf);
+            double eps = eps_i * MathEx.pow(eps_f / eps_i, tf);
 
             for (double[] signal : data) {
                 for (Neuron node : nodes) {
-                    node.dist = Math.squaredDistance(node.w, signal);
+                    node.dist = MathEx.squaredDistance(node.w, signal);
                 }
 
                 Arrays.sort(nodes);
 
                 for (int i = 0; i < k; i++) {
-                    double delta = eps * Math.exp(-i / lambda);
+                    double delta = eps * MathEx.exp(-i / lambda);
                     if (delta > 0) {
                         for (int j = 0; j < d; j++) {
                             nodes[i].w[j] += delta * (signal[j] - nodes[i].w[j]);
@@ -202,7 +202,7 @@ public class NeuralGas extends PartitionClustering<double[]> {
         for (int i = 0; i < n; i++) {
             double nearest = Double.MAX_VALUE;
             for (int j = 0; j < k; j++) {
-                double dist = Math.squaredDistance(data[i], centroids[j]);
+                double dist = MathEx.squaredDistance(data[i], centroids[j]);
                 if (nearest > dist) {
                     y[i] = j;
                     nearest = dist;
@@ -250,7 +250,7 @@ public class NeuralGas extends PartitionClustering<double[]> {
         int bestCluster = 0;
 
         for (int i = 0; i < k; i++) {
-            double dist = Math.squaredDistance(x, centroids[i]);
+            double dist = MathEx.squaredDistance(x, centroids[i]);
             if (dist < minDist) {
                 minDist = dist;
                 bestCluster = i;
@@ -267,7 +267,7 @@ public class NeuralGas extends PartitionClustering<double[]> {
         sb.append(String.format("Neural Gas distortion: %.5f%n", distortion));
         sb.append(String.format("Clusters of %d data points of dimension %d:%n", y.length, centroids[0].length));
         for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
+            int r = (int) MathEx.round(1000.0 * size[i] / y.length);
             sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
         

@@ -25,7 +25,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.validation.LOOCV;
 import static org.junit.Assert.*;
 
@@ -71,8 +71,8 @@ public class FLDTest {
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
                 FLD fisher = new FLD(trainx, trainy);
 
                 if (y[loocv.test[i]] != fisher.predict(x[loocv.test[i]]))

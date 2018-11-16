@@ -16,7 +16,7 @@
 
 package smile.feature;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The signal-to-noise (S2N) metric ratio is a univariate feature ranking metric,
@@ -63,15 +63,15 @@ public class SignalNoiseRatio implements FeatureRanking {
             }
         }
 
-        double[] mu1 = Math.colMeans(x1);
-        double[] mu2 = Math.colMeans(x2);
-        double[] sd1 = Math.colSds(x1);
-        double[] sd2 = Math.colSds(x2);
+        double[] mu1 = MathEx.colMeans(x1);
+        double[] mu2 = MathEx.colMeans(x2);
+        double[] sd1 = MathEx.colSds(x1);
+        double[] sd2 = MathEx.colSds(x2);
 
         int p = mu1.length;
         double[] s2n = new double[p];
         for (int i = 0; i < p; i++) {
-            s2n[i] = Math.abs(mu1[i] - mu2[i]) / (sd1[i] + sd2[i]);
+            s2n[i] = MathEx.abs(mu1[i] - mu2[i]) / (sd1[i] + sd2[i]);
         }
         return s2n;
     }

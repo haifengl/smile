@@ -25,7 +25,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.validation.CrossValidation;
 
 /**
@@ -65,7 +65,7 @@ public class SVRTest {
             AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
-            Math.standardize(datax);
+            MathEx.standardize(datax);
 
             int n = datax.length;
             int k = 10;
@@ -73,10 +73,10 @@ public class SVRTest {
             CrossValidation cv = new CrossValidation(n, k);
             double rss = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 SVR<double[]> svr = new SVR<>(trainx, trainy, new PolynomialKernel(3, 1.0, 1.0), 0.1, 1.0);
 
@@ -86,7 +86,7 @@ public class SVRTest {
                 }
             }
 
-            System.out.println("10-CV RMSE = " + Math.sqrt(rss / n));
+            System.out.println("10-CV RMSE = " + MathEx.sqrt(rss / n));
          } catch (Exception ex) {
              System.err.println(ex);
          }

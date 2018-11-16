@@ -17,7 +17,7 @@
 package smile.classification;
 
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
@@ -183,7 +183,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         }
 
         // class label set.
-        int[] labels = Math.unique(y);
+        int[] labels = MathEx.unique(y);
         Arrays.sort(labels);
         
         for (int i = 0; i < labels.length; i++) {
@@ -223,7 +223,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         // The number of instances in each class.
         int[] ni = new int[k];
         // Common mean vector.
-        mean = Math.colMeans(x);
+        mean = MathEx.colMeans(x);
         // Common covariance.
         DenseMatrix T = Matrix.zeros(p, p);
         // Class mean vectors.
@@ -326,7 +326,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         int y = 0;
         double nearest = Double.POSITIVE_INFINITY;
         for (int i = 0; i < k; i++) {
-            double d = Math.distance(wx, smu[i]);
+            double d = MathEx.distance(wx, smu[i]);
             if (d < nearest) {
                 nearest = d;
                 y = i;
@@ -344,7 +344,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
 
         double[] y = new double[scaling.ncols()];
         scaling.atx(x, y);
-        Math.minus(y, smean);
+        MathEx.minus(y, smean);
         return y;
     }
 
@@ -358,7 +358,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             }
 
             scaling.atx(x[i], y[i]);
-            Math.minus(y[i], smean);
+            MathEx.minus(y[i], smean);
         }
         
         return y;

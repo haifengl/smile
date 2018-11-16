@@ -17,7 +17,7 @@
 package smile.classification;
 
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
 import smile.math.distance.Metric;
@@ -133,7 +133,7 @@ public class KNN<T> implements SoftClassifier<T> {
         this.y = y;
         
         // class label set.
-        int[] labels = Math.unique(y);
+        int[] labels = MathEx.unique(y);
         Arrays.sort(labels);
         
         for (int i = 0; i < labels.length; i++) {
@@ -180,7 +180,7 @@ public class KNN<T> implements SoftClassifier<T> {
         }
         
         // class label set.
-        int[] labels = Math.unique(y);
+        int[] labels = MathEx.unique(y);
         Arrays.sort(labels);
         
         for (int i = 0; i < labels.length; i++) {

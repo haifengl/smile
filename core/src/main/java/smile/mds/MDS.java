@@ -17,7 +17,7 @@ package smile.mds;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
@@ -132,14 +132,14 @@ public class MDS {
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
-                double x = -0.5 * Math.sqr(proximity[i][j]);
+                double x = -0.5 * MathEx.sqr(proximity[i][j]);
                 A.set(i, j, x);
                 A.set(j, i, x);
             }
         }
 
         double[] mean = A.rowMeans();
-        double mu = Math.mean(mean);
+        double mu = MathEx.mean(mean);
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
@@ -161,8 +161,8 @@ public class MDS {
                 Z.set(n + i, i, -1);
             }
 
-            mean = Math.rowMeans(proximity);
-            mu = Math.mean(mean);
+            mean = MathEx.rowMeans(proximity);
+            mu = MathEx.mean(mean);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
                     Z.set(n + i, n + j, 2 * (proximity[i][j] - mean[i] - mean[j] + mu));
@@ -170,12 +170,12 @@ public class MDS {
             }
 
             double[] evalues = Z.eig();
-            double c = Math.max(evalues);
+            double c = MathEx.max(evalues);
 
             for (int i = 0; i < n; i++) {
                 B.set(i, i, 0.0);
                 for (int j = 0; j < i; j++) {
-                    double x = -0.5 * Math.sqr(proximity[i][j] + c);
+                    double x = -0.5 * MathEx.sqr(proximity[i][j] + c);
                     B.set(i, j, x);
                     B.set(j, i, x);
                 }
@@ -196,7 +196,7 @@ public class MDS {
                 throw new IllegalArgumentException(String.format("Some of the first %d eigenvalues are < 0.", k));
             }
 
-            double scale = Math.sqrt(eigen.getEigenValues()[j]);
+            double scale = MathEx.sqrt(eigen.getEigenValues()[j]);
             for (int i = 0; i < n; i++) {
                 coordinates[i][j] = eigen.getEigenVectors().get(i, j) * scale;
             }
@@ -204,6 +204,6 @@ public class MDS {
 
         eigenvalues = eigen.getEigenValues();
         proportion = eigenvalues.clone();
-        Math.unitize1(proportion);
+        MathEx.unitize1(proportion);
     }
 }

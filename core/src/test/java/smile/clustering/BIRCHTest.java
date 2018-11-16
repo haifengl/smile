@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.clustering;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.validation.RandIndex;
 import smile.validation.AdjustedRandIndex;
 import smile.data.AttributeDataset;
@@ -72,7 +72,7 @@ public class BIRCHTest {
             
             BIRCH birch = new BIRCH(x[0].length, 5, 16.0);
             for (int i = 0; i < 20; i++) {
-                int[] index = Math.permutate(x.length);
+                int[] index = MathEx.permutate(x.length);
                 for (int j = 0; j < x.length; j++) {
                     birch.add(x[index[j]]);
                 }

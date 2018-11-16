@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.util.MulticoreExecutor;
 
@@ -217,7 +217,7 @@ public class Maxent implements SoftClassifier<int[]> {
         this.p = p;
         
         // class label set.
-        int[] labels = Math.unique(y);
+        int[] labels = MathEx.unique(y);
         Arrays.sort(labels);
         
         for (int i = 0; i < labels.length; i++) {
@@ -242,7 +242,7 @@ public class Maxent implements SoftClassifier<int[]> {
 
             L = 0.0;
             try {
-                L = -Math.min(func, 5, w, tol, maxIter);
+                L = -MathEx.min(func, 5, w, tol, maxIter);
             } catch (Exception ex) {
                 logger.error("Failed to minimize binary objective function of Maximum Entropy Classifier", ex);
             }
@@ -253,7 +253,7 @@ public class Maxent implements SoftClassifier<int[]> {
 
             L = 0.0;
             try {
-                L = -Math.min(func, 5, w, tol, maxIter);
+                L = -MathEx.min(func, 5, w, tol, maxIter);
             } catch (Exception ex) {
                 logger.error("Failed to minimize multi-class objective function of Maximum Entropy Classifier", ex);
             }
@@ -285,7 +285,7 @@ public class Maxent implements SoftClassifier<int[]> {
         if (x > 15) {
             y = x;
         } else {
-            y += Math.log1p(Math.exp(x));
+            y += MathEx.log1p(MathEx.exp(x));
         }
 
         return y;
@@ -437,7 +437,7 @@ public class Maxent implements SoftClassifier<int[]> {
                     double wx = dot(x[i], w);
                     f += log1pe(wx) - y[i] * wx;
 
-                    double yi = y[i] - Math.logistic(wx);
+                    double yi = y[i] - MathEx.logistic(wx);
                     for (int j : x[i]) {
                         g[j] -= yi * j;
                     }
@@ -462,7 +462,7 @@ public class Maxent implements SoftClassifier<int[]> {
                     double wx = dot(x[i], w);
                     f += log1pe(wx) - y[i] * wx;
 
-                    double yi = y[i] - Math.logistic(wx);
+                    double yi = y[i] - MathEx.logistic(wx);
                     for (int j : x[i]) {
                         g[j] -= yi * j;
                     }
@@ -494,7 +494,7 @@ public class Maxent implements SoftClassifier<int[]> {
                         double wx = dot(x[i], w);
                         f += log1pe(wx) - y[i] * wx;
 
-                        double yi = y[i] - Math.logistic(wx);
+                        double yi = y[i] - MathEx.logistic(wx);
                         for (int j : x[i]) {
                             g[j] -= yi * j;
                         }
@@ -528,7 +528,7 @@ public class Maxent implements SoftClassifier<int[]> {
         if (x < 1E-300) {
             y = -690.7755;
         } else {
-            y = Math.log(x);
+            y = MathEx.log(x);
         }
         return y;
     }
@@ -664,7 +664,7 @@ public class Maxent implements SoftClassifier<int[]> {
                 double wnorm = 0.0;
                 for (int i = 0; i < k; i++) {
                     for (int j = 0; j < p; j++) {
-                        wnorm += Math.sqr(w[i*(p+1) + j]);
+                        wnorm += MathEx.sqr(w[i*(p+1) + j]);
                     }
                 }
 
@@ -837,7 +837,7 @@ public class Maxent implements SoftClassifier<int[]> {
 
         double Z = 0.0;
         for (int i = 0; i < prob.length; i++) {
-            double p = Math.exp(prob[i] - max);
+            double p = MathEx.exp(prob[i] - max);
             prob[i] = p;
             Z += p;
         }
@@ -893,7 +893,7 @@ public class Maxent implements SoftClassifier<int[]> {
         }
 
         if (w != null) {
-            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
+            double f = 1.0 / (1.0 + MathEx.exp(-dot(x, w)));
 
             if (posteriori != null) {
                 posteriori[0] = 1.0 - f;
@@ -923,7 +923,7 @@ public class Maxent implements SoftClassifier<int[]> {
             if (posteriori != null) {
                 double Z = 0.0;
                 for (int i = 0; i < k; i++) {
-                    posteriori[i] = Math.exp(posteriori[i] - max);
+                    posteriori[i] = MathEx.exp(posteriori[i] - max);
                     Z += posteriori[i];
                 }
 

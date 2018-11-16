@@ -23,7 +23,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.stat.distribution.EmpiricalDistribution;
 
 /**
@@ -217,7 +217,7 @@ public class HMMTest {
         int[][] sequences = new int[5000][];
         int[][] labels = new int[5000][];
         for (int i = 0; i < sequences.length; i++) {
-            sequences[i] = new int[30 * (Math.randomInt(5) + 1)];
+            sequences[i] = new int[30 * (MathEx.randomInt(5) + 1)];
             labels[i] = new int[sequences[i].length];
             int state = (int) initial.rand();
             sequences[i][0] = (int) emission[state].rand();
@@ -371,7 +371,7 @@ public class HMMTest {
         String[][] sequences = new String[5000][];
         int[][] labels = new int[5000][];
         for (int i = 0; i < sequences.length; i++) {
-            sequences[i] = new String[30 * (Math.randomInt(5) + 1)];
+            sequences[i] = new String[30 * (MathEx.randomInt(5) + 1)];
             labels[i] = new int[sequences[i].length];
             int state = (int) initial.rand();
             sequences[i][0] = symbols[(int) emission[state].rand()];

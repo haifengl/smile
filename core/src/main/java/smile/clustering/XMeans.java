@@ -18,7 +18,7 @@ package smile.clustering;
 import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.QuickSort;
 
 /**
@@ -44,7 +44,7 @@ public class XMeans extends KMeans {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(XMeans.class);
 
-    private static final double LOG2PI = Math.log(Math.PI * 2.0);
+    private static final double LOG2PI = MathEx.log(MathEx.PI * 2.0);
 
     /**
      * Constructor. Clustering data with the number of clusters being
@@ -78,7 +78,7 @@ public class XMeans extends KMeans {
         // within-cluster sum of squares
         double[] wcss = new double[k];
         for (int i = 0; i < n; i++) {
-            wcss[0] += Math.squaredDistance(data[i], centroids[0]);
+            wcss[0] += MathEx.squaredDistance(data[i], centroids[0]);
         }
 
         distortion = wcss[0];
@@ -165,7 +165,7 @@ public class XMeans extends KMeans {
 
             wcss = new double[k];
             for (int i = 0; i < n; i++) {
-                wcss[y[i]] += Math.squaredDistance(data[i], centroids[y[i]]);
+                wcss[y[i]] += MathEx.squaredDistance(data[i], centroids[y[i]]);
             }
 
             logger.info(String.format("X-Means distortion with %d clusters: %.5f", k, distortion));
@@ -183,12 +183,12 @@ public class XMeans extends KMeans {
         double variance = distortion / (n - 1);
 
         double p1 = -n * LOG2PI;
-        double p2 = -n * d * Math.log(variance);
+        double p2 = -n * d * MathEx.log(variance);
         double p3 = -(n - 1);
         double L = (p1 + p2 + p3) / 2;
 
         int numParameters = d + 1;
-        return L - 0.5 * numParameters * Math.log(n);
+        return L - 0.5 * numParameters * MathEx.log(n);
     }
 
     /**
@@ -209,7 +209,7 @@ public class XMeans extends KMeans {
         }
 
         int numParameters = k + k * d;
-        return L - 0.5 * numParameters * Math.log(n);
+        return L - 0.5 * numParameters * MathEx.log(n);
     }
 
     /**
@@ -224,10 +224,10 @@ public class XMeans extends KMeans {
      */
     private static double logLikelihood(int k, int n, int ni, int d, double variance) {
         double p1 = -ni * LOG2PI;
-        double p2 = -ni * d * Math.log(variance);
+        double p2 = -ni * d * MathEx.log(variance);
         double p3 = -(ni - k);
-        double p4 = ni * Math.log(ni);
-        double p5 = -ni * Math.log(n);
+        double p4 = ni * MathEx.log(ni);
+        double p5 = -ni * MathEx.log(n);
         double loglike = (p1 + p2 + p3) / 2 + p4 + p5;
         return loglike;
     }
@@ -239,7 +239,7 @@ public class XMeans extends KMeans {
         sb.append(String.format("X-Means distortion: %.5f%n", distortion));
         sb.append(String.format("Clusters of %d data points of dimension %d:%n", y.length, centroids[0].length));
         for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
+            int r = (int) MathEx.round(1000.0 * size[i] / y.length);
             sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
 

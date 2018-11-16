@@ -25,7 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.NominalAttribute;
 import smile.data.parser.DelimitedTextParser;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.QuickSort;
 
 /**
@@ -78,8 +78,8 @@ public class GradientTreeBoostTest {
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
                 GradientTreeBoost boost = new GradientTreeBoost(iris.attributes(), trainx, trainy, 100);
 
                 if (y[loocv.test[i]] != boost.predict(x[loocv.test[i]]))
@@ -109,8 +109,8 @@ public class GradientTreeBoostTest {
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
                 GradientTreeBoost boost = new GradientTreeBoost(iris.attributes(), trainx, trainy, 100);
 
                 if (y[loocv.test[i]] != boost.predict(x[loocv.test[i]]))

@@ -18,7 +18,7 @@ package smile.clustering;
 import java.util.ArrayList;
 import java.util.List;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
 import smile.math.distance.Metric;
@@ -237,7 +237,7 @@ public class MEC <T> extends PartitionClustering<T> {
                 for (int j = 0; j < k; j++) {
                     double r = ((double) neighborhoodClusterSize[i][j]) / ni;
                     if (r > 0) {
-                        m -= r * Math.log2(r);
+                        m -= r * MathEx.log2(r);
                     }
                 }
 
@@ -259,19 +259,19 @@ public class MEC <T> extends PartitionClustering<T> {
                         double r1 = (double) neighborhoodClusterSize[neighbor][y[i]] / nk;
                         double r2 = (double) neighborhoodClusterSize[neighbor][mostSignificantNeighborhoodCluster[i]] / nk;
                         if (r1 > 0) {
-                            oldMutual -= r1 * Math.log2(r1) * px[neighbor];
+                            oldMutual -= r1 * MathEx.log2(r1) * px[neighbor];
                         }
                         if (r2 > 0) {
-                            oldMutual -= r2 * Math.log2(r2) * px[neighbor];
+                            oldMutual -= r2 * MathEx.log2(r2) * px[neighbor];
                         }
 
                         r1 = (neighborhoodClusterSize[neighbor][y[i]] - 1.0) / nk;
                         r2 = (neighborhoodClusterSize[neighbor][mostSignificantNeighborhoodCluster[i]] + 1.0) / nk;
                         if (r1 > 0) {
-                            newMutual -= r1 * Math.log2(r1) * px[neighbor];
+                            newMutual -= r1 * MathEx.log2(r1) * px[neighbor];
                         }
                         if (r2 > 0) {
-                            newMutual -= r2 * Math.log2(r2) * px[neighbor];
+                            newMutual -= r2 * MathEx.log2(r2) * px[neighbor];
                         }
                     }
 
@@ -302,7 +302,7 @@ public class MEC <T> extends PartitionClustering<T> {
                     for (int j = 0; j < k; j++) {
                         double r = ((double) neighborhoodClusterSize[i][j]) / ni;
                         if (r > 0) {
-                            m -= r * Math.log2(r);
+                            m -= r * MathEx.log2(r);
                         }
                     }
 
@@ -372,7 +372,7 @@ public class MEC <T> extends PartitionClustering<T> {
             label[yi]++;
         }
 
-        return Math.whichMax(label);
+        return MathEx.whichMax(label);
     }
 
     @Override

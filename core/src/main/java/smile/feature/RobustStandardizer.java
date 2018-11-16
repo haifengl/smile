@@ -17,7 +17,7 @@
 package smile.feature;
 
 import smile.data.Attribute;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.QuickSelect;
 
 /**
@@ -62,7 +62,7 @@ public class RobustStandardizer extends Standardizer {
 
                 mu[j] = QuickSelect.median(x);
                 std[j] = QuickSelect.q3(x) - QuickSelect.q1(x);
-                if (Math.isZero(std[j])) {
+                if (MathEx.isZero(std[j])) {
                     throw new IllegalArgumentException("Column " + j + " has constant values between Q1 and Q3.");
                 }
             }

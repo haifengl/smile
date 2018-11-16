@@ -23,7 +23,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.validation.CrossValidation;
@@ -154,8 +154,8 @@ public class LASSOTest {
         int n = longley.length;
         LOOCV loocv = new LOOCV(n);
         for (int i = 0; i < n; i++) {
-            double[][] trainx = Math.slice(longley, loocv.train[i]);
-            double[] trainy = Math.slice(y, loocv.train[i]);
+            double[][] trainx = MathEx.slice(longley, loocv.train[i]);
+            double[] trainy = MathEx.slice(y, loocv.train[i]);
             LASSO lasso = new LASSO(trainx, trainy, 0.1);
 
             double r = y[loocv.test[i]] - lasso.predict(longley[loocv.test[i]]);
@@ -185,10 +185,10 @@ public class LASSOTest {
             CrossValidation cv = new CrossValidation(n, k);
             double rss = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 LASSO lasso = new LASSO(trainx, trainy, 50.0);
 

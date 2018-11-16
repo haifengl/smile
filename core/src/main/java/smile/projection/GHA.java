@@ -16,7 +16,7 @@
 package smile.projection;
 
 import java.io.Serializable;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
@@ -106,7 +106,7 @@ public class GHA implements Projection<double[]>, Serializable {
         projection = Matrix.zeros(p, n);
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < n; j++) {
-                projection.set(i, j, 0.1 * Math.random());
+                projection.set(i, j, 0.1 * MathEx.random());
             }
         }
     }
@@ -202,6 +202,6 @@ public class GHA implements Projection<double[]>, Serializable {
 
         projection.ax(x, y);
         projection.atx(y, wy);
-        return Math.squaredDistance(x, wy);
+        return MathEx.squaredDistance(x, wy);
     }
 }

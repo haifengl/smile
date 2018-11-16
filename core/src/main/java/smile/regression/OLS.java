@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.data.Attribute;
 import smile.data.AttributeDataset;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QR;
@@ -256,18 +256,18 @@ public class OLS implements Regression<double[]> {
 
         double TSS = 0.0;
         RSS = 0.0;
-        double ybar = Math.mean(y);
+        double ybar = MathEx.mean(y);
         fittedValues = new double[n];
         residuals = new double[n];
         for (int i = 0; i < n; i++) {
             fittedValues[i] = yhat[i] + b;
             double r = y[i] - fittedValues[i];
             residuals[i] = r;
-            RSS += Math.sqr(r);
-            TSS += Math.sqr(y[i] - ybar);
+            RSS += MathEx.sqr(r);
+            TSS += MathEx.sqr(y[i] - ybar);
         }
 
-        error = Math.sqrt(RSS / (n - p - 1));
+        error = MathEx.sqrt(RSS / (n - p - 1));
         df = n - p - 1;
 
         RSquared = 1.0 - RSS / TSS;
@@ -283,7 +283,7 @@ public class OLS implements Regression<double[]> {
             for (int i = 0; i <= p; i++) {
                 coefficients[i][0] = w1[i];
                 double s = svd.getSingularValues()[i];
-                if (!Math.isZero(s, 1E-10)) {
+                if (!MathEx.isZero(s, 1E-10)) {
                     double se = error / s;
                     coefficients[i][1] = se;
                     double t = w1[i] / se;
@@ -302,7 +302,7 @@ public class OLS implements Regression<double[]> {
 
             for (int i = 0; i <= p; i++) {
                 coefficients[i][0] = w1[i];
-                double se = error * Math.sqrt(inv.get(i, i));
+                double se = error * MathEx.sqrt(inv.get(i, i));
                 coefficients[i][1] = se;
                 double t = w1[i] / se;
                 coefficients[i][2] = t;
@@ -417,7 +417,7 @@ public class OLS implements Regression<double[]> {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        return b + Math.dot(x, w);
+        return b + MathEx.dot(x, w);
     }
 
     /**
@@ -445,7 +445,7 @@ public class OLS implements Regression<double[]> {
         double[] r = residuals.clone();
         builder.append("\nResiduals:\n");
         builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
-        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", Math.min(r), Math.q1(r), Math.median(r), Math.q3(r), Math.max(r)));
+        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", MathEx.min(r), MathEx.q1(r), MathEx.median(r), MathEx.q3(r), MathEx.max(r)));
 
         builder.append("\nCoefficients:\n");
         builder.append("            Estimate        Std. Error        t value        Pr(>|t|)\n");

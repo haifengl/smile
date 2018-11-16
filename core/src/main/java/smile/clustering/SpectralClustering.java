@@ -17,7 +17,7 @@ package smile.clustering;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
@@ -110,7 +110,7 @@ public class SpectralClustering {
                 throw new IllegalArgumentException("Isolated vertex: " + i);                    
             }
             
-            D[i] = 1.0 / Math.sqrt(D[i]);
+            D[i] = 1.0 / MathEx.sqrt(D[i]);
         }
 
         DenseMatrix L = Matrix.zeros(n, n);
@@ -126,7 +126,7 @@ public class SpectralClustering {
         EVD eigen = L.eigen(k);
         double[][] Y = eigen.getEigenVectors().array();
         for (int i = 0; i < n; i++) {
-            Math.unitize2(Y[i]);
+            MathEx.unitize2(Y[i]);
         }
 
         KMeans kmeans = new KMeans(Y, k);
@@ -162,7 +162,7 @@ public class SpectralClustering {
         DenseMatrix W = Matrix.zeros(n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
-                double w = Math.exp(gamma * Math.squaredDistance(data[i], data[j]));
+                double w = MathEx.exp(gamma * MathEx.squaredDistance(data[i], data[j]));
                 W.set(i, j, w);
                 W.set(j, i, w);
             }
@@ -178,7 +178,7 @@ public class SpectralClustering {
                 logger.error(String.format("Small D[%d] = %f. The data may contain outliers.", i, D[i]));
             }
             
-            D[i] = 1.0 / Math.sqrt(D[i]);
+            D[i] = 1.0 / MathEx.sqrt(D[i]);
         }
 
         DenseMatrix L = W;
@@ -194,7 +194,7 @@ public class SpectralClustering {
         EVD eigen = L.eigen(k);
         double[][] Y = eigen.getEigenVectors().array();
         for (int i = 0; i < n; i++) {
-            Math.unitize2(Y[i]);
+            MathEx.unitize2(Y[i]);
         }
 
         KMeans kmeans = new KMeans(Y, k);
@@ -232,7 +232,7 @@ public class SpectralClustering {
         int n = data.length;
         double gamma = -0.5 / (sigma * sigma);
 
-        int[] index = Math.permutate(n);
+        int[] index = MathEx.permutate(n);
         double[][] x = new double[n][];
         for (int i = 0; i < n; i++) {
             x[i] = data[index[i]];
@@ -245,7 +245,7 @@ public class SpectralClustering {
             double sum = 0.0;
             for (int j = 0; j < n; j++) {
                 if (i != j) {
-                    double w = Math.exp(gamma * Math.squaredDistance(data[i], data[j]));
+                    double w = MathEx.exp(gamma * MathEx.squaredDistance(data[i], data[j]));
                     sum += w;
                     if (j < l) {
                         C.set(i, j, w);
@@ -257,7 +257,7 @@ public class SpectralClustering {
                 logger.error(String.format("Small D[%d] = %f. The data may contain outliers.", i, sum));
             }
             
-            D[i] = 1.0 / Math.sqrt(sum);
+            D[i] = 1.0 / MathEx.sqrt(sum);
         }
         
         for (int i = 0; i < n; i++) {
@@ -276,7 +276,7 @@ public class SpectralClustering {
         W.setSymmetric(true);
         EVD eigen = W.eigen(k);
         double[] e = eigen.getEigenValues();
-        double scale = Math.sqrt((double)l / n);
+        double scale = MathEx.sqrt((double)l / n);
         for (int i = 0; i < k; i++) {
             if (e[i] <= 0.0) {
                 throw new IllegalStateException("Non-positive eigen value: " + e[i]);
@@ -294,7 +294,7 @@ public class SpectralClustering {
         
         double[][] Y = C.abmm(U).array();
         for (int i = 0; i < n; i++) {
-            Math.unitize2(Y[i]);
+            MathEx.unitize2(Y[i]);
         }
 
         KMeans kmeans = new KMeans(Y, k);
@@ -350,7 +350,7 @@ public class SpectralClustering {
         sb.append(String.format("Spectral Clustering distortion in feature space: %.5f%n", distortion));
         sb.append(String.format("Clusters of %d data points:%n", y.length));
         for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
+            int r = (int) MathEx.round(1000.0 * size[i] / y.length);
             sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
 

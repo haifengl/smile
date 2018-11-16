@@ -16,7 +16,7 @@
 package smile.clustering;
 
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Balanced Box-Decomposition Tree. BBD tree is a specialized k-d tree that
@@ -279,10 +279,10 @@ public class BBDTree {
         int d = centroids[0].length;
 
         // Determine which mean the node mean is closest to
-        double minDist = Math.squaredDistance(node.center, centroids[candidates[0]]);
+        double minDist = MathEx.squaredDistance(node.center, centroids[candidates[0]]);
         int closest = candidates[0];
         for (int i = 1; i < k; i++) {
-            double dist = Math.squaredDistance(node.center, centroids[candidates[i]]);
+            double dist = MathEx.squaredDistance(node.center, centroids[candidates[i]]);
             if (dist < minDist) {
                 minDist = dist;
                 closest = candidates[i];

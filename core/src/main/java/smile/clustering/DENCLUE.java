@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.util.MulticoreExecutor;
 
 /**
@@ -150,7 +150,7 @@ public class DENCLUE extends PartitionClustering<double[]> {
                 while (diff > eps) {
                     double weight = 0.0;
                     for (int j = 0; j < m; j++) {
-                        double w = Math.exp(gamma * Math.squaredDistance(attractors[i], samples[j]));
+                        double w = Math.exp(gamma * MathEx.squaredDistance(attractors[i], samples[j]));
                         weight += w;
                         for (int l = 0; l < d; l++) {
                             attractor[l] += w * samples[j][l];
@@ -166,7 +166,7 @@ public class DENCLUE extends PartitionClustering<double[]> {
                     prob[i] = weight;
 
                     if (diff > 1E-5) {
-                        radius[i] = 2 * Math.distance(attractors[i], attractor);
+                        radius[i] = 2 * MathEx.distance(attractors[i], attractor);
                     }
 
                     System.arraycopy(attractor, 0, attractors[i], 0, d);
@@ -189,7 +189,7 @@ public class DENCLUE extends PartitionClustering<double[]> {
         for (int i = 1; i < n; i++) {
             newcluster = true;
             for (int j = 0; j < cluster.size(); j++) {
-                if (Math.distance(attractors[i], cluster.get(j)) < radius[i] + step.get(j)) {
+                if (MathEx.distance(attractors[i], cluster.get(j)) < radius[i] + step.get(j)) {
                     y[i] = j;
                     newcluster = false;
                     if (prob[i] > probability.get(j)) {
@@ -261,7 +261,7 @@ public class DENCLUE extends PartitionClustering<double[]> {
                 while (diff > eps) {
                     double weight = 0.0;
                     for (int j = 0; j < m; j++) {
-                        double w = Math.exp(gamma * Math.squaredDistance(attractors[i], samples[j]));
+                        double w = Math.exp(gamma * MathEx.squaredDistance(attractors[i], samples[j]));
                         weight += w;
                         for (int l = 0; l < d; l++) {
                             attractor[l] += w * samples[j][l];
@@ -277,7 +277,7 @@ public class DENCLUE extends PartitionClustering<double[]> {
                     prob[i] = weight;
 
                     if (diff > 1E-5) {
-                        radius[i] = 2 * Math.distance(attractors[i], attractor);
+                        radius[i] = 2 * MathEx.distance(attractors[i], attractor);
                     }
 
                     System.arraycopy(attractor, 0, attractors[i], 0, d);
@@ -312,7 +312,7 @@ public class DENCLUE extends PartitionClustering<double[]> {
         while (diff > eps) {
             double weight = 0.0;
             for (int i = 0; i < samples.length; i++) {
-                double w = Math.exp(gamma * Math.squaredDistance(samples[i], z));
+                double w = Math.exp(gamma * MathEx.squaredDistance(samples[i], z));
                 weight += w;
                 for (int j = 0; j < p; j++) {
                     attractor[j] += w * samples[i][j];
@@ -328,7 +328,7 @@ public class DENCLUE extends PartitionClustering<double[]> {
             prob = weight;
 
             if (diff > 1E-5) {
-                step = 2 * Math.distance(attractor, z);
+                step = 2 * MathEx.distance(attractor, z);
             }
 
             for (int j = 0; j < p; j++) {
@@ -338,7 +338,7 @@ public class DENCLUE extends PartitionClustering<double[]> {
         }
 
         for (int i = 0; i < k; i++) {
-            if (Math.distance(attractors[i], z) < radius[i] + step) {
+            if (MathEx.distance(attractors[i], z) < radius[i] + step) {
                 return i;
             }
         }

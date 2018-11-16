@@ -23,7 +23,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.distance.Metric;
 import smile.sort.DoubleHeapSelect;
 
@@ -592,7 +592,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
 
         Arrays.sort(neighbors);
 
-        Math.reverse(neighbors);
+        MathEx.reverse(neighbors);
 
         if (neighbors.length > k) {
             neighbors = Arrays.copyOf(neighbors, k);

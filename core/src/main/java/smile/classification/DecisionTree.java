@@ -21,7 +21,7 @@ import java.util.concurrent.Callable;
 import smile.data.Attribute;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.QuickSort;
 import smile.util.MulticoreExecutor;
 
@@ -402,7 +402,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
 
         @Override
         public int compareTo(TrainNode a) {
-            return (int) Math.signum(a.node.splitScore - node.splitScore);
+            return (int) MathEx.signum(a.node.splitScore - node.splitScore);
         }
 
         /**
@@ -492,7 +492,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
             }
             
             if (mtry < p) {
-                Math.permutate(variables);
+                MathEx.permutate(variables);
 
                 // Random forest already runs on parallel.
                 for (int j = 0; j < mtry; j++) {
@@ -561,7 +561,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 }
 
                 for (int l = 0; l < m; l++) {
-                    int tc = Math.sum(trueCount[l]);
+                    int tc = MathEx.sum(trueCount[l]);
                     int fc = n - tc;
 
                     // If either side is empty, skip this feature.
@@ -573,8 +573,8 @@ public class DecisionTree implements SoftClassifier<double[]> {
                         falseCount[q] = count[q] - trueCount[l][q];
                     }
 
-                    int trueLabel = Math.whichMax(trueCount[l]);
-                    int falseLabel = Math.whichMax(falseCount);
+                    int trueLabel = MathEx.whichMax(trueCount[l]);
+                    int falseLabel = MathEx.whichMax(falseCount);
                     double gain = impurity - (double) tc / n * impurity(trueCount[l], tc) - (double) fc / n * impurity(falseCount, fc);
 
                     if (gain > splitNode.splitScore) {
@@ -600,7 +600,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
                             continue;
                         }
 
-                        int tc = Math.sum(trueCount);
+                        int tc = MathEx.sum(trueCount);
                         int fc = n - tc;
 
                         // If either side is empty, skip this feature.
@@ -615,8 +615,8 @@ public class DecisionTree implements SoftClassifier<double[]> {
                             falseCount[l] = count[l] - trueCount[l];
                         }
 
-                        int trueLabel = Math.whichMax(trueCount);
-                        int falseLabel = Math.whichMax(falseCount);
+                        int trueLabel = MathEx.whichMax(trueCount);
+                        int falseLabel = MathEx.whichMax(falseCount);
                         double gain = impurity - (double) tc / n * impurity(trueCount, tc) - (double) fc / n * impurity(falseCount, fc);
 
                         if (gain > splitNode.splitScore) {
@@ -757,7 +757,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 for (int i = 0; i < count.length; i++) {
                     if (count[i] > 0) {
                         double p = (double) count[i] / n;
-                        impurity -= p * Math.log2(p);
+                        impurity -= p * MathEx.log2(p);
                     }
                 }
                 break;
@@ -765,10 +765,10 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 impurity = 0;
                 for (int i = 0; i < count.length; i++) {
                     if (count[i] > 0) {
-                        impurity = Math.max(impurity, count[i] / (double)n);
+                        impurity = MathEx.max(impurity, count[i] / (double)n);
                     }
                 }
-                impurity = Math.abs(1 - impurity);
+                impurity = MathEx.abs(1 - impurity);
                 break;
         }
 
@@ -890,7 +890,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
         }
 
         // class label set.
-        int[] labels = Math.unique(y);
+        int[] labels = MathEx.unique(y);
         Arrays.sort(labels);
         
         for (int i = 0; i < labels.length; i++) {
@@ -963,7 +963,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
         for (int i = 0; i < k; i++) {
             posteriori[i] = (double) count[i] / n;
         }
-        root = new Node(Math.whichMax(count), posteriori);
+        root = new Node(MathEx.whichMax(count), posteriori);
         
         TrainNode trainRoot = new TrainNode(root, x, y, samples);
         // Now add splits to the tree until max tree size is reached

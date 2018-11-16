@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.PowerIteration;
@@ -130,7 +130,7 @@ public class DeterministicAnnealing extends KMeans {
 
         priori[0] = priori[1] = 0.5;
 
-        DenseMatrix cov = Matrix.newInstance(Math.cov(data, centroids[0]));
+        DenseMatrix cov = Matrix.newInstance(MathEx.cov(data, centroids[0]));
         double[] ev = new double[d];
         Arrays.fill(ev, 1.0);
         double lambda = PowerIteration.eigen(cov, ev, 1E-4);
@@ -189,11 +189,11 @@ public class DeterministicAnnealing extends KMeans {
                 T /= alpha;
             } else if (k - currentK > 2) { // too large step
                 T /= alpha; // revise back and try smaller step.
-                alpha += 5 * Math.pow(10, Math.log10(1 - alpha) - 1);
+                alpha += 5 * MathEx.pow(10, MathEx.log10(1 - alpha) - 1);
             } else {
                 // be careful since we are close to the final Kmax.
                 if (k > currentK && k == 2 * Kmax - 2) {
-                    alpha += 5 * Math.pow(10, Math.log10(1 - alpha) - 1);
+                    alpha += 5 * MathEx.pow(10, MathEx.log10(1 - alpha) - 1);
                 }
 
                 // decrease the temperature.
@@ -213,7 +213,7 @@ public class DeterministicAnnealing extends KMeans {
         for (int i = 0; i < n; i++) {
             double nearest = Double.MAX_VALUE;
             for (int j = 0; j < k; j += 2) {
-                double dist = Math.squaredDistance(data[i], centroids[j]);
+                double dist = MathEx.squaredDistance(data[i], centroids[j]);
                 if (nearest > dist) {
                     y[i] = j / 2;
                     nearest = dist;
@@ -291,8 +291,8 @@ public class DeterministicAnnealing extends KMeans {
                     double p = 0.0;
 
                     for (int j = 0; j < k; j++) {
-                        dist[j] = Math.squaredDistance(data[i], centroids[j]);
-                        posteriori[i][j] = priori[j] * Math.exp(-dist[j] / T);
+                        dist[j] = MathEx.squaredDistance(data[i], centroids[j]);
+                        posteriori[i][j] = priori[j] * MathEx.exp(-dist[j] / T);
                         p += posteriori[i][j];
                     }
 
@@ -300,7 +300,7 @@ public class DeterministicAnnealing extends KMeans {
                     for (int j = 0; j < k; j++) {
                         posteriori[i][j] /= p;
                         D += posteriori[i][j] * dist[j];
-                        r += -posteriori[i][j] * Math.log(posteriori[i][j]);
+                        r += -posteriori[i][j] * MathEx.log(posteriori[i][j]);
                     }
                     H += r;
                 }
@@ -392,8 +392,8 @@ public class DeterministicAnnealing extends KMeans {
                 double p = 0.0;
 
                 for (int j = 0; j < k; j++) {
-                    dist[j] = Math.squaredDistance(data[i], centroids[j]);
-                    posteriori[i][j] = priori[j] * Math.exp(-dist[j] / T);
+                    dist[j] = MathEx.squaredDistance(data[i], centroids[j]);
+                    posteriori[i][j] = priori[j] * MathEx.exp(-dist[j] / T);
                     p += posteriori[i][j];
                 }
 
@@ -401,7 +401,7 @@ public class DeterministicAnnealing extends KMeans {
                 for (int j = 0; j < k; j++) {
                     posteriori[i][j] /= p;
                     D += posteriori[i][j] * dist[j];
-                    r += -posteriori[i][j] * Math.log(posteriori[i][j]);
+                    r += -posteriori[i][j] * MathEx.log(posteriori[i][j]);
                 }
                 H += r;
             }
@@ -459,7 +459,7 @@ public class DeterministicAnnealing extends KMeans {
         sb.append(String.format("Deterministic Annealing clustering distortion: %.5f%n", distortion));
         sb.append(String.format("Clusters of %d data points:%n", y.length));
         for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
+            int r = (int) MathEx.round(1000.0 * size[i] / y.length);
             sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
 

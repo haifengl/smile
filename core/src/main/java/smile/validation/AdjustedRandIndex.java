@@ -16,7 +16,7 @@
 
 package smile.validation;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Adjusted Rand Index. Rand index is defined as the number of pairs of objects
@@ -47,10 +47,10 @@ public class AdjustedRandIndex implements ClusterMeasure {
         // Get # of non-zero classes in each solution
         int n = y1.length;
 
-        int[] label1 = Math.unique(y1);
+        int[] label1 = MathEx.unique(y1);
         int n1 = label1.length;
 
-        int[] label2 = Math.unique(y2);
+        int[] label2 = MathEx.unique(y2);
         int n2 = label2.length;
 
         // Calculate N contingency matrix
@@ -85,7 +85,7 @@ public class AdjustedRandIndex implements ClusterMeasure {
         for (int i = 0; i < n1; i++) {
             for (int j = 0; j < n2; j++) {
                 if (count[i][j] >= 2) {
-                    rand1 += Math.choose(count[i][j], 2);
+                    rand1 += MathEx.choose(count[i][j], 2);
                 }
             }
         }
@@ -93,19 +93,19 @@ public class AdjustedRandIndex implements ClusterMeasure {
         double rand2a = 0.0;
         for (int i = 0; i < n1; i++) {
             if (count1[i] >= 2) {
-                rand2a += Math.choose(count1[i], 2);
+                rand2a += MathEx.choose(count1[i], 2);
             }
         }
 
         double rand2b = 0;
         for (int j = 0; j < n2; j++) {
             if (count2[j] >= 2) {
-                rand2b += Math.choose(count2[j], 2);
+                rand2b += MathEx.choose(count2[j], 2);
             }
         }
 
         double rand3 = rand2a * rand2b;
-        rand3 /= Math.choose(n, 2);
+        rand3 /= MathEx.choose(n, 2);
         double rand_N = rand1 - rand3;
 
         // D

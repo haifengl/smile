@@ -17,7 +17,7 @@ package smile.mds;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.sort.QuickSort;
 
@@ -121,7 +121,7 @@ public class IsotonicMDS {
             throw new IllegalArgumentException("The proximity matrix and the initial coordinates are of different size.");
         }
 
-        coordinates = Math.clone(init);
+        coordinates = MathEx.clone(init);
         int nr = proximity.length;
         int nc = coordinates[0].length;
 
@@ -147,10 +147,10 @@ public class IsotonicMDS {
 
         stress = 0.0;
         try {
-            stress = Math.min(func, 5, x, tol, maxIter);
+            stress = MathEx.min(func, 5, x, tol, maxIter);
         } catch (Exception ex) {
             // If L-BFGS doesn't work, let's try BFGS.
-            stress = Math.min(func, x, tol, maxIter);
+            stress = MathEx.min(func, x, tol, maxIter);
         }
 
         if (stress == 0.0) {
@@ -217,9 +217,9 @@ public class IsotonicMDS {
                 for (int j = i + 1; j < nr; j++) {
                     double tmp = 0.0;
                     for (int c = 0; c < nc; c++) {
-                        tmp += Math.sqr(x[i * nc + c] - x[j * nc + c]);
+                        tmp += MathEx.sqr(x[i * nc + c] - x[j * nc + c]);
                     }
-                    d[index++] = Math.sqrt(tmp);
+                    d[index++] = MathEx.sqrt(tmp);
                 }
             }
 
@@ -262,7 +262,7 @@ public class IsotonicMDS {
                 sstar += tmp * tmp;
                 tstar += y[i] * y[i];
             }
-            double ssq = Math.sqrt(sstar / tstar);
+            double ssq = MathEx.sqrt(sstar / tstar);
             return ssq;
         }
 
@@ -300,7 +300,7 @@ public class IsotonicMDS {
                 sstar += tmp * tmp;
                 tstar += y[i] * y[i];
             }
-            double ssq = Math.sqrt(sstar / tstar);
+            double ssq = MathEx.sqrt(sstar / tstar);
 
             int k = 0;
             for (int u = 0; u < nr; u++) {
@@ -321,7 +321,7 @@ public class IsotonicMDS {
                         }
                         double tmp1 = (x[u * nc + i] - x[s * nc + i]);
                         double sgn = (tmp1 >= 0) ? 1 : -1;
-                        tmp1 = Math.abs(tmp1) / y[k];
+                        tmp1 = MathEx.abs(tmp1) / y[k];
                         tmp += ((y[k] - yf[k]) / sstar - y[k] / tstar) * sgn * tmp1;
                     }
                     g[u * nc + i] = tmp * ssq;

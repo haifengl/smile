@@ -24,6 +24,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.AttributeDataset;
 import smile.data.parser.ArffParser;
+import smile.math.MathEx;
 import smile.validation.CrossValidation;
 
 /**
@@ -72,10 +73,10 @@ public class RLSTest {
             CrossValidation cv = new CrossValidation(n, k);
             double rss = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = smile.math.Math.slice(datax, cv.train[i]);
-                double[] trainy = smile.math.Math.slice(datay, cv.train[i]);
-                double[][] testx = smile.math.Math.slice(datax, cv.test[i]);
-                double[] testy = smile.math.Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 int l = trainx.length / 2;
                 double[][] batchx = new double[l][];

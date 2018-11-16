@@ -18,7 +18,7 @@ package smile.association;
 import java.util.Arrays;
 import java.util.HashMap;
 import smile.sort.QuickSort;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * FP-tree data structure used in FP-growth (frequent pattern growth)
@@ -291,7 +291,7 @@ final class FPTree {
      * @return the frequency of single items
      */
     private static int[] freq(int[][] itemsets) {
-        int[] f = new int[Math.max(itemsets) + 1];
+        int[] f = new int[MathEx.max(itemsets) + 1];
         for (int[] itemset : itemsets) {
             for (int i : itemset) {
                 f[i]++;

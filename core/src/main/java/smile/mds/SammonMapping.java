@@ -18,7 +18,7 @@ package smile.mds;
 import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The Sammon's mapping is an iterative technique for making interpoint
@@ -158,7 +158,7 @@ public class SammonMapping {
             throw new IllegalArgumentException("The proximity matrix is not square.");
         }
 
-        coordinates = Math.clone(init);
+        coordinates = MathEx.clone(init);
         
         double c = 0.0;
         for (int i = 0; i < n; i++) {
@@ -175,8 +175,8 @@ public class SammonMapping {
             for (int j = i + 1; j < n; j++) {
                 double dij = proximity[i][j];
                 if (dij == 0.0) dij = 1.0E-10;
-                double rij = Math.distance(coordinates[i], coordinates[j]);
-                stress += Math.sqr(dij - rij) / dij;
+                double rij = MathEx.distance(coordinates[i], coordinates[j]);
+                stress += MathEx.sqr(dij - rij) / dij;
             }
         }
         stress /= c;
@@ -211,7 +211,7 @@ public class SammonMapping {
                         rij += xd * xd;
                         xv[l] = xd;
                     }
-                    rij = Math.sqrt(rij);
+                    rij = MathEx.sqrt(rij);
                     if (rij == 0.0) rij = 1.0E-10;
 
                     double dq = dij - rij;
@@ -224,7 +224,7 @@ public class SammonMapping {
 
                 // Correction
                 for (int l = 0; l < k; l++) {
-                    xu[i][l] = ri[l] + lambda * e1[l] / Math.abs(e2[l]);
+                    xu[i][l] = ri[l] + lambda * e1[l] / MathEx.abs(e2[l]);
                 }
             }
 
@@ -233,8 +233,8 @@ public class SammonMapping {
                 for (int j = i + 1; j < n; j++) {
                     double dij = proximity[i][j];
                     if (dij == 0.0) dij = 1.0E-10;
-                    double rij = Math.distance(xu[i], xu[j]);
-                    stress += Math.sqr(dij - rij) / dij;
+                    double rij = MathEx.distance(xu[i], xu[j]);
+                    stress += MathEx.sqr(dij - rij) / dij;
                 }
             }
             stress /= c;
@@ -255,7 +255,7 @@ public class SammonMapping {
                 eprev = stress;
 
                 // Move the centroid to origin and update
-                double[] mu = Math.colMeans(xu);
+                double[] mu = MathEx.colMeans(xu);
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j < k; j++) {
                         coordinates[i][j] = xu[i][j] - mu[j];

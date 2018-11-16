@@ -17,7 +17,7 @@
 package smile.classification;
 
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
@@ -198,7 +198,7 @@ public class RDA implements SoftClassifier<double[]> {
         }
 
         // class label set.
-        int[] labels = Math.unique(y);
+        int[] labels = MathEx.unique(y);
         Arrays.sort(labels);
         
         for (int i = 0; i < labels.length; i++) {
@@ -235,7 +235,7 @@ public class RDA implements SoftClassifier<double[]> {
         // The number of instances in each class.
         int[] ni = new int[k];
         // Common mean vector.
-        double[] mean = Math.colMeans(x);
+        double[] mean = MathEx.colMeans(x);
         // Common covariance.
         DenseMatrix C = Matrix.zeros(p, p);
         // Class mean vectors.

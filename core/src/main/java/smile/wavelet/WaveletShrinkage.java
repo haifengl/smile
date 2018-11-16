@@ -16,7 +16,7 @@
 
 package smile.wavelet;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The wavelet shrinkage is a signal denoising technique based on the idea of
@@ -73,7 +73,7 @@ public class WaveletShrinkage {
 
         double[] wc = new double[nh];
         System.arraycopy(t, nh, wc, 0, nh);
-        double error = Math.mad(wc) / 0.6745;
+        double error = MathEx.mad(wc) / 0.6745;
 
         double lambda = error * Math.sqrt(2 * Math.log(n));
 

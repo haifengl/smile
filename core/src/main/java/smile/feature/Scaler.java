@@ -16,7 +16,7 @@
 
 package smile.feature;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.data.Attribute;
 
 /**
@@ -56,15 +56,15 @@ public class Scaler extends FeatureTransform {
 
     @Override
     public void learn(Attribute[] attributes, double[][] data) {
-        lo = Math.colMin(data);
-        hi = Math.colMax(data);
+        lo = MathEx.colMin(data);
+        hi = MathEx.colMax(data);
 
         for (int i = 0; i < lo.length; i++) {
             if (attributes[i].getType() != Attribute.Type.NUMERIC) {
                 lo[i] = Double.NaN;
             } else {
                 hi[i] -= lo[i];
-                if (Math.isZero(hi[i])) {
+                if (MathEx.isZero(hi[i])) {
                     hi[i] = 1.0;
                 }
             }

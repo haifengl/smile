@@ -25,7 +25,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.validation.LOOCV;
 import static org.junit.Assert.*;
 
@@ -72,8 +72,8 @@ public class LDATest {
             int error = 0;
             double[] posteriori = new double[3];
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
                 LDA lda = new LDA(trainx, trainy);
 
                 if (y[loocv.test[i]] != lda.predict(x[loocv.test[i]], posteriori))

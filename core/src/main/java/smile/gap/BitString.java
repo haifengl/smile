@@ -16,7 +16,7 @@
 
 package smile.gap;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The standard bit string representation of the solution domain.
@@ -116,7 +116,7 @@ public class BitString implements Chromosome {
 
         bits = new int[length];
         for (int i = 0; i < length; i++) {
-            bits[i] = Math.random() > 0.5 ? 1 : 0;
+            bits[i] = MathEx.random() > 0.5 ? 1 : 0;
         }        
     }
     
@@ -149,7 +149,7 @@ public class BitString implements Chromosome {
 
         bits = new int[length];
         for (int i = 0; i < length; i++) {
-            bits[i] = Math.random() > 0.5 ? 1 : 0;
+            bits[i] = MathEx.random() > 0.5 ? 1 : 0;
         }
     }
 
@@ -190,7 +190,7 @@ public class BitString implements Chromosome {
 
     @Override
     public int compareTo(Chromosome o) {
-        return (int) Math.signum(fitness - o.fitness());
+        return (int) MathEx.signum(fitness - o.fitness());
     }
     
     @Override
@@ -215,7 +215,7 @@ public class BitString implements Chromosome {
 
         BitString mother = (BitString) another;
         BitString[] offsprings = new BitString[2];
-        if (Math.random() < crossoverRate) {
+        if (MathEx.random() < crossoverRate) {
             switch (crossover) {
                 case SINGLE_POINT:
                     singlePointCrossover(this, mother, offsprings);
@@ -241,7 +241,7 @@ public class BitString implements Chromosome {
     private void singlePointCrossover(BitString father, BitString mother, BitString[] offsprings) {
         int point = 0; // crossover point
         while (point == 0) {
-            point = Math.randomInt(length);
+            point = MathEx.randomInt(length);
         }
 
         int[] son = new int[length];
@@ -262,12 +262,12 @@ public class BitString implements Chromosome {
     private void twoPointCrossover(BitString father, BitString mother, BitString[] offsprings) {
         int point1 = 0; // first crossover point
         while (point1 == 0 || point1 == length - 1) {
-            point1 = Math.randomInt(length);
+            point1 = MathEx.randomInt(length);
         }
 
         int point2 = 0; // second crossover point
         while (point2 == point1 || point2 == 0 || point2 == length - 1) {
-            point2 = Math.randomInt(length);
+            point2 = MathEx.randomInt(length);
         }
         
         if (point2 < point1) {
@@ -298,7 +298,7 @@ public class BitString implements Chromosome {
         int[] daughter = new int[length];
 
         for (int i = 0; i < length; i++) {
-            if (Math.random() < 0.5) {
+            if (MathEx.random() < 0.5) {
                 son[i] = father.bits[i];
                 daughter[i] = mother.bits[i];
             } else {
@@ -314,7 +314,7 @@ public class BitString implements Chromosome {
     @Override
     public void mutate() {
         for (int i = 0; i < length; i++) {
-            if (Math.random() < mutationRate) {
+            if (MathEx.random() < mutationRate) {
                 bits[i] ^= 1;
             }
         }

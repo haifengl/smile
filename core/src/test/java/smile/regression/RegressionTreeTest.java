@@ -22,7 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.AttributeDataset;
 import smile.data.parser.ArffParser;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.QuickSort;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
@@ -90,8 +90,8 @@ public class RegressionTreeTest {
         LOOCV loocv = new LOOCV(n);
         double rss = 0.0;
         for (int i = 0; i < n; i++) {
-            double[][] trainx = Math.slice(longley, loocv.train[i]);
-            double[] trainy = Math.slice(y, loocv.train[i]);
+            double[][] trainx = MathEx.slice(longley, loocv.train[i]);
+            double[] trainy = MathEx.slice(y, loocv.train[i]);
             RegressionTree tree = new RegressionTree(trainx, trainy, 3);
 
             double r = y[loocv.test[i]] - tree.predict(longley[loocv.test[i]]);
@@ -118,21 +118,21 @@ public class RegressionTreeTest {
             double rss = 0.0;
             double ad = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 RegressionTree tree = new RegressionTree(data.attributes(), trainx, trainy, 20);
 
                 for (int j = 0; j < testx.length; j++) {
                     double r = testy[j] - tree.predict(testx[j]);
                     rss += r * r;
-                    ad += Math.abs(r);
+                    ad += MathEx.abs(r);
                 }
             }
 
-            System.out.format("10-CV RMSE = %.4f \t AbsoluteDeviation = %.4f%n", Math.sqrt(rss/n), ad/n);
+            System.out.format("10-CV RMSE = %.4f \t AbsoluteDeviation = %.4f%n", MathEx.sqrt(rss/n), ad/n);
          } catch (Exception ex) {
              System.err.println(ex);
          }
@@ -169,7 +169,7 @@ public class RegressionTreeTest {
 
             int n = datax.length;
             int m = 3 * n / 4;
-            int[] index = Math.permutate(n);
+            int[] index = MathEx.permutate(n);
             
             double[][] trainx = new double[m][];
             double[] trainy = new double[m];            

@@ -18,7 +18,7 @@ package smile.regression;
 import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.BiconjugateGradient;
@@ -238,7 +238,7 @@ public class LASSO  implements Regression<double[]> {
         int n = x.length;
         int p = x[0].length;
 
-        center = Math.colMeans(x);
+        center = MathEx.colMeans(x);
         DenseMatrix X = Matrix.zeros(n, p);
 
         for (int i = 0; i < n; i++) {
@@ -250,13 +250,13 @@ public class LASSO  implements Regression<double[]> {
         scale = new double[p];
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
-                scale[j] += Math.sqr(X.get(i, j));
+                scale[j] += MathEx.sqr(X.get(i, j));
             }
-            scale[j] = Math.sqrt(scale[j] / n);
+            scale[j] = MathEx.sqrt(scale[j] / n);
         }
 
         for (int j = 0; j < p; j++) {
-            if (!Math.isZero(scale[j])) {
+            if (!MathEx.isZero(scale[j])) {
                 for (int i = 0; i < n; i++) {
                     X.div(i, j, scale[j]);
                 }
@@ -266,12 +266,12 @@ public class LASSO  implements Regression<double[]> {
         train(X, y, lambda, tol, maxIter);
 
         for (int j = 0; j < p; j++) {
-            if (!Math.isZero(scale[j])) {
+            if (!MathEx.isZero(scale[j])) {
                 w[j] /= scale[j];
             }
         }
 
-        b = ym - Math.dot(w, center);
+        b = ym - MathEx.dot(w, center);
         fitness(Matrix.newInstance(x), y);
     }
 
@@ -333,12 +333,12 @@ public class LASSO  implements Regression<double[]> {
         p = x.ncols();
 
         double[] Y = new double[n];
-        ym = Math.mean(y);
+        ym = MathEx.mean(y);
         for (int i = 0; i < n; i++) {
             Y[i] = y[i] - ym;
         }
 
-        double t = Math.min(Math.max(1.0, 1.0 / lambda), 2 * p / 1e-3);
+        double t = MathEx.min(MathEx.max(1.0, 1.0 / lambda), 2 * p / 1e-3);
         double pobj = 0.0; // primal objective function value
         double dobj = Double.NEGATIVE_INFINITY; // dual objective function value
         double s = Double.POSITIVE_INFINITY;
@@ -396,7 +396,7 @@ public class LASSO  implements Regression<double[]> {
 
             // CALCULATE DUALITY GAP
             x.atx(nu, xnu);
-            double maxXnu = Math.normInf(xnu);
+            double maxXnu = MathEx.normInf(xnu);
             if (maxXnu > lambda) {
                 double lnu = lambda / maxXnu;
                 for (int i = 0; i < n; i++) {
@@ -404,8 +404,8 @@ public class LASSO  implements Regression<double[]> {
                 }
             }
 
-            pobj = Math.dot(z, z) + lambda * Math.norm1(w);
-            dobj = Math.max(-0.25 * Math.dot(nu, nu) - Math.dot(nu, Y), dobj);
+            pobj = MathEx.dot(z, z) + lambda * MathEx.norm1(w);
+            dobj = MathEx.max(-0.25 * MathEx.dot(nu, nu) - MathEx.dot(nu, Y), dobj);
             if (ntiter % 10 == 0) {
                 logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g%n", ntiter, pobj, dobj));
             }
@@ -419,7 +419,7 @@ public class LASSO  implements Regression<double[]> {
 
             // UPDATE t
             if (s >= 0.5) {
-                t = Math.max(Math.min(2 * p * MU / gap, MU * t), t);
+                t = MathEx.max(MathEx.min(2 * p * MU / gap, MU * t), t);
             }
 
             // CALCULATE NEWTON STEP    
@@ -448,8 +448,8 @@ public class LASSO  implements Regression<double[]> {
             }
 
             // set pcg tolerance (relative)
-            double normg = Math.norm(grad);
-            double pcgtol = Math.min(0.1, eta * gap / Math.min(1.0, normg));
+            double normg = MathEx.norm(grad);
+            double pcgtol = MathEx.min(0.1, eta * gap / MathEx.min(1.0, normg));
             if (ntiter != 0 && pitr == 0) {
                 pcgtol = pcgtol * 0.1;
             }
@@ -466,9 +466,9 @@ public class LASSO  implements Regression<double[]> {
             }
 
             // BACKTRACKING LINE SEARCH
-            double phi = Math.dot(z, z) + lambda * Math.sum(u) - sumlogneg(f) / t;
+            double phi = MathEx.dot(z, z) + lambda * MathEx.sum(u) - sumlogneg(f) / t;
             s = 1.0;
-            double gdx = Math.dot(grad, dxu);
+            double gdx = MathEx.dot(grad, dxu);
 
             int lsiter = 0;
             for (; lsiter < MAX_LS_ITER; lsiter++) {
@@ -479,13 +479,13 @@ public class LASSO  implements Regression<double[]> {
                     newf[1][i] = -neww[i] - newu[i];
                 }
 
-                if (Math.max(newf) < 0.0) {
+                if (MathEx.max(newf) < 0.0) {
                     x.ax(neww, newz);
                     for (int i = 0; i < n; i++) {
                         newz[i] -= Y[i];
                     }
 
-                    double newphi = Math.dot(newz, newz) + lambda * Math.sum(newu) - sumlogneg(newf) / t;
+                    double newphi = MathEx.dot(newz, newz) + lambda * MathEx.sum(newu) - sumlogneg(newf) / t;
                     if (newphi - phi <= ALPHA * s * gdx) {
                         break;
                     }
@@ -516,16 +516,16 @@ public class LASSO  implements Regression<double[]> {
 
         double TSS = 0.0;
         RSS = 0.0;
-        double ybar = Math.mean(y);
+        double ybar = MathEx.mean(y);
         residuals = new double[n];
         for (int i = 0; i < n; i++) {
             double r = y[i] - yhat[i] - b;
             residuals[i] = r;
-            RSS += Math.sqr(r);
-            TSS += Math.sqr(y[i] - ybar);
+            RSS += MathEx.sqr(r);
+            TSS += MathEx.sqr(y[i] - ybar);
         }
 
-        error = Math.sqrt(RSS / (n - p - 1));
+        error = MathEx.sqrt(RSS / (n - p - 1));
         df = n - p - 1;
 
         RSquared = 1.0 - RSS / TSS;
@@ -553,7 +553,7 @@ public class LASSO  implements Regression<double[]> {
         double sum = 0.0;
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
-                sum += Math.log(-f[i][j]);
+                sum += MathEx.log(-f[i][j]);
             }
         }
 
@@ -714,7 +714,7 @@ public class LASSO  implements Regression<double[]> {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        return Math.dot(x, w) + b;
+        return MathEx.dot(x, w) + b;
     }
 
     /**
@@ -793,7 +793,7 @@ public class LASSO  implements Regression<double[]> {
         double[] r = residuals.clone();
         builder.append("\nResiduals:\n");
         builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
-        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", Math.min(r), Math.q1(r), Math.median(r), Math.q3(r), Math.max(r)));
+        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", MathEx.min(r), MathEx.q1(r), MathEx.median(r), MathEx.q3(r), MathEx.max(r)));
 
         builder.append("\nCoefficients:\n");
         builder.append("            Estimate\n");

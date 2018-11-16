@@ -16,7 +16,7 @@
 
 package smile.feature;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.data.Attribute;
 
 /**
@@ -65,7 +65,7 @@ public class MaxAbsScaler extends FeatureTransform {
         }
 
         for (int i = 0; i < scale.length; i++) {
-            if (Math.isZero(scale[i])) {
+            if (MathEx.isZero(scale[i])) {
                 scale[i] = 1.0;
             }
         }

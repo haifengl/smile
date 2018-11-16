@@ -16,7 +16,7 @@
 
 package smile.validation;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Rand Index. Rand index is defined as the number of pairs of objects
@@ -45,10 +45,10 @@ public class RandIndex implements ClusterMeasure {
         // Get # of non-zero classes in each solution
         int n = y1.length;
 
-        int[] label1 = Math.unique(y1);
+        int[] label1 = MathEx.unique(y1);
         int n1 = label1.length;
         
-        int[] label2 = Math.unique(y2);
+        int[] label2 = MathEx.unique(y2);
         int n2 = label2.length;
 
         // Calculate N contingency matrix
@@ -82,24 +82,24 @@ public class RandIndex implements ClusterMeasure {
         double rand_T = 0.0;
         for (int i = 0; i < n1; i++) {
             for (int j = 0; j < n2; j++) {
-                rand_T += Math.sqr(count[i][j]);
+                rand_T += MathEx.sqr(count[i][j]);
             }
         }
         rand_T -= n;
 
         double rand_P = 0.0;
         for (int i = 0; i < n1; i++) {
-            rand_P += Math.sqr(count1[i]);
+            rand_P += MathEx.sqr(count1[i]);
         }
         rand_P -= n;
 
         double rand_Q = 0.0;
         for (int j = 0; j < n2; j++) {
-            rand_Q += Math.sqr(count2[j]);
+            rand_Q += MathEx.sqr(count2[j]);
         }
         rand_Q -= n;
 
-        double rand = (rand_T - 0.5 * rand_P - 0.5 * rand_Q + Math.choose(n, 2)) / Math.choose(n, 2);
+        double rand = (rand_T - 0.5 * rand_P - 0.5 * rand_Q + MathEx.choose(n, 2)) / MathEx.choose(n, 2);
         return rand;
     }
 

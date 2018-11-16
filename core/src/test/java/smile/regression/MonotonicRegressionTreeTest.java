@@ -20,14 +20,13 @@ import org.junit.Test;
 
 import java.text.MessageFormat;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import smile.data.Attribute;
 import smile.data.NumericAttribute;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.stat.distribution.GaussianDistribution;
 
 public class MonotonicRegressionTreeTest {
@@ -41,7 +40,7 @@ public class MonotonicRegressionTreeTest {
         double[] y = new double[observations];
 
         for (int i = 0; i < observations; i++) {
-            double[] features = Math.random(1);
+            double[] features = MathEx.random(1);
             x[i] = features;
             y[i] = function(features[0]);
         }
@@ -68,7 +67,7 @@ public class MonotonicRegressionTreeTest {
     }
 
     private double function(double x1) {
-        return 5 * x1 + Math.sin(10 * Math.PI * x1) + GaussianDistribution.getInstance().rand();
+        return 5 * x1 + MathEx.sin(10 * MathEx.PI * x1) + GaussianDistribution.getInstance().rand();
     }
 
     private void assertMonotonic(double[] values) {

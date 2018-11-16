@@ -28,7 +28,7 @@ import smile.data.Attribute;
 import smile.data.AttributeDataset;
 import smile.data.NominalAttribute;
 import smile.data.NumericAttribute;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.QuickSort;
 import smile.util.MulticoreExecutor;
 
@@ -232,7 +232,7 @@ public class RegressionTree implements Regression<double[]> {
 
         public RegressionTree train(int[][] x, double[] y) {
             if (numFeatures <= 0) {
-                return new RegressionTree(Math.max(x) + 1, x, y, maxNodes, nodeSize);
+                return new RegressionTree(MathEx.max(x) + 1, x, y, maxNodes, nodeSize);
             } else {
                 return new RegressionTree(numFeatures, x, y, maxNodes, nodeSize);
             }
@@ -311,7 +311,7 @@ public class RegressionTree implements Regression<double[]> {
                 return output;
             } else {
                 if (attributes[splitFeature].getType() == Attribute.Type.NOMINAL) {
-                    if (Math.equals(x[splitFeature], splitValue)) {
+                    if (MathEx.equals(x[splitFeature], splitValue)) {
                         return trueChild.predict(x);
                     } else {
                         return falseChild.predict(x);
@@ -386,7 +386,7 @@ public class RegressionTree implements Regression<double[]> {
 
         @Override
         public int compareTo(TrainNode a) {
-            return (int) Math.signum(a.node.splitScore - node.splitScore);
+            return (int) MathEx.signum(a.node.splitScore - node.splitScore);
         }
 
         /**
@@ -429,7 +429,7 @@ public class RegressionTree implements Regression<double[]> {
             // Loop through features and compute the reduction of squared error,
             // which is trueCount * trueMean^2 + falseCount * falseMean^2 - count * parentMean^2                    
             if (mtry < p) {
-                Math.permutate(variables);
+                MathEx.permutate(variables);
 
                 // Random forest already runs on parallel.
                 for (int j = 0; j < mtry; j++) {
@@ -598,12 +598,12 @@ public class RegressionTree implements Regression<double[]> {
                         if (monoRegForFeature > 0) {
                             boolean isTargetDecreasing = trueMean > falseMean;
                             if (isTargetDecreasing) {
-                                score *= 1 - Math.abs(monoRegForFeature);
+                                score *= 1 - MathEx.abs(monoRegForFeature);
                             }
                         } else if (monoRegForFeature < 0) {
                             boolean isTargetDecreasing = trueMean < falseMean;
                             if (isTargetDecreasing) {
-                                score *= 1 - Math.abs(monoRegForFeature);
+                                score *= 1 - MathEx.abs(monoRegForFeature);
                             }
                         } // monoRegForFeature == 0 - no monotonic regression
 
@@ -649,7 +649,7 @@ public class RegressionTree implements Regression<double[]> {
             if (attributes[node.splitFeature].getType() == Attribute.Type.NOMINAL) {
                 for (int i = 0; i < n; i++) {
                     if (samples[i] > 0) {
-                        if (Math.equals(x[i][node.splitFeature], node.splitValue)) {
+                        if (MathEx.equals(x[i][node.splitFeature], node.splitValue)) {
                             trueSamples[i] = samples[i];
                             tc += trueSamples[i];
                             samples[i] = 0;
@@ -746,7 +746,7 @@ public class RegressionTree implements Regression<double[]> {
 
         @Override
         public int compareTo(SparseBinaryTrainNode a) {
-            return (int) Math.signum(a.node.splitScore - node.splitScore);
+            return (int) MathEx.signum(a.node.splitScore - node.splitScore);
         }
 
         /**
@@ -763,7 +763,7 @@ public class RegressionTree implements Regression<double[]> {
             int[] trueCount = new int[p];
             int[] featureIndex = new int[p];
 
-            int n = Math.sum(samples);
+            int n = MathEx.sum(samples);
             double sumX = 0.0;
             for (int i = 0; i < x.length; i++) {
                 if (samples[i] == 0) {

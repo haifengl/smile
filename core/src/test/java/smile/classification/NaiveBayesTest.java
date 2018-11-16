@@ -26,7 +26,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.feature.Bag;
 import smile.stat.distribution.Distribution;
 import smile.stat.distribution.GaussianMixture;
@@ -113,11 +113,11 @@ public class NaiveBayesTest {
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int l = 0; l < n; l++) {
-                double[][] trainx = Math.slice(x, loocv.train[l]);
-                int[] trainy = Math.slice(y, loocv.train[l]);
+                double[][] trainx = MathEx.slice(x, loocv.train[l]);
+                int[] trainy = MathEx.slice(y, loocv.train[l]);
 
                 int p = trainx[0].length;
-                int k = Math.max(trainy) + 1;
+                int k = MathEx.max(trainy) + 1;
 
                 double[] priori = new double[k];
                 Distribution[][] condprob = new Distribution[k][p];
@@ -168,14 +168,14 @@ public class NaiveBayesTest {
         int error = 0;
         int total = 0;
         for (int i = 0; i < k; i++) {
-            double[][] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
+            double[][] trainx = MathEx.slice(x, cv.train[i]);
+            int[] trainy = MathEx.slice(y, cv.train[i]);
             NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.MULTINOMIAL, 2, feature.length);
 
             bayes.learn(trainx, trainy);
 
-            double[][] testx = Math.slice(x, cv.test[i]);
-            int[] testy = Math.slice(y, cv.test[i]);
+            double[][] testx = MathEx.slice(x, cv.test[i]);
+            int[] testy = MathEx.slice(y, cv.test[i]);
             for (int j = 0; j < testx.length; j++) {
                 int label = bayes.predict(testx[j]);
                 if (label != -1) {
@@ -206,16 +206,16 @@ public class NaiveBayesTest {
         int error = 0;
         int total = 0;
         for (int i = 0; i < k; i++) {
-            double[][] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
+            double[][] trainx = MathEx.slice(x, cv.train[i]);
+            int[] trainy = MathEx.slice(y, cv.train[i]);
             NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.MULTINOMIAL, 2, feature.length);
 
             for (int j = 0; j < trainx.length; j++) {
                 bayes.learn(trainx[j], trainy[j]);
             }
 
-            double[][] testx = Math.slice(x, cv.test[i]);
-            int[] testy = Math.slice(y, cv.test[i]);
+            double[][] testx = MathEx.slice(x, cv.test[i]);
+            int[] testy = MathEx.slice(y, cv.test[i]);
             for (int j = 0; j < testx.length; j++) {
                 int label = bayes.predict(testx[j]);
                 if (label != -1) {
@@ -246,14 +246,14 @@ public class NaiveBayesTest {
         int error = 0;
         int total = 0;
         for (int i = 0; i < k; i++) {
-            double[][] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
+            double[][] trainx = MathEx.slice(x, cv.train[i]);
+            int[] trainy = MathEx.slice(y, cv.train[i]);
             NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.POLYAURN, 2, feature.length);
 
             bayes.learn(trainx, trainy);
 
-            double[][] testx = Math.slice(x, cv.test[i]);
-            int[] testy = Math.slice(y, cv.test[i]);
+            double[][] testx = MathEx.slice(x, cv.test[i]);
+            int[] testy = MathEx.slice(y, cv.test[i]);
             for (int j = 0; j < testx.length; j++) {
                 int label = bayes.predict(testx[j]);
                 if (label != -1) {
@@ -284,16 +284,16 @@ public class NaiveBayesTest {
         int error = 0;
         int total = 0;
         for (int i = 0; i < k; i++) {
-            double[][] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
+            double[][] trainx = MathEx.slice(x, cv.train[i]);
+            int[] trainy = MathEx.slice(y, cv.train[i]);
             NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.POLYAURN, 2, feature.length);
 
             for (int j = 0; j < trainx.length; j++) {
                 bayes.learn(trainx[j], trainy[j]);
             }
 
-            double[][] testx = Math.slice(x, cv.test[i]);
-            int[] testy = Math.slice(y, cv.test[i]);
+            double[][] testx = MathEx.slice(x, cv.test[i]);
+            int[] testy = MathEx.slice(y, cv.test[i]);
             for (int j = 0; j < testx.length; j++) {
                 int label = bayes.predict(testx[j]);
                 if (label != -1) {
@@ -324,14 +324,14 @@ public class NaiveBayesTest {
         int error = 0;
         int total = 0;
         for (int i = 0; i < k; i++) {
-            double[][] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
+            double[][] trainx = MathEx.slice(x, cv.train[i]);
+            int[] trainy = MathEx.slice(y, cv.train[i]);
             NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.BERNOULLI, 2, feature.length);
 
             bayes.learn(trainx, trainy);
 
-            double[][] testx = Math.slice(x, cv.test[i]);
-            int[] testy = Math.slice(y, cv.test[i]);
+            double[][] testx = MathEx.slice(x, cv.test[i]);
+            int[] testy = MathEx.slice(y, cv.test[i]);
 
             for (int j = 0; j < testx.length; j++) {
                 int label = bayes.predict(testx[j]);
@@ -363,16 +363,16 @@ public class NaiveBayesTest {
         int error = 0;
         int total = 0;
         for (int i = 0; i < k; i++) {
-            double[][] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
+            double[][] trainx = MathEx.slice(x, cv.train[i]);
+            int[] trainy = MathEx.slice(y, cv.train[i]);
             NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.BERNOULLI, 2, feature.length);
 
             for (int j = 0; j < trainx.length; j++) {
                 bayes.learn(trainx[j], trainy[j]);
             }
 
-            double[][] testx = Math.slice(x, cv.test[i]);
-            int[] testy = Math.slice(y, cv.test[i]);
+            double[][] testx = MathEx.slice(x, cv.test[i]);
+            int[] testy = MathEx.slice(y, cv.test[i]);
 
             for (int j = 0; j < testx.length; j++) {
                 int label = bayes.predict(testx[j]);

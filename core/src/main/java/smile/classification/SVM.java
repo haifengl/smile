@@ -23,7 +23,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.DoubleArrayList;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.SparseArray;
 import smile.math.kernel.LinearKernel;
 import smile.math.kernel.MercerKernel;
@@ -494,7 +494,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
             }
 
             // train SVM in a stochastic order.
-            int[] index = Math.permutate(n);
+            int[] index = MathEx.permutate(n);
             for (int i = 0; i < n; i++) {
                 if (weight == null) {
                     process(x[index[i]], y[index[i]]);
@@ -517,7 +517,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
 
             if (kernel instanceof LinearKernel && w != null) {
                 if (x instanceof double[]) {
-                    f += Math.dot(w, (double[]) x);
+                    f += MathEx.dot(w, (double[]) x);
                 } else if (x instanceof SparseArray) {
                     for (SparseArray.Entry e : (SparseArray) x) {
                         f += w[e.i] * e.x;
@@ -1229,12 +1229,12 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
             throw new IllegalArgumentException(String.format("The sizes of X and instance weight don't match: %d != %d", x.length, weight.length));
         }
 
-        int miny = Math.min(y);
+        int miny = MathEx.min(y);
         if (miny < 0) {
             throw new IllegalArgumentException("Negative class label:" + miny);
         }
 
-        int maxy = Math.max(y);
+        int maxy = MathEx.max(y);
         if (maxy >= k) {
             throw new IllegalArgumentException("Invalid class label:" + maxy);
         }
@@ -1531,7 +1531,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
         final double minProb = 1e-7;
         final double maxProb = 1 - minProb;
 
-        return Math.min(Math.max(svm.platt.predict(y), minProb), maxProb);
+        return MathEx.min(MathEx.max(svm.platt.predict(y), minProb), maxProb);
     }
 
     @Override
@@ -1566,7 +1566,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
                 }
             }
 
-            smile.math.Math.unitize1(prob);
+            MathEx.unitize1(prob);
 
             return label;
         } else {

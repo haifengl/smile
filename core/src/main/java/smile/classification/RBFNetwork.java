@@ -17,7 +17,7 @@
 package smile.classification;
 
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.distance.Metric;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
@@ -277,7 +277,7 @@ public class RBFNetwork<T> implements Classifier<T> {
         }
 
         // class label set.
-        int[] labels = Math.unique(y);
+        int[] labels = MathEx.unique(y);
         Arrays.sort(labels);
         
         for (int i = 0; i < labels.length; i++) {

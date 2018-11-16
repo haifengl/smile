@@ -22,7 +22,7 @@ import smile.clustering.linkage.UPGMCLinkage;
 import smile.clustering.linkage.WPGMALinkage;
 import smile.clustering.linkage.UPGMALinkage;
 import smile.clustering.linkage.CompleteLinkage;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.validation.RandIndex;
 import smile.validation.AdjustedRandIndex;
 import smile.data.AttributeDataset;
@@ -80,7 +80,7 @@ public class HierarchicalClusteringTest {
             for (int i = 0; i < n; i++) {
                 proximity[i] = new double[i + 1];
                 for (int j = 0; j < i; j++) {
-                    proximity[i][j] = Math.distance(x[i], x[j]);
+                    proximity[i][j] = MathEx.distance(x[i], x[j]);
                 }
             }
 

@@ -23,7 +23,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import static org.junit.Assert.*;
@@ -120,8 +120,8 @@ public class OLSTest {
         LOOCV loocv = new LOOCV(n);
         double rss = 0.0;
         for (int i = 0; i < n; i++) {
-            double[][] trainx = Math.slice(longley, loocv.train[i]);
-            double[] trainy = Math.slice(y, loocv.train[i]);
+            double[][] trainx = MathEx.slice(longley, loocv.train[i]);
+            double[] trainy = MathEx.slice(y, loocv.train[i]);
             OLS linear = new OLS(trainx, trainy);
 
             double r = y[loocv.test[i]] - linear.predict(longley[loocv.test[i]]);
@@ -152,10 +152,10 @@ public class OLSTest {
             CrossValidation cv = new CrossValidation(n, k);
             double rss = 0.0;
             for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+                double[][] trainx = MathEx.slice(datax, cv.train[i]);
+                double[] trainy = MathEx.slice(datay, cv.train[i]);
+                double[][] testx = MathEx.slice(datax, cv.test[i]);
+                double[] testy = MathEx.slice(datay, cv.test[i]);
 
                 OLS linear = new OLS(trainx, trainy);
 

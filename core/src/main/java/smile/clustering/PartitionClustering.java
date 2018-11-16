@@ -16,7 +16,7 @@
 package smile.clustering;
 
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Abstract class of partition clustering. Partition methods break
@@ -124,7 +124,7 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
     public static int[] seed(double[][] data, int k, ClusteringDistance distance) {
         int n = data.length;
         int[] y = new int[n];
-        double[] centroid = data[Math.randomInt(n)];
+        double[] centroid = data[MathEx.randomInt(n)];
 
         double[] d = new double[n];
         for (int i = 0; i < n; i++) {
@@ -140,13 +140,13 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
                 double dist = 0.0;
                 switch (distance) {
                     case EUCLIDEAN:
-                        dist = Math.squaredDistance(data[i], centroid);
+                        dist = MathEx.squaredDistance(data[i], centroid);
                         break;
                     case EUCLIDEAN_MISSING_VALUES:
                         dist = squaredDistance(data[i], centroid);
                         break;
                     case JENSEN_SHANNON_DIVERGENCE:
-                        dist = Math.JensenShannonDivergence(data[i], centroid);
+                        dist = MathEx.JensenShannonDivergence(data[i], centroid);
                         break;
                 }
                 
@@ -156,7 +156,7 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
                 }
             }
 
-            double cutoff = Math.random() * Math.sum(d);
+            double cutoff = MathEx.random() * MathEx.sum(d);
             double cost = 0.0;
             int index = 0;
             for (; index < n; index++) {
@@ -174,13 +174,13 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
             double dist = 0.0;
             switch (distance) {
                 case EUCLIDEAN:
-                    dist = Math.squaredDistance(data[i], centroid);
+                    dist = MathEx.squaredDistance(data[i], centroid);
                     break;
                 case EUCLIDEAN_MISSING_VALUES:
                     dist = squaredDistance(data[i], centroid);
                     break;
                 case JENSEN_SHANNON_DIVERGENCE:
-                    dist = Math.JensenShannonDivergence(data[i], centroid);
+                    dist = MathEx.JensenShannonDivergence(data[i], centroid);
                     break;
             }
             
@@ -234,7 +234,7 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
     public static <T> double seed(smile.math.distance.Distance<T> distance, T[] data, T[] medoids, int[] y, double[] d) {
         int n = data.length;
         int k = medoids.length;
-        T medoid = data[Math.randomInt(n)];
+        T medoid = data[MathEx.randomInt(n)];
         medoids[0] = medoid;
 
         Arrays.fill(d, Double.MAX_VALUE);
@@ -252,7 +252,7 @@ public abstract class PartitionClustering <T> implements Clustering<T> {
                 }
             }
 
-            double cutoff = Math.random() * Math.sum(d);
+            double cutoff = MathEx.random() * MathEx.sum(d);
             double cost = 0.0;
             int index = 0;
             for (; index < n; index++) {

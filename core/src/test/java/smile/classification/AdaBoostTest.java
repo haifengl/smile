@@ -16,7 +16,7 @@
 package smile.classification;
 
 import smile.data.Attribute;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.validation.LOOCV;
 import smile.data.parser.ArffParser;
 import smile.data.NominalAttribute;
@@ -72,8 +72,8 @@ public class AdaBoostTest {
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
                 
                 AdaBoost forest = new AdaBoost(weather.attributes(), trainx, trainy, 200, 4);
                 if (y[loocv.test[i]] != forest.predict(x[loocv.test[i]]))
@@ -107,8 +107,8 @@ public class AdaBoostTest {
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
                 
                 AdaBoost forest = new AdaBoost(iris.attributes(), trainx, trainy, 200);
                 if (y[loocv.test[i]] != forest.predict(x[loocv.test[i]]))

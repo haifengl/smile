@@ -24,7 +24,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 import static org.junit.Assert.*;
 
@@ -226,11 +226,11 @@ public class KPCATest {
             AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
 
             double[][] x = iris.toArray(new double[iris.size()][]);
-            KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(Math.sqrt(2.5)), 1E-4);
-            assertTrue(Math.equals(latent, kpca.getVariances(), 1E-3));
+            KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(MathEx.sqrt(2.5)), 1E-4);
+            assertTrue(MathEx.equals(latent, kpca.getVariances(), 1E-3));
             double[][] points = kpca.project(x);
             points[0] = kpca.project(x[0]);
-            assertTrue(Math.equals(points, kpca.getCoordinates(), 1E-7));
+            assertTrue(MathEx.equals(points, kpca.getCoordinates(), 1E-7));
 /*
             for (int j = 0; j < points[0].length; j++) {
                 double sign = Math.signum(points[0][j] / scores[0][j]);
@@ -258,11 +258,11 @@ public class KPCATest {
             AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
 
             double[][] x = iris.toArray(new double[iris.size()][]);
-            KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(Math.sqrt(2.5)), 29);
-            assertTrue(Math.equals(latent, kpca.getVariances(), 1E-3));
+            KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(MathEx.sqrt(2.5)), 29);
+            assertTrue(MathEx.equals(latent, kpca.getVariances(), 1E-3));
             double[][] points = kpca.project(x);
             points[0] = kpca.project(x[0]);
-            assertTrue(Math.equals(points, kpca.getCoordinates(), 1E-7));
+            assertTrue(MathEx.equals(points, kpca.getCoordinates(), 1E-7));
 /*
             for (int j = 0; j < points[0].length; j++) {
                 double sign = Math.signum(points[0][j] / scores[0][j]);

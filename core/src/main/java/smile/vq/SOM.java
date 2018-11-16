@@ -23,7 +23,7 @@ import smile.clustering.HierarchicalClustering;
 import smile.clustering.BBDTree;
 import smile.clustering.linkage.Linkage;
 import smile.clustering.linkage.UPGMALinkage;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
@@ -185,13 +185,13 @@ public class SOM implements Clustering<double[]> {
         neurons = new double[height][width][d];
         bmu = new int[n][2];
 
-        double mpd = Math.max(0.5, height * width / (double) n);
-        int roughTrainLen = (int) Math.ceil(10 * mpd);
-        int fineTrainLen = (int) Math.ceil(40 * mpd);
+        double mpd = MathEx.max(0.5, height * width / (double) n);
+        int roughTrainLen = (int) MathEx.ceil(10 * mpd);
+        int fineTrainLen = (int) MathEx.ceil(40 * mpd);
         int trainLen = roughTrainLen + fineTrainLen;
 
-        double initRadius = Math.max(1.0, Math.max(height, width) / 2.0);
-        double finalRadius = Math.max(1.0, initRadius / 4.0);
+        double initRadius = MathEx.max(1.0, MathEx.max(height, width) / 2.0);
+        double finalRadius = MathEx.max(1.0, initRadius / 4.0);
 
         double[] radius = new double[trainLen];
         for (int i = 0; i < roughTrainLen; i++) {
@@ -270,7 +270,7 @@ public class SOM implements Clustering<double[]> {
         }
 
         for (int iter = 0; iter < trainLen; iter++) {
-            int r = (int) Math.round(Math.sqrt(radius[iter]));
+            int r = (int) MathEx.round(MathEx.sqrt(radius[iter]));
             double distortion = bbd.clustering(centroids, sums, hit, sy);
             logger.info(String.format("SOM distortion after %3d iterations (radius = %d): %.5f", iter + 1, r, distortion));
 
@@ -279,17 +279,17 @@ public class SOM implements Clustering<double[]> {
                     double denom = 0.0;
                     Arrays.fill(neurons[i][j], 0.0);
 
-                    int minH = Math.max(0, i - 3 * r) + 1;
-                    int maxH = Math.min(height, i + 3 * r) - 1;
-                    int minW = Math.max(0, j - 3 * r) + 1;
-                    int maxW = Math.min(width, j + 3 * r) - 1;
+                    int minH = MathEx.max(0, i - 3 * r) + 1;
+                    int maxH = MathEx.min(height, i + 3 * r) - 1;
+                    int minW = MathEx.max(0, j - 3 * r) + 1;
+                    int maxW = MathEx.min(width, j + 3 * r) - 1;
 
                     int hits = 0;
                     while (hits == 0) {
-                        minH = Math.max(0, minH - 1);
-                        maxH = Math.min(height, maxH + 1);
-                        minW = Math.max(0, minW - 1);
-                        maxW = Math.min(width, maxW + 1);
+                        minH = MathEx.max(0, minH - 1);
+                        maxH = MathEx.min(height, maxH + 1);
+                        minW = MathEx.max(0, minW - 1);
+                        maxW = MathEx.min(width, maxW + 1);
 
                         for (int s = minH; s < maxH; s++) {
                             for (int t = minW; t < maxW; t++) {
@@ -305,7 +305,7 @@ public class SOM implements Clustering<double[]> {
                             if (hit[pos] > 0) {
                                 int dx = i - s;
                                 int dy = j - t;
-                                double h = Math.exp(-(dx * dx + dy * dy) / (2 * radius[iter]));
+                                double h = MathEx.exp(-(dx * dx + dy * dy) / (2 * radius[iter]));
                                 denom += h * hit[pos];
                                 for (int k = 0; k < d; k++) {
                                     neurons[i][j][k] += h * sums[pos][k];
@@ -338,28 +338,28 @@ public class SOM implements Clustering<double[]> {
         umatrix = new double[height][width];
         for (int i = 0; i < height - 1; i++) {
             for (int j = 0; j < width - 1; j++) {
-                double dist = Math.sqrt(Math.squaredDistance(neurons[i][j], neurons[i][j + 1]));
-                umatrix[i][j] = Math.max(umatrix[i][j], dist);
-                umatrix[i][j + 1] = Math.max(umatrix[i][j + 1], dist);
-                dist = Math.sqrt(Math.squaredDistance(neurons[i][j], neurons[i + 1][j]));
-                umatrix[i][j] = Math.max(umatrix[i][j], dist);
-                umatrix[i + 1][j] = Math.max(umatrix[i + 1][j], dist);
+                double dist = MathEx.sqrt(MathEx.squaredDistance(neurons[i][j], neurons[i][j + 1]));
+                umatrix[i][j] = MathEx.max(umatrix[i][j], dist);
+                umatrix[i][j + 1] = MathEx.max(umatrix[i][j + 1], dist);
+                dist = MathEx.sqrt(MathEx.squaredDistance(neurons[i][j], neurons[i + 1][j]));
+                umatrix[i][j] = MathEx.max(umatrix[i][j], dist);
+                umatrix[i + 1][j] = MathEx.max(umatrix[i + 1][j], dist);
             }
         }
 
         for (int i = 0; i < height - 1; i++) {
-            double dist = Math.sqrt(Math.squaredDistance(neurons[i][width - 1], neurons[i + 1][width - 1]));
-            umatrix[i][width - 1] = Math.max(umatrix[i][width - 1], dist);
-            umatrix[i + 1][width - 1] = Math.max(umatrix[i + 1][width - 1], dist);
+            double dist = MathEx.sqrt(MathEx.squaredDistance(neurons[i][width - 1], neurons[i + 1][width - 1]));
+            umatrix[i][width - 1] = MathEx.max(umatrix[i][width - 1], dist);
+            umatrix[i + 1][width - 1] = MathEx.max(umatrix[i + 1][width - 1], dist);
         }
 
         for (int j = 0; j < width - 1; j++) {
-            double dist = Math.sqrt(Math.squaredDistance(neurons[height - 1][j], neurons[height - 1][j + 1]));
-            umatrix[height - 1][j] = Math.max(umatrix[height - 1][j], dist);
-            umatrix[height - 1][j + 1] = Math.max(umatrix[height - 1][j + 1], dist);
+            double dist = MathEx.sqrt(MathEx.squaredDistance(neurons[height - 1][j], neurons[height - 1][j + 1]));
+            umatrix[height - 1][j] = MathEx.max(umatrix[height - 1][j], dist);
+            umatrix[height - 1][j + 1] = MathEx.max(umatrix[height - 1][j + 1], dist);
         }
 
-        umatrix[height - 1][width - 1] = Math.max(umatrix[height - 1][width - 2], umatrix[height - 2][width - 1]);
+        umatrix[height - 1][width - 1] = MathEx.max(umatrix[height - 1][width - 2], umatrix[height - 2][width - 1]);
     }
 
     /**
@@ -431,7 +431,7 @@ public class SOM implements Clustering<double[]> {
         for (int i = 0; i < n; i++) {
             proximity[i] = new double[i + 1];
             for (int j = 0; j < i; j++) {
-                proximity[i][j] = Math.distance(units[i], units[j]);
+                proximity[i][j] = MathEx.distance(units[i], units[j]);
             }
         }
 
@@ -465,7 +465,7 @@ public class SOM implements Clustering<double[]> {
         int ii = -1, jj = -1;
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                double dist = Math.squaredDistance(neurons[i][j], x);
+                double dist = MathEx.squaredDistance(neurons[i][j], x);
                 if (dist < best) {
                     best = dist;
                     ii = i;

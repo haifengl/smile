@@ -22,7 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
@@ -121,10 +121,10 @@ public class GHATest {
         System.out.println("learn");
 
         int k = 3;
-        double[] mu = Math.colMeans(USArrests);
-        DenseMatrix cov = Matrix.newInstance(Math.cov(USArrests));
+        double[] mu = MathEx.colMeans(USArrests);
+        DenseMatrix cov = Matrix.newInstance(MathEx.cov(USArrests));
         for (int i = 0; i < USArrests.length; i++) {
-           Math.minus(USArrests[i], mu);
+           MathEx.minus(USArrests[i], mu);
         }
 
         double r = 0.00001;
@@ -164,18 +164,18 @@ public class GHATest {
             assertTrue(ev[i] < 0.1);
         }
 
-        double[][] lt = Math.transpose(loadings);
+        double[][] lt = MathEx.transpose(loadings);
         double[] evdot = new double[k];
         double[][] pa = p.array();
         System.out.println("Dot products of learned eigenvectors to true eigenvectors:");
         for (int i = 0; i < k; i++) {
-            evdot[i] = Math.dot(lt[i], pa[i]);
+            evdot[i] = MathEx.dot(lt[i], pa[i]);
             System.out.format("%.4f ", evdot[i]);
         }
         System.out.println();
 
         for (int i = 0; i < k; i++) {
-            assertTrue(Math.abs(1.0-Math.abs(evdot[i])) < 0.1);
+            assertTrue(Math.abs(1.0- Math.abs(evdot[i])) < 0.1);
         }
     }
 }

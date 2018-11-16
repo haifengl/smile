@@ -16,7 +16,7 @@
 package smile.projection;
 
 import java.io.Serializable;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
@@ -119,7 +119,7 @@ public class PCA implements Projection<double[]>, Serializable {
         int m = data.length;
         n = data[0].length;
 
-        mu = Math.colMeans(data);
+        mu = MathEx.colMeans(data);
         DenseMatrix x = Matrix.newInstance(data);
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
@@ -158,7 +158,7 @@ public class PCA implements Projection<double[]>, Serializable {
             if (cor) {
                 sd = new double[n];
                 for (int i = 0; i < n; i++) {
-                    sd[i] = Math.sqrt(cov.get(i, i));
+                    sd[i] = MathEx.sqrt(cov.get(i, i));
                 }
 
                 for (int i = 0; i < n; i++) {
@@ -186,7 +186,7 @@ public class PCA implements Projection<double[]>, Serializable {
         }
 
         proportion = eigvalues.clone();
-        Math.unitize1(proportion);
+        MathEx.unitize1(proportion);
 
         cumulativeProportion = new double[eigvalues.length];
         cumulativeProportion[0] = proportion[0];
@@ -295,7 +295,7 @@ public class PCA implements Projection<double[]>, Serializable {
 
         double[] y = new double[p];
         projection.ax(x, y);
-        Math.minus(y, pmu);
+        MathEx.minus(y, pmu);
         return y;
     }
 
@@ -308,7 +308,7 @@ public class PCA implements Projection<double[]>, Serializable {
         double[][] y = new double[x.length][p];
         for (int i = 0; i < x.length; i++) {
             projection.ax(x[i], y[i]);
-            Math.minus(y[i], pmu);
+            MathEx.minus(y[i], pmu);
         }
         return y;
     }

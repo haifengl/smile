@@ -26,7 +26,7 @@ import org.junit.Test;
 import smile.data.AttributeDataset;
 import smile.data.NominalAttribute;
 import smile.data.parser.DelimitedTextParser;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.stat.distribution.MultivariateGaussianDistribution;
 
 /**
@@ -103,14 +103,14 @@ public class KDTreeSpeedTest {
 
         start = System.currentTimeMillis();
         for (int i = 0; i < 1000; i++) {
-            kdtree.nearest(data[Math.randomInt(data.length)]);
+            kdtree.nearest(data[MathEx.randomInt(data.length)]);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
         for (int i = 0; i < 1000; i++) {
-            kdtree.knn(data[Math.randomInt(data.length)], 10);
+            kdtree.knn(data[MathEx.randomInt(data.length)], 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);
@@ -118,7 +118,7 @@ public class KDTreeSpeedTest {
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
-            kdtree.range(data[Math.randomInt(data.length)], 1.0, n);
+            kdtree.range(data[MathEx.randomInt(data.length)], 1.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;

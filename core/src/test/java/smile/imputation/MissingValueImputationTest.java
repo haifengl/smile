@@ -24,7 +24,7 @@ import org.junit.Test;
 import smile.data.AttributeDataset;
 import smile.data.parser.ArffParser;
 import smile.data.parser.DelimitedTextParser;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -84,7 +84,7 @@ public class MissingValueImputationTest {
         double[][] dat = new double[data.length][data[0].length];
         for (int i = 0; i < dat.length; i++) {
             for (int j = 0; j < dat[i].length; j++) {
-                if (Math.random() < rate) {
+                if (MathEx.random() < rate) {
                     n++;
                     dat[i][j] = Double.NaN;
                 } else {
@@ -103,7 +103,7 @@ public class MissingValueImputationTest {
             }
         }
 
-        rmse = Math.sqrt(rmse / n);
+        rmse = MathEx.sqrt(rmse / n);
         return rmse;
     }
 

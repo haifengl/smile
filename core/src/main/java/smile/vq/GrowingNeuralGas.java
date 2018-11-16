@@ -24,7 +24,7 @@ import smile.clustering.HierarchicalClustering;
 import smile.clustering.linkage.Linkage;
 import smile.clustering.linkage.UPGMALinkage;
 import smile.sort.HeapSelect;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Growing Neural Gas. As an extension of Neural Gas, Growing Neural Gas
@@ -264,7 +264,7 @@ public class GrowingNeuralGas implements Clustering<double[]> {
         Node[] top2 = new Node[2];
         HeapSelect<Node> heap = new HeapSelect<>(top2);
         for (Node neuron : nodes) {
-            neuron.dist = Math.squaredDistance(neuron.w, x);
+            neuron.dist = MathEx.squaredDistance(neuron.w, x);
             heap.add(neuron);
         }
 
@@ -386,7 +386,7 @@ public class GrowingNeuralGas implements Clustering<double[]> {
         for (i = 0; i < nodes.size(); i++) {
             proximity[i] = new double[i+1];
             for (int j = 0; j < i; j++)
-                proximity[i][j] = Math.distance(reps[i], reps[j]);
+                proximity[i][j] = MathEx.distance(reps[i], reps[j]);
         }
         
         Linkage linkage = new UPGMALinkage(proximity);
@@ -408,7 +408,7 @@ public class GrowingNeuralGas implements Clustering<double[]> {
 
         int i = 0;
         for (Node neuron : nodes) {
-            double dist = Math.squaredDistance(x, neuron.w);
+            double dist = MathEx.squaredDistance(x, neuron.w);
             if (dist < minDist) {
                 minDist = dist;
                 bestCluster = i;

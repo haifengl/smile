@@ -24,7 +24,7 @@ import smile.clustering.HierarchicalClustering;
 import smile.clustering.linkage.Linkage;
 import smile.clustering.linkage.UPGMALinkage;
 import smile.sort.HeapSelect;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.stat.distribution.GaussianDistribution;
 
 /**
@@ -100,7 +100,7 @@ public class NeuralMap implements Clustering<double[]> {
 
         @Override
         public int compareTo(Neighbor o) {
-            return (int) Math.signum(distance - o.distance);
+            return (int) MathEx.signum(distance - o.distance);
         }
     }
 
@@ -169,7 +169,7 @@ public class NeuralMap implements Clustering<double[]> {
                         a[i][j] = GaussianDistribution.getInstance().rand();
                     }
 
-                    b[i] = Math.random(0, w);
+                    b[i] = MathEx.random(0, w);
                 }
 
                 LinkedList<Item> list = new LinkedList<>();
@@ -199,7 +199,7 @@ public class NeuralMap implements Clustering<double[]> {
                 long r = 0;
                 for (int i = 0; i < k; i++) {
                     double ri = hash(x, i);
-                    r += c[i] * (int) Math.floor(ri);
+                    r += c[i] * (int) MathEx.floor(ri);
                 }
 
                 int h = (int) (r % P);
@@ -277,7 +277,7 @@ public class NeuralMap implements Clustering<double[]> {
 
             c = new int[k];
             for (int i = 0; i < c.length; i++) {
-                c[i] = Math.randomInt(P);
+                c[i] = MathEx.randomInt(P);
             }
 
             for (int i = 0; i < L; i++) {
@@ -325,7 +325,7 @@ public class NeuralMap implements Clustering<double[]> {
                 if (bin != null) {
                     for (Hash.Item e : bin) {
                         if (e.bucket == bucket) {
-                            double distance = Math.distance(x, e.neuron.w);
+                            double distance = MathEx.distance(x, e.neuron.w);
                             if (distance < neighbor.distance) {
                                 neighbor.distance = distance;
                                 neighbor.neuron = e.neuron;
@@ -361,7 +361,7 @@ public class NeuralMap implements Clustering<double[]> {
 
                             if (!existed) {
                                 //hit++;
-                                double distance = Math.distance(x, e.neuron.w);
+                                double distance = MathEx.distance(x, e.neuron.w);
                                 if (heap.peek() == null || distance < heap.peek().distance) {
                                     heap.add(new Neighbor(e.neuron, distance));
                                     hit++;
@@ -497,7 +497,7 @@ public class NeuralMap implements Clustering<double[]> {
                 neighbor.w[i] += epsNeighbor * (x[i] - neighbor.w[i]);
             }
 
-            if (Math.distance(neuron.w, neighbor.w) > 2 * r) {
+            if (MathEx.distance(neuron.w, neighbor.w) > 2 * r) {
                 neighbor.neighbors.remove(neuron);
                 iter.remove();
             }
@@ -581,7 +581,7 @@ public class NeuralMap implements Clustering<double[]> {
         for (int i = 0; i < data.size(); i++) {
             proximity[i] = new double[i + 1];
             for (int j = 0; j < i; j++) {
-                proximity[i][j] = Math.distance(data.get(i).w, data.get(j).w);
+                proximity[i][j] = MathEx.distance(data.get(i).w, data.get(j).w);
             }
         }
 
@@ -608,7 +608,7 @@ public class NeuralMap implements Clustering<double[]> {
         int bestCluster = 0;
 
         for (Neuron neuron : neurons) {
-            double dist = Math.squaredDistance(x, neuron.w);
+            double dist = MathEx.squaredDistance(x, neuron.w);
             if (dist < minDist) {
                 minDist = dist;
                 bestCluster = neuron.y;

@@ -29,7 +29,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.util.SmileUtils;
 import smile.validation.LOOCV;
@@ -78,8 +78,8 @@ public class RBFNetworkTest {
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+                double[][] trainx = MathEx.slice(x, loocv.train[i]);
+                int[] trainy = MathEx.slice(y, loocv.train[i]);
 
                 double[][] centers = new double[10][];
                 RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
