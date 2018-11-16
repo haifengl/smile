@@ -16,7 +16,7 @@
 
 package smile.math.kernel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The hyperbolic tangent kernel.
@@ -67,7 +67,7 @@ public class HyperbolicTangentKernel implements MercerKernel<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        double dot = Math.dot(x, y);
+        double dot = MathEx.dot(x, y);
         return Math.tanh(scale * dot + offset);
     }
 }

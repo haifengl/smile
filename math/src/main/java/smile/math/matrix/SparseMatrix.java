@@ -15,12 +15,11 @@
  *******************************************************************************/
 package smile.math.matrix;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * A sparse matrix is a matrix populated primarily with zeros. Conceptually,
@@ -106,7 +105,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      * @param D a dense matrix to converted into sparse matrix format.
      */
     public SparseMatrix(double[][] D) {
-        this(D, 100 * Math.EPSILON);
+        this(D, 100 * MathEx.EPSILON);
     }
 
     /**
@@ -486,7 +485,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
 
     @Override
     public double[] diag() {
-        int n = smile.math.Math.min(nrows(), ncols());
+        int n = Math.min(nrows(), ncols());
         double[] d = new double[n];
 
         for (int i = 0; i < n; i++) {

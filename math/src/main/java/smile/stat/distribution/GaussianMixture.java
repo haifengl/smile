@@ -18,7 +18,7 @@ package smile.stat.distribution;
 
 import java.util.List;
 import java.util.ArrayList;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Finite univariate Gaussian mixture. The EM algorithm is provide to learned
@@ -48,8 +48,8 @@ public class GaussianMixture extends ExponentialFamilyMixture {
         if (k < 2)
             throw new IllegalArgumentException("Invalid number of components in the mixture.");
 
-        double min = Math.min(data);
-        double max = Math.max(data);
+        double min = MathEx.min(data);
+        double max = MathEx.max(data);
         double step = (max - min) / (k+1);
         
         for (int i = 0; i < k; i++) {

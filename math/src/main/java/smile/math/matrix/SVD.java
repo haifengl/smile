@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.math.matrix;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Singular Value Decomposition.
@@ -90,7 +90,7 @@ public class SVD {
         m = U.nrows();
         n = V.nrows();
         full = s.length == Math.min(m, n);
-        tol = 0.5 * Math.sqrt(m + n + 1.0) * s[0] * Math.EPSILON;
+        tol = 0.5 * Math.sqrt(m + n + 1.0) * s[0] * MathEx.EPSILON;
     }
 
     /**

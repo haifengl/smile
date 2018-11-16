@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -85,7 +85,7 @@ public class EVDTest {
         DenseMatrix a = new JMatrix(A);
         a.setSymmetric(true);
         EVD result = a.eigen();
-        assertTrue(Math.equals(eigenValues, result.getEigenValues(), 1E-7));
+        assertTrue(MathEx.equals(eigenValues, result.getEigenValues(), 1E-7));
 
         assertEquals(eigenVectors.length,    result.getEigenVectors().nrows());
         assertEquals(eigenVectors[0].length, result.getEigenVectors().ncols());
@@ -120,7 +120,7 @@ public class EVDTest {
         System.out.println("decompose");
         DenseMatrix a = new JMatrix(B);
         EVD result = a.eigen();
-        assertTrue(Math.equals(eigenValuesB, result.getEigenValues(), 1E-7));
+        assertTrue(MathEx.equals(eigenValuesB, result.getEigenValues(), 1E-7));
 
         assertEquals(eigenVectorsB.length,    result.getEigenVectors().nrows());
         assertEquals(eigenVectorsB[0].length, result.getEigenVectors().ncols());

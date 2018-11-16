@@ -16,7 +16,7 @@
 
 package smile.math.matrix;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * An abstract interface of dense matrix.
@@ -223,7 +223,7 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
             }
         }
 
-        return Math.max(f);
+        return MathEx.max(f);
     }
 
     /**

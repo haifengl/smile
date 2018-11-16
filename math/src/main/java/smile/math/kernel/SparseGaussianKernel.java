@@ -17,7 +17,7 @@
 package smile.math.kernel;
 
 import smile.math.SparseArray;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The Gaussian Mercer Kernel. k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>,
@@ -54,6 +54,6 @@ public class SparseGaussianKernel implements MercerKernel<SparseArray> {
 
     @Override
     public double k(SparseArray x, SparseArray y) {
-        return Math.exp(-gamma * Math.squaredDistance(x, y));
+        return Math.exp(-gamma * MathEx.squaredDistance(x, y));
     }
 }

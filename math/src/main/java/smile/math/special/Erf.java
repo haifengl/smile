@@ -16,7 +16,7 @@
 
 package smile.math.special;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The error function (also called the Gauss error function) is a special

@@ -17,7 +17,7 @@ package smile.math.special;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The beta function, also called the Euler integral of the first kind.
@@ -66,7 +66,11 @@ public class Beta {
                 ibeta = 1.0;
             } else {
                 // Term before continued fraction
-                ibeta = Math.exp(Gamma.lgamma(alpha + beta) - Gamma.lgamma(alpha) - Gamma.lgamma(beta) + alpha * Math.log(x) + beta * Math.log(1.0D - x));
+                ibeta = Math.exp(Gamma.lgamma(alpha + beta)
+                        - Gamma.lgamma(alpha)
+                        - Gamma.lgamma(beta)
+                        + alpha * Math.log(x)
+                        + beta * Math.log(1.0D - x));
                 // Continued fraction
                 if (x < (alpha + 1.0) / (alpha + beta + 2.0)) {
                     ibeta = ibeta * incompleteFractionSummation(alpha, beta, x) / alpha;

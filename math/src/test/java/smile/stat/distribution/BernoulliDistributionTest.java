@@ -21,7 +21,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
+import smile.math.MathEx;
 import static org.junit.Assert.*;
 
 /**
@@ -115,7 +115,7 @@ public class BernoulliDistributionTest {
         System.out.println("entropy");
         BernoulliDistribution instance = new BernoulliDistribution(0.3);
         instance.rand();
-        assertEquals(-0.3*Math.log2(0.3) - 0.7*Math.log2(0.7), instance.entropy(), 1E-7);
+        assertEquals(-0.3* MathEx.log2(0.3) - 0.7* MathEx.log2(0.7), instance.entropy(), 1E-7);
     }
 
     /**

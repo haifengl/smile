@@ -16,7 +16,7 @@
 
 package smile.math.distance;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Correlation distance is defined as 1 - correlation coefficient.
@@ -46,7 +46,7 @@ public class CorrelationDistance implements Distance<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        return 1 - Math.cor(x, y);
+        return 1 - MathEx.cor(x, y);
     }
 
     /**
@@ -56,7 +56,7 @@ public class CorrelationDistance implements Distance<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        return 1 - Math.cor(x, y);
+        return 1 - MathEx.cor(x, y);
     }
 
     /**
@@ -66,7 +66,7 @@ public class CorrelationDistance implements Distance<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        return 1 - Math.cor(x, y);
+        return 1 - MathEx.cor(x, y);
     }
 
     /**
@@ -76,7 +76,7 @@ public class CorrelationDistance implements Distance<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        return 1 - Math.cor(x, y);
+        return 1 - MathEx.cor(x, y);
     }
 
     /**
@@ -86,7 +86,7 @@ public class CorrelationDistance implements Distance<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        return 1 - Math.spearman(x, y);
+        return 1 - MathEx.spearman(x, y);
     }
 
     /**
@@ -96,7 +96,7 @@ public class CorrelationDistance implements Distance<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        return 1 - Math.spearman(x, y);
+        return 1 - MathEx.spearman(x, y);
     }
 
     /**
@@ -106,7 +106,7 @@ public class CorrelationDistance implements Distance<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        return 1 - Math.spearman(x, y);
+        return 1 - MathEx.spearman(x, y);
     }
 
     /**
@@ -116,7 +116,7 @@ public class CorrelationDistance implements Distance<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        return 1 - Math.kendall(x, y);
+        return 1 - MathEx.kendall(x, y);
     }
 
     /**
@@ -126,7 +126,7 @@ public class CorrelationDistance implements Distance<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        return 1 - Math.kendall(x, y);
+        return 1 - MathEx.kendall(x, y);
     }
 
     /**
@@ -136,6 +136,6 @@ public class CorrelationDistance implements Distance<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        return 1 - Math.kendall(x, y);
+        return 1 - MathEx.kendall(x, y);
     }
 }

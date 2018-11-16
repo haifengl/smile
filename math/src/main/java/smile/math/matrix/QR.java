@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.math.matrix;
 
-import smile.math.Math;
-
 /**
  * For an m-by-n matrix A with m &ge; n, the QR decomposition is an m-by-n
  * orthogonal matrix Q and an n-by-n upper triangular matrix R such that

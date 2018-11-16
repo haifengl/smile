@@ -16,7 +16,7 @@
 
 package smile.math.matrix;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * For an m-by-n matrix A with m &ge; n, the LU decomposition is an m-by-n

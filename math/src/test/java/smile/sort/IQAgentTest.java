@@ -16,7 +16,7 @@
 
 package smile.sort;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -60,7 +60,7 @@ public class IQAgentTest {
         for (int i = 0; i < data.length; i++)
             data[i] = i+1;
 
-        Math.permutate(data);
+        MathEx.permutate(data);
         
         IQAgent instance = new IQAgent();
         for (int i = 0; i < data.length; i++)

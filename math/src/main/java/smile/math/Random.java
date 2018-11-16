@@ -135,7 +135,7 @@ public class Random {
     public void permutate(int[] x) {
         for (int i = 0; i < x.length; i++) {
             int j = i + nextInt(x.length - i);
-            Math.swap(x, i, j);
+            MathEx.swap(x, i, j);
         }
     }
 
@@ -145,7 +145,7 @@ public class Random {
     public void permutate(float[] x) {
         for (int i = 0; i < x.length; i++) {
             int j = i + nextInt(x.length - i);
-            Math.swap(x, i, j);
+            MathEx.swap(x, i, j);
         }
     }
 
@@ -155,7 +155,7 @@ public class Random {
     public void permutate(double[] x) {
         for (int i = 0; i < x.length; i++) {
             int j = i + nextInt(x.length - i);
-            Math.swap(x, i, j);
+            MathEx.swap(x, i, j);
         }
     }
 
@@ -165,7 +165,7 @@ public class Random {
     public void permutate(Object[] x) {
         for (int i = 0; i < x.length; i++) {
             int j = i + nextInt(x.length - i);
-            Math.swap(x, i, j);
+            MathEx.swap(x, i, j);
         }
     }
 }

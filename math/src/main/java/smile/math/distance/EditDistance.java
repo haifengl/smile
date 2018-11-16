@@ -16,7 +16,7 @@
 
 package smile.math.distance;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The Edit distance between two strings is a metric for measuring the amount
@@ -202,7 +202,7 @@ public class EditDistance implements Metric<String> {
 
             for (int j = start; j <= end; j++) {
                 double cost = weight[x[i - 1]][y[j - 1]];
-                d[1][j] = Math.min(
+                d[1][j] = MathEx.min(
                         d[0][j] + weight[x[i - 1]][0], // deletion
                         d[1][j - 1] + weight[0][y[j - 1]], // insertion
                         d[0][j - 1] + cost); // substitution
@@ -258,7 +258,7 @@ public class EditDistance implements Metric<String> {
 
             for (int j = start; j <= end; j++) {
                 double cost = weight[x.charAt(i - 1)][y.charAt(j - 1)];
-                d[1][j] = Math.min(
+                d[1][j] = MathEx.min(
                         d[0][j] + weight[x.charAt(i - 1)][0], // deletion
                         d[1][j - 1] + weight[0][y.charAt(j - 1)], // insertion
                         d[0][j - 1] + cost); // substitution
@@ -388,7 +388,7 @@ public class EditDistance implements Metric<String> {
     private static class BRF1 implements BRF {
         @Override
         public void f(char[] x, char[] y, int[][] FKP, int ZERO_K, int k, int p) {
-            int t = Math.max(FKP[k + ZERO_K][p] + 1, FKP[k - 1 + ZERO_K][p], FKP[k + 1 + ZERO_K][p] + 1);
+            int t = MathEx.max(FKP[k + ZERO_K][p] + 1, FKP[k - 1 + ZERO_K][p], FKP[k + 1 + ZERO_K][p] + 1);
 
             while (t < Math.min(x.length, y.length - k) && x[t] == y[t + k]) {
                 t++;
@@ -399,7 +399,7 @@ public class EditDistance implements Metric<String> {
 
         @Override
         public void f(String x, String y, int[][] FKP, int ZERO_K, int k, int p) {
-            int t = Math.max(FKP[k + ZERO_K][p] + 1, FKP[k - 1 + ZERO_K][p], FKP[k + 1 + ZERO_K][p] + 1);
+            int t = MathEx.max(FKP[k + ZERO_K][p] + 1, FKP[k - 1 + ZERO_K][p], FKP[k + 1 + ZERO_K][p] + 1);
 
             while (t < Math.min(x.length(), y.length() - k) && x.charAt(t) == y.charAt(t + k)) {
                 t++;
@@ -423,7 +423,7 @@ public class EditDistance implements Metric<String> {
                 }
             }
 
-            t = Math.max(FKP[k - 1 + ZERO_K][p], FKP[k + 1 + ZERO_K][p] + 1, t);
+            t = MathEx.max(FKP[k - 1 + ZERO_K][p], FKP[k + 1 + ZERO_K][p] + 1, t);
 
             while (t < Math.min(x.length, y.length - k) && x[t] == y[t + k]) {
                 t++;
@@ -442,7 +442,7 @@ public class EditDistance implements Metric<String> {
                 }
             }
 
-            t = Math.max(FKP[k - 1 + ZERO_K][p], FKP[k + 1 + ZERO_K][p] + 1, t);
+            t = MathEx.max(FKP[k - 1 + ZERO_K][p], FKP[k + 1 + ZERO_K][p] + 1, t);
 
             while (t < Math.min(x.length(), y.length() - k) && x.charAt(t) == y.charAt(t + k)) {
                 t++;
@@ -476,7 +476,7 @@ public class EditDistance implements Metric<String> {
 
             for (int j = 1; j <= y.length(); j++) {
                 int cost = x.charAt(i - 1) == y.charAt(j - 1) ? 0 : 1;
-                d[1][j] = Math.min(
+                d[1][j] = MathEx.min(
                         d[0][j] + 1, // deletion
                         d[1][j - 1] + 1, // insertion
                         d[0][j - 1] + cost); // substitution
@@ -513,7 +513,7 @@ public class EditDistance implements Metric<String> {
 
             for (int j = 1; j <= y.length; j++) {
                 int cost = x[i - 1] == y[j - 1] ? 0 : 1;
-                d[1][j] = Math.min(
+                d[1][j] = MathEx.min(
                         d[0][j] + 1, // deletion
                         d[1][j - 1] + 1, // insertion
                         d[0][j - 1] + cost); // substitution
@@ -550,7 +550,7 @@ public class EditDistance implements Metric<String> {
 
             for (int j = 1; j <= y.length(); j++) {
                 int cost = x.charAt(i-1) == y.charAt(j-1) ? 0 : 1;
-                d[2][j] = Math.min(
+                d[2][j] = MathEx.min(
                         d[1][j] + 1,       // deletion
                         d[2][j-1] + 1,       // insertion
                         d[1][j-1] + cost); // substitution
@@ -594,7 +594,7 @@ public class EditDistance implements Metric<String> {
 
             for (int j = 1; j <= y.length; j++) {
                 int cost = x[i-1] == y[j-1] ? 0 : 1;
-                d[2][j] = Math.min(
+                d[2][j] = MathEx.min(
                         d[1][j] + 1,       // deletion
                         d[2][j-1] + 1,       // insertion
                         d[1][j-1] + cost); // substitution

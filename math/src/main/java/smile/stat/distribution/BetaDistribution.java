@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.special.Beta;
 import smile.math.special.Gamma;
 
@@ -77,8 +77,8 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
             }
         }
 
-        mean = Math.mean(data);
-        var = Math.var(data);
+        mean = MathEx.mean(data);
+        var = MathEx.var(data);
 
         alpha = mean * (mean * (1 - mean) / var - 1);
         beta = (1 - mean) * (mean * (1 - mean) / var - 1);
@@ -269,8 +269,8 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                     /* -X- generator code -X- */
                     while (true) {
                         /* Step 1 */
-                        u1 = Math.random();
-                        u2 = Math.random();
+                        u1 = MathEx.random();
+                        u2 = MathEx.random();
                         v = be * Math.log(u1 / (1.0 - u1));
                         w = am * Math.exp(v);
                         z = u1 * u1 * u2;
@@ -289,7 +289,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                         }
 
                         /* Step 5 */
-                        X = Math.equals(am, alpha) ? w / (bm + w) : bm / (bm + w);
+                        X = MathEx.equals(am, alpha) ? w / (bm + w) : bm / (bm + w);
                         break;
                     }
                     /* -X- end of generator code -X- */
@@ -298,8 +298,8 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                 case BC:
                     while (true) {
                         /* Step 1 */
-                        u1 = Math.random();
-                        u2 = Math.random();
+                        u1 = MathEx.random();
+                        u2 = MathEx.random();
 
                         if (u1 < 0.5) {
                             /* Step 2 */
@@ -316,7 +316,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                                 if (alnam < Math.log(z)) {
                                     continue;
                                 }
-                                X = Math.equals(am, alpha) ? 1.0 : 0.0;
+                                X = MathEx.equals(am, alpha) ? 1.0 : 0.0;
                                 break;
                             } else {
                                 w = am * Math.exp(v);
@@ -326,7 +326,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                                 }
 
                                 /* Step 6_a */
-                                X = !Math.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
+                                X = !MathEx.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
                                 break;
                             }
                         } else {
@@ -336,12 +336,12 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                                 /* Step 5 */
                                 v = be * Math.log(u1 / (1.0 - u1));
                                 if (v > 80.0) {
-                                    X = Math.equals(am, alpha) ? 1.0 : 0.0;
+                                    X = MathEx.equals(am, alpha) ? 1.0 : 0.0;
                                     break;
                                 }
 
                                 w = am * Math.exp(v);
-                                X = !Math.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
+                                X = !MathEx.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
                                 break;
                             } else {
                                 if (z >= rk2) {
@@ -352,7 +352,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                                     if (alnam < Math.log(z)) {
                                         continue;
                                     }
-                                    X = Math.equals(am, alpha) ? 1.0 : 0.0;
+                                    X = MathEx.equals(am, alpha) ? 1.0 : 0.0;
                                     break;
                                 }
                                 w = am * Math.exp(v);
@@ -362,7 +362,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                                 }
 
                                 /* Step 6_b */
-                                X = !Math.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
+                                X = !MathEx.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
                                 break;
                             }
                         }

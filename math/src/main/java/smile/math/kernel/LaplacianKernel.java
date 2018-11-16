@@ -16,7 +16,7 @@
 
 package smile.math.kernel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The Laplacian Kernel. k(u, v) = e<sup>-||u-v|| / &sigma;</sup>,
@@ -53,6 +53,6 @@ public class LaplacianKernel implements MercerKernel<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        return Math.exp(-gamma * Math.distance(x, y));
+        return Math.exp(-gamma * MathEx.distance(x, y));
     }
 }

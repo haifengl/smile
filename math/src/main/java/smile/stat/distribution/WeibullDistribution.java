@@ -16,7 +16,6 @@
 package smile.stat.distribution;
 
 import smile.math.special.Gamma;
-import smile.math.Math;
 
 /**
  * The Weibull distribution is one of the most widely used lifetime distributions

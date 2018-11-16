@@ -16,7 +16,7 @@
 
 package smile.math.kernel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The polynomial kernel. k(u, v) = (&gamma; u<sup>T</sup>v - &lambda;)<sup>d</sup>,
@@ -66,7 +66,7 @@ public class PolynomialKernel implements MercerKernel<double[]> {
         if (x.length != y.length)
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
-        double dot = Math.dot(x, y);
+        double dot = MathEx.dot(x, y);
         return Math.pow(scale * dot + offset, degree);
     }
 }

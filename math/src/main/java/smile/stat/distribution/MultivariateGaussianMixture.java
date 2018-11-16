@@ -18,7 +18,7 @@ package smile.stat.distribution;
 
 import java.util.List;
 import java.util.ArrayList;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Finite multivariate Gaussian mixture. The EM algorithm is provide to learned
@@ -101,7 +101,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
             }
         }
 
-        double[] centroid = data[Math.randomInt(n)];
+        double[] centroid = data[MathEx.randomInt(n)];
         Component c = new Component();
         c.priori = 1.0 / k;
         MultivariateGaussianDistribution gaussian = new MultivariateGaussianDistribution(centroid, sigma);
@@ -122,13 +122,13 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
             // the distance from each sample to its closest center in scores.
             for (int j = 0; j < n; j++) {
                 // compute the distance between this sample and the current center
-                double dist = Math.squaredDistance(data[j], centroid);
+                double dist = MathEx.squaredDistance(data[j], centroid);
                 if (dist < D[j]) {
                     D[j] = dist;
                 }
             }
 
-            double cutoff = Math.random() * Math.sum(D);
+            double cutoff = MathEx.random() * MathEx.sum(D);
             double cost = 0.0;
             int index = 0;
             for (; index < n; index++) {

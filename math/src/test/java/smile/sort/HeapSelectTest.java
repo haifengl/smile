@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -84,7 +84,7 @@ public class HeapSelectTest {
         System.out.println("HeapSelect Big");
         HeapSelect<Double> instance = new HeapSelect<>(new Double[10]);
         for (int i = 0; i < 100000000; i++) {
-            instance.add(Math.random());
+            instance.add(MathEx.random());
         }
 
         for (int j = 0; j < 10; j++) {
@@ -127,7 +127,7 @@ public class HeapSelectTest {
         System.out.println("IntHeapSelect Big");
         IntHeapSelect instance = new IntHeapSelect(10);
         for (int i = 0; i < 100000000; i++) {
-            instance.add(Math.randomInt(1000000));
+            instance.add(MathEx.randomInt(1000000));
         }
 
         for (int j = 0; j < 10; j++) {
@@ -170,7 +170,7 @@ public class HeapSelectTest {
         System.out.println("FloatHeapSelect Big");
         FloatHeapSelect instance = new FloatHeapSelect(10);
         for (int i = 0; i < 100000000; i++) {
-            instance.add((float) Math.random());
+            instance.add((float) MathEx.random());
         }
 
         for (int j = 0; j < 10; j++) {
@@ -213,7 +213,7 @@ public class HeapSelectTest {
         System.out.println("DoubleHeapSelect Big");
         DoubleHeapSelect instance = new DoubleHeapSelect(10);
         for (int i = 0; i < 100000000; i++) {
-            instance.add(Math.random());
+            instance.add(MathEx.random());
         }
 
         for (int j = 0; j < 10; j++) {

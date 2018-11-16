@@ -18,7 +18,7 @@ package smile.stat.distribution;
 
 import java.util.ArrayList;
 import java.util.List;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The finite mixture of distributions from discrete exponential family.
@@ -143,7 +143,7 @@ public class DiscreteExponentialFamilyMixture extends DiscreteMixture {
                 // Adjust posterior probabilites based on Regularized EM algorithm.
                 if (gamma > 0) {
                     for (int i = 0; i < m; i++) {
-                        posteriori[i][j] *= (1 + gamma * Math.log2(posteriori[i][j]));
+                        posteriori[i][j] *= (1 + gamma * MathEx.log2(posteriori[i][j]));
                         if (Double.isNaN(posteriori[i][j]) || posteriori[i][j] < 0.0) {
                             posteriori[i][j] = 0.0;
                         }

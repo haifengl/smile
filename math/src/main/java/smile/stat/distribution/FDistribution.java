@@ -17,7 +17,7 @@ package smile.stat.distribution;
 
 import smile.math.special.Beta;
 import smile.math.special.Gamma;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * F-distribution arises in the testing of whether two observed samples have

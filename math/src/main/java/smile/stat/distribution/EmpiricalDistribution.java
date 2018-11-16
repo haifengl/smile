@@ -16,7 +16,7 @@
 package smile.stat.distribution;
 
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * An empirical distribution function or empirical cdf, is a cumulative
@@ -92,7 +92,7 @@ public class EmpiricalDistribution extends DiscreteDistribution {
 
             mean += x[i] * p[i];
             mean2 += x[i] * x[i] * p[i];
-            entropy -= p[i] * Math.log2(p[i]);
+            entropy -= p[i] * MathEx.log2(p[i]);
         }
 
         var = mean2 - mean * mean;
@@ -111,8 +111,8 @@ public class EmpiricalDistribution extends DiscreteDistribution {
             throw new IllegalArgumentException("Empty dataset.");
         }
 
-        xMin = Math.min(data);
-        xMax = Math.max(data);
+        xMin = MathEx.min(data);
+        xMax = MathEx.max(data);
 
         int n = xMax - xMin + 1;
         x = new int[n];
@@ -138,7 +138,7 @@ public class EmpiricalDistribution extends DiscreteDistribution {
 
             mean += x[i] * p[i];
             mean2 += x[i] * x[i] * p[i];
-            entropy -= p[i] * Math.log2(p[i]);
+            entropy -= p[i] * MathEx.log2(p[i]);
         }
 
         var = mean2 - mean * mean;
@@ -189,7 +189,7 @@ public class EmpiricalDistribution extends DiscreteDistribution {
         }
 
         // generate sample
-        double rU = Math.random() * p.length;
+        double rU = MathEx.random() * p.length;
 
         int k = (int) (rU);
         rU -= k;  /* rU becomes rU-[rU] */
@@ -210,7 +210,7 @@ public class EmpiricalDistribution extends DiscreteDistribution {
         // generate sample
         int[] ans = new int[n];
         for (int i = 0; i < n; i++) {
-            double rU = Math.random() * p.length;
+            double rU = MathEx.random() * p.length;
 
             int k = (int) (rU);
             rU -= k;  /* rU becomes rU-[rU] */

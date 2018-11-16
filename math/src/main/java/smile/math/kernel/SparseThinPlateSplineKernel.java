@@ -17,7 +17,7 @@
 package smile.math.kernel;
 
 import java.util.Iterator;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.SparseArray;
 
 /**
@@ -60,24 +60,24 @@ public class SparseThinPlateSplineKernel implements MercerKernel<SparseArray> {
         double s = 0.0;
         while (e1 != null && e2 != null) {
             if (e1.i == e2.i) {
-                s += Math.sqr(e1.x - e2.x);
+                s += MathEx.sqr(e1.x - e2.x);
                 e1 = it1.hasNext() ? it1.next() : null;
                 e2 = it2.hasNext() ? it2.next() : null;
             } else if (e1.i > e2.i) {
-                s += Math.sqr(e2.x);
+                s += MathEx.sqr(e2.x);
                 e2 = it2.hasNext() ? it2.next() : null;
             } else {
-                s += Math.sqr(e1.x);
+                s += MathEx.sqr(e1.x);
                 e1 = it1.hasNext() ? it1.next() : null;
             }
         }
         
         while (it1.hasNext()) {
-            s += Math.sqr(it1.next().x);
+            s += MathEx.sqr(it1.next().x);
         }
 
         while (it2.hasNext()) {
-            s += Math.sqr(it2.next().x);
+            s += MathEx.sqr(it2.next().x);
         }
 
         return s/(sigma*sigma) * Math.log(Math.sqrt(s)/sigma);

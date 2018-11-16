@@ -16,7 +16,7 @@
 
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The hypergeometric distribution is a discrete probability distribution that
@@ -115,7 +115,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
         if (k < Math.max(0, m + n - N) || k > Math.min(m, n)) {
             return Double.NEGATIVE_INFINITY;
         } else {
-            return Math.logChoose(m, k) + Math.logChoose(N - m, n - k) - Math.logChoose(N, n);
+            return MathEx.logChoose(m, k) + MathEx.logChoose(N - m, n - k) - MathEx.logChoose(N, n);
         }
     }
 
@@ -453,7 +453,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
          *  subfunction used by random number generator.
          */
         private double lnpk(int k, int L, int m, int n) {
-            return Math.logFactorial(k) + Math.logFactorial(m - k) + Math.logFactorial(n - k) + Math.logFactorial(L + k);
+            return MathEx.logFactorial(k) + MathEx.logFactorial(m - k) + MathEx.logFactorial(n - k) + MathEx.logFactorial(L + k);
         }
     }
 
@@ -484,7 +484,15 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
 
             // mode probability, using log factorial function
             // (may read directly from fac_table if N < FAK_LEN)
-            fm = Math.exp(Math.logFactorial(N - m) - Math.logFactorial(L + mode) - Math.logFactorial(n - mode) + Math.logFactorial(m) - Math.logFactorial(m - mode) - Math.logFactorial(mode) - Math.logFactorial(N) + Math.logFactorial(N - n) + Math.logFactorial(n));
+            fm = Math.exp(MathEx.logFactorial(N - m)
+                    - MathEx.logFactorial(L + mode)
+                    - MathEx.logFactorial(n - mode)
+                    + MathEx.logFactorial(m)
+                    - MathEx.logFactorial(m - mode)
+                    - MathEx.logFactorial(mode)
+                    - MathEx.logFactorial(N)
+                    + MathEx.logFactorial(N - n)
+                    + MathEx.logFactorial(n));
 
             // safety bound - guarantees at least 17 significant decimal digits
             // bound = min(nn, (int)(modef + k*c'))

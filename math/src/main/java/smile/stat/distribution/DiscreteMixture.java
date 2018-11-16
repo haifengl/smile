@@ -17,7 +17,7 @@ package smile.stat.distribution;
 
 import java.util.List;
 import java.util.ArrayList;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * The finite mixture of discrete distributions.
@@ -153,7 +153,7 @@ public class DiscreteMixture extends DiscreteDistribution {
             throw new IllegalStateException("Mixture is empty!");
         }
 
-        double r = Math.random();
+        double r = MathEx.random();
 
         double p = 0.0;
         for (Component g : components) {

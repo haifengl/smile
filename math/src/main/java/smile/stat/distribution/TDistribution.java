@@ -17,7 +17,6 @@ package smile.stat.distribution;
 
 import smile.math.special.Beta;
 import smile.math.special.Gamma;
-import smile.math.Math;
 
 /**
  * Student's t-distribution (or simply the t-distribution) is a probability
