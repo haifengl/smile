@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.EVD;

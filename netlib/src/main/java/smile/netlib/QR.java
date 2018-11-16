@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.netlib;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Cholesky;

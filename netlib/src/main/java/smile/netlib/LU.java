@@ -16,7 +16,7 @@
 
 package smile.netlib;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import com.github.fommil.netlib.LAPACK;
 import org.netlib.util.intW;
