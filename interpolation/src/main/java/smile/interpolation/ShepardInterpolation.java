@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.interpolation;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Shepard interpolation is a special case of normalized radial basis function
@@ -70,7 +70,7 @@ public class ShepardInterpolation {
 
         double weight = 0.0, sum = 0.0;
         for (int i = 0; i < this.x.length; i++) {
-            double r = Math.distance(x, this.x[i]);
+            double r = MathEx.distance(x, this.x[i]);
             if (r == 0.0) {
                 return y[i];
             }

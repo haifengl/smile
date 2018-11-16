@@ -16,7 +16,7 @@
 
 package smile.interpolation.variogram;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Power variogram
@@ -83,11 +83,11 @@ public class PowerVariogram implements Variogram {
             for (int j = i + 1; j < n; j++) {
                 double rb = 0.0;
                 for (int k = 0; k < dim; k++) {
-                    rb += Math.sqr(x[i][k] - x[j][k]);
+                    rb += MathEx.sqr(x[i][k] - x[j][k]);
                 }
 
                 rb = Math.pow(rb, 0.5 * beta);
-                num += rb * 0.5 * Math.sqr(y[i] - y[j] - nugget);
+                num += rb * 0.5 * MathEx.sqr(y[i] - y[j] - nugget);
                 denom += rb * rb;
             }
         }

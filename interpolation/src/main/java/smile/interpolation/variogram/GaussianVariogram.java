@@ -16,7 +16,7 @@
 
 package smile.interpolation.variogram;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Gaussian variogram.
@@ -76,7 +76,7 @@ public class GaussianVariogram implements Variogram {
 
     @Override
     public double f(double r) {
-        return c + b * (1 - Math.exp(-3.0*Math.sqr(r/a)));
+        return c + b * (1 - Math.exp(-3.0* MathEx.sqr(r/a)));
     }
 
     @Override
