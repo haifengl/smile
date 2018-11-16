@@ -16,7 +16,7 @@
 
 package smile
 
-import smile.math.Math
+import smile.math.MathEx
 
 import scala.language.implicitConversions
 import scala.collection.JavaConverters._
@@ -33,12 +33,12 @@ package object data {
 
   def summary(x: Array[Double]): Unit = {
     println("min\tq1\tmedian\tmean\tq3\tmax")
-    val min = Math.min(x)
-    val q1 = Math.q1(x)
-    val median = Math.median(x)
-    val mean = Math.mean(x)
-    val q3 = Math.q3(x)
-    val max = Math.max(x)
+    val min = MathEx.min(x)
+    val q1 = MathEx.q1(x)
+    val median = MathEx.median(x)
+    val mean = MathEx.mean(x)
+    val q3 = MathEx.q3(x)
+    val max = MathEx.max(x)
     println(f"$min%1.5f\t$q1%1.5f\t$median%1.5f\t$mean%1.5f\t$q3%1.5f\t$max%1.5f")
   }
 

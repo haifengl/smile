@@ -16,7 +16,7 @@
 
 package smile.nlp
 
-import smile.math.Math
+import smile.math.MathEx
 
 import scala.collection.JavaConverters._
 import smile.nlp.collocation._
@@ -198,7 +198,7 @@ trait Operators {
       features(i) = tfidf(bag(i), maxtf, n, df(i))
     }
 
-    val norm = Math.norm(features)
+    val norm = MathEx.norm(features)
     for (i <- 0 until features.length) {
       features(i) = features(i) / norm
     }

@@ -16,15 +16,16 @@
 
 package smile.plot
 
-import java.awt.{GridLayout, Color}
+import java.awt.{Color, GridLayout}
 import javax.swing.{JFrame, JPanel}
+
 import smile.data.AttributeDataset
 import smile.classification.Classifier
 import smile.regression.Regression
 import smile.clustering.HierarchicalClustering
-import smile.math.Math
+import smile.math.MathEx
 import smile.math.matrix.SparseMatrix
-import smile.stat.distribution.{Distribution, DiscreteDistribution}
+import smile.stat.distribution.{DiscreteDistribution, Distribution}
 import smile.projection.PCA
 
 /** Data visualization operators.
@@ -651,7 +652,7 @@ trait Operators {
       }
     }
 
-    val levels = (0 until Math.max(y)).map(_ + 0.5).toArray
+    val levels = (0 until MathEx.max(y)).map(_ + 0.5).toArray
     val contour = new Contour(v1, v2, z, levels)
     contour.showLevelValue(false)
     win.canvas.add(contour)
