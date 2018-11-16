@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.math.matrix;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -520,13 +519,13 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      *
      * @author Haifeng Li
      */
-    public static SparseMatrix from(String path) throws IOException {
+    public static SparseMatrix from(java.nio.file.Path path) throws IOException {
         int nrows = 0, ncols = 0, n = 0;
         int[] colIndex;
         int[] rowIndex;
         double[] data;
 
-        try (FileInputStream stream = new FileInputStream(path);
+        try (java.io.InputStream stream = java.nio.file.Files.newInputStream(path);
              Scanner scanner = new Scanner(stream)) {
             String line = scanner.nextLine();
             String[] tokens = line.split("\\s+");

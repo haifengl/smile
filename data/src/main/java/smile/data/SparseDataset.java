@@ -17,7 +17,7 @@ package smile.data;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.ArrayList;
@@ -46,6 +46,9 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * Returns the number of columns.
      */
     int ncols();
+
+    /** Returns the number of nonzero entries. */
+    int length();
 
     /**
      * Returns the value at entry (i, j).
@@ -111,9 +114,20 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * Returns a default implementation of SparseDataset from a collection.
      *
      * @data Each row is a data item which are the indices of nonzero elements.
+     * @ncols The number of columns.
      */
     static SparseDataset of(Collection<SparseArray> data) {
         return new SparseDatasetImpl(data);
+    }
+
+    /**
+     * Returns a default implementation of SparseDataset from a collection.
+     *
+     * @data Each row is a data item which are the indices of nonzero elements.
+     * @ncols The number of columns.
+     */
+    static SparseDataset of(Collection<SparseArray> data, int ncols) {
+        return new SparseDatasetImpl(data, ncols);
     }
 
     /**
@@ -124,7 +138,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
      *
      * @throws java.io.IOException
      */
-    static SparseDataset from(String path) throws IOException, ParseException {
+    static SparseDataset from(Path path) throws IOException, ParseException {
         return from(path, 0);
     }
 
@@ -166,8 +180,8 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * @exception IOException if stream to file cannot be read or closed.
      * @exception ParseException if an index is not an integer or the value is not a double.
      */
-    static SparseDataset from(String path, int arrayIndexOrigin) throws IOException, ParseException {
-        try (Stream<String> stream = Files.lines(Paths.get(path))) {
+    static SparseDataset from(Path path, int arrayIndexOrigin) throws IOException, ParseException {
+        try (Stream<String> stream = Files.lines(path)) {
             List<SparseArray> rows = new ArrayList<>();
             stream.forEach(line -> {
                 String[] tokens = line.trim().split("\\s+");
@@ -179,15 +193,15 @@ public interface SparseDataset extends Dataset<SparseArray> {
                 int j = Integer.parseInt(tokens[1]) - arrayIndexOrigin;
                 double x = Double.parseDouble(tokens[2]);
 
-                if (i >= rows.size() || rows.get(i) == null) {
-                    rows.set(i, new SparseArray());
+                while (i >= rows.size()) {
+                    rows.add(new SparseArray());
                 }
 
                 SparseArray row = rows.get(i);
                 row.set(j, x);
             });
 
-            return new SparseDatasetImpl(rows);
+            return of(rows);
         }
     }
 }

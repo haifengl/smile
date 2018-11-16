@@ -176,4 +176,44 @@ public class SparseMatrixTest {
         SparseMatrix matrix = new SparseMatrix(nrows, ncols, data, rowIndex, colIndex);
         return matrix;
     }
+
+    /**
+     * Test of from method, of class SparseMatrix.
+     */
+    @Test
+    public void testParse() throws Exception {
+        System.out.println("from");
+        try {
+            SparseMatrix data = SparseMatrix.from(smile.util.Paths.getTestData("matrix/08blocks.txt"));
+            assertEquals(592, data.size());
+            assertEquals(300, data.nrows());
+            assertEquals(300, data.ncols());
+            assertEquals(94.0, data.get(36, 0), 1E-7);
+            assertEquals(1.0, data.get(0, 1), 1E-7);
+            assertEquals(33.0, data.get(36, 1), 1E-7);
+            assertEquals(95.0, data.get(299, 299), 1E-7);
+        } catch (Exception ex) {
+            System.err.println(ex);
+        }
+    }
+
+    /**
+     * Test of from method, of class SparseMatrix.
+     */
+    @Test
+    public void testParseExchange() throws Exception {
+        System.out.println("HB exchange format");
+        try {
+            SparseMatrix data = SparseMatrix.from(smile.util.Paths.getTestData("matrix/5by5_rua.hb"));
+            assertEquals(13, data.size());
+            assertEquals(5, data.nrows());
+            assertEquals(5, data.ncols());
+            assertEquals(11.0, data.get(0, 0), 1E-7);
+            assertEquals(31.0, data.get(2, 0), 1E-7);
+            assertEquals(51.0, data.get(4, 0), 1E-7);
+            assertEquals(55.0, data.get(4, 4), 1E-7);
+        } catch (Exception ex) {
+            System.err.println(ex);
+        }
+    }
 }
