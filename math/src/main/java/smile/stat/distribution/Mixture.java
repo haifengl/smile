@@ -39,6 +39,7 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class Mixture extends AbstractDistribution {
+    private static final long serialVersionUID = 1L;
 
     /**
      * A component in the mixture distribution is defined by a distribution

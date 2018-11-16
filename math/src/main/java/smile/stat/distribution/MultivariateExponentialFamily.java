@@ -36,5 +36,5 @@ public interface MultivariateExponentialFamily {
      * @param posteriori the posteriori probability.
      * @return the (unnormalized) weight of this distribution in the mixture.
      */
-    public MultivariateMixture.Component M(double[][] x , double[] posteriori);
+    MultivariateMixture.Component M(double[][] x , double[] posteriori);
 }

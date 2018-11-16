@@ -28,6 +28,8 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class GaussianMixture extends ExponentialFamilyMixture {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Constructor.
      * @param mixture a list of multivariate Gaussian distributions.

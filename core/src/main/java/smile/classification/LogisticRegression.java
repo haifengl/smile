@@ -16,7 +16,6 @@
 
 package smile.classification;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -76,7 +75,7 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]>, Serializable {
+public class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]> {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(LogisticRegression.class);
 
@@ -285,7 +284,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
             }
             
             if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + labels[i]+1);                 
+                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
             }
         }
 

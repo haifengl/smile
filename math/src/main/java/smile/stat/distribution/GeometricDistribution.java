@@ -43,6 +43,8 @@ package smile.stat.distribution;
  * @author Haifeng Li
  */
 public class GeometricDistribution extends DiscreteDistribution implements DiscreteExponentialFamily {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Probability of success on each trial.
      */

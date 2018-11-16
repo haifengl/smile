@@ -16,6 +16,8 @@
 
 package smile.stat.distribution;
 
+import java.io.Serializable;
+
 /**
  * Probability distribution of univariate random variable. A probability
  * distribution identifies either the probability of each value
@@ -30,67 +32,67 @@ package smile.stat.distribution;
  *
  * @author Haifeng Li
  */
-public interface Distribution {
+public interface Distribution extends Serializable {
 
     /**
      * The number of parameters of the distribution.
      */
-    public int npara();
+    int npara();
 
     /**
      * The mean of distribution.
      */
-    public double mean();
+    double mean();
     
     /**
      * The variance of distribution.
      */
-    public double var();
+    double var();
     
     /**
      * The standard deviation of distribution.
      */
-    public double sd();
+    double sd();
 
     /**
      * Shannon entropy of the distribution.
      */
-    public double entropy();
+    double entropy();
 
     /**
      * Generates a random number following this distribution.
      */
-    public double rand();
+    double rand();
     
     /**
      * The probability density function for continuous distribution
      * or probability mass function for discrete distribution at x.
      */
-    public double p(double x);
+    double p(double x);
 
     /**
      * The density at x in log scale, which may prevents the underflow problem.
      */
-    public double logp(double x);
+    double logp(double x);
 
     /**
      * Cumulative distribution function. That is the probability to the left of x.
      */
-    public double cdf(double x);
+    double cdf(double x);
 
     /**
      * The quantile, the probability to the left of quantile is p. It is
      * actually the inverse of cdf.
      */
-    public double quantile(double p);
+    double quantile(double p);
 
     /**
      * The likelihood of the sample set following this distribution.
      */
-    public double likelihood(double[] x);
+    double likelihood(double[] x);
     
     /**
      * The log likelihood of the sample set following this distribution.
      */
-    public double logLikelihood(double[] x);
+    double logLikelihood(double[] x);
 }

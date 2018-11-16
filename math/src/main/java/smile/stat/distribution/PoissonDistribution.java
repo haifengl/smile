@@ -46,6 +46,7 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class PoissonDistribution extends DiscreteDistribution implements DiscreteExponentialFamily {
+    private static final long serialVersionUID = 1L;
 
     private double lambda;
     private double entropy;

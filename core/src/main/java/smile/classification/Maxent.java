@@ -16,7 +16,6 @@
 
 package smile.classification;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,7 +50,7 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class Maxent implements SoftClassifier<int[]>, Serializable {
+public class Maxent implements SoftClassifier<int[]> {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(Maxent.class);
 
@@ -227,7 +226,7 @@ public class Maxent implements SoftClassifier<int[]>, Serializable {
             }
             
             if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + labels[i]+1);                 
+                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
             }
         }
 

@@ -16,7 +16,6 @@
 
 package smile.math.distance;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import smile.math.SparseArray;
 
@@ -27,7 +26,7 @@ import smile.math.SparseArray;
  * 
  * @author Haifeng Li
  */
-public class SparseChebyshevDistance implements Metric<SparseArray>, Serializable {
+public class SparseChebyshevDistance implements Metric<SparseArray> {
     private static final long serialVersionUID = 1L;
 
     /**

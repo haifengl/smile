@@ -36,7 +36,7 @@ import smile.math.Math;
   *
   * @author Sam Erickson
   */
- public class NeuralNetwork implements OnlineRegression<double[]>, Serializable {
+ public class NeuralNetwork implements OnlineRegression<double[]> {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(NeuralNetwork.class);
 

@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.regression;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +64,7 @@ import smile.math.special.Beta;
  * 
  * @author Haifeng Li
  */
-public class LASSO  implements Regression<double[]>, Serializable {
+public class LASSO  implements Regression<double[]> {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(LASSO.class);
 
@@ -235,6 +234,7 @@ public class LASSO  implements Regression<double[]>, Serializable {
      * @param maxIter the maximum number of IPM (Newton) iterations.
      */
     public LASSO(double[][] x, double[] y, double lambda, double tol, int maxIter) {
+        this.lambda = lambda;
         int n = x.length;
         int p = x[0].length;
 
@@ -560,7 +560,7 @@ public class LASSO  implements Regression<double[]>, Serializable {
         return sum;
     }
 
-    class PCGMatrix extends Matrix implements Preconditioner {
+    class PCGMatrix implements Matrix, Preconditioner {
 
         Matrix A;
         Matrix AtA;
@@ -577,7 +577,6 @@ public class LASSO  implements Regression<double[]>, Serializable {
             this.d2 = d2;
             this.prb = prb;
             this.prs = prs;
-            setSymmetric(true);
 
             int n = A.nrows();
             ax = new double[n];
@@ -586,6 +585,11 @@ public class LASSO  implements Regression<double[]>, Serializable {
             if ((A.ncols() < 10000) && (A instanceof DenseMatrix)) {
                 AtA = A.ata();
             }
+        }
+
+        @Override
+        public boolean isSymmetric() {
+            return true;
         }
 
         @Override

@@ -17,8 +17,6 @@
 package smile.math.matrix;
 
 import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.Complex;
 import smile.math.Math;
 
@@ -26,9 +24,8 @@ import smile.math.Math;
  * A pure Java implementation of DenseMatrix whose data is stored in a single 1D array of
  * doubles in column major order.
  */
-public class JMatrix extends DenseMatrix {
+public class JMatrix implements DenseMatrix {
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(JMatrix.class);
 
     /**
      * The matrix storage.
@@ -42,6 +39,10 @@ public class JMatrix extends DenseMatrix {
      * The number of columns.
      */
     private int ncols;
+    /**
+     * True if the matrix is symmetric.
+     */
+    private boolean symmetric = false;
 
     /**
      * Constructor.
@@ -94,6 +95,16 @@ public class JMatrix extends DenseMatrix {
         this.nrows = rows;
         this.ncols = cols;
         this.A = value;
+    }
+
+    @Override
+    public boolean isSymmetric() {
+        return symmetric;
+    }
+
+    @Override
+    public void setSymmetric(boolean symmetric) {
+        this.symmetric = symmetric;
     }
 
     @Override

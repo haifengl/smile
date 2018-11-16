@@ -16,7 +16,6 @@
 
 package smile.classification;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.Math;
 import smile.math.distance.Distance;
@@ -68,7 +67,7 @@ import smile.neighbor.Neighbor;
  * 
  * @author Haifeng Li
  */
-public class KNN<T> implements SoftClassifier<T>, Serializable {
+public class KNN<T> implements SoftClassifier<T> {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -143,7 +142,7 @@ public class KNN<T> implements SoftClassifier<T>, Serializable {
             }
             
             if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + labels[i]+1);                 
+                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
             }
         }
 

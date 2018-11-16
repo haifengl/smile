@@ -16,8 +16,6 @@
 
 package smile.math.distance;
 
-import java.io.Serializable;
-
 /**
  * Manhattan distance, also known as L<sub>1</sub> distance or L<sub>1</sub>
  * norm, is the sum of the (absolute) differences of their coordinates. Use
@@ -28,7 +26,7 @@ import java.io.Serializable;
  *
  * @author Haifeng Li
  */
-public class ManhattanDistance implements Metric<double[]>, Serializable {
+public class ManhattanDistance implements Metric<double[]> {
     private static final long serialVersionUID = 1L;
 
     /**

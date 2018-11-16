@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.clustering;
 
+import java.io.Serializable;
+
 /**
  * Clustering interface.
  * 
@@ -22,16 +24,16 @@ package smile.clustering;
  * 
  * @author Haifeng Li
  */
-public interface Clustering <T> {
+public interface Clustering <T> extends Serializable {
     /**
      * Cluster label for outliers or noises.
      */
-    public static final int OUTLIER = Integer.MAX_VALUE;
+    int OUTLIER = Integer.MAX_VALUE;
     
     /**
      * Cluster a new instance.
      * @param x a new instance.
      * @return the cluster label.
      */
-    public int predict(T x);
+    int predict(T x);
 }

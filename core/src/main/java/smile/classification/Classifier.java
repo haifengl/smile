@@ -16,6 +16,8 @@
 
 package smile.classification;
 
+import java.io.Serializable;
+
 /**
  * A classifier assigns an input object into one of a given number of categories.
  * The input object is formally termed an instance, and the categories are
@@ -34,14 +36,14 @@ package smile.classification;
  * 
  * @author Haifeng Li
  */
-public interface Classifier<T> {
+public interface Classifier<T> extends Serializable {
     /**
      * Predicts the class label of an instance.
      * 
      * @param x the instance to be classified.
      * @return the predicted class label.
      */
-    public int predict(T x);
+    int predict(T x);
 
     /**
      * Predicts the class labels of an array of instances.
@@ -49,7 +51,7 @@ public interface Classifier<T> {
      * @param x the instances to be classified.
      * @return the predicted class labels.
      */
-    default public int[] predict(T[] x) {
+    default int[] predict(T[] x) {
         int[] y = new int[x.length];
         for (int i = 0; i < y.length; i++) {
             y[i] = predict(x[i]);
