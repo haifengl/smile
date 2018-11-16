@@ -18,7 +18,7 @@ package smile.benchmark
 import smile.data._
 import smile.data.parser.DelimitedTextParser
 import smile.classification._
-import smile.math.Math
+import smile.math.MathEx
 import smile.validation._
 
 /**
@@ -68,8 +68,8 @@ object Airline {
     val (x, y) = train.unzipInt
     val (testx, testy) = test.unzipInt
 
-    val pos = Math.sum(y)
-    val testpos = Math.sum(testy)
+    val pos = MathEx.sum(y)
+    val testpos = MathEx.sum(testy)
     println(s"train data positive : negative =  $pos : ${y.length - pos}")
     println(s"test  data positive : negative =  $testpos : ${testy.length - testpos}")
 

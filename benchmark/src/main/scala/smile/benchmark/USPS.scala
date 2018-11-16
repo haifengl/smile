@@ -18,7 +18,7 @@ package smile.benchmark
 import smile.data._
 import smile.data.parser.DelimitedTextParser
 import smile.classification._
-import smile.math.Math
+import smile.math.MathEx
 import smile.math.distance.EuclideanDistance
 import smile.math.kernel.GaussianKernel
 import smile.math.rbf.GaussianRadialBasis
@@ -45,7 +45,7 @@ object USPS {
     val test = parser.parse(smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"))
     val (x, y) = train.unzipInt
     val (testx, testy) = test.unzipInt
-    val k = Math.max(y) + 1
+    val k = MathEx.max(y) + 1
 
     // Random Forest
     val forest = test2(x, y, testx, testy) { (x, y) =>
@@ -86,8 +86,8 @@ object USPS {
 
     // Neural Network
     val p = x(0).length
-    val mu = Math.colMeans(x)
-    val sd = Math.colSds(x)
+    val mu = MathEx.colMeans(x)
+    val sd = MathEx.colSds(x)
     x.foreach { xi =>
       (0 until p) foreach { j => xi(j) = (xi(j) - mu(j)) / sd(j)}
     }
