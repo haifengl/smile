@@ -21,7 +21,7 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.plot.PlotCanvas;
 import smile.plot.QQPlot;
 import smile.stat.distribution.GaussianDistribution;
@@ -37,7 +37,7 @@ public class QQPlotDemo extends JPanel {
 
         double[] x  = new double[5000];
         for (int j = 0; j < x.length; j++) {
-            x[j] = Math.random();
+            x[j] = MathEx.random();
         }
         
         double[] y  = new double[500];

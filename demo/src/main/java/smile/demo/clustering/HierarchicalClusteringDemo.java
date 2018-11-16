@@ -35,7 +35,7 @@ import smile.clustering.linkage.WPGMCLinkage;
 import smile.clustering.linkage.WardLinkage;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.plot.Dendrogram;
 import smile.plot.ScatterPlot;
 
@@ -71,7 +71,7 @@ public class HierarchicalClusteringDemo extends ClusteringDemo {
         for (int i = 0; i < n; i++) {
             proximity[i] = new double[i+1];
             for (int j = 0; j < i; j++)
-                proximity[i][j] = Math.distance(data[i], data[j]);
+                proximity[i][j] = MathEx.distance(data[i], data[j]);
         }
         HierarchicalClustering hac = null;
         switch (linkageBox.getSelectedIndex()) {

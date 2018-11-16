@@ -22,7 +22,7 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.plot.Histogram;
 import smile.plot.PlotCanvas;
 import smile.plot.QQPlot;
@@ -56,7 +56,7 @@ public class GaussianMixtureDemo extends JPanel {
         canvas.setTitle("Gaussian Mixture with Singular Component");
         add(canvas);
 
-        double width = (Math.max(data) - Math.min(data)) / 24;
+        double width = (MathEx.max(data) - MathEx.min(data)) / 24;
         double[][] p = new double[50][2];
         for (int i = 0; i < p.length; i++) {
             p[i][0] = i*0.5;
@@ -98,7 +98,7 @@ public class GaussianMixtureDemo extends JPanel {
         canvas.setTitle("Gaussian Mixture of Five Components");
         add(canvas);
 
-        width = (Math.max(data) - Math.min(data)) / 50;
+        width = (MathEx.max(data) - MathEx.min(data)) / 50;
         p = new double[220][2];
         for (int i = 0; i < p.length; i++) {
             p[i][0] = -10 + i*0.1;

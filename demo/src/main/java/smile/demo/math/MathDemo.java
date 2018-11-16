@@ -16,7 +16,7 @@
 
 package smile.demo.math;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -24,7 +24,7 @@ import smile.math.Math;
  */
 public class MathDemo {
     public static void main(String[] args) {
-        int[] x = Math.permutate(10);
+        int[] x = MathEx.permutate(10);
         for (int i = 0; i < x.length; i++) {
             System.out.printf("%d ", x[i]);
         }

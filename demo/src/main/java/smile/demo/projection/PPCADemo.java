@@ -26,7 +26,7 @@ import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.projection.PCA;
 import smile.projection.PPCA;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -54,7 +54,7 @@ public class PPCADemo extends ProjectionDemo {
         pca.setProjection(2);
         double[][] y = pca.project(data);
 
-        PlotCanvas plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {
@@ -72,7 +72,7 @@ public class PPCADemo extends ProjectionDemo {
         pca.setProjection(3);
         y = pca.project(data);
 
-        plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {
@@ -89,7 +89,7 @@ public class PPCADemo extends ProjectionDemo {
 
         PPCA ppca = new PPCA(data, 2);
         y = ppca.project(data);
-        plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {
@@ -108,7 +108,7 @@ public class PPCADemo extends ProjectionDemo {
         ppca = new PPCA(data, 3);
         System.out.format("Learn PPCA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
         y = ppca.project(data);
-        plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {

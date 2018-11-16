@@ -38,7 +38,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import smile.plot.PlotCanvas;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.distance.EditDistance;
 import smile.neighbor.BKTree;
 import smile.neighbor.CoverTree;
@@ -134,7 +134,7 @@ public class ApproximateStringSearchDemo extends JPanel implements Runnable, Act
             validate();
         }
 
-        int[] perm = Math.permutate(data.length);
+        int[] perm = MathEx.permutate(data.length);
 
         System.out.println("Perform 1000 searches...");
         long time = System.currentTimeMillis();

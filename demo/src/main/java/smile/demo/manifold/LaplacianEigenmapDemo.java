@@ -29,7 +29,7 @@ import javax.swing.JTextField;
 import smile.graph.Graph;
 import smile.plot.PlotCanvas;
 import smile.manifold.LaplacianEigenmap;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * 
@@ -74,7 +74,7 @@ public class LaplacianEigenmapDemo extends ManifoldDemo {
 
         double[][] y = eigenmap.getCoordinates();
 
-        PlotCanvas plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         plot.points(y, 'o', Color.RED);
 
         int n = y.length;

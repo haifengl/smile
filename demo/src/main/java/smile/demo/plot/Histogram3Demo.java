@@ -21,7 +21,7 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.plot.Histogram3D;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
@@ -39,8 +39,8 @@ public class Histogram3Demo extends JPanel {
         for (int j = 0; j < data.length; j++) {
             double x, y, r;
             do {
-                x = 2 * (Math.random() - 0.5);
-                y = 2 * (Math.random() - 0.5);
+                x = 2 * (MathEx.random() - 0.5);
+                y = 2 * (MathEx.random() - 0.5);
                 r = x * x + y * y;
             } while (r >= 1.0);
 

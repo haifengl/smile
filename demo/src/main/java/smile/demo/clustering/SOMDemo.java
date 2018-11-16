@@ -29,7 +29,7 @@ import javax.swing.JTextField;
 
 import smile.plot.Palette;
 import smile.vq.SOM;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.plot.Hexmap;
 import smile.plot.Histogram;
 import smile.plot.PlotCanvas;
@@ -125,10 +125,10 @@ public class SOMDemo  extends ClusteringDemo {
 
         GaussianMixture mixture = new GaussianMixture(umatrix1);
 
-        double w = (Math.max(umatrix1) - Math.min(umatrix1)) / 24;
+        double w = (MathEx.max(umatrix1) - MathEx.min(umatrix1)) / 24;
         double[][] p = new double[50][2];
         for (int i = 0; i < p.length; i++) {
-            p[i][0] = Math.min(umatrix1) + i * w;
+            p[i][0] = MathEx.min(umatrix1) + i * w;
             p[i][1] = mixture.p(p[i][0]) * w;
         }
         plot.line(p, Color.RED);

@@ -28,7 +28,7 @@ import javax.swing.JPanel;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.projection.PCA;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -69,7 +69,7 @@ public class PCADemo extends ProjectionDemo {
         pca.setProjection(3);
         double[][] y = pca.project(data);
 
-        PlotCanvas plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
         } else if (dataset[datasetIndex].responseAttribute() != null) {

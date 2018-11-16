@@ -26,7 +26,7 @@ import javax.swing.JPanel;
 import smile.graph.Graph;
 import smile.plot.PlotCanvas;
 import smile.manifold.LLE;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -55,7 +55,7 @@ public class LLEDemo extends ManifoldDemo {
 
         double[][] y = lle.getCoordinates();
 
-        PlotCanvas plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         plot.points(y, 'o', Color.RED);
 
         int n = y.length;
