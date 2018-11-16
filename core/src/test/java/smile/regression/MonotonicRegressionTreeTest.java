@@ -81,7 +81,7 @@ public class MonotonicRegressionTreeTest {
             Assert.assertTrue(
                     MessageFormat.format(
                             "Array {0} is not monotonic",
-                            Arrays.stream(values).mapToObj(Double::toString).collect(Collectors.joining(",", "[", "]"))
+                            Arrays.toString(values)
                     ),
                     current >= previous
             );

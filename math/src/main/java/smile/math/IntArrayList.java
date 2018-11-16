@@ -17,6 +17,7 @@
 package smile.math;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * A resizeable, array-backed list of integer primitives.
@@ -64,6 +65,11 @@ public final class IntArrayList implements Serializable {
         add(values);
     }
 
+    @Override
+    public String toString() {
+        return Arrays.stream(data).limit(size).mapToObj(String::valueOf).collect(java.util.stream.Collectors.joining(",", "[", "]"));
+    }
+
     /**
      * Increases the capacity, if necessary, to ensure that it can hold
      * at least the number of values specified by the minimum capacity
@@ -102,7 +108,7 @@ public final class IntArrayList implements Serializable {
      * Trims the capacity to be the list's current size.
      */
     public void trimToSize() {
-        if (data.length > size()) {
+        if (data.length > size) {
             int[] tmp = toArray();
             data = tmp;
         }

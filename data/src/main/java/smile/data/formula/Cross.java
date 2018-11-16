@@ -56,7 +56,7 @@ public class Cross implements Term {
 
     @Override
     public String toString() {
-        return String.format("(%s)^2", factors.stream().map(Factor::toString).collect(Collectors.joining(" + ")));
+        return factors.stream().map(Factor::toString).collect(Collectors.joining(" + ", "(", ")^2"));
     }
 
     @Override

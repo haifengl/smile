@@ -77,8 +77,7 @@ public class BinarySparseDatasetTest {
             assertEquals(0, sm.get(0, 4), 1E-16);
             assertEquals(1, sm.get(990001, 1056), 1E-16);
         } catch (Exception ex) {
-            System.err.println(ex);
-            assertTrue(false);
+            assertTrue(String.format("Unexpected exception: %s", ex), false);
         }
     }
 }

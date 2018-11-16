@@ -135,8 +135,7 @@ public class SparseDatasetTest {
             assertEquals(0.0, sm.get(1, 1063), 1E-7);
             assertEquals(1.0, sm.get(3429, 6821), 1E-7);
         } catch (Exception ex) {
-            System.err.println(ex);
-            assertTrue(false);
+            assertTrue(String.format("Unexpected exception: %s", ex), false);
         }
     }
 }
