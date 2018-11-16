@@ -17,6 +17,7 @@
 package smile.math;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * A resizeable, array-backed list of double primitives.
@@ -62,6 +63,11 @@ public final class DoubleArrayList implements Serializable {
     public DoubleArrayList(double[] values) {
         this(Math.max(values.length, 10));
         add(values);
+    }
+
+    @Override
+    public String toString() {
+        return Arrays.stream(data).limit(size).mapToObj(String::valueOf).collect(java.util.stream.Collectors.joining(",", "[", "]"));
     }
 
     /**

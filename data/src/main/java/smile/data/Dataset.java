@@ -84,16 +84,13 @@ public interface Dataset<T> {
      */
     default String toString(int numRows) {
         StringBuilder sb = new StringBuilder();
-        int n = Math.min(size(), numRows);
-        for (int i = 0; i < n; i++) {
-            sb.append(get(i).toString());
-            sb.append("\n");
-        }
+        String top = stream().limit(numRows).map(Object::toString).collect(java.util.stream.Collectors.joining("\n"));
+        sb.append(top);
 
-        int rest = size() - n;
+        int rest = size() - numRows;
         if (rest > 0) {
             String rowsString = (rest == 1) ? "row" : "rows";
-            sb.append(String.format("%d more %s...\n", rest, rowsString));
+            sb.append(String.format("\n%d more %s...\n", rest, rowsString));
         }
 
         return sb.toString();

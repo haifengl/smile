@@ -176,7 +176,7 @@ public interface DataFrame extends Dataset<Tuple> {
     }
 
     /**
-     * Returns a stream collector that accumulates elements into a Dataset.
+     * Returns a stream collector that accumulates elements into a DataFrame.
      *
      * @param <T> the type of input elements to the reduction operation
      * @param clazz The class type of elements.
@@ -252,6 +252,7 @@ public interface DataFrame extends Dataset<Tuple> {
         StringBuilder sb = new StringBuilder();
         boolean hasMoreData = size() > numRows;
         String[] names = names();
+        DataType[] types = types();
         int numCols = names.length;
         int maxColWidth = 20;
         switch (numCols) {
@@ -273,7 +274,7 @@ public interface DataFrame extends Dataset<Tuple> {
         List<String[]> rows = stream().limit(numRows).map( row -> {
             String[] cells = new String[numCols];
             for (int i = 0; i < numCols; i++) {
-                String str = row.get(i).toString();
+                String str = types[i].toString(row.get(i));
                 cells[i] = (truncate && str.length() > maxColumnWidth) ? str.substring(0, maxColumnWidth - 3) + "..." : str;
             }
             return cells;
@@ -287,8 +288,7 @@ public interface DataFrame extends Dataset<Tuple> {
         }
 
         // Create SeparateLine
-        String sep = IntStream.of(colWidths).mapToObj(w -> Strings.fill('-', w)).collect(Collectors.joining("+"));
-        sep = "+" + sep + "+\n";
+        String sep = IntStream.of(colWidths).mapToObj(w -> Strings.fill('-', w)).collect(Collectors.joining("+", "+", "+\n"));
         sb.append(sep);
 
         // column names

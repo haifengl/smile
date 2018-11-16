@@ -215,9 +215,18 @@ class DataFrameImpl implements DataFrame {
                     }).toArray();
                     Vector<T> vector = Vector.of(name, values);
                     columns.add(vector);
+                    if (type == String.class) {
+                        structFields.add(new StructField(name, DataTypes.StringType));
+                    } else if (type == LocalDate.class) {
+                        structFields.add(new StructField(name, DataTypes.DateType));
+                    } else if (type == LocalDateTime.class) {
+                        structFields.add(new StructField(name, DataTypes.DateTimeType));
+                    }
                 }
             }
         }
+
+        this.schema = new StructType(structFields.toArray(new StructField[structFields.size()]));
     }
 
     @Override

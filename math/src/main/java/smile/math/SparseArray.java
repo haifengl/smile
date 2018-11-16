@@ -57,7 +57,7 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
 
         @Override
         public String toString() {
-            return String.format("%d:%f", i, x);
+            return String.format("%d:%G", i, x);
         }
     }
     

@@ -44,7 +44,7 @@ public class ArrayType implements DataType {
 
     @Override
     public String name() {
-        return String.format("array[%s]", type.name());
+        return String.format("array%s", type.name());
     }
 
     @Override
@@ -54,7 +54,7 @@ public class ArrayType implements DataType {
 
     @Override
     public String toString(Object o) {
-        return String.format("[%s]", Arrays.toString((Object[]) o));
+        return Arrays.toString((Object[]) o);
     }
 
     @Override
