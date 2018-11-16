@@ -18,7 +18,7 @@ package smile.data;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Stream;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.matrix.SparseMatrix;
 
 /**
@@ -53,12 +53,12 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
     public BinarySparseDatasetImpl(Collection<int[]> data) {
         this.data = data.toArray(new int[data.size()][]);
 
-        int min = Math.min(this.data);
+        int min = MathEx.min(this.data);
         if (min < 0) {
             throw new IllegalArgumentException(String.format("Negative index of nonzero element: %d", min));
         }
 
-        ncols = Math.max(this.data) + 1;
+        ncols = MathEx.max(this.data) + 1;
         colSize = new int[ncols];
         for (int[] x : data) {
             n += x.length;
