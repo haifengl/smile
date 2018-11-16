@@ -89,9 +89,9 @@ public class SparseMatrixTest {
      * Test of size method, of class SparseMatrix.
      */
     @Test
-    public void testNvals() {
-        System.out.println("nvals");
-        assertEquals(7, sm.size());
+    public void testLength() {
+        System.out.println("length");
+        assertEquals(7, sm.length());
     }
 
     /**
@@ -117,7 +117,7 @@ public class SparseMatrixTest {
         SparseMatrix c = sm.abmm(sm);
         assertEquals(c.nrows(), 3);
         assertEquals(c.ncols(), 3);
-        assertEquals(c.size(), 9);
+        assertEquals(c.length(), 9);
         for (int i = 0; i < C.length; i++) {
             for (int j = 0; j < C[i].length; j++) {
                 assertEquals(C[i][j], c.get(i, j), 1E-7);
@@ -134,7 +134,7 @@ public class SparseMatrixTest {
         SparseMatrix c = sm.aat();
         assertEquals(c.nrows(), 3);
         assertEquals(c.ncols(), 3);
-        assertEquals(c.size(), 9);
+        assertEquals(c.length(), 9);
         for (int i = 0; i < C.length; i++) {
             for (int j = 0; j < C[i].length; j++) {
                 assertEquals(C[i][j], c.get(i, j), 1E-7);
@@ -185,7 +185,7 @@ public class SparseMatrixTest {
         System.out.println("from");
         try {
             SparseMatrix data = SparseMatrix.from(smile.util.Paths.getTestData("matrix/08blocks.txt"));
-            assertEquals(592, data.size());
+            assertEquals(592, data.length());
             assertEquals(300, data.nrows());
             assertEquals(300, data.ncols());
             assertEquals(94.0, data.get(36, 0), 1E-7);
@@ -205,7 +205,7 @@ public class SparseMatrixTest {
         System.out.println("HB exchange format");
         try {
             SparseMatrix data = SparseMatrix.from(smile.util.Paths.getTestData("matrix/5by5_rua.hb"));
-            assertEquals(13, data.size());
+            assertEquals(13, data.length());
             assertEquals(5, data.nrows());
             assertEquals(5, data.ncols());
             assertEquals(11.0, data.get(0, 0), 1E-7);

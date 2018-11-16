@@ -16,8 +16,6 @@
 package smile.data;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.List;
@@ -31,6 +29,9 @@ import java.util.stream.Stream;
  * @author Haifeng Li
  */
 public interface BinarySparseDataset extends Dataset<int[]> {
+    /** Returns the number of nonzero entries. */
+    int length();
+
     /**
      * Returns the number of columns.
      */
@@ -93,8 +94,8 @@ public interface BinarySparseDataset extends Dataset<int[]> {
      * @exception IOException if stream to file cannot be read or closed.
      * @exception ParseException if an entry is not an integer.
      */
-    static BinarySparseDataset from(String path) throws IOException, ParseException {
-        try (Stream<String> stream = Files.lines(Paths.get(path))) {
+    static BinarySparseDataset from(java.nio.file.Path path) throws IOException, ParseException {
+        try (Stream<String> stream = java.nio.file.Files.lines(path)) {
             List<int[]> rows = stream.map(line -> {
                 String[] s = line.split("\\s+");
                 int[] index = new int[s.length];

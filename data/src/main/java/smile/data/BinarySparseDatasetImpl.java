@@ -28,6 +28,8 @@ import smile.math.matrix.SparseMatrix;
  * @author Haifeng Li
  */
 class BinarySparseDatasetImpl implements BinarySparseDataset {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BinarySparseDatasetImpl.class);
+
     /**
      * The data objects.
      */
@@ -53,21 +55,23 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
     public BinarySparseDatasetImpl(Collection<int[]> data) {
         this.data = data.toArray(new int[data.size()][]);
 
-        int min = MathEx.min(this.data);
-        if (min < 0) {
-            throw new IllegalArgumentException(String.format("Negative index of nonzero element: %d", min));
-        }
-
         ncols = MathEx.max(this.data) + 1;
         colSize = new int[ncols];
-        for (int[] x : data) {
-            n += x.length;
+        for (int[] x : this.data) {
             Arrays.sort(x);
-            colSize[x[0]]++;
-            for (int i = 1; i < x.length; i++) {
-                colSize[x[i]]++;
-                if (x[i] == x[i - 1]) {
-                    throw new IllegalArgumentException(String.format("Duplicated indices of nonzero elements: %d in a row", x[i]));
+
+            int prev = -1; // index of previous element
+            for (int xi : x) {
+                if (xi < 0) {
+                    throw new IllegalArgumentException(String.format("Negative index of nonzero element: %d", xi));
+                }
+
+                if (xi == prev) {
+                    logger.warn(String.format("Ignore duplicated indices: %d in [%s]", xi, Arrays.toString(x)));
+                } else {
+                    colSize[xi]++;
+                    n++;
+                    prev = xi;
                 }
             }
         }
@@ -79,13 +83,18 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
     }
 
     @Override
-    public int[] get(int i) {
-        return data[i];
+    public int length() {
+        return n;
     }
 
     @Override
     public int ncols() {
         return ncols;
+    }
+
+    @Override
+    public int[] get(int i) {
+        return data[i];
     }
 
     @Override

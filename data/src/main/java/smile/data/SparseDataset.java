@@ -41,14 +41,13 @@ import smile.math.matrix.SparseMatrix;
  * @author Haifeng Li
  */
 public interface SparseDataset extends Dataset<SparseArray> {
+    /** Returns the number of nonzero entries. */
+    int length();
 
     /**
      * Returns the number of columns.
      */
     int ncols();
-
-    /** Returns the number of nonzero entries. */
-    int length();
 
     /**
      * Returns the value at entry (i, j).
@@ -108,7 +107,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
     /**
      * Convert into Harwell-Boeing column-compressed sparse matrix format.
      */
-    SparseMatrix toSparseMatrix();
+    SparseMatrix toMatrix();
 
     /**
      * Returns a default implementation of SparseDataset from a collection.

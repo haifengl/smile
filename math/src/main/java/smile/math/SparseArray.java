@@ -54,6 +54,11 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
             this.i = i;
             this.x = x;
         }
+
+        @Override
+        public String toString() {
+            return String.format("%d:%f", i, x);
+        }
     }
     
     private List<Entry> array;
@@ -71,6 +76,11 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      */
     private SparseArray(int initialCapacity) {
         array = new ArrayList<>(initialCapacity);
+    }
+
+    @Override
+    public String toString() {
+        return array.toString();
     }
 
     /**
