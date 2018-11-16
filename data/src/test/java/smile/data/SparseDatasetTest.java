@@ -20,6 +20,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import smile.math.SparseArray;
 import smile.math.matrix.SparseMatrix;
 import static org.junit.Assert.*;
 
@@ -38,23 +42,17 @@ public class SparseDatasetTest {
     double[] b = {0.5, 0.5, 0.5};
 
     public SparseDatasetTest() {
-        SparseDataset lil = new SparseDataset("Test Sparse Dataset");
-        int[] index = {0, 2, 1};
+        List<SparseArray> rows = new ArrayList<>();
         for (int i = 0; i < A.length; i++) {
+            SparseArray row = new SparseArray();
             for (int j = 0; j < A[i].length; j++) {
-                if (A[i][index[j]] != 0) {
-                    lil.set(i, index[j], Math.random());
-                }
+                row.append(j, A[i][j]);
             }
+
+            rows.add(row);
         }
-        
-        for (int i = 0; i < A.length; i++) {
-            for (int j = 0; j < A[i].length; j++) {
-                if (A[i][index[j]] != 0) {
-                    lil.set(i, index[j], A[i][index[j]]);
-                }
-            }
-        }
+
+        SparseDataset lil = SparseDataset.of(rows);
         sm = lil.toSparseMatrix();
     }
 
@@ -113,5 +111,23 @@ public class SparseDatasetTest {
         assertEquals(0.0, sm.get(2, 0), 1E-7);
         assertEquals(0.0, sm.get(0, 2), 1E-7);
         assertEquals(0.4, sm.get(0, 1), 1E-7);
+    }
+
+    @Test
+    public void testParse() throws Exception {
+        System.out.println("from");
+        try {
+            SparseDataset data = SparseDataset.from(smile.util.Paths.getTestData("text/kos.txt"), 1);
+            assertEquals(3430, data.size());
+            assertEquals(6906, data.ncols());
+            assertEquals(353160, data.length());
+            assertEquals(2.0, data.get(0, 60), 1E-7);
+            assertEquals(1.0, data.get(1, 1062), 1E-7);
+            assertEquals(0.0, data.get(1, 1063), 1E-7);
+            assertEquals(1.0, data.get(3429, 6821), 1E-7);
+        } catch (Exception ex) {
+            System.err.println(ex);
+            assertTrue(false);
+        }
     }
 }

@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Sparse array of double values.
@@ -94,6 +95,11 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      */
     public Iterator<Entry> iterator() {
         return array.iterator();
+    }
+
+    /** Returns the stream of nonzero entries. */
+    public Stream<Entry> stream() {
+        return array.stream();
     }
 
     /** Sorts the array elements such that the indices are in ascending order. */
