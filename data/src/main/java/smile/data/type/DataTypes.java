@@ -31,7 +31,7 @@ public class DataTypes {
     /** Short data type. */
     public static smile.data.type.ShortType ShortType = smile.data.type.ShortType.instance;
     /** Integer data type. */
-    public static IntType IntegerType = IntType.instance;
+    public static IntegerType IntegerType = smile.data.type.IntegerType.instance;
     /** Long data type. */
     public static smile.data.type.LongType LongType = smile.data.type.LongType.instance;
     /** Float data type. */

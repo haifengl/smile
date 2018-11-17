@@ -18,10 +18,8 @@ package smile.data;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,7 +30,7 @@ import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
-import smile.data.type.DataTypes;
+import smile.data.type.DataType;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.*;
@@ -44,6 +42,8 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 class DataFrameImpl implements DataFrame {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataFrameImpl.class);
+
     /** DataFrame schema. */
     private StructType schema;
     /** The column vectors. */
@@ -91,142 +91,85 @@ class DataFrameImpl implements DataFrame {
      * @param <T> The type of elements.
      */
     @SuppressWarnings("unchecked")
-    public <T> DataFrameImpl(Collection<T> data, Class<T> clazz) {
+    public <T> DataFrameImpl(List<T> data, Class<T> clazz) {
         this.size = data.size();
         this.columns = new ArrayList<>();
-        List<StructField> structFields = new ArrayList<>();
 
-        Field[] fields = clazz.getFields();
-        for (Field field : fields) {
-            String name = field.getName();
-            Class<?> type = field.getType();
+        try {
+            BeanInfo info = Introspector.getBeanInfo(clazz);
+            PropertyDescriptor[] props = info.getPropertyDescriptors();
+            List<StructField> fields = Arrays.stream(props)
+                    .filter(prop -> !prop.getName().equals("class"))
+                    .map(this::field)
+                    .collect(Collectors.toList());
 
-            if (type == int.class) {
-                int[] values = data.stream().mapToInt(o -> {
-                    try {
-                        return field.getInt(o);
-                    } catch (ReflectiveOperationException ex) {
-                        throw new RuntimeException(ex);
+            this.schema = new StructType(fields);
+            for (PropertyDescriptor prop : props) {
+                if (!prop.getName().equals("class")) {
+                    String name = prop.getName();
+                    Class<?> type = prop.getPropertyType();
+                    Method read = prop.getReadMethod();
+
+                    if (type == int.class) {
+                        int[] values = new int[size];
+                        for (int i = 0; i < size; i++) values[i] = (int) read.invoke(data.get(i));
+                        IntVector vector = IntVector.of(name, values);
+                        columns.add(vector);
+                    } else if (type == double.class) {
+                        double[] values = new double[size];
+                        for (int i = 0; i < size; i++) values[i] = (double) read.invoke(data.get(i));
+                        DoubleVector vector = DoubleVector.of(name, values);
+                        columns.add(vector);
+                    } else if (type == boolean.class) {
+                        boolean[] values = new boolean[size];
+                        for (int i = 0; i < size; i++) values[i] = (boolean) read.invoke(data.get(i));
+                        BooleanVector vector = BooleanVector.of(name, values);
+                        columns.add(vector);
+                    } else if (type == short.class) {
+                        short[] values = new short[size];
+                        for (int i = 0; i < size; i++) values[i] = (short) read.invoke(data.get(i));
+                        ShortVector vector = ShortVector.of(name, values);
+                        columns.add(vector);
+                    } else if (type == long.class) {
+                        long[] values = new long[size];
+                        for (int i = 0; i < size; i++) values[i] = (long) read.invoke(data.get(i));
+                        LongVector vector = LongVector.of(name, values);
+                        columns.add(vector);
+                    } else if (type == float.class) {
+                        float[] values = new float[size];
+                        for (int i = 0; i < size; i++) values[i] = (float) read.invoke(data.get(i));
+                        FloatVector vector = FloatVector.of(name, values);
+                        columns.add(vector);
+                    } else if (type == byte.class) {
+                        byte[] values = new byte[size];
+                        for (int i = 0; i < size; i++) values[i] = (byte) read.invoke(data.get(i));
+                        ByteVector vector = ByteVector.of(name, values);
+                        columns.add(vector);
+                    } else if (type == char.class) {
+                        char[] values = new char[size];
+                        for (int i = 0; i < size; i++) values[i] = (char) read.invoke(data.get(i));
+                        CharVector vector = CharVector.of(name, values);
+                        columns.add(vector);
+                    } else {
+                        Object[] values = new Object[size];
+                        for (int i = 0; i < size; i++) values[i] = read.invoke(data.get(i));
+                        Vector<?> vector = Vector.of(name, values);
+                        columns.add(vector);
                     }
-                }).toArray();
-                IntVector vector = IntVector.of(name, values);
-                columns.add(vector);
-                structFields.add(new StructField(name, DataTypes.IntegerType));
-            } else if (type == long.class) {
-                long[] values = data.stream().mapToLong(o -> {
-                    try {
-                        return field.getLong(o);
-                    } catch (ReflectiveOperationException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }).toArray();
-                LongVector vector = LongVector.of(name, values);
-                columns.add(vector);
-                structFields.add(new StructField(name, DataTypes.LongType));
-            } else if (type == double.class) {
-                double[] values = data.stream().mapToDouble(o -> {
-                    try {
-                        return field.getDouble(o);
-                    } catch (ReflectiveOperationException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }).toArray();
-                DoubleVector vector = DoubleVector.of(name, values);
-                columns.add(vector);
-                structFields.add(new StructField(name, DataTypes.DoubleType));
-            } else {
-                T[] values = (T[]) data.stream().map(o -> {
-                    try {
-                        return (T) field.get(o);
-                    } catch (ReflectiveOperationException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }).toArray();
-                Vector<T> vector = Vector.of(name, values);
-                columns.add(vector);
-                if (type == String.class) {
-                    structFields.add(new StructField(name, DataTypes.StringType));
-                } else if (type == LocalDate.class) {
-                    structFields.add(new StructField(name, DataTypes.DateType));
-                } else if (type == LocalDateTime.class) {
-                    structFields.add(new StructField(name, DataTypes.DateTimeType));
                 }
             }
-        }
-
-        BeanInfo info;
-        try {
-            info = Introspector.getBeanInfo(clazz);
         } catch (java.beans.IntrospectionException ex) {
+            logger.error("Failed to introspect a bean: ", ex);
+            throw new RuntimeException(ex);
+        } catch (ReflectiveOperationException ex) {
+            logger.error("Failed to call property read method: ", ex);
             throw new RuntimeException(ex);
         }
+    }
 
-        PropertyDescriptor[] props = info.getPropertyDescriptors();
-
-        for (PropertyDescriptor prop : props) {
-            if (!prop.getName().equals("class")) {
-                String name = prop.getName();
-                Class<?> type = prop.getPropertyType();
-
-                if (type == int.class) {
-                    Method read = prop.getReadMethod();
-                    int[] values = data.stream().mapToInt(o -> {
-                        try {
-                            return (Integer) read.invoke(o);
-                        } catch (ReflectiveOperationException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }).toArray();
-                    IntVector vector = IntVector.of(name, values);
-                    columns.add(vector);
-                    structFields.add(new StructField(name, DataTypes.IntegerType));
-                } else if (type == long.class) {
-                    Method read = prop.getReadMethod();
-                    long[] values = data.stream().mapToLong(o -> {
-                        try {
-                            return (Long) read.invoke(o);
-                        } catch (ReflectiveOperationException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }).toArray();
-                    LongVector vector = LongVector.of(name, values);
-                    columns.add(vector);
-                    structFields.add(new StructField(name, DataTypes.LongType));
-                } else if (type == double.class) {
-                    Method read = prop.getReadMethod();
-                    double[] values = data.stream().mapToDouble(o -> {
-                        try {
-                            return (Double) read.invoke(o);
-                        } catch (ReflectiveOperationException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }).toArray();
-                    DoubleVector vector = DoubleVector.of(name, values);
-                    columns.add(vector);
-                    structFields.add(new StructField(name, DataTypes.DoubleType));
-                } else {
-                    Method read = prop.getReadMethod();
-                    T[] values = (T[]) data.stream().map(o -> {
-                        try {
-                            return (T) read.invoke(o);
-                        } catch (ReflectiveOperationException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }).toArray();
-                    Vector<T> vector = Vector.of(name, values);
-                    columns.add(vector);
-                    if (type == String.class) {
-                        structFields.add(new StructField(name, DataTypes.StringType));
-                    } else if (type == LocalDate.class) {
-                        structFields.add(new StructField(name, DataTypes.DateType));
-                    } else if (type == LocalDateTime.class) {
-                        structFields.add(new StructField(name, DataTypes.DateTimeType));
-                    }
-                }
-            }
-        }
-
-        this.schema = new StructType(structFields.toArray(new StructField[structFields.size()]));
+    /** Returns the struct field of a property. */
+    private StructField field(PropertyDescriptor prop) {
+        return new StructField(prop.getName(), DataType.of(prop.getPropertyType()));
     }
 
     @Override

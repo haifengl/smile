@@ -35,12 +35,12 @@ public class IntegerType implements DataType {
 
     @Override
     public String name() {
-        return "integer";
+        return "int";
     }
 
     @Override
     public String toString() {
-        return name();
+        return "int";
     }
 
     @Override
