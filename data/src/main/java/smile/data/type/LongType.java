@@ -40,7 +40,7 @@ public class LongType implements DataType {
 
     @Override
     public String toString() {
-        return name();
+        return "long";
     }
 
     @Override

@@ -60,7 +60,7 @@ public class DateTimeType implements DataType {
 
     @Override
     public String toString() {
-        return name();
+        return "datetime";
     }
 
     @Override

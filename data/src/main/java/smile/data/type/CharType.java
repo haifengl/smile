@@ -40,7 +40,7 @@ public class CharType implements DataType {
 
     @Override
     public String toString() {
-        return name();
+        return "char";
     }
 
     @Override

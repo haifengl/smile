@@ -40,7 +40,7 @@ public class BooleanType implements DataType {
 
     @Override
     public String toString() {
-        return name();
+        return "boolean";
     }
 
     @Override

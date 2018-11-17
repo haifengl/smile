@@ -40,7 +40,7 @@ public class FloatType implements DataType {
 
     @Override
     public String toString() {
-        return name();
+        return "float";
     }
 
     @Override

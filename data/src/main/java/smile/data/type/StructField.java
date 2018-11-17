@@ -37,7 +37,7 @@ public class StructField {
 
     @Override
     public String toString() {
-        return String.format("%s: %s", name, type.name());
+        return String.format("%s: %s", name, type);
     }
 
     /** Returns the string representation of the field with given value. */

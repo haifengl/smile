@@ -49,7 +49,7 @@ public class ArrayType implements DataType {
 
     @Override
     public String toString() {
-        return name();
+        return String.format("%s[]", type);
     }
 
     @Override
