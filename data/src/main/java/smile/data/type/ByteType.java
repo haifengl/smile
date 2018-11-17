@@ -40,7 +40,7 @@ public class ByteType implements DataType {
 
     @Override
     public String toString() {
-        return name();
+        return "byte";
     }
 
     @Override

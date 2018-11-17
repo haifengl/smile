@@ -40,7 +40,7 @@ public class ShortType implements DataType {
 
     @Override
     public String toString() {
-        return name();
+        return "short";
     }
 
     @Override

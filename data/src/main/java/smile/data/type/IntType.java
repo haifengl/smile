@@ -18,38 +18,38 @@ package smile.data.type;
 import java.text.ParseException;
 
 /**
- * Float data type.
+ * Integer data type.
  *
  * @author Haifeng Li
  */
-public class FloatType implements DataType {
+public class IntType implements DataType {
 
     /** Singleton instance. */
-    static FloatType instance = new FloatType();
+    static IntType instance = new IntType();
 
     /**
      * Private constructor for singleton design pattern.
      */
-    private FloatType() {
+    private IntType() {
     }
 
     @Override
     public String name() {
-        return "float";
+        return "int";
     }
 
     @Override
     public String toString() {
-        return "float";
+        return "int";
     }
 
     @Override
-    public Float valueOf(String s) throws ParseException {
-        return Float.valueOf(s);
+    public Integer valueOf(String s) throws ParseException {
+        return Integer.valueOf(s);
     }
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof FloatType;
+        return o instanceof IntType;
     }
 }

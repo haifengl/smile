@@ -51,7 +51,7 @@ public class ObjectType implements DataType {
 
     @Override
     public String toString() {
-        return name();
+        return clazz.getSimpleName();
     }
 
     @Override

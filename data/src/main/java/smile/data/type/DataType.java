@@ -54,7 +54,7 @@ public interface DataType extends Serializable {
             case "char": return DataTypes.CharType;
             case "byte": return DataTypes.ByteType;
             case "short": return DataTypes.ShortType;
-            case "integer": return DataTypes.IntegerType;
+            case "int": return DataTypes.IntegerType;
             case "long": return DataTypes.LongType;
             case "float": return DataTypes.FloatType;
             case "double": return DataTypes.DoubleType;
@@ -62,7 +62,7 @@ public interface DataType extends Serializable {
             case "date": return DataTypes.DateType;
             case "datetime": return DataTypes.DateTimeType;
             default:
-                Pattern pattern = Pattern.compile("(date|datetime|nominal|ordinal|object|array|struct)\\[([^\\[\\]]*)\\]");
+                Pattern pattern = Pattern.compile("(date|datetime|object|array|struct)\\[([^\\[\\]]*)\\]");
                 Matcher matcher = pattern.matcher(s);
                 if (matcher.matches()) {
                     String type = matcher.group(1);

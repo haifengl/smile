@@ -73,12 +73,14 @@ public class StructType implements DataType {
 
     @Override
     public String name() {
-        return String.format("struct%s", Arrays.toString(fields));
+        return Arrays.stream(fields)
+                .map(field -> String.format("%s: %s", field.name, field.type.name()))
+                .collect(Collectors.joining(",", "struct[", "]"));
     }
 
     @Override
     public String toString() {
-        return name();
+        return Arrays.toString(fields);
     }
 
     @Override
