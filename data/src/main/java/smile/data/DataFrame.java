@@ -17,7 +17,6 @@ package smile.data;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -274,7 +273,8 @@ public interface DataFrame extends Dataset<Tuple> {
         List<String[]> rows = stream().limit(numRows).map( row -> {
             String[] cells = new String[numCols];
             for (int i = 0; i < numCols; i++) {
-                String str = types[i].toString(row.get(i));
+                Object x = row.get(i);
+                String str = x == null ? "null" : types[i].toString(x);
                 cells[i] = (truncate && str.length() > maxColumnWidth) ? str.substring(0, maxColumnWidth - 3) + "..." : str;
             }
             return cells;
@@ -342,7 +342,7 @@ public interface DataFrame extends Dataset<Tuple> {
      * @param clazz The class type of elements.
      * @param <T> The type of elements.
      */
-    static <T> DataFrame of(Collection<T> data, Class<T> clazz) {
+    static <T> DataFrame of(List<T> data, Class<T> clazz) {
         return new DataFrameImpl(data, clazz);
     }
 
