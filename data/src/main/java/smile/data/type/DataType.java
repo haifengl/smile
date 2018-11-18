@@ -32,7 +32,10 @@ import java.util.regex.Pattern;
  * @author Haifeng Li
  */
 public interface DataType extends Serializable {
-    /** Returns the string representation for the type in external catalogs. */
+    /**
+     * Returns the type name used in external catalogs.
+     * DataType.of(name()) should returns the same type.
+     */
     String name();
 
     /**
@@ -62,25 +65,22 @@ public interface DataType extends Serializable {
             case "date": return DataTypes.DateType;
             case "datetime": return DataTypes.DateTimeType;
             default:
-                Pattern pattern = Pattern.compile("(date|datetime|object|array|struct)\\[([^\\[\\]]*)\\]");
-                Matcher matcher = pattern.matcher(s);
-                if (matcher.matches()) {
-                    String type = matcher.group(1);
-                    String value = matcher.group(2);
-                    switch (type) {
-                        case "date": return DataTypes.date(value);
-                        case "datetime": return DataTypes.datetime(value);
-                        case "array": return DataTypes.array(DataType.of(value));
-                        case "object": return DataTypes.object(Class.forName(value));
-                        case "struct":
-                            String[] elements = value.split(",");
-                            StructField[] fields = new StructField[elements.length];
-                            for (int i = 0; i < fields.length; i++) {
-                                String[] f = elements[i].split(":");
-                                fields[i] = new StructField(f[0], DataType.of(f[1]));
-                            }
-                            return DataTypes.struct(fields);
+                if (s.startsWith("date[") && s.endsWith("]"))
+                    return DataTypes.date(s.substring(5, s.length() - 1));
+                else if (s.startsWith("datetime[") && s.endsWith("]"))
+                    return DataTypes.datetime(s.substring(9, s.length() - 1));
+                else if (s.startsWith("class[") && s.endsWith("]"))
+                    return DataTypes.object(Class.forName(s.substring(6, s.length() - 1)));
+                else if (s.startsWith("array[") && s.endsWith("]"))
+                    return DataTypes.array(DataType.of(s.substring(6, s.length() - 1).trim()));
+                else if (s.startsWith("struct[") && s.endsWith("]")) {
+                    String[] elements = s.substring(7, s.length() - 1).split(",");
+                    StructField[] fields = new StructField[elements.length];
+                    for (int i = 0; i < fields.length; i++) {
+                        String[] item = elements[i].split(":");
+                        fields[i] = new StructField(item[0].trim(), DataType.of(item[1].trim()));
                     }
+                    return DataTypes.struct(fields);
                 }
         }
         throw new IllegalArgumentException(String.format("Unknown data type: %s", s));

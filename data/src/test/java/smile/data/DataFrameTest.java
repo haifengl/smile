@@ -71,6 +71,7 @@ public class DataFrameTest {
         System.out.println(Arrays.toString(df.types()));
         System.out.println(df.structure());
         System.out.println(df.schema());
+        System.out.println(df.schema().name());
     }
 
     @BeforeClass

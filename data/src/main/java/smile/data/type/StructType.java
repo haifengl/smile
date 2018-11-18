@@ -75,7 +75,7 @@ public class StructType implements DataType {
     public String name() {
         return Arrays.stream(fields)
                 .map(field -> String.format("%s: %s", field.name, field.type.name()))
-                .collect(Collectors.joining(",", "struct[", "]"));
+                .collect(Collectors.joining(", ", "struct[", "]"));
     }
 
     @Override
@@ -87,7 +87,7 @@ public class StructType implements DataType {
     public String toString(Object o) {
         Tuple t = (Tuple) o;
         return Arrays.stream(fields)
-                .map(field -> String.format("%s : %s", field.name, field.type.toString(t.get(field.name))))
+                .map(field -> String.format("%s: %s", field.name, field.type.toString(t.get(field.name))))
                 .collect(Collectors.joining(",\n", "{", "}"));
     }
 
