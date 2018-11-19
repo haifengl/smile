@@ -175,7 +175,7 @@ public interface DataFrame extends Dataset<Tuple> {
     }
 
     /**
-     * Returns a stream collector that accumulates elements into a DataFrame.
+     * Returns a stream collector that accumulates objects into a DataFrame.
      *
      * @param <T> the type of input elements to the reduction operation
      * @param clazz The class type of elements.
@@ -190,6 +190,22 @@ public interface DataFrame extends Dataset<Tuple> {
                 (c1, c2) -> { c1.addAll(c2); return c1; },
                 // finisher
                 (container) -> DataFrame.of(container, clazz)
+        );
+    }
+
+    /**
+     * Returns a stream collector that accumulates tuples into a DataFrame.
+     */
+    static Collector<Tuple, List<Tuple>, DataFrame> toDataFrame() {
+        return Collector.of(
+                // supplier
+                () -> new ArrayList<Tuple>(),
+                // accumulator
+                (container, t) -> container.add(t),
+                // combiner
+                (c1, c2) -> { c1.addAll(c2); return c1; },
+                // finisher
+                (container) -> DataFrame.of(container)
         );
     }
 
@@ -337,6 +353,14 @@ public interface DataFrame extends Dataset<Tuple> {
     }
 
     /**
+     * Creates a default columnar implementation of DataFrame from a set of vectors.
+     * @param vectors The column vectors.
+     */
+    static DataFrame of(BaseVector... vectors) {
+        return new DataFrameImpl(Arrays.asList(vectors));
+    }
+
+    /**
      * Creates a default columnar implementation of DataFrame from a collection.
      * @param data The data collection.
      * @param clazz The class type of elements.
@@ -347,10 +371,10 @@ public interface DataFrame extends Dataset<Tuple> {
     }
 
     /**
-     * Creates a default columnar implementation of DataFrame from a set of vectors.
-     * @param vectors The column vectors.
+     * Creates a default columnar implementation of DataFrame from a set of tuples.
+     * @param data The data collection.
      */
-    static DataFrame of(BaseVector... vectors) {
-        return new DataFrameImpl(Arrays.asList(vectors));
+    static DataFrame of(List<Tuple> data) {
+        return new DataFrameImpl(data);
     }
 }

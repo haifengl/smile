@@ -29,7 +29,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class Exp implements Factor {
+class Exp implements Factor {
     /** The operand factor of exp expression. */
     private Factor child;
 

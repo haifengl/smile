@@ -34,7 +34,7 @@ import java.util.function.Function;
  *
  * @author Haifeng Li
  */
-public class Mul implements Factor {
+class Mul implements Factor {
     /** The first factor. */
     private Factor a;
     /** The second factor. */

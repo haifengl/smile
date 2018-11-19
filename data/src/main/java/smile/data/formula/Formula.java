@@ -15,13 +15,14 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 import smile.data.DataFrame;
 import smile.data.Tuple;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 
@@ -51,10 +52,13 @@ public class Formula {
      * Apply the formula on a DataFrame to generate the model data.
      */
     public DataFrame apply(DataFrame df) {
-
-        throw new UnsupportedOperationException();
+        schema = schema(df.schema());
+        return df.stream().map(this::apply).collect(DataFrame.toDataFrame());
     }
 
+    /**
+     * Apply the formula on a Tuple to generate the model data.
+     */
     public Tuple apply(Tuple t) {
         if (schema == null) {
             schema = schema(t.schema());
@@ -109,7 +113,7 @@ public class Formula {
     }
 
     /** Returns the schema of formula after binding to an input type. */
-    public StructType schema(StructType inputType) {
+    private StructType schema(StructType inputType) {
         Arrays.stream(terms).forEach(term -> term.bind(inputType));
 
         List<Factor> factors = Arrays.stream(terms)
@@ -140,5 +144,671 @@ public class Formula {
                 .map(factor -> new StructField(factor.toString(), factor.type()))
                 .collect(Collectors.toList());
         return new StructType(fields);
+    }
+
+    /** Returns all columns not otherwise in the formula. */
+    public static Term all() {
+        return new All();
+    }
+
+    /** Returns a column factor. */
+    public static Factor col(String name) {
+        return new Column(name);
+    }
+
+    /** Removes a column from the formula/model. */
+    public static Factor remove(String name) {
+        return remove(col(name));
+    }
+
+    /** Removes a factor from the formula/model. */
+    public static Factor remove(Factor x) {
+        return new Remove(x);
+    }
+
+    /** Returns the exp of a factor. */
+    public static Factor exp(String name) {
+        return exp(col(name));
+    }
+
+    /** Returns the exp of a factor. */
+    public static Factor exp(Factor x) {
+        return new Exp(x);
+    }
+
+    /** Returns the log of a factor. */
+    public static Factor log(String name) {
+        return log(col(name));
+    }
+
+    /** Returns the log of a factor. */
+    public static Factor log(Factor x) {
+        return new Log(x);
+    }
+
+    /** Returns the log10 of a factor. */
+    public static Factor log10(String name) {
+        return log10(col(name));
+    }
+
+    /** Returns the log10 of a factor. */
+    public static Factor log10(Factor x) {
+        return new Log10(x);
+    }
+
+    /** Returns the ceil of a factor. */
+    public static Factor ceil(String name) {
+        return ceil(col(name));
+    }
+
+    /** Returns the ceil of a factor. */
+    public static Factor ceil(Factor x) {
+        return new Ceil(x);
+    }
+
+    /** Returns the floor of a factor. */
+    public static Factor floor(String name) {
+        return floor(col(name));
+    }
+
+    /** Returns the floor of a factor. */
+    public static Factor floor(Factor x) {
+        return new Floor(x);
+    }
+
+    /** Returns the round of a factor. */
+    public static Factor round(String name) {
+        return round(col(name));
+    }
+
+    /** Returns the log of a factor. */
+    public static Factor round(Factor x) {
+        return new Round(x);
+    }
+
+    /** Returns the signum of a factor. */
+    public static Factor signum(String name) {
+        return signum(col(name));
+    }
+
+    /** Returns the signum of a factor. */
+    public static Factor signum(Factor x) {
+        return new Signum(x);
+    }
+
+    /** Returns the square root of a factor. */
+    public static Factor sqrt(String name) {
+        return sqrt(col(name));
+    }
+
+    /** Returns the square root of a factor. */
+    public static Factor sqrt(Factor x) {
+        return new Sqrt(x);
+    }
+
+    /** Adds two factors. */
+    public static Factor add(Factor a, Factor b) {
+        return new Add(a, b);
+    }
+
+    /** Adds two factors. */
+    public static Factor add(String a, String b) {
+        return new Add(col(a), col(b));
+    }
+
+    /** Adds two factors. */
+    public static Factor add(Factor a, String b) {
+        return new Add(a, col(b));
+    }
+
+    /** Adds two factors. */
+    public static Factor add(String a, Factor b) {
+        return new Add(col(a), b);
+    }
+
+    /** Subtracts two factors. */
+    public static Factor sub(Factor a, Factor b) {
+        return new Sub(a, b);
+    }
+
+    /** Subtracts two factors. */
+    public static Factor sub(String a, String b) {
+        return new Sub(col(a), col(b));
+    }
+
+    /** Subtracts two factors. */
+    public static Factor sub(Factor a, String b) {
+        return new Sub(a, col(b));
+    }
+
+    /** Subtracts two factors. */
+    public static Factor sub(String a, Factor b) {
+        return new Sub(col(a), b);
+    }
+
+    /** Multiplies two factors. */
+    public static Factor mul(Factor a, Factor b) {
+        return new Mul(a, b);
+    }
+
+    /** Multiplies two factors. */
+    public static Factor mul(String a, String b) {
+        return new Mul(col(a), col(b));
+    }
+
+    /** Multiplies two factors. */
+    public static Factor mul(Factor a, String b) {
+        return new Mul(a, col(b));
+    }
+
+    /** Multiplies two factors. */
+    public static Factor mul(String a, Factor b) {
+        return new Mul(col(a), b);
+    }
+
+    /** Divides two factors. */
+    public static Factor div(Factor a, Factor b) {
+        return new Div(a, b);
+    }
+
+    /** Divides two factors. */
+    public static Factor div(String a, String b) {
+        return new Div(col(a), col(b));
+    }
+
+    /** Divides two factors. */
+    public static Factor div(Factor a, String b) {
+        return new Div(a, col(b));
+    }
+
+    /** Divides two factors. */
+    public static Factor div(String a, Factor b) {
+        return new Div(col(a), b);
+    }
+
+    /** Returns a const boolean factor. */
+    public static Factor cst(final boolean x) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public String toString() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.BooleanType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a const char factor. */
+    public static Factor cst(final char x) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public String toString() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.CharType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+            }
+
+            @Override
+            public int applyAsInt(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a const byte factor. */
+    public static Factor cst(final byte x) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public String toString() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.ByteType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+            }
+
+            @Override
+            public int applyAsInt(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a const short factor. */
+    public static Factor cst(final short x) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public String toString() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.ShortType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+            }
+
+            @Override
+            public int applyAsInt(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a const integer factor. */
+    public static Factor cst(final int x) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public String toString() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.IntegerType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+            }
+
+            @Override
+            public int applyAsInt(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a const long factor. */
+    public static Factor cst(final long x) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public String toString() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.LongType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a const float factor. */
+    public static Factor cst(final float x) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public String toString() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.FloatType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+            }
+
+            @Override
+            public float applyAsFloat(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a const double factor. */
+    public static Factor cst(final double x) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public String toString() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.DoubleType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a const object factor. */
+    public static Factor cst(final Object x) {
+        final DataType type = x instanceof String ? DataTypes.StringType :
+                x instanceof LocalDate ? DataTypes.DateType :
+                x instanceof LocalDateTime ? DataTypes.DateTimeType :
+                DataType.of(x.getClass());
+
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public String toString() {
+                return x.toString();
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public DataType type() {
+                return type;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
     }
 }

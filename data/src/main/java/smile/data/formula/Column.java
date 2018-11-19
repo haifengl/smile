@@ -33,7 +33,7 @@ import smile.util.ToFloatFunction;
  *
  * @author Haifeng Li
  */
-public class Column implements Factor {
+class Column implements Factor {
     /** Column name. */
     private final String name;
     /** Data type of column. Only available after calling bind(). */

@@ -29,7 +29,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class Sqrt implements Factor {
+class Sqrt implements Factor {
     /** The operand factor of sqrt expression. */
     private Factor child;
 

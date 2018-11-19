@@ -29,7 +29,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class Signum implements Factor {
+class Signum implements Factor {
     /** The operand factor of signum expression. */
     private Factor child;
 

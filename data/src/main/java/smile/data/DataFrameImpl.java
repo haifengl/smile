@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 import smile.data.type.DataType;
+import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.*;
@@ -170,6 +171,72 @@ class DataFrameImpl implements DataFrame {
     /** Returns the struct field of a property. */
     private StructField field(PropertyDescriptor prop) {
         return new StructField(prop.getName(), DataType.of(prop.getPropertyType()));
+    }
+
+
+    /**
+     * Constructor.
+     * @param data The data collection.
+     */
+    public DataFrameImpl(List<Tuple> data) {
+        if (data.isEmpty()) {
+            throw new IllegalArgumentException("Empty tuple collections");
+        }
+
+        this.size = data.size();
+        this.schema = data.get(0).schema();
+        StructField[] fields = schema.fields();
+        this.columns = new ArrayList<>(fields.length);
+
+        for (int j = 0; j < fields.length; j++) {
+            StructField field = fields[j];
+            if (field.type == DataTypes.IntegerType) {
+                int[] values = new int[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getInt(j);
+                IntVector vector = IntVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.LongType) {
+                long[] values = new long[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getLong(j);
+                LongVector vector = LongVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.DoubleType) {
+                double[] values = new double[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getDouble(j);
+                DoubleVector vector = DoubleVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.FloatType) {
+                float[] values = new float[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getFloat(j);
+                FloatVector vector = FloatVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.BooleanType) {
+                boolean[] values = new boolean[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getBoolean(j);
+                BooleanVector vector = BooleanVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.CharType) {
+                char[] values = new char[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getChar(j);
+                CharVector vector = CharVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.ByteType) {
+                byte[] values = new byte[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getByte(j);
+                ByteVector vector = ByteVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.ShortType) {
+                short[] values = new short[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getShort(j);
+                ShortVector vector = ShortVector.of(field.name, values);
+                columns.add(vector);
+            } else {
+                Object[] values = new Object[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).get(j);
+                Vector vector = Vector.of(field.name, values);
+                columns.add(vector);
+            }
+        }
     }
 
     @Override

@@ -31,7 +31,7 @@ import java.util.function.Function;
  *
  * @author Haifeng Li
  */
-public class Div implements Factor {
+class Div implements Factor {
     /** The numerator factor. */
     private Factor a;
     /** The denominator factor. */

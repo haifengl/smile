@@ -29,7 +29,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class Abs implements Factor {
+class Abs implements Factor {
     /** The operand factor of abs expression. */
     private Factor child;
 
