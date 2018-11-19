@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  *
  * @author Haifeng Li
  */
-public class Cross implements Term {
+class Cross implements Term {
     /** The children factors. */
     private List<Factor> factors;
 

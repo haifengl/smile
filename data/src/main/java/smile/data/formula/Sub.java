@@ -31,7 +31,7 @@ import java.util.function.Function;
  *
  * @author Haifeng Li
  */
-public class Sub implements Factor {
+class Sub implements Factor {
     /** The left factor. */
     private Factor a;
     /** The right factor. */

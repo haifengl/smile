@@ -31,7 +31,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class Add implements Factor {
+class Add implements Factor {
     /** The left factor. */
     private Factor a;
     /** The right factor. */

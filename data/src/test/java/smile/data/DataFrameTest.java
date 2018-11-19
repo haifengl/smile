@@ -25,8 +25,12 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
+
+import smile.data.formula.Formula;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import static smile.data.formula.Formula.*;
+
 import static org.junit.Assert.*;
 
 /**
@@ -129,7 +133,7 @@ public class DataFrameTest {
     }
 
     /**
-     * Test of get method, of class SparseMatrix.
+     * Test of get method, of class DataFrame.
      */
     @Test
     public void testGet() {
@@ -140,5 +144,29 @@ public class DataFrameTest {
         assertEquals(13, df.get(3).getInt(0));
         assertEquals("Amy", df.get(3).getString(3));
         assertEquals(null, df.get(3).get(4));
+
+        assertEquals(38, df.get(0,0));
+        assertEquals("Alex", df.get(0,3));
+        assertEquals(10000, df.get(0,4));
+        assertEquals(13, df.get(3,0));
+        assertEquals("Amy", df.get(3,3));
+        assertEquals(null, df.get(3,4));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaAdd() {
+        System.out.println("Add");
+        Formula formula = new Formula(all(), add("age", cst(10)));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(48, output.get(0,0));
+        assertEquals(33, output.get(1,0));
+        assertEquals(58, output.get(2,0));
+        assertEquals(23, output.get(3,0));
     }
 }

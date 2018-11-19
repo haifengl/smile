@@ -26,7 +26,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class All implements Term {
+class All implements Term {
     /** All columns in the schema. */
     private List<Column> columns;
     /**

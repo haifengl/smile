@@ -29,7 +29,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class Floor implements Factor {
+class Floor implements Factor {
     /** The operand factor of ceil expression. */
     private Factor child;
 

@@ -29,7 +29,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class Log10 implements Factor {
+class Log10 implements Factor {
     /** The operand factor of log10 expression. */
     private Factor child;
 

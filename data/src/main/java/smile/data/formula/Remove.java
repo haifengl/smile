@@ -27,7 +27,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class Remove implements Factor {
+class Remove implements Factor {
     /** The factor to remove. */
     private Factor factor;
 

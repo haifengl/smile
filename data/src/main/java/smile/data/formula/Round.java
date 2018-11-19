@@ -29,7 +29,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class Round implements Factor {
+class Round implements Factor {
     /** The operand factor of round expression. */
     private Factor child;
 

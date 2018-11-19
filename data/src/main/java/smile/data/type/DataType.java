@@ -69,8 +69,8 @@ public interface DataType extends Serializable {
                     return DataTypes.date(s.substring(5, s.length() - 1));
                 else if (s.startsWith("datetime[") && s.endsWith("]"))
                     return DataTypes.datetime(s.substring(9, s.length() - 1));
-                else if (s.startsWith("class[") && s.endsWith("]"))
-                    return DataTypes.object(Class.forName(s.substring(6, s.length() - 1)));
+                else if (s.startsWith("object[") && s.endsWith("]"))
+                    return DataTypes.object(Class.forName(s.substring(7, s.length() - 1)));
                 else if (s.startsWith("array[") && s.endsWith("]"))
                     return DataTypes.array(DataType.of(s.substring(6, s.length() - 1).trim()));
                 else if (s.startsWith("struct[") && s.endsWith("]")) {
