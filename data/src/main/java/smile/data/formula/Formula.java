@@ -17,7 +17,17 @@ package smile.data.formula;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.function.ToDoubleBiFunction;
+import java.util.function.ToDoubleFunction;
+import java.util.function.ToIntBiFunction;
+import java.util.function.ToIntFunction;
+import java.util.function.ToLongBiFunction;
+import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -773,7 +783,7 @@ public class Formula {
         return new Factor() {
             @Override
             public String name() {
-                return String.valueOf(x);
+                return x.toString();
             }
 
             @Override
@@ -808,6 +818,276 @@ public class Formula {
             @Override
             public Object apply(Tuple o) {
                 return x;
+            }
+        };
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given column.
+     * @param name the function name.
+     * @param x the column name.
+     * @param f the lambda to apply on the column.
+     */
+    public static Factor apply(final String name, final String x, ToIntFunction<Object> f) {
+        return apply(name, col(x), f);
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given factor.
+     * @param name the function name.
+     * @param x the factor.
+     * @param f the lambda to apply on the factor.
+     */
+    public static Factor apply(final String name, final Factor x, ToIntFunction<Object> f) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return x.variables();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.IntegerType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+            }
+
+            @Override
+            public int applyAsInt(Tuple o) {
+                return f.applyAsInt(x.apply(o));
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return f.applyAsInt(x.apply(o));
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return f.applyAsInt(x.apply(o));
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.applyAsInt(x.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given column.
+     * @param name the function name.
+     * @param x the column name.
+     * @param f the lambda to apply on the column.
+     */
+    public static Factor apply(final String name, final String x, ToLongFunction<Object> f) {
+        return apply(name, col(x), f);
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given factor.
+     * @param name the function name.
+     * @param x the factor.
+     * @param f the lambda to apply on the factor.
+     */
+    public static Factor apply(final String name, final Factor x, ToLongFunction<Object> f) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return x.variables();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.LongType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return f.applyAsLong(x.apply(o));
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return f.applyAsLong(x.apply(o));
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.applyAsLong(x.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given column.
+     * @param name the function name.
+     * @param x the column name.
+     * @param f the lambda to apply on the column.
+     */
+    public static Factor apply(final String name, final String x, ToDoubleFunction<Object> f) {
+        return apply(name, col(x), f);
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given factor.
+     * @param name the function name.
+     * @param x the factor.
+     * @param f the lambda to apply on the factor.
+     */
+    public static Factor apply(final String name, final Factor x, ToDoubleFunction<Object> f) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return x.variables();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.DoubleType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return f.applyAsDouble(x.apply(o));
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.applyAsDouble(x.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given column.
+     * @param name the function name.
+     * @param x the column name.
+     * @param f the lambda to apply on the column.
+     */
+    public static Factor apply(final String name, final String x, Function<Object, Object> f) {
+        return apply(name, col(x), f);
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given factor.
+     * @param name the function name.
+     * @param x the factor.
+     * @param f the lambda to apply on the factor.
+     */
+    public static Factor apply(final String name, final Factor x, Function<Object, Object> f) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return x.variables();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.LongType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.apply(x.apply(o));
             }
         };
     }

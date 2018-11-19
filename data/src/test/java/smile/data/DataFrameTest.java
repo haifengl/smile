@@ -158,15 +158,32 @@ public class DataFrameTest {
      */
     @Test
     public void testFormulaAdd() {
-        System.out.println("Add");
+        System.out.println("add");
         Formula formula = new Formula(all(), add("age", cst(10)));
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
+        assertEquals(5, output.ncols());
+        assertEquals(48, output.get(0,4));
+        assertEquals(33, output.get(1,4));
+        assertEquals(58, output.get(2,4));
+        assertEquals(23, output.get(3,4));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaLog() {
+        System.out.println("log");
+        Formula formula = new Formula(log("salary"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
-        assertEquals(48, output.get(0,0));
-        assertEquals(33, output.get(1,0));
-        assertEquals(58, output.get(2,0));
-        assertEquals(23, output.get(3,0));
+        assertEquals(Math.log(10000), output.get(0,0));
+        assertEquals(null, output.get(1,0));
+        assertEquals(Math.log(230000), output.get(2,0));
+        assertEquals(null, output.get(3,0));
     }
 }
