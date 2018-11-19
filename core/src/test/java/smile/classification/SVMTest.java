@@ -219,31 +219,18 @@ public class SVMTest {
             int[] testy = test.toArray(new int[test.size()]);
             
             SVM<double[]> svm = new SVM<>(new GaussianKernel(8.0), 5.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ONE, ScalingMethod.IsotonicRegression);
-            svm.learn(x, y);
-            svm.finish();
-            svm.trainIsotonicRegressionScaling(x, y);
-            assertTrue(svm.hasIsotonicRegressionScaling());  
-            
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (svm.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
-
-            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
-            assertTrue(error < 95);
-            
+            svm.learn(x, y);            
             System.out.println("USPS one more epoch...");
             for (int i = 0; i < x.length; i++) {
                 int j = Math.randomInt(x.length);
                 svm.learn(x[j], y[j]);
-            }
-            
+            }            
             svm.finish();
+            assertTrue(!svm.hasIsotonicRegressionScaling());
             svm.trainIsotonicRegressionScaling(x, y);   
+            assertTrue(svm.hasIsotonicRegressionScaling());  
 
-            error = 0;
+            int error = 0;
             for (int i = 0; i < testx.length; i++) {
                 if (svm.predict(testx[i]) != testy[i]) {
                     error++;

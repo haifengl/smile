@@ -37,6 +37,9 @@ import smile.sort.QuickSort;
  */
 public class IsotonicRegressionScaling implements Serializable {
     private static final long serialVersionUID = 1L;
+    
+    private double trainMixScore = Double.NaN;
+    private double trainMaxScore = Double.NaN;
 
     /** setep-wise constant functions */
     private static class StepwiseConsFunc {
@@ -71,7 +74,7 @@ public class IsotonicRegressionScaling implements Serializable {
         }
 
         boolean matchValue(double score) {
-            if (score > lowScore && score <= highScore) {
+            if ((score - lowScore) > 0.0 && (highScore - score) >= 0.0) {
                 return true;
             } else {
                 return false;
@@ -97,11 +100,15 @@ public class IsotonicRegressionScaling implements Serializable {
         initStepwiseConstFuncs(scores, y);
 
         StepwiseConsFunc current = startConstantFuncs.next;
-
+        StepwiseConsFunc last = startConstantFuncs;
+        
         while (current != null) {
             StepwiseConsFunc previous = current.previous;
             while (previous != null) {
-                if (previous.getVal() >= current.getVal()) {
+                double pv = previous.getVal();
+                double cv = current.getVal();
+                double diff = pv - cv;
+                if (diff >= 0.0) {
                     int weight = previous.getWeight() + current.getWeight();
                     double val = (previous.getWeight() * previous.getVal() + current.getWeight() * current.getVal())
                             / weight;
@@ -109,23 +116,35 @@ public class IsotonicRegressionScaling implements Serializable {
                     newFunc.setWeight(weight);
 
                     newFunc.next = current.next;
-                    if (newFunc.next != null) {
+                    if (current.next != null) {
                         newFunc.next.previous = newFunc;
+                        current.next = null;
                     }
 
                     newFunc.previous = previous.previous;
-                    if (newFunc.previous != null) {
+                    if (previous.previous != null) {
                         newFunc.previous.next = newFunc;
+                        previous.previous = null;
                     }
-
+                    
                     current = newFunc;
                     previous = current.previous;
+                    if (previous == null) {
+                        startConstantFuncs = current;
+                    }
                 } else {
                     previous = previous.previous;
                 }
             }
+            last = current;
             current = current.next;
         }
+        
+        double minScore = startConstantFuncs.lowScore;
+        assert((minScore - trainMixScore) == 0.0);
+        
+        double maxScore = last.highScore;
+        assert((maxScore - trainMaxScore) == 0.0);
     }
 
     private void initStepwiseConstFuncs(double[] scores, int[] y) {
@@ -133,6 +152,8 @@ public class IsotonicRegressionScaling implements Serializable {
         int[] sortedY = Arrays.copyOf(y, y.length);
 
         QuickSort.sort(sortedScores, sortedY, sortedScores.length);
+        trainMixScore = sortedScores[0];
+        trainMaxScore = sortedScores[sortedScores.length - 1];
 
         StepwiseConsFunc previous = new StepwiseConsFunc(sortedScores[0], sortedScores[0], (double) sortedY[0]);
         startConstantFuncs = previous;
@@ -155,6 +176,11 @@ public class IsotonicRegressionScaling implements Serializable {
     public double predict(double y) {
         double ret = Double.NaN;
         StepwiseConsFunc func = startConstantFuncs;
+        
+        if(startConstantFuncs != null && (y - func.lowScore) == 0.0) {
+            return func.getVal();
+        }
+        
         while (func != null) {
             if (func.matchValue(y)) {
                 ret = func.getVal();
@@ -162,9 +188,11 @@ public class IsotonicRegressionScaling implements Serializable {
             }
             func = func.next;
         }
+        
         if (ret == Double.NaN) {
             throw new IllegalArgumentException("fail to get the posteriori probability for given prediction: " + y);
         }
+        
         return ret;
     }
 
@@ -173,6 +201,20 @@ public class IsotonicRegressionScaling implements Serializable {
      */
     public static void multiclass(int k, double[][] r, double[] p) {
         PlattScaling.multiclass(k, r, p);
+    }
+    
+    @Override
+    public String toString() {        
+        StringBuilder sb = new StringBuilder();
+        StepwiseConsFunc iter = startConstantFuncs;
+        while(iter != null) {
+            sb.append("[" + iter.lowScore + "," + iter.highScore + "]=" + iter.val + ",");            
+            iter = iter.next;
+        }
+        if(sb.length() > 0) {
+           sb.setLength(sb.length() - 1);
+        }
+        return sb.toString();
     }
 
 }

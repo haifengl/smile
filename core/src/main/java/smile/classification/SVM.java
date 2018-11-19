@@ -1432,7 +1432,18 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
      * @return true if Isotonic Regression Scaling is available
      */
     public boolean hasIsotonicRegressionScaling() {
-        return (svm != null && svm.isotonicRegression != null) || (svms != null && svms.size() > 0 && svms.get(0).isotonicRegression != null);
+        boolean ret = (svm != null && svm.isotonicRegression != null) || (svms != null && svms.size() > 0 && svms.get(0).isotonicRegression != null);
+        if(ret) {
+            if(svm != null && svm.isotonicRegression != null) {
+               System.out.println("Isotonic Regression Paiwwise:" + svm.isotonicRegression.toString()); 
+            }
+            if(svms != null && svms.size() > 0 && svms.get(0).isotonicRegression != null) {
+               for(LASVM svm : svms) {
+                   System.out.println("Isotonic Regression Paiwwise:" + svm.isotonicRegression.toString());      
+               }                
+            }
+        }
+        return ret;
     }
 
     /**
