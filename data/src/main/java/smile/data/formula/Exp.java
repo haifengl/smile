@@ -22,6 +22,7 @@ import java.util.Set;
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.ObjectType;
 import smile.data.type.StructType;
 
 /**
@@ -69,14 +70,21 @@ class Exp implements Factor {
 
     @Override
     public DataType type() {
-        return DataTypes.DoubleType;
+        return child.type() instanceof ObjectType ? DataTypes.object(Double.class) : DataTypes.DoubleType;
     }
 
     @Override
     public void bind(StructType schema) {
         child.bind(schema);
 
-        if (child.type() != DataTypes.DoubleType && child.type() != DataTypes.object(Double.class)) {
+        if (!(child.type().equals(DataTypes.DoubleType) ||
+              child.type().equals(DataTypes.IntegerType) ||
+              child.type().equals(DataTypes.FloatType) ||
+              child.type().equals(DataTypes.LongType) ||
+              child.type().equals(DataTypes.object(Double.class)) ||
+              child.type().equals(DataTypes.object(Integer.class)) ||
+              child.type().equals(DataTypes.object(Float.class)) ||
+              child.type().equals(DataTypes.object(Long.class)))) {
             throw new IllegalStateException(String.format("Invalid expression: exp(%s)", child.type()));
         }
     }
@@ -90,6 +98,6 @@ class Exp implements Factor {
     public Double apply(Tuple o) {
         Object x = child.apply(o);
         if (x == null) return null;
-        else return Math.exp((double) x);
+        else return Math.exp(((Number) x).doubleValue());
     }
 }
