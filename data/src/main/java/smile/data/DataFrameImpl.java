@@ -67,7 +67,7 @@ class DataFrameImpl implements DataFrame {
                 .map(v -> new StructField(v.name(), v.type()))
                 .collect(Collectors.toList())
                 .toArray(new StructField[columns.size()]);
-        this.schema = new StructType(fields);
+        this.schema = DataTypes.struct(fields);
 
         Set<String> set = new HashSet<>();
         for (BaseVector v : columns) {
@@ -104,7 +104,7 @@ class DataFrameImpl implements DataFrame {
                     .map(this::field)
                     .collect(Collectors.toList());
 
-            this.schema = new StructType(fields);
+            this.schema = DataTypes.struct(fields);
             for (PropertyDescriptor prop : props) {
                 if (!prop.getName().equals("class")) {
                     String name = prop.getName();
@@ -353,17 +353,48 @@ class DataFrameImpl implements DataFrame {
     }
 
     @Override
-    public IntVector intColumn(int i) {
+    @SuppressWarnings("unchecked")
+    public <T> Vector<T> vector(int i) {
+        return (Vector<T>) columns.get(i);
+    }
+
+    @Override
+    public BooleanVector booleanVector(int i) {
+        return (BooleanVector) columns.get(i);
+    }
+
+    @Override
+    public CharVector charVector(int i) {
+        return (CharVector) columns.get(i);
+    }
+
+    @Override
+    public ByteVector byteVector(int i) {
+        return (ByteVector) columns.get(i);
+    }
+
+    @Override
+    public ShortVector shortVector(int i) {
+        return (ShortVector) columns.get(i);
+    }
+
+    @Override
+    public IntVector intVector(int i) {
         return (IntVector) columns.get(i);
     }
 
     @Override
-    public LongVector longColumn(int i) {
+    public LongVector longVector(int i) {
         return (LongVector) columns.get(i);
     }
 
     @Override
-    public DoubleVector doubleColumn(int i) {
+    public FloatVector floatVector(int i) {
+        return (FloatVector) columns.get(i);
+    }
+
+    @Override
+    public DoubleVector doubleVector(int i) {
         return (DoubleVector) columns.get(i);
     }
 
