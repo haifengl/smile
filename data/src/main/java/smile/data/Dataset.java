@@ -34,13 +34,6 @@ import java.util.stream.Stream;
  */
 public interface Dataset<T> {
     /**
-     * Return the (optional) name of dataset.
-     */
-    default String name() {
-        return null;
-    }
-
-    /**
      * Returns true if the dataset is distributed over multiple machines.
      */
     default boolean distributed() {

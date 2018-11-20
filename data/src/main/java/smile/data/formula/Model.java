@@ -75,7 +75,7 @@ public class Model extends Formula {
     public Instance<Tuple> map(Tuple o) {
         DataType type = y.type();
         if (type == DataTypes.DoubleObjectType || type == DataTypes.FloatType) {
-            return new Instance() {
+            return new Instance<Tuple>() {
                 @Override
                 public Tuple x() {
                     return apply(o);
@@ -87,7 +87,7 @@ public class Model extends Formula {
                 }
             };
         } else {
-            return new Instance() {
+            return new Instance<Tuple>() {
                 @Override
                 public Tuple x() {
                     return apply(o);
