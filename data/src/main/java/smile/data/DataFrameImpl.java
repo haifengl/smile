@@ -419,7 +419,7 @@ class DataFrameImpl implements DataFrame {
     }
 
     @Override
-    public DataFrame bind(DataFrame... dataframes) {
+    public DataFrame merge(DataFrame... dataframes) {
         List<BaseVector> all = new ArrayList<>(columns);
         for (DataFrame df : dataframes) {
             for (int i = 0; i < df.ncols(); i++) {
@@ -430,7 +430,7 @@ class DataFrameImpl implements DataFrame {
     }
 
     @Override
-    public DataFrame bind(BaseVector... vectors) {
+    public DataFrame merge(BaseVector... vectors) {
         List<BaseVector> columns = new ArrayList<>(this.columns);
         Collections.addAll(columns, vectors);
         return new DataFrameImpl(columns);

@@ -15,16 +15,18 @@
  *******************************************************************************/
 package smile.data;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
+
+import smile.data.type.ContinuousMeasure;
 import smile.data.type.DataType;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.*;
+import smile.data.vector.Vector;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 import smile.util.Strings;
@@ -245,13 +247,13 @@ public interface DataFrame extends Dataset<Tuple> {
      * Returns a new DataFrame that combines this DataFrame
      * with one more more other DataFrames by columns.
      */
-    DataFrame bind(DataFrame... dataframes);
+    DataFrame merge(DataFrame... dataframes);
 
     /**
      * Returns a new DataFrame that combines this DataFrame
      * with one more more additional vectors.
      */
-    DataFrame bind(BaseVector... vectors);
+    DataFrame merge(BaseVector... vectors);
 
     /** Returns a new DataFrame without given column names. */
     default DataFrame drop(String... cols) {
@@ -278,43 +280,90 @@ public interface DataFrame extends Dataset<Tuple> {
     /**
      * Return the matrix obtained by converting all the variables
      * in a data frame to numeric mode and then binding them together
-     * as the columns of a matrix. Factors and ordered factors are
+     * as the columns of a matrix. Nominal and ordinal variables are
      * replaced by their internal codes.
      */
     Matrix toMatrix();
 
-    /** Returns statistic summary. */
-    /*
+    /** Returns the statistic summary of numeric columns. */
     default DataFrame summary() {
-        Attribute[] attr = {
-                new NumericAttribute("min"),
-                new NumericAttribute("q1"),
-                new NumericAttribute("median"),
-                new NumericAttribute("mean"),
-                new NumericAttribute("q3"),
-                new NumericAttribute("max"),
-        };
+        int ncols = ncols();
+        String[] names = names();
+        DataType[] types = types();
+        String[] col = new String[ncols];
+        double[] min = new double[ncols];
+        double[] max = new double[ncols];
+        double[] avg = new double[ncols];
+        long[] count = new long[ncols];
 
-        AttributeDataset stat = new AttributeDataset(name + " Summary", attr);
-
-        for (int i = 0; i < ncols(); i++) {
-            double[] x = column(i).vector();
-            double[] s = new double[attr.length];
-            s[0] = Math.min(x);
-            s[1] = Math.q1(x);
-            s[2] = Math.median(x);
-            s[3] = Math.mean(x);
-            s[4] = Math.q3(x);
-            s[5] = Math.max(x);
-            Row datum = new Row(s);
-            datum.name = attributes[i].getName();
-            datum.description = attributes[i].getDescription();
-            stat.add(datum);
+        int k = 0;
+        for (int j = 0; j < ncols; j++) {
+            DataType type = types[j];
+            if (type.isInt()) {
+                IntSummaryStatistics s = type.isObject() ?
+                        this.<Integer>vector(j).stream().filter(Objects::nonNull).mapToInt(Integer::intValue).summaryStatistics() :
+                        intVector(j).stream().summaryStatistics();
+                col[k] = names[j];
+                min[k] = s.getMin();
+                max[k] = s.getMax();
+                avg[k] = s.getAverage();
+                count[k++] = s.getCount();
+            } else if (type.isLong()) {
+                LongSummaryStatistics s = type.isObject() ?
+                        this.<Long>vector(j).stream().filter(Objects::nonNull).mapToLong(Long::longValue).summaryStatistics() :
+                        longVector(j).stream().summaryStatistics();
+                col[k] = names[j];
+                min[k] = s.getMin();
+                max[k] = s.getMax();
+                avg[k] = s.getAverage();
+                count[k++] = s.getCount();
+            } else if (type.isFloat()) {
+                DoubleSummaryStatistics s = type.isObject() ?
+                        this.<Float>vector(j).stream().filter(Objects::nonNull).mapToDouble(Float::doubleValue).summaryStatistics() :
+                        floatVector(j).stream().summaryStatistics();
+                col[k] = names[j];
+                min[k] = s.getMin();
+                max[k] = s.getMax();
+                avg[k] = s.getAverage();
+                count[k++] = s.getCount();
+            } else if (type.isDouble()) {
+                DoubleSummaryStatistics s = type.isObject() ?
+                        this.<Double>vector(j).stream().filter(Objects::nonNull).mapToDouble(Double::doubleValue).summaryStatistics() :
+                        doubleVector(j).stream().summaryStatistics();
+                col[k] = names[j];
+                min[k] = s.getMin();
+                max[k] = s.getMax();
+                avg[k] = s.getAverage();
+                count[k++] = s.getCount();
+            } else if (type.isByte()) {
+                IntSummaryStatistics s = type.isObject() ?
+                        this.<Byte>vector(j).stream().filter(Objects::nonNull).mapToInt(Byte::intValue).summaryStatistics() :
+                        byteVector(j).stream().summaryStatistics();
+                col[k] = names[j];
+                min[k] = s.getMin();
+                max[k] = s.getMax();
+                avg[k] = s.getAverage();
+                count[k++] = s.getCount();
+            } else if (type.isShort()) {
+                IntSummaryStatistics s = type.isObject() ?
+                        this.<Short>vector(j).stream().filter(Objects::nonNull).mapToInt(Short::intValue).summaryStatistics() :
+                        shortVector(j).stream().summaryStatistics();
+                col[k] = names[j];
+                min[k] = s.getMin();
+                max[k] = s.getMax();
+                avg[k] = s.getAverage();
+                count[k++] = s.getCount();
+            }
         }
 
-        return stat;
+        return DataFrame.of(
+                Vector.of("column", Arrays.copyOf(col, k)),
+                LongVector.of("count", Arrays.copyOf(count, k)),
+                DoubleVector.of("min", Arrays.copyOf(min, k)),
+                DoubleVector.of("avg", Arrays.copyOf(avg, k)),
+                DoubleVector.of("max", Arrays.copyOf(max, k))
+        );
     }
-    */
 
     /**
      * Returns the string representation of top rows.
