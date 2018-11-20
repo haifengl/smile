@@ -29,6 +29,8 @@ import java.util.List;
 import smile.data.formula.Formula;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+
 import static smile.data.formula.Formula.*;
 
 import static org.junit.Assert.*;
@@ -70,12 +72,6 @@ public class DataFrameTest {
         persons.add(new Person("Amy", 'F', LocalDate.of(2005, 12, 10), 13, null));
 
         df = DataFrame.of(persons, Person.class);
-        System.out.println(df);
-        System.out.println(Arrays.toString(df.names()));
-        System.out.println(Arrays.toString(df.types()));
-        System.out.println(df.structure());
-        System.out.println(df.schema());
-        System.out.println(df.schema().name());
     }
 
     @BeforeClass
@@ -113,7 +109,26 @@ public class DataFrameTest {
     }
 
     /**
-     * Test of size method, of class DataFrame.
+     * Test of schema method, of class DataFrame.
+     */
+    @Test
+    public void testSchema() {
+        System.out.println("schema");
+        System.out.println(df.schema());
+        System.out.println(df.structure());
+        System.out.println(df);
+        smile.data.type.StructType schema = DataTypes.struct(
+                new StructField("age", DataTypes.IntegerType),
+                new StructField("birthday", DataTypes.DateType),
+                new StructField("gender", DataTypes.CharType),
+                new StructField("name", DataTypes.StringType),
+                new StructField("salary", DataTypes.object(Double.class))
+        );
+        assertEquals(schema, df.schema());
+    }
+
+    /**
+     * Test of names method, of class DataFrame.
      */
     @Test
     public void testNames() {
@@ -123,7 +138,7 @@ public class DataFrameTest {
     }
 
     /**
-     * Test of size method, of class DataFrame.
+     * Test of types method, of class DataFrame.
      */
     @Test
     public void testTypes() {
