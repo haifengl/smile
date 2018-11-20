@@ -374,32 +374,32 @@ class DataFrameImpl implements DataFrame {
 
         @Override
         public byte getByte(int j) {
-            return ((ByteVector) columns.get(j)).getByte(i);
+            return columns.get(j).getByte(i);
         }
 
         @Override
         public short getShort(int j) {
-            return ((ShortVector) columns.get(j)).getShort(i);
+            return columns.get(j).getShort(i);
         }
 
         @Override
         public int getInt(int j) {
-            return ((IntVector) columns.get(j)).getInt(i);
+            return columns.get(j).getInt(i);
         }
 
         @Override
         public long getLong(int j) {
-            return ((LongVector) columns.get(j)).getLong(i);
+            return columns.get(j).getLong(i);
         }
 
         @Override
         public float getFloat(int j) {
-            return ((FloatVector) columns.get(j)).getFloat(i);
+            return columns.get(j).getFloat(i);
         }
 
         @Override
         public double getDouble(int j) {
-            return ((DoubleVector) columns.get(j)).getDouble(i);
+            return columns.get(j).getDouble(i);
         }
 
         @Override

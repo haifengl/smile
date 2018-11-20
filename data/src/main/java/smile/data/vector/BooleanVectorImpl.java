@@ -41,6 +41,36 @@ class BooleanVectorImpl implements BooleanVector {
     }
 
     @Override
+    public byte getByte(int i) {
+        return vector[i] ? (byte) 1 : 0;
+    }
+
+    @Override
+    public short getShort(int i) {
+        return vector[i] ? (short) 1 : 0;
+    }
+
+    @Override
+    public int getInt(int i) {
+        return vector[i] ? 1 : 0;
+    }
+
+    @Override
+    public long getLong(int i) {
+        return vector[i] ? 1 : 0;
+    }
+
+    @Override
+    public float getFloat(int i) {
+        return vector[i] ? 1 : 0;
+    }
+
+    @Override
+    public double getDouble(int i) {
+        return vector[i] ? 1 : 0;
+    }
+
+    @Override
     public Boolean get(int i) {
         return vector[i];
     }

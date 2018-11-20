@@ -37,6 +37,36 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
                 .orElse(DataTypes.ObjectType);
     }
 
+    @Override
+    default byte getByte(int i) {
+        return ((Number) get(i)).byteValue();
+    }
+
+    @Override
+    default short getShort(int i) {
+        return ((Number) get(i)).shortValue();
+    }
+
+    @Override
+    default int getInt(int i) {
+        return ((Number) get(i)).intValue();
+    }
+
+    @Override
+    default long getLong(int i) {
+        return ((Number) get(i)).longValue();
+    }
+
+    @Override
+    default float getFloat(int i) {
+        return ((Number) get(i)).floatValue();
+    }
+
+    @Override
+    default double getDouble(int i) {
+        return ((Number) get(i)).doubleValue();
+    }
+
     /** Checks whether the value at position i is null. */
     default boolean isNullAt(int i) {
         return get(i) == null;

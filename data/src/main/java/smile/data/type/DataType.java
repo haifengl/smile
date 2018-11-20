@@ -50,6 +50,31 @@ public interface DataType extends Serializable {
         return o.toString();
     }
 
+    /** Returns true if the type is int or Integer. */
+    default boolean isInt() {
+        return false;
+    }
+
+    /** Returns true if the type is long or Long. */
+    default boolean isLong() {
+        return false;
+    }
+
+    /** Returns true if the type is float or Float. */
+    default boolean isFloat() {
+        return false;
+    }
+
+    /** Returns true if the type is double or Double. */
+    default boolean isDouble() {
+        return false;
+    }
+
+    /** Returns true if the type is ObjectType. */
+    default boolean isObject() {
+        return false;
+    }
+
     /** Returns a DataType from its string representation. */
     static DataType of(String s) throws ClassNotFoundException {
         switch (s) {
@@ -124,22 +149,37 @@ public interface DataType extends Serializable {
      * is double, the result is double.
      */
     static DataType prompt(DataType a, DataType b) {
-        if (!isInt(a) && !isLong(a) && !isFloat(a) && !isDouble(a))
+        if (!a.isInt() && !a.isLong() && !a.isFloat() && !a.isDouble())
             throw new IllegalArgumentException(String.format("Invalid data type for type promotion: %s", a));
 
-        if (!isInt(b) && !isLong(b) && !isFloat(b) && !isDouble(b))
+        if (!b.isInt() && !b.isLong() && !b.isFloat() && !b.isDouble())
             throw new IllegalArgumentException(String.format("Invalid data type for type promotion: %s", b));
 
-        if (isDouble(a) || isDouble(b))
-            return DataTypes.DoubleType;
+        if (a.isDouble() || b.isDouble()) {
+            if (a.isObject() || b.isObject())
+                return DataTypes.DoubleObjectType;
+            else
+                return DataTypes.DoubleType;
+        }
 
-        if (isFloat(a) || isFloat(b))
-            return DataTypes.FloatType;
+        if (a.isFloat() || b.isFloat()) {
+            if (a.isObject() || b.isObject())
+                return DataTypes.FloatObjectType;
+            else
+                return DataTypes.FloatType;
+        }
 
-        if (isLong(a) || isLong(b))
-            return DataTypes.LongType;
+        if (a.isLong() || b.isLong()) {
+            if (a.isObject() || b.isObject())
+                return DataTypes.LongObjectType;
+            else
+                return DataTypes.LongType;
+        }
 
-        return DataTypes.IntegerType;
+        if (a.isObject() || b.isObject())
+            return DataTypes.IntegerObjectType;
+        else
+            return DataTypes.IntegerType;
     }
 
     /**
@@ -151,7 +191,7 @@ public interface DataType extends Serializable {
                t == DataTypes.ShortType ||
                t == DataTypes.ByteType ||
                t == DataTypes.CharType ||
-               t == DataTypes.object(Integer.class) ||
+               t.equals(DataTypes.object(Integer.class)) ||
                t == DataTypes.object(Short.class) ||
                t == DataTypes.object(Byte.class) ||
                t == DataTypes.object(Character.class);

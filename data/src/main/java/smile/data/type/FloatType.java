@@ -34,6 +34,11 @@ public class FloatType implements DataType {
     }
 
     @Override
+    public boolean isFloat() {
+        return true;
+    }
+
+    @Override
     public String name() {
         return "float";
     }

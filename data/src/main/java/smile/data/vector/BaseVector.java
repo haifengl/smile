@@ -46,6 +46,36 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
     T get(int i);
 
     /**
+     * Returns the byte value at position i.
+     */
+    byte getByte(int i);
+
+    /**
+     * Returns the short value at position i.
+     */
+    short getShort(int i);
+
+    /**
+     * Returns the integer value at position i.
+     */
+    int getInt(int i);
+
+    /**
+     * Returns the long value at position i.
+     */
+    long getLong(int i);
+
+    /**
+     * Returns the float value at position i.
+     */
+    float getFloat(int i);
+
+    /**
+     * Returns the double value at position i.
+     */
+    double getDouble(int i);
+
+    /**
      * Returns the value at position i, which may be null.
      */
     default T apply(int i) {

@@ -21,8 +21,16 @@ package smile.data.type;
  * @author Haifeng Li
  */
 public class ObjectType implements DataType {
-    /** Default instance. */
-    static ObjectType instance = new ObjectType(Object.class);
+    /** Object type. */
+    static ObjectType objectType = new ObjectType(Object.class);
+    /** Integer type. */
+    static ObjectType integerType = new ObjectType(Integer.class);
+    /** Long type. */
+    static ObjectType longType = new ObjectType(Long.class);
+    /** Float type. */
+    static ObjectType floatType = new ObjectType(Float.class);
+    /** Double type. */
+    static ObjectType doubleType = new ObjectType(Double.class);
 
     /** Object Class. */
     private Class clazz;
@@ -42,6 +50,31 @@ public class ObjectType implements DataType {
      */
     public Class getObjectClass() {
         return clazz;
+    }
+
+    @Override
+    public boolean isObject() {
+        return true;
+    }
+
+    @Override
+    public boolean isInt() {
+        return clazz == Integer.class;
+    }
+
+    @Override
+    public boolean isLong() {
+        return clazz == Long.class;
+    }
+
+    @Override
+    public boolean isFloat() {
+        return clazz == Float.class;
+    }
+
+    @Override
+    public boolean isDouble() {
+        return clazz == Double.class;
     }
 
     @Override

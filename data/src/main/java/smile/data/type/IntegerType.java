@@ -34,6 +34,11 @@ public class IntegerType implements DataType {
     }
 
     @Override
+    public boolean isInt() {
+        return true;
+    }
+
+    @Override
     public String name() {
         return "int";
     }
