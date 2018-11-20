@@ -25,6 +25,8 @@ import smile.data.type.DataType;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.*;
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 import smile.util.Strings;
 
 /**
@@ -88,18 +90,13 @@ public interface DataFrame extends Dataset<Tuple> {
     int columnIndex(String name);
 
     /** Selects column based on the column name and return it as a Column. */
-    default <T> Vector<T> apply(String colName) {
-        return get(colName);
-    }
-
-    /** Selects column based on the column name. */
-    default <T> Vector<T> get(String colName) {
-        return (Vector<T>) column(colName);
+    default BaseVector apply(String colName) {
+        return column(colName);
     }
 
     /** Selects column using an enum value. */
-    default <T> Vector<T> get(Enum<?> e) {
-        return (Vector<T>) column(e);
+    default BaseVector apply(Enum<?> e) {
+        return column(e.toString());
     }
 
     /** Selects column based on the column index. */
@@ -116,42 +113,120 @@ public interface DataFrame extends Dataset<Tuple> {
     }
 
     /** Selects column based on the column index. */
-    IntVector intColumn(int i);
+    <T> Vector<T> vector(int i);
 
     /** Selects column based on the column name. */
-    default IntVector intColumn(String colName) {
-        return intColumn(columnIndex(colName));
+    default <T> Vector<T> vector(String colName) {
+        return vector(columnIndex(colName));
     }
 
     /** Selects column using an enum value. */
-    default IntVector intColumn(Enum<?> e) {
-        return intColumn(columnIndex(e.toString()));
+    default <T> Vector<T> vector(Enum<?> e) {
+        return vector(columnIndex(e.toString()));
     }
 
     /** Selects column based on the column index. */
-    LongVector longColumn(int i);
+    BooleanVector booleanVector(int i);
 
     /** Selects column based on the column name. */
-    default LongVector longColumn(String colName) {
-        return longColumn(columnIndex(colName));
+    default BooleanVector booleanVector(String colName) {
+        return booleanVector(columnIndex(colName));
     }
 
     /** Selects column using an enum value. */
-    default LongVector longColumn(Enum<?> e) {
-        return longColumn(columnIndex(e.toString()));
+    default BooleanVector booleanVector(Enum<?> e) {
+        return booleanVector(columnIndex(e.toString()));
     }
 
     /** Selects column based on the column index. */
-    DoubleVector doubleColumn(int i);
+    CharVector charVector(int i);
 
     /** Selects column based on the column name. */
-    default DoubleVector doubleColumn(String colName) {
-        return doubleColumn(columnIndex(colName));
+    default CharVector charVector(String colName) {
+        return charVector(columnIndex(colName));
     }
 
     /** Selects column using an enum value. */
-    default DoubleVector doubleColumn(Enum<?> e) {
-        return doubleColumn(columnIndex(e.toString()));
+    default CharVector charVector(Enum<?> e) {
+        return charVector(columnIndex(e.toString()));
+    }
+
+    /** Selects column based on the column index. */
+    ByteVector byteVector(int i);
+
+    /** Selects column based on the column name. */
+    default ByteVector byteVector(String colName) {
+        return byteVector(columnIndex(colName));
+    }
+
+    /** Selects column using an enum value. */
+    default ByteVector byteVector(Enum<?> e) {
+        return byteVector(columnIndex(e.toString()));
+    }
+
+    /** Selects column based on the column index. */
+    ShortVector shortVector(int i);
+
+    /** Selects column based on the column name. */
+    default ShortVector shortVector(String colName) {
+        return shortVector(columnIndex(colName));
+    }
+
+    /** Selects column using an enum value. */
+    default ShortVector shortVector(Enum<?> e) {
+        return shortVector(columnIndex(e.toString()));
+    }
+
+    /** Selects column based on the column index. */
+    IntVector intVector(int i);
+
+    /** Selects column based on the column name. */
+    default IntVector intVector(String colName) {
+        return intVector(columnIndex(colName));
+    }
+
+    /** Selects column using an enum value. */
+    default IntVector intVector(Enum<?> e) {
+        return intVector(columnIndex(e.toString()));
+    }
+
+    /** Selects column based on the column index. */
+    LongVector longVector(int i);
+
+    /** Selects column based on the column name. */
+    default LongVector longVector(String colName) {
+        return longVector(columnIndex(colName));
+    }
+
+    /** Selects column using an enum value. */
+    default LongVector longVector(Enum<?> e) {
+        return longVector(columnIndex(e.toString()));
+    }
+
+    /** Selects column based on the column index. */
+    FloatVector floatVector(int i);
+
+    /** Selects column based on the column name. */
+    default FloatVector floatVector(String colName) {
+        return floatVector(columnIndex(colName));
+    }
+
+    /** Selects column using an enum value. */
+    default FloatVector floatVector(Enum<?> e) {
+        return floatVector(columnIndex(e.toString()));
+    }
+
+    /** Selects column based on the column index. */
+    DoubleVector doubleVector(int i);
+
+    /** Selects column based on the column name. */
+    default DoubleVector doubleVector(String colName) {
+        return doubleVector(columnIndex(colName));
+    }
+
+    /** Selects column using an enum value. */
+    default DoubleVector doubleVector(Enum<?> e) {
+        return doubleVector(columnIndex(e.toString()));
     }
 
     /** Selects a new DataFrame with given column indices. */
@@ -185,38 +260,19 @@ public interface DataFrame extends Dataset<Tuple> {
     }
 
     /**
-     * Returns a stream collector that accumulates objects into a DataFrame.
-     *
-     * @param <T> the type of input elements to the reduction operation
-     * @param clazz The class type of elements.
+     * Creates a default columnar implementation of DataFrame by a formula.
+     * @param formula The formula that transforms this DataFrame.
      */
-    static <T> Collector<T, List<T>, DataFrame> toDataFrame(Class<T> clazz) {
-        return Collector.of(
-                // supplier
-                () -> new ArrayList<T>(),
-                // accumulator
-                (container, t) -> container.add(t),
-                // combiner
-                (c1, c2) -> { c1.addAll(c2); return c1; },
-                // finisher
-                (container) -> DataFrame.of(container, clazz)
-        );
+    default DataFrame apply(smile.data.formula.Formula formula) {
+        return map(formula);
     }
 
     /**
-     * Returns a stream collector that accumulates tuples into a DataFrame.
+     * Creates a default columnar implementation of DataFrame by a formula.
+     * @param formula The formula that transforms this DataFrame.
      */
-    static Collector<Tuple, List<Tuple>, DataFrame> toDataFrame() {
-        return Collector.of(
-                // supplier
-                () -> new ArrayList<Tuple>(),
-                // accumulator
-                (container, t) -> container.add(t),
-                // combiner
-                (c1, c2) -> { c1.addAll(c2); return c1; },
-                // finisher
-                (container) -> DataFrame.of(container)
-        );
+    default DataFrame map(smile.data.formula.Formula formula) {
+        return new DataFrameImpl(this, formula);
     }
 
     /**
@@ -225,7 +281,7 @@ public interface DataFrame extends Dataset<Tuple> {
      * as the columns of a matrix. Factors and ordered factors are
      * replaced by their internal codes.
      */
-    smile.math.matrix.Matrix toMatrix();
+    Matrix toMatrix();
 
     /** Returns statistic summary. */
     /*
@@ -389,10 +445,66 @@ public interface DataFrame extends Dataset<Tuple> {
     }
 
     /**
-     * Creates a default columnar implementation of DataFrame by a formula.
-     * @param formula The formula that transforms this DataFrame.
+     * Returns a stream collector that accumulates objects into a DataFrame.
+     *
+     * @param <T> the type of input elements to the reduction operation
+     * @param clazz The class type of elements.
      */
-    default DataFrame map(smile.data.formula.Formula formula) {
-        return new DataFrameImpl(this, formula);
+    static <T> Collector<T, List<T>, DataFrame> toDataFrame(Class<T> clazz) {
+        return Collector.of(
+                // supplier
+                () -> new ArrayList<T>(),
+                // accumulator
+                (container, t) -> container.add(t),
+                // combiner
+                (c1, c2) -> { c1.addAll(c2); return c1; },
+                // finisher
+                (container) -> DataFrame.of(container, clazz)
+        );
+    }
+
+    /**
+     * Returns a stream collector that accumulates tuples into a DataFrame.
+     */
+    static Collector<Tuple, List<Tuple>, DataFrame> toDataFrame() {
+        return Collector.of(
+                // supplier
+                () -> new ArrayList<Tuple>(),
+                // accumulator
+                (container, t) -> container.add(t),
+                // combiner
+                (c1, c2) -> { c1.addAll(c2); return c1; },
+                // finisher
+                (container) -> DataFrame.of(container)
+        );
+    }
+
+    /**
+     * Returns a stream collector that accumulates tuples into a Matrix.
+     */
+    static Collector<Tuple, List<Tuple>, DenseMatrix> toDenseMatrix() {
+        return Collector.of(
+                // supplier
+                () -> new ArrayList<Tuple>(),
+                // accumulator
+                (container, t) -> container.add(t),
+                // combiner
+                (c1, c2) -> { c1.addAll(c2); return c1; },
+                // finisher
+                (container) -> {
+                    if (container.isEmpty()) {
+                        throw new IllegalArgumentException("Empty list of tuples");
+                    }
+                    int nrows = container.size();
+                    int ncols = container.get(0).size();
+                    DenseMatrix m = Matrix.newInstance(nrows, ncols, 0);
+                    for (int i = 0; i < nrows; i++) {
+                        for (int j = 0; j < ncols; j++) {
+                            m.set(i, j, container.get(i).getDouble(j));
+                        }
+                    }
+                    return m;
+                }
+        );
     }
 }

@@ -411,7 +411,7 @@ public class DataFrameTest {
     @Test
     public void testFormulaAddCst() {
         System.out.println("add cst");
-        Formula formula = new Formula(all(), add("age", cst(10)));
+        Formula formula = new Formula(all(), add("age", val(10)));
         DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -445,7 +445,7 @@ public class DataFrameTest {
     @Test
     public void testFormulaSubCst() {
         System.out.println("sub cst");
-        Formula formula = new Formula(all(), sub("age", cst(10)));
+        Formula formula = new Formula(all(), sub("age", val(10)));
         DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -479,7 +479,7 @@ public class DataFrameTest {
     @Test
     public void testFormulaMulCst() {
         System.out.println("mul cst");
-        Formula formula = new Formula(all(), mul("age", cst(10)));
+        Formula formula = new Formula(all(), mul("age", val(10)));
         DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -513,7 +513,7 @@ public class DataFrameTest {
     @Test
     public void testFormulaDivCst() {
         System.out.println("div cst");
-        Formula formula = new Formula(all(), div("age", cst(10)));
+        Formula formula = new Formula(all(), div("age", val(10)));
         DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
