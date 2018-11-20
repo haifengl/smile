@@ -66,6 +66,26 @@ public class ObjectType implements DataType {
     }
 
     @Override
+    public boolean isBoolean() {
+        return clazz == Boolean.class;
+    }
+
+    @Override
+    public boolean isChar() {
+        return clazz == Character.class;
+    }
+
+    @Override
+    public boolean isByte() {
+        return clazz == Byte.class;
+    }
+
+    @Override
+    public boolean isShort() {
+        return clazz == Short.class;
+    }
+
+    @Override
     public boolean isInt() {
         return clazz == Integer.class;
     }

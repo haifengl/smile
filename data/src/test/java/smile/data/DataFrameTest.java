@@ -540,4 +540,27 @@ public class DataFrameTest {
         assertEquals(230000./48, output.get(2,3));
         assertEquals(null, output.get(3,3));
     }
+
+    /**
+     * Test of summary method, of class Formula.
+     */
+    @Test
+    public void testDataFrameSummary() {
+        System.out.println("summary");
+        DataFrame output = df.summary();
+        System.out.println(output);
+        System.out.println(output.schema());
+        assertEquals(2, output.nrows());
+        assertEquals(5, output.ncols());
+        assertEquals("age", output.get(0,0));
+        assertEquals(4L, output.get(0,1));
+        assertEquals(13., output.get(0,2));
+        assertEquals(30.5, output.get(0,3));
+        assertEquals(48.0, output.get(0,4));
+        assertEquals("salary", output.get(1,0));
+        assertEquals(2L, output.get(1,1));
+        assertEquals(10000., output.get(1,2));
+        assertEquals(120000., output.get(1,3));
+        assertEquals(230000., output.get(1,4));
+    }
 }

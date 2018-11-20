@@ -61,6 +61,26 @@ public interface DataType extends Serializable {
                this == DataTypes.ShortType;
     }
 
+    /** Returns true if the type is boolean or Boolean. */
+    default boolean isBoolean() {
+        return false;
+    }
+
+    /** Returns true if the type is char or Char. */
+    default boolean isChar() {
+        return false;
+    }
+
+    /** Returns true if the type is byte or Byte. */
+    default boolean isByte() {
+        return false;
+    }
+
+    /** Returns true if the type is short or Shorter. */
+    default boolean isShort() {
+        return false;
+    }
+
     /** Returns true if the type is int or Integer. */
     default boolean isInt() {
         return false;
