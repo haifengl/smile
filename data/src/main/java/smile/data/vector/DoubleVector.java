@@ -16,6 +16,7 @@
 
 package smile.data.vector;
 
+import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
 import smile.data.type.ContinuousMeasure;
@@ -38,6 +39,15 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
 
     /** Sets the (optional) scale of measure. */
     void setScale(ContinuousMeasure scale);
+
+    /**
+     * Returns the string representation of vector.
+     * @param n Number of elements to show
+     */
+    default String toString(int n) {
+        String suffix = n >= size() ? "]" : String.format(", ... %d more]", size() - n);
+        return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
+    }
 
     /** Creates a named double vector.
      *

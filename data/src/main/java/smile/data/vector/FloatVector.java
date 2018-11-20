@@ -20,6 +20,7 @@ import smile.data.type.ContinuousMeasure;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 
+import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
 /**
@@ -43,6 +44,15 @@ public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
      * Returns the value at position i.
      */
     float getFloat(int i);
+
+    /**
+     * Returns the string representation of vector.
+     * @param n Number of elements to show
+     */
+    default String toString(int n) {
+        String suffix = n >= size() ? "]" : String.format(", ... %d more]", size() - n);
+        return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
+    }
 
     /** Creates a named float vector.
      *

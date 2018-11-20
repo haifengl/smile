@@ -89,4 +89,9 @@ class CharVectorImpl implements CharVector {
     public IntStream stream() {
         return IntStream.range(0, vector.length).map(i -> vector[i]);
     }
+
+    @Override
+    public String toString() {
+        return toString(10);
+    }
 }

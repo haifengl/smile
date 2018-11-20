@@ -85,4 +85,9 @@ class LongVectorImpl implements LongVector {
     public LongStream stream() {
         return Arrays.stream(vector);
     }
+
+    @Override
+    public String toString() {
+        return toString(10);
+    }
 }

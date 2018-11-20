@@ -20,6 +20,7 @@ import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.DiscreteMeasure;
 
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -43,6 +44,15 @@ public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
      * Returns the value at position i.
      */
     short getShort(int i);
+
+    /**
+     * Returns the string representation of vector.
+     * @param n Number of elements to show
+     */
+    default String toString(int n) {
+        String suffix = n >= size() ? "]" : String.format(", ... %d more]", size() - n);
+        return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
+    }
 
     /** Creates a named short vector.
      *

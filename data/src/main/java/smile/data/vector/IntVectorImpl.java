@@ -99,4 +99,9 @@ class IntVectorImpl implements IntVector {
     public IntStream stream() {
         return Arrays.stream(vector);
     }
+
+    @Override
+    public String toString() {
+        return toString(10);
+    }
 }
