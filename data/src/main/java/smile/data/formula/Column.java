@@ -61,6 +61,11 @@ final class Column implements Factor {
     }
 
     @Override
+    public boolean isColumn() {
+        return true;
+    }
+
+    @Override
     public boolean equals(Object o) {
         return name().equals(o);
     }

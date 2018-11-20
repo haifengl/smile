@@ -15,19 +15,11 @@
  *******************************************************************************/
 package smile.data.formula;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.ToDoubleBiFunction;
-import java.util.function.ToDoubleFunction;
-import java.util.function.ToIntBiFunction;
-import java.util.function.ToIntFunction;
-import java.util.function.ToLongBiFunction;
-import java.util.function.ToLongFunction;
+import java.util.*;
+import java.util.function.*;
 import java.util.stream.Collectors;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -42,7 +34,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class Formula {
+public class Formula implements Serializable {
     /** The predictor terms. */
     private Term[] terms;
     /** The factors after binding to a schema and expanding the terms. */
@@ -58,22 +50,15 @@ public class Formula {
         this.terms = terms;
     }
 
-    /**
-     * Apply the formula on a DataFrame to generate the model data.
-     */
-    public DataFrame apply(DataFrame df) {
-        schema = schema(df.schema());
-        return df.stream().map(this::apply).collect(DataFrame.toDataFrame());
+    /** Returns the factors of formula. This should be called after bind() called. */
+    public Factor[] factors() {
+        return factors;
     }
 
     /**
      * Apply the formula on a Tuple to generate the model data.
      */
     public Tuple apply(Tuple t) {
-        if (schema == null) {
-            schema = schema(t.schema());
-        }
-
         return new Tuple() {
             @Override
             public StructType schema() {
@@ -122,9 +107,9 @@ public class Formula {
         };
     }
 
-    /** Returns the schema of formula after binding to an input type. */
-    private StructType schema(StructType inputType) {
-        Arrays.stream(terms).forEach(term -> term.bind(inputType));
+    /** Binds the formula to a schema and returns the output schema of formula. */
+    public StructType bind(StructType inputSchema) {
+        Arrays.stream(terms).forEach(term -> term.bind(inputSchema));
 
         List<Factor> factors = Arrays.stream(terms)
                 .filter(term -> !(term instanceof All) && !(term instanceof Remove))
@@ -153,7 +138,9 @@ public class Formula {
         List<StructField> fields = all.stream()
                 .map(factor -> new StructField(factor.toString(), factor.type()))
                 .collect(Collectors.toList());
-        return new StructType(fields);
+
+        schema = new StructType(fields);
+        return schema;
     }
 
     /** Returns all columns not otherwise in the formula. */
@@ -838,7 +825,7 @@ public class Formula {
      * @param x the column name.
      * @param f the lambda to apply on the column.
      */
-    public static Factor apply(final String name, final String x, ToIntFunction<Object> f) {
+    public static <T> Factor apply(final String name, final String x, ToIntFunction<T> f) {
         return apply(name, col(x), f);
     }
 
@@ -848,7 +835,7 @@ public class Formula {
      * @param x the factor.
      * @param f the lambda to apply on the factor.
      */
-    public static Factor apply(final String name, final Factor x, ToIntFunction<Object> f) {
+    public static <T> Factor apply(final String name, final Factor x, ToIntFunction<T> f) {
         return new Factor() {
             @Override
             public String name() {
@@ -887,22 +874,27 @@ public class Formula {
 
             @Override
             public int applyAsInt(Tuple o) {
-                return f.applyAsInt(x.apply(o));
+                return f.applyAsInt((T) x.apply(o));
             }
 
             @Override
             public long applyAsLong(Tuple o) {
-                return f.applyAsInt(x.apply(o));
+                return f.applyAsInt((T) x.apply(o));
+            }
+
+            @Override
+            public float applyAsFloat(Tuple o) {
+                return f.applyAsInt((T) x.apply(o));
             }
 
             @Override
             public double applyAsDouble(Tuple o) {
-                return f.applyAsInt(x.apply(o));
+                return f.applyAsInt((T) x.apply(o));
             }
 
             @Override
             public Object apply(Tuple o) {
-                return f.applyAsInt(x.apply(o));
+                return f.applyAsInt((T) x.apply(o));
             }
         };
     }
@@ -913,7 +905,7 @@ public class Formula {
      * @param x the column name.
      * @param f the lambda to apply on the column.
      */
-    public static Factor apply(final String name, final String x, ToLongFunction<Object> f) {
+    public static <T> Factor apply(final String name, final String x, ToLongFunction<T> f) {
         return apply(name, col(x), f);
     }
 
@@ -923,7 +915,7 @@ public class Formula {
      * @param x the factor.
      * @param f the lambda to apply on the factor.
      */
-    public static Factor apply(final String name, final Factor x, ToLongFunction<Object> f) {
+    public static <T> Factor apply(final String name, final Factor x, ToLongFunction<T> f) {
         return new Factor() {
             @Override
             public String name() {
@@ -962,17 +954,22 @@ public class Formula {
 
             @Override
             public long applyAsLong(Tuple o) {
-                return f.applyAsLong(x.apply(o));
+                return f.applyAsLong((T) x.apply(o));
+            }
+
+            @Override
+            public float applyAsFloat(Tuple o) {
+                return f.applyAsLong((T) x.apply(o));
             }
 
             @Override
             public double applyAsDouble(Tuple o) {
-                return f.applyAsLong(x.apply(o));
+                return f.applyAsLong((T) x.apply(o));
             }
 
             @Override
             public Object apply(Tuple o) {
-                return f.applyAsLong(x.apply(o));
+                return f.applyAsLong((T) x.apply(o));
             }
         };
     }
@@ -983,7 +980,7 @@ public class Formula {
      * @param x the column name.
      * @param f the lambda to apply on the column.
      */
-    public static Factor apply(final String name, final String x, ToDoubleFunction<Object> f) {
+    public static <T> Factor apply(final String name, final String x, ToDoubleFunction<T> f) {
         return apply(name, col(x), f);
     }
 
@@ -993,7 +990,7 @@ public class Formula {
      * @param x the factor.
      * @param f the lambda to apply on the factor.
      */
-    public static Factor apply(final String name, final Factor x, ToDoubleFunction<Object> f) {
+    public static <T> Factor apply(final String name, final Factor x, ToDoubleFunction<T> f) {
         return new Factor() {
             @Override
             public String name() {
@@ -1032,12 +1029,12 @@ public class Formula {
 
             @Override
             public double applyAsDouble(Tuple o) {
-                return f.applyAsDouble(x.apply(o));
+                return f.applyAsDouble((T) x.apply(o));
             }
 
             @Override
             public Object apply(Tuple o) {
-                return f.applyAsDouble(x.apply(o));
+                return f.applyAsDouble((T) x.apply(o));
             }
         };
     }
@@ -1046,19 +1043,21 @@ public class Formula {
      * Returns a factor that applies a lambda on given column.
      * @param name the function name.
      * @param x the column name.
+     * @param clazz the class of return object.
      * @param f the lambda to apply on the column.
      */
-    public static Factor apply(final String name, final String x, Function<Object, Object> f) {
-        return apply(name, col(x), f);
+    public static <T, R> Factor apply(final String name, final String x, final Class<R> clazz, Function<T, R> f) {
+        return apply(name, col(x), clazz, f);
     }
 
     /**
      * Returns a factor that applies a lambda on given factor.
      * @param name the function name.
      * @param x the factor.
+     * @param clazz the class of return object.
      * @param f the lambda to apply on the factor.
      */
-    public static Factor apply(final String name, final Factor x, Function<Object, Object> f) {
+    public static <T, R> Factor apply(final String name, final Factor x, final Class<R> clazz, Function<T, R> f) {
         return new Factor() {
             @Override
             public String name() {
@@ -1087,7 +1086,7 @@ public class Formula {
 
             @Override
             public DataType type() {
-                return DataTypes.LongType;
+                return DataTypes.object(clazz);
             }
 
             @Override
@@ -1097,7 +1096,61 @@ public class Formula {
 
             @Override
             public Object apply(Tuple o) {
-                return f.apply(x.apply(o));
+                return f.apply((T) x.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given factor.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param clazz the class of return object.
+     * @param f the lambda to apply on the factor.
+     */
+    public static <T, U, R> Factor apply(final String name, final Factor x, final Class<R> clazz, final Factor y, BiFunction<T, U, R> f) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                Set<String> vars = new HashSet<>(x.variables());
+                vars.addAll(y.variables());
+                return vars;
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.object(clazz);
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.apply((T) x.apply(o), (U) y.apply(o));
             }
         };
     }

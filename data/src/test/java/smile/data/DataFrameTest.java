@@ -160,7 +160,7 @@ public class DataFrameTest {
     public void testFormulaAbs() {
         System.out.println("abs");
         Formula formula = new Formula(abs("age"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -177,7 +177,7 @@ public class DataFrameTest {
     public void testFormulaAbsNullable() {
         System.out.println("abs null");
         Formula formula = new Formula(abs("salary"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -194,7 +194,7 @@ public class DataFrameTest {
     public void testFormulaExp() {
         System.out.println("exp");
         Formula formula = new Formula(exp("age"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -211,7 +211,7 @@ public class DataFrameTest {
     public void testFormulaExpNullable() {
         System.out.println("exp null");
         Formula formula = new Formula(exp("salary"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -227,7 +227,7 @@ public class DataFrameTest {
     public void testFormulaLog() {
         System.out.println("log");
         Formula formula = new Formula(log("age"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -244,7 +244,7 @@ public class DataFrameTest {
     public void testFormulaLogNullable() {
         System.out.println("log null");
         Formula formula = new Formula(log("salary"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -261,7 +261,7 @@ public class DataFrameTest {
     public void testFormulaLog10() {
         System.out.println("log10");
         Formula formula = new Formula(log10("age"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -278,7 +278,7 @@ public class DataFrameTest {
     public void testFormulaLog10Nullable() {
         System.out.println("log null");
         Formula formula = new Formula(log10("salary"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -295,7 +295,7 @@ public class DataFrameTest {
     public void testFormulaSqrt() {
         System.out.println("sqrt");
         Formula formula = new Formula(sqrt("age"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -312,7 +312,7 @@ public class DataFrameTest {
     public void testFormulaSqrtNullable() {
         System.out.println("sqrt null");
         Formula formula = new Formula(sqrt("salary"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -329,7 +329,7 @@ public class DataFrameTest {
     public void testFormulaCeilNullable() {
         System.out.println("ceil null");
         Formula formula = new Formula(ceil("salary"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -346,7 +346,7 @@ public class DataFrameTest {
     public void testFormulaFloorNullable() {
         System.out.println("floor null");
         Formula formula = new Formula(floor("salary"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -363,7 +363,7 @@ public class DataFrameTest {
     public void testFormulaRoundNullable() {
         System.out.println("round null");
         Formula formula = new Formula(round("salary"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -380,7 +380,7 @@ public class DataFrameTest {
     public void testFormulaSignumNullable() {
         System.out.println("signum null");
         Formula formula = new Formula(signum("salary"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -397,7 +397,7 @@ public class DataFrameTest {
     public void testFormulaAddCst() {
         System.out.println("add cst");
         Formula formula = new Formula(all(), add("age", cst(10)));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(5, output.ncols());
@@ -414,7 +414,7 @@ public class DataFrameTest {
     public void testFormulaAddNullable() {
         System.out.println("add nullable");
         Formula formula = new Formula(all(), add("salary", "age"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(4, output.ncols());
@@ -431,7 +431,7 @@ public class DataFrameTest {
     public void testFormulaSubCst() {
         System.out.println("sub cst");
         Formula formula = new Formula(all(), sub("age", cst(10)));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(5, output.ncols());
@@ -448,7 +448,7 @@ public class DataFrameTest {
     public void testFormulaSubNullable() {
         System.out.println("sub nullable");
         Formula formula = new Formula(all(), sub("salary", "age"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(4, output.ncols());
@@ -465,7 +465,7 @@ public class DataFrameTest {
     public void testFormulaMulCst() {
         System.out.println("mul cst");
         Formula formula = new Formula(all(), mul("age", cst(10)));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(5, output.ncols());
@@ -482,7 +482,7 @@ public class DataFrameTest {
     public void testFormulaMulNullable() {
         System.out.println("mul nullable");
         Formula formula = new Formula(all(), mul("salary", "age"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(4, output.ncols());
@@ -499,7 +499,7 @@ public class DataFrameTest {
     public void testFormulaDivCst() {
         System.out.println("div cst");
         Formula formula = new Formula(all(), div("age", cst(10)));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(5, output.ncols());
@@ -516,7 +516,7 @@ public class DataFrameTest {
     public void testFormulaDivNullable() {
         System.out.println("div nullable");
         Formula formula = new Formula(all(), div("salary", "age"));
-        DataFrame output = formula.apply(df);
+        DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(4, output.ncols());

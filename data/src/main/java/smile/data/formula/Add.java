@@ -74,9 +74,9 @@ class Add implements Factor {
 
     @Override
     public Set<String> variables() {
-        Set<String> t = new HashSet<>(a.variables());
-        t.addAll(b.variables());
-        return t;
+        Set<String> vars = new HashSet<>(a.variables());
+        vars.addAll(b.variables());
+        return vars;
     }
 
     @Override
