@@ -36,7 +36,7 @@ public class DateTimeType implements DataType {
      * Constructor with the ISO date time formatter that formats
      * or parses a date without an offset, such as '2011-12-03T10:15:30'.
      */
-    public DateTimeType() {
+    DateTimeType() {
         pattern = "uuuu-MM-dd'T'HH:mm:ss";
         formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
     }

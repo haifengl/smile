@@ -40,7 +40,7 @@ public class StructType implements DataType {
     /**
      * Constructor.
      */
-    public StructType(StructField... fields) {
+    StructType(StructField... fields) {
         this.fields = fields;
         initFieldIndex();
     }
@@ -48,7 +48,7 @@ public class StructType implements DataType {
     /**
      * Constructor.
      */
-    public StructType(List<StructField> fields) {
+    StructType(List<StructField> fields) {
         this.fields = fields.toArray(new StructField[fields.size()]);
         initFieldIndex();
     }

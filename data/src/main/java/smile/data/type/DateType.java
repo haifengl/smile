@@ -36,7 +36,7 @@ public class DateType implements DataType {
      * Constructor with the ISO date formatter that formats
      * or parses a date without an offset, such as '2011-12-03'.
      */
-    public DateType() {
+    DateType() {
         pattern = "uuuu-MM-dd";
         formatter = DateTimeFormatter.ISO_LOCAL_DATE;
     }
