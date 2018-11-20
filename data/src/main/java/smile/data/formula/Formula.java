@@ -56,7 +56,7 @@ public class Formula implements Serializable {
     }
 
     /**
-     * Apply the formula on a Tuple to generate the model data.
+     * Apply the formula on a tuple to generate the model data.
      */
     public Tuple apply(Tuple t) {
         return new Tuple() {
@@ -125,17 +125,27 @@ public class Formula implements Serializable {
             .flatMap(factor -> factor.variables().stream())
             .collect(Collectors.toSet());
 
-        List<Factor> all = Arrays.stream(terms)
+        Optional<All> hasAll = Arrays.stream(terms)
                 .filter(term -> term instanceof All)
-                .flatMap(term -> term.factors().stream())
-                .filter(factor -> !variables.contains(factor.name()))
-                .collect(Collectors.toList());
+                .map(term -> (All) term)
+                .findAny();
 
-        all.addAll(factors);
-        all.removeAll(removes);
-        this.factors = all.toArray(new Factor[all.size()]);
+        List<Factor> result = new ArrayList<>();
+        if (hasAll.isPresent()) {
+            All all = hasAll.get();
+            java.util.stream.Stream<Column> stream = all.factors().stream();
+            if (all.rest()) {
+                stream = stream.filter(factor -> !variables.contains(factor.name()));
+            }
 
-        List<StructField> fields = all.stream()
+            result.addAll(stream.collect(Collectors.toList()));
+        }
+
+        result.addAll(factors);
+        result.removeAll(removes);
+        this.factors = result.toArray(new Factor[result.size()]);
+
+        List<StructField> fields = result.stream()
                 .map(factor -> new StructField(factor.toString(), factor.type()))
                 .collect(Collectors.toList());
 

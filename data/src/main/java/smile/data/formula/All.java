@@ -22,18 +22,37 @@ import java.util.stream.Collectors;
 import smile.data.type.StructType;
 
 /**
- * All columns not otherwise in the formula.
+ * All columns in the input DataFrame.
  *
  * @author Haifeng Li
  */
 class All implements Term {
+    /** If true, keep the original columns. */
+    private boolean rest;
     /** All columns in the schema. */
     private List<Column> columns;
+
     /**
-     * Constructor.
+     * Constructor. All columns not otherwise in the formula.
      */
     public All() {
+        this(true);
+    }
 
+    /**
+     * Constructor.
+     * @param rest If true, only columns not in the formula.
+     *             Otherwise, keep all the original columns.
+     */
+    public All(boolean rest) {
+        this.rest = rest;
+    }
+
+    /**
+     * Return true if only columns not in the formula.
+     */
+    public boolean rest() {
+        return rest;
     }
 
     @Override
