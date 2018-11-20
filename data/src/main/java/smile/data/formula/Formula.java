@@ -149,13 +149,18 @@ public class Formula implements Serializable {
                 .map(factor -> new StructField(factor.toString(), factor.type()))
                 .collect(Collectors.toList());
 
-        schema = new StructType(fields);
+        schema = DataTypes.struct(fields);
         return schema;
     }
 
     /** Returns all columns not otherwise in the formula. */
     public static Term all() {
         return new All();
+    }
+
+    /** Returns all columns if rest is true or only those not otherwise in the formula. */
+    public static Term all(boolean rest) {
+        return new All(rest);
     }
 
     /** Returns a column factor. */
@@ -344,7 +349,7 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const boolean factor. */
-    public static Factor cst(final boolean x) {
+    public static Factor val(final boolean x) {
         return new Factor() {
             @Override
             public String name() {
@@ -388,7 +393,7 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const char factor. */
-    public static Factor cst(final char x) {
+    public static Factor val(final char x) {
         return new Factor() {
             @Override
             public String name() {
@@ -447,7 +452,7 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const byte factor. */
-    public static Factor cst(final byte x) {
+    public static Factor val(final byte x) {
         return new Factor() {
             @Override
             public String name() {
@@ -506,7 +511,7 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const short factor. */
-    public static Factor cst(final short x) {
+    public static Factor val(final short x) {
         return new Factor() {
             @Override
             public String name() {
@@ -565,7 +570,7 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const integer factor. */
-    public static Factor cst(final int x) {
+    public static Factor val(final int x) {
         return new Factor() {
             @Override
             public String name() {
@@ -624,7 +629,7 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const long factor. */
-    public static Factor cst(final long x) {
+    public static Factor val(final long x) {
         return new Factor() {
             @Override
             public String name() {
@@ -678,7 +683,7 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const float factor. */
-    public static Factor cst(final float x) {
+    public static Factor val(final float x) {
         return new Factor() {
             @Override
             public String name() {
@@ -732,7 +737,7 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const double factor. */
-    public static Factor cst(final double x) {
+    public static Factor val(final double x) {
         return new Factor() {
             @Override
             public String name() {
@@ -781,7 +786,7 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const object factor. */
-    public static Factor cst(final Object x) {
+    public static Factor val(final Object x) {
         final DataType type = x instanceof String ? DataTypes.StringType :
                 x instanceof LocalDate ? DataTypes.DateType :
                 x instanceof LocalDateTime ? DataTypes.DateTimeType :
@@ -845,6 +850,7 @@ public class Formula implements Serializable {
      * @param x the factor.
      * @param f the lambda to apply on the factor.
      */
+    @SuppressWarnings("unchecked")
     public static <T> Factor apply(final String name, final Factor x, ToIntFunction<T> f) {
         return new Factor() {
             @Override
@@ -925,6 +931,7 @@ public class Formula implements Serializable {
      * @param x the factor.
      * @param f the lambda to apply on the factor.
      */
+    @SuppressWarnings("unchecked")
     public static <T> Factor apply(final String name, final Factor x, ToLongFunction<T> f) {
         return new Factor() {
             @Override
@@ -1000,6 +1007,7 @@ public class Formula implements Serializable {
      * @param x the factor.
      * @param f the lambda to apply on the factor.
      */
+    @SuppressWarnings("unchecked")
     public static <T> Factor apply(final String name, final Factor x, ToDoubleFunction<T> f) {
         return new Factor() {
             @Override
@@ -1067,6 +1075,7 @@ public class Formula implements Serializable {
      * @param clazz the class of return object.
      * @param f the lambda to apply on the factor.
      */
+    @SuppressWarnings("unchecked")
     public static <T, R> Factor apply(final String name, final Factor x, final Class<R> clazz, Function<T, R> f) {
         return new Factor() {
             @Override
@@ -1112,14 +1121,240 @@ public class Formula implements Serializable {
     }
 
     /**
-     * Returns a factor that applies a lambda on given factor.
+     * Returns a factor that applies a lambda on given columns.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param f the lambda to apply on the columns.
+     */
+    public static <T, U> Factor apply(final String name, final String x, final String y, ToIntBiFunction<T, U> f) {
+        return apply(name, col(x), col(y), f);
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given factors.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param f the lambda to apply on the factors.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T, U> Factor apply(final String name, final Factor x, final Factor y, ToIntBiFunction<T, U> f) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                Set<String> vars = new HashSet<>(x.variables());
+                vars.addAll(y.variables());
+                return vars;
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.IntegerType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+                y.bind(schema);
+            }
+
+            @Override
+            public int applyAsInt(Tuple o) {
+                return f.applyAsInt((T) x.apply(o), (U) y.apply(o));
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.applyAsInt((T) x.apply(o), (U) y.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given columns.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param f the lambda to apply on the columns.
+     */
+    public static <T, U> Factor apply(final String name, final String x, final String y, ToLongBiFunction<T, U> f) {
+        return apply(name, col(x), col(y), f);
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given factors.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param f the lambda to apply on the factors.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T, U> Factor apply(final String name, final Factor x, final Factor y, ToLongBiFunction<T, U> f) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                Set<String> vars = new HashSet<>(x.variables());
+                vars.addAll(y.variables());
+                return vars;
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.LongType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+                y.bind(schema);
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return f.applyAsLong((T) x.apply(o), (U) y.apply(o));
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.applyAsLong((T) x.apply(o), (U) y.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given columns.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param f the lambda to apply on the columns.
+     */
+    public static <T, U> Factor apply(final String name, final String x, final String y, ToDoubleBiFunction<T, U> f) {
+        return apply(name, col(x), col(y), f);
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given factors.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param f the lambda to apply on the factors.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T, U> Factor apply(final String name, final Factor x, final Factor y, ToDoubleBiFunction<T, U> f) {
+        return new Factor() {
+            @Override
+            public String name() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public List<? extends Factor> factors() {
+                return Collections.singletonList(this);
+            }
+
+            @Override
+            public Set<String> variables() {
+                Set<String> vars = new HashSet<>(x.variables());
+                vars.addAll(y.variables());
+                return vars;
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.DoubleType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+                y.bind(schema);
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return f.applyAsDouble((T) x.apply(o), (U) y.apply(o));
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.applyAsDouble((T) x.apply(o), (U) y.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given columns.
      * @param name the function name.
      * @param x the first parameter of function.
      * @param y the second parameter of function.
      * @param clazz the class of return object.
-     * @param f the lambda to apply on the factor.
+     * @param f the lambda to apply on the columns.
      */
-    public static <T, U, R> Factor apply(final String name, final Factor x, final Class<R> clazz, final Factor y, BiFunction<T, U, R> f) {
+    public static <T, U, R> Factor apply(final String name, final String x, final String y, final Class<R> clazz, BiFunction<T, U, R> f) {
+        return apply(name, col(x), col(y), clazz, f);
+    }
+
+    /**
+     * Returns a factor that applies a lambda on given factors.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param clazz the class of return object.
+     * @param f the lambda to apply on the factors.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T, U, R> Factor apply(final String name, final Factor x, final Factor y, final Class<R> clazz, BiFunction<T, U, R> f) {
         return new Factor() {
             @Override
             public String name() {
