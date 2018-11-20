@@ -16,16 +16,16 @@
 package smile.data.type;
 
 import java.text.ParseException;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 /**
- * DateTime data type.
+ * Time data type.
  *
  * @author Haifeng Li
  */
-public class DateTimeType implements DataType {
+public class TimeType implements DataType {
     /** Default instance. */
-    static DateTimeType instance = new DateTimeType();
+    static TimeType instance = new TimeType();
 
     /** Date format pattern. */
     private String pattern;
@@ -33,14 +33,14 @@ public class DateTimeType implements DataType {
     private DateTimeFormatter formatter;
 
     /**
-     * Constructor with the ISO date time formatter that formats
-     * or parses a date without an offset, such as '2011-12-03T10:15:30'.
+     * Constructor with the ISO date formatter that formats
+     * or parses a date without an offset, such as '2011-12-03'.
      */
-    DateTimeType() {
+    TimeType() {
         // This is only an approximation.
-        // ISO_LOCAL_DATE_TIME cannot be fully encoded by a pattern string.
-        pattern = "uuuu-MM-dd'T'HH:mm[:ss]";
-        formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+        // ISO_LOCAL_TIME cannot be fully encoded by a pattern string.
+        pattern = "HH:mm[:ss]";
+        formatter = DateTimeFormatter.ISO_LOCAL_TIME;
     }
 
     /**
@@ -50,32 +50,32 @@ public class DateTimeType implements DataType {
      *                For example, "d MMM uuuu" will format 2011-12-03
      *                as '3 Dec 2011'.
      */
-    public DateTimeType(String pattern) {
+    public TimeType(String pattern) {
         this.pattern = pattern;
         formatter = DateTimeFormatter.ofPattern(pattern);
     }
 
     @Override
     public String name() {
-        return String.format("datetime[%s]", pattern);
+        return String.format("time[%s]", pattern);
     }
 
     @Override
     public String toString() {
-        return "datetime";
+        return "time";
     }
 
     @Override
     public String toString(Object o) {
-        return formatter.format((LocalDateTime) o);
+        return formatter.format((LocalTime) o);
     }
 
     @Override
-    public LocalDateTime valueOf(String s) throws ParseException {
-        return LocalDateTime.parse(s, formatter);
+    public LocalTime valueOf(String s) throws ParseException {
+        return LocalTime.parse(s, formatter);
     }
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof DateTimeType;
+        return o instanceof TimeType;
     }}

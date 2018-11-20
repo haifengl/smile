@@ -40,12 +40,16 @@ public class DataTypes {
     public static smile.data.type.FloatType FloatType = smile.data.type.FloatType.instance;
     /** Double data type. */
     public static smile.data.type.DoubleType DoubleType = smile.data.type.DoubleType.instance;
+    /** Decimal data type. */
+    public static smile.data.type.DecimalType DecimalType = smile.data.type.DecimalType.instance;
     /** String data type. */
     public static smile.data.type.StringType StringType = smile.data.type.StringType.instance;
     /** Date data type with ISO format. */
     public static smile.data.type.DateType DateType = smile.data.type.DateType.instance;
     /** DateTime data type with ISO format. */
     public static smile.data.type.DateTimeType DateTimeType = smile.data.type.DateTimeType.instance;
+    /** Time data type with ISO format. */
+    public static smile.data.type.TimeType TimeType = smile.data.type.TimeType.instance;
     /** Plain Object data type. */
     public static smile.data.type.ObjectType ObjectType = smile.data.type.ObjectType.instance;
     /** Boolean Object data type. */
@@ -84,6 +88,11 @@ public class DataTypes {
     /** Date data type with customized format. */
     public static smile.data.type.DateType date(String pattern) {
         return new smile.data.type.DateType(pattern);
+    }
+
+    /** ime data type with customized format. */
+    public static smile.data.type.TimeType time(String pattern) {
+        return new smile.data.type.TimeType(pattern);
     }
 
     /** DateTime data type with customized format. */

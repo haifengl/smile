@@ -18,10 +18,10 @@ package smile.data.formula;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collectors;
-import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
@@ -790,6 +790,7 @@ public class Formula implements Serializable {
         final DataType type = x instanceof String ? DataTypes.StringType :
                 x instanceof LocalDate ? DataTypes.DateType :
                 x instanceof LocalDateTime ? DataTypes.DateTimeType :
+                x instanceof LocalTime ? DataTypes.TimeType :
                 DataType.of(x.getClass());
 
         return new Factor() {
