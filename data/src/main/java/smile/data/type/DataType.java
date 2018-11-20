@@ -16,12 +16,11 @@
 package smile.data.type;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.time.LocalTime;
 
 /**
  * The data type in the sense of .
@@ -98,14 +97,18 @@ public interface DataType extends Serializable {
             case "long": return DataTypes.LongType;
             case "float": return DataTypes.FloatType;
             case "double": return DataTypes.DoubleType;
+            case "decimal": return DataTypes.DecimalType;
             case "string": return DataTypes.StringType;
             case "date": return DataTypes.DateType;
             case "datetime": return DataTypes.DateTimeType;
+            case "time": return DataTypes.TimeType;
             default:
                 if (s.startsWith("date[") && s.endsWith("]"))
                     return DataTypes.date(s.substring(5, s.length() - 1));
                 else if (s.startsWith("datetime[") && s.endsWith("]"))
                     return DataTypes.datetime(s.substring(9, s.length() - 1));
+                else if (s.startsWith("time[") && s.endsWith("]"))
+                    return DataTypes.datetime(s.substring(5, s.length() - 1));
                 else if (s.startsWith("object[") && s.endsWith("]"))
                     return DataTypes.object(Class.forName(s.substring(7, s.length() - 1)));
                 else if (s.startsWith("array[") && s.endsWith("]"))
@@ -143,10 +146,14 @@ public interface DataType extends Serializable {
             return DataTypes.CharType;
         else if (clazz == String.class)
             return DataTypes.StringType;
+        else if (clazz == BigDecimal.class)
+            return DataTypes.DecimalType;
         else if (clazz == LocalDate.class)
             return DataTypes.DateType;
         else if (clazz == LocalDateTime.class)
             return DataTypes.DateTimeType;
+        else if (clazz == LocalTime.class)
+            return DataTypes.TimeType;
         else if (clazz.isArray())
             return DataTypes.array(DataType.of(clazz.getComponentType()));
         else

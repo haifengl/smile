@@ -37,7 +37,9 @@ public class DateTimeType implements DataType {
      * or parses a date without an offset, such as '2011-12-03T10:15:30'.
      */
     DateTimeType() {
-        pattern = "uuuu-MM-dd'T'HH:mm:ss";
+        // This is only an approximation.
+        // ISO_LOCAL_DATE_TIME cannot be fully encoded by a pattern string.
+        pattern = "uuuu-MM-dd'T'HH:mm[:ss]";
         formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
     }
 
