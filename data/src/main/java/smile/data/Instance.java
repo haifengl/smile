@@ -30,6 +30,20 @@ public interface Instance <T> {
     T x();
 
     /**
+     * Returns the response variable of instance.
+     */
+    default double y() {
+        throw new UnsupportedOperationException("The instance doesn't have response variable.");
+    }
+
+    /**
+     * Returns the class label of instance.
+     */
+    default int label() {
+        throw new UnsupportedOperationException("The instance doesn't have class label.");
+    }
+
+    /**
      * Return the (optional) name associated with instance.
      * Note that this is not the class label.
      */

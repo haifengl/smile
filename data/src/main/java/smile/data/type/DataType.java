@@ -50,6 +50,18 @@ public interface DataType extends Serializable {
         return o.toString();
     }
 
+    /** Returns true if this is a primitive data type. */
+    default boolean isPrimitive() {
+        return this == DataTypes.IntegerType ||
+               this == DataTypes.LongType ||
+               this == DataTypes.DoubleType ||
+               this == DataTypes.FloatType ||
+               this == DataTypes.BooleanType ||
+               this == DataTypes.CharType ||
+               this == DataTypes.ByteType ||
+               this == DataTypes.ShortType;
+    }
+
     /** Returns true if the type is int or Integer. */
     default boolean isInt() {
         return false;
