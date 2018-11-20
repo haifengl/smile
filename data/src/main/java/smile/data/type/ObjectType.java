@@ -22,15 +22,23 @@ package smile.data.type;
  */
 public class ObjectType implements DataType {
     /** Object type. */
-    static ObjectType objectType = new ObjectType(Object.class);
-    /** Integer type. */
-    static ObjectType integerType = new ObjectType(Integer.class);
-    /** Long type. */
-    static ObjectType longType = new ObjectType(Long.class);
-    /** Float type. */
-    static ObjectType floatType = new ObjectType(Float.class);
-    /** Double type. */
-    static ObjectType doubleType = new ObjectType(Double.class);
+    static ObjectType instance = new ObjectType(Object.class);
+    /** Boolean object type. */
+    static ObjectType BooleanObjectType = new ObjectType(Boolean.class);
+    /** Char object type. */
+    static ObjectType CharObjectType = new ObjectType(Character.class);
+    /** Byte object type. */
+    static ObjectType ByteObjectType = new ObjectType(Byte.class);
+    /** Short object type. */
+    static ObjectType ShortObjectType = new ObjectType(Short.class);
+    /** Integer object type. */
+    static ObjectType IntegerObjectType = new ObjectType(Integer.class);
+    /** Long object type. */
+    static ObjectType LongObjectType = new ObjectType(Long.class);
+    /** Float object type. */
+    static ObjectType FloatObjectType = new ObjectType(Float.class);
+    /** Double object type. */
+    static ObjectType DoubleObjectType = new ObjectType(Double.class);
 
     /** Object Class. */
     private Class clazz;
@@ -39,7 +47,7 @@ public class ObjectType implements DataType {
      * Constructor.
      * @param clazz the class of objects.
      */
-    public ObjectType(Class clazz) {
+    ObjectType(Class clazz) {
         this.clazz = clazz;
     }
 
