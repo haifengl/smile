@@ -89,4 +89,9 @@ class BooleanVectorImpl implements BooleanVector {
     public IntStream stream() {
         return IntStream.range(0, vector.length).map(i -> vector[i] ? 1 : 0);
     }
+
+    @Override
+    public String toString() {
+        return toString(10);
+    }
 }

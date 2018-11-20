@@ -18,6 +18,7 @@ package smile.data.vector;
 
 import java.io.Serializable;
 import java.util.stream.BaseStream;
+
 import smile.data.type.DataType;
 
 /**

@@ -16,6 +16,7 @@
 
 package smile.data.vector;
 
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
@@ -35,6 +36,15 @@ public interface BooleanVector extends BaseVector<Boolean, Integer, IntStream> {
      * Returns the value at position i.
      */
     boolean getBoolean(int i);
+
+    /**
+     * Returns the string representation of vector.
+     * @param n Number of elements to show
+     */
+    default String toString(int n) {
+        String suffix = n >= size() ? "]" : String.format(", ... %d more]", size() - n);
+        return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
+    }
 
     /** Creates a named boolean vector.
      *

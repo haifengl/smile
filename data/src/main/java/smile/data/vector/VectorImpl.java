@@ -55,4 +55,9 @@ class VectorImpl<T> implements Vector<T> {
     public Stream<T> stream() {
         return Arrays.stream(vector);
     }
+
+    @Override
+    public String toString() {
+        return toString(10);
+    }
 }

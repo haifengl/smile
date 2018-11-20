@@ -99,4 +99,9 @@ class DoubleVectorImpl implements DoubleVector {
     public DoubleStream stream() {
         return Arrays.stream(vector);
     }
+
+    @Override
+    public String toString() {
+        return toString(10);
+    }
 }
