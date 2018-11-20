@@ -89,19 +89,29 @@ public interface DataFrame extends Dataset<Tuple> {
 
     /** Selects column based on the column name and return it as a Column. */
     default <T> Vector<T> apply(String colName) {
-        return column(colName);
+        return get(colName);
+    }
+
+    /** Selects column based on the column name. */
+    default <T> Vector<T> get(String colName) {
+        return (Vector<T>) column(colName);
+    }
+
+    /** Selects column using an enum value. */
+    default <T> Vector<T> get(Enum<?> e) {
+        return (Vector<T>) column(e);
     }
 
     /** Selects column based on the column index. */
-    <T> Vector<T> column(int i);
+    BaseVector column(int i);
 
     /** Selects column based on the column name. */
-    default <T> Vector<T> column(String colName) {
+    default BaseVector column(String colName) {
         return column(columnIndex(colName));
     }
 
     /** Selects column using an enum value. */
-    default <T> Vector<T> column(Enum<?> e) {
+    default BaseVector column(Enum<?> e) {
         return column(columnIndex(e.toString()));
     }
 
@@ -376,5 +386,13 @@ public interface DataFrame extends Dataset<Tuple> {
      */
     static DataFrame of(List<Tuple> data) {
         return new DataFrameImpl(data);
+    }
+
+    /**
+     * Creates a default columnar implementation of DataFrame by a formula.
+     * @param formula The formula that transforms this DataFrame.
+     */
+    default DataFrame map(smile.data.formula.Formula formula) {
+        return new DataFrameImpl(this, formula);
     }
 }

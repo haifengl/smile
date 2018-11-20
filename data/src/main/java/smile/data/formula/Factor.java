@@ -25,6 +25,12 @@ import smile.data.type.DataType;
  * @author Haifeng Li
  */
 public interface Factor extends Term {
+    /** Returns the name of factor. */
+    String name();
+
+    /** Returns the data type of output values. */
+    DataType type();
+
     /** Applies the factor formula on a data object. */
     Object apply(Tuple o);
 
@@ -48,9 +54,8 @@ public interface Factor extends Term {
         throw new UnsupportedOperationException();
     }
 
-    /** Returns the name of factor. */
-    String name();
-
-    /** Returns the data type of output values. */
-    DataType type();
+    /** Returns true if the factor represents a plain column of input DataFrame. */
+    default boolean isColumn() {
+        return false;
+    }
 }

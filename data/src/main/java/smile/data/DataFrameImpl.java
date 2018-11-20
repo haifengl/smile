@@ -173,7 +173,6 @@ class DataFrameImpl implements DataFrame {
         return new StructField(prop.getName(), DataType.of(prop.getPropertyType()));
     }
 
-
     /**
      * Constructor.
      * @param data The data collection.
@@ -190,6 +189,84 @@ class DataFrameImpl implements DataFrame {
 
         for (int j = 0; j < fields.length; j++) {
             StructField field = fields[j];
+            if (field.type == DataTypes.IntegerType) {
+                int[] values = new int[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getInt(j);
+                IntVector vector = IntVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.LongType) {
+                long[] values = new long[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getLong(j);
+                LongVector vector = LongVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.DoubleType) {
+                double[] values = new double[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getDouble(j);
+                DoubleVector vector = DoubleVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.FloatType) {
+                float[] values = new float[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getFloat(j);
+                FloatVector vector = FloatVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.BooleanType) {
+                boolean[] values = new boolean[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getBoolean(j);
+                BooleanVector vector = BooleanVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.CharType) {
+                char[] values = new char[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getChar(j);
+                CharVector vector = CharVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.ByteType) {
+                byte[] values = new byte[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getByte(j);
+                ByteVector vector = ByteVector.of(field.name, values);
+                columns.add(vector);
+            } else if (field.type == DataTypes.ShortType) {
+                short[] values = new short[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).getShort(j);
+                ShortVector vector = ShortVector.of(field.name, values);
+                columns.add(vector);
+            } else {
+                Object[] values = new Object[size];
+                for (int i = 0; i < size; i++) values[i] = data.get(i).get(j);
+                Vector vector = Vector.of(field.name, values);
+                columns.add(vector);
+            }
+        }
+    }
+
+    /**
+     * Constructor.
+     * @param df The input DataFrame.
+     * @param formula The formula that transforms from the input DataFrame.
+     */
+    public DataFrameImpl(DataFrame df, smile.data.formula.Formula formula) {
+        this.size = df.size();
+        this.schema = formula.bind(df.schema());
+        StructField[] fields = schema.fields();
+        this.columns = new ArrayList<>(fields.length);
+
+        smile.data.formula.Factor[] factors = formula.factors();
+        for (int j = 0; j < fields.length; j++) {
+            StructField field = fields[j];
+            if (factors[j].isColumn()) {
+                columns.add(df.column(field.name));
+            }
+        }
+
+        // We are done if all factors are raw columns.
+        if (columns.size() == factors.length) return;
+
+        List<Tuple> data = df.stream().map(formula::apply).collect(Collectors.toList());
+        for (int j = 0; j < fields.length; j++) {
+            StructField field = fields[j];
+            if (formula.factors()[j].isColumn()) {
+                continue;
+            }
+
             if (field.type == DataTypes.IntegerType) {
                 int[] values = new int[size];
                 for (int i = 0; i < size; i++) values[i] = data.get(i).getInt(j);
@@ -270,10 +347,9 @@ class DataFrameImpl implements DataFrame {
         return java.util.stream.StreamSupport.stream(spliterator, true);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <T> Vector<T> column(int i) {
-        return (Vector<T>) columns.get(i);
+    public BaseVector column(int i) {
+        return columns.get(i);
     }
 
     @Override
