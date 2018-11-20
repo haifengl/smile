@@ -22,6 +22,7 @@ import java.util.Set;
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.ObjectType;
 import smile.data.type.StructType;
 
 /**
@@ -69,14 +70,20 @@ class Round implements Factor {
 
     @Override
     public DataType type() {
-        return DataTypes.LongType;
+        if (child.type().equals(DataTypes.DoubleType)) return DataTypes.LongType;
+        if (child.type().equals(DataTypes.FloatType)) return DataTypes.IntegerType;
+        if (child.type().equals(DataTypes.object(Double.class))) return DataTypes.object(Long.class);
+        else return DataTypes.object(Integer.class);
     }
 
     @Override
     public void bind(StructType schema) {
         child.bind(schema);
 
-        if (child.type() != DataTypes.DoubleType && child.type() != DataTypes.object(Double.class)) {
+        if (!(child.type().equals(DataTypes.DoubleType) ||
+              child.type().equals(DataTypes.FloatType) ||
+              child.type().equals(DataTypes.object(Double.class)) ||
+              child.type().equals(DataTypes.object(Float.class)))) {
             throw new IllegalStateException(String.format("Invalid expression: round(%s)", child.type()));
         }
     }
@@ -90,6 +97,6 @@ class Round implements Factor {
     public Long apply(Tuple o) {
         Object x = child.apply(o);
         if (x == null) return null;
-        else return Math.round((double) x);
+        else return Math.round(((Number) x).doubleValue());
     }
 }

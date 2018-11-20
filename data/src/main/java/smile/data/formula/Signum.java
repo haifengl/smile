@@ -79,17 +79,20 @@ class Signum implements Factor {
 
     @Override
     public DataType type() {
-        return child.type();
+        if (child.type().equals(DataTypes.DoubleType)) return DataTypes.DoubleType;
+        if (child.type().equals(DataTypes.FloatType)) return DataTypes.FloatType;
+        if (child.type().equals(DataTypes.object(Double.class))) return DataTypes.object(Double.class);
+        else return DataTypes.object(Float.class);
     }
 
     @Override
     public void bind(StructType schema) {
         child.bind(schema);
 
-        if (child.type() != DataTypes.DoubleType &&
-            child.type() != DataTypes.FloatType &&
-            child.type() != DataTypes.object(Double.class) &&
-            child.type() != DataTypes.object(Float.class)) {
+        if (!(child.type().equals(DataTypes.DoubleType) ||
+              child.type().equals(DataTypes.FloatType) ||
+              child.type().equals(DataTypes.object(Double.class)) ||
+              child.type().equals(DataTypes.object(Float.class)))) {
             throw new IllegalStateException(String.format("Invalid expression: signum(%s)", child.type()));
         }
     }

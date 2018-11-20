@@ -44,8 +44,8 @@ public class DataFrameTest {
         char gender;
         LocalDate birthday;
         int age;
-        Integer salary;
-        Person(String name, char gender, LocalDate birthday, int age, Integer salary) {
+        Double salary;
+        Person(String name, char gender, LocalDate birthday, int age, Double salary) {
             this.name = name;
             this.gender = gender;
             this.birthday = birthday;
@@ -57,16 +57,16 @@ public class DataFrameTest {
         public char getGender() { return gender; }
         public LocalDate getBirthday() { return birthday; }
         public int getAge() { return age; }
-        public Integer getSalary() { return salary; }
+        public Double getSalary() { return salary; }
     }
 
     DataFrame df;
 
     public DataFrameTest() {
         List<Person> persons = new ArrayList<>();
-        persons.add(new Person("Alex", 'M', LocalDate.of(1980, 10, 1), 38, 10000));
+        persons.add(new Person("Alex", 'M', LocalDate.of(1980, 10, 1), 38, 10000.));
         persons.add(new Person("Bob", 'M', LocalDate.of(1995, 3, 4), 23, null));
-        persons.add(new Person("Jane", 'F', LocalDate.of(1970, 3, 1), 48, 230000));
+        persons.add(new Person("Jane", 'F', LocalDate.of(1970, 3, 1), 48, 230000.));
         persons.add(new Person("Amy", 'F', LocalDate.of(2005, 12, 10), 13, null));
 
         df = DataFrame.of(persons, Person.class);
@@ -128,7 +128,7 @@ public class DataFrameTest {
     @Test
     public void testTypes() {
         System.out.println("names");
-        DataType[] types = {DataTypes.IntegerType, DataTypes.DateType, DataTypes.CharType, DataTypes.StringType, DataTypes.object(Integer.class)};
+        DataType[] types = {DataTypes.IntegerType, DataTypes.DateType, DataTypes.CharType, DataTypes.StringType, DataTypes.object(Double.class)};
         assertTrue(Arrays.equals(types, df.types()));
     }
 
@@ -140,14 +140,14 @@ public class DataFrameTest {
         System.out.println("get");
         assertEquals(38, df.get(0).getInt(0));
         assertEquals("Alex", df.get(0).getString(3));
-        assertEquals(10000, df.get(0).get(4));
+        assertEquals(10000., df.get(0).get(4));
         assertEquals(13, df.get(3).getInt(0));
         assertEquals("Amy", df.get(3).getString(3));
         assertEquals(null, df.get(3).get(4));
 
         assertEquals(38, df.get(0,0));
         assertEquals("Alex", df.get(0,3));
-        assertEquals(10000, df.get(0,4));
+        assertEquals(10000., df.get(0,4));
         assertEquals(13, df.get(3,0));
         assertEquals("Amy", df.get(3,3));
         assertEquals(null, df.get(3,4));
@@ -170,12 +170,97 @@ public class DataFrameTest {
         assertEquals(23, output.get(3,4));
     }
 
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaAbs() {
+        System.out.println("abs");
+        Formula formula = new Formula(abs("age"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(Math.abs(38), output.get(0,0));
+        assertEquals(Math.abs(23), output.get(1,0));
+        assertEquals(Math.abs(48), output.get(2,0));
+        assertEquals(Math.abs(13), output.get(3,0));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaAbsNullable() {
+        System.out.println("abs null");
+        Formula formula = new Formula(abs("salary"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(Math.abs(10000.), output.get(0,0));
+        assertEquals(null, output.get(1,0));
+        assertEquals(Math.abs(230000.), output.get(2,0));
+        assertEquals(null, output.get(3,0));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaExp() {
+        System.out.println("exp");
+        Formula formula = new Formula(exp("age"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(Math.exp(38), output.get(0,0));
+        assertEquals(Math.exp(23), output.get(1,0));
+        assertEquals(Math.exp(48), output.get(2,0));
+        assertEquals(Math.exp(13), output.get(3,0));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaExpNullable() {
+        System.out.println("exp null");
+        Formula formula = new Formula(exp("salary"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(Math.exp(10000), output.get(0,0));
+        assertEquals(null, output.get(1,0));
+        assertEquals(Math.exp(230000), output.get(2,0));
+        assertEquals(null, output.get(3,0));
+    }
     /**
      * Test of apply method, of class Formula.
      */
     @Test
     public void testFormulaLog() {
         System.out.println("log");
+        Formula formula = new Formula(log("age"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(Math.log(38), output.get(0,0));
+        assertEquals(Math.log(23), output.get(1,0));
+        assertEquals(Math.log(48), output.get(2,0));
+        assertEquals(Math.log(13), output.get(3,0));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaLogNullable() {
+        System.out.println("log null");
         Formula formula = new Formula(log("salary"));
         DataFrame output = formula.apply(df);
         System.out.println(output);
@@ -184,6 +269,142 @@ public class DataFrameTest {
         assertEquals(Math.log(10000), output.get(0,0));
         assertEquals(null, output.get(1,0));
         assertEquals(Math.log(230000), output.get(2,0));
+        assertEquals(null, output.get(3,0));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaLog10() {
+        System.out.println("log10");
+        Formula formula = new Formula(log10("age"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(Math.log10(38), output.get(0,0));
+        assertEquals(Math.log10(23), output.get(1,0));
+        assertEquals(Math.log10(48), output.get(2,0));
+        assertEquals(Math.log10(13), output.get(3,0));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaLog10Nullable() {
+        System.out.println("log null");
+        Formula formula = new Formula(log10("salary"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(Math.log10(10000), output.get(0,0));
+        assertEquals(null, output.get(1,0));
+        assertEquals(Math.log10(230000), output.get(2,0));
+        assertEquals(null, output.get(3,0));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaSqrt() {
+        System.out.println("sqrt");
+        Formula formula = new Formula(sqrt("age"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(Math.sqrt(38), output.get(0,0));
+        assertEquals(Math.sqrt(23), output.get(1,0));
+        assertEquals(Math.sqrt(48), output.get(2,0));
+        assertEquals(Math.sqrt(13), output.get(3,0));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaSqrtNullable() {
+        System.out.println("sqrt null");
+        Formula formula = new Formula(sqrt("salary"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(Math.sqrt(10000), output.get(0,0));
+        assertEquals(null, output.get(1,0));
+        assertEquals(Math.sqrt(230000), output.get(2,0));
+        assertEquals(null, output.get(3,0));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaCeilNullable() {
+        System.out.println("ceil null");
+        Formula formula = new Formula(ceil("salary"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(Math.ceil(10000), output.get(0,0));
+        assertEquals(null, output.get(1,0));
+        assertEquals(Math.ceil(230000), output.get(2,0));
+        assertEquals(null, output.get(3,0));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaFloorNullable() {
+        System.out.println("floor null");
+        Formula formula = new Formula(floor("salary"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(Math.floor(10000), output.get(0,0));
+        assertEquals(null, output.get(1,0));
+        assertEquals(Math.floor(230000), output.get(2,0));
+        assertEquals(null, output.get(3,0));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaRoundNullable() {
+        System.out.println("round null");
+        Formula formula = new Formula(round("salary"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(Math.round(10000.), output.get(0,0));
+        assertEquals(null, output.get(1,0));
+        assertEquals(Math.round(230000.), output.get(2,0));
+        assertEquals(null, output.get(3,0));
+    }
+
+    /**
+     * Test of apply method, of class Formula.
+     */
+    @Test
+    public void testFormulaSignumNullable() {
+        System.out.println("signum null");
+        Formula formula = new Formula(signum("salary"));
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(Math.signum(10000.), output.get(0,0));
+        assertEquals(null, output.get(1,0));
+        assertEquals(Math.signum(230000.), output.get(2,0));
         assertEquals(null, output.get(3,0));
     }
 }

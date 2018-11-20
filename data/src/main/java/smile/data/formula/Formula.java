@@ -176,6 +176,16 @@ public class Formula {
         return new Remove(x);
     }
 
+    /** Returns the absolute value of a factor. */
+    public static Factor abs(String name) {
+        return abs(col(name));
+    }
+
+    /** Returns the absolute value of a factor. */
+    public static Factor abs(Factor x) {
+        return new Abs(x);
+    }
+
     /** Returns the exp of a factor. */
     public static Factor exp(String name) {
         return exp(col(name));
