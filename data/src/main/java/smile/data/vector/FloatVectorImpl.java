@@ -51,7 +51,32 @@ class FloatVectorImpl implements FloatVector {
     }
 
     @Override
+    public byte getByte(int i) {
+        throw new UnsupportedOperationException("cast float to byte");
+    }
+
+    @Override
+    public short getShort(int i) {
+        throw new UnsupportedOperationException("cast float to short");
+    }
+
+    @Override
+    public int getInt(int i) {
+        throw new UnsupportedOperationException("cast float to int");
+    }
+
+    @Override
+    public long getLong(int i) {
+        throw new UnsupportedOperationException("cast float to long");
+    }
+
+    @Override
     public float getFloat(int i) {
+        return vector[i];
+    }
+
+    @Override
+    public double getDouble(int i) {
         return vector[i];
     }
 

@@ -34,6 +34,11 @@ public class LongType implements DataType {
     }
 
     @Override
+    public boolean isLong() {
+        return true;
+    }
+
+    @Override
     public String name() {
         return "long";
     }

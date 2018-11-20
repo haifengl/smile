@@ -39,11 +39,6 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
     /** Sets the (optional) scale of measure. */
     void setScale(ContinuousMeasure scale);
 
-    /**
-     * Returns the value at position i.
-     */
-    double getDouble(int i);
-
     /** Creates a named double vector.
      *
      * @param name the name of vector.

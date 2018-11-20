@@ -45,7 +45,15 @@ public class DataTypes {
     /** DateTime data type with ISO format. */
     public static smile.data.type.DateTimeType DateTimeType = smile.data.type.DateTimeType.instance;
     /** Plain Object data type. */
-    public static smile.data.type.ObjectType ObjectType = smile.data.type.ObjectType.instance;
+    public static smile.data.type.ObjectType ObjectType = smile.data.type.ObjectType.objectType;
+    /** Integer Object data type. */
+    public static smile.data.type.ObjectType IntegerObjectType = smile.data.type.ObjectType.integerType;
+    /** Long Object data type. */
+    public static smile.data.type.ObjectType LongObjectType = smile.data.type.ObjectType.longType;
+    /** Float Object data type. */
+    public static smile.data.type.ObjectType FloatObjectType = smile.data.type.ObjectType.floatType;
+    /** Double Object data type. */
+    public static smile.data.type.ObjectType DoubleObjectType = smile.data.type.ObjectType.doubleType;
 
     /** Date data type with customized format. */
     public static smile.data.type.DateType date(String pattern) {

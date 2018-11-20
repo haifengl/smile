@@ -121,14 +121,14 @@ class Add implements Factor {
         b.bind(schema);
         type = DataType.prompt(a.type(), b.type());
 
-        if (type == DataTypes.IntegerType) {
-            f = (Tuple o) -> (int) a.apply(o) + (int) b.apply(o);
-        } else if (type == DataTypes.LongType) {
-            f = (Tuple o) -> (long) a.apply(o) + (long) b.apply(o);
-        } else if (type == DataTypes.FloatType) {
-            f = (Tuple o) -> (float) a.apply(o) + (float) b.apply(o);
-        } else if (type == DataTypes.DoubleType) {
-            f = (Tuple o) -> (double) a.apply(o) + (double) b.apply(o);
+        if (type.isInt()) {
+            f = (Tuple o) -> a.applyAsInt(o) + b.applyAsInt(o);
+        } else if (type.isLong()) {
+            f = (Tuple o) -> a.applyAsLong(o) + b.applyAsLong(o);
+        } else if (type.isFloat()) {
+            f = (Tuple o) -> a.applyAsFloat(o) + b.applyAsFloat(o);
+        } else if (type.isDouble()) {
+            f = (Tuple o) -> a.applyAsDouble(o) + b.applyAsDouble(o);
         }
     }
 }

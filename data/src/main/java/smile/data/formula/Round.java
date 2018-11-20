@@ -80,10 +80,7 @@ class Round implements Factor {
     public void bind(StructType schema) {
         child.bind(schema);
 
-        if (!(child.type().equals(DataTypes.DoubleType) ||
-              child.type().equals(DataTypes.FloatType) ||
-              child.type().equals(DataTypes.object(Double.class)) ||
-              child.type().equals(DataTypes.object(Float.class)))) {
+        if (!(child.type().isDouble() || child.type().isFloat())) {
             throw new IllegalStateException(String.format("Invalid expression: round(%s)", child.type()));
         }
     }

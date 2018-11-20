@@ -34,6 +34,11 @@ public class DoubleType implements DataType {
     }
 
     @Override
+    public boolean isDouble() {
+        return true;
+    }
+
+    @Override
     public String name() {
         return "double";
     }

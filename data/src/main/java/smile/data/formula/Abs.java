@@ -108,14 +108,10 @@ class Abs implements Factor {
     public void bind(StructType schema) {
         child.bind(schema);
 
-        if (!(child.type().equals(DataTypes.DoubleType) ||
-              child.type().equals(DataTypes.IntegerType) ||
-              child.type().equals(DataTypes.LongType) ||
-              child.type().equals(DataTypes.FloatType) ||
-              child.type().equals(DataTypes.object(Double.class)) ||
-              child.type().equals(DataTypes.object(Integer.class)) ||
-              child.type().equals(DataTypes.object(Long.class)) ||
-              child.type().equals(DataTypes.object(Float.class)))) {
+        if (!(child.type().isInt() ||
+              child.type().isLong() ||
+              child.type().isDouble() ||
+              child.type().isFloat())) {
             throw new IllegalStateException(String.format("Invalid expression: abs(%s)", child.type()));
         }
     }
