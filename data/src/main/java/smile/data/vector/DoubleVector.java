@@ -40,6 +40,31 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
     /** Sets the (optional) scale of measure. */
     void setScale(ContinuousMeasure scale);
 
+    @Override
+    default byte getByte(int i) {
+        throw new UnsupportedOperationException("cast double to byte");
+    }
+
+    @Override
+    default short getShort(int i) {
+        throw new UnsupportedOperationException("cast double to short");
+    }
+
+    @Override
+    default int getInt(int i) {
+        throw new UnsupportedOperationException("cast double to int");
+    }
+
+    @Override
+    default long getLong(int i) {
+        throw new UnsupportedOperationException("cast double to long");
+    }
+
+    @Override
+    default float getFloat(int i) {
+        throw new UnsupportedOperationException("cast double to float");
+    }
+
     /**
      * Returns the string representation of vector.
      * @param n Number of elements to show

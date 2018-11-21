@@ -50,32 +50,7 @@ class ShortVectorImpl implements ShortVector {
     }
 
     @Override
-    public byte getByte(int i) {
-        throw new UnsupportedOperationException("cast short to byte");
-    }
-
-    @Override
     public short getShort(int i) {
-        return vector[i];
-    }
-
-    @Override
-    public int getInt(int i) {
-        return vector[i];
-    }
-
-    @Override
-    public long getLong(int i) {
-        return vector[i];
-    }
-
-    @Override
-    public float getFloat(int i) {
-        return vector[i];
-    }
-
-    @Override
-    public double getDouble(int i) {
         return vector[i];
     }
 

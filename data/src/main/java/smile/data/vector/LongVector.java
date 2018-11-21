@@ -32,10 +32,30 @@ public interface LongVector extends BaseVector<Long, Long, LongStream> {
         return DataTypes.LongType;
     }
 
-    /**
-     * Returns the value at position i.
-     */
-    long getLong(int i);
+    @Override
+    default byte getByte(int i) {
+        throw new UnsupportedOperationException("cast long to byte");
+    }
+
+    @Override
+    default short getShort(int i) {
+        throw new UnsupportedOperationException("cast long to short");
+    }
+
+    @Override
+    default int getInt(int i) {
+        throw new UnsupportedOperationException("cast long to int");
+    }
+
+    @Override
+    default float getFloat(int i) {
+        return getLong(i);
+    }
+
+    @Override
+    default double getDouble(int i) {
+        return getLong(i);
+    }
 
     /**
      * Returns the string representation of vector.
