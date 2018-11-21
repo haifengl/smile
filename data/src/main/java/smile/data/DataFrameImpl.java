@@ -35,6 +35,7 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.*;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
 /**
@@ -442,8 +443,62 @@ class DataFrameImpl implements DataFrame {
     }
 
     @Override
-    public Matrix toMatrix() {
-        throw new UnsupportedOperationException();
+    public DenseMatrix toMatrix() {
+        int nrows = nrows();
+        int ncols = ncols();
+        DataType[] types = types();
+
+        DenseMatrix m = Matrix.newInstance(nrows, ncols, 0);
+        for (int j = 0; j < ncols; j++) {
+            DataType type = types[j];
+            if (type == DataTypes.DoubleType) {
+                DoubleVector v = doubleVector(j);
+                for (int i = 0; i < nrows; i++) m.set(i, j, v.getDouble(i));
+            } else if (type == DataTypes.IntegerType) {
+                IntVector v = intVector(j);
+                for (int i = 0; i < nrows; i++) m.set(i, j, v.getInt(i));
+            } else if (type == DataTypes.LongType) {
+                LongVector v = longVector(j);
+                for (int i = 0; i < nrows; i++) m.set(i, j, v.getLong(i));
+            } else if (type == DataTypes.FloatType) {
+                FloatVector v = floatVector(j);
+                for (int i = 0; i < nrows; i++) m.set(i, j, v.getFloat(i));
+            } else if (type == DataTypes.ShortType) {
+                ShortVector v = shortVector(j);
+                for (int i = 0; i < nrows; i++) m.set(i, j, v.getShort(i));
+            } else if (type == DataTypes.ByteType) {
+                ByteVector v = byteVector(j);
+                for (int i = 0; i < nrows; i++) m.set(i, j, v.getByte(i));
+            } else if (type == DataTypes.CharType) {
+                CharVector v = charVector(j);
+                for (int i = 0; i < nrows; i++) m.set(i, j, v.getChar(i));
+            } else if (type == DataTypes.BooleanType) {
+                BooleanVector v = booleanVector(j);
+                for (int i = 0; i < nrows; i++) m.set(i, j, v.getDouble(i));
+            } else if (type == DataTypes.BooleanObjectType) {
+                Vector<Boolean> v = vector(j);
+                for (int i = 0; i < nrows; i++) {
+                    Boolean b = v.get(i);
+                    if (b != null)
+                        m.set(i, j, b.booleanValue() ? 1 : 0);
+                    else
+                        m.set(i, j, Double.NaN);
+                }
+            } else if (type == DataTypes.DoubleObjectType ||
+                       type == DataTypes.IntegerObjectType ||
+                       type == DataTypes.FloatObjectType ||
+                       type == DataTypes.LongObjectType ||
+                       type == DataTypes.ByteObjectType ||
+                       type == DataTypes.ShortObjectType ||
+                       type == DataTypes.CharObjectType) {
+                Vector<?> v = vector(j);
+                for (int i = 0; i < nrows; i++) m.set(i, j, v.getDouble(i));
+            } else {
+                throw new UnsupportedOperationException(String.format("DataFrame.toMatrix() doesn't support type %s", type));
+            }
+        }
+
+        return m;
     }
 
     class DataFrameRow implements Tuple {

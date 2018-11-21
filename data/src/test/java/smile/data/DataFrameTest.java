@@ -30,6 +30,7 @@ import smile.data.formula.Formula;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.math.matrix.DenseMatrix;
 
 import static smile.data.formula.Formula.*;
 
@@ -225,14 +226,14 @@ public class DataFrameTest {
     @Test
     public void testFormulaExpNullable() {
         System.out.println("exp null");
-        Formula formula = new Formula(exp("salary"));
+        Formula formula = new Formula(exp(div("salary", val(10000))));
         DataFrame output = df.map(formula);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
-        assertEquals(Math.exp(10000), output.get(0,0));
+        assertEquals(Math.exp(1), output.get(0,0));
         assertEquals(null, output.get(1,0));
-        assertEquals(Math.exp(230000), output.get(2,0));
+        assertEquals(Math.exp(23), output.get(2,0));
         assertEquals(null, output.get(3,0));
     }
     /**
@@ -542,7 +543,7 @@ public class DataFrameTest {
     }
 
     /**
-     * Test of summary method, of class Formula.
+     * Test of summary method, of class DataFrame.
      */
     @Test
     public void testDataFrameSummary() {
@@ -562,5 +563,25 @@ public class DataFrameTest {
         assertEquals(10000., output.get(1,2));
         assertEquals(120000., output.get(1,3));
         assertEquals(230000., output.get(1,4));
+    }
+
+    /**
+     * Test of toMatrix method, of class DataFrame.
+     */
+    @Test
+    public void testDataFrameToMatrix() {
+        System.out.println("toMatrix");
+        DenseMatrix output = df.select("age", "salary").toMatrix();
+        System.out.println(output);
+        assertEquals(4, output.nrows());
+        assertEquals(2, output.ncols());
+        assertEquals(38., output.get(0, 0), 1E-10);
+        assertEquals(23., output.get(1, 0), 1E-10);
+        assertEquals(48., output.get(2, 0), 1E-10);
+        assertEquals(13., output.get(3, 0), 1E-10);
+        assertEquals(10000., output.get(0, 1), 1E-10);
+        assertEquals(Double.NaN, output.get(1, 1), 1E-10);
+        assertEquals(230000., output.get(2, 1), 1E-10);
+        assertEquals(Double.NaN, output.get(3, 1), 1E-10);
     }
 }

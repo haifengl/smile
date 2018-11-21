@@ -18,10 +18,8 @@ package smile.data;
 import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
-import smile.data.type.ContinuousMeasure;
 import smile.data.type.DataType;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
@@ -281,9 +279,10 @@ public interface DataFrame extends Dataset<Tuple> {
      * Return the matrix obtained by converting all the variables
      * in a data frame to numeric mode and then binding them together
      * as the columns of a matrix. Nominal and ordinal variables are
-     * replaced by their internal codes.
+     * replaced by their internal codes. Missing values/nulls will be
+     * encoded as Double.NaN.
      */
-    Matrix toMatrix();
+    DenseMatrix toMatrix();
 
     /** Returns the statistic summary of numeric columns. */
     default DataFrame summary() {
@@ -499,7 +498,7 @@ public interface DataFrame extends Dataset<Tuple> {
      * @param <T> the type of input elements to the reduction operation
      * @param clazz The class type of elements.
      */
-    static <T> Collector<T, List<T>, DataFrame> toDataFrame(Class<T> clazz) {
+    static <T> Collector<T, List<T>, DataFrame> collect(Class<T> clazz) {
         return Collector.of(
                 // supplier
                 () -> new ArrayList<T>(),
@@ -515,7 +514,7 @@ public interface DataFrame extends Dataset<Tuple> {
     /**
      * Returns a stream collector that accumulates tuples into a DataFrame.
      */
-    static Collector<Tuple, List<Tuple>, DataFrame> toDataFrame() {
+    static Collector<Tuple, List<Tuple>, DataFrame> collect() {
         return Collector.of(
                 // supplier
                 () -> new ArrayList<Tuple>(),
@@ -531,7 +530,7 @@ public interface DataFrame extends Dataset<Tuple> {
     /**
      * Returns a stream collector that accumulates tuples into a Matrix.
      */
-    static Collector<Tuple, List<Tuple>, DenseMatrix> toDenseMatrix() {
+    static Collector<Tuple, List<Tuple>, DenseMatrix> collectMatrix() {
         return Collector.of(
                 // supplier
                 () -> new ArrayList<Tuple>(),
