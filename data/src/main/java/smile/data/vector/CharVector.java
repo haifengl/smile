@@ -38,6 +38,36 @@ public interface CharVector extends BaseVector<Character, Integer, IntStream> {
      */
     char getChar(int i);
 
+    @Override
+    default byte getByte(int i) {
+        throw new UnsupportedOperationException("cast char to byte");
+    }
+
+    @Override
+    default short getShort(int i) {
+        throw new UnsupportedOperationException("cast char to byte");
+    }
+
+    @Override
+    default int getInt(int i) {
+        return getChar(i);
+    }
+
+    @Override
+    default long getLong(int i) {
+        return getChar(i);
+    }
+
+    @Override
+    default float getFloat(int i) {
+        return getChar(i);
+    }
+
+    @Override
+    default double getDouble(int i) {
+        return getChar(i);
+    }
+
     /**
      * Returns the string representation of vector.
      * @param n Number of elements to show

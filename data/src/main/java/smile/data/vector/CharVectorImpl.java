@@ -41,36 +41,6 @@ class CharVectorImpl implements CharVector {
     }
 
     @Override
-    public byte getByte(int i) {
-        throw new UnsupportedOperationException("cast char to byte");
-    }
-
-    @Override
-    public short getShort(int i) {
-        throw new UnsupportedOperationException("cast char to byte");
-    }
-
-    @Override
-    public int getInt(int i) {
-        return vector[i];
-    }
-
-    @Override
-    public long getLong(int i) {
-        return vector[i];
-    }
-
-    @Override
-    public float getFloat(int i) {
-        return vector[i];
-    }
-
-    @Override
-    public double getDouble(int i) {
-        return vector[i];
-    }
-
-    @Override
     public Character get(int i) {
         return vector[i];
     }

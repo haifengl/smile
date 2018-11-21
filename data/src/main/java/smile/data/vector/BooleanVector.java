@@ -37,6 +37,36 @@ public interface BooleanVector extends BaseVector<Boolean, Integer, IntStream> {
      */
     boolean getBoolean(int i);
 
+    @Override
+    default byte getByte(int i) {
+        return getBoolean(i) ? (byte) 1 : 0;
+    }
+
+    @Override
+    default short getShort(int i) {
+        return getBoolean(i)  ? (short) 1 : 0;
+    }
+
+    @Override
+    default int getInt(int i) {
+        return getBoolean(i)  ? 1 : 0;
+    }
+
+    @Override
+    default long getLong(int i) {
+        return getBoolean(i)  ? 1 : 0;
+    }
+
+    @Override
+    default float getFloat(int i) {
+        return getBoolean(i)  ? 1 : 0;
+    }
+
+    @Override
+    default double getDouble(int i) {
+        return getBoolean(i)  ? 1 : 0;
+    }
+
     /**
      * Returns the string representation of vector.
      * @param n Number of elements to show

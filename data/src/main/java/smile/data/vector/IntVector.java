@@ -39,10 +39,30 @@ public interface IntVector extends BaseVector<Integer, Integer, IntStream> {
     /** Sets the (optional) scale of measure. */
     void setScale(DiscreteMeasure scale);
 
-    /**
-     * Returns the value at position i.
-     */
-    int getInt(int i);
+    @Override
+    default byte getByte(int i) {
+        throw new UnsupportedOperationException("cast int to byte");
+    }
+
+    @Override
+    default short getShort(int i) {
+        throw new UnsupportedOperationException("cast int to short");
+    }
+
+    @Override
+    default long getLong(int i) {
+        return getInt(i);
+    }
+
+    @Override
+    default float getFloat(int i) {
+        return getInt(i);
+    }
+
+    @Override
+    default double getDouble(int i) {
+        return getInt(i);
+    }
 
     /**
      * Returns the string representation of vector.

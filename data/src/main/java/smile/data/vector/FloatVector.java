@@ -40,10 +40,31 @@ public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
     /** Sets the (optional) scale of measure. */
     void setScale(ContinuousMeasure scale);
 
-    /**
-     * Returns the value at position i.
-     */
-    float getFloat(int i);
+    @Override
+    default byte getByte(int i) {
+        throw new UnsupportedOperationException("cast float to byte");
+    }
+
+    @Override
+    default short getShort(int i) {
+        throw new UnsupportedOperationException("cast float to short");
+    }
+
+    @Override
+    default int getInt(int i) {
+        throw new UnsupportedOperationException("cast float to int");
+    }
+
+    @Override
+    default long getLong(int i) {
+        throw new UnsupportedOperationException("cast float to long");
+    }
+
+    @Override
+    default double getDouble(int i) {
+        return getFloat(i);
+    }
+
 
     /**
      * Returns the string representation of vector.

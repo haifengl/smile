@@ -60,12 +60,14 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
 
     @Override
     default float getFloat(int i) {
-        return ((Number) get(i)).floatValue();
+        Number x = (Number) get(i);
+        return x == null ? Float.NaN : x.floatValue();
     }
 
     @Override
     default double getDouble(int i) {
-        return ((Number) get(i)).doubleValue();
+        Number x = (Number) get(i);
+        return x == null ? Double.NaN : x.doubleValue();
     }
 
     /** Checks whether the value at position i is null. */

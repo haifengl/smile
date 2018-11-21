@@ -40,10 +40,30 @@ public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
     /** Sets the (optional) scale of measure. */
     void setScale(DiscreteMeasure scale);
 
-    /**
-     * Returns the value at position i.
-     */
-    short getShort(int i);
+    @Override
+    default byte getByte(int i) {
+        throw new UnsupportedOperationException("cast short to byte");
+    }
+
+    @Override
+    default int getInt(int i) {
+        return getShort(i);
+    }
+
+    @Override
+    default long getLong(int i) {
+        return getShort(i);
+    }
+
+    @Override
+    default float getFloat(int i) {
+        return getShort(i);
+    }
+
+    @Override
+    default double getDouble(int i) {
+        return getShort(i);
+    }
 
     /**
      * Returns the string representation of vector.

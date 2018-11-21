@@ -51,31 +51,6 @@ class DoubleVectorImpl implements DoubleVector {
     }
 
     @Override
-    public byte getByte(int i) {
-        throw new UnsupportedOperationException("cast double to byte");
-    }
-
-    @Override
-    public short getShort(int i) {
-        throw new UnsupportedOperationException("cast double to short");
-    }
-
-    @Override
-    public int getInt(int i) {
-        throw new UnsupportedOperationException("cast double to int");
-    }
-
-    @Override
-    public long getLong(int i) {
-        throw new UnsupportedOperationException("cast double to long");
-    }
-
-    @Override
-    public float getFloat(int i) {
-        throw new UnsupportedOperationException("cast double to float");
-    }
-
-    @Override
     public double getDouble(int i) {
         return vector[i];
     }
