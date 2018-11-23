@@ -16,7 +16,6 @@
 
 package smile.classification;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,6 +23,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.math.Math;
+import smile.data.AttributeDataset;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.util.MulticoreExecutor;
 
@@ -75,7 +75,7 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]>, Serializable {
+public class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]> {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(LogisticRegression.class);
 
@@ -190,11 +190,32 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
     /**
      * Constructor. No regularization.
      * 
+     * @param data labels in [0, k) where k is the number of classes and training samples.
+     */
+    public LogisticRegression(AttributeDataset data) {
+        this(data.x(), data.labels());
+    }
+
+    /**
+     * Constructor. No regularization.
+     * 
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      */
     public LogisticRegression(double[][] x, int[] y) {
         this(x, y, 0.0);
+    }
+
+    /**
+     * Constructor. No regularization.
+     * 
+     * @param data labels in [0, k) where k is the number of classes and training samples.
+     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+     * weights which often has superior generalization performance, especially
+     * when the dimensionality is high.
+     */
+    public LogisticRegression(AttributeDataset data,  double lambda) {
+        this(data.x(), data.labels(), lambda);
     }
 
     /**
@@ -208,6 +229,20 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
      */
     public LogisticRegression(double[][] x, int[] y, double lambda) {
         this(x, y, lambda, 1E-5, 500);
+    }
+
+    /**
+     * Constructor. No regularization.
+     * 
+     * @param data labels in [0, k) where k is the number of classes and training samples.
+     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+     * weights which often has superior generalization performance, especially
+     * when the dimensionality is high.
+     * @param tol the tolerance for stopping iterations.
+     * @param maxIter the maximum number of iterations.
+     */
+    public LogisticRegression(AttributeDataset data,  double lambda, double tol, int maxIter) {
+        this(data.x(), data.labels(), lambda, tol, maxIter);
     }
 
     /**
@@ -249,7 +284,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
             }
             
             if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + labels[i]+1);                 
+                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
             }
         }
 

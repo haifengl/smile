@@ -16,9 +16,7 @@
 
 package smile.classification;
 
-import java.io.Serializable;
 import java.util.Arrays;
-
 import smile.math.Math;
 import smile.math.distance.Metric;
 import smile.math.matrix.Matrix;
@@ -93,7 +91,7 @@ import smile.util.SmileUtils;
  * 
  * @author Haifeng Li
  */
-public class RBFNetwork<T> implements Classifier<T>, Serializable {
+public class RBFNetwork<T> implements Classifier<T> {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -288,7 +286,7 @@ public class RBFNetwork<T> implements Classifier<T>, Serializable {
             }
             
             if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + labels[i]+1);                 
+                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
             }
         }
 

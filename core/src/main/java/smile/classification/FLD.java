@@ -16,7 +16,6 @@
 
 package smile.classification;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.Math;
 import smile.math.matrix.Matrix;
@@ -61,7 +60,7 @@ import smile.projection.Projection;
  * 
  * @author Haifeng Li
  */
-public class FLD implements Classifier<double[]>, Projection<double[]>, Serializable {
+public class FLD implements Classifier<double[]>, Projection<double[]> {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -193,7 +192,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]>, Serializ
             }
             
             if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + labels[i]+1);                 
+                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
             }
         }
 

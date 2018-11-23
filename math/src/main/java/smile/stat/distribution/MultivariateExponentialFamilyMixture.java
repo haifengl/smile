@@ -27,6 +27,7 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
+    private static final long serialVersionUID = 1L;
 
     /**
      * Constructor.

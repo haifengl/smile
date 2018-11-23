@@ -29,6 +29,7 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class BernoulliDistribution extends DiscreteDistribution {
+    private static final long serialVersionUID = 1L;
 
     /**
      * Probability of success.

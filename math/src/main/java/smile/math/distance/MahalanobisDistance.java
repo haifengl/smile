@@ -16,7 +16,6 @@
 
 package smile.math.distance;
 
-import java.io.Serializable;
 import smile.math.Math;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
@@ -31,7 +30,7 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class MahalanobisDistance implements Metric<double[]>, Serializable {
+public class MahalanobisDistance implements Metric<double[]> {
     private static final long serialVersionUID = 1L;
 
     private DenseMatrix sigma;
