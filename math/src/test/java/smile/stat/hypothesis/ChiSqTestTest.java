@@ -75,4 +75,34 @@ public class ChiSqTestTest {
         assertEquals(4, result.df, 1E-10);
         assertEquals(0.2695, result.pvalue, 1E-4);
     }
+
+    /**
+     * Test of test method, of class Chisq.
+     */
+    @Test
+    public void testPearsonChisqTest() {
+        System.out.println("pearson");
+        int[][] x = {{12, 7}, {5, 7}};
+        ChiSqTest result = ChiSqTest.test(x);
+        assertEquals(1, result.df, 1E-7);
+        assertEquals(0.6411, result.chisq, 1E-4);
+        assertEquals(0.4233, result.pvalue, 1E-4);
+    }
+
+    /**
+     * Test of test method, of class Chisq.
+     */
+    @Test
+    public void testPearsonChisqTest2() {
+        System.out.println("pearson 2");
+        int[][] y = {
+                {8, 13, 16, 10, 3},
+                {4, 9, 14, 16, 7}
+        };
+
+        ChiSqTest result = ChiSqTest.test(y);
+        assertEquals(4, result.df, 1E-7);
+        assertEquals(5.179, result.chisq, 1E-3);
+        assertEquals(0.2695, result.pvalue, 1E-4);
+    }
 }

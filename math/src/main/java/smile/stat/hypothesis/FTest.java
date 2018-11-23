@@ -33,17 +33,17 @@ public class FTest {
     /**
      * The degree of freedom of f-statistic.
      */
-    public int df1, df2;
+    public final int df1, df2;
 
     /**
      * f-statistic
      */
-    public double f;
+    public final double f;
 
     /**
      * p-value
      */
-    public double pvalue;
+    public final double pvalue;
 
     /**
      * Constructor.
@@ -53,6 +53,11 @@ public class FTest {
         this.df1 = df1;
         this.df2 = df2;
         this.pvalue = pvalue;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("F-test(f = %.4f, df1 = %d, df2 = %d, p-value = %G)", f, df1, df2, pvalue);
     }
 
     /**

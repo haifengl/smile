@@ -21,35 +21,46 @@ import smile.math.special.Gamma;
 /**
  * Pearson's chi-square test, also known as the chi-square goodness-of-fit test
  * or chi-square test for independence. Note that the chi-square distribution
- * is only approximately valid for large sample size. If a siginficant fraction
- * of bins have small numbers of counts (say, &lt; 10), then it the statistic is
+ * is only approximately valid for large sample size. If a significant fraction
+ * of bins have small numbers of counts (say, &lt; 10), then the statistic is
  * not well approximated by a chi-square probability function.
  *
  * @author Haifeng Li
  */
 public class ChiSqTest {
     /**
+     * A character string indicating what type of test was performed.
+     */
+    public final String method;
+
+    /**
      * The degree of freedom of chisq-statistic.
      */
-    public double df;
+    public final double df;
 
     /**
      * chi-square statistic
      */
-    public double chisq;
+    public final double chisq;
 
     /**
      * p-value
      */
-    public double pvalue;
+    public final double pvalue;
 
     /**
      * Constructor.
      */
-    private ChiSqTest(double chisq, double df, double pvalue) {
+    private ChiSqTest(String method, double chisq, double df, double pvalue) {
+        this.method = method;
         this.chisq = chisq;
         this.df = df;
         this.pvalue = pvalue;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s Chi-squared Test(t = %.4f, df = %.3f, p-value = %G)", method, chisq, df, pvalue);
     }
 
     /**
@@ -93,7 +104,7 @@ public class ChiSqTest {
 
         double p = Gamma.regularizedUpperIncompleteGamma(0.5 * df, 0.5 * chisq);
 
-        return new ChiSqTest(chisq, df, p);
+        return new ChiSqTest("One Sample", chisq, df, p);
     }
 
     /**
@@ -130,6 +141,71 @@ public class ChiSqTest {
 
         double p = Gamma.regularizedUpperIncompleteGamma(0.5 * df, 0.5 * chisq);
 
-        return new ChiSqTest(chisq, df, p);
+        return new ChiSqTest("Two Sample", chisq, df, p);
+    }
+
+    /**
+     * Given a two-dimensional contingency table in the form of an array of
+     * integers, returns Chi-square test for independence. The rows of contingency table
+     * are labels by the values of one nominal variable, the columns are labels
+     * by the values of the other nominal variable, and whose entries are
+     * nonnegative integers giving the number of observed events for each
+     * combination of row and column. Continuity correction
+     * will be applied when computing the test statistic for 2x2 tables: one half
+     * is subtracted from all |O-E| differences. The correlation coefficient is
+     * calculated as Cramer's V.
+     */
+    public static ChiSqTest test(int[][] table) {
+        final double TINY = 1.0e-16;
+
+        int ni = table.length;
+        int nj = table[0].length;
+
+        boolean correct = false;
+        if (ni == 2 && nj == 2) {
+            correct = true;
+        }
+
+        double sum = 0.0;
+
+        int nni = ni;
+        double[] sumi = new double[ni];
+        for (int i = 0; i < ni; i++) {
+            for (int j = 0; j < nj; j++) {
+                sumi[i] += table[i][j];
+                sum += table[i][j];
+            }
+            if (sumi[i] == 0.0) {
+                --nni;
+            }
+        }
+
+        int nnj = nj;
+        double[] sumj = new double[nj];
+        for (int j = 0; j < nj; j++) {
+            for (int i = 0; i < ni; i++) {
+                sumj[j] += table[i][j];
+            }
+            if (sumj[j] == 0.0) {
+                --nnj;
+            }
+        }
+
+        int df = nni * nnj - nni - nnj + 1;
+        double chisq = 0.0;
+        for (int i = 0; i < ni; i++) {
+            for (int j = 0; j < nj; j++) {
+                double expctd = sumj[j] * sumi[i] / sum;
+                double temp = table[i][j] - expctd;
+                if (correct) temp = Math.abs(temp) - 0.5;
+                chisq += temp * temp / (expctd + TINY);
+            }
+        }
+
+        double prob = Gamma.regularizedUpperIncompleteGamma(0.5 * df, 0.5 * chisq);
+        int minij = nni < nnj ? nni-1 : nnj-1;
+        double v = Math.sqrt(chisq/(sum*minij));
+
+        return new ChiSqTest("Pearson's", chisq, df, prob);
     }
 }

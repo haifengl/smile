@@ -208,7 +208,7 @@ public class BandMatrix implements Matrix, LinearSolver {
      * LU decomposition.
      */
     public void decompose() {
-        final double TINY = 1.0e-40;
+        final double TINY = 1.0e-16;
 
         int mm = m1 + m2 + 1;
         index = new int[n];

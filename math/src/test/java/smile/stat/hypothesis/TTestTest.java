@@ -145,7 +145,7 @@ public class TTestTest {
             2.8555142, 1.5852899, 0.9091290, 1.6060025, 1.0111968, 1.2479493,
             0.9407034, 1.7167572, 0.5380608, 2.1290007, 1.8695506, 1.2139096};
 
-        TTest result = TTest.pairedTest(y, z);
+        TTest result = TTest.testPaired(y, z);
         assertEquals(17, result.df, 1E-10);
         assertEquals(-0.1502, result.t, 1E-4);
         assertEquals(0.8824, result.pvalue, 1E-4);

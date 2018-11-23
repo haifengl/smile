@@ -91,28 +91,4 @@ public class CorTestTest {
         assertEquals(0.4444444, result.cor, 1E-7);
         assertEquals(0.0953, result.pvalue, 1E-4);
     }
-
-    /**
-     * Test of chisq method, of class CorTest.
-     */
-    @Test
-    public void testChisqTest() {
-        System.out.println("chisq");
-        int[][] x = {{12, 7}, {5, 7}};
-        CorTest result = CorTest.chisq(x);
-        assertEquals(0.1438, result.cor, 1E-4);
-        assertEquals(1, result.df, 1E-7);
-        assertEquals(0.6411, result.t, 1E-4);
-        assertEquals(0.4233, result.pvalue, 1E-4);
-
-        int[][] y = {
-            {8, 13, 16, 10, 3},
-            {4,  9, 14, 16, 7}
-        };
-        result = CorTest.chisq(y);
-        assertEquals(0.2275644, result.cor, 1E-7);
-        assertEquals(4, result.df, 1E-7);
-        assertEquals(5.179, result.t, 1E-3);
-        assertEquals(0.2695, result.pvalue, 1E-4);
-    }
 }
