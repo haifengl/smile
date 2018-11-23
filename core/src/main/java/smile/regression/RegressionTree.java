@@ -99,7 +99,7 @@ public class RegressionTree implements Regression<double[]> {
      *
      * It can be used to enforce model to keep monotonic relationship between target and the attribute.
      * Positive value enforce target to be positively correlated with this feature.
-     * Positive value enforce target to be negatively correlated with this feature.
+     * Negative value enforce target to be negatively correlated with this feature.
      * Zero value turns off monotonic regression.
      */
     private double[] monotonicRegression;
@@ -548,7 +548,7 @@ public class RegressionTree implements Regression<double[]> {
                     double trueMean = trueSum[k] / tc;
                     double falseMean = (sum - trueSum[k]) / fc;
 
-                    double gain = (tc * trueMean * trueMean + fc * falseMean * falseMean) - n * split.output * split.output;
+                    double gain = (tc * trueMean * trueMean + fc * falseMean * falseMean);
                     if (gain > split.splitScore) {
                         // new best split
                         split.splitFeature = j;
@@ -589,7 +589,7 @@ public class RegressionTree implements Regression<double[]> {
                         // The gain is actually -(reduction in squared error) for
                         // sorting in priority queue, which treats smaller number with
                         // higher priority.
-                        double gain = (trueCount * trueMean * trueMean + falseCount * falseMean * falseMean) - n * split.output * split.output;
+                        double gain = (trueCount * trueMean * trueMean + falseCount * falseMean * falseMean);
 
                         double score = gain;
                         double monoRegForFeature = monotonicRegression[j];
