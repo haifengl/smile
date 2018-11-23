@@ -54,18 +54,29 @@ import smile.math.MathEx;
  */
 public class KSTest {
     /**
+     * A character string indicating what type of test was performed.
+     */
+    public final String method;
+
+    /**
      * Kolmogorov-Smirnov statistic
      */
-    public double d;
+    public final double d;
 
     /**
      * P-value
      */
-    public double pvalue;
+    public final double pvalue;
 
-    private KSTest(double d, double pvalue) {
+    private KSTest(String method, double d, double pvalue) {
+        this.method = method;
         this.d = d;
         this.pvalue = pvalue;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s Kolmogorov-Smirnov Test(d = %.4f, p-value = %G)", method, d, pvalue);
     }
 
     /**
@@ -211,7 +222,7 @@ public class KSTest {
         en = Math.sqrt(en);
         double p = qks((en + 0.12 + 0.11 / en) * d);
 
-        return new KSTest(d, p);
+        return new KSTest(dist.toString(), d, p);
     }
 
     /**
@@ -252,6 +263,6 @@ public class KSTest {
         double en = Math.sqrt(en1 * en2 / (en1 + en2));
         double p = qks((en + 0.12 + 0.11 / en) * d);
 
-        return new KSTest(d, p);
+        return new KSTest("Two Sample", d, p);
     }
 }

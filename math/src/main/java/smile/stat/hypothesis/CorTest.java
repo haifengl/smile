@@ -86,40 +86,51 @@ import smile.sort.QuickSort;
  */
 public class CorTest {
     /**
+     * A character string indicating what type of test was performed.
+     */
+    public final String method;
+
+    /**
      * Correlation coefficient
      */
-    public double cor;
+    public final double cor;
 
     /**
      * Degree of freedom
      */
-    public double df;
+    public final double df;
 
     /**
      * test statistic
      */
-    public double t;
+    public final double t;
 
     /**
      * (two-sided) p-value of test
      */
-    public double pvalue;
+    public final double pvalue;
 
     /**
      * Constructor.
      */
-    private CorTest(double cor, double df, double t, double pvalue) {
+    private CorTest(String method, double cor, double df, double t, double pvalue) {
+        this.method = method;
         this.cor = cor;
         this.df = df;
         this.t = t;
         this.pvalue = pvalue;
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s Correlation Test(cor = %.2f, t = %.4f, df = %.3f, p-value = %G)", method, cor, t, df, pvalue);
+    }
+
     /**
      * Pearson correlation coefficient test.
      */
     public static CorTest pearson(double[] x, double[] y) {
-        final double TINY = 1.0e-20;
+        final double TINY = 1.0e-16;
 
         int n = x.length;
         double syy = 0.0, sxy = 0.0, sxx = 0.0, ay = 0.0, ax = 0.0;
@@ -145,7 +156,7 @@ public class CorTest {
         double t = r * Math.sqrt(df / ((1.0 - r + TINY) * (1.0 + r + TINY)));
         double prob = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
 
-        return new CorTest(r, df, t, prob);
+        return new CorTest("Pearson", r, df, t, prob);
     }
 
     /**
@@ -232,7 +243,7 @@ public class CorTest {
             probrs = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
         }
 
-        return new CorTest(rs, df, t, probrs);
+        return new CorTest("Spearman", rs, df, t, probrs);
     }
 
     /**
@@ -273,71 +284,6 @@ public class CorTest {
         double svar = (4.0 * n + 10.0) / (9.0 * n * (n - 1.0));
         double z = tau / Math.sqrt(svar);
         double prob = Erf.erfcc(Math.abs(z) / 1.4142136);
-        return new CorTest(tau, 0, z, prob);
-    }
-
-    /**
-     * Given a two-dimensional contingency table in the form of an array of
-     * integers, returns Chi-square test for independence. The rows of contingency table
-     * are labels by the values of one nominal variable, the columns are labels
-     * by the values of the other nominal variable, and whose entries are
-     * nonnegative integers giving the number of observed events for each
-     * combination of row and column. Continuity correction
-     * will be applied when computing the test statistic for 2x2 tables: one half
-     * is subtracted from all |O-E| differences. The correlation coefficient is
-     * calculated as Cramer's V.
-     */
-    public static CorTest chisq(int[][] table) {
-        final double TINY = 1.0e-30;
-
-        int ni = table.length;
-        int nj = table[0].length;
-
-        boolean correct = false;
-        if (ni == 2 && nj == 2) {
-            correct = true;
-        }
-
-        double sum = 0.0;
-
-        int nni = ni;
-        double[] sumi = new double[ni];
-        for (int i = 0; i < ni; i++) {
-            for (int j = 0; j < nj; j++) {
-                sumi[i] += table[i][j];
-                sum += table[i][j];
-            }
-            if (sumi[i] == 0.0) {
-                --nni;
-            }
-        }
-        
-        int nnj = nj;
-        double[] sumj = new double[nj];
-        for (int j = 0; j < nj; j++) {
-            for (int i = 0; i < ni; i++) {
-                sumj[j] += table[i][j];
-            }
-            if (sumj[j] == 0.0) {
-                --nnj;
-            }
-        }
-
-        int df = nni * nnj - nni - nnj + 1;
-        double chisq = 0.0;
-        for (int i = 0; i < ni; i++) {
-            for (int j = 0; j < nj; j++) {
-                double expctd = sumj[j] * sumi[i] / sum;
-                double temp = table[i][j] - expctd;
-                if (correct) temp = Math.abs(temp) - 0.5;
-                chisq += temp * temp / (expctd + TINY);
-            }
-        }
-
-        double prob = Gamma.regularizedUpperIncompleteGamma(0.5 * df, 0.5 * chisq);
-        int minij = nni < nnj ? nni-1 : nnj-1;
-        double v = Math.sqrt(chisq/(sum*minij));
-
-        return new CorTest(v, df, chisq, prob);
+        return new CorTest("Kendall", tau, 0, z, prob);
     }
 }

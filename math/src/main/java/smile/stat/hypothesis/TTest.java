@@ -62,27 +62,38 @@ import smile.math.MathEx;
  */
 public class TTest {
     /**
+     * A character string indicating what type of test was performed.
+     */
+    public final String method;
+
+    /**
      * The degree of freedom of t-statistic.
      */
-    public double df;
+    public final double df;
 
     /**
      * t-statistic
      */
-    public double t;
+    public final double t;
 
     /**
      * p-value
      */
-    public double pvalue;
+    public final double pvalue;
 
     /**
      * Constructor.
      */
-    private TTest(double t, double df, double pvalue) {
+    private TTest(String method, double t, double df, double pvalue) {
+        this.method = method;
         this.t = t;
         this.df = df;
         this.pvalue = pvalue;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s t-test(t = %.4f, df = %.3f, p-value = %G)", method, t, df, pvalue);
     }
 
     /**
@@ -101,7 +112,7 @@ public class TTest {
         double t = (mu - mean) / Math.sqrt(var/n);
         double p = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
 
-        return new TTest(t, df, p);
+        return new TTest("One Sample", t, df, p);
     }
 
     /**
@@ -140,7 +151,7 @@ public class TTest {
             double t = (mu1 - mu2) / Math.sqrt(svar * (1.0 / n1 + 1.0 / n2));
             double p = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
 
-            return new TTest(t, df, p);
+            return new TTest("Equal Variance Two Sample", t, df, p);
         } else {
             int n1 = x.length;
             int n2 = y.length;
@@ -156,7 +167,7 @@ public class TTest {
             double t = (mu1 - mu2) / Math.sqrt(var1 / n1 + var2 / n2);
             double p = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
 
-            return new TTest(t, df, p);
+            return new TTest("Unequal Variance Two Sample", t, df, p);
         }
     }
 
@@ -165,7 +176,7 @@ public class TTest {
      * different means. Small values of p-value indicate that the two arrays
      * have significantly different means.
      */
-    public static TTest pairedTest(double[] x, double[] y) {
+    public static TTest testPaired(double[] x, double[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException("Input vectors have different size");
         }
@@ -189,7 +200,7 @@ public class TTest {
         double t = (mu1 - mu2) / sd;
         double p = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
 
-        return new TTest(t, df, p);
+        return new TTest("Paired", t, df, p);
     }
 
     /**
@@ -201,11 +212,11 @@ public class TTest {
      * used in the calculation of r.
      */
     public static TTest test(double r, int df) {
-        final double TINY = 1.0e-20;
+        final double TINY = 1.0e-16;
 
         double t = r * Math.sqrt(df / ((1.0 - r + TINY) * (1.0 + r + TINY)));
         double p = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
 
-        return new TTest(t, df, p);
+        return new TTest("Pearson correlation coefficient", t, df, p);
     }
 }

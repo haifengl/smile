@@ -20,19 +20,15 @@ package smile.hash;
 import java.nio.ByteBuffer;
 
 /**
- * This is a very fast, non-cryptographic hash suitable for general hash-based
- * lookup. See http://murmurhash.googlepages.com/ for more details.
- * 
- * hash32() and hash64() are MurmurHash 2.0. hash3_x64_128() is MurmurHash 3.0.
- * 
- * <p>
- * The C version of MurmurHash 2.0 found at that site was ported to Java by
- * Andrzej Bialecki (ab at getopt org).
- * </p>
+ * MurmurHash is a very fast, non-cryptographic hash suitable for general hash-based
+ * lookup. The name comes from two basic operations, multiply (MU) and rotate (R),
+ * used in its inner loop. See http://murmurhash.googlepages.com/ for more details.
+ *
  * This class is copied from Apache Cassandra.
  */
 public class MurmurHash {
-    public static int hash32(ByteBuffer data, int offset, int length, int seed) {
+    /** 32-bit MurmurHash2. */
+    public static int hash2_32(ByteBuffer data, int offset, int length, int seed) {
         int m = 0x5bd1e995;
         int r = 24;
 
@@ -81,6 +77,7 @@ public class MurmurHash {
         return h;
     }
 
+    /** 64-bit MurmurHash2. */
     public static long hash2_64(ByteBuffer key, int offset, int length, long seed) {
         long m64 = 0xc6a4a7935bd1e995L;
         int r64 = 47;
@@ -165,7 +162,13 @@ public class MurmurHash {
         return k;
     }
 
-    public static void hash3_x64_128(ByteBuffer key, int offset, int length, long seed, long[] result) {
+    /**
+     * 128-bit MurmurHash3 for x64.
+     * When using 128-bits, the x86 and x64 versions do not produce
+     * the same values, as the algorithms are optimized for their
+     * respective platforms.
+     */
+    public static void hash3_128_x64(ByteBuffer key, int offset, int length, long seed, long[] result) {
         final int nblocks = length >> 4; // Process as 128-bit blocks.
 
         long h1 = seed;
