@@ -2337,8 +2337,8 @@ public class JMatrix implements DenseMatrix {
                         A.set(na, nn, -(A.get(nn, nn) - p) / A.get(nn, na));
                     } else {
                         Complex temp = cdiv(0.0, -A.get(na, nn), A.get(na, na) - p, q);
-                        A.set(na, na, temp.re());
-                        A.set(na, nn, temp.im());
+                        A.set(na, na, temp.re);
+                        A.set(na, nn, temp.im);
                     }
                     A.set(nn, na, 0.0);
                     A.set(nn, nn, 1.0);
@@ -2357,8 +2357,8 @@ public class JMatrix implements DenseMatrix {
                             m = i;
                             if (e[i] == 0.0) {
                                 Complex temp = cdiv(-ra, -sa, w, q);
-                                A.set(i, na, temp.re());
-                                A.set(i, nn, temp.im());
+                                A.set(i, na, temp.re);
+                                A.set(i, nn, temp.im);
                             } else {
                                 x = A.get(i, i + 1);
                                 y = A.get(i + 1, i);
@@ -2368,15 +2368,15 @@ public class JMatrix implements DenseMatrix {
                                     vr = MathEx.EPSILON * anorm * (Math.abs(w) + Math.abs(q) + Math.abs(x) + Math.abs(y) + Math.abs(z));
                                 }
                                 Complex temp = cdiv(x * r - z * ra + q * sa, x * s - z * sa - q * ra, vr, vi);
-                                A.set(i, na, temp.re());
-                                A.set(i, nn, temp.im());
+                                A.set(i, na, temp.re);
+                                A.set(i, nn, temp.im);
                                 if (Math.abs(x) > Math.abs(z) + Math.abs(q)) {
                                     A.set(i + 1, na, (-ra - w * A.get(i, na) + q * A.get(i, nn)) / x);
                                     A.set(i + 1, nn, (-sa - w * A.get(i, nn) - q * A.get(i, na)) / x);
                                 } else {
                                     temp = cdiv(-r - y * A.get(i, na), -s - y * A.get(i, nn), z, q);
-                                    A.set(i + 1, na, temp.re());
-                                    A.set(i + 1, nn, temp.im());
+                                    A.set(i + 1, na, temp.re);
+                                    A.set(i + 1, nn, temp.im);
                                 }
                             }
                         }

@@ -16,14 +16,20 @@
 
 package smile.math;
 
+import java.io.Serializable;
+import java.util.function.ToDoubleFunction;
+
 /**
  * An interface representing a multivariate real function.
  *
  * @author Haifeng Li
  */
-public interface MultivariateFunction {
+public interface MultivariateFunction extends ToDoubleFunction<double[]>, Serializable {
     /**
      * Compute the value of the function at x.
+     * It delegates the computation to applyAsDouble().
      */
-    public double f(double[] x);
+    default double apply(double... x) {
+        return applyAsDouble(x);
+    }
 }

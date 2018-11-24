@@ -3578,7 +3578,7 @@ public class MathEx {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);            
         }
         
-        double a = x1, b = x2, c = x2, d = 0, e = 0, fa = func.f(a), fb = func.f(b), fc, p, q, r, s, xm;
+        double a = x1, b = x2, c = x2, d = 0, e = 0, fa = func.apply(a), fb = func.apply(b), fc, p, q, r, s, xm;
         if ((fa > 0.0 && fb > 0.0) || (fa < 0.0 && fb < 0.0)) {
             throw new IllegalArgumentException("Root must be bracketed.");
         }
@@ -3650,7 +3650,7 @@ public class MathEx {
             } else {
                 b += Math.copySign(tol, xm);
             }
-            fb = func.f(b);
+            fb = func.apply(b);
         }
 
         logger.error("Brent's method exceeded the maximum number of iterations.");
@@ -3691,8 +3691,8 @@ public class MathEx {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);            
         }
         
-        double fl = func.f(x1);
-        double fh = func.f(x2);
+        double fl = func.apply(x1);
+        double fh = func.apply(x2);
         if ((fl > 0.0 && fh > 0.0) || (fl < 0.0 && fh < 0.0)) {
             throw new IllegalArgumentException("Root must be bracketed in rtsafe");
         }
@@ -3715,7 +3715,7 @@ public class MathEx {
         double rts = 0.5 * (x1 + x2);
         double dxold = Math.abs(x2 - x1);
         double dx = dxold;
-        double f = func.f(rts);
+        double f = func.apply(rts);
         double df = func.df(rts);
         for (int iter = 1; iter <= maxIter; iter++) {
             if ((((rts - xh) * df - f) * ((rts - xl) * df - f) > 0.0) || (Math.abs(2.0 * f) > Math.abs(dxold * df))) {
@@ -3746,7 +3746,7 @@ public class MathEx {
                 return rts;
             }
 
-            f = func.f(rts);
+            f = func.apply(rts);
             df = func.df(rts);
             if (f < 0.0) {
                 xl = rts;
@@ -3863,7 +3863,7 @@ public class MathEx {
                 x[i] = xold[i] + alam * p[i];
             }
 
-            double f = func.f(x);
+            double f = func.apply(x);
 
             // Convergence on &Delta; x.
             if (alam < alammin) {
@@ -4010,7 +4010,7 @@ public class MathEx {
         // Current gradient.
         double[] g = new double[n];
         // Current function value.
-        double f = func.f(x, g);
+        double f = func.applyWithGradient(x, g);
 
         logger.info(String.format("L-BFGS: initial function value: %.5g", f));
 
@@ -4027,7 +4027,7 @@ public class MathEx {
         for (int iter = 1, k = 0; iter <= maxIter; iter++) {
             linesearch(func, x, f, g, xi, xnew, stpmax);
 
-            f = func.f(xnew, gnew);
+            f = func.applyWithGradient(xnew, gnew);
             for (int i = 0; i < n; i++) {
                 s[k][i] = xnew[i] - x[i];
                 y[k][i] = gnew[i] - g[i];
@@ -4170,7 +4170,7 @@ public class MathEx {
 
         // Calculate starting function value and gradient and initialize the
         // inverse Hessian to the unit matrix.
-        double f = func.f(x, g);
+        double f = func.applyWithGradient(x, g);
         logger.info(String.format("BFGS: initial function value: %.5g", f));
 
         double sum = 0.0;
@@ -4213,7 +4213,7 @@ public class MathEx {
             
             System.arraycopy(g, 0, dg, 0, n);
 
-            func.f(x, g);
+            func.applyWithGradient(x, g);
 
             // Test for convergence on zero gradient.
             den = Math.max(f, 1.0);

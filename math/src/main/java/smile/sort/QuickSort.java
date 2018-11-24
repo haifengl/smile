@@ -82,7 +82,7 @@ public class QuickSort {
     }
 
     /**
-     * This is an effecient implementation Quick Sort algorithm without
+     * This is an efficient implementation Quick Sort algorithm without
      * recursive. Besides sorting the first n elements of array arr, the first
      * n elements of array brr will be also rearranged as the same order of arr.
      */
@@ -178,7 +178,7 @@ public class QuickSort {
     }
 
     /**
-     * This is an effecient implementation Quick Sort algorithm without
+     * This is an efficient implementation Quick Sort algorithm without
      * recursive. Besides sorting the first n elements of array arr, the first
      * n elements of array brr will be also rearranged as the same order of arr.
      */
@@ -288,7 +288,7 @@ public class QuickSort {
     }
 
     /**
-     * This is an effecient implementation Quick Sort algorithm without
+     * This is an efficient implementation Quick Sort algorithm without
      * recursive. Besides sorting the first n elements of array arr, the first
      * n elements of array brr will be also rearranged as the same order of arr.
      */
@@ -386,7 +386,7 @@ public class QuickSort {
     }
 
     /**
-     * This is an effecient implementation Quick Sort algorithm without
+     * This is an efficient implementation Quick Sort algorithm without
      * recursive. Besides sorting the first n elements of array arr, the first
      * n elements of array brr will be also rearranged as the same order of arr.
      */
@@ -483,7 +483,7 @@ public class QuickSort {
     }
 
     /**
-     * This is an effecient implementation Quick Sort algorithm without
+     * This is an efficient implementation Quick Sort algorithm without
      * recursive. Besides sorting the first n elements of array arr, the first
      * n elements of array brr will be also rearranged as the same order of arr.
      */
@@ -594,7 +594,7 @@ public class QuickSort {
     }
 
     /**
-     * This is an effecient implementation Quick Sort algorithm without
+     * This is an efficient implementation Quick Sort algorithm without
      * recursive. Besides sorting the first n elements of array arr, the first
      * n elements of array brr will be also rearranged as the same order of arr.
      */
@@ -684,7 +684,7 @@ public class QuickSort {
     }
 
     /**
-     * This is an effecient implementation Quick Sort algorithm without
+     * This is an efficient implementation Quick Sort algorithm without
      * recursive. Besides sorting the array arr, the array brr will be also
      * rearranged as the same order of arr.
      */
@@ -693,7 +693,7 @@ public class QuickSort {
     }
 
     /**
-     * This is an effecient implementation Quick Sort algorithm without
+     * This is an efficient implementation Quick Sort algorithm without
      * recursive. Besides sorting the first n elements of array arr, the first
      * n elements of array brr will be also rearranged as the same order of arr.
      */
@@ -790,7 +790,7 @@ public class QuickSort {
     }
 
     /**
-     * This is an effecient implementation Quick Sort algorithm without
+     * This is an efficient implementation Quick Sort algorithm without
      * recursive. Besides sorting the first n elements of array arr, the first
      * n elements of array brr will be also rearranged as the same order of arr.
      */
@@ -901,7 +901,7 @@ public class QuickSort {
     }
 
     /**
-     * This is an effecient implementation Quick Sort algorithm without
+     * This is an efficient implementation Quick Sort algorithm without
      * recursive. Besides sorting the first n elements of array arr, the first
      * n elements of array brr will be also rearranged as the same order of arr.
      */
@@ -991,7 +991,7 @@ public class QuickSort {
     }
 
     /**
-     * This is an effecient implementation Quick Sort algorithm without
+     * This is an efficient implementation Quick Sort algorithm without
      * recursive. Besides sorting the first n elements of array arr, the first
      * n elements of array brr will be also rearranged as the same order of arr.
      */
@@ -1089,7 +1089,7 @@ public class QuickSort {
     }
 
     /**
-     * This is an effecient implementation Quick Sort algorithm without
+     * This is an efficient implementation Quick Sort algorithm without
      * recursive. Besides sorting the first n elements of array arr, the first
      * n elements of array brr will be also rearranged as the same order of arr.
      */

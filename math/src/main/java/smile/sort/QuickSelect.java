@@ -17,7 +17,7 @@
 package smile.sort;
 
 /**
- * Selection is asking for the k th smallest element out of n elements.
+ * Selection is asking for the k-th smallest element out of n elements.
  * This class implements the fastest general method for selection based on
  * partitioning, exactly as done in the Quicksort algorithm.
  * <p>
