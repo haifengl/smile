@@ -393,6 +393,11 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     }
 
     @Override
+    public SparseMatrix atbtmm(SparseMatrix B) {
+        return B.abmm(this).transpose();
+    }
+
+    @Override
     public SparseMatrix ata() {
         SparseMatrix AT = transpose();
         return AT.aat(this);

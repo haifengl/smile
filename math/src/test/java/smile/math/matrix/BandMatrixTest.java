@@ -61,7 +61,7 @@ public class BandMatrixTest {
         };
         double[] b = {0.5, 0.5, 0.5};
 
-        DenseMatrix a = Matrix.newInstance(A);
+        DenseMatrix a = Matrix.of(A);
         LU lu = a.lu();
         double[] x = b.clone();
         lu.solve(x);

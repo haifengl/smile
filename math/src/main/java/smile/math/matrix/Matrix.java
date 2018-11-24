@@ -73,21 +73,21 @@ public interface Matrix extends Serializable {
     /**
      * Returns an matrix initialized by given two-dimensional array.
      */
-    static DenseMatrix newInstance(double[][] A) {
+    static DenseMatrix of(double[][] A) {
         return Factory.matrix(A);
     }
 
     /**
      * Returns a column vector/matrix initialized by given one-dimensional array.
      */
-    static DenseMatrix newInstance(double[] A) {
+    static DenseMatrix of(double[] A) {
         return Factory.matrix(A);
     }
 
     /**
      * Creates a matrix filled with given value.
      */
-    static DenseMatrix newInstance(int rows, int cols, double value) {
+    static DenseMatrix of(int rows, int cols, double value) {
         return Factory.matrix(rows, cols, value);
     }
 

@@ -66,7 +66,7 @@ public class LanczosTest {
     @Test
     public void testLanczos() {
         System.out.println("eigen");
-        Matrix a = Matrix.newInstance(A);
+        Matrix a = Matrix.of(A);
         a.setSymmetric(true);
         EVD result = Lanczos.eigen(a, 3);
         assertTrue(MathEx.equals(eigenValues, result.getEigenValues(), 1E-7));
@@ -86,7 +86,7 @@ public class LanczosTest {
     @Test
     public void testEigen1() {
         System.out.println("eigen1");
-        Matrix a = Matrix.newInstance(A);
+        Matrix a = Matrix.of(A);
         a.setSymmetric(true);
         EVD result = Lanczos.eigen(a, 1);
         assertEquals(eigenValues[0], result.getEigenValues()[0], 1E-4);
@@ -106,7 +106,7 @@ public class LanczosTest {
         A[0][0] = A[1][1] = A[2][2] = A[3][3] = 2.0;
         for (int i = 4; i < 500; i++)
             A[i][i] = (500 - i) / 500.0;
-        Matrix a = Matrix.newInstance(A);
+        Matrix a = Matrix.of(A);
         a.setSymmetric(true);
         EVD result = Lanczos.eigen(a, 6);
         assertEquals(2.0, result.getEigenValues()[0], 1E-4);
@@ -142,7 +142,7 @@ public class LanczosTest {
                 {0.6240573, -0.44947578, -0.6391588}
         };
 
-        SVD result = Matrix.newInstance(A).svd(3);
+        SVD result = Matrix.of(A).svd(3);
         assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().nrows());
@@ -200,7 +200,7 @@ public class LanczosTest {
                 {-0.5156083, -0.36573746, -0.47613340, 0.41342817, -0.2659765, 0.1654796, -0.32346758}
         };
 
-        SVD result = Matrix.newInstance(A).svd(7);
+        SVD result = Matrix.of(A).svd(7);
         assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().nrows());
@@ -257,7 +257,7 @@ public class LanczosTest {
                 {0.06127719, 0.230326187, 0.04693098, -0.3300697, 0.825499232, -0.3880689}
         };
 
-        SVD result = Matrix.newInstance(A).svd(6);
+        SVD result = Matrix.of(A).svd(6);
         assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().nrows());
@@ -313,7 +313,7 @@ public class LanczosTest {
                 {0.82502638, -0.400562630, 0.30810911, -0.1797507, 0.1778750}
         };
 
-        SVD result = Matrix.newInstance(A).svd(5);
+        SVD result = Matrix.of(A).svd(5);
         assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
         assertEquals(U.length, result.getU().nrows());

@@ -190,6 +190,22 @@ public class NLMatrix extends JMatrix {
     }
 
     @Override
+    public NLMatrix atbtmm(DenseMatrix B) {
+        if (B instanceof JMatrix) {
+            int m = ncols();
+            int n = B.nrows();
+            int k = nrows();
+            NLMatrix C = new NLMatrix(m, n);
+            BLAS.getInstance().dgemm(Transpose, Transpose,
+                    m, n, k, 1.0, data(), k, B.data(),
+                    k, 0.0, C.data(), m);
+            return C;
+        }
+
+        throw new IllegalArgumentException("NLMatrix.atbtmm() parameter must be JMatrix");
+    }
+
+    @Override
     public NLMatrix transpose() {
         NLMatrix B = new NLMatrix(ncols(), nrows());
         for (int i = 0; i < nrows(); i++) {

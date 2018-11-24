@@ -29,5 +29,5 @@ public interface LinearSolver {
      * @return the solution vector x
      * @throws RuntimeException if matrix is singular.
      */
-    public double[] solve(double[] b, double[] x);
+    double[] solve(double[] b, double[] x);
 }

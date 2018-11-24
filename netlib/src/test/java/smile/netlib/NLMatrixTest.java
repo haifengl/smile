@@ -224,8 +224,11 @@ public class NLMatrixTest {
 
         NLMatrix a = new NLMatrix(A);
         NLMatrix b = new NLMatrix(B);
+        double[][] F = b.abmm(a).transpose().array();
+
         assertTrue(MathEx.equals(a.abmm(b).array(), C, 1E-7));
         assertTrue(MathEx.equals(a.abtmm(b).array(), D, 1E-7));
         assertTrue(MathEx.equals(a.atbmm(b).array(), E, 1E-7));
+        assertTrue(MathEx.equals(a.atbtmm(b).array(), F, 1E-7));
     }
 }

@@ -252,7 +252,7 @@ public class OLS implements Regression<double[]> {
         System.arraycopy(w1, 0, w, 0, p);
 
         double[] yhat = new double[n];
-        Matrix.newInstance(x).ax(w, yhat);
+        Matrix.of(x).ax(w, yhat);
 
         double TSS = 0.0;
         RSS = 0.0;

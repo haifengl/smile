@@ -130,7 +130,7 @@ public class DeterministicAnnealing extends KMeans {
 
         priori[0] = priori[1] = 0.5;
 
-        DenseMatrix cov = Matrix.newInstance(MathEx.cov(data, centroids[0]));
+        DenseMatrix cov = Matrix.of(MathEx.cov(data, centroids[0]));
         double[] ev = new double[d];
         Arrays.fill(ev, 1.0);
         double lambda = PowerIteration.eigen(cov, ev, 1E-4);

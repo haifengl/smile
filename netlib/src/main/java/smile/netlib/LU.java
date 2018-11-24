@@ -98,7 +98,7 @@ public class LU extends smile.math.matrix.LU {
     @Override
     public void solve(double[] b) {
         // B use b as the internal storage. Therefore b will contains the results.
-        DenseMatrix B = Matrix.newInstance(b);
+        DenseMatrix B = Matrix.of(b);
         solve(B);
     }
 

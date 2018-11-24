@@ -39,7 +39,7 @@ public class MahalanobisDistance implements Metric<double[]> {
      * Constructor with given covariance matrix.
      */
     public MahalanobisDistance(double[][] cov) {
-        sigma = Matrix.newInstance(cov);
+        sigma = Matrix.of(cov);
         sigmaInv = sigma.inverse();
     }
 

@@ -140,7 +140,7 @@ public class QR {
         }
 
         double[] B = b.clone();
-        solve(Matrix.newInstance(B));
+        solve(Matrix.of(B));
         System.arraycopy(B, 0, x, 0, x.length);
     }
 

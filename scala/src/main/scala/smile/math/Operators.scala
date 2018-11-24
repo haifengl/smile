@@ -233,35 +233,35 @@ trait Operators {
   def diag(A: Matrix) = A.diag()
 
   /** LU decomposition. */
-  def lu(A: Array[Array[Double]]) = Matrix.newInstance(A).lu(true)
+  def lu(A: Array[Array[Double]]) = Matrix.of(A).lu(true)
   /** LU decomposition. */
   def lu(A: DenseMatrix) = A.lu(false)
   /** LU decomposition. */
   def lu(A: MatrixExpression) = A.toMatrix.lu(true)
 
   /** QR decomposition. */
-  def qr(A: Array[Array[Double]]) = Matrix.newInstance(A).qr(true)
+  def qr(A: Array[Array[Double]]) = Matrix.of(A).qr(true)
   /** QR decomposition. */
   def qr(A: DenseMatrix) = A.qr(false)
   /** QR decomposition. */
   def qr(A: MatrixExpression) = A.toMatrix.qr(true)
 
   /** Cholesky decomposition. */
-  def cholesky(A: Array[Array[Double]]) =  Matrix.newInstance(A).cholesky(true)
+  def cholesky(A: Array[Array[Double]]) =  Matrix.of(A).cholesky(true)
   /** Cholesky decomposition. */
   def cholesky(A: DenseMatrix) = A.cholesky(false)
   /** Cholesky decomposition. */
   def cholesky(A: MatrixExpression) = A.toMatrix.cholesky(true)
 
   /** Returns eigen values. */
-  def eig(A: Array[Array[Double]]) = Matrix.newInstance(A).eig(true)
+  def eig(A: Array[Array[Double]]) = Matrix.of(A).eig(true)
   /** Returns eigen values. */
   def eig(A: DenseMatrix) = A.eig(false)
   /** Returns eigen values. */
   def eig(A: MatrixExpression) = A.toMatrix.eig(true)
 
   /** Eigen decomposition. */
-  def eigen(A: Array[Array[Double]]) = Matrix.newInstance(A).eigen(true)
+  def eigen(A: Array[Array[Double]]) = Matrix.of(A).eigen(true)
   /** Eigen decomposition. */
   def eigen(A: DenseMatrix) = A.eigen(false)
   /** Eigen decomposition. */
@@ -270,7 +270,7 @@ trait Operators {
   def eigen(A: DenseMatrix, k: Int, kappa: Double = 1E-8, maxIter: Int = -1) = A.eigen(k, kappa, maxIter)
 
   /** SVD decomposition. */
-  def svd(A: Array[Array[Double]]) = Matrix.newInstance(A).svd(true)
+  def svd(A: Array[Array[Double]]) = Matrix.of(A).svd(true)
   /** SVD decomposition. */
   def svd(A: DenseMatrix) = A.svd(false)
   /** SVD decomposition. */
@@ -324,7 +324,7 @@ private[math] class PimpedArray[T](override val a: Array[T])(implicit val tag: C
 
 private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]]) extends PimpedArrayLike[Array[Double]] {
 
-  def unary_~ = Matrix.newInstance(a)
+  def unary_~ = Matrix.of(a)
 
   def nrows: Int = a.length
 
@@ -379,7 +379,7 @@ private[math] case class PimpedDouble(a: Double) {
 }
 
 private[math] class PimpedDoubleArray(override val a: Array[Double]) extends PimpedArray[Double](a) {
-  def unary_~ = Matrix.newInstance(a)
+  def unary_~ = Matrix.of(a)
 
   def += (b: Double): Array[Double] = { a.transform(_ + b); a }
   def -= (b: Double): Array[Double] = { a.transform(_ - b); a }

@@ -545,7 +545,7 @@ public interface DataFrame extends Dataset<Tuple> {
                     }
                     int nrows = container.size();
                     int ncols = container.get(0).size();
-                    DenseMatrix m = Matrix.newInstance(nrows, ncols, 0);
+                    DenseMatrix m = Matrix.of(nrows, ncols, 0);
                     for (int i = 0; i < nrows; i++) {
                         for (int j = 0; j < ncols; j++) {
                             m.set(i, j, container.get(i).getDouble(j));

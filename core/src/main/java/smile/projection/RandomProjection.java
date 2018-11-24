@@ -126,7 +126,7 @@ public class RandomProjection implements Projection<double[]>, Serializable {
                 }
                 MathEx.unitize(proj[i]);
             }
-            projection = Matrix.newInstance(proj);
+            projection = Matrix.of(proj);
         }
     }
 

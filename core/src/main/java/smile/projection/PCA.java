@@ -120,7 +120,7 @@ public class PCA implements Projection<double[]>, Serializable {
         n = data[0].length;
 
         mu = MathEx.colMeans(data);
-        DenseMatrix x = Matrix.newInstance(data);
+        DenseMatrix x = Matrix.of(data);
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 x.sub(i, j, mu[j]);

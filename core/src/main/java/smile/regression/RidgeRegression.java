@@ -242,7 +242,7 @@ public class RidgeRegression implements Regression<double[]> {
         b = ym - MathEx.dot(w, center);
 
         double[] yhat = new double[n];
-        Matrix.newInstance(x).ax(w, yhat);
+        Matrix.of(x).ax(w, yhat);
 
         double TSS = 0.0;
         RSS = 0.0;

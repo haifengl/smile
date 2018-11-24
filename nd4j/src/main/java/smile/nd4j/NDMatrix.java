@@ -322,7 +322,17 @@ public class NDMatrix implements DenseMatrix {
             return new NDMatrix(Nd4j.gemm(A, b.A, true, false));
         }
 
-        throw new IllegalArgumentException("NDMatrix.abtmm() parameter must be NDMatrix");
+        throw new IllegalArgumentException("NDMatrix.atbmm() parameter must be NDMatrix");
+    }
+
+    @Override
+    public NDMatrix atbtmm(DenseMatrix B) {
+        if (B instanceof NDMatrix) {
+            NDMatrix b = (NDMatrix) B;
+            return new NDMatrix(Nd4j.gemm(A, b.A, true, true));
+        }
+
+        throw new IllegalArgumentException("NDMatrix.atbtmm() parameter must be NDMatrix");
     }
 
     @Override
