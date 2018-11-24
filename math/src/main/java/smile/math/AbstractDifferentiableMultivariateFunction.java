@@ -26,8 +26,8 @@ public abstract class AbstractDifferentiableMultivariateFunction implements Diff
     private static final double EPS = 1.0E-8;
 
     @Override
-    public double f(double[] x, double[] gradient) {
-        double f = f(x);
+    public double applyWithGradient(double[] x, double[] gradient) {
+        double f = applyAsDouble(x);
 
         double[] xh = x.clone();
         for (int j = 0; j < x.length; j++) {
@@ -38,7 +38,7 @@ public abstract class AbstractDifferentiableMultivariateFunction implements Diff
             }
             xh[j] = temp + h; // trick to reduce finite-precision error.
             h = xh[j] - temp;
-            double fh = f(xh);
+            double fh = applyAsDouble(xh);
             xh[j] = temp;
             gradient[j] = (fh - f) / h;
         }

@@ -745,14 +745,7 @@ public class MathExTest {
     @Test
     public void testRoot_4args() {
         System.out.println("root");
-        Function func = new Function() {
-
-            @Override
-            public double f(double x) {
-                return x * x * x + x * x - 5 * x + 3;
-            }
-        };
-        double result = MathEx.root(func, -4, -2, 1E-7);
+        double result = MathEx.root(x -> x * x * x + x * x - 5 * x + 3, -4, -2, 1E-7);
         assertEquals(-3, result, 1E-7);
     }
 
@@ -765,7 +758,7 @@ public class MathExTest {
         Function func = new DifferentiableFunction() {
 
             @Override
-            public double f(double x) {
+            public double apply(double x) {
                 return x * x * x + x * x - 5 * x + 3;
             }
 
@@ -787,7 +780,7 @@ public class MathExTest {
         DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
 
             @Override
-            public double f(double[] x) {
+            public double applyAsDouble(double[] x) {
                 double f = 0.0;
                 for (int j = 1; j <= x.length; j += 2) {
                     double t1 = 1.e0 - x[j - 1];
@@ -798,7 +791,7 @@ public class MathExTest {
             }
 
             @Override
-            public double f(double[] x, double[] g) {
+            public double applyWithGradient(double[] x, double[] g) {
                 double f = 0.0;
                 for (int j = 1; j <= x.length; j += 2) {
                     double t1 = 1.e0 - x[j - 1];
@@ -830,7 +823,7 @@ public class MathExTest {
         DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
 
             @Override
-            public double f(double[] x) {
+            public double applyAsDouble(double[] x) {
                 double f = 0.0;
                 for (int j = 1; j <= x.length; j += 2) {
                     double t1 = 1.e0 - x[j - 1];
@@ -841,7 +834,7 @@ public class MathExTest {
             }
 
             @Override
-            public double f(double[] x, double[] g) {
+            public double applyWithGradient(double[] x, double[] g) {
                 double f = 0.0;
                 for (int j = 1; j <= x.length; j += 2) {
                     double t1 = 1.e0 - x[j - 1];

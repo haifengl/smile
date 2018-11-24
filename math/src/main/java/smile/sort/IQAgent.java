@@ -19,12 +19,18 @@ package smile.sort;
 import java.util.Arrays;
 
 /**
- * This class provide a robust and extremely fast algorithm to estimate arbitary
- * quantile values from a continuing stream of data values. Basically, the data
- * values fly by in a stream. We look at each value only once and do a
- * constant-time process on it. From time to time, we can use this class to
- * report any arbitary p-quantile value of the data that we have seen thus far.
- * 
+ * Incremental quantile estimation. This class provide a robust and extremely
+ * fast algorithm to estimate arbitrary quantile values from a continuing
+ * stream of data values. Basically, the data values fly by in a stream.
+ * We look at each value only once and do a constant-time process on it.
+ * From time to time, we can use this class to report any arbitrary
+ * p-quantile value of the data that we have seen thus far.
+ *
+ * <h2>References</h2>
+ * <ol>
+ * <li> John M. Chambers, David A. James, Diane Lambert and Scott Vander Wiel. Monitoring Networked Applications With Incremental Quantile Estimation. Statistical Sciencec21(4):463–475, 2006.</li>
+ * </ol>
+ *
  * @author Haifeng Li
  */
 public class IQAgent {

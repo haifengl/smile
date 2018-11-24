@@ -58,16 +58,16 @@ public class ComplexTest {
         System.out.println("Complex");
         System.out.println("a = " + a);
         System.out.println("b = " + b);
-        assertEquals(a.re(), 5.0, 1E-15);
-        assertEquals(a.im(), 6.0, 1E-15);
+        assertEquals(a.re, 5.0, 1E-15);
+        assertEquals(a.im, 6.0, 1E-15);
         assertEquals(a.abs(), 7.810249675906654, 1E-15);
-        assertTrue(a.plus(b).equals(new Complex(2.0, 10.0)));
-        assertTrue(a.minus(b).equals(new Complex(8.0, 2.0)));
-        assertTrue(a.times(b).equals(new Complex(-39.0, 2.0)));
-        assertTrue(a.div(b).equals(new Complex(0.36, -1.52)));
+        assertTrue(a.add(b).equals(Complex.of(2.0, 10.0)));
+        assertTrue(a.sub(b).equals(Complex.of(8.0, 2.0)));
+        assertTrue(a.mul(b).equals(Complex.of(-39.0, 2.0)));
+        assertTrue(a.div(b).equals(Complex.of(0.36, -1.52)));
         System.out.println("a / b = " + a.div(b));
-        assertTrue(a.div(b).times(b).equals(new Complex(5.0, 6.0)));
-        assertTrue(a.conjugate().equals(new Complex(5.0, -6.0)));
-        assertTrue(a.tan().equals(new Complex(-6.685231390243073E-6, 1.00001031089812)));
+        assertTrue(a.div(b).mul(b).equals(Complex.of(5.0, 6.0)));
+        assertTrue(a.conjugate().equals(Complex.of(5.0, -6.0)));
+        assertTrue(a.tan().equals(Complex.of(-6.685231390243073E-6, 1.00001031089812)));
     }
 }

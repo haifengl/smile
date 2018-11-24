@@ -29,11 +29,11 @@ public class Complex implements Serializable {
     /**
      * The real part.
      */
-    private final double re;
+    public final double re;
     /**
      * The imaginary part.
      */
-    private final double im;
+    public final double im;
 
     /**
      * Constructor.
@@ -43,6 +43,16 @@ public class Complex implements Serializable {
     public Complex(double real, double imag) {
         re = real;
         im = imag;
+    }
+
+    /** Returns a Complex instance representing the specified value. */
+    public static Complex of(double real) {
+        return new Complex(real, 0.0);
+    }
+
+    /** Returns a Complex instance representing the specified value. */
+    public static Complex of(double real, double imag) {
+        return new Complex(real, imag);
     }
 
     @Override
@@ -66,9 +76,7 @@ public class Complex implements Serializable {
     public boolean equals(Object o) {
         if (o instanceof Complex) {
             Complex c = (Complex) o;
-            if (re == c.re && im == c.im) {
-                return true;
-            }
+            return re == c.re && im == c.im;
         }
         
         return false;
@@ -83,23 +91,9 @@ public class Complex implements Serializable {
     }
 
     /**
-     * Returns abs/modulus/magnitude.
-     */
-    public double abs() {
-        return Math.hypot(re, im);
-    }
-
-    /**
-     * Returns angle/phase/argument between -pi and pi.
-     */
-    public double phase() {
-        return Math.atan2(im, re);
-    }
-
-    /**
      * Returns this + b.
      */
-    public Complex plus(Complex b) {
+    public Complex add(Complex b) {
         Complex a = this;
         double real = a.re + b.re;
         double imag = a.im + b.im;
@@ -109,7 +103,7 @@ public class Complex implements Serializable {
     /**
      * Returns this - b.
      */
-    public Complex minus(Complex b) {
+    public Complex sub(Complex b) {
         Complex a = this;
         double real = a.re - b.re;
         double imag = a.im - b.im;
@@ -119,7 +113,7 @@ public class Complex implements Serializable {
     /**
      * Returns this * b.
      */
-    public Complex times(Complex b) {
+    public Complex mul(Complex b) {
         Complex a = this;
         double real = a.re * b.re - a.im * b.im;
         double imag = a.re * b.im + a.im * b.re;
@@ -127,9 +121,10 @@ public class Complex implements Serializable {
     }
 
     /**
-     * Scalar multiplication.* Returns this * b.
+     * Scalar multiplication.
+     * @return this * b.
      */
-    public Complex times(double b) {
+    public Complex scale(double b) {
         return new Complex(b * re, b * im);
     }
 
@@ -155,6 +150,20 @@ public class Complex implements Serializable {
     }
 
     /**
+     * Returns abs/modulus/magnitude.
+     */
+    public double abs() {
+        return Math.hypot(re, im);
+    }
+
+    /**
+     * Returns angle/phase/argument between -pi and pi.
+     */
+    public double phase() {
+        return Math.atan2(im, re);
+    }
+
+    /**
      * Returns the conjugate.
      */
     public Complex conjugate() {
@@ -167,20 +176,6 @@ public class Complex implements Serializable {
     public Complex reciprocal() {
         double scale = re * re + im * im;
         return new Complex(re / scale, -im / scale);
-    }
-
-    /**
-     * Returns the real part.
-     */
-    public double re() {
-        return re;
-    }
-
-    /**
-     * Returns the imaginary part.
-     */
-    public double im() {
-        return im;
     }
 
     /**

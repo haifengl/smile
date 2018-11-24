@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.math.rbf;
 
-import java.io.Serializable;
-
 /**
  * Thin plate RBF. &phi;(r) = r<sup>2</sup> log(r / r<sub>0</sub>)
  * with the limiting value &phi;(0)=0 assumed, where r<sub>0</sub> is a scale factor.
@@ -35,7 +33,7 @@ import java.io.Serializable;
  *
  * @author Haifeng Li
  */
-public class ThinPlateRadialBasis implements RadialBasisFunction, Serializable {
+public class ThinPlateRadialBasis implements RadialBasisFunction {
     private static final long serialVersionUID = 1L;
 
     private double r0;
@@ -55,7 +53,7 @@ public class ThinPlateRadialBasis implements RadialBasisFunction, Serializable {
     }
 
     @Override
-    public double f(double r) {
+    public double apply(double r) {
         return r <= 0.0 ? 0.0 : r * r * Math.log(r / r0);
     }
 

@@ -26,6 +26,5 @@ public interface DifferentiableFunction extends Function {
     /**
      * Compute the value of the derivative function at x.
      */
-    public double df(double x);
-
+    double df(double x);
 }

@@ -17,7 +17,7 @@
 package smile.sort;
 
 /**
- * Some useful functions such as swap and swif-down used in many sorting
+ * Some useful functions such as swap and swift-down used in many sorting
  * algorithms.
  * 
  * @author Haifeng Li

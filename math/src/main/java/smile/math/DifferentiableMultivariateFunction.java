@@ -27,6 +27,5 @@ public interface DifferentiableMultivariateFunction extends MultivariateFunction
     /**
      * Compute the value and gradient of the function at x.
      */
-    public double f(double[] x, double[] gradient);
-
+    double applyWithGradient(double[] x, double[] gradient);
 }

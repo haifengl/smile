@@ -16,14 +16,16 @@
 
 package smile.math;
 
+import java.io.Serializable;
+
 /**
  * An interface representing a univariate real function.
  *
  * @author Haifeng Li
  */
-public interface Function {
+public interface Function extends Serializable {
     /**
      * Compute the value of the function at x.
      */
-    public double f(double x);
+    double apply(double x);
 }
