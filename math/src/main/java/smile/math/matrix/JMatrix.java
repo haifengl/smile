@@ -825,6 +825,25 @@ public class JMatrix implements DenseMatrix {
         return C;
     }
 
+    @Override
+    public JMatrix atbtmm(DenseMatrix B) {
+        if (nrows() != B.ncols()) {
+            throw new IllegalArgumentException(String.format("Matrix multiplication A' * B': %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
+        }
+
+        JMatrix C = new JMatrix(ncols, B.nrows());
+        for (int i = 0; i < ncols; i++) {
+            for (int j = 0; j < B.nrows(); j++) {
+                double v = 0.0;
+                for (int k = 0; k < nrows; k++) {
+                    v += get(k, i) * B.get(j, k);
+                }
+                C.set(i, j, v);
+            }
+        }
+        return C;
+    }
+
     /**
      * LU decomposition is computed by a "left-looking", dot-product, Crout/Doolittle algorithm.
      */

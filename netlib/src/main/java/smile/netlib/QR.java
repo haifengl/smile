@@ -126,7 +126,7 @@ public class QR extends smile.math.matrix.QR {
         }
 
         double[] B = b.clone();
-        solve(Matrix.newInstance(B));
+        solve(Matrix.of(B));
         System.arraycopy(B, 0, x, 0, x.length);
     }
 

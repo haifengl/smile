@@ -51,7 +51,7 @@ public class BiconjugateGradientTest {
     public void setUp() {
         System.out.println("setUp");
 
-        DenseMatrix a = Matrix.newInstance(A);
+        DenseMatrix a = Matrix.of(A);
         LU lu = a.lu();
         x = b.clone();
         lu.solve(x);
@@ -68,7 +68,7 @@ public class BiconjugateGradientTest {
     public void testSolveMatrix() {
         System.out.println("naive matrix");
 
-        DenseMatrix naive = Matrix.newInstance(A);
+        DenseMatrix naive = Matrix.of(A);
         double[] result = new double[3];
         BiconjugateGradient.solve(naive, b, result);
 

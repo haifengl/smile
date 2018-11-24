@@ -123,7 +123,7 @@ public class GHA implements Projection<double[]>, Serializable {
 
         y = new double[p];
         wy = new double[n];
-        projection = Matrix.newInstance(w);
+        projection = Matrix.of(w);
     }
 
     /**

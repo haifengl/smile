@@ -69,7 +69,7 @@ public class ARPACKTest {
     @Test
     public void testARPACK() {
         System.out.println("ARPACK");
-        DenseMatrix a = Matrix.newInstance(A);
+        DenseMatrix a = Matrix.of(A);
         a.setSymmetric(true);
         EVD result = ARPACK.eigen(a, 2, ARPACK.Ritz.SA);
         assertEquals(eigenValues[1], result.getEigenValues()[0], 1E-4);
@@ -90,7 +90,7 @@ public class ARPACKTest {
     @Test
     public void testARPACK1() {
         System.out.println("ARPACK1");
-        DenseMatrix a = Matrix.newInstance(A);
+        DenseMatrix a = Matrix.of(A);
         a.setSymmetric(true);
         EVD result = ARPACK.eigen(a, 1, ARPACK.Ritz.LA);
         assertEquals(eigenValues[0], result.getEigenValues()[0], 1E-4);
@@ -110,7 +110,7 @@ public class ARPACKTest {
         A[0][0] = A[1][1] = A[2][2] = A[3][3] = 2.0;
         for (int i = 4; i < 500; i++)
             A[i][i] = (500 - i) / 500.0;
-        DenseMatrix a = Matrix.newInstance(A);
+        DenseMatrix a = Matrix.of(A);
         a.setSymmetric(true);
         EVD result = ARPACK.eigen(a, 6, ARPACK.Ritz.LA);
         assertEquals(2.0, result.getEigenValues()[0], 1E-4);

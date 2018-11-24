@@ -272,7 +272,7 @@ public class LASSO  implements Regression<double[]> {
         }
 
         b = ym - MathEx.dot(w, center);
-        fitness(Matrix.newInstance(x), y);
+        fitness(Matrix.of(x), y);
     }
 
     /**

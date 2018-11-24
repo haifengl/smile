@@ -106,7 +106,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         }
 
         mu = new double[mean.length];
-        sigma = Matrix.newInstance(cov);
+        sigma = Matrix.of(cov);
         for (int i = 0; i < mu.length; i++) {
             mu[i] = mean[i];
         }
@@ -146,7 +146,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
                 sigma.div(j, j, (data.length - 1));
             }
         } else {
-            sigma = Matrix.newInstance(MathEx.cov(data, mu));
+            sigma = Matrix.of(MathEx.cov(data, mu));
         }
 
         numParameters = mu.length + mu.length * (mu.length + 1) / 2;

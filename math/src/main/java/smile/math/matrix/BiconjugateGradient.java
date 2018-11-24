@@ -33,16 +33,14 @@ public class BiconjugateGradient {
      * trivial diagonal part of A in some cases.
      */
     private static Preconditioner diagonalPreconditioner(Matrix A) {
-        return new Preconditioner() {
-            public void asolve(double[] b, double[] x) {
+        return (double[] b, double[] x) -> {
                 double[] diag = A.diag();
                 int n = diag.length;
 
                 for (int i = 0; i < n; i++) {
                     x[i] = diag[i] != 0.0 ? b[i] / diag[i] : b[i];
                 }
-            }
-        };
+            };
     }
 
     /**

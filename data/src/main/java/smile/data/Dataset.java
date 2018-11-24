@@ -124,7 +124,7 @@ public interface Dataset<T> {
                 // combiner
                 (c1, c2) -> { c1.addAll(c2); return c1; },
                 // finisher
-                (container) -> Matrix.newInstance(container.toArray(new double[container.size()][]))
+                (container) -> Matrix.of(container.toArray(new double[container.size()][]))
         );
     }
 }

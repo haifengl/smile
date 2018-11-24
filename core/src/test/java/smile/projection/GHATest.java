@@ -122,7 +122,7 @@ public class GHATest {
 
         int k = 3;
         double[] mu = MathEx.colMeans(USArrests);
-        DenseMatrix cov = Matrix.newInstance(MathEx.cov(USArrests));
+        DenseMatrix cov = Matrix.of(MathEx.cov(USArrests));
         for (int i = 0; i < USArrests.length; i++) {
            MathEx.minus(USArrests[i], mu);
         }
