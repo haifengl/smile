@@ -162,7 +162,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         Cholesky cholesky = sigma.cholesky(false);
         sigmaInv = cholesky.inverse();
         sigmaDet = cholesky.det();
-        sigmaL = cholesky.getL();
+        sigmaL = cholesky.matrix();
         pdfConstant = (dim * Math.log(2 * Math.PI) + Math.log(sigmaDet)) / 2.0;
     }
 

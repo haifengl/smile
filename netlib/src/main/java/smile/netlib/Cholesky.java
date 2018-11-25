@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Haifeng Li
  */
-public class Cholesky extends smile.math.matrix.Cholesky {
+class Cholesky extends smile.math.matrix.Cholesky {
     private static final Logger logger = LoggerFactory.getLogger(Cholesky.class);
 
     /**
@@ -59,7 +59,7 @@ public class Cholesky extends smile.math.matrix.Cholesky {
      * @param  L the lower triangular part of matrix contains the Cholesky
      *          factorization.
      */
-    public Cholesky(DenseMatrix L) {
+    public Cholesky(NLMatrix L) {
         super(L);
     }
 

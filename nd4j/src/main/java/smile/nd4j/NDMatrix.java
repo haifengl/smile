@@ -45,7 +45,7 @@ public class NDMatrix implements DenseMatrix {
     /**
      * The matrix storage.
      */
-    private INDArray A;
+    INDArray A;
     /**
      * True if the matrix is symmetric.
      */

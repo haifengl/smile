@@ -34,13 +34,13 @@ import smile.math.matrix.Cholesky;
  *
  * @author Haifeng Li
  */
-public class QR extends smile.math.matrix.QR {
+class QR extends smile.math.matrix.QR {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QR.class);
 
     /**
      * Constructor.
      */
-    public QR(DenseMatrix qr, double[] tau, boolean singular) {
+    public QR(NDMatrix qr, double[] tau, boolean singular) {
         super(qr, tau, singular);
     }
 

@@ -49,7 +49,7 @@ import org.nd4j.linalg.factory.Nd4j;
  *
  * @author Haifeng Li
  */
-public class Cholesky extends smile.math.matrix.Cholesky {
+class Cholesky extends smile.math.matrix.Cholesky {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cholesky.class);
 
     /**
@@ -57,7 +57,7 @@ public class Cholesky extends smile.math.matrix.Cholesky {
      * @param  L the lower triangular part of matrix contains the Cholesky
      *          factorization.
      */
-    public Cholesky(DenseMatrix L) {
+    public Cholesky(NDMatrix L) {
         super(L);
     }
 

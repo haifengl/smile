@@ -87,6 +87,11 @@ public class LU {
         }
     }
 
+    /** Returns the LU decomposition matrix. */
+    public DenseMatrix matrix() {
+        return lu;
+    }
+
     /**
      * Returns true if the matrix is singular or false otherwise.
      */

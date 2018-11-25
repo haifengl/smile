@@ -37,7 +37,7 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class LU extends smile.math.matrix.LU {
+class LU extends smile.math.matrix.LU {
     private static final Logger logger = LoggerFactory.getLogger(LU.class);
 
     /**
@@ -46,7 +46,7 @@ public class LU extends smile.math.matrix.LU {
      * @param piv      pivot vector
      * @param singular True if the matrix is singular
      */
-    public LU(DenseMatrix lu, int[] piv, boolean singular) {
+    public LU(NLMatrix lu, int[] piv, boolean singular) {
         super(lu, piv, pivsign(piv, Math.min(lu.nrows(), lu.ncols())), singular);
     }
 
