@@ -55,6 +55,11 @@ public class QR {
         this.singular = singular;
     }
 
+    /** Returns the QR decomposition matrix. */
+    public DenseMatrix matrix() {
+        return qr;
+    }
+
     /**
      * Returns true if the matrix is singular (not full column rank).
      */

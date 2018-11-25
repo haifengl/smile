@@ -38,13 +38,13 @@ import org.slf4j.LoggerFactory;
  *
  * @author Haifeng Li
  */
-public class QR extends smile.math.matrix.QR {
+class QR extends smile.math.matrix.QR {
     private static final Logger logger = LoggerFactory.getLogger(QR.class);
 
     /**
      * Constructor.
      */
-    public QR(DenseMatrix qr, double[] tau, boolean singular) {
+    public QR(NLMatrix qr, double[] tau, boolean singular) {
         super(qr, tau, singular);
     }
 

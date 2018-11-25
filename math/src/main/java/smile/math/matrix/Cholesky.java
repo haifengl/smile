@@ -66,7 +66,7 @@ public class Cholesky {
     /**
      * Returns lower triangular factor.
      */
-    public DenseMatrix getL() {
+    public DenseMatrix matrix() {
         return L;
     }
 

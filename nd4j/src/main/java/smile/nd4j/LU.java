@@ -35,7 +35,7 @@ import org.nd4j.linalg.factory.Nd4j;
  *
  * @author Haifeng Li
  */
-public class LU extends smile.math.matrix.LU {
+class LU extends smile.math.matrix.LU {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LU.class);
 
     /**
@@ -44,7 +44,7 @@ public class LU extends smile.math.matrix.LU {
      * @param piv      pivot vector
      * @param singular True if the matrix is singular
      */
-    public LU(DenseMatrix lu, int[] piv, boolean singular) {
+    public LU(NDMatrix lu, int[] piv, boolean singular) {
         super(lu, piv, pivsign(piv, Math.min(lu.nrows(), lu.ncols())), singular);
     }
 
@@ -72,28 +72,13 @@ public class LU extends smile.math.matrix.LU {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", m, n));
         }
 
-        throw new UnsupportedOperationException("dgetri is not supported by ND4J");
-
-        /*
-        int nb = LAPACK.getInstance().ilaenv(1, "DGETRI", "", n, -1, -1, -1);
-        if (nb < 0) {
-            logger.warn("LAPACK ILAENV error code: {}", nb);
-        }
-
-        if (nb < 1) nb = 1;
-
+        int nb = 1;
         int lwork = lu.ncols() * nb;
-        double[] work = new double[lwork];
-        intW info = new intW(0);
-        Nd4j.getBlasWrapper().lapack().getri(lu.ncols(), lu.data(), lu.ld(), piv, work, lwork, info);
-
-        if (info.val != 0) {
-            logger.error("LAPACK DGETRI error code: {}", info.val);
-            throw new IllegalArgumentException("LAPACK DGETRI error code: " + info.val);
-        }
+        INDArray work = Nd4j.create(lwork);
+        int info = 0;
+        Nd4j.getBlasWrapper().lapack().getri(lu.ncols(), ((NDMatrix) lu).A, lu.ld(), piv, work, lwork, info);
 
         return lu;
-        */
     }
 
     @Override
