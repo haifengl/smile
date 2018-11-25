@@ -61,7 +61,7 @@ public class NDMatrixTest {
     }
 
     /**
-     * Test of nrows method, of class ColumnMajorMatrix.
+     * Test of nrows method, of class NDMatrix.
      */
     @Test
     public void testNrows() {
@@ -70,7 +70,7 @@ public class NDMatrixTest {
     }
 
     /**
-     * Test of ncols method, of class ColumnMajorMatrix.
+     * Test of ncols method, of class NDMatrix.
      */
     @Test
     public void testNcols() {
@@ -79,7 +79,7 @@ public class NDMatrixTest {
     }
 
     /**
-     * Test of get method, of class ColumnMajorMatrix.
+     * Test of get method, of class NDMatrix.
      */
     @Test
     public void testGet() {
@@ -93,7 +93,7 @@ public class NDMatrixTest {
     }
 
     /**
-     * Test of ax method, of class ColumnMajorMatrix.
+     * Test of ax method, of class NDMatrix.
      */
     @Test
     public void testAx() {
@@ -106,7 +106,7 @@ public class NDMatrixTest {
     }
 
     /**
-     * Test of atx method, of class ColumnMajorMatrix.
+     * Test of atx method, of class NDMatrix.
      */
     @Test
     public void testAtx() {
@@ -119,7 +119,7 @@ public class NDMatrixTest {
     }
 
     /**
-     * Test of AAT method, of class ColumnMajorMatrix.
+     * Test of AAT method, of class NDMatrix.
      */
     @Test
     public void testAAT() {
@@ -135,7 +135,7 @@ public class NDMatrixTest {
     }
 
     /**
-     * Test of mm method, of class ColumnMajorMatrix.
+     * Test of mm method, of class NDMatrix.
      */
     @Test
     public void testMm() {

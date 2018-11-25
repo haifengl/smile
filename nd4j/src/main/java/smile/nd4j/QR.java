@@ -13,15 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.netlib;
+package smile.nd4j;
 
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Cholesky;
-import com.github.fommil.netlib.LAPACK;
-import org.netlib.util.intW;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * For an m-by-n matrix A with m &ge; n, the QR decomposition is an m-by-n
@@ -39,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * @author Haifeng Li
  */
 public class QR extends smile.math.matrix.QR {
-    private static final Logger logger = LoggerFactory.getLogger(QR.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QR.class);
 
     /**
      * Constructor.
@@ -84,6 +80,8 @@ public class QR extends smile.math.matrix.QR {
         int n = qr.ncols();
         int k = Math.min(m, n);
 
+        throw new UnsupportedOperationException("dorgqr is not supported by ND4J");
+        /*
         intW info = new intW(0);
         double[] work = new double[1];
         LAPACK.getInstance().dorgqr(m, n, k, qr.data(), qr.ld(), tau, work, -1, info);
@@ -108,6 +106,7 @@ public class QR extends smile.math.matrix.QR {
         }
 
         return qr;
+        */
     }
 
     @Override
@@ -139,6 +138,8 @@ public class QR extends smile.math.matrix.QR {
             throw new RuntimeException("Matrix is rank deficient.");
         }
 
+        throw new UnsupportedOperationException("dtrtrs is not supported by ND4J");
+        /*
         int m = qr.nrows();
         int n = qr.ncols();
         int k = Math.min(m, n);
@@ -173,5 +174,6 @@ public class QR extends smile.math.matrix.QR {
             logger.error("LAPACK DTRTRS error code: {}", info.val);
             throw new IllegalArgumentException("LAPACK DTRTRS error code: " + info.val);
         }
+        */
     }
 }

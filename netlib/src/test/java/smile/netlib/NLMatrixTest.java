@@ -62,7 +62,7 @@ public class NLMatrixTest {
     }
 
     /**
-     * Test of nrows method, of class ColumnMajorMatrix.
+     * Test of nrows method, of class NLMatrix.
      */
     @Test
     public void testNrows() {
@@ -71,7 +71,7 @@ public class NLMatrixTest {
     }
 
     /**
-     * Test of ncols method, of class ColumnMajorMatrix.
+     * Test of ncols method, of class NLMatrix.
      */
     @Test
     public void testNcols() {
@@ -80,7 +80,7 @@ public class NLMatrixTest {
     }
 
     /**
-     * Test of get method, of class ColumnMajorMatrix.
+     * Test of get method, of class NLMatrix.
      */
     @Test
     public void testGet() {
@@ -94,7 +94,7 @@ public class NLMatrixTest {
     }
 
     /**
-     * Test of ax method, of class ColumnMajorMatrix.
+     * Test of ax method, of class NLMatrix.
      */
     @Test
     public void testAx() {
@@ -107,7 +107,35 @@ public class NLMatrixTest {
     }
 
     /**
-     * Test of atx method, of class ColumnMajorMatrix.
+     * Test of axpy method, of class NLMatrix.
+     */
+    @Test
+    public void testAxpy() {
+        System.out.println("axpy");
+        double[] d = new double[matrix.nrows()];
+        for (int i = 0; i < d.length; i++) d[i] = 1.0;
+        matrix.axpy(b, d);
+        assertEquals(1.65, d[0], 1E-10);
+        assertEquals(1.60, d[1], 1E-10);
+        assertEquals(1.55, d[2], 1E-10);
+    }
+
+    /**
+     * Test of axpy method, of class NLMatrix.
+     */
+    @Test
+    public void testAxpy2() {
+        System.out.println("axpy b = 2");
+        double[] d = new double[matrix.nrows()];
+        for (int i = 0; i < d.length; i++) d[i] = 1.0;
+        matrix.axpy(b, d, 2.0);
+        assertEquals(2.65, d[0], 1E-10);
+        assertEquals(2.60, d[1], 1E-10);
+        assertEquals(2.55, d[2], 1E-10);
+    }
+
+    /**
+     * Test of atx method, of class NLMatrix.
      */
     @Test
     public void testAtx() {
@@ -120,7 +148,35 @@ public class NLMatrixTest {
     }
 
     /**
-     * Test of AAT method, of class ColumnMajorMatrix.
+     * Test of atxpy method, of class NLMatrix.
+     */
+    @Test
+    public void testAtxpy() {
+        System.out.println("atxpy");
+        double[] d = new double[matrix.nrows()];
+        for (int i = 0; i < d.length; i++) d[i] = 1.0;
+        matrix.atxpy(b, d);
+        assertEquals(1.65, d[0], 1E-10);
+        assertEquals(1.60, d[1], 1E-10);
+        assertEquals(1.55, d[2], 1E-10);
+    }
+
+    /**
+     * Test of atxpy method, of class NLMatrix.
+     */
+    @Test
+    public void testAtxpy2() {
+        System.out.println("atxpy b = 2");
+        double[] d = new double[matrix.nrows()];
+        for (int i = 0; i < d.length; i++) d[i] = 1.0;
+        matrix.atxpy(b, d, 2.0);
+        assertEquals(2.65, d[0], 1E-10);
+        assertEquals(2.60, d[1], 1E-10);
+        assertEquals(2.55, d[2], 1E-10);
+    }
+
+    /**
+     * Test of AAT method, of class NLMatrix.
      */
     @Test
     public void testAAT() {
@@ -191,7 +247,7 @@ public class NLMatrixTest {
     }
 
     /**
-     * Test of mm method, of class ColumnMajorMatrix.
+     * Test of mm method, of class NLMatrix.
      */
     @Test
     public void testMm() {

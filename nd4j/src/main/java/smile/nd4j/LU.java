@@ -14,14 +14,12 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.netlib;
+package smile.nd4j;
 
 import smile.math.matrix.DenseMatrix;
-import com.github.fommil.netlib.LAPACK;
-import org.netlib.util.intW;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.matrix.Matrix;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
 
 /**
  * For an m-by-n matrix A with m &ge; n, the LU decomposition is an m-by-n
@@ -38,7 +36,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class LU extends smile.math.matrix.LU {
-    private static final Logger logger = LoggerFactory.getLogger(LU.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LU.class);
 
     /**
      * Constructor.
@@ -74,6 +72,9 @@ public class LU extends smile.math.matrix.LU {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", m, n));
         }
 
+        throw new UnsupportedOperationException("dgetri is not supported by ND4J");
+
+        /*
         int nb = LAPACK.getInstance().ilaenv(1, "DGETRI", "", n, -1, -1, -1);
         if (nb < 0) {
             logger.warn("LAPACK ILAENV error code: {}", nb);
@@ -84,7 +85,7 @@ public class LU extends smile.math.matrix.LU {
         int lwork = lu.ncols() * nb;
         double[] work = new double[lwork];
         intW info = new intW(0);
-        LAPACK.getInstance().dgetri(lu.ncols(), lu.data(), lu.ld(), piv, work, lwork, info);
+        Nd4j.getBlasWrapper().lapack().getri(lu.ncols(), lu.data(), lu.ld(), piv, work, lwork, info);
 
         if (info.val != 0) {
             logger.error("LAPACK DGETRI error code: {}", info.val);
@@ -92,12 +93,13 @@ public class LU extends smile.math.matrix.LU {
         }
 
         return lu;
+        */
     }
 
     @Override
     public void solve(double[] b) {
         // B use b as the internal storage. Therefore b will contains the results.
-        DenseMatrix B = Matrix.of(b);
+        DenseMatrix B = new NDMatrix(b);
         solve(B);
     }
 
@@ -114,6 +116,8 @@ public class LU extends smile.math.matrix.LU {
             throw new RuntimeException("Matrix is singular.");
         }
 
+        throw new UnsupportedOperationException("dgetrs is not supported by ND4J");
+        /*
         intW info = new intW(0);
         LAPACK.getInstance().dgetrs(NLMatrix.Transpose, lu.nrows(), B.ncols(), lu.data(), lu.ld(), piv, B.data(), B.ld(), info);
 
@@ -121,5 +125,6 @@ public class LU extends smile.math.matrix.LU {
             logger.error("LAPACK DGETRS error code: {}", info.val);
             throw new IllegalArgumentException("LAPACK DGETRS error code: " + info.val);
         }
+        */
     }
 }
