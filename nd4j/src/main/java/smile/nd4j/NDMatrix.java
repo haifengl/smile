@@ -21,6 +21,8 @@ import smile.math.matrix.SVD;
 import smile.math.matrix.EVD;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.indexing.INDArrayIndex;
+import org.nd4j.linalg.indexing.NDArrayIndex;
 import org.nd4j.linalg.inverse.InvertMatrix;
 
 /**
@@ -30,6 +32,15 @@ import org.nd4j.linalg.inverse.InvertMatrix;
  */
 public class NDMatrix implements DenseMatrix {
     private static final long serialVersionUID = 1L;
+
+    static {
+        // ND4J allows INDArrays to be backed by either float
+        // or double-precision values. The default is single-precision
+        // (float). Here we set the order globally to double precision.
+        // Alternatively, we can set the property when launching the JVM:
+        // -Ddtype=double
+        Nd4j.setDataType(org.nd4j.linalg.api.buffer.DataBuffer.Type.DOUBLE);
+    }
 
     /**
      * The matrix storage.
@@ -184,15 +195,15 @@ public class NDMatrix implements DenseMatrix {
         int mn = Math.min(m, n);
 
         INDArray S = Nd4j.create(mn);
-        INDArray U  = m >= n ? A : Nd4j.create(m, n);
-        INDArray Vt = m >= n ? Nd4j.create(n, n) : A;
+        INDArray U = Nd4j.create(m, m);
+        INDArray Vt = Nd4j.create(n, n);
         Nd4j.getNDArrayFactory().lapack().gesvd(A, S, U, Vt);
 
         double[] s = new double[mn];
         for (int i = 0; i < mn; i++) {
             s[i] = S.getDouble(i);
         }
-        return new SVD(new NDMatrix(U), new NDMatrix(Vt).transpose(), s);
+        return new SVD(new NDMatrix(U), new NDMatrix(Vt.transpose()), s);
     }
 
     @Override
@@ -205,9 +216,9 @@ public class NDMatrix implements DenseMatrix {
         INDArray V = Nd4j.create(n);
 
         if (symmetric) {
-            Nd4j.getNDArrayFactory().lapack().syev('N', 'A', A, V);
+            Nd4j.getNDArrayFactory().lapack().syev('N', 'L', A, V);
         } else {
-            Nd4j.getNDArrayFactory().lapack().syev('N', 'N', A, V);
+            throw new UnsupportedOperationException("Nd4j doesn't support eigen decomposition of asymmetric matrix");
         }
 
         // LAPACK returns eigen values in ascending order.
@@ -230,19 +241,22 @@ public class NDMatrix implements DenseMatrix {
         INDArray V = Nd4j.create(n);
 
         if (symmetric) {
-            Nd4j.getNDArrayFactory().lapack().syev('V', 'A', A, V);
+            Nd4j.getNDArrayFactory().lapack().syev('V', 'L', A, V);
         } else {
-            Nd4j.getNDArrayFactory().lapack().syev('N', 'V', A, V);
+            throw new UnsupportedOperationException("Nd4j doesn't support eigen decomposition of asymmetric matrix");
         }
 
         // LAPACK returns eigen values in ascending order.
         // In contrast, JMatrix returns eigen values in descending order.
         // Reverse the array to match JMatrix.
+        INDArray a = Nd4j.create(n, n);
         double[] d = new double[n];
         for (int i = 0; i < n; i++) {
-            d[i] = V.getDouble(i);
+            d[i] = V.getDouble(n - i - 1);
+            INDArrayIndex[] col = {NDArrayIndex.all(), NDArrayIndex.point(i)};
+            a.put(col, A.get(NDArrayIndex.all(), NDArrayIndex.point(n - i - 1)));
         }
-        return new EVD(this, d);
+        return new EVD(new NDMatrix(a), d);
     }
 
     @Override

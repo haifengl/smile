@@ -102,7 +102,7 @@ public class EVDTest {
         NDMatrix a = new NDMatrix(A);
         a.setSymmetric(true);
         double[] result = a.eig();
-        assertEquals(2*a.nrows(), result.length);
+        assertEquals(a.nrows(), result.length);
         for (int i = 0; i < eigenValues.length; i++)
             assertEquals(eigenValues[i], result[i], 1E-7);
         for (int i = eigenValues.length; i < result.length; i++)
