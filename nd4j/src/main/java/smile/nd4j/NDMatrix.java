@@ -16,10 +16,7 @@
 
 package smile.nd4j;
 
-import smile.math.matrix.Cholesky;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.LU;
-import smile.math.matrix.QR;
 import smile.math.matrix.SVD;
 import smile.math.matrix.EVD;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -42,6 +39,12 @@ public class NDMatrix implements DenseMatrix {
      * True if the matrix is symmetric.
      */
     private boolean symmetric = false;
+
+    private static char RowOrder = 'e'; // CblasRowMajor
+    private static char ColOrder = 'f'; // CblasColMajor
+    private static char NoTranspose = 'N';
+    private static char Transpose   = 'T';
+    private static char ConjugateTranspose = 'C';
 
     /**
      * Constructor.
@@ -143,42 +146,112 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public LU lu() {
-        throw new UnsupportedOperationException();
+        INDArray r = Nd4j.getNDArrayFactory().lapack().getrf(A);
+        int[] piv = new int[(int) r.length()];
+        for (int i = 0; i < piv.length; i++) {
+            piv[i] = r.getInt(i);
+        }
+        // Nd4j doesn't report if the matrix is singular.
+        return new LU(this, piv, false);
     }
 
     @Override
     public Cholesky cholesky() {
-        throw new UnsupportedOperationException();
+        if (nrows() != ncols()) {
+            throw new UnsupportedOperationException("Cholesky decomposition on non-square matrix");
+        }
+
+        Nd4j.getNDArrayFactory().lapack().potrf(A, true);
+        return new Cholesky(this);
     }
 
     @Override
     public QR qr() {
-        throw new UnsupportedOperationException();
+        double[] tau = new double[Math.min(nrows(), ncols())];
+        INDArray R = Nd4j.create(ncols(), ncols());
+        Nd4j.getNDArrayFactory().lapack().geqrf(A, R);
+        for (int i = 0; i < tau.length; i++) {
+            tau[i] = R.getDouble(i, i);
+        }
+        // Nd4j doesn't report if the matrix is singular.
+        return new QR(this, tau, false);
     }
 
     @Override
     public SVD svd() {
-        throw new UnsupportedOperationException();
+        int m = nrows();
+        int n = ncols();
+        int mn = Math.min(m, n);
+
+        INDArray S = Nd4j.create(mn);
+        INDArray U  = m >= n ? A : Nd4j.create(m, n);
+        INDArray Vt = m >= n ? Nd4j.create(n, n) : A;
+        Nd4j.getNDArrayFactory().lapack().gesvd(A, S, U, Vt);
+
+        double[] s = new double[mn];
+        for (int i = 0; i < mn; i++) {
+            s[i] = S.getDouble(i);
+        }
+        return new SVD(new NDMatrix(U), new NDMatrix(Vt).transpose(), s);
     }
 
     @Override
     public double[] eig() {
-        throw new UnsupportedOperationException();
+        if (nrows() != ncols()) {
+            throw new UnsupportedOperationException("Eigen decomposition on non-square matrix");
+        }
+
+        int n = nrows();
+        INDArray V = Nd4j.create(n);
+
+        if (symmetric) {
+            Nd4j.getNDArrayFactory().lapack().syev('N', 'A', A, V);
+        } else {
+            Nd4j.getNDArrayFactory().lapack().syev('N', 'N', A, V);
+        }
+
+        // LAPACK returns eigen values in ascending order.
+        // In contrast, JMatrix returns eigen values in descending order.
+        // Reverse the array to match JMatrix.
+        double[] d = new double[n];
+        for (int i = 0; i < n; i++) {
+            d[i] = V.getDouble(n - i - 1);
+        }
+        return d;
     }
 
     @Override
     public EVD eigen() {
-        throw new UnsupportedOperationException();
+        if (nrows() != ncols()) {
+            throw new UnsupportedOperationException("Eigen decomposition on non-square matrix");
+        }
+
+        int n = nrows();
+        INDArray V = Nd4j.create(n);
+
+        if (symmetric) {
+            Nd4j.getNDArrayFactory().lapack().syev('V', 'A', A, V);
+        } else {
+            Nd4j.getNDArrayFactory().lapack().syev('N', 'V', A, V);
+        }
+
+        // LAPACK returns eigen values in ascending order.
+        // In contrast, JMatrix returns eigen values in descending order.
+        // Reverse the array to match JMatrix.
+        double[] d = new double[n];
+        for (int i = 0; i < n; i++) {
+            d[i] = V.getDouble(i);
+        }
+        return new EVD(this, d);
     }
 
     @Override
     public double[] ax(double[] x, double[] y) {
-        // Nd4j.getBlasWrapper().level2().gemv() crashes.
-        // Use gemm for now.
         int m = nrows();
         int n = ncols();
         INDArray ndx = Nd4j.create(x, new int[]{n, 1});
-        INDArray ndy = Nd4j.gemm(A, ndx, false, false);
+        INDArray ndy = Nd4j.create(m, 1);
+        Nd4j.getBlasWrapper().level2().gemv(ColOrder, NoTranspose, 1.0, A, ndx, 0.0, ndy);
         for (int i = 0; i < m; i++) {
             y[i] = ndy.getDouble(i);
         }
@@ -188,14 +261,13 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] axpy(double[] x, double[] y) {
-        // Nd4j.getBlasWrapper().level2().gemv() crashes.
-        // Use gemm for now.
         int m = nrows();
         int n = ncols();
         INDArray ndx = Nd4j.create(x, new int[]{n, 1});
-        INDArray ndy = Nd4j.gemm(A, ndx, false, false);
+        INDArray ndy = Nd4j.create(y, new int[]{m, 1});
+        Nd4j.getBlasWrapper().level2().gemv(ColOrder, NoTranspose, 1.0, A, ndx, 1.0, ndy);
         for (int i = 0; i < m; i++) {
-            y[i] += ndy.getDouble(i);
+            y[i] = ndy.getDouble(i);
         }
 
         return y;
@@ -203,14 +275,13 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] axpy(double[] x, double[] y, double b) {
-        // Nd4j.getBlasWrapper().level2().gemv() crashes.
-        // Use gemm for now.
         int m = nrows();
         int n = ncols();
         INDArray ndx = Nd4j.create(x, new int[]{n, 1});
-        INDArray ndy = Nd4j.gemm(A, ndx, false, false);
+        INDArray ndy = Nd4j.create(y, new int[]{m, 1});
+        Nd4j.getBlasWrapper().level2().gemv(ColOrder, NoTranspose, 1.0, A, ndx, b, ndy);
         for (int i = 0; i < m; i++) {
-            y[i] = b * y[i] + ndy.getDouble(i);
+            y[i] = ndy.getDouble(i);
         }
 
         return y;
@@ -218,12 +289,11 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] atx(double[] x, double[] y) {
-        // Nd4j.getBlasWrapper().level2().gemv() crashes.
-        // Use gemm for now.
         int m = nrows();
         int n = ncols();
         INDArray ndx = Nd4j.create(x, new int[]{m, 1});
-        INDArray ndy = Nd4j.gemm(A, ndx, true, false);
+        INDArray ndy = Nd4j.create(n, 1);
+        Nd4j.getBlasWrapper().level2().gemv(ColOrder, Transpose, 1.0, A, ndx, 0.0, ndy);
         for (int i = 0; i < n; i++) {
             y[i] = ndy.getDouble(i);
         }
@@ -233,14 +303,13 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] atxpy(double[] x, double[] y) {
-        // Nd4j.getBlasWrapper().level2().gemv() crashes.
-        // Use gemm for now.
         int m = nrows();
         int n = ncols();
         INDArray ndx = Nd4j.create(x, new int[]{m, 1});
-        INDArray ndy = Nd4j.gemm(A, ndx, true, false);
+        INDArray ndy = Nd4j.create(y, new int[]{n, 1});
+        Nd4j.getBlasWrapper().level2().gemv(ColOrder, Transpose, 1.0, A, ndx, 1.0, ndy);
         for (int i = 0; i < n; i++) {
-            y[i] += ndy.getDouble(i);
+            y[i] = ndy.getDouble(i);
         }
 
         return y;
@@ -248,14 +317,13 @@ public class NDMatrix implements DenseMatrix {
 
     @Override
     public double[] atxpy(double[] x, double[] y, double b) {
-        // Nd4j.getBlasWrapper().level2().gemv() crashes.
-        // Use gemm for now.
         int m = nrows();
         int n = ncols();
         INDArray ndx = Nd4j.create(x, new int[]{m, 1});
-        INDArray ndy = Nd4j.gemm(A, ndx, true, false);
+        INDArray ndy = Nd4j.create(y, new int[]{n, 1});
+        Nd4j.getBlasWrapper().level2().gemv(ColOrder, Transpose, 1.0, A, ndx, b, ndy);
         for (int i = 0; i < n; i++) {
-            y[i] = b * y[i] + ndy.getDouble(i);
+            y[i] = ndy.getDouble(i);
         }
 
         return y;

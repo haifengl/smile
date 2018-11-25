@@ -20,7 +20,6 @@ import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.JMatrix;
 import smile.math.matrix.SVD;
 import smile.math.matrix.EVD;
-import smile.sort.QuickSort;
 import com.github.fommil.netlib.BLAS;
 import com.github.fommil.netlib.LAPACK;
 import org.netlib.util.intW;
