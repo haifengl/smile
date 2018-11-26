@@ -26,7 +26,7 @@ public abstract class AbstractDifferentiableMultivariateFunction implements Diff
     private static final double EPS = 1.0E-8;
 
     @Override
-    public double applyWithGradient(double[] x, double[] gradient) {
+    public double g(double[] x, double[] gradient) {
         double f = applyAsDouble(x);
 
         double[] xh = x.clone();

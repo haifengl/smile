@@ -758,102 +758,16 @@ public class MathExTest {
         Function func = new DifferentiableFunction() {
 
             @Override
-            public double apply(double x) {
+            public double f(double x) {
                 return x * x * x + x * x - 5 * x + 3;
             }
 
             @Override
-            public double df(double x) {
+            public double g(double x) {
                 return 3 * x * x + 2 * x - 5;
             }
         };
         double result = MathEx.root(func, -4, -2, 1E-7);
         assertEquals(-3, result, 1E-7);
-    }
-
-    /**
-     * Test of min method, of class Math.
-     */
-    @Test
-    public void testMin_5args() {
-        System.out.println("L-BFGS");
-        DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
-
-            @Override
-            public double applyAsDouble(double[] x) {
-                double f = 0.0;
-                for (int j = 1; j <= x.length; j += 2) {
-                    double t1 = 1.e0 - x[j - 1];
-                    double t2 = 1.e1 * (x[j] - x[j - 1] * x[j - 1]);
-                    f = f + t1 * t1 + t2 * t2;
-                }
-                return f;
-            }
-
-            @Override
-            public double applyWithGradient(double[] x, double[] g) {
-                double f = 0.0;
-                for (int j = 1; j <= x.length; j += 2) {
-                    double t1 = 1.e0 - x[j - 1];
-                    double t2 = 1.e1 * (x[j] - x[j - 1] * x[j - 1]);
-                    g[j + 1 - 1] = 2.e1 * t2;
-                    g[j - 1] = -2.e0 * (x[j - 1] * g[j + 1 - 1] + t1);
-                    f = f + t1 * t1 + t2 * t2;
-                }
-                return f;
-            }
-        };
-
-        double[] x = new double[100];
-        for (int j = 1; j <= x.length; j += 2) {
-            x[j - 1] = -1.2e0;
-            x[j + 1 - 1] = 1.e0;
-        }
-
-        double result = MathEx.min(func, 5, x, 0.0001);
-        assertEquals(3.2760183604E-14, result, 1E-15);
-    }
-
-    /**
-     * Test of min method, of class Math.
-     */
-    @Test
-    public void testMin_4args() {
-        System.out.println("BFGS");
-        DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
-
-            @Override
-            public double applyAsDouble(double[] x) {
-                double f = 0.0;
-                for (int j = 1; j <= x.length; j += 2) {
-                    double t1 = 1.e0 - x[j - 1];
-                    double t2 = 1.e1 * (x[j] - x[j - 1] * x[j - 1]);
-                    f = f + t1 * t1 + t2 * t2;
-                }
-                return f;
-            }
-
-            @Override
-            public double applyWithGradient(double[] x, double[] g) {
-                double f = 0.0;
-                for (int j = 1; j <= x.length; j += 2) {
-                    double t1 = 1.e0 - x[j - 1];
-                    double t2 = 1.e1 * (x[j] - x[j - 1] * x[j - 1]);
-                    g[j + 1 - 1] = 2.e1 * t2;
-                    g[j - 1] = -2.e0 * (x[j - 1] * g[j + 1 - 1] + t1);
-                    f = f + t1 * t1 + t2 * t2;
-                }
-                return f;
-            }
-        };
-
-        double[] x = new double[100];
-        for (int j = 1; j <= x.length; j += 2) {
-            x[j - 1] = -1.2e0;
-            x[j + 1 - 1] = 1.e0;
-        }
-
-        double result = MathEx.min(func, x, 0.0001);
-        assertEquals(2.95793E-10, result, 1E-15);
     }
 }

@@ -29,11 +29,103 @@ import smile.math.MathEx;
 public class BiconjugateGradient {
     private static final Logger logger = LoggerFactory.getLogger(BiconjugateGradient.class);
 
-    /** Returns a simple preconditioner matrix that is the
+    /** The instance with default settings. */
+    private static BiconjugateGradient instance = new BiconjugateGradient();
+
+    /**
+     * The desired convergence tolerance.
+     */
+    private double tol = 1E-10;
+    /**
+     * Which convergence test is applied. If itol = 1,
+     * iteration stops when |Ax - b| / |b| is less than the parameter tolerance.
+     * If itol = 2, the stop criterion is
+     * |A<sup>-1</sup> (Ax - b)| / |A<sup>-1</sup>b| is less than tolerance.
+     * If tol = 3, |x<sub>k+1</sub> - x<sub>k</sub>|<sub>2</sub> is less than
+     * tolerance. The setting of tol = 4 is same as tol = 3 except that the
+     * L<sub>&infin;</sub> norm instead of L<sub>2</sub>.
+     */
+    private int itol = 1;
+    /**
+     * The maximum number of allowed iterations.
+     */
+    private int maxIter = 0;
+    /**
+     * The preconditioner matrix.
+     */
+    private Preconditioner preconditioner;
+
+    /**
+     * Constructor with itol = 1 and tol = 1E-10.
+     * The maximum number of iterations will be determined by
+     * the size of matrix. The preconditioner will be
+     * a trivial diagonal part of input matrix if not set.
+     */
+    public BiconjugateGradient() {
+
+    }
+
+    /** Returns the instance with default settings. */
+    public static BiconjugateGradient getInstance() {
+        return instance;
+    }
+
+    /**
+     * Sets the desired convergence tolerance.
+     * @return return this object.
+     */
+    public BiconjugateGradient setTolerance(double tol) {
+        if (tol <= 0.0) {
+            throw new IllegalArgumentException("Invalid tolerance: " + tol);
+        }
+
+        this.tol = tol;
+        return this;
+    }
+
+    /**
+     * Sets which convergence test is applied. If itol = 1,
+     * iteration stops when |Ax - b| / |b| is less than the parameter tolerance.
+     * If itol = 2, the stop criterion is
+     * |A<sup>-1</sup> (Ax - b)| / |A<sup>-1</sup>b| is less than tolerance.
+     * If tol = 3, |x<sub>k+1</sub> - x<sub>k</sub>|<sub>2</sub> is less than
+     * tolerance. The setting of tol = 4 is same as tol = 3 except that the
+     * L<sub>&infin;</sub> norm instead of L<sub>2</sub>.
+     * @return return this object.
+     */
+    public BiconjugateGradient setConvergenceTest(int itol) {
+        if (itol < 1 || itol > 4) {
+            throw new IllegalArgumentException(String.format("Invalid itol: %d", itol));
+        }
+
+        this.itol = itol;
+        return this;
+    }
+
+    /**
+     * Sets the maximum number of allowed iterations.
+     * @return return this object.
+     */
+    public BiconjugateGradient setMaxIter(int maxIter) {
+        this.maxIter = maxIter;
+        return this;
+    }
+
+    /**
+     * Sets the preconditioner matrix.
+     * @return return this object.
+     */
+    public BiconjugateGradient setPreconditioner(Preconditioner preconditioner) {
+        this.preconditioner = preconditioner;
+        return this;
+    }
+
+    /**
+     * Returns a simple preconditioner matrix that is the
      * trivial diagonal part of A in some cases.
      */
-    private static Preconditioner diagonalPreconditioner(Matrix A) {
-        return (double[] b, double[] x) -> {
+    private Preconditioner diagonalPreconditioner(Matrix A) {
+        return (b, x) -> {
                 double[] diag = A.diag();
                 int n = diag.length;
 
@@ -50,139 +142,12 @@ public class BiconjugateGradient {
      * (or all zeros). On output, x is reset to the improved solution.
      * @return the estimated error.
      */
-    public static double solve(Matrix A, double[] b, double[] x) {
-        return solve(A, diagonalPreconditioner(A), b, x);
-    }
+    public double solve(Matrix A, double[] b, double[] x) {
+        if (maxIter <= 0)
+            maxIter = 2 * Math.max(A.nrows(), A.ncols());
 
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * @param Ap the preconditioned matrix of A.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @return the estimated error.
-     */
-    public static double solve(Matrix A, Preconditioner Ap, double[] b, double[] x) {
-        return solve(A, Ap, b, x, 1E-10);
-    }
-
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @param tol the desired convergence tolerance.
-     * @return the estimated error.
-     */
-    public static double solve(Matrix A, double[] b, double[] x, double tol) {
-        return solve(A, diagonalPreconditioner(A), b, x, tol);
-    }
-
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * @param Ap the preconditioned matrix of A.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @param tol the desired convergence tolerance.
-     * @return the estimated error.
-     */
-    public static double solve(Matrix A, Preconditioner Ap, double[] b, double[] x, double tol) {
-        return solve(A, Ap, b, x, tol, 1);
-    }
-
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @param itol specify which convergence test is applied. If itol = 1,
-     * iteration stops when |Ax - b| / |b| is less than the parameter tolerance.
-     * If itol = 2, the stop criterion is
-     * |A<sup>-1</sup> (Ax - b)| / |A<sup>-1</sup>b| is less than tolerance.
-     * If tol = 3, |x<sub>k+1</sub> - x<sub>k</sub>|<sub>2</sub> is less than
-     * tolerance. The setting of tol = 4 is same as tol = 3 except that the
-     * L<sub>&infin;</sub> norm instead of L<sub>2</sub>.
-     * @param tol the desired convergence tolerance.
-     * @return the estimated error.
-     */
-    public static double solve(Matrix A, double[] b, double[] x, double tol, int itol) {
-        return solve(A, diagonalPreconditioner(A), b, x, tol, itol);
-    }
-
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * @param Ap the preconditioned matrix of A.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @param itol specify which convergence test is applied. If itol = 1,
-     * iteration stops when |Ax - b| / |b| is less than the parameter tolerance.
-     * If itol = 2, the stop criterion is
-     * |A<sup>-1</sup> (Ax - b)| / |A<sup>-1</sup>b| is less than tolerance.
-     * If tol = 3, |x<sub>k+1</sub> - x<sub>k</sub>|<sub>2</sub> is less than
-     * tolerance. The setting of tol = 4 is same as tol = 3 except that the
-     * L<sub>&infin;</sub> norm instead of L<sub>2</sub>.
-     * @param tol the desired convergence tolerance.
-     * @return the estimated error.
-     */
-    public static double solve(Matrix A, Preconditioner Ap, double[] b, double[] x, double tol, int itol) {
-        return solve(A, Ap, b, x, tol, itol, 2 * Math.max(A.nrows(), A.ncols()));
-    }
-
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * This method can be called repeatedly, with maxIter &lt; n, to monitor how
-     * error decreases.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @param itol specify which convergence test is applied. If itol = 1,
-     * iteration stops when |Ax - b| / |b| is less than the parameter tolerance.
-     * If itol = 2, the stop criterion is
-     * |A<sup>-1</sup> (Ax - b)| / |A<sup>-1</sup>b| is less than tolerance.
-     * If tol = 3, |x<sub>k+1</sub> - x<sub>k</sub>|<sub>2</sub> is less than
-     * tolerance. The setting of tol = 4 is same as tol = 3 except that the
-     * L<sub>&infin;</sub> norm instead of L<sub>2</sub>.
-     * @param tol the desired convergence tolerance.
-     * @param maxIter the maximum number of allowed iterations.
-     * @return the estimated error.
-     */
-    public static double solve(Matrix A, double[] b, double[] x, double tol, int itol, int maxIter) {
-        return solve(A, diagonalPreconditioner(A), b, x, tol, itol, maxIter);
-    }
-
-    /**
-     * Solves A * x = b by iterative biconjugate gradient method.
-     * This method can be called repeatedly, with maxIter &lt; n, to monitor how
-     * error decreases.
-     * @param Ap the preconditioned matrix of A.
-     * @param b the right hand side of linear equations.
-     * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
-     * @param itol specify which convergence test is applied. If itol = 1,
-     * iteration stops when |Ax - b| / |b| is less than the parameter tolerance.
-     * If itol = 2, the stop criterion is
-     * |A<sup>-1</sup> (Ax - b)| / |A<sup>-1</sup>b| is less than tolerance.
-     * If tol = 3, |x<sub>k+1</sub> - x<sub>k</sub>|<sub>2</sub> is less than
-     * tolerance. The setting of tol = 4 is same as tol = 3 except that the
-     * L<sub>&infin;</sub> norm instead of L<sub>2</sub>.
-     * @param tol the desired convergence tolerance.
-     * @param maxIter the maximum number of allowed iterations.
-     * @return the estimated error.
-     */
-    public static double solve(Matrix A, Preconditioner Ap, double[] b, double[] x, double tol, int itol, int maxIter) {
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
-        if (itol < 1 || itol > 4) {
-            throw new IllegalArgumentException(String.format("Illegal itol: %d", itol));
-        }
+        if (preconditioner == null)
+            preconditioner = diagonalPreconditioner(A);
 
         double err = 0.0;
         double ak, akden, bk, bkden = 1.0, bknum, bnrm, dxnrm, xnrm, zm1nrm, znrm = 0.0;
@@ -202,23 +167,23 @@ public class BiconjugateGradient {
         }
 
         if (itol == 1) {
-            bnrm = snorm(b, itol);
-            Ap.asolve(r, z);
+            bnrm = snorm(b);
+            preconditioner.solve(r, z);
         } else if (itol == 2) {
-            Ap.asolve(b, z);
-            bnrm = snorm(z, itol);
-            Ap.asolve(r, z);
+            preconditioner.solve(b, z);
+            bnrm = snorm(z);
+            preconditioner.solve(r, z);
         } else if (itol == 3 || itol == 4) {
-            Ap.asolve(b, z);
-            bnrm = snorm(z, itol);
-            Ap.asolve(r, z);
-            znrm = snorm(z, itol);
+            preconditioner.solve(b, z);
+            bnrm = snorm(z);
+            preconditioner.solve(r, z);
+            znrm = snorm(z);
         } else {
             throw new IllegalArgumentException(String.format("Illegal itol: %d", itol));
         }
 
         for (int iter = 1; iter <= maxIter; iter++) {
-            Ap.asolve(rr, zz);
+            preconditioner.solve(rr, zz);
             for (bknum = 0.0, j = 0; j < n; j++) {
                 bknum += z[j] * rr[j];
             }
@@ -246,22 +211,22 @@ public class BiconjugateGradient {
                 r[j] -= ak * z[j];
                 rr[j] -= ak * zz[j];
             }
-            Ap.asolve(r, z);
+            preconditioner.solve(r, z);
             if (itol == 1) {
-                err = snorm(r, itol) / bnrm;
+                err = snorm(r) / bnrm;
             } else if (itol == 2) {
-                err = snorm(z, itol) / bnrm;
+                err = snorm(z) / bnrm;
             } else if (itol == 3 || itol == 4) {
                 zm1nrm = znrm;
-                znrm = snorm(z, itol);
+                znrm = snorm(z);
                 if (Math.abs(zm1nrm - znrm) > MathEx.EPSILON * znrm) {
-                    dxnrm = Math.abs(ak) * snorm(p, itol);
+                    dxnrm = Math.abs(ak) * snorm(p);
                     err = znrm / Math.abs(zm1nrm - znrm) * dxnrm;
                 } else {
                     err = znrm / bnrm;
                     continue;
                 }
-                xnrm = snorm(x, itol);
+                xnrm = snorm(x);
                 if (err <= 0.5 * xnrm) {
                     err /= xnrm;
                 } else {
@@ -286,7 +251,7 @@ public class BiconjugateGradient {
     /**
      * Compute L2 or L-infinity norms for a vector x, as signaled by itol.
      */
-    private static double snorm(double[] x, int itol) {
+    private double snorm(double[] x) {
         int n = x.length;
 
         if (itol <= 3) {
