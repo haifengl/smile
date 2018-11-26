@@ -29,5 +29,5 @@ public interface Preconditioner {
      * conjugate gradient method. The preconditioner matrix could be as simple
      * as the trivial diagonal part of A in some cases.
      */
-    void asolve(double[] b, double[] x);
+    void solve(double[] b, double[] x);
 }

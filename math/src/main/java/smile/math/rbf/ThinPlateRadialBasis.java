@@ -53,7 +53,7 @@ public class ThinPlateRadialBasis implements RadialBasisFunction {
     }
 
     @Override
-    public double apply(double r) {
+    public double f(double r) {
         return r <= 0.0 ? 0.0 : r * r * Math.log(r / r0);
     }
 

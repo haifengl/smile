@@ -70,7 +70,7 @@ public class BiconjugateGradientTest {
 
         DenseMatrix naive = Matrix.of(A);
         double[] result = new double[3];
-        BiconjugateGradient.solve(naive, b, result);
+        BiconjugateGradient.getInstance().solve(naive, b, result);
 
         assertEquals(result.length, x.length);
         for (int i = 0; i < x.length; i++) {
@@ -90,7 +90,7 @@ public class BiconjugateGradientTest {
         SparseMatrix sparse = new SparseMatrix(3, 3, val, rowIndex, colIndex);
 
         double[] result = new double[3];
-        BiconjugateGradient.solve(sparse, b, result);
+        BiconjugateGradient.getInstance().solve(sparse, b, result);
 
         assertEquals(result.length, x.length);
         for (int i = 0; i < x.length; i++) {
