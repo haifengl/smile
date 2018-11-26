@@ -74,13 +74,10 @@ public class BFGS {
     /**
      * The maximum number of allowed iterations.
      */
-    private int maxIter = 200;
+    private int maxIter = 500;
 
     /**
-     * Constructor with gtol = 1E-5 and maxIter = 100.
-     * The maximum number of iterations will be determined by
-     * the size of matrix. The preconditioner will be
-     * a trivial diagonal part of input matrix if not set.
+     * Constructor with gtol = 1E-5 and maxIter = 500.
      */
     public BFGS() {
 
@@ -109,6 +106,10 @@ public class BFGS {
      * @return return this object.
      */
     public BFGS setMaxIter(int maxIter) {
+        if (maxIter <= 0) {
+            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+        }
+
         this.maxIter = maxIter;
         return this;
     }
