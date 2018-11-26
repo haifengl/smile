@@ -41,7 +41,9 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
      *
      * @return the leading dimension
      */
-    int ld();
+    default int ld() {
+        return nrows();
+    }
 
     /**
      * Set the entry value at row i and column j.
