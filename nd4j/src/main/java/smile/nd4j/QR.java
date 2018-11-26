@@ -63,11 +63,11 @@ class QR extends smile.math.matrix.QR {
 
     @Override
     public DenseMatrix getR() {
-        int m = qr.nrows();
         int n = qr.ncols();
-        DenseMatrix R = Matrix.zeros(m, n);
+        DenseMatrix R = Matrix.zeros(n, n);
         for (int i = 0; i < n; i++) {
-            for (int j = i; j < n; j++) {
+            R.set(i, i, tau[i]);
+            for (int j = i+1; j < n; j++) {
                 R.set(i, j, qr.get(i, j));
             }
         }
