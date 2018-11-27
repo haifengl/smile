@@ -208,7 +208,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         }
 
         double[] v = x.clone();
-        MathEx.minus(v, mu);
+        MathEx.sub(v, mu);
         double result = sigmaInv.xax(v) / -2.0;
         return result - pdfConstant;
     }
@@ -238,7 +238,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         double errMax = 0.001;
 
         double[] v = x.clone();
-        MathEx.minus(v, mu);
+        MathEx.sub(v, mu);
 
         double p = 0.0;
         double varSum = 0.0;
@@ -303,7 +303,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
             }
         }
 
-        MathEx.plus(pt, mu);
+        MathEx.add(pt, mu);
 
         return pt;
     }

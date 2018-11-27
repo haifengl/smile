@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.math;
+package smile.stat;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -27,9 +27,9 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class RootTest {
+public class StatTest {
 
-    public RootTest() {
+    public StatTest() {
     }
 
     @BeforeClass
@@ -49,34 +49,22 @@ public class RootTest {
     }
 
     /**
-     * Test of find method, of class Root.
+     * Test of GoodTuring method, of class Stat.
      */
     @Test
-    public void testBrent() {
-        System.out.println("Brent");
-        double result = Root.getInstance().find(x -> x * x * x + x * x - 5 * x + 3, -4, -2);
-        assertEquals(-3, result, 1E-7);
-    }
+    public void testGoodTuring() {
+        System.out.println("GoodTuring");
+        int[] r = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12};
+        int[] Nr = {120, 40, 24, 13, 15, 5, 11, 2, 2, 1, 3};
+        double p0 = 0.2047782;
+        double[] p = {
+                0.0009267, 0.0024393, 0.0040945, 0.0058063, 0.0075464,
+                0.0093026, 0.0110689, 0.0128418, 0.0146194, 0.0164005, 0.0199696};
 
-    /**
-     * Test of find method, of class Root.
-     */
-    @Test
-    public void testNewton() {
-        System.out.println("Newton");
-        Function func = new DifferentiableFunction() {
-
-            @Override
-            public double f(double x) {
-                return x * x * x + x * x - 5 * x + 3;
-            }
-
-            @Override
-            public double g(double x) {
-                return 3 * x * x + 2 * x - 5;
-            }
-        };
-        double result = Root.getInstance().find(func, -4, -2);
-        assertEquals(-3, result, 1E-7);
+        double[] result = new double[r.length];
+        assertEquals(p0, Stat.GoodTuring(r, Nr, result), 1E-7);
+        for (int i = 0; i < r.length; i++) {
+            assertEquals(p[i], result[i], 1E-7);
+        }
     }
 }
