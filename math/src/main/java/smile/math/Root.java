@@ -43,7 +43,7 @@ public class Root {
     }
 
     /** Returns the instance with default settings. */
-    public static Root getInstance() {
+    public static Root getDefaultInstance() {
         return instance;
     }
 
