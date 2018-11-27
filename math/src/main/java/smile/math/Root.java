@@ -74,10 +74,17 @@ public class Root {
     }
 
     /**
-     * Returns the root of a function known to lie between x1 and x2 by
-     * Brent's method. The root will be refined until its accuracy is tol.
+     * Brent's method for root-finding. It combines the bisection method,
+     * the secant method and inverse quadratic interpolation. It has the
+     * reliability of bisection but it can be as quick as some of the
+     * less-reliable methods. The algorithm tries to use the potentially
+     * fast-converging secant method or inverse quadratic interpolation
+     * if possible, but it falls back to the more robust bisection method
+     * if necessary.
+     *
      * The method is guaranteed to converge as long as the function can be
      * evaluated within the initial interval known to contain a root.
+     *
      * @param func the function to be evaluated.
      * @param x1 the left end of search interval.
      * @param x2 the right end of search interval.
@@ -164,9 +171,16 @@ public class Root {
     }
 
     /**
-     * Returns the root of a function whose derivative is available known
-     * to lie between x1 and x2 by Newton-Raphson method. The root will be
-     * refined until its accuracy is within xacc.
+     * Newton's method (also known as the Newton–Raphson method). This method
+     * finds successively better approximations to the roots of a real-valued
+     * function. Newton's method assumes the function to have a continuous
+     * derivative. Newton's method may not converge if started too far away
+     * from a root. However, when it does converge, it is faster than the
+     * bisection method, and is usually quadratic. Newton's method is also
+     * important because it readily generalizes to higher-dimensional problems.
+     * Newton-like methods with higher orders of convergence are the
+     * Householder's methods.
+     *
      * @param func the function to be evaluated.
      * @param x1 the left end of search interval.
      * @param x2 the right end of search interval.

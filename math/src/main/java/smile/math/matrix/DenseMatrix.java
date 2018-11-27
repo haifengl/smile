@@ -24,7 +24,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, DenseMatrix> {
-    /** Returns the array of storing the matrix. */
+    /** Returns the array that backs this matrix (optional operation). */
     double[] data();
 
     /**
@@ -735,7 +735,7 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
      * Return the two-dimensional array of matrix.
      * @return the two-dimensional array of matrix.
      */
-    default double[][] array() {
+    default double[][] toArray() {
         int m = nrows();
         int n = ncols();
 

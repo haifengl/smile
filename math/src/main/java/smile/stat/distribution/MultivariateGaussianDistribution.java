@@ -191,7 +191,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
 
     @Override
     public double[][] cov() {
-        return sigma.array();
+        return sigma.toArray();
     }
 
     /**

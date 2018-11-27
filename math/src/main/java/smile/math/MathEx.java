@@ -1736,7 +1736,7 @@ public class MathEx {
     public static void pdist(double[][] x, double[][] dist, boolean squared, boolean half) {
         int n = x.length;
 
-        if (n < 100) {
+        if (n < 1000) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < i; j++) {
                     double d = distance(x[i], x[j]);
@@ -2967,24 +2967,6 @@ public class MathEx {
     /** Tests if a floating number is zero with given epsilon. */
     public static boolean isZero(double x, double epsilon) {
         return Math.abs(x) < epsilon;
-    }
-
-    /**
-     * Check if x element-wisely equals y.
-     */
-    public static <T extends Comparable<? super T>>  boolean equals(T[][] x, T[][] y) {
-        if (x.length != y.length || x[0].length != y[0].length) {
-            throw new IllegalArgumentException(String.format("Matrices have different rows: %d x %d vs %d x %d", x.length, x[0].length, y.length, y[0].length));
-        }
-
-        for (int i = 0; i < x.length; i++) {
-            for (int j = 0; j < x[i].length; j++) {
-                if (x[i][j].compareTo(y[i][j]) != 0) {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 
     /**
