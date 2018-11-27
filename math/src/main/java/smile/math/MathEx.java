@@ -2844,135 +2844,6 @@ public class MathEx {
     }
 
     /**
-     * Returns the fitted linear function value y = intercept + slope * log(x).
-     */
-    private static double smoothed(int x, double slope, double intercept) {
-        return Math.exp(intercept + slope * Math.log(x));
-    }
-
-    /**
-     * Returns the index of given frequency.
-     * @param r the frequency list.
-     * @param f the given frequency.
-     * @return the index of given frequency or -1 if it doesn't exist in the list.
-     */
-    private static int row(int[] r, int f) {
-        int i = 0;
-
-        while (i < r.length && r[i] < f) {
-            ++i;
-        }
-
-        return ((i < r.length && r[i] == f) ? i : -1);
-    }
-
-    /**
-     * Takes a set of (frequency, frequency-of-frequency) pairs, and applies
-     * the "Simple Good-Turing" technique for estimating the probabilities
-     * corresponding to the observed frequencies, and P<sub>0</sub>, the joint
-     * probability of all unobserved species.
-     * @param r the frequency in ascending order.
-     * @param Nr the frequency of frequencies.
-     * @param p on output, it is the estimated probabilities.
-     * @return P<sub>0</sub> for all unobserved species.
-     */
-    public static double GoodTuring(int[] r, int[] Nr, double[] p) {
-        final double CONFID_FACTOR = 1.96;
-
-        if (r.length != Nr.length) {
-            throw new IllegalArgumentException("The sizes of r and Nr are not same.");
-        }
-
-        int len = r.length;
-        double[] logR = new double[len];
-        double[] logZ = new double[len];
-        double[] Z = new double[len];
-
-        int N = 0;
-        for (int j = 0; j < len; ++j) {
-            N += r[j] * Nr[j];
-        }
-
-        int n1 = (r[0] != 1) ? 0 : Nr[0];
-        double p0 = n1 / (double) N;
-
-        for (int j = 0; j < len; ++j) {
-            int q = j == 0     ?  0           : r[j - 1];
-            int t = j == len - 1 ? 2 * r[j] - q : r[j + 1];
-            Z[j] = 2.0 * Nr[j] / (t - q);
-            logR[j] = Math.log(r[j]);
-            logZ[j] = Math.log(Z[j]);
-        }
-
-        // Simple linear regression.
-        double XYs = 0.0, Xsquares = 0.0, meanX = 0.0, meanY = 0.0;
-        for (int i = 0; i < len; ++i) {
-            meanX += logR[i];
-            meanY += logZ[i];
-        }
-        meanX /= len;
-        meanY /= len;
-        for (int i = 0; i < len; ++i) {
-            XYs += (logR[i] - meanX) * (logZ[i] - meanY);
-            Xsquares += sqr(logR[i] - meanX);
-        }
-
-        double slope = XYs / Xsquares;
-        double intercept = meanY - slope * meanX;
-
-        boolean indiffValsSeen = false;
-        for (int j = 0; j < len; ++j) {
-            double y = (r[j] + 1) * smoothed(r[j] + 1, slope, intercept) / smoothed(r[j], slope, intercept);
-
-            if (row(r, r[j] + 1) < 0) {
-                indiffValsSeen = true;
-            }
-
-            if (!indiffValsSeen) {
-                int n = Nr[row(r, r[j] + 1)];
-                double x = (r[j] + 1) * n / (double) Nr[j];
-                if (Math.abs(x - y) <= CONFID_FACTOR * Math.sqrt(sqr(r[j] + 1.0) * n / sqr(Nr[j]) * (1 + n / (double) Nr[j]))) {
-                    indiffValsSeen = true;
-                } else {
-                    p[j] = x;
-                }
-            }
-
-            if (indiffValsSeen) {
-                p[j] = y;
-            }
-        }
-
-        double Nprime = 0.0;
-        for (int j = 0; j < len; ++j) {
-            Nprime += Nr[j] * p[j];
-        }
-
-        for (int j = 0; j < len; ++j) {
-            p[j] = (1 - p0) * p[j] / Nprime;
-        }
-
-        return p0;
-    }
-
-    /**
-     * Check if x element-wisely equals y.
-     */
-    public static boolean equals(int[] x, int[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-        }
-
-        for (int i = 0; i < x.length; i++) {
-            if (x[i] != y[i]) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Check if x element-wisely equals y with default epsilon 1E-7.
      */
     public static boolean equals(float[] x, float[] y) {
@@ -3021,41 +2892,6 @@ public class MathEx {
             }
         }
 
-        return true;
-    }
-
-    /**
-     * Check if x element-wisely equals y.
-     */
-    public static <T extends Comparable<? super T>>  boolean equals(T[] x, T[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-        }
-
-        for (int i = 0; i < x.length; i++) {
-            if (x[i].compareTo(y[i]) != 0) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Check if x element-wisely equals y.
-     */
-    public static boolean equals(int[][] x, int[][] y) {
-        if (x.length != y.length || x[0].length != y[0].length) {
-            throw new IllegalArgumentException(String.format("Matrices have different rows: %d x %d vs %d x %d", x.length, x[0].length, y.length, y[0].length));
-        }
-
-        for (int i = 0; i < x.length; i++) {
-            for (int j = 0; j < x[i].length; j++) {
-                if (x[i][j] != y[i][j]) {
-                    return false;
-                }
-            }
-        }
         return true;
     }
 
@@ -3358,7 +3194,7 @@ public class MathEx {
     /**
      * Element-wise sum of two arrays y = x + y.
      */
-    public static void plus(double[] y, double[] x) {
+    public static void add(double[] y, double[] x) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
         }
@@ -3373,7 +3209,7 @@ public class MathEx {
      * @param y minuend matrix
      * @param x subtrahend matrix
      */
-    public static void minus(double[] y, double[] x) {
+    public static void sub(double[] y, double[] x) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
         }

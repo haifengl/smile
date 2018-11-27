@@ -22,6 +22,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.math.MathEx;
+
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 
 /**
@@ -63,16 +66,16 @@ public class ShellSortTest {
 
         int[] data1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         ShellSort.sort(data1);
-        assertTrue(MathEx.equals(data, data1));
+        assertTrue(Arrays.equals(data, data1));
         int[] data2 = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
         ShellSort.sort(data2);
-        assertTrue(MathEx.equals(data, data2));
+        assertTrue(Arrays.equals(data, data2));
         int[] data3 = {0, 1, 2, 3, 5, 4, 6, 7, 8, 9};
         ShellSort.sort(data3);
-        assertTrue(MathEx.equals(data, data3));
+        assertTrue(Arrays.equals(data, data3));
         int[] data4 = {4, 1, 2, 3, 0, 5, 6, 7, 8, 9};
         ShellSort.sort(data4);
-        assertTrue(MathEx.equals(data, data4));
+        assertTrue(Arrays.equals(data, data4));
     }
 
     /**
@@ -129,16 +132,16 @@ public class ShellSortTest {
 
         Integer[] data1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         ShellSort.sort(data1);
-        assertTrue(MathEx.equals(data, data1));
+        assertTrue(Arrays.equals(data, data1));
         Integer[] data2 = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
         ShellSort.sort(data2);
-        assertTrue(MathEx.equals(data, data2));
+        assertTrue(Arrays.equals(data, data2));
         Integer[] data3 = {0, 1, 2, 3, 5, 4, 6, 7, 8, 9};
         ShellSort.sort(data3);
-        assertTrue(MathEx.equals(data, data3));
+        assertTrue(Arrays.equals(data, data3));
         Integer[] data4 = {4, 1, 2, 3, 0, 5, 6, 7, 8, 9};
         ShellSort.sort(data4);
-        assertTrue(MathEx.equals(data, data4));
+        assertTrue(Arrays.equals(data, data4));
     }
 
     /**

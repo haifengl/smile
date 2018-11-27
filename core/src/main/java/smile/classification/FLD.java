@@ -344,7 +344,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
 
         double[] y = new double[scaling.ncols()];
         scaling.atx(x, y);
-        MathEx.minus(y, smean);
+        MathEx.sub(y, smean);
         return y;
     }
 
@@ -358,7 +358,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             }
 
             scaling.atx(x[i], y[i]);
-            MathEx.minus(y[i], smean);
+            MathEx.sub(y[i], smean);
         }
         
         return y;

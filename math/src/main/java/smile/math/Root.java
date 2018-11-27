@@ -114,7 +114,7 @@ public class Root {
             }
 
             if (Math.abs(xm) <= tol || fb == 0.0) {
-                logger.info(String.format("Brent finds the root after %3d iterations: %.5g, error = %.5g", iter, b, xm));
+                logger.info(String.format("Brent finds the root after %d iterations: %.5g, error = %.5g", iter, b, xm));
                 return b;
             }
 
@@ -159,7 +159,7 @@ public class Root {
             fb = func.apply(b);
         }
 
-        logger.error("Brent's method exceeded the maximum number of iterations.");
+        logger.error("Brent exceeded the maximum number of iterations.");
         return b;
     }
 
@@ -213,7 +213,7 @@ public class Root {
                 dx = 0.5 * (xh - xl);
                 rts = xl + dx;
                 if (xl == rts) {
-                    logger.info(String.format("Newton-Raphson finds the root after %3d iterations: %.5g, error = %.5g", iter, rts, dx));
+                    logger.info(String.format("Newton-Raphson finds the root after %d iterations: %.5g, error = %.5g", iter, rts, dx));
                     return rts;
                 }
             } else {
@@ -222,7 +222,7 @@ public class Root {
                 double temp = rts;
                 rts -= dx;
                 if (temp == rts) {
-                    logger.info(String.format("Newton-Raphson finds the root after %3d iterations: %.5g, error = %.5g", iter, rts, dx));
+                    logger.info(String.format("Newton-Raphson finds the root after %d iterations: %.5g, error = %.5g", iter, rts, dx));
                     return rts;
                 }
             }
@@ -232,7 +232,7 @@ public class Root {
             }
 
             if (Math.abs(dx) < tol) {
-                logger.info(String.format("Newton-Raphson finds the root after %3d iterations: %.5g, error = %.5g", iter, rts, dx));
+                logger.info(String.format("Newton-Raphson finds the root after %d iterations: %.5g, error = %.5g", iter, rts, dx));
                 return rts;
             }
 
@@ -245,7 +245,7 @@ public class Root {
             }
         }
 
-        logger.error("Newton-Raphson method exceeded the maximum number of iterations.");
+        logger.error("Newton-Raphson exceeded the maximum number of iterations.");
         return rts;
     }
 }

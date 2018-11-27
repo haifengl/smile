@@ -295,7 +295,7 @@ public class PCA implements Projection<double[]>, Serializable {
 
         double[] y = new double[p];
         projection.ax(x, y);
-        MathEx.minus(y, pmu);
+        MathEx.sub(y, pmu);
         return y;
     }
 
@@ -308,7 +308,7 @@ public class PCA implements Projection<double[]>, Serializable {
         double[][] y = new double[x.length][p];
         for (int i = 0; i < x.length; i++) {
             projection.ax(x[i], y[i]);
-            MathEx.minus(y[i], pmu);
+            MathEx.sub(y[i], pmu);
         }
         return y;
     }

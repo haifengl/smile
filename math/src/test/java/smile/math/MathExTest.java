@@ -673,26 +673,6 @@ public class MathExTest {
     }
 
     /**
-     * Test of GoodTuring method, of class Math.
-     */
-    @Test
-    public void testGoodTuring() {
-        System.out.println("GoodTuring");
-        int[] r = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12};
-        int[] Nr = {120, 40, 24, 13, 15, 5, 11, 2, 2, 1, 3};
-        double p0 = 0.2047782;
-        double[] p = {
-            0.0009267, 0.0024393, 0.0040945, 0.0058063, 0.0075464,
-            0.0093026, 0.0110689, 0.0128418, 0.0146194, 0.0164005, 0.0199696};
-
-        double[] result = new double[r.length];
-        assertEquals(p0, MathEx.GoodTuring(r, Nr, result), 1E-7);
-        for (int i = 0; i < r.length; i++) {
-            assertEquals(p[i], result[i], 1E-7);
-        }
-    }
-
-    /**
      * Test of clone method, of class Math.
      */
     @Test
@@ -722,7 +702,7 @@ public class MathExTest {
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
         double[] y = {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300};
         double[] z = {-3.9749544, -1.6219752, 0.9094410, 0.1106760, -0.0071785};
-        MathEx.plus(x, y);
+        MathEx.add(x, y);
         assertTrue(MathEx.equals(x, z));
     }
 
@@ -731,11 +711,11 @@ public class MathExTest {
      */
     @Test
     public void testMinus_doubleArr_doubleArr() {
-        System.out.println("minus");
+        System.out.println("sub");
         double[] x = {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515};
         double[] y = {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300};
         double[] z = {-0.4186894, -0.2900074, -0.9957886, 2.0028598, 0.7778815};
-        MathEx.minus(x, y);
+        MathEx.sub(x, y);
         assertTrue(MathEx.equals(x, z));
     }
 }

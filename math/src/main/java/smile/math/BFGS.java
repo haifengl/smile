@@ -212,7 +212,7 @@ public class BFGS {
             }
 
             if (test < TOLX) {
-                logger.info(String.format("L-BFGS converges on x after %3d iterations: %.5g", iter, f));
+                logger.info(String.format("L-BFGS converges on x after %d iterations: %.5g", iter, f));
                 return f;
             }
 
@@ -228,7 +228,7 @@ public class BFGS {
             }
 
             if (test < gtol) {
-                logger.info(String.format("L-BFGS converges on gradient after %3d iterations: %.5g", iter, f));
+                logger.info(String.format("L-BFGS converges on gradient after %d iterations: %.5g", iter, f));
                 return f;
             }
 
@@ -348,7 +348,7 @@ public class BFGS {
             }
 
             if (test < TOLX) {
-                logger.info(String.format("BFGS converges on x after %3d iterations: %.5g", iter, f));
+                logger.info(String.format("BFGS converges on x after %d iterations: %.5g", iter, f));
                 return f;
             }
 
@@ -367,7 +367,7 @@ public class BFGS {
             }
 
             if (test < gtol) {
-                logger.info(String.format("BFGS converges on gradient after %3d iterations: %.5g", iter, f));
+                logger.info(String.format("BFGS converges on gradient after %d iterations: %.5g", iter, f));
                 return f;
             }
 
