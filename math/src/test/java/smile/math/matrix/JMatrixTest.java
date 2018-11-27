@@ -252,7 +252,7 @@ public class JMatrixTest {
         JMatrix a = new JMatrix(A);
         JMatrix b = new JMatrix(B);
         JMatrix c = a.add(b);
-        assertTrue(MathEx.equals(C, c.array(), 1E-7));
+        assertTrue(MathEx.equals(C, c.toArray(), 1E-7));
     }
 
     /**
@@ -279,7 +279,7 @@ public class JMatrixTest {
         JMatrix a = new JMatrix(A);
         JMatrix b = new JMatrix(B);
         JMatrix c = a.sub(b);
-        assertTrue(MathEx.equals(C, c.array(), 1E-7));
+        assertTrue(MathEx.equals(C, c.toArray(), 1E-7));
     }
 
     /**
@@ -316,11 +316,11 @@ public class JMatrixTest {
 
         JMatrix a = new JMatrix(A);
         JMatrix b = new JMatrix(B);
-        double[][] F = b.abmm(a).transpose().array();
+        double[][] F = b.abmm(a).transpose().toArray();
 
-        assertTrue(MathEx.equals(a.abmm(b).array(), C, 1E-7));
-        assertTrue(MathEx.equals(a.abtmm(b).array(), D, 1E-7));
-        assertTrue(MathEx.equals(a.atbmm(b).array(), E, 1E-7));
-        assertTrue(MathEx.equals(a.atbtmm(b).array(), F, 1E-7));
+        assertTrue(MathEx.equals(a.abmm(b).toArray(), C, 1E-7));
+        assertTrue(MathEx.equals(a.abtmm(b).toArray(), D, 1E-7));
+        assertTrue(MathEx.equals(a.atbmm(b).toArray(), E, 1E-7));
+        assertTrue(MathEx.equals(a.atbtmm(b).toArray(), F, 1E-7));
     }
 }
