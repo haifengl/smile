@@ -87,7 +87,7 @@ public class BFGSTest {
             x[j + 1 - 1] = 1.e0;
         }
 
-        double result = BFGS.getInstance().minimize(func, 5, x);
+        double result = BFGS.getDefaultInstance().minimize(func, 5, x);
         assertEquals(3.2760183604E-14, result, 1E-15);
     }
 
@@ -130,7 +130,7 @@ public class BFGSTest {
             x[j + 1 - 1] = 1.e0;
         }
 
-        double result = BFGS.getInstance().minimize(func, x);
+        double result = BFGS.getDefaultInstance().minimize(func, x);
         assertEquals(2.2388137801857536E-12, result, 1E-15);
     }
 }

@@ -70,17 +70,17 @@ lazy val nd4j = project.in(file("nd4j")).settings(commonSettings: _*).dependsOn(
 
 lazy val netlib = project.in(file("netlib")).settings(commonSettings: _*).dependsOn(math)
 
-lazy val symbolic = project.in(file("symbolic")).settings(commonSettings: _*)
-
-lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph, netlib % "test")
-
 lazy val data = project.in(file("data")).settings(commonSettings: _*).dependsOn(math)
 
 lazy val arrow = project.in(file("arrow")).settings(commonSettings: _*).dependsOn(data)
 
+lazy val io = project.in(file("io")).settings(commonSettings: _*).dependsOn(data)
+
 lazy val graph = project.in(file("graph")).settings(commonSettings: _*).dependsOn(math)
 
 lazy val interpolation = project.in(file("interpolation")).settings(commonSettings: _*).dependsOn(math)
+
+lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph, netlib % "test")
 
 lazy val nlp = project.in(file("nlp")).settings(commonSettings: _*).dependsOn(core)
 

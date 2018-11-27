@@ -84,7 +84,7 @@ public class BFGS {
     }
 
     /** Returns the instance with default settings. */
-    public static BFGS getInstance() {
+    public static BFGS getDefaultInstance() {
         return instance;
     }
 
