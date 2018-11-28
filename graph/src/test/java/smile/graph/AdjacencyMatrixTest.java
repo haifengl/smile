@@ -25,6 +25,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import smile.math.MathEx;
 
+import java.util.Arrays;
+
 /**
  *
  * @author Haifeng Li
@@ -339,7 +341,7 @@ public class AdjacencyMatrixTest {
         graph.addEdge(9, 12);
         graph.addEdge(11, 12);
 
-        assertTrue(MathEx.equals(ts, graph.sortdfs()));
+        assertTrue(Arrays.equals(ts, graph.sortdfs()));
     }
 
     /**
@@ -362,7 +364,7 @@ public class AdjacencyMatrixTest {
         graph.addEdge(5, 4);
 
         int[][] cc2 = graph.dfs();
-        assertTrue(MathEx.equals(cc, cc2));
+        assertTrue(Arrays.deepEquals(cc, cc2));
     }
 
     /**
@@ -392,7 +394,7 @@ public class AdjacencyMatrixTest {
         graph.addEdge(9, 12);
         graph.addEdge(11, 12);
 
-        assertTrue(MathEx.equals(ts, graph.sortbfs()));
+        assertTrue(Arrays.equals(ts, graph.sortbfs()));
     }
 
     /**
@@ -415,7 +417,7 @@ public class AdjacencyMatrixTest {
         graph.addEdge(5, 4);
 
         int[][] cc2 = graph.bfs();
-        assertTrue(MathEx.equals(cc, cc2));
+        assertTrue(Arrays.deepEquals(cc, cc2));
     }
 
     /**

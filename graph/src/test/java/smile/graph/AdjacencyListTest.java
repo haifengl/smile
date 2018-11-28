@@ -24,6 +24,8 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 import smile.math.MathEx;
+import smile.math.matrix.Matrix;
+import java.util.Arrays;
 
 /**
  *
@@ -339,7 +341,7 @@ public class AdjacencyListTest {
         graph.addEdge(9, 12);
         graph.addEdge(11, 12);
 
-        assertTrue(MathEx.equals(ts, graph.sortdfs()));
+        assertTrue(Arrays.equals(ts, graph.sortdfs()));
     }
 
     /**
@@ -362,16 +364,15 @@ public class AdjacencyListTest {
         graph.addEdge(5, 4);
 
         int[][] cc2 = graph.dfs();
-        assertTrue(MathEx.equals(cc, cc2));
+        assertTrue(Arrays.deepEquals(cc, cc2));
     }
 
     /**
      * Test of toSparseMatrix method, of class AdjacencyList.
      */
-    /*
     @Test
-    public void testToSparseMatrix() {
-        System.out.println("toSparseMatrix");
+    public void testToMatrix() {
+        System.out.println("toMatrix");
 
         AdjacencyList graph = new AdjacencyList(8);
         graph.addEdge(0, 2);
@@ -382,9 +383,8 @@ public class AdjacencyListTest {
         graph.addEdge(3, 5);
         graph.addEdge(5, 4);
 
-        SparseMatrix matrix = graph.toSparseMatrix();
+        Matrix matrix = graph.toMatrix();
     }
-    */
 
     /**
      * Test of bfs method, of class AdjacencyList.
@@ -413,7 +413,7 @@ public class AdjacencyListTest {
         graph.addEdge(9, 12);
         graph.addEdge(11, 12);
 
-        assertTrue(MathEx.equals(ts, graph.sortbfs()));
+        assertTrue(Arrays.equals(ts, graph.sortbfs()));
     }
 
     /**
@@ -436,7 +436,7 @@ public class AdjacencyListTest {
         graph.addEdge(5, 4);
 
         int[][] cc2 = graph.bfs();
-        assertTrue(MathEx.equals(cc, cc2));
+        assertTrue(Arrays.deepEquals(cc, cc2));
     }
 
     /**

@@ -27,5 +27,5 @@ public interface Visitor {
      * Performs some operations on the currently-visiting vertex during DFS or BFS.
      * @param vertex the index of vertex.
      */
-    public void visit(int vertex);
+    void visit(int vertex);
 }
