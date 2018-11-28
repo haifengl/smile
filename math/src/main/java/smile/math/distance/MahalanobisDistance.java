@@ -45,7 +45,7 @@ public class MahalanobisDistance implements Metric<double[]> {
 
     @Override
     public String toString() {
-        return "Mahalanobis distance";
+        return String.format("Mahalanobis Distance(%s)", sigma);
     }
 
     @Override

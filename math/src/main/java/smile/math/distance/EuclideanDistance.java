@@ -16,6 +16,8 @@
 
 package smile.math.distance;
 
+import java.util.Arrays;
+
 /**
  * Euclidean distance. Use getInstance() to get the standard unweighted
  * Euclidean distance. Or create an instance with a specified
@@ -56,9 +58,9 @@ public class EuclideanDistance implements Metric<double[]> {
     @Override
     public String toString() {
         if (weight != null)
-            return "weighted Euclidean distance";
+            return String.format("Weighted Euclidean Distance(%s)", Arrays.toString(weight));
         else
-            return "Euclidean distance";
+            return "Euclidean Distance";
     }
 
     /**

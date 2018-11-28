@@ -46,7 +46,7 @@ public class JaccardDistance<T> implements Distance<T[]> {
 
     @Override
     public String toString() {
-        return "Jaccard distance";
+        return "Jaccard Distance";
     }
 
     @Override

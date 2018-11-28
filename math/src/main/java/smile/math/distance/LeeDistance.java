@@ -44,7 +44,7 @@ public class LeeDistance implements Metric<int[]> {
 
     @Override
     public String toString() {
-        return String.format("Lee distance (q = %d)", q);
+        return String.format("Lee Distance(q = %d)", q);
     }
 
     @Override

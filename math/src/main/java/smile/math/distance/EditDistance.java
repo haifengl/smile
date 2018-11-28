@@ -16,6 +16,8 @@
 
 package smile.math.distance;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import smile.math.MathEx;
 
 /**
@@ -59,7 +61,7 @@ public class EditDistance implements Metric<String> {
     /**
      * Cost matrix. Because Java automatically initialize arrays, it
      * is very time consuming to declare this cost matrix every time
-     * before calculate edit distance. Therefore, I create this
+     * before calculate edit distance. Therefore, we create this
      * cost matrix here. Note that methods using this cost matrix
      * is not multi-thread safe.
      */
@@ -117,10 +119,19 @@ public class EditDistance implements Metric<String> {
 
     @Override
     public String toString() {
-        if (damerauDistance)
-            return "Damerau-Levenshtein distance";
-        else
-            return "Levenshtein distance";
+        if (damerauDistance) {
+            if (weight != null)
+                return String.format("Damerau-Levenshtein Distance(radius = %d, weight = %s)", r,
+                        Arrays.stream(weight).map(Arrays::toString).collect(Collectors.joining("\n  ", "[\n  ", "\n]")));
+            else
+                return "Damerau-Levenshtein Distance";
+        } else {
+            if (weight != null)
+                return String.format("Levenshtein Distance(radius = %d, weight = %s)", r,
+                        Arrays.stream(weight).map(Arrays::toString).collect(Collectors.joining("\n  ", "[\n  ", "\n]")));
+            else
+                return  "Levenshtein Distance";
+        }
     }
 
     /**

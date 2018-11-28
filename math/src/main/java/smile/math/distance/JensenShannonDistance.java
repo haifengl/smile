@@ -47,7 +47,7 @@ public class JensenShannonDistance implements Metric<double[]> {
 
     @Override
     public String toString() {
-        return "Jensen-Shannon distance";
+        return "Jensen-Shannon Distance";
     }
 
     @Override

@@ -16,6 +16,7 @@
 
 package smile.math.distance;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import smile.math.SparseArray;
 
@@ -71,7 +72,10 @@ public class SparseMinkowskiDistance implements Metric<SparseArray> {
 
     @Override
     public String toString() {
-        return String.format("Minkowski distance (p = %d)", p);
+        if (weight != null)
+            return String.format("Weighted Minkowski Distance(p = %d, weight = %s)", p, Arrays.toString(weight));
+        else
+            return String.format("Minkowski Distance(p = %d)", p);
     }
 
     @Override

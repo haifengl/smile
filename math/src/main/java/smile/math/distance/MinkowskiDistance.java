@@ -16,6 +16,8 @@
 
 package smile.math.distance;
 
+import java.util.Arrays;
+
 /**
  * Minkowski distance of order p or L<sub>p</sub>-norm, is a generalization of
  * Euclidean distance that is actually L<sub>2</sub>-norm. You may also provide
@@ -68,7 +70,10 @@ public class MinkowskiDistance implements Metric<double[]> {
 
     @Override
     public String toString() {
-        return String.format("Minkowski distance (p = %d)", p);
+        if (weight != null)
+            return String.format("Weighted Minkowski Distance(p = %d, weight = %s)", p, Arrays.toString(weight));
+        else
+            return String.format("Minkowski Distance(p = %d)", p);
     }
 
     /**

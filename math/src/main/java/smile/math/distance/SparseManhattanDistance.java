@@ -16,6 +16,7 @@
 
 package smile.math.distance;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import smile.math.SparseArray;
 
@@ -60,9 +61,9 @@ public class SparseManhattanDistance implements Metric<SparseArray> {
     @Override
     public String toString() {
         if (weight != null)
-            return "Weighted Manhattan distance";
+            return String.format("Weighted Manhattan Distance(%s)", Arrays.toString(weight));
         else
-            return "Manhattan distance";
+            return "Manhattan Distance";
     }
 
     @Override
