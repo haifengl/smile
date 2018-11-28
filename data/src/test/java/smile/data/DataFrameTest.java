@@ -154,6 +154,8 @@ public class DataFrameTest {
     @Test
     public void testGet() {
         System.out.println("get");
+        System.out.println(df.get(0));
+        System.out.println(df.get(1));
         assertEquals(38, df.get(0).getInt(0));
         assertEquals("Alex", df.get(0).getString(3));
         assertEquals(10000., df.get(0).get(4));

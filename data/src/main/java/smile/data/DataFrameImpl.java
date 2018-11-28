@@ -571,7 +571,7 @@ class DataFrameImpl implements DataFrame {
 
         @Override
         public String toString() {
-            return toString(",");
+            return schema.toString(this);
         }
     }
 }

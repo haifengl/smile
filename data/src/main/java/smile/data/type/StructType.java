@@ -87,13 +87,13 @@ public class StructType implements DataType {
     public String toString(Object o) {
         Tuple t = (Tuple) o;
         return Arrays.stream(fields)
-                .map(field -> String.format("%s: %s", field.name, field.type.toString(t.get(field.name))))
-                .collect(Collectors.joining(",\n", "{", "}"));
+                .map(field -> String.format("  %s: %s", field.name, field.type.toString(t.get(field.name))))
+                .collect(Collectors.joining(",\n", "{\n", "\n}"));
     }
 
     @Override
     public Tuple valueOf(String s) throws ParseException {
-        // strip surrounding {}
+        // strip surrounding []
         String[] elements = s.substring(1, s.length() - 1).split(",");
         final Object[] array = new Object[fields.length];
         for (String element : elements) {
@@ -131,14 +131,7 @@ public class StructType implements DataType {
     public boolean equals(Object o) {
         if (o instanceof StructType) {
             StructType t = (StructType) o;
-
-            if (fields.length == t.fields.length) {
-                for (int i = 0; i < fields.length; i++) {
-                    if (!fields[i].equals(t.fields[i]))
-                        return false;
-                }
-                return true;
-            }
+            return Arrays.equals(fields, t.fields);
         }
 
         return false;

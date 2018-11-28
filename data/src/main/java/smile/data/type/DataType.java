@@ -46,7 +46,7 @@ public interface DataType extends Serializable {
     /** Returns the string representation of a value of the type. */
     default String toString(Object o) {
         // no check the type of o.
-        return o.toString();
+        return o == null ? "null" : o.toString();
     }
 
     /** Returns true if this is a primitive data type. */
