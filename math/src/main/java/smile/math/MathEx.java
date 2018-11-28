@@ -50,18 +50,22 @@ public class MathEx {
     private static final Logger logger = LoggerFactory.getLogger(MathEx.class);
 
     /**
+     * Dynamically determines the machine parameters of the floating-point arithmetic.
+     */
+    private static final FPU fpu = new FPU();
+    /**
      * The machine precision for the double type, which is the difference between 1
      * and the smallest value greater than 1 that is representable for the double type.
      */
-    public static double EPSILON = Math.pow(2.0, -52.0);
+    public static final double EPSILON = fpu.EPSILON;
     /**
      * The base of the exponent of the double type.
      */
-    public static int RADIX = 2;
+    public static final int RADIX = fpu.RADIX;
     /**
      * The number of digits (in radix base) in the mantissa.
      */
-    public static int DIGITS = 53;
+    public static final int DIGITS = fpu.RADIX;
     /**
      * Rounding style.
      * <ul>
@@ -73,17 +77,26 @@ public class MathEx {
      * <li> 5 if floating-point addition rounds in the IEEEE style, and there is partial underflow
      * </ul>
      */
-    public static int ROUND_STYLE = 2;
+    public static final int ROUND_STYLE = fpu.ROUND_STYLE;
     /**
      * The largest negative integer such that 1.0 + RADIX<sup>MACHEP</sup> &ne; 1.0,
      * except that machep is bounded below by -(DIGITS+3)
      */
-    public static int MACHEP = -52;
+    public static final int MACHEP = fpu.MACHEP;
     /**
      * The largest negative integer such that 1.0 - RADIX<sup>NEGEP</sup> &ne; 1.0,
      * except that negeps is bounded below by -(DIGITS+3)
      */
-    public static int NEGEP = -53;
+    public static final int NEGEP = fpu.NEGEP;
+    /**
+     * Root finding algorithms.
+     */
+    public static final Root root = new Root();
+    /**
+     * The Broyden–Fletcher–Goldfarb–Shanno (BFGS) algorithm
+     * for unconstrained nonlinear optimization problems.
+     */
+    public static final BFGS BFGS = new BFGS();
     /**
      * True when we create the first random number generator.
      */
@@ -121,82 +134,92 @@ public class MathEx {
     /**
      * Dynamically determines the machine parameters of the floating-point arithmetic.
      */
-    static {
-        double beta, betain, betah, a, b, ZERO, ONE, TWO, temp, tempa, temp1;
-        int i, itemp;
+    private static class FPU {
+        double EPSILON = Math.pow(2.0, -52.0);
+        int RADIX = 2;
+        int DIGITS = 53;
+        int ROUND_STYLE = 2;
+        int MACHEP = -52;
+        int NEGEP = -53;
 
-        ONE = (double) 1;
-        TWO = ONE + ONE;
-        ZERO = ONE - ONE;
+        FPU() {
+            double beta, betain, betah, a, b, ZERO, ONE, TWO, temp, tempa, temp1;
+            int i, itemp;
 
-        a = ONE;
-        temp1 = ONE;
-        while (temp1 - ONE == ZERO) {
-            a = a + a;
-            temp = a + ONE;
-            temp1 = temp - a;
-        }
-        b = ONE;
-        itemp = 0;
-        while (itemp == 0) {
-            b = b + b;
-            temp = a + b;
-            itemp = (int) (temp - a);
-        }
-        RADIX = itemp;
-        beta = (double) RADIX;
+            ONE = (double) 1;
+            TWO = ONE + ONE;
+            ZERO = ONE - ONE;
 
-        DIGITS = 0;
-        b = ONE;
-        temp1 = ONE;
-        while (temp1 - ONE == ZERO) {
-            DIGITS = DIGITS + 1;
-            b = b * beta;
-            temp = b + ONE;
-            temp1 = temp - b;
-        }
-        ROUND_STYLE = 0;
-        betah = beta / TWO;
-        temp = a + betah;
-        if (temp - a != ZERO) {
-            ROUND_STYLE = 1;
-        }
-        tempa = a + beta;
-        temp = tempa + betah;
-        if ((ROUND_STYLE == 0) && (temp - tempa != ZERO)) {
-            ROUND_STYLE = 2;
-        }
+            a = ONE;
+            temp1 = ONE;
+            while (temp1 - ONE == ZERO) {
+                a = a + a;
+                temp = a + ONE;
+                temp1 = temp - a;
+            }
+            b = ONE;
+            itemp = 0;
+            while (itemp == 0) {
+                b = b + b;
+                temp = a + b;
+                itemp = (int) (temp - a);
+            }
+            RADIX = itemp;
+            beta = (double) RADIX;
 
-        NEGEP = DIGITS + 3;
-        betain = ONE / beta;
-        a = ONE;
-        for (i = 0; i < NEGEP; i++) {
-            a = a * betain;
-        }
-        b = a;
-        temp = ONE - a;
-        while (temp - ONE == ZERO) {
-            a = a * beta;
-            NEGEP = NEGEP - 1;
+            DIGITS = 0;
+            b = ONE;
+            temp1 = ONE;
+            while (temp1 - ONE == ZERO) {
+                DIGITS = DIGITS + 1;
+                b = b * beta;
+                temp = b + ONE;
+                temp1 = temp - b;
+            }
+            ROUND_STYLE = 0;
+            betah = beta / TWO;
+            temp = a + betah;
+            if (temp - a != ZERO) {
+                ROUND_STYLE = 1;
+            }
+            tempa = a + beta;
+            temp = tempa + betah;
+            if ((ROUND_STYLE == 0) && (temp - tempa != ZERO)) {
+                ROUND_STYLE = 2;
+            }
+
+            NEGEP = DIGITS + 3;
+            betain = ONE / beta;
+            a = ONE;
+            for (i = 0; i < NEGEP; i++) {
+                a = a * betain;
+            }
+            b = a;
             temp = ONE - a;
-        }
-        NEGEP = -(NEGEP);
+            while (temp - ONE == ZERO) {
+                a = a * beta;
+                NEGEP = NEGEP - 1;
+                temp = ONE - a;
+            }
+            NEGEP = -(NEGEP);
 
-        MACHEP = -(DIGITS) - 3;
-        a = b;
-        temp = ONE + a;
-        while (temp - ONE == ZERO) {
-            a = a * beta;
-            MACHEP = MACHEP + 1;
+            MACHEP = -(DIGITS) - 3;
+            a = b;
             temp = ONE + a;
+            while (temp - ONE == ZERO) {
+                a = a * beta;
+                MACHEP = MACHEP + 1;
+                temp = ONE + a;
+            }
+            EPSILON = a;
         }
-        EPSILON = a;
     }
     
     /**
      * Private constructor.
      */
     private MathEx() {
+
     }
 
     /**

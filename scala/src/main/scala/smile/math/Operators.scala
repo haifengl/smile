@@ -41,9 +41,6 @@ trait Operators {
   implicit def matrix2MatrixExpression(x: DenseMatrix) = MatrixLift(x)
   implicit def matrixExpression2Array(exp: MatrixExpression) = exp.toMatrix
 
-  val root = Root.getDefaultInstance
-  val bfgs = BFGS.getDefaultInstance
-
   def abs(x: VectorExpression) = AbsVector(x)
   def acos(x: VectorExpression) = AcosVector(x)
   def asin(x: VectorExpression) = AsinVector(x)
