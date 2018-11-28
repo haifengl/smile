@@ -155,4 +155,9 @@ public class RBFInterpolation {
 
         return normalized ? sumw / sum : sumw;
     }
+
+    @Override
+    public String toString() {
+        return String.format("RBF Interpolation(%s)", rbf);
+    }
 }

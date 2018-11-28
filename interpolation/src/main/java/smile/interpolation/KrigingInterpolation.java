@@ -165,4 +165,9 @@ public class KrigingInterpolation {
         }
         return Math.sqrt(d);
     }
+
+    @Override
+    public String toString() {
+        return String.format("Kriging Interpolation(%s)", variogram);
+    }
 }

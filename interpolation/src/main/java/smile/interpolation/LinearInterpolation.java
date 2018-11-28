@@ -39,5 +39,10 @@ public class LinearInterpolation extends AbstractInterpolation {
             return yy[j] + ((x - xx[j]) / (xx[j + 1] - xx[j])) * (yy[j + 1] - yy[j]);
         }
     }
+
+    @Override
+    public String toString() {
+        return "Linear Interpolation";
+    }
 }
 

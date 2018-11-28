@@ -50,4 +50,9 @@ public class BilinearInterpolation implements Interpolation2D {
 
         return yy;
     }
-};
+
+    @Override
+    public String toString() {
+        return "BiLinear Interpolation";
+    }
+}

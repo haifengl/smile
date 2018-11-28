@@ -102,6 +102,6 @@ public class PowerVariogram implements Variogram {
 
     @Override
     public String toString() {
-        return String.format("Power Variogram (range = %.4f, sill = %.4f, nugget effect = %.4f)", alpha, beta, nugget);
+        return String.format("Power Variogram(range = %.4f, sill = %.4f, nugget effect = %.4f)", alpha, beta, nugget);
     }
 }

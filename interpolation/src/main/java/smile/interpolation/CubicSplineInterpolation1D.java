@@ -90,5 +90,10 @@ public class CubicSplineInterpolation1D extends AbstractInterpolation {
             y2[k] = y2[k] * y2[k + 1] + u[k];
         }
     }
+
+    @Override
+    public String toString() {
+        return "Cubic Spline Interpolation";
+    }
 }
 
