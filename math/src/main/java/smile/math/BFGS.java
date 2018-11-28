@@ -64,9 +64,6 @@ import java.util.Arrays;
 public class BFGS {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BFGS.class);
 
-    /** The instance with default settings. */
-    private static BFGS instance = new BFGS();
-
     /**
      * The desired convergence tolerance.
      */
@@ -80,38 +77,25 @@ public class BFGS {
      * Constructor with gtol = 1E-5 and maxIter = 500.
      */
     public BFGS() {
-
-    }
-
-    /** Returns the instance with default settings. */
-    public static BFGS getDefaultInstance() {
-        return instance;
+        this(1E-5, 500);
     }
 
     /**
-     * Sets the convergence requirement on zeroing the gradient.
-     * @return return this object.
+     * Constructor.
+     * @param gtol the convergence requirement on zeroing the gradient.
+     * @param maxIter the maximum number of allowed iterations.
      */
-    public BFGS setGradientTolerance(double gtol) {
+    public BFGS(double gtol, int maxIter) {
         if (gtol <= 0.0) {
             throw new IllegalArgumentException("Invalid gradient tolerance: " + gtol);
         }
 
-        this.gtol = gtol;
-        return this;
-    }
-
-    /**
-     * Sets the maximum number of allowed iterations.
-     * @return return this object.
-     */
-    public BFGS setMaxIter(int maxIter) {
         if (maxIter <= 0) {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
+        this.gtol = gtol;
         this.maxIter = maxIter;
-        return this;
     }
 
     /**

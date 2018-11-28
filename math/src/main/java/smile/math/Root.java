@@ -23,9 +23,6 @@ package smile.math;
 public class Root {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Root.class);
 
-    /** The instance with default settings. */
-    private static Root instance = new Root();
-
     /**
      * The accuracy tolerance.
      */
@@ -39,38 +36,25 @@ public class Root {
      * Constructor with tol = 1E-7 and maxIter = 500.
      */
     public Root() {
-
-    }
-
-    /** Returns the instance with default settings. */
-    public static Root getDefaultInstance() {
-        return instance;
+        this(1E-7, 500);
     }
 
     /**
-     * Sets the accuracy tolerance.
-     * @return return this object.
+     * Constructor.
+     * @param tol the accuracy tolerance.
+     * @param maxIter the maximum number of allowed iterations.
      */
-    public Root setTolerance(double tol) {
+    public Root(double tol, int maxIter) {
         if (tol <= 0.0) {
             throw new IllegalArgumentException("Invalid tolerance: " + tol);
         }
 
-        this.tol = tol;
-        return this;
-    }
-
-    /**
-     * Sets the maximum number of allowed iterations.
-     * @return return this object.
-     */
-    public Root setMaxIter(int maxIter) {
         if (maxIter <= 0) {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
+        this.tol = tol;
         this.maxIter = maxIter;
-        return this;
     }
 
     /**
