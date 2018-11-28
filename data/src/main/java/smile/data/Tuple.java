@@ -236,23 +236,4 @@ public interface Tuple extends Serializable {
         }
         return false;
     }
-
-    /**
-     * Returns the string representation of the tuple.
-     * @param delimiter field delimiter.
-     */
-    default String toString(String delimiter) {
-        StringBuilder sb = new StringBuilder();
-
-        String[] fields = new String[size()];
-        for (int i = 0; i < fields.length; i++) {
-            fields[i] = get(i).toString();
-        }
-
-        sb.append("(");
-        sb.append(String.join(delimiter, fields));
-        sb.append(")");
-
-        return sb.toString();
-    }
 }
