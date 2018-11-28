@@ -15,6 +15,8 @@
  *******************************************************************************/
 package smile.interpolation;
 
+import java.io.Serializable;
+
 /**
  * In numerical analysis, interpolation is a method of constructing new data
  * points within the range of a discrete set of known data points.
@@ -26,10 +28,10 @@ package smile.interpolation;
  *
  * @author Haifeng Li
  */
-public interface Interpolation {
+public interface Interpolation extends Serializable {
 
     /**
      * Given a value x, return an interploated value.
      */
-    public double interpolate(double x);
+    double interpolate(double x);
 }

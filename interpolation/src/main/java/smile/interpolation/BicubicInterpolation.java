@@ -229,4 +229,9 @@ public class BicubicInterpolation implements Interpolation2D {
 
         return bcuint(y, y1, y2, y12, x1l, x1u, x2l, x2u, x1p, x2p);
     }
+
+    @Override
+    public String toString() {
+        return "BiCubic Interpolation";
+    }
 }

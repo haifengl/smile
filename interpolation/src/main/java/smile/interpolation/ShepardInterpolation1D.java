@@ -75,4 +75,9 @@ public class ShepardInterpolation1D implements Interpolation {
 
         return sum / weight;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Shepard Interpolation(p = %.4f)", -p);
+    }
 }

@@ -79,6 +79,6 @@ public class ExponentialVariogram implements Variogram {
 
     @Override
     public String toString() {
-        return String.format("Exponential Variogram (range = %.4f, sill = %.4f, nugget effect = %.4f)", a, b, c);
+        return String.format("Exponential Variogram(range = %.4f, sill = %.4f, nugget effect = %.4f)", a, b, c);
     }
 }

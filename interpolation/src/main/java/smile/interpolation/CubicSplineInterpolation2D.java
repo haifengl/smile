@@ -55,4 +55,9 @@ public class CubicSplineInterpolation2D implements Interpolation2D {
 
         return scol.interpolate(x1p);
     }
+
+    @Override
+    public String toString() {
+        return "Cubic Spline Interpolation";
+    }
 }

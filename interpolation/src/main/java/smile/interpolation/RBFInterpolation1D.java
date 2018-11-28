@@ -149,4 +149,9 @@ public class RBFInterpolation1D implements Interpolation {
 
         return normalized ? sumw / sum : sumw;
     }
+
+    @Override
+    public String toString() {
+        return String.format("RBF Interpolation(%s)", rbf);
+    }
 }

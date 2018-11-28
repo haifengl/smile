@@ -254,4 +254,9 @@ public class LaplaceInterpolation {
         }
         return Math.sqrt(ans);
     }
+
+    @Override
+    public String toString() {
+        return "Laplace Interpolation";
+    }
 }

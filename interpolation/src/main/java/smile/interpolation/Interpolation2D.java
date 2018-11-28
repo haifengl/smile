@@ -15,15 +15,17 @@
  *******************************************************************************/
 package smile.interpolation;
 
+import java.io.Serializable;
+
 /**
  * Interpolation of 2-dimensional data.
  *
  * @author Haifeng Li
  */
-public interface Interpolation2D {
+public interface Interpolation2D extends Serializable {
 
     /**
      * Interpolate the data at a given 2-dimensional point.
      */
-    public double interpolate(double x1, double x2);
+    double interpolate(double x1, double x2);
 }

@@ -87,6 +87,6 @@ public class SphericalVariogram implements Variogram {
 
     @Override
     public String toString() {
-        return String.format("Spherical Variogram (range = %.4f, sill = %.4f, nugget effect = %.4f)", a, b, c);
+        return String.format("Spherical Variogram(range = %.4f, sill = %.4f, nugget effect = %.4f)", a, b, c);
     }
 }

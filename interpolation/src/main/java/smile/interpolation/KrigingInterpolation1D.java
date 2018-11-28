@@ -104,4 +104,9 @@ public class KrigingInterpolation1D implements Interpolation {
     private double variogram(double r) {
         return alpha * Math.pow(r, beta);
     }
+
+    @Override
+    public String toString() {
+        return "Kriging Interpolation";
+    }
 }
