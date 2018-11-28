@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 /**
  * Sparse array of double values.
@@ -69,7 +70,21 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
     public SparseArray() {
         this(10);
     }
-    
+
+    /**
+     * Constructor.
+     */
+    public SparseArray(List<Entry> entries) {
+        this.array = entries;
+    }
+
+    /**
+     * Constructor.
+     */
+    public SparseArray(Stream<Entry> stream) {
+        this.array = stream.collect(Collectors.toList());
+    }
+
     /**
      * Constructor.
      * @param initialCapacity the number of rows in the matrix.

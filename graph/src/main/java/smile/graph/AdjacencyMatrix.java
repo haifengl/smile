@@ -20,9 +20,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
-
 import smile.sort.PriorityQueue;
 import smile.math.MathEx;
+import smile.math.matrix.Matrix;
 
 /**
  * An adjacency matrix representation of a graph. Only simple graph is supported.
@@ -653,5 +653,10 @@ public class AdjacencyMatrix implements Graph {
         }
 
         return maxflow;
+    }
+
+    @Override
+    public Matrix toMatrix() {
+        return Matrix.of(graph);
     }
 }
