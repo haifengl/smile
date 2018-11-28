@@ -39,7 +39,7 @@ public class HammingDistance<T> implements Metric<T[]> {
 
     @Override
     public String toString() {
-        return "Hamming distance";
+        return "Hamming Distance";
     }
 
     /**

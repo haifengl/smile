@@ -16,6 +16,8 @@
 
 package smile.math.distance;
 
+import java.util.Arrays;
+
 /**
  * Manhattan distance, also known as L<sub>1</sub> distance or L<sub>1</sub>
  * norm, is the sum of the (absolute) differences of their coordinates. Use
@@ -57,9 +59,9 @@ public class ManhattanDistance implements Metric<double[]> {
     @Override
     public String toString() {
         if (weight != null)
-            return "Weighted Manhattan distance";
+            return String.format("Weighted Manhattan Distance(%s)", Arrays.toString(weight));
         else
-            return "Manhattan distance";
+            return "Manhattan Distance";
     }
 
     /**

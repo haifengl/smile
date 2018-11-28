@@ -37,7 +37,7 @@ public class SparseChebyshevDistance implements Metric<SparseArray> {
 
     @Override
     public String toString() {
-        return "Chebyshev distance";
+        return "Chebyshev Distance";
     }
 
     @Override

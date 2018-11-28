@@ -34,7 +34,7 @@ public class ChebyshevDistance implements Metric<double[]> {
 
     @Override
     public String toString() {
-        return "Chebyshev distance";
+        return "Chebyshev Distance";
     }
 
     /**
