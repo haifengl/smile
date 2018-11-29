@@ -117,23 +117,23 @@ public interface DataType extends Serializable {
             case "long": return DataTypes.LongType;
             case "float": return DataTypes.FloatType;
             case "double": return DataTypes.DoubleType;
-            case "decimal": return DataTypes.DecimalType;
-            case "string": return DataTypes.StringType;
-            case "date": return DataTypes.DateType;
-            case "datetime": return DataTypes.DateTimeType;
-            case "time": return DataTypes.TimeType;
+            case "Decimal": return DataTypes.DecimalType;
+            case "String": return DataTypes.StringType;
+            case "Date": return DataTypes.DateType;
+            case "DateTime": return DataTypes.DateTimeType;
+            case "Time": return DataTypes.TimeType;
             default:
-                if (s.startsWith("date[") && s.endsWith("]"))
+                if (s.startsWith("Date[") && s.endsWith("]"))
                     return DataTypes.date(s.substring(5, s.length() - 1));
-                else if (s.startsWith("datetime[") && s.endsWith("]"))
+                else if (s.startsWith("DateTime[") && s.endsWith("]"))
                     return DataTypes.datetime(s.substring(9, s.length() - 1));
-                else if (s.startsWith("time[") && s.endsWith("]"))
+                else if (s.startsWith("Time[") && s.endsWith("]"))
                     return DataTypes.datetime(s.substring(5, s.length() - 1));
-                else if (s.startsWith("object[") && s.endsWith("]"))
+                else if (s.startsWith("Object[") && s.endsWith("]"))
                     return DataTypes.object(Class.forName(s.substring(7, s.length() - 1)));
-                else if (s.startsWith("array[") && s.endsWith("]"))
+                else if (s.startsWith("Array[") && s.endsWith("]"))
                     return DataTypes.array(DataType.of(s.substring(6, s.length() - 1).trim()));
-                else if (s.startsWith("struct[") && s.endsWith("]")) {
+                else if (s.startsWith("Struct[") && s.endsWith("]")) {
                     String[] elements = s.substring(7, s.length() - 1).split(",");
                     StructField[] fields = new StructField[elements.length];
                     for (int i = 0; i < fields.length; i++) {
@@ -164,6 +164,22 @@ public interface DataType extends Serializable {
             return DataTypes.ByteType;
         else if (clazz == char.class)
             return DataTypes.CharType;
+        else if (clazz == Integer.class)
+            return DataTypes.IntegerObjectType;
+        else if (clazz == Double.class)
+            return DataTypes.DoubleObjectType;
+        else if (clazz == Long.class)
+            return DataTypes.LongObjectType;
+        else if (clazz == Float.class)
+            return DataTypes.FloatObjectType;
+        else if (clazz == Boolean.class)
+            return DataTypes.BooleanObjectType;
+        else if (clazz == Short.class)
+            return DataTypes.ShortObjectType;
+        else if (clazz == Byte.class)
+            return DataTypes.ByteObjectType;
+        else if (clazz == Character.class)
+            return DataTypes.CharObjectType;
         else if (clazz == String.class)
             return DataTypes.StringType;
         else if (clazz == BigDecimal.class)
@@ -178,6 +194,55 @@ public interface DataType extends Serializable {
             return DataTypes.array(DataType.of(clazz.getComponentType()));
         else
             return DataTypes.object(clazz);
+    }
+
+    /** Returns the DataType of a JDBC type. */
+    static DataType of(java.sql.JDBCType type, boolean nullable) {
+        switch (type) {
+            case BOOLEAN:
+            case BIT:
+                return nullable ? DataTypes.BooleanObjectType : DataTypes.BooleanType;
+            case TINYINT:
+                return nullable ? DataTypes.ByteObjectType : DataTypes.ByteType;
+            case SMALLINT:
+                return nullable ? DataTypes.ShortObjectType : DataTypes.ShortType;
+            case INTEGER:
+                return nullable ? DataTypes.IntegerObjectType : DataTypes.IntegerType;
+            case BIGINT:
+                return nullable ? DataTypes.LongObjectType : DataTypes.LongType;
+            case NUMERIC:
+                // Numeric should be like Decimal.
+                // But SQLite treats Numeric very differently.
+                return nullable ? DataTypes.DoubleObjectType : DataTypes.DoubleType;
+            case DECIMAL:
+                return DataTypes.DecimalType;
+            case REAL:
+            case FLOAT:
+                return nullable ? DataTypes.FloatObjectType : DataTypes.FloatType;
+            case DOUBLE:
+                return nullable ? DataTypes.DoubleObjectType : DataTypes.DoubleType;
+            case CHAR:
+            case NCHAR:
+            case VARCHAR:
+            case NVARCHAR:
+            case LONGVARCHAR:
+            case LONGNVARCHAR:
+            case CLOB:
+                return DataTypes.StringType;
+            case DATE:
+                return DataTypes.DateType;
+            case TIME:
+                return DataTypes.TimeType;
+            case TIMESTAMP:
+                return DataTypes.DateTimeType;
+            case BINARY:
+            case VARBINARY:
+            case LONGVARBINARY:
+            case BLOB:
+                return DataTypes.ByteArrayType;
+            default:
+                throw new UnsupportedOperationException(String.format("Unsupported JDBCType: %s", type));
+        }
     }
 
     /**

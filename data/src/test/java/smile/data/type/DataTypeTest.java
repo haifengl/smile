@@ -100,7 +100,7 @@ public class DataTypeTest {
     public void testArray() {
         System.out.println("array");
         try {
-            assertEquals(DataTypes.array(DataTypes.IntegerType), DataType.of("array[int]"));
+            assertEquals(DataTypes.array(DataTypes.IntegerType), DataType.of("Array[int]"));
         } catch (Exception ex) {
             assertTrue(String.format("Unexpected exception: %s", ex), false);
         }
@@ -113,7 +113,7 @@ public class DataTypeTest {
     public void testObject() {
         System.out.println("object");
         try {
-            assertEquals(DataTypes.object(Integer.class), DataType.of("object[java.lang.Integer]"));
+            assertEquals(DataTypes.object(Integer.class), DataType.of("Object[java.lang.Integer]"));
         } catch (Exception ex) {
             assertTrue(String.format("Unexpected exception: %s", ex), false);
         }
@@ -133,7 +133,7 @@ public class DataTypeTest {
                     new StructField("name", DataTypes.StringType),
                     new StructField("salary", DataTypes.object(Integer.class))
                     ),
-                    DataType.of("struct[age: int, birthday: date[uuuu-MM-dd], gender: char, name: string, salary: object[java.lang.Integer]]"));
+                    DataType.of("Struct[age: int, birthday: Date[uuuu-MM-dd], gender: char, name: String, salary: Object[java.lang.Integer]]"));
         } catch (Exception ex) {
             assertTrue(String.format("Unexpected exception: %s", ex), false);
         }

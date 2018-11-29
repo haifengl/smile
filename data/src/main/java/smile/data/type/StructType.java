@@ -75,7 +75,7 @@ public class StructType implements DataType {
     public String name() {
         return Arrays.stream(fields)
                 .map(field -> String.format("%s: %s", field.name, field.type.name()))
-                .collect(Collectors.joining(", ", "struct[", "]"));
+                .collect(Collectors.joining(", ", "Struct[", "]"));
     }
 
     @Override
@@ -95,36 +95,16 @@ public class StructType implements DataType {
     public Tuple valueOf(String s) throws ParseException {
         // strip surrounding []
         String[] elements = s.substring(1, s.length() - 1).split(",");
-        final Object[] array = new Object[fields.length];
+        final Object[] row = new Object[fields.length];
         for (String element : elements) {
             String[] field = element.split(":");
             DataType type = fields[index.get(field[0])].type;
             Object value = type.valueOf(field[1]);
             int i = index.get(field[0]);
-            array[i] = value;
+            row[i] = value;
         }
 
-        return new Tuple() {
-            @Override
-            public int size() {
-                return array.length;
-            }
-
-            @Override
-            public StructType schema() {
-                return StructType.this;
-            }
-
-            @Override
-            public Object get(int i) {
-                return array[i];
-            }
-
-            @Override
-            public int fieldIndex(String field) {
-                return index.get(field);
-            }
-        };
+        return Tuple.of(row, this);
     }
 
     @Override

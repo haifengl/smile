@@ -33,12 +33,12 @@ public class StringType implements DataType {
 
     @Override
     public String name() {
-        return "string";
+        return "String";
     }
 
     @Override
     public String toString() {
-        return "string";
+        return "String";
     }
 
     @Override

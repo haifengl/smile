@@ -61,7 +61,7 @@ public class ArrayType implements DataType {
 
     @Override
     public String name() {
-        return String.format("array%s", type.name());
+        return String.format("Array%s", type.name());
     }
 
     @Override
