@@ -335,9 +335,8 @@ public class GradientTreeBoost implements Regression<double[]> {
      * @param maxNodes the number of leaves in each tree.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param f the sampling rate for stochastic tree boosting.
-     * @param q the ratio for quantile regression.
      */
-    public GradientTreeBoost(double[][] x, double[] y, Loss loss, int ntrees, int maxNodes, double shrinkage, double f, double q) {
+    public GradientTreeBoost(double[][] x, double[] y, Loss loss, int ntrees, int maxNodes, double shrinkage, double f) {
         this(null, x, y, loss, ntrees, maxNodes, shrinkage, f);
     }
 
