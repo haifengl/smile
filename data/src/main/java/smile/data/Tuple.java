@@ -17,6 +17,11 @@
 package smile.data;
 
 import java.io.Serializable;
+import java.sql.Date;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 import smile.data.type.StructType;
 
 /**
@@ -168,20 +173,29 @@ public interface Tuple extends Serializable {
     }
 
     /**
-     * Returns the value at position i of date type as java.sql.Date.
+     * Returns the value at position i of date type as java.time.LocalDate.
      *
      * @throws ClassCastException when data type does not match.
      */
-    default java.sql.Date getDate(int i) {
+    default java.time.LocalDate getDate(int i) {
         return getAs(i);
     }
 
     /**
-     * Returns the value at position i of date type as java.sql.Timestamp.
+     * Returns the value at position i of date type as java.time.LocalTime.
      *
      * @throws ClassCastException when data type does not match.
      */
-    default java.sql.Timestamp getTimestamp(int i) {
+    default java.time.LocalTime getTime(int i) {
+        return getAs(i);
+    }
+
+    /**
+     * Returns the value at position i of date type as java.time.LocalDateTime.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default java.time.LocalDateTime getDateTime(int i) {
         return getAs(i);
     }
 
@@ -222,11 +236,10 @@ public interface Tuple extends Serializable {
     /**
      * Returns the index of a given field name.
      *
-     * @throws UnsupportedOperationException when schema is not defined.
      * @throws IllegalArgumentException when a field `name` does not exist.
      */
     default int fieldIndex(String name) {
-        throw new UnsupportedOperationException("fieldIndex on a Tuple without schema is undefined.");
+        return schema().fieldIndex(name);
     }
 
     /** Returns true if there are any NULL values in this tuple. */
@@ -235,5 +248,43 @@ public interface Tuple extends Serializable {
             if (isNullAt(i)) return true;
         }
         return false;
+    }
+
+    /** Returns an object array based tuple. */
+    static Tuple of(Object[] row, StructType schema) {
+        return new Tuple() {
+            @Override
+            public int size() {
+                return row.length;
+            }
+
+            @Override
+            public Object get(int i) {
+                return row[i];
+            }
+
+            @Override
+            public StructType schema() {
+                return schema;
+            }
+        };
+    }
+
+    /** Returns the current row of a JDBC ResultSet as a tuple. */
+    static Tuple of(ResultSet rs, StructType schema) throws SQLException {
+        final Object[] row = new Object[rs.getMetaData().getColumnCount()];
+        for(int i = 0; i < row.length; ++i){
+            row[i] = rs.getObject(i+1);
+
+            if (row[i] instanceof Date) {
+                row[i] = ((Date) row[i]).toLocalDate();
+            } else if (row[i] instanceof Time) {
+                row[i] = ((Time) row[i]).toLocalTime();
+            } else if (row[i] instanceof Timestamp) {
+                row[i] = ((Timestamp) row[i]).toLocalDateTime();
+            }
+        }
+
+        return of(row, schema);
     }
 }

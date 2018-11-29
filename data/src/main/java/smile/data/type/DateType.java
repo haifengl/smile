@@ -55,7 +55,7 @@ public class DateType implements DataType {
 
     @Override
     public String name() {
-        return String.format("date[%s]", pattern);
+        return String.format("Date[%s]", pattern);
     }
 
     @Override

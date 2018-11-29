@@ -15,12 +15,16 @@
  *******************************************************************************/
 package smile.data;
 
+import java.sql.JDBCType;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
 import smile.data.type.DataType;
+import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.*;
@@ -467,7 +471,7 @@ public interface DataFrame extends Dataset<Tuple> {
     }
 
     /**
-     * Creates a default columnar implementation of DataFrame from a set of vectors.
+     * Creates a DataFrame from a set of vectors.
      * @param vectors The column vectors.
      */
     static DataFrame of(BaseVector... vectors) {
@@ -475,7 +479,7 @@ public interface DataFrame extends Dataset<Tuple> {
     }
 
     /**
-     * Creates a default columnar implementation of DataFrame from a collection.
+     * Creates a DataFrame from a collection.
      * @param data The data collection.
      * @param clazz The class type of elements.
      * @param <T> The type of elements.
@@ -485,11 +489,25 @@ public interface DataFrame extends Dataset<Tuple> {
     }
 
     /**
-     * Creates a default columnar implementation of DataFrame from a set of tuples.
+     * Creates a DataFrame from a set of tuples.
      * @param data The data collection.
      */
     static DataFrame of(List<Tuple> data) {
         return new DataFrameImpl(data);
+    }
+
+    /**
+     * Creates a DataFrame from a JDBC ResultSet.
+     * @param rs The JDBC result set.
+     */
+    static DataFrame of(ResultSet rs) throws SQLException {
+        StructType schema = DataTypes.struct(rs.getMetaData());
+        List<Tuple> rows = new ArrayList<>();
+        while (rs.next()) {
+            rows.add(Tuple.of(rs, schema));
+        }
+
+        return of(rows);
     }
 
     /**

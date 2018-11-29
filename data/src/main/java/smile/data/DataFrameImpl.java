@@ -565,11 +565,6 @@ class DataFrameImpl implements DataFrame {
         }
 
         @Override
-        public int fieldIndex(String name) {
-            return columnIndex(name);
-        }
-
-        @Override
         public String toString() {
             return schema.toString(this);
         }

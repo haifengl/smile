@@ -15,6 +15,9 @@
  *******************************************************************************/
 package smile.data.type;
 
+import java.sql.JDBCType;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -134,5 +137,18 @@ public class DataTypes {
     /** Creates a struct data type. */
     public static StructType struct(List<StructField> fields) {
         return new StructType(fields);
+    }
+
+    /** Creates a struct data type from JDBC result set meta data. */
+    public static StructType struct(ResultSetMetaData meta) throws SQLException {
+        int ncols = meta.getColumnCount();
+        StructField[] fields = new StructField[ncols];
+        for (int i = 1; i <= ncols; i++) {
+            String name = meta.getColumnName(i);
+            DataType type = DataType.of(JDBCType.valueOf(meta.getColumnTypeName(i)), meta.isNullable(i) != ResultSetMetaData.columnNoNulls);
+            fields[i-1] = new StructField(name, type);
+        }
+
+        return struct(fields);
     }
 }

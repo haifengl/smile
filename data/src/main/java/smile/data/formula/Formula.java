@@ -96,11 +96,6 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public int fieldIndex(String name) {
-                return schema.fieldIndex(name);
-            }
-
-            @Override
             public String toString() {
                 return schema.toString(this);
             }

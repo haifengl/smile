@@ -107,7 +107,7 @@ public class ObjectType implements DataType {
 
     @Override
     public String name() {
-        return String.format("object[%s]", clazz.getName());
+        return String.format("Object[%s]", clazz.getName());
     }
 
     @Override

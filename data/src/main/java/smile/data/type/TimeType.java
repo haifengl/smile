@@ -57,12 +57,12 @@ public class TimeType implements DataType {
 
     @Override
     public String name() {
-        return String.format("time[%s]", pattern);
+        return String.format("Time[%s]", pattern);
     }
 
     @Override
     public String toString() {
-        return "time";
+        return "Time";
     }
 
     @Override

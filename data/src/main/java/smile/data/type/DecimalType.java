@@ -35,12 +35,12 @@ public class DecimalType implements DataType {
 
     @Override
     public String name() {
-        return "decimal";
+        return "Decimal";
     }
 
     @Override
     public String toString() {
-        return "decimal";
+        return "Decimal";
     }
 
     @Override
