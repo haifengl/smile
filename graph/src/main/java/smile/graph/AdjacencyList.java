@@ -21,11 +21,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.stream.Collectors;
-import smile.math.SparseArray;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
-import smile.sort.PriorityQueue;
+import smile.util.PriorityQueue;
 
 /**
  * An adjacency list representation of a graph. Multigraph is supported.
