@@ -21,6 +21,8 @@ import smile.validation.CrossValidation;
 import smile.data.AttributeDataset;
 import smile.data.parser.ArffParser;
 import smile.math.Math;
+import smile.regression.GradientTreeBoost.Loss;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -66,14 +68,19 @@ public class GradientTreeBoostTest {
 
             CrossValidation cv = new CrossValidation(n, k);
             double rss = 0.0;
-            double ad = 0.0;
+            double ad = 0.0;            
             for (int i = 0; i < k; i++) {
                 double[][] trainx = Math.slice(datax, cv.train[i]);
                 double[] trainy = Math.slice(datay, cv.train[i]);
                 double[][] testx = Math.slice(datax, cv.test[i]);
                 double[] testy = Math.slice(datay, cv.test[i]);
 
-                GradientTreeBoost boost = new GradientTreeBoost(data.attributes(), trainx, trainy, loss, 100, 6, 0.05, 0.7);
+                GradientTreeBoost boost = null;
+                if(loss == Loss.Quantile) {
+                    boost = new GradientTreeBoost(data.attributes(), trainx, trainy, loss, 100, 6, 0.05, 0.7, 0.6);
+                }else {
+                    boost = new GradientTreeBoost(data.attributes(), trainx, trainy, loss, 100, 6, 0.05, 0.7);                    
+                }
 
                 for (int j = 0; j < testx.length; j++) {
                     double r = testy[j] - boost.predict(testx[j]);
@@ -118,6 +125,16 @@ public class GradientTreeBoostTest {
         test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "cal_housing", "weka/regression/cal_housing.arff", 8);
         //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "puma8nh", "weka/regression/puma8nh.arff", 8);
         //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "kin8nm", "weka/regression/kin8nm.arff", 8);
+    }
+    
+    /**
+     * Test of quantile loss of class GradientTreeBoost.
+     */
+    @Test
+    public void testQuantile() {
+        test(GradientTreeBoost.Loss.Quantile, "CPU", "weka/cpu.arff", 6);
+        test(GradientTreeBoost.Loss.Quantile, "autoMPG", "weka/regression/autoMpg.arff", 7);
+        test(GradientTreeBoost.Loss.Quantile, "cal_housing", "weka/regression/cal_housing.arff", 8);
     }
     
     /**

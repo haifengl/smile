@@ -113,11 +113,19 @@ public class GradientTreeBoost implements Regression<double[]> {
          */
         LeastSquares,
         /**
+         * Quantile regression. The gradient tree boosting based
+         * on this loss function is highly robust. The trees use only order
+         * information on the input variables and the pseudo-response has only
+         * two values {-1, +1}. The line searches (terminal node values) use
+         * only specified quantile ratio.
+         */
+        Quantile,
+        /**
          * Least absolute deviation regression. The gradient tree boosting based
          * on this loss function is highly robust. The trees use only order
          * information on the input variables and the pseudo-response has only
          * two values {-1, +1}. The line searches (terminal node values) use
-         * only medians.
+         * only medians. This is a special case of quantile regression while the quantile is 0.5
          */
         LeastAbsoluteDeviation,
         /**
@@ -163,6 +171,10 @@ public class GradientTreeBoost implements Regression<double[]> {
      * The sampling rate for stochastic tree boosting.
      */
     private double f = 0.7;
+    /**
+     * The ratio for quantile regression.
+     */
+    private double q = 0.5;
     
     /**
      * Trainer for GradientTreeBoost regression.
@@ -188,6 +200,10 @@ public class GradientTreeBoost implements Regression<double[]> {
          * The sampling rate for stochastic tree boosting.
          */
         private double f = 0.7;
+        /**
+         * The ratio for quantile regression.
+         */
+        private double q = 0.5;
         
         /**
          * Constructor.
@@ -277,8 +293,21 @@ public class GradientTreeBoost implements Regression<double[]> {
 
             this.f = f;
             return this;
-        }
+        }        
         
+        /**
+         * Sets the ratio for quantile regression
+         * @param q the ratio for quantile regression
+         */
+        public Trainer setQuantile(double q) {
+            if (q <= 0 || q >= 1) {
+                throw new IllegalArgumentException("Invalid quantile ratio: " + q);
+            }
+            
+            this.q = q;
+            return this;
+        }
+
         @Override
         public GradientTreeBoost train(double[][] x, double[] y) {
             return new GradientTreeBoost(attributes, x, y, loss, ntrees, maxNodes, shrinkage, f);
@@ -306,8 +335,9 @@ public class GradientTreeBoost implements Regression<double[]> {
      * @param maxNodes the number of leaves in each tree.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param f the sampling rate for stochastic tree boosting.
+     * @param q the ratio for quantile regression.
      */
-    public GradientTreeBoost(double[][] x, double[] y, Loss loss, int ntrees, int maxNodes, double shrinkage, double f) {
+    public GradientTreeBoost(double[][] x, double[] y, Loss loss, int ntrees, int maxNodes, double shrinkage, double f, double q) {
         this(null, x, y, loss, ntrees, maxNodes, shrinkage, f);
     }
 
@@ -362,6 +392,24 @@ public class GradientTreeBoost implements Regression<double[]> {
      * @param f the sampling fraction for stochastic tree boosting.
      */
     public GradientTreeBoost(Attribute[] attributes, double[][] x, double[] y, Loss loss, int ntrees, int maxNodes, double shrinkage, double f) {
+        this(attributes, x, y, loss, ntrees, maxNodes, shrinkage, f, 0.5);
+    }
+    
+    /**
+     * Constructor. Learns a gradient tree boosting for regression.
+     *
+     * @param attributes variable attributes.
+     * @param x the training samples.
+     * @param y the training sample responses.
+     * @param loss loss function for regression. By default, least absolute
+     * deviation is employed for robust regression.
+     * @param ntrees the number of iterations (trees).
+     * @param maxNodes the number of leaves in each tree.
+     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+     * @param f the sampling fraction for stochastic tree boosting.
+     * @param q the ratio for quantile regression.
+     */
+    public GradientTreeBoost(Attribute[] attributes, double[][] x, double[] y, Loss loss, int ntrees, int maxNodes, double shrinkage, double f, double q) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -372,6 +420,10 @@ public class GradientTreeBoost implements Regression<double[]> {
 
         if (f <= 0 || f > 1) {
             throw new IllegalArgumentException("Invalid sampling fraction: " + f);            
+        }
+        
+        if (q <= 0 || q >= 1) {
+            throw new IllegalArgumentException("Invalid quantile ratio: " + q);
         }
         
         if (attributes == null) {
@@ -387,6 +439,9 @@ public class GradientTreeBoost implements Regression<double[]> {
         this.maxNodes = maxNodes;
         this.shrinkage = shrinkage;
         this.f = f;
+        if(loss == Loss.Quantile) {
+            this.q = q;            
+        }
 
         int n = x.length;
         int N = (int) Math.round(n * f);
@@ -407,10 +462,10 @@ public class GradientTreeBoost implements Regression<double[]> {
             for (int i = 0; i < n; i++) {
                 residual[i] = y[i] - b;
             }
-        } else if (loss == Loss.LeastAbsoluteDeviation) {
-            output = new LADNodeOutput(residual);
+        } else if (loss == Loss.LeastAbsoluteDeviation || loss == Loss.Quantile) {
+            output = new LADNodeOutput(residual, this.q);
             System.arraycopy(y, 0, residual, 0, n);
-            b = QuickSelect.median(residual);
+            b = QuickSelect.select(residual, (int)(residual.length * this.q));
             response = new double[n];
             for (int i = 0; i < n; i++) {
                 residual[i] = y[i] - b;
@@ -444,7 +499,7 @@ public class GradientTreeBoost implements Regression<double[]> {
             
             for (int i = 0; i < n; i++) {
                 residual[i] -= shrinkage * trees[m].predict(x[i]);
-                if (loss == Loss.LeastAbsoluteDeviation) {
+                if (loss == Loss.LeastAbsoluteDeviation || loss == Loss.Quantile) {
                     response[i] = Math.signum(residual[i]);
                 }
             }
@@ -481,12 +536,28 @@ public class GradientTreeBoost implements Regression<double[]> {
          * Residuals to fit.
          */
         double[] residual;
+        
+        /**
+         * Quantile ratio.
+         */
+        double q = 0.5;
+        
         /**
          * Constructor.
          * @param residual response to fit.
          */
         public LADNodeOutput(double[] residual) {
             this.residual = residual;
+        }
+        
+        /**
+         * Constructor.
+         * @param residual response to fit.
+         * @param q quantile ratio
+         */
+        public LADNodeOutput(double[] residual, double q) {
+            this.residual = residual;
+            this.q = q;
         }
         
         @Override
@@ -503,7 +574,7 @@ public class GradientTreeBoost implements Regression<double[]> {
                 }
             }
             
-            return QuickSelect.median(r);
+            return QuickSelect.select(r, (int)(r.length * q));
         }        
     }
     
