@@ -15,8 +15,10 @@
  *******************************************************************************/
 
 /**
- * A collection of data organized into (potentially heterogeneous) named columns.
- * A <code>DataFrame</code> is equivalent to a relational table.
+ * Apache Arrow is a cross-language development platform for in-memory data.
+ * It specifies a standardized language-independent columnar memory format
+ * for flat and hierarchical data, organized for efficient analytic
+ * operations on modern hardware.
  *
  * @author Haifeng Li
  */
