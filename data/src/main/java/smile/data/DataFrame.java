@@ -501,7 +501,7 @@ public interface DataFrame extends Dataset<Tuple> {
      * @param rs The JDBC result set.
      */
     static DataFrame of(ResultSet rs) throws SQLException {
-        StructType schema = DataTypes.struct(rs.getMetaData());
+        StructType schema = DataTypes.struct(rs);
         List<Tuple> rows = new ArrayList<>();
         while (rs.next()) {
             rows.add(Tuple.of(rs, schema));

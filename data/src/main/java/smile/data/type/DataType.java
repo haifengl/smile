@@ -196,8 +196,22 @@ public interface DataType extends Serializable {
             return DataTypes.object(clazz);
     }
 
-    /** Returns the DataType of a JDBC type. */
+    /**
+     * Returns the DataType of a JDBC type.
+     * @param type a JDBCType
+     * @param nullable true if the column value may be null
+     */
     static DataType of(java.sql.JDBCType type, boolean nullable) {
+        return of(type, nullable, null);
+    }
+
+    /**
+     * Returns the DataType of a JDBC type.
+     * @param type a JDBCType
+     * @param nullable true if the column value may be null
+     * @param dbms The database product name.
+     */
+    static DataType of(java.sql.JDBCType type, boolean nullable, String dbms) {
         switch (type) {
             case BOOLEAN:
             case BIT:
@@ -213,7 +227,10 @@ public interface DataType extends Serializable {
             case NUMERIC:
                 // Numeric should be like Decimal.
                 // But SQLite treats Numeric very differently.
-                return nullable ? DataTypes.DoubleObjectType : DataTypes.DoubleType;
+                if ("SQLite".equals(dbms))
+                    return nullable ? DataTypes.DoubleObjectType : DataTypes.DoubleType;
+                else
+                    return DataTypes.DecimalType;
             case DECIMAL:
                 return DataTypes.DecimalType;
             case REAL:
