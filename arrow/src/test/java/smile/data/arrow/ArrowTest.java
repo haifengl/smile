@@ -13,25 +13,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data.frame;
+package smile.data.arrow;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.DataFrame;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.SparseMatrix;
+import smile.util.Paths;
+
+import java.io.File;
+import java.nio.file.Path;
+import java.sql.*;
+
 import static org.junit.Assert.*;
 
 /**
  *
  * @author Haifeng Li
  */
-public class ArrowDataFrameTest {
+public class ArrowTest {
 
-    ArrowDataFrame df = new ArrowDataFrame(smile.util.Paths.getTestData("arrow/iris.feather"));
+    Arrow arrow = new Arrow();
+    DataFrame df;
 
-    public ArrowDataFrameTest() {
+    public ArrowTest() {
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        }
+
+        String url = String.format("jdbc:sqlite:%s", Paths.getTestData("sqlite/chinook.db").toAbsolutePath());
+        String sql = "select e.firstname as 'Employee First', e.lastname as 'Employee Last', c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total"
+                + " from employees as e"
+                + " join customers as c on e.employeeid = c.supportrepid"
+                + " join invoices as i on c.customerid = i.customerid";
+
+        try (Connection conn = DriverManager.getConnection(url);
+             Statement stmt  = conn.createStatement();
+             ResultSet rs    = stmt.executeQuery(sql)) {
+            df = DataFrame.of(rs);
+            File temp = File.createTempFile("chinook", "arrow");
+            Path path = temp.toPath();
+            arrow.write(df, path);
+            df = arrow.read(path);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     @BeforeClass
@@ -50,13 +84,14 @@ public class ArrowDataFrameTest {
     public void tearDown() {
     }
 
+
     /**
      * Test of nrows method, of class DataFrame.
      */
     @Test
     public void testNrows() {
         System.out.println("nrows");
-        assertEquals(150, df.nrows());
+        assertEquals(412, df.nrows());
     }
 
     /**
@@ -65,7 +100,7 @@ public class ArrowDataFrameTest {
     @Test
     public void testNcols() {
         System.out.println("ncols");
-        assertEquals(4, df.ncols());
+        assertEquals(6, df.ncols());
     }
 
     /**
@@ -78,33 +113,14 @@ public class ArrowDataFrameTest {
         System.out.println(df.structure());
         System.out.println(df);
         smile.data.type.StructType schema = DataTypes.struct(
-                new StructField("age", DataTypes.IntegerType),
-                new StructField("birthday", DataTypes.DateType),
-                new StructField("gender", DataTypes.CharType),
-                new StructField("name", DataTypes.StringType),
-                new StructField("salary", DataTypes.object(Double.class))
+                new StructField("Employee First", DataTypes.StringType),
+                new StructField("Employee Last", DataTypes.StringType),
+                new StructField("Customer First", DataTypes.StringType),
+                new StructField("Customer Last", DataTypes.StringType),
+                new StructField("Country", DataTypes.StringType),
+                new StructField("Total", DataTypes.DoubleType)
         );
         assertEquals(schema, df.schema());
-    }
-
-    /**
-     * Test of names method, of class DataFrame.
-     */
-    @Test
-    public void testNames() {
-        System.out.println("names");
-        String[] names = {"age", "birthday", "gender", "name", "salary"};
-        assertTrue(Arrays.equals(names, df.names()));
-    }
-
-    /**
-     * Test of types method, of class DataFrame.
-     */
-    @Test
-    public void testTypes() {
-        System.out.println("names");
-        DataType[] types = {DataTypes.IntegerType, DataTypes.DateType, DataTypes.CharType, DataTypes.StringType, DataTypes.object(Double.class)};
-        assertTrue(Arrays.equals(types, df.types()));
     }
 
     /**
@@ -113,19 +129,21 @@ public class ArrowDataFrameTest {
     @Test
     public void testGet() {
         System.out.println("get");
-        assertEquals(38, df.get(0).getInt(0));
-        assertEquals("Alex", df.get(0).getString(3));
-        assertEquals(10000., df.get(0).get(4));
-        assertEquals(13, df.get(3).getInt(0));
-        assertEquals("Amy", df.get(3).getString(3));
-        assertEquals(null, df.get(3).get(4));
+        System.out.println(df.get(0));
+        System.out.println(df.get(1));
+        assertEquals("Jane", df.get(0).getString(0));
+        assertEquals("Peacock", df.get(0).getString(1));
+        assertEquals("Luís", df.get(0).getString(2));
+        assertEquals("Gonçalves", df.get(0).getString(3));
+        assertEquals("Brazil", df.get(0).getString(4));
+        assertEquals(3.98, df.get(0).getDouble(5), 1E-10);
 
-        assertEquals(38, df.get(0,0));
-        assertEquals("Alex", df.get(0,3));
-        assertEquals(10000., df.get(0,4));
-        assertEquals(13, df.get(3,0));
-        assertEquals("Amy", df.get(3,3));
-        assertEquals(null, df.get(3,4));
+        assertEquals("Steve", df.get(7).getString(0));
+        assertEquals("Johnson", df.get(7).getString(1));
+        assertEquals("Leonie", df.get(7).getString(2));
+        assertEquals("Köhler", df.get(7).getString(3));
+        assertEquals("Germany", df.get(7).getString(4));
+        assertEquals(1.98, df.get(7).getDouble(5), 1E-10);
     }
 
     /**
@@ -137,18 +155,13 @@ public class ArrowDataFrameTest {
         DataFrame output = df.summary();
         System.out.println(output);
         System.out.println(output.schema());
-        assertEquals(2, output.nrows());
+        assertEquals(1, output.nrows());
         assertEquals(5, output.ncols());
-        assertEquals("age", output.get(0,0));
-        assertEquals(4L, output.get(0,1));
-        assertEquals(13., output.get(0,2));
-        assertEquals(30.5, output.get(0,3));
-        assertEquals(48.0, output.get(0,4));
-        assertEquals("salary", output.get(1,0));
-        assertEquals(2L, output.get(1,1));
-        assertEquals(10000., output.get(1,2));
-        assertEquals(120000., output.get(1,3));
-        assertEquals(230000., output.get(1,4));
+        assertEquals("Total", output.get(0,0));
+        assertEquals(412L, output.get(0,1));
+        assertEquals(0.99, output.get(0,2));
+        assertEquals(5.651941747572815, output.get(0,3));
+        assertEquals(25.86, output.get(0,4));
     }
 
     /**
@@ -157,17 +170,13 @@ public class ArrowDataFrameTest {
     @Test
     public void testDataFrameToMatrix() {
         System.out.println("toMatrix");
-        DenseMatrix output = df.select("age", "salary").toMatrix();
+        DenseMatrix output = df.select("Total").toMatrix();
         System.out.println(output);
-        assertEquals(4, output.nrows());
-        assertEquals(2, output.ncols());
-        assertEquals(38., output.get(0, 0), 1E-10);
-        assertEquals(23., output.get(1, 0), 1E-10);
-        assertEquals(48., output.get(2, 0), 1E-10);
-        assertEquals(13., output.get(3, 0), 1E-10);
-        assertEquals(10000., output.get(0, 1), 1E-10);
-        assertEquals(Double.NaN, output.get(1, 1), 1E-10);
-        assertEquals(230000., output.get(2, 1), 1E-10);
-        assertEquals(Double.NaN, output.get(3, 1), 1E-10);
+        assertEquals(412, output.nrows());
+        assertEquals(1, output.ncols());
+        assertEquals(3.98, output.get(0, 0), 1E-10);
+        assertEquals(3.96, output.get(1, 0), 1E-10);
+        assertEquals(5.94, output.get(2, 0), 1E-10);
+        assertEquals(0.99, output.get(3, 0), 1E-10);
     }
 }

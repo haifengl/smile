@@ -21,10 +21,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneOffset;
+import java.nio.file.Path;
+import java.time.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
@@ -110,35 +108,82 @@ public class Arrow {
 
     /**
      * Reads an arrow file.
-     * @param file an Apache Arrow file.
+     * @param path an Apache Arrow file path.
      */
-    public DataFrame read(File file) throws IOException {
+    public DataFrame read(Path path) throws IOException {
         try (RootAllocator allocator = new RootAllocator(limit);
-             FileInputStream input = new FileInputStream(file);
+             FileInputStream input = new FileInputStream(path.toFile());
              ArrowFileReader reader = new ArrowFileReader(input.getChannel(), allocator)) {
 
             // The holder for a set of vectors to be loaded/unloaded.
             VectorSchemaRoot root = reader.getVectorSchemaRoot();
-            Schema schema = root.getSchema();
-            StructType struct = toSmileSchema(schema);
-            List<Field> fields = schema.getFields();
-            List<FieldVector> columns = root.getFieldVectors();
-
             List<ArrowBlock> blocks = reader.getRecordBlocks();
-            for (ArrowBlock block : blocks) {
+            DataFrame[] frames = new DataFrame[blocks.size()];
+            for (int i = 0; i < frames.length; i++) {
+                ArrowBlock block = blocks.get(i);
                 if (!reader.loadRecordBatch(block)) {
-                    throw new IOException("Expected to read record batch");
+                    throw new IOException("Failed to load record batch: " + block);
                 }
 
-                System.out.println("\trow count for this block is " + root.getRowCount());
-                List<FieldVector> fieldVector = root.getFieldVectors();
-                System.out.println("\tnumber of fieldVectors (corresponding to columns) : " + fieldVector.size());
+                List<FieldVector> fieldVectors = root.getFieldVectors();
+                logger.info("read {} rows and {} columns from block {}", root.getRowCount(), fieldVectors.size(), block);
+
+                smile.data.vector.BaseVector[] vectors = new smile.data.vector.BaseVector[fieldVectors.size()];
+                for (int j = 0; j < fieldVectors.size(); j++) {
+                    FieldVector fieldVector = fieldVectors.get(j);
+                    switch (fieldVector.getMinorType()) {
+                        case INT:
+                            vectors[j] = readIntField(fieldVector);
+                            break;
+                        case BIGINT:
+                            vectors[j] = readLongField(fieldVector);
+                            break;
+                        case FLOAT4:
+                            vectors[j] = readFloatField(fieldVector);
+                            break;
+                        case FLOAT8:
+                            vectors[j] = readDoubleField(fieldVector);
+                            break;
+                        case BIT:
+                            vectors[j] = readBitField(fieldVector);
+                            break;
+                        case TINYINT:
+                            vectors[j] = readByteField(fieldVector);
+                            break;
+                        case SMALLINT:
+                            vectors[j] = readShortField(fieldVector);
+                            break;
+                        case UINT2:
+                            vectors[j] = readCharField(fieldVector);
+                            break;
+                        case DATEDAY:
+                            vectors[j] = readDateField(fieldVector);
+                            break;
+                        case TIMENANO:
+                            vectors[j] = readTimeField(fieldVector);
+                            break;
+                        case TIMESTAMPMILLI:
+                            vectors[j] = readDateTimeField(fieldVector);
+                            break;
+                        case VARBINARY:
+                            vectors[j] = readByteArrayField(fieldVector);
+                            break;
+                        case VARCHAR:
+                            vectors[j] = readStringField(fieldVector);
+                            break;
+                        default: throw new UnsupportedOperationException("Unsupported column type: " + fieldVector.getMinorType());
+                    }
+                }
+
+                frames[i] = DataFrame.of(vectors);
             }
+
+            return frames[0];
         }
     }
 
     /** Writes the DataFrame to a file. */
-    public void write(DataFrame df, File file) throws IOException {
+    public void write(DataFrame df, Path path) throws IOException {
         Schema schema = toArrowSchema(df.schema());
         /**
          * When a field is dictionary encoded, the values are represented
@@ -154,7 +199,7 @@ public class Arrow {
         DictionaryProvider provider = new DictionaryProvider.MapDictionaryProvider();
         try (RootAllocator allocator = new RootAllocator(limit);
              VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator);
-             FileOutputStream output = new FileOutputStream(file);
+             FileOutputStream output = new FileOutputStream(path.toFile());
              ArrowFileWriter writer = new ArrowFileWriter(root, provider, output.getChannel())) {
 
             writer.start();
@@ -180,9 +225,9 @@ public class Arrow {
                     } else if (type == DataTypes.BooleanType) {
                         writeBooleanField(df, vector, from, count);
                     } else if (type == DataTypes.FloatType) {
-                        writeDoubleField(df, vector, from, count);
-                    } else if (type == DataTypes.DoubleType) {
                         writeFloatField(df, vector, from, count);
+                    } else if (type == DataTypes.DoubleType) {
+                        writeDoubleField(df, vector, from, count);
                     } else if (type == DataTypes.IntegerObjectType) {
                         writeIntObjectField(df, vector, from, count);
                     } else if (type == DataTypes.LongObjectType) {
@@ -196,9 +241,9 @@ public class Arrow {
                     } else if (type == DataTypes.BooleanObjectType) {
                         writeBooleanObjectField(df, vector, from, count);
                     } else if (type == DataTypes.FloatObjectType) {
-                        writeDoubleObjectField(df, vector, from, count);
-                    } else if (type == DataTypes.DoubleObjectType) {
                         writeFloatObjectField(df, vector, from, count);
+                    } else if (type == DataTypes.DoubleObjectType) {
+                        writeDoubleObjectField(df, vector, from, count);
                     } else if (type == DataTypes.DecimalType) {
                         writeDecimalField(df, vector, from, count);
                     } else if (type == DataTypes.StringType) {
@@ -217,6 +262,7 @@ public class Arrow {
                 }
 
                 writer.writeBatch();
+                logger.info("write {} rows", count);
             }
 
             writer.end();
@@ -224,6 +270,281 @@ public class Arrow {
             output.flush();
             output.close();
         }
+    }
+
+    /** Reads a boolean column. */
+    private smile.data.vector.BaseVector readBitField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        BitVector vector = (BitVector) fieldVector;
+
+        if (fieldVector.getNullCount() == 0) {
+            boolean[] a = new boolean[count];
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.get(i) != 0;
+            }
+
+            return smile.data.vector.BooleanVector.of(fieldVector.getField().getName(), a);
+        } else {
+            Boolean[] a = new Boolean[count];
+            for (int i = 0; i < count; i++) {
+                if (vector.isNull(i))
+                    a[i] = null;
+                else
+                    a[i] = vector.get(i) != 0;
+            }
+
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        }
+    }
+
+    /** Reads a byte column. */
+    private smile.data.vector.BaseVector readByteField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        TinyIntVector vector = (TinyIntVector) fieldVector;
+
+        if (fieldVector.getNullCount() == 0) {
+            byte[] a = new byte[count];
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.get(i);
+            }
+
+            return smile.data.vector.ByteVector.of(fieldVector.getField().getName(), a);
+        } else {
+            Byte[] a = new Byte[count];
+            for (int i = 0; i < count; i++) {
+                if (vector.isNull(i))
+                    a[i] = null;
+                else
+                    a[i] = vector.get(i);
+            }
+
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        }
+    }
+
+    /** Reads a char column. */
+    private smile.data.vector.BaseVector readCharField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        SmallIntVector vector = (SmallIntVector) fieldVector;
+
+        if (fieldVector.getNullCount() == 0) {
+            char[] a = new char[count];
+            for (int i = 0; i < count; i++) {
+                a[i] = (char) vector.get(i);
+            }
+
+            return smile.data.vector.CharVector.of(fieldVector.getField().getName(), a);
+        } else {
+            Character[] a = new Character[count];
+            for (int i = 0; i < count; i++) {
+                if (vector.isNull(i))
+                    a[i] = null;
+                else
+                    a[i] = (char) vector.get(i);
+            }
+
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        }
+    }
+
+    /** Reads a short column. */
+    private smile.data.vector.BaseVector readShortField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        SmallIntVector vector = (SmallIntVector) fieldVector;
+
+        if (fieldVector.getNullCount() == 0) {
+            short[] a = new short[count];
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.get(i);
+            }
+
+            return smile.data.vector.ShortVector.of(fieldVector.getField().getName(), a);
+        } else {
+            Short[] a = new Short[count];
+            for (int i = 0; i < count; i++) {
+                if (vector.isNull(i))
+                    a[i] = null;
+                else
+                    a[i] = vector.get(i);
+            }
+
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        }
+    }
+
+    /** Reads an int column. */
+    private smile.data.vector.BaseVector readIntField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        IntVector vector = (IntVector) fieldVector;
+
+        if (fieldVector.getNullCount() == 0) {
+            int[] a = new int[count];
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.get(i);
+            }
+
+            return smile.data.vector.IntVector.of(fieldVector.getField().getName(), a);
+        } else {
+            Integer[] a = new Integer[count];
+            for (int i = 0; i < count; i++) {
+                if (vector.isNull(i))
+                    a[i] = null;
+                else
+                    a[i] = vector.get(i);
+            }
+
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        }
+    }
+
+    /** Reads a long column. */
+    private smile.data.vector.BaseVector readLongField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        BigIntVector vector = (BigIntVector) fieldVector;
+
+        if (fieldVector.getNullCount() == 0) {
+            long[] a = new long[count];
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.get(i);
+            }
+
+            return smile.data.vector.LongVector.of(fieldVector.getField().getName(), a);
+        } else {
+            Long[] a = new Long[count];
+            for (int i = 0; i < count; i++) {
+                if (vector.isNull(i))
+                    a[i] = null;
+                else
+                    a[i] = vector.get(i);
+            }
+
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        }
+    }
+
+    /** Reads a float column. */
+    private smile.data.vector.BaseVector readFloatField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        Float4Vector vector = (Float4Vector) fieldVector;
+
+        if (fieldVector.getNullCount() == 0) {
+            float[] a = new float[count];
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.get(i);
+            }
+
+            return smile.data.vector.FloatVector.of(fieldVector.getField().getName(), a);
+        } else {
+            Float[] a = new Float[count];
+            for (int i = 0; i < count; i++) {
+                if (vector.isNull(i))
+                    a[i] = null;
+                else
+                    a[i] = vector.get(i);
+            }
+
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        }
+    }
+
+    /** Reads a double column. */
+    private smile.data.vector.BaseVector readDoubleField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        Float8Vector vector = (Float8Vector) fieldVector;
+
+        if (fieldVector.getNullCount() == 0) {
+            double[] a = new double[count];
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.get(i);
+            }
+
+            return smile.data.vector.DoubleVector.of(fieldVector.getField().getName(), a);
+        } else {
+            Double[] a = new Double[count];
+            for (int i = 0; i < count; i++) {
+                if (vector.isNull(i))
+                    a[i] = null;
+                else
+                    a[i] = vector.get(i);
+            }
+
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        }
+    }
+
+    /** Reads a date column. */
+    private smile.data.vector.BaseVector readDateField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        DateMilliVector vector = (DateMilliVector) fieldVector;
+        LocalDate[] a = new LocalDate[count];
+        for (int i = 0; i < count; i++) {
+            if (vector.isNull(i))
+                a[i] = null;
+            else
+                a[i] = LocalDate.ofEpochDay(vector.get(i));
+        }
+
+        return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+    }
+
+    /** Reads a time column. */
+    private smile.data.vector.BaseVector readTimeField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        TimeNanoVector vector = (TimeNanoVector) fieldVector;
+        LocalTime[] a = new LocalTime[count];
+        for (int i = 0; i < count; i++) {
+            if (vector.isNull(i))
+                a[i] = null;
+            else
+                a[i] = LocalTime.ofNanoOfDay(vector.get(i));
+        }
+
+        return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+    }
+
+    /** Reads a DateTime column. */
+    private smile.data.vector.BaseVector readDateTimeField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        TimeStampMilliVector vector = (TimeStampMilliVector) fieldVector;
+        LocalDateTime[] a = new LocalDateTime[count];
+        for (int i = 0; i < count; i++) {
+            if (vector.isNull(i))
+                a[i] = null;
+            else
+                a[i] = LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)), ZoneOffset.UTC);
+        }
+
+        return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+    }
+
+    /** Reads a byte[] column. */
+    private smile.data.vector.BaseVector readByteArrayField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        VarBinaryVector vector = (VarBinaryVector) fieldVector;
+        byte[][] a = new byte[count][];
+        for (int i = 0; i < count; i++) {
+            if (vector.isNull(i))
+                a[i] = null;
+            else
+                a[i] = vector.get(i);
+        }
+
+        return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+    }
+
+    /** Reads a String column. */
+    private smile.data.vector.BaseVector readStringField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        VarCharVector vector = (VarCharVector) fieldVector;
+        String[] a = new String[count];
+        for (int i = 0; i < count; i++) {
+            if (vector.isNull(i))
+                a[i] = null;
+            else
+                a[i] = new String(vector.get(i));
+        }
+
+        return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
     }
 
     /** Writes an int column. */
@@ -571,7 +892,7 @@ public class Arrow {
                 vector.setNull(i);
             } else {
                 vector.setIndexDefined(i);
-                vector.setSafe(i, x.toEpochSecond(ZoneOffset.UTC));
+                vector.setSafe(i, x.toInstant(ZoneOffset.UTC).toEpochMilli());
             }
         }
 
@@ -583,7 +904,7 @@ public class Arrow {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
-        TimeMilliVector vector = (TimeMilliVector) fieldVector;
+        TimeNanoVector vector = (TimeNanoVector) fieldVector;
         smile.data.vector.Vector<LocalTime> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             LocalTime x = column.get(j);
@@ -591,7 +912,7 @@ public class Arrow {
                 vector.setNull(i);
             } else {
                 vector.setIndexDefined(i);
-                vector.setSafe(i, (int) (x.toNanoOfDay() / 1000000));
+                vector.setSafe(i, x.toNanoOfDay());
             }
         }
 
