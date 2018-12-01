@@ -111,6 +111,11 @@ public class ObjectType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Object;
+    }
+
+    @Override
     public String toString() {
         return clazz.getSimpleName();
     }

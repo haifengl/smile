@@ -61,6 +61,11 @@ public class TimeType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Time;
+    }
+
+    @Override
     public String toString() {
         return "Time";
     }

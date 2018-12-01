@@ -44,6 +44,11 @@ public class ShortType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Short;
+    }
+
+    @Override
     public String toString() {
         return "short";
     }

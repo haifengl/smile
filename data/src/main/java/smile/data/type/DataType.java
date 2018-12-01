@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
- * The data type in the sense of .
+ * The data type in the sense of encoding and storage.
  *
  * @see DiscreteMeasure
  * @see ContinuousMeasure
@@ -32,10 +32,35 @@ import java.time.LocalTime;
  */
 public interface DataType extends Serializable {
     /**
+     * Data type ID.
+     */
+    enum ID {
+        Boolean,
+        Byte,
+        Char,
+        Short,
+        Integer,
+        Long,
+        Float,
+        Double,
+        Decimal,
+        String,
+        Date,
+        Time,
+        DateTime,
+        Object,
+        Array,
+        Struct
+    }
+
+    /**
      * Returns the type name used in external catalogs.
      * DataType.of(name()) should returns the same type.
      */
     String name();
+
+    /** Returns the type ID enum. */
+    ID id();
 
     /**
      * Returns the value from its string representation.
@@ -51,14 +76,19 @@ public interface DataType extends Serializable {
 
     /** Returns true if this is a primitive data type. */
     default boolean isPrimitive() {
-        return this == DataTypes.IntegerType ||
-               this == DataTypes.LongType ||
-               this == DataTypes.DoubleType ||
-               this == DataTypes.FloatType ||
-               this == DataTypes.BooleanType ||
-               this == DataTypes.CharType ||
-               this == DataTypes.ByteType ||
-               this == DataTypes.ShortType;
+        switch (id()) {
+            case Integer:
+            case Long:
+            case Float:
+            case Double:
+            case Boolean:
+            case Char:
+            case Byte:
+            case Short:
+                return true;
+            default:
+                return false;
+        }
     }
 
     /** Returns true if the type is boolean or Boolean. */
@@ -308,14 +338,17 @@ public interface DataType extends Serializable {
      * either primitive or boxed.
      */
     static boolean isInt(DataType t) {
-        return t == DataTypes.IntegerType ||
-               t == DataTypes.ShortType ||
-               t == DataTypes.ByteType ||
-               t == DataTypes.CharType ||
-               t.equals(DataTypes.object(Integer.class)) ||
-               t == DataTypes.object(Short.class) ||
-               t == DataTypes.object(Byte.class) ||
-               t == DataTypes.object(Character.class);
+        switch (t.id()) {
+            case Integer:
+            case Short:
+            case Byte:
+                return true;
+            case Object:
+                Class clazz = ((ObjectType) t).getObjectClass();
+                return clazz == Integer.class || clazz == Short.class || clazz == Byte.class;
+            default:
+                return false;
+        }
     }
 
     /**
@@ -323,7 +356,7 @@ public interface DataType extends Serializable {
      * either primitive or boxed.
      */
     static boolean isLong(DataType t) {
-        return t == DataTypes.LongType ||
+        return t.id() == ID.Long ||
                t == DataTypes.object(Long.class);
     }
 
@@ -332,7 +365,7 @@ public interface DataType extends Serializable {
      * either primitive or boxed.
      */
     static boolean isFloat(DataType t) {
-        return t == DataTypes.FloatType ||
+        return t.id () == ID.Float ||
                t == DataTypes.object(Float.class);
     }
 
@@ -341,7 +374,7 @@ public interface DataType extends Serializable {
      * either primitive or boxed.
      */
     static boolean isDouble(DataType t) {
-        return t == DataTypes.DoubleType ||
+        return t.id() == ID.Double ||
                t == DataTypes.object(Double.class);
     }
 }

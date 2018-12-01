@@ -59,6 +59,11 @@ public class DateType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Date;
+    }
+
+    @Override
     public String toString() {
         return "date";
     }

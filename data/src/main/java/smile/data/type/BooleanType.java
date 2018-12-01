@@ -44,6 +44,11 @@ public class BooleanType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Boolean;
+    }
+
+    @Override
     public String toString() {
         return "boolean";
     }

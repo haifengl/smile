@@ -65,6 +65,11 @@ public class ArrayType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Array;
+    }
+
+    @Override
     public String toString() {
         return String.format("%s[]", type);
     }

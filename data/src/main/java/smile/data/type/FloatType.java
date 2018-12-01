@@ -44,6 +44,11 @@ public class FloatType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Float;
+    }
+
+    @Override
     public String toString() {
         return "float";
     }
