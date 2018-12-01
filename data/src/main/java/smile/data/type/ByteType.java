@@ -39,6 +39,11 @@ public class ByteType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Byte;
+    }
+
+    @Override
     public String name() {
         return "byte";
     }

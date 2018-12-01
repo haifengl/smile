@@ -39,6 +39,11 @@ public class DecimalType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Decimal;
+    }
+
+    @Override
     public String toString() {
         return "Decimal";
     }

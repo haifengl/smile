@@ -44,6 +44,11 @@ public class CharType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Char;
+    }
+
+    @Override
     public String toString() {
         return "char";
     }

@@ -44,6 +44,11 @@ public class IntegerType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Integer;
+    }
+
+    @Override
     public String toString() {
         return "int";
     }

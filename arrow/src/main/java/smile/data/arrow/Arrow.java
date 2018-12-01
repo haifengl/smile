@@ -45,10 +45,7 @@ import static org.apache.arrow.vector.types.FloatingPointPrecision.SINGLE;
 
 import scala.Char;
 import smile.data.DataFrame;
-import smile.data.type.DataType;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
+import smile.data.type.*;
 
 /**
  * Apache Arrow is a cross-language development platform for in-memory data.
@@ -131,44 +128,61 @@ public class Arrow {
                 smile.data.vector.BaseVector[] vectors = new smile.data.vector.BaseVector[fieldVectors.size()];
                 for (int j = 0; j < fieldVectors.size(); j++) {
                     FieldVector fieldVector = fieldVectors.get(j);
-                    switch (fieldVector.getMinorType()) {
-                        case INT:
-                            vectors[j] = readIntField(fieldVector);
+                    ArrowType type = fieldVector.getField().getType();
+                    switch (type.getTypeID()) {
+                        case Int:
+                            ArrowType.Int itype = (ArrowType.Int) type;
+                            int bitWidth = itype.getBitWidth();
+                            switch (bitWidth) {
+                                case 8:
+                                    vectors[j] = readByteField(fieldVector);
+                                    break;
+                                case 16:
+                                    if (itype.getIsSigned())
+                                        vectors[j] = readShortField(fieldVector);
+                                    else
+                                        vectors[j] = readCharField(fieldVector);
+                                    break;
+                                case 32:
+                                    vectors[j] = readIntField(fieldVector);
+                                    break;
+                                case 64:
+                                    vectors[j] = readLongField(fieldVector);
+                                    break;
+                                default:
+                                    throw new UnsupportedOperationException("Unsupported integer bit width: " + bitWidth);
+                            }
                             break;
-                        case BIGINT:
-                            vectors[j] = readLongField(fieldVector);
+                        case FloatingPoint:
+                            FloatingPointPrecision precision = ((ArrowType.FloatingPoint) type).getPrecision();
+                            switch (precision) {
+                                case DOUBLE:
+                                    readDoubleField(fieldVector);
+                                    break;
+                                case SINGLE:
+                                    vectors[j] = readFloatField(fieldVector);
+                                    break;
+                                case HALF:
+                                    throw new UnsupportedOperationException("Unsupported float precision: " + precision);
+                            }
                             break;
-                        case FLOAT4:
-                            vectors[j] = readFloatField(fieldVector);
-                            break;
-                        case FLOAT8:
-                            vectors[j] = readDoubleField(fieldVector);
-                            break;
-                        case BIT:
+                        case Bool:
                             vectors[j] = readBitField(fieldVector);
                             break;
-                        case TINYINT:
-                            vectors[j] = readByteField(fieldVector);
-                            break;
-                        case SMALLINT:
-                            vectors[j] = readShortField(fieldVector);
-                            break;
-                        case UINT2:
-                            vectors[j] = readCharField(fieldVector);
-                            break;
-                        case DATEDAY:
+                        case Date:
                             vectors[j] = readDateField(fieldVector);
                             break;
-                        case TIMENANO:
+                        case Time:
                             vectors[j] = readTimeField(fieldVector);
                             break;
-                        case TIMESTAMPMILLI:
+                        case Timestamp:
                             vectors[j] = readDateTimeField(fieldVector);
                             break;
-                        case VARBINARY:
+                        case Binary:
+                        case FixedSizeBinary:
                             vectors[j] = readByteArrayField(fieldVector);
                             break;
-                        case VARCHAR:
+                        case Utf8:
                             vectors[j] = readStringField(fieldVector);
                             break;
                         default: throw new UnsupportedOperationException("Unsupported column type: " + fieldVector.getMinorType());
@@ -212,52 +226,78 @@ public class Arrow {
                 for (Field field : root.getSchema().getFields()) {
                     FieldVector vector = root.getVector(field.getName());
                     DataType type = df.schema().field(field.getName()).type;
-                    if (type == DataTypes.IntegerType) {
-                        writeIntField(df, vector, from, count);
-                    } else if (type == DataTypes.LongType) {
-                        writeLongField(df, vector, from, count);
-                    } else if (type == DataTypes.ShortType) {
-                        writeShortField(df, vector, from, count);
-                    } else if (type == DataTypes.ByteType) {
-                        writeByteField(df, vector, from, count);
-                    } else if (type == DataTypes.CharType) {
-                        writeCharField(df, vector, from, count);
-                    } else if (type == DataTypes.BooleanType) {
-                        writeBooleanField(df, vector, from, count);
-                    } else if (type == DataTypes.FloatType) {
-                        writeFloatField(df, vector, from, count);
-                    } else if (type == DataTypes.DoubleType) {
-                        writeDoubleField(df, vector, from, count);
-                    } else if (type == DataTypes.IntegerObjectType) {
-                        writeIntObjectField(df, vector, from, count);
-                    } else if (type == DataTypes.LongObjectType) {
-                        writeLongObjectField(df, vector, from, count);
-                    } else if (type == DataTypes.ShortObjectType) {
-                        writeShortObjectField(df, vector, from, count);
-                    } else if (type == DataTypes.ByteObjectType) {
-                        writeByteObjectField(df, vector, from, count);
-                    } else if (type == DataTypes.CharObjectType) {
-                        writeCharObjectField(df, vector, from, count);
-                    } else if (type == DataTypes.BooleanObjectType) {
-                        writeBooleanObjectField(df, vector, from, count);
-                    } else if (type == DataTypes.FloatObjectType) {
-                        writeFloatObjectField(df, vector, from, count);
-                    } else if (type == DataTypes.DoubleObjectType) {
-                        writeDoubleObjectField(df, vector, from, count);
-                    } else if (type == DataTypes.DecimalType) {
-                        writeDecimalField(df, vector, from, count);
-                    } else if (type == DataTypes.StringType) {
-                        writeStringField(df, vector, from, count);
-                    } else if (type == DataTypes.DateType) {
-                        writeDateField(df, vector, from, count);
-                    } else if (type == DataTypes.TimeType) {
-                        writeTimeField(df, vector, from, count);
-                    } else if (type == DataTypes.DateTimeType) {
-                        writeDateTimeField(df, vector, from, count);
-                    } else if (type == DataTypes.ByteArrayType) {
-                        writeByteArrayField(df, vector, from, count);
-                    } else {
-                        throw new UnsupportedOperationException("Not supported type: " + type);
+                    switch (type.id()) {
+                        case Integer:
+                            writeIntField(df, vector, from, count);
+                            break;
+                        case Long:
+                            writeLongField(df, vector, from, count);
+                            break;
+                        case Double:
+                            writeDoubleField(df, vector, from, count);
+                            break;
+                        case Float:
+                            writeFloatField(df, vector, from, count);
+                            break;
+                        case Boolean:
+                            writeBooleanField(df, vector, from, count);
+                            break;
+                        case Byte:
+                            writeByteField(df, vector, from, count);
+                            break;
+                        case Short:
+                            writeShortField(df, vector, from, count);
+                            break;
+                        case Char:
+                            writeCharField(df, vector, from, count);
+                            break;
+                        case Object: {
+                            Class clazz = ((ObjectType) type).getObjectClass();
+                            if (clazz == Integer.class) {
+                                writeIntObjectField(df, vector, from, count);
+                            } else if (clazz == Long.class) {
+                                writeLongObjectField(df, vector, from, count);
+                            } else if (clazz == Double.class) {
+                                writeDoubleObjectField(df, vector, from, count);
+                            } else if (clazz == Float.class) {
+                                writeFloatObjectField(df, vector, from, count);
+                            } else if (clazz == Boolean.class) {
+                                writeBooleanObjectField(df, vector, from, count);
+                            } else if (clazz == Byte.class) {
+                                writeByteObjectField(df, vector, from, count);
+                            } else if (clazz == Short.class) {
+                                writeShortObjectField(df, vector, from, count);
+                            } else if (clazz == Character.class) {
+                                writeCharObjectField(df, vector, from, count);
+                            } else if (clazz == BigDecimal.class) {
+                                writeDecimalField(df, vector, from, count);
+                            } else if (clazz == String.class) {
+                                writeStringField(df, vector, from, count);
+                            } else if (clazz == LocalDate.class) {
+                                writeDateField(df, vector, from, count);
+                            } else if (clazz == LocalTime.class) {
+                                writeTimeField(df, vector, from, count);
+                            } else if (clazz == LocalDateTime.class) {
+                                writeDateTimeField(df, vector, from, count);
+                            } else {
+                                throw new UnsupportedOperationException("Unsupported type: " + type);
+                            }
+                            break;
+                        }
+                        case Array: {
+                            DataType etype = ((ArrayType) type).getComponentType();
+                            switch (etype.id()) {
+                                case Byte:
+                                    writeByteArrayField(df, vector, from, count);
+                                    break;
+                                default:
+                                    throw new UnsupportedOperationException("Unsupported type: " + type);
+                            }
+                            break;
+                        }
+
+                        default:
+                            throw new UnsupportedOperationException("Unsupported type: " + type);
                     }
                 }
 
@@ -277,7 +317,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         BitVector vector = (BitVector) fieldVector;
 
-        if (fieldVector.getNullCount() == 0) {
+        if (fieldVector.getField().isNullable()) {
             boolean[] a = new boolean[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i) != 0;
@@ -302,7 +342,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         TinyIntVector vector = (TinyIntVector) fieldVector;
 
-        if (fieldVector.getNullCount() == 0) {
+        if (fieldVector.getField().isNullable()) {
             byte[] a = new byte[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
@@ -327,7 +367,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         SmallIntVector vector = (SmallIntVector) fieldVector;
 
-        if (fieldVector.getNullCount() == 0) {
+        if (fieldVector.getField().isNullable()) {
             char[] a = new char[count];
             for (int i = 0; i < count; i++) {
                 a[i] = (char) vector.get(i);
@@ -352,7 +392,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         SmallIntVector vector = (SmallIntVector) fieldVector;
 
-        if (fieldVector.getNullCount() == 0) {
+        if (fieldVector.getField().isNullable()) {
             short[] a = new short[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
@@ -377,7 +417,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         IntVector vector = (IntVector) fieldVector;
 
-        if (fieldVector.getNullCount() == 0) {
+        if (fieldVector.getField().isNullable()) {
             int[] a = new int[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
@@ -402,7 +442,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         BigIntVector vector = (BigIntVector) fieldVector;
 
-        if (fieldVector.getNullCount() == 0) {
+        if (fieldVector.getField().isNullable()) {
             long[] a = new long[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
@@ -427,7 +467,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         Float4Vector vector = (Float4Vector) fieldVector;
 
-        if (fieldVector.getNullCount() == 0) {
+        if (fieldVector.getField().isNullable()) {
             float[] a = new float[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
@@ -452,7 +492,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         Float8Vector vector = (Float8Vector) fieldVector;
 
-        if (fieldVector.getNullCount() == 0) {
+        if (fieldVector.getField().isNullable()) {
             double[] a = new double[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
@@ -940,7 +980,7 @@ public class Arrow {
     }
 
     /** Converts a smile schema to arrow schema. */
-    private Schema toArrowSchema(StructType schema) {
+    public static Schema toArrowSchema(StructType schema) {
         List<Field> fields = new ArrayList<>();
         for (StructField field : schema.fields()) {
             fields.add(toArrowField(field));
@@ -950,7 +990,7 @@ public class Arrow {
     }
 
     /** Converts an arrow schema to smile schema. */
-    private StructType toSmileSchema(Schema schema) {
+    public static StructType toSmileSchema(Schema schema) {
         List<StructField> fields = new ArrayList<>();
         for (Field field : schema.getFields()) {
             fields.add(toSmileField(field));
@@ -960,103 +1000,118 @@ public class Arrow {
     }
 
     /** Converts a smile struct field to arrow field. */
-    private Field toArrowField(smile.data.type.StructField field) {
-        if (field.type == DataTypes.BooleanType) {
-            return new Field(field.name, new FieldType(false, new ArrowType.Bool(), null), null);
-        } else if (field.type == DataTypes.CharType) {
-            return new Field(field.name, new FieldType(false, new ArrowType.Int(16, false), null), null);
-        } else if (field.type == DataTypes.ByteType) {
-            return new Field(field.name, new FieldType(false, new ArrowType.Int(8, true), null), null);
-        } else if (field.type == DataTypes.ShortType) {
-            return new Field(field.name, new FieldType(false, new ArrowType.Int(16, true), null), null);
-        } else if (field.type == DataTypes.IntegerType) {
-            return new Field(field.name, new FieldType(false, new ArrowType.Int(32, true), null), null);
-        } else if (field.type == DataTypes.LongType) {
-            return new Field(field.name, new FieldType(false, new ArrowType.Int(64, true), null), null);
-        } else if (field.type == DataTypes.FloatType) {
-            return new Field(field.name, new FieldType(false, new ArrowType.FloatingPoint(SINGLE), null), null);
-        } else if (field.type == DataTypes.DoubleType) {
-            return new Field(field.name, new FieldType(false, new ArrowType.FloatingPoint(DOUBLE), null), null);
-        } else if (field.type == DataTypes.BooleanObjectType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.Bool()), null);
-        } else if (field.type == DataTypes.CharObjectType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.Int(16, false)), null);
-        } else if (field.type == DataTypes.ByteObjectType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.Int(8, true)), null);
-        } else if (field.type == DataTypes.ShortObjectType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.Int(16, true)), null);
-        } else if (field.type == DataTypes.IntegerObjectType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.Int(32, true)), null);
-        } else if (field.type == DataTypes.LongObjectType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.Int(64, true)), null);
-        } else if (field.type == DataTypes.FloatObjectType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.FloatingPoint(SINGLE)), null);
-        } else if (field.type == DataTypes.DoubleObjectType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.FloatingPoint(DOUBLE)), null);
-        } else if (field.type == DataTypes.DecimalType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.Decimal(28, 10)), null);
-        } else if (field.type == DataTypes.StringType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.Utf8()), null);
-        } else if (field.type instanceof smile.data.type.DateType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.Date(DateUnit.DAY)), null);
-        } else if (field.type instanceof smile.data.type.TimeType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.Time(TimeUnit.MILLISECOND, 32)), null);
-        } else if (field.type instanceof smile.data.type.DateTimeType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.Timestamp(TimeUnit.MILLISECOND, java.time.ZoneOffset.UTC.getId())), null);
-        } else if (field.type == DataTypes.BooleanArrayType) {
-            return new Field(field.name,
-                    new FieldType(false, new ArrowType.List(), null),
-                    // children type
-                    Arrays.asList(new Field(null, new FieldType(false, new ArrowType.Bool(), null), null))
-            );
-        } else if (field.type == DataTypes.CharArrayType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.Utf8()), null);
-        } else if (field.type == DataTypes.ByteArrayType) {
-            return new Field(field.name, FieldType.nullable(new ArrowType.Binary()), null);
-        } else if (field.type == DataTypes.ShortArrayType) {
-            return new Field(field.name,
-                    new FieldType(false, new ArrowType.List(), null),
-                    // children type
-                    Arrays.asList(new Field(null, new FieldType(false, new ArrowType.Int(16, true), null), null))
-            );
-        } else if (field.type == DataTypes.IntegerArrayType) {
-            return new Field(field.name,
-                    new FieldType(false, new ArrowType.List(), null),
-                    // children type
-                    Arrays.asList(new Field(null, new FieldType(false, new ArrowType.Int(32, true), null), null))
-            );
-        } else if (field.type == DataTypes.LongArrayType) {
-            return new Field(field.name,
-                    new FieldType(false, new ArrowType.List(), null),
-                    // children type
-                    Arrays.asList(new Field(null, new FieldType(false, new ArrowType.Int(64, true), null), null))
-            );
-        } else if (field.type == DataTypes.FloatArrayType) {
-            return new Field(field.name,
-                    new FieldType(false, new ArrowType.List(), null),
-                    // children type
-                    Arrays.asList(new Field(null, new FieldType(false, new ArrowType.FloatingPoint(SINGLE), null), null))
-            );
-        } else if (field.type == DataTypes.DoubleArrayType) {
-            return new Field(field.name,
-                    new FieldType(false, new ArrowType.List(), null),
-                    // children type
-                    Arrays.asList(new Field(null, new FieldType(false, new ArrowType.FloatingPoint(DOUBLE), null), null))
-            );
-        } else if (field.type instanceof smile.data.type.StructType) {
-            smile.data.type.StructType children = (smile.data.type.StructType) field.type;
-            return new Field(field.name,
-                    new FieldType(false, new ArrowType.Struct(), null),
-                    // children type
-                    Arrays.stream(children.fields()).map(this::toArrowField).collect(Collectors.toList())
-            );
-        } else {
-            throw new UnsupportedOperationException("Unsupported smile to arrow type conversion: " + field.type);
+    public static Field toArrowField(smile.data.type.StructField field) {
+        switch (field.type.id()) {
+            case Integer:
+                return new Field(field.name, new FieldType(false, new ArrowType.Int(32, true), null), null);
+            case Long:
+                return new Field(field.name, new FieldType(false, new ArrowType.Int(64, true), null), null);
+            case Double:
+                return new Field(field.name, new FieldType(false, new ArrowType.FloatingPoint(DOUBLE), null), null);
+            case Float:
+                return new Field(field.name, new FieldType(false, new ArrowType.FloatingPoint(SINGLE), null), null);
+            case Boolean:
+                return new Field(field.name, new FieldType(false, new ArrowType.Bool(), null), null);
+            case Byte:
+                return new Field(field.name, new FieldType(false, new ArrowType.Int(8, true), null), null);
+            case Short:
+                return new Field(field.name, new FieldType(false, new ArrowType.Int(16, true), null), null);
+            case Char:
+                return new Field(field.name, new FieldType(false, new ArrowType.Int(16, false), null), null);
+            case Decimal:
+                return new Field(field.name, FieldType.nullable(new ArrowType.Decimal(28, 10)), null);
+            case String:
+                return new Field(field.name, FieldType.nullable(new ArrowType.Utf8()), null);
+            case Date:
+                return new Field(field.name, FieldType.nullable(new ArrowType.Date(DateUnit.DAY)), null);
+            case Time:
+                return new Field(field.name, FieldType.nullable(new ArrowType.Time(TimeUnit.MILLISECOND, 32)), null);
+            case DateTime:
+                return new Field(field.name, FieldType.nullable(new ArrowType.Timestamp(TimeUnit.MILLISECOND, java.time.ZoneOffset.UTC.getId())), null);
+            case Object: {
+                Class clazz = ((ObjectType) field.type).getObjectClass();
+                if (clazz == Integer.class) {
+                    return new Field(field.name, FieldType.nullable(new ArrowType.Int(32, true)), null);
+                } else if (clazz == Long.class) {
+                    return new Field(field.name, FieldType.nullable(new ArrowType.Int(64, true)), null);
+                } else if (clazz == Double.class) {
+                    return new Field(field.name, FieldType.nullable(new ArrowType.FloatingPoint(DOUBLE)), null);
+                } else if (clazz == Float.class) {
+                    return new Field(field.name, FieldType.nullable(new ArrowType.FloatingPoint(SINGLE)), null);
+                } else if (clazz == Boolean.class) {
+                    return new Field(field.name, FieldType.nullable(new ArrowType.Bool()), null);
+                } else if (clazz == Byte.class) {
+                    return new Field(field.name, FieldType.nullable(new ArrowType.Int(8, true)), null);
+                } else if (clazz == Short.class) {
+                    return new Field(field.name, FieldType.nullable(new ArrowType.Int(16, true)), null);
+                } else if (clazz == Character.class) {
+                    return new Field(field.name, FieldType.nullable(new ArrowType.Int(16, false)), null);
+                } else {
+                    throw new UnsupportedOperationException("Unsupported smile to arrow type conversion: " + field.type);
+                }
+            }
+            case Array: {
+                DataType etype = ((ArrayType) field.type).getComponentType();
+                switch (etype.id()) {
+                    case Integer:
+                        return new Field(field.name,
+                                new FieldType(false, new ArrowType.List(), null),
+                                // children type
+                                Arrays.asList(new Field(null, new FieldType(false, new ArrowType.Int(32, true), null), null))
+                        );
+                    case Long:
+                        return new Field(field.name,
+                                new FieldType(false, new ArrowType.List(), null),
+                                // children type
+                                Arrays.asList(new Field(null, new FieldType(false, new ArrowType.Int(64, true), null), null))
+                        );
+                    case Double:
+                        return new Field(field.name,
+                                new FieldType(false, new ArrowType.List(), null),
+                                // children type
+                                Arrays.asList(new Field(null, new FieldType(false, new ArrowType.FloatingPoint(DOUBLE), null), null))
+                        );
+                    case Float:
+                        return new Field(field.name,
+                                new FieldType(false, new ArrowType.List(), null),
+                                // children type
+                                Arrays.asList(new Field(null, new FieldType(false, new ArrowType.FloatingPoint(SINGLE), null), null))
+                        );
+                    case Boolean:
+                        return new Field(field.name,
+                                new FieldType(false, new ArrowType.List(), null),
+                                // children type
+                                Arrays.asList(new Field(null, new FieldType(false, new ArrowType.Bool(), null), null))
+                        );
+                    case Byte:
+                        return new Field(field.name, FieldType.nullable(new ArrowType.Binary()), null);
+                    case Short:
+                        return new Field(field.name,
+                                new FieldType(false, new ArrowType.List(), null),
+                                // children type
+                                Arrays.asList(new Field(null, new FieldType(false, new ArrowType.Int(16, true), null), null))
+                        );
+                    case Char:
+                        return new Field(field.name, FieldType.nullable(new ArrowType.Utf8()), null);
+                    default:
+                        throw new UnsupportedOperationException("Unsupported smile to arrow type conversion: " + field.type);
+                }
+            }
+            case Struct: {
+                smile.data.type.StructType children = (smile.data.type.StructType) field.type;
+                return new Field(field.name,
+                        new FieldType(false, new ArrowType.Struct(), null),
+                        // children type
+                        Arrays.stream(children.fields()).map(Arrow::toArrowField).collect(Collectors.toList())
+                );
+            }
+            default:
+                throw new UnsupportedOperationException("Unsupported smile to arrow type conversion: " + field.type);
         }
     }
 
     /** Converts an arrow field to smile struct field. */
-    private StructField toSmileField(Field field) {
+    public static StructField toSmileField(Field field) {
         String name = field.getName();
         ArrowType type = field.getType();
         boolean nullable = field.isNullable();
@@ -1116,11 +1171,11 @@ public class Arrow {
                 return new StructField(name, DataTypes.array(toSmileField(child.get(0)).type));
 
             case Struct:
-                List<StructField> children = field.getChildren().stream().map(this::toSmileField).collect(Collectors.toList());
+                List<StructField> children = field.getChildren().stream().map(Arrow::toSmileField).collect(Collectors.toList());
                 return new StructField(name, DataTypes.struct(children));
 
             default:
-                throw new UnsupportedOperationException("Unsupported ArrowType: " + type);
+                throw new UnsupportedOperationException("Unsupported arrow to smile type conversion: " + type);
         }
     }
 }

@@ -37,6 +37,11 @@ public class StringType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.String;
+    }
+
+    @Override
     public String toString() {
         return "String";
     }

@@ -84,6 +84,11 @@ public class StructType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Struct;
+    }
+
+    @Override
     public String toString() {
         return Arrays.toString(fields);
     }

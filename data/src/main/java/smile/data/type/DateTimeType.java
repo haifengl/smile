@@ -61,6 +61,11 @@ public class DateTimeType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.DateTime;
+    }
+
+    @Override
     public String toString() {
         return "DateTime";
     }

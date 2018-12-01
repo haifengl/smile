@@ -39,6 +39,11 @@ public class DoubleType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Double;
+    }
+
+    @Override
     public String name() {
         return "double";
     }

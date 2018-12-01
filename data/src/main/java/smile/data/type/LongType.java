@@ -39,6 +39,11 @@ public class LongType implements DataType {
     }
 
     @Override
+    public ID id() {
+        return ID.Long;
+    }
+
+    @Override
     public String name() {
         return "long";
     }
