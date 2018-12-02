@@ -166,6 +166,9 @@ public class Arrow {
                                     throw new UnsupportedOperationException("Unsupported float precision: " + precision);
                             }
                             break;
+                        case Decimal:
+                            vectors[j] = readDecimalField(fieldVector);
+                            break;
                         case Bool:
                             vectors[j] = readBitField(fieldVector);
                             break;
@@ -512,16 +515,32 @@ public class Arrow {
         }
     }
 
+    /** Reads a decmal column. */
+    private smile.data.vector.BaseVector readDecimalField(FieldVector fieldVector) {
+        int count = fieldVector.getValueCount();
+        BigDecimal[] a = new BigDecimal[count];
+        DecimalVector vector = (DecimalVector) fieldVector;
+        for (int i = 0; i < count; i++) {
+            a[i] = vector.isNull(i) ? null : vector.getObject(i);
+        }
+
+        return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+    }
+
     /** Reads a date column. */
     private smile.data.vector.BaseVector readDateField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
-        DateMilliVector vector = (DateMilliVector) fieldVector;
         LocalDate[] a = new LocalDate[count];
-        for (int i = 0; i < count; i++) {
-            if (vector.isNull(i))
-                a[i] = null;
-            else
-                a[i] = LocalDate.ofEpochDay(vector.get(i));
+        if (fieldVector instanceof DateDayVector) {
+            DateDayVector vector = (DateDayVector) fieldVector;
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.isNull(i) ? null : LocalDate.ofEpochDay(vector.get(i));
+            }
+        } else if (fieldVector instanceof DateMilliVector) {
+            DateMilliVector vector = (DateMilliVector) fieldVector;
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.isNull(i) ? null : LocalDate.ofEpochDay(vector.get(i));
+            }
         }
 
         return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
@@ -530,28 +549,54 @@ public class Arrow {
     /** Reads a time column. */
     private smile.data.vector.BaseVector readTimeField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
-        TimeNanoVector vector = (TimeNanoVector) fieldVector;
         LocalTime[] a = new LocalTime[count];
-        for (int i = 0; i < count; i++) {
-            if (vector.isNull(i))
-                a[i] = null;
-            else
-                a[i] = LocalTime.ofNanoOfDay(vector.get(i));
+        if (fieldVector instanceof TimeNanoVector) {
+            TimeNanoVector vector = (TimeNanoVector) fieldVector;
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i));
+            }
+        } else if (fieldVector instanceof TimeMilliVector) {
+            TimeMilliVector vector = (TimeMilliVector) fieldVector;
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000000);
+            }
+        } else if (fieldVector instanceof TimeMicroVector) {
+            TimeMicroVector vector = (TimeMicroVector) fieldVector;
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000);
+            }
+        } else if (fieldVector instanceof TimeSecVector) {
+            TimeSecVector vector = (TimeSecVector) fieldVector;
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.isNull(i) ? null : LocalTime.ofSecondOfDay(vector.get(i));
+            }
         }
-
         return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
     }
 
     /** Reads a DateTime column. */
     private smile.data.vector.BaseVector readDateTimeField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
-        TimeStampMilliVector vector = (TimeStampMilliVector) fieldVector;
         LocalDateTime[] a = new LocalDateTime[count];
-        for (int i = 0; i < count; i++) {
-            if (vector.isNull(i))
-                a[i] = null;
-            else
-                a[i] = LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)), ZoneOffset.UTC);
+        TimeStampVector vector = (TimeStampVector) fieldVector;
+        String timezone = ((ArrowType.Timestamp) fieldVector.getField().getType()).getTimezone();
+        ZoneOffset zone = timezone == null ? OffsetDateTime.now().getOffset() : ZoneOffset.of(timezone);
+        if (fieldVector instanceof TimeStampMilliVector) {
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)), zone);
+            }
+        } else if (fieldVector instanceof TimeStampNanoVector) {
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)/1000000), zone);
+            }
+        } else if (fieldVector instanceof TimeStampMicroVector) {
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)/1000), zone);
+            }
+        } else if (fieldVector instanceof TimeStampSecVector) {
+            for (int i = 0; i < count; i++) {
+                a[i] = vector.isNull(i) ? null : LocalDateTime.ofEpochSecond(vector.get(i), 0, zone);
+            }
         }
 
         return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
@@ -560,13 +605,25 @@ public class Arrow {
     /** Reads a byte[] column. */
     private smile.data.vector.BaseVector readByteArrayField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
-        VarBinaryVector vector = (VarBinaryVector) fieldVector;
         byte[][] a = new byte[count][];
-        for (int i = 0; i < count; i++) {
-            if (vector.isNull(i))
-                a[i] = null;
-            else
-                a[i] = vector.get(i);
+        if (fieldVector instanceof VarBinaryVector) {
+            VarBinaryVector vector = (VarBinaryVector) fieldVector;
+            for (int i = 0; i < count; i++) {
+                if (vector.isNull(i))
+                    a[i] = null;
+                else
+                    a[i] = vector.get(i);
+            }
+        } else if (fieldVector instanceof FixedSizeBinaryVector){
+            FixedSizeBinaryVector vector = (FixedSizeBinaryVector) fieldVector;
+            for (int i = 0; i < count; i++) {
+                if (vector.isNull(i))
+                    a[i] = null;
+                else
+                    a[i] = vector.get(i);
+            }
+        } else {
+            throw new UnsupportedOperationException("Unsupported binary vector: " + fieldVector);
         }
 
         return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
@@ -919,26 +976,6 @@ public class Arrow {
         fieldVector.setValueCount(count);
     }
 
-    /** Writes a datetime column. */
-    private void writeDateTimeField(DataFrame df, FieldVector fieldVector, int from, int count) throws UnsupportedEncodingException {
-        fieldVector.setInitialCapacity(count);
-        fieldVector.allocateNew();
-
-        TimeStampMilliVector vector = (TimeStampMilliVector) fieldVector;
-        smile.data.vector.Vector<LocalDateTime> column = df.vector(fieldVector.getField().getName());
-        for (int i = 0, j = from; i < count; i++, j++) {
-            LocalDateTime x = column.get(j);
-            if (x == null) {
-                vector.setNull(i);
-            } else {
-                vector.setIndexDefined(i);
-                vector.setSafe(i, x.toInstant(ZoneOffset.UTC).toEpochMilli());
-            }
-        }
-
-        fieldVector.setValueCount(count);
-    }
-
     /** Writes a time column. */
     private void writeTimeField(DataFrame df, FieldVector fieldVector, int from, int count) throws UnsupportedEncodingException {
         fieldVector.setInitialCapacity(count);
@@ -953,6 +990,26 @@ public class Arrow {
             } else {
                 vector.setIndexDefined(i);
                 vector.setSafe(i, x.toNanoOfDay());
+            }
+        }
+
+        fieldVector.setValueCount(count);
+    }
+
+    /** Writes a datetime column. */
+    private void writeDateTimeField(DataFrame df, FieldVector fieldVector, int from, int count) throws UnsupportedEncodingException {
+        fieldVector.setInitialCapacity(count);
+        fieldVector.allocateNew();
+
+        TimeStampMilliVector vector = (TimeStampMilliVector) fieldVector;
+        smile.data.vector.Vector<LocalDateTime> column = df.vector(fieldVector.getField().getName());
+        for (int i = 0, j = from; i < count; i++, j++) {
+            LocalDateTime x = column.get(j);
+            if (x == null) {
+                vector.setNull(i);
+            } else {
+                vector.setIndexDefined(i);
+                vector.setSafe(i, x.toInstant(OffsetDateTime.now().getOffset()).toEpochMilli());
             }
         }
 
