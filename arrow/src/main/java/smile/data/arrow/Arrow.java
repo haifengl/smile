@@ -531,6 +531,7 @@ public class Arrow {
     private smile.data.vector.BaseVector readDateField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         LocalDate[] a = new LocalDate[count];
+        ZoneOffset zone = OffsetDateTime.now().getOffset();
         if (fieldVector instanceof DateDayVector) {
             DateDayVector vector = (DateDayVector) fieldVector;
             for (int i = 0; i < count; i++) {
@@ -539,7 +540,7 @@ public class Arrow {
         } else if (fieldVector instanceof DateMilliVector) {
             DateMilliVector vector = (DateMilliVector) fieldVector;
             for (int i = 0; i < count; i++) {
-                a[i] = vector.isNull(i) ? null : LocalDate.ofEpochDay(vector.get(i));
+                a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)), zone).toLocalDate();
             }
         }
 
