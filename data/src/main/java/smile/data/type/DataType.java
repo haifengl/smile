@@ -356,8 +356,8 @@ public interface DataType extends Serializable {
      * either primitive or boxed.
      */
     static boolean isLong(DataType t) {
-        return t.id() == ID.Long ||
-               t == DataTypes.object(Long.class);
+        return (t.id() == ID.Long) ||
+               (t.id() == ID.Object && ((ObjectType) t).getObjectClass() == Long.class);
     }
 
     /**
@@ -365,8 +365,8 @@ public interface DataType extends Serializable {
      * either primitive or boxed.
      */
     static boolean isFloat(DataType t) {
-        return t.id () == ID.Float ||
-               t == DataTypes.object(Float.class);
+        return (t.id () == ID.Float) ||
+               (t.id() == ID.Object && ((ObjectType) t).getObjectClass() == Float.class);
     }
 
     /**
@@ -374,7 +374,7 @@ public interface DataType extends Serializable {
      * either primitive or boxed.
      */
     static boolean isDouble(DataType t) {
-        return t.id() == ID.Double ||
-               t == DataTypes.object(Double.class);
+        return (t.id() == ID.Double) ||
+               (t.id() == ID.Object && ((ObjectType) t).getObjectClass() == Double.class);
     }
 }
