@@ -73,31 +73,40 @@ public class Model extends Formula {
      * Apply the formula on a tuple to generate the model data.
      */
     public Instance<Tuple> map(Tuple o) {
-        DataType type = y.type();
-        if (type == DataTypes.DoubleType || type == DataTypes.FloatType) {
-            return new Instance<Tuple>() {
-                @Override
-                public Tuple x() {
-                    return apply(o);
-                }
+        switch (y.type().id()) {
+            case Double:
+            case Float:
+                return new Instance<Tuple>() {
+                    @Override
+                    public Tuple x() {
+                        return apply(o);
+                    }
 
-                @Override
-                public double y() {
-                    return y.applyAsDouble(o);
-                }
-            };
-        } else {
-            return new Instance<Tuple>() {
-                @Override
-                public Tuple x() {
-                    return apply(o);
-                }
+                    @Override
+                    public double y() {
+                        return y.applyAsDouble(o);
+                    }
+                };
 
-                @Override
-                public int label() {
-                    return y.applyAsInt(o);
-                }
-            };
+            case Integer:
+            case Boolean:
+            case Short:
+            case Byte:
+            case Char:
+                return new Instance<Tuple>() {
+                    @Override
+                    public Tuple x() {
+                        return apply(o);
+                    }
+
+                    @Override
+                    public int label() {
+                        return y.applyAsInt(o);
+                    }
+                };
+
+            default:
+                throw new UnsupportedOperationException("Unsupported response type: " + y.type());
         }
     }
 
