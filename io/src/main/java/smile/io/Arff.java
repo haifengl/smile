@@ -13,19 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data.parser;
+package smile.io;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StreamTokenizer;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.type.DataTypes;
+import smile.data.type.NominalScale;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 
 /**
  * Weka ARFF (attribute relation file format) is an ASCII
@@ -54,7 +60,8 @@ import smile.data.DataFrame;
  *
  * @author Haifeng Li
  */
-public class Arff {
+public class Arff implements Closeable {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Arff.class);
 
     /** The keyword used to denote the start of an arff header */
     private static final String ARFF_RELATION = "@relation";
@@ -78,16 +85,23 @@ public class Arff {
     private static final String ARFF_END_SUBRELATION = "@end";
     private static final String PREMATURE_END_OF_FILE = "premature end of file";
 
+    /** Buffered file reader. */
+    private Reader reader;
+    /** The tokenizer to parse the file. */
+    private StreamTokenizer tokenizer;
+    /** The name of ARFF relation. */
+    private String name;
+    /** The schema of ARFF relation. */
+    private StructType schema;
+
     /**
      * Constructor.
      */
-    private Arff() {
-    }
-    
-    /**
-     * Initializes the StreamTokenizer used for reading the ARFF file.
-     */
-    private static void initTokenizer(StreamTokenizer tokenizer) {
+    public Arff(Path path) throws IOException, ParseException {
+        FileInputStream stream = new FileInputStream(path.toFile());
+        reader = new BufferedReader(new InputStreamReader(stream));
+
+        tokenizer = new StreamTokenizer(reader);
         tokenizer.resetSyntax();
         tokenizer.whitespaceChars(0, ' ');
         tokenizer.wordChars(' ' + 1, '\u00FF');
@@ -98,6 +112,13 @@ public class Arff {
         tokenizer.ordinaryChar('{');
         tokenizer.ordinaryChar('}');
         tokenizer.eolIsSignificant(true);
+
+        readHeader();
+    }
+
+    @Override
+    public void close() throws IOException {
+        reader.close();
     }
 
     /**
@@ -105,8 +126,9 @@ public class Arff {
      *
      * @throws IOException if reading the next token fails
      */
-    private static void getFirstToken(StreamTokenizer tokenizer) throws IOException {
+    private void getFirstToken() throws IOException {
         while (tokenizer.nextToken() == StreamTokenizer.TT_EOL) {
+            // empty lines
         }
 
         if ((tokenizer.ttype == '\'') || (tokenizer.ttype == '"')) {
@@ -122,7 +144,7 @@ public class Arff {
      * @param endOfFileOk true if EOF is OK
      * @throws IllegalStateException if it doesn't find an end of line
      */
-    private static void getLastToken(StreamTokenizer tokenizer, boolean endOfFileOk) throws IOException, ParseException {
+    private void getLastToken(boolean endOfFileOk) throws IOException, ParseException {
         if ((tokenizer.nextToken() != StreamTokenizer.TT_EOL) && ((tokenizer.ttype != StreamTokenizer.TT_EOF) || !endOfFileOk)) {
             throw new ParseException("end of line expected", tokenizer.lineno());
         }
@@ -133,10 +155,11 @@ public class Arff {
      *
      * @throws IllegalStateException if it finds a premature end of line
      */
-    private static void getNextToken(StreamTokenizer tokenizer) throws IOException, ParseException {
+    private void getNextToken() throws IOException, ParseException {
         if (tokenizer.nextToken() == StreamTokenizer.TT_EOL) {
             throw new ParseException("premature end of line", tokenizer.lineno());
         }
+
         if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
             throw new ParseException(PREMATURE_END_OF_FILE, tokenizer.lineno());
         } else if ((tokenizer.ttype == '\'') || (tokenizer.ttype == '"')) {
@@ -149,37 +172,39 @@ public class Arff {
     /**
      * Reads and stores header of an ARFF file.
      *
-     * @param attributes the set of attributes in this relation.
-     * @return the name of relation.
+     * @return the schema of relation.
      * @throws IllegalStateException if the information is not read successfully
      */
-    private static String readHeader(StreamTokenizer tokenizer, List<Attribute> attributes) throws IOException, ParseException {
-        /// The name of dataset.
-        String relationName = null;
-        // clear attribute set, which may be from previous parsing of other datasets.
-        attributes.clear();
+    private void readHeader() throws IOException, ParseException {
+        List<StructField> fields = new ArrayList<>();
 
         // Get name of relation.
-        getFirstToken(tokenizer);
+        getFirstToken();
         if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
             throw new ParseException(PREMATURE_END_OF_FILE, tokenizer.lineno());
         }
         if (ARFF_RELATION.equalsIgnoreCase(tokenizer.sval)) {
-            getNextToken(tokenizer);
-            relationName = tokenizer.sval;
-            getLastToken(tokenizer, false);
+            getNextToken();
+            name = tokenizer.sval;
+            logger.info("Read ARFF relation {}", name);
+            getLastToken(false);
         } else {
             throw new ParseException("keyword " + ARFF_RELATION + " expected", tokenizer.lineno());
         }
 
         // Get attribute declarations.
-        getFirstToken(tokenizer);
+        getFirstToken();
         if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
             throw new ParseException(PREMATURE_END_OF_FILE, tokenizer.lineno());
         }
 
         while (ARFF_ATTRIBUTE.equalsIgnoreCase(tokenizer.sval)) {
-            attributes.add(parseAttribute(tokenizer));
+            StructField attribute = parseAttribute();
+            // We may meet an relational attribute, which parseAttribute returns null
+            // as it flats the relational attribute out.
+            if (attribute != null) {
+                fields.add(parseAttribute());
+            }
         }
 
         // Check if data part follows. We can't easily check for EOL.
@@ -188,11 +213,11 @@ public class Arff {
         }
 
         // Check if any attributes have been declared.
-        if (attributes.isEmpty()) {
+        if (fields.isEmpty()) {
             throw new ParseException("no attributes declared", tokenizer.lineno());
         }
         
-        return relationName;
+        schema = DataTypes.struct(fields);
     }
 
     /**
@@ -202,51 +227,57 @@ public class Arff {
      * @throws IOException 	if the information is not read
      * 				successfully
      */
-    private static Attribute parseAttribute(StreamTokenizer tokenizer) throws IOException, ParseException {
-        Attribute attribute = null;
+    private StructField parseAttribute() throws IOException, ParseException {
+        StructField attribute = null;
 
         // Get attribute name.
-        getNextToken(tokenizer);
+        getNextToken();
         String attributeName = tokenizer.sval;
-        getNextToken(tokenizer);
+        getNextToken();
 
         // Check if attribute is nominal.
         if (tokenizer.ttype == StreamTokenizer.TT_WORD) {
-
             // Attribute is real, integer, or string.
-            if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_REAL) ||
-                    tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_INTEGER) ||
-                    tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_NUMERIC)) {
-                attribute = new NumericAttribute(attributeName);
-                readTillEOL(tokenizer);
+            if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_NUMERIC)) {
+                attribute = new StructField(attributeName, DataTypes.DoubleType);
+                readTillEOL();
+
+            } else if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_REAL)) {
+                attribute = new StructField(attributeName, DataTypes.FloatType);
+                readTillEOL();
+
+            } else if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_INTEGER)) {
+                attribute = new StructField(attributeName, DataTypes.IntegerType);
+                readTillEOL();
 
             } else if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_STRING)) {
-                attribute = new StringAttribute(attributeName);
-                readTillEOL(tokenizer);
+                attribute = new StructField(attributeName, DataTypes.StringType);
+                readTillEOL();
 
             } else if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_DATE)) {
-                String format = null;
                 if (tokenizer.nextToken() != StreamTokenizer.TT_EOL) {
                     if ((tokenizer.ttype != StreamTokenizer.TT_WORD) && (tokenizer.ttype != '\'') && (tokenizer.ttype != '\"')) {
                         throw new ParseException("not a valid date format", tokenizer.lineno());
                     }
-                    format = tokenizer.sval;
-                    readTillEOL(tokenizer);
+                    attribute = new StructField(attributeName, DataTypes.datetime(tokenizer.sval));
+                    readTillEOL();
                 } else {
+                    attribute = new StructField(attributeName, DataTypes.DateTimeType);
                     tokenizer.pushBack();
                 }
-                attribute = new DateAttribute(attributeName, null, format);
-                readTillEOL(tokenizer);
+                readTillEOL();
 
             } else if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_RELATIONAL)) {
-                readTillEOL(tokenizer);
+                logger.info("Encounter relational attribute {}. Flat out its attributes to top level.", attributeName);
+                readTillEOL();
 
             } else if (tokenizer.sval.equalsIgnoreCase(ARFF_END_SUBRELATION)) {
-                getNextToken(tokenizer);
+                getNextToken();
 
             } else {
                 throw new ParseException("Invalid attribute type or invalid enumeration", tokenizer.lineno());
             }
+
         } else {
 
             // Attribute is nominal.
@@ -269,11 +300,11 @@ public class Arff {
             for (int i = 0; i < values.length; i++) {
                 values[i] = attributeValues.get(i);
             }
-            attribute = new NominalAttribute(attributeName, values);
+            attribute = new StructField(attributeName, DataTypes.StringType);//new NominalScale(values);
         }
 
-        getLastToken(tokenizer, false);
-        getFirstToken(tokenizer);
+        getLastToken(false);
+        getFirstToken();
         if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
             throw new ParseException(PREMATURE_END_OF_FILE, tokenizer.lineno());
         }
@@ -286,127 +317,92 @@ public class Arff {
      *
      * @throws IOException in case something goes wrong
      */
-    private static void readTillEOL(StreamTokenizer tokenizer) throws IOException {
+    private void readTillEOL() throws IOException {
         while (tokenizer.nextToken() != StreamTokenizer.TT_EOL) {
+            // skip all the tokens before EOL
         }
 
+        // push back the EOL token
         tokenizer.pushBack();
+    }
+
+    /** Returns the name of relation. */
+    public String name() {
+        return name;
     }
 
     /**
      * Returns the attribute set of given stream.
      */
-    public static Attribute[] getAttributes(InputStream stream) throws IOException, ParseException {
-        Reader r = new BufferedReader(new InputStreamReader(stream));
-        StreamTokenizer tokenizer = new StreamTokenizer(r);
-        
-        ArffParser parser = new ArffParser();
-        parser.initTokenizer(tokenizer);
-
-        List<Attribute> attributes = new ArrayList<>();
-        parser.readHeader(tokenizer, attributes);
-
-        return attributes.toArray(new Attribute[attributes.size()]);
+    public StructType schema() {
+        return schema;
     }
-    
+
     /**
-     * Parse a dataset from given stream.
+     * Reads all the records.
      */
-    public static DataFrame read(String path) throws IOException, ParseException {
-        try (FileInputStream stream = new FileInputStream(path);
-             Reader reader = new BufferedReader(new InputStreamReader(stream))) {
+    public DataFrame read() throws IOException, ParseException {
+        return read(Integer.MAX_VALUE);
+    }
 
-            StreamTokenizer tokenizer = new StreamTokenizer(reader);
-            initTokenizer(tokenizer);
-
-            List<Attribute> attributes = new ArrayList<>();
-            String relationName = readHeader(tokenizer, attributes);
-
-            if (attributes.isEmpty()) {
-                throw new IOException("no header information available");
+    /**
+     * Reads a limited number of records.
+     * @param limit reads a limited number of records.
+     */
+    public DataFrame read(int limit) throws IOException, ParseException {
+        List<Tuple> data = new ArrayList<>();
+        for (int i = 0; i < limit; i++) {
+            // Check if end of file reached.
+            getFirstToken();
+            if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
+                break;
             }
-        
-            Attribute[] attr = new Attribute[attributes.size()];
-            attributes.toArray(attr);
-        
-            AttributeDataset data = new AttributeDataset(relationName, attributes.toArray(new Attribute[attributes.size()]));
-        
-            while (true) {
-                // Check if end of file reached.
-                getFirstToken(tokenizer);
-                if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
-                    break;
-                }
 
-                // Parse instance
-                if (tokenizer.ttype == '{') {
-                    readSparseInstance(tokenizer, data, attr);
-                } else {
-                    readInstance(tokenizer, data, attr);
-                }
-            }
-        
-            for (Attribute attribute : attributes) {
-                if (attribute instanceof NominalAttribute) {
-                    NominalAttribute a = (NominalAttribute) attribute;
-                    a.setOpen(false);
-                }
-            
-                if (attribute instanceof StringAttribute) {
-                    StringAttribute a = (StringAttribute) attribute;
-                    a.setOpen(false);
-                }
-            }
-        
-            return data;
+            // Parse instance
+            Object[] row = tokenizer.ttype == '{' ? readSparseInstance() : readInstance();
+            data.add(Tuple.of(row, schema));
         }
+
+        return DataFrame.of(data);
     }
 
     /**
      * Reads a single instance.
      * @throws ParseException if the information is not read successfully
      */
-    private void readInstance(StreamTokenizer tokenizer, AttributeDataset data, Attribute[] attributes) throws IOException, ParseException {
-        double[] x = responseIndex >= 0 ? new double[attributes.length - 1] : new double[attributes.length];
-        double y = Double.NaN;
-        
+    private Object[] readInstance() throws IOException, ParseException {
+        StructField[] fields = schema.fields();
+        int p = fields.length;
+        Object[] x = new Object[p];
+
         // Get values for all attributes.
-        for (int i = 0, k = 0; i < attributes.length; i++) {
+        for (int i = 0; i < p; i++) {
             // Get next token
             if (i > 0) {
-                getNextToken(tokenizer);
+                getNextToken();
             }
 
-            if (i == responseIndex) {
-                if (tokenizer.ttype == '?') {
-                    y = Double.NaN;
-                } else {
-                    y = attributes[i].valueOf(tokenizer.sval);
-                }
-            } else {
-                if (tokenizer.ttype == '?') {
-                    x[k++] = Double.NaN;
-                } else {
-                    x[k++] = attributes[i].valueOf(tokenizer.sval);
-                }
+            if (tokenizer.ttype != '?') {
+                x[i] = fields[i].type.valueOf(tokenizer.sval);
             }
         }
 
-        if (Double.isNaN(y)) data.add(x); else data.add(x, y);
+        return x;
     }
 
     /**
      * Reads a sparse instance using the tokenizer.
      * @throws ParseException if the information is not read successfully
      */
-    private void readSparseInstance(StreamTokenizer tokenizer, AttributeDataset data, Attribute[] attributes) throws IOException, ParseException {
-        double[] x = responseIndex >= 0 ? new double[attributes.length - 1] : new double[attributes.length];
-        double y = Double.NaN;
+    private Object[] readSparseInstance() throws IOException, ParseException {
+        StructField[] fields = schema.fields();
+        int p = fields.length;
+        Object[] x = new Object[p];
         int index = -1;
-        
+
         // Get values for all attributes.
         do {
-            getNextToken(tokenizer);
+            getNextToken();
             
             // end of instance
             if (tokenizer.ttype == '}') {
@@ -416,32 +412,22 @@ public class Arff {
             String s = tokenizer.sval.trim();
             if (index < 0) {
                 index = Integer.parseInt(s);
-                if (index < 0 || index >= attributes.length) {
+                if (index < 0 || index >= p) {
                     throw new ParseException("Invalid attribute index: " + index, tokenizer.lineno());
                 }
                 
             } else {
                 
                 String val = s;
-                if (index != responseIndex) {
-                    if (val.equals("?")) {
-                        x[index] = Double.NaN;
-                    } else {
-                        x[index] = attributes[index].valueOf(val);
-                    }
-                } else {
-                    if (val.equals("?")) {
-                        y = Double.NaN;
-                    } else {
-                        y = attributes[index].valueOf(val);
-                    }
+                if (!val.equals("?")) {
+                    x[index] = fields[index].type.valueOf(val);
                 }
-                
+
                 index = -1;
             }
             
         } while (tokenizer.ttype == StreamTokenizer.TT_WORD);
-        
-        if (Double.isNaN(y)) data.add(x); else data.add(x, y);
+
+        return x;
     }
 }
