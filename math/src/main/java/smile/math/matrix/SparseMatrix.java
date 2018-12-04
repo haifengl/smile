@@ -42,6 +42,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, SparseMatrix> {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseMatrix.class);
     private static final long serialVersionUID = 1L;
 
     /**
@@ -505,12 +506,90 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     }
 
     /**
-     * Parses a sparse matrix from a file in Harwell-Boeing Exchange Format.
+     * Reads a sparse matrix from a Harwell-Boeing Exchange Format file.
      * For details, see
      * <a href="http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html">http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html</a>.
+     *
      * Note that our implementation supports only real-valued matrix and we ignore
-     * the optional right hand side vectors.
-     * <p>
+     * the optional supplementary data (e.g. right hand side vectors).
+     *
+     * @param path the input file path.
+     *
+     * @author Haifeng Li
+     */
+    public static SparseMatrix harwell(java.nio.file.Path path) throws IOException {
+        logger.info("Reads Harwell-Boeing file '{}'", path.toAbsolutePath());
+        try (java.io.InputStream stream = java.nio.file.Files.newInputStream(path);
+             Scanner scanner = new Scanner(stream)) {
+
+            // Ignore the title line.
+            String line = scanner.nextLine();
+            logger.info(line);
+
+            line = scanner.nextLine().trim();
+            logger.info(line);
+            String[] tokens = line.split("\\s+");
+            int RHSCRD = Integer.parseInt(tokens[4]);
+
+            line = scanner.nextLine().trim();
+            logger.info(line);
+            if (!line.startsWith("R")) {
+                throw new UnsupportedOperationException("SparseMatrix supports only real-valued matrix.");
+            }
+
+            tokens = line.split("\\s+");
+            int nrows = Integer.parseInt(tokens[1]);
+            int ncols = Integer.parseInt(tokens[2]);
+            int nz = Integer.parseInt(tokens[3]);
+
+            line = scanner.nextLine();
+            logger.info(line);
+            if (RHSCRD > 0) {
+                line = scanner.nextLine();
+                logger.info(line);
+            }
+
+            int[] colIndex = new int[ncols + 1];
+            int[] rowIndex = new int[nz];
+            double[] data = new double[nz];
+            for (int i = 0; i <= ncols; i++) {
+                colIndex[i] = scanner.nextInt() - 1;
+            }
+            for (int i = 0; i < nz; i++) {
+                rowIndex[i] = scanner.nextInt() - 1;
+            }
+            for (int i = 0; i < nz; i++) {
+                data[i] = scanner.nextDouble();
+            }
+
+            return new SparseMatrix(nrows, ncols, data, rowIndex, colIndex);
+        }
+    }
+
+    /**
+     * Reads a sparse matrix from a Rutherford-Boeing Exchange Format file.
+     * The Rutherford Boeing format is an updated more flexible version of the
+     * Harwell Boeing format.
+     * For details, see
+     * <a href="http://people.sc.fsu.edu/~jburkardt/data/rb/rb.html">http://people.sc.fsu.edu/~jburkardt/data/rb/rb.html</a>.
+     * Especially, the supplementary data in the form of right-hand sides,
+     * estimates or solutions are treated as separate files.
+     *
+     * Note that our implementation supports only real-valued matrix and we ignore
+     * the optional supplementary data (e.g. right hand side vectors).
+     *
+     * @param path the input file path.
+     *
+     * @author Haifeng Li
+     */
+    public static SparseMatrix rutherford(java.nio.file.Path path) throws IOException {
+        // As we ignore the supplementary data, the parsing process
+        // is same as Harwell.
+        return harwell(path);
+    }
+
+    /**
+     * Reads a sparse matrix from a text file.
      * The first line contains three integers, which are the number of rows,
      * the number of columns, and the number of nonzero entries in the matrix.
      * <p>
@@ -524,62 +603,27 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      *
      * @author Haifeng Li
      */
-    public static SparseMatrix from(java.nio.file.Path path) throws IOException {
-        int nrows = 0, ncols = 0, n = 0;
-        int[] colIndex;
-        int[] rowIndex;
-        double[] data;
-
+    public static SparseMatrix text(java.nio.file.Path path) throws IOException {
         try (java.io.InputStream stream = java.nio.file.Files.newInputStream(path);
              Scanner scanner = new Scanner(stream)) {
-            String line = scanner.nextLine();
-            String[] tokens = line.split("\\s+");
-            if (tokens.length == 3) {
-                try {
-                    nrows = Integer.parseInt(tokens[0]);
-                    ncols = Integer.parseInt(tokens[1]);
-                    n = Integer.parseInt(tokens[2]);
-                } catch (Exception ex) {
-                }
-            }
+            int nrows = scanner.nextInt();
+            int ncols = scanner.nextInt();
+            int nz = scanner.nextInt();
 
-            if (n == 0) {
-                // Harwell-Boeing Exchange Format. We ignore first two lines.
-                line = scanner.nextLine().trim();
-                tokens = line.split("\\s+");
-                int RHSCRD = Integer.parseInt(tokens[4]);
-
-                line = scanner.nextLine().trim();
-                if (!line.startsWith("R")) {
-                    throw new UnsupportedOperationException("SparseMatrixParser supports only real-valued matrix.");
-                }
-
-                tokens = line.split("\\s+");
-                nrows = Integer.parseInt(tokens[1]);
-                ncols = Integer.parseInt(tokens[2]);
-                n = Integer.parseInt(tokens[3]);
-
-                line = scanner.nextLine();
-                if (RHSCRD > 0) {
-                    line = scanner.nextLine();
-                }
-            }
-
-            colIndex = new int[ncols + 1];
-            rowIndex = new int[n];
-            data = new double[n];
+            int[] colIndex = new int[ncols + 1];
+            int[] rowIndex = new int[nz];
+            double[] data = new double[nz];
             for (int i = 0; i <= ncols; i++) {
                 colIndex[i] = scanner.nextInt() - 1;
             }
-            for (int i = 0; i < n; i++) {
+            for (int i = 0; i < nz; i++) {
                 rowIndex[i] = scanner.nextInt() - 1;
             }
-            for (int i = 0; i < n; i++) {
+            for (int i = 0; i < nz; i++) {
                 data[i] = scanner.nextDouble();
             }
-        }
 
-        SparseMatrix matrix = new SparseMatrix(nrows, ncols, data, rowIndex, colIndex);
-        return matrix;
+            return new SparseMatrix(nrows, ncols, data, rowIndex, colIndex);
+        }
     }
 }
