@@ -407,4 +407,21 @@ public class JMatrixTest {
         assertEquals(22.0, data.get(1, 1), 1E-7);
         assertEquals(23.0, data.get(2, 1), 1E-7);
     }
+
+    /**
+     * Test of market method, of class Matrix.
+     */
+    @Test(expected = Test.None.class)
+    public void testMatrixMarketDense() throws Exception {
+        System.out.println("market dense");
+        Matrix data = Matrix.market(smile.util.Paths.getTestData("matrix/m_10_01.mm"));
+        assertEquals(false, data.isSymmetric());
+        assertEquals(10, data.nrows());
+        assertEquals(1, data.ncols());
+        assertEquals(0.193523, data.get(0, 0), 1E-7);
+        assertEquals(0.200518, data.get(1, 0), 1E-7);
+        assertEquals(0.625800, data.get(2, 0), 1E-7);
+        assertEquals(0.585233, data.get(3, 0), 1E-7);
+        assertEquals(0.127585, data.get(9, 0), 1E-7);
+    }
 }
