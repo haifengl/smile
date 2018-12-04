@@ -15,7 +15,10 @@
  *******************************************************************************/
 package smile.math.matrix;
 
+import java.io.InputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Scanner;
 import smile.math.MathEx;
@@ -517,9 +520,9 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      *
      * @author Haifeng Li
      */
-    public static SparseMatrix harwell(java.nio.file.Path path) throws IOException {
-        logger.info("Reads Harwell-Boeing file '{}'", path.toAbsolutePath());
-        try (java.io.InputStream stream = java.nio.file.Files.newInputStream(path);
+    public static SparseMatrix harwell(Path path) throws IOException {
+        logger.info("Reads sparse matrix file '{}'", path.toAbsolutePath());
+        try (InputStream stream = Files.newInputStream(path);
              Scanner scanner = new Scanner(stream)) {
 
             // Ignore the title line.
@@ -582,7 +585,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      *
      * @author Haifeng Li
      */
-    public static SparseMatrix rutherford(java.nio.file.Path path) throws IOException {
+    public static SparseMatrix rutherford(Path path) throws IOException {
         // As we ignore the supplementary data, the parsing process
         // is same as Harwell.
         return harwell(path);
@@ -603,8 +606,8 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      *
      * @author Haifeng Li
      */
-    public static SparseMatrix text(java.nio.file.Path path) throws IOException {
-        try (java.io.InputStream stream = java.nio.file.Files.newInputStream(path);
+    public static SparseMatrix text(Path path) throws IOException {
+        try (InputStream stream = Files.newInputStream(path);
              Scanner scanner = new Scanner(stream)) {
             int nrows = scanner.nextInt();
             int ncols = scanner.nextInt();
