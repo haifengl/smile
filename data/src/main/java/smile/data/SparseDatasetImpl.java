@@ -106,8 +106,13 @@ class SparseDatasetImpl implements SparseDataset {
     }
 
     @Override
-    public int length() {
+    public int nz() {
         return n;
+    }
+
+    @Override
+    public int nz(int j) {
+        return colSize[j];
     }
 
     @Override
@@ -123,31 +128,5 @@ class SparseDatasetImpl implements SparseDataset {
     @Override
     public Stream<SparseArray> stream() {
         return Arrays.stream(data);
-    }
-
-    @Override
-    public SparseMatrix toMatrix() {
-        int[] pos = new int[ncols];
-        int[] colIndex = new int[ncols + 1];
-        for (int i = 0; i < ncols; i++) {
-            colIndex[i + 1] = colIndex[i] + colSize[i];
-        }
-
-        int nrows = size();
-        int[] rowIndex = new int[n];
-        double[] x = new double[n];
-
-        for (int i = 0; i < nrows; i++) {
-            for (SparseArray.Entry e : data[i]) {
-                int j = e.i;
-                int k = colIndex[j] + pos[j];
-
-                rowIndex[k] = i;
-                x[k] = e.x;
-                pos[j]++;
-            }
-        }
-
-        return new SparseMatrix(nrows, ncols, x, rowIndex, colIndex);
     }
 }

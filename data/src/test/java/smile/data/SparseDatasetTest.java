@@ -120,7 +120,7 @@ public class SparseDatasetTest {
             SparseDataset data = SparseDataset.from(smile.util.Paths.getTestData("text/kos.txt"), 1);
             assertEquals(3430, data.size());
             assertEquals(6906, data.ncols());
-            assertEquals(353160, data.length());
+            assertEquals(353160, data.nz());
             assertEquals(2.0, data.get(0, 60), 1E-7);
             assertEquals(1.0, data.get(1, 1062), 1E-7);
             assertEquals(0.0, data.get(1, 1063), 1E-7);
