@@ -21,7 +21,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.data.SparseDataset;
+import smile.data.Dataset;
+import smile.data.Instance;
 import smile.math.SparseArray;
 
 /**
@@ -52,84 +53,74 @@ public class LibsvmTest {
     /**
      * Test of parse method, of class LibsvmParser.
      */
-    @Test
+    @Test(expected = Test.None.class)
     public void testParseNG20() throws Exception {
         System.out.println("NG20");
         DatasetReader reader = new DatasetReader();
-        try {
-            Dataset<Instance<SparseArray>> train = reader.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
-            Dataset<Instance<SparseArray>> test  = reader.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
-            int[] y = train.toArray(new int[train.size()]);
-            int[] testy = test.toArray(new int[test.size()]);
-            
-            assertEquals(train.size(), 15935);
-            assertEquals(y[0], 0);
-            assertEquals(train.get(0, 0), 0.0, 1E-7);
-            assertEquals(train.get(0, 1), 0.0, 1E-7);
-            assertEquals(train.get(0, 196), 2.0, 1E-7);
-            assertEquals(train.get(0, 320), 3.0, 1E-7);
-            assertEquals(train.get(0, 20504), 0.0, 1E-7);
-            assertEquals(train.get(0, 20505), 1.0, 1E-7);
-            assertEquals(train.get(0, 20506), 1.0, 1E-7);
-            assertEquals(train.get(0, 20507), 0.0, 1E-7);
+        Dataset<Instance<SparseArray>> train = reader.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
+        Dataset<Instance<SparseArray>> test  = reader.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
 
-            assertEquals(y[y.length-1], 16);
-            assertEquals(train.get(y.length-1, 0), 1.0, 1E-7);
-            assertEquals(train.get(y.length-1, 1), 0.0, 1E-7);
-            assertEquals(train.get(y.length-1, 9), 1.0, 1E-7);
-            assertEquals(train.get(y.length-1, 10), 0.0, 1E-7);
-            assertEquals(train.get(y.length-1, 57796), 0.0, 1E-7);
-            assertEquals(train.get(y.length-1, 57797), 1.0, 1E-7);
-            assertEquals(train.get(y.length-1, 57798), 0.0, 1E-7);
-            
-            assertEquals(test.size(), 3993);
-            assertEquals(testy[0], 1);
-            assertEquals(testy[testy.length-3], 17);
-            assertEquals(testy[testy.length-2], 18);
-            assertEquals(testy[testy.length-1], 16);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        assertEquals(15935, train.size());
+        assertEquals(1, train.get(0).label());
+        assertEquals(0.0, train.get(0).x().get(0), 1E-7);
+        assertEquals(0.0, train.get(0).x().get(1), 1E-7);
+        assertEquals(2.0, train.get(0).x().get(196), 1E-7);
+        assertEquals(3.0, train.get(0).x().get(320), 1E-7);
+        assertEquals(0.0, train.get(0).x().get(20504), 1E-7);
+        assertEquals(1.0, train.get(0).x().get(20505), 1E-7);
+        assertEquals(1.0, train.get(0).x().get(20506), 1E-7);
+        assertEquals(0.0, train.get(0).x().get(20507), 1E-7);
+
+        int n = train.size() - 1;
+        assertEquals(17, train.get(n).label(), 16);
+        assertEquals(1.0, train.get(n).x().get(0), 1E-7);
+        assertEquals(0.0, train.get(n).x().get(1), 1E-7);
+        assertEquals(1.0, train.get(n).x().get(9), 1E-7);
+        assertEquals(0.0, train.get(n).x().get(10), 1E-7);
+        assertEquals(0.0, train.get(n).x().get(57796), 1E-7);
+        assertEquals(1.0, train.get(n).x().get(57797), 1E-7);
+        assertEquals(0.0, train.get(n).x().get(57798), 1E-7);
+
+        n = test.size();
+        assertEquals(3993, test.size());
+        assertEquals(2, test.get(0).label());
+        assertEquals(18, test.get(n-3).label());
+        assertEquals(19, test.get(n-2).label());
+        assertEquals(17, test.get(n-1).label());
     }
 
     /**
      * Test of parse method, of class LibsvmParser.
      */
-    @Test
+    @Test(expected = Test.None.class)
     public void testParseGlass() throws Exception {
         System.out.println("glass");
-        LibsvmParser parser = new LibsvmParser();
-        try {
-            SparseDataset train = parser.parse("Glass", smile.data.parser.IOUtils.getTestDataFile("libsvm/glass.txt"));
-            double[][] x = train.toArray();
-            int[] y = train.toArray(new int[train.size()]);
+        DatasetReader reader = new DatasetReader();
+        Dataset<Instance<SparseArray>> train = reader.libsvm(smile.util.Paths.getTestData("libsvm/glass.txt"));
+
+        assertEquals(214, train.size());
+        assertEquals(9, train.get(0).x().size());
             
-            assertEquals(214, train.size());
-            assertEquals(9, x[0].length);
+        assertEquals( 1, train.get(0).label());
+        assertEquals(-0.134323, train.get(0).x().get(0), 1E-7);
+        assertEquals(-0.124812, train.get(0).x().get(1), 1E-7);
+        assertEquals( 1.000000, train.get(0).x().get(2), 1E-7);
+        assertEquals(-0.495327, train.get(0).x().get(3), 1E-7);
+        assertEquals(-0.296429, train.get(0).x().get(4), 1E-7);
+        assertEquals(-0.980676, train.get(0).x().get(5), 1E-7);
+        assertEquals(-0.382900, train.get(0).x().get(6), 1E-7);
+        assertEquals(-1.000000, train.get(0).x().get(7), 1E-7);
+        assertEquals(-1.000000, train.get(0).x().get(8), 1E-7);
             
-            assertEquals(0, y[0]);
-            assertEquals(-0.134323, x[0][0], 1E-7);
-            assertEquals(-0.124812, x[0][1], 1E-7);
-            assertEquals(1, x[0][2], 1E-7);
-            assertEquals(-0.495327, x[0][3], 1E-7);
-            assertEquals(-0.296429, x[0][4], 1E-7);
-            assertEquals(-0.980676, x[0][5], 1E-7);
-            assertEquals(-0.3829, x[0][6], 1E-7);
-            assertEquals(-1, x[0][7], 1E-7);
-            assertEquals(-1, x[0][8], 1E-7);
-            
-            assertEquals(5, y[213]);
-            assertEquals(-0.476734, x[213][0], 1E-7);
-            assertEquals(0.0526316, x[213][1], 1E-7);
-            assertEquals(-1, x[213][2], 1E-7);
-            assertEquals(0.115265, x[213][3], 1E-7);
-            assertEquals(0.267857, x[213][4], 1E-7);
-            assertEquals(-1, x[213][5], 1E-7);
-            assertEquals(-0.407063, x[213][6], 1E-7);
-            assertEquals(0.0603174, x[213][7], 1E-7);
-            assertEquals(-1, x[213][8], 1E-7);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        assertEquals(7, train.get(213).label());
+        assertEquals(-0.4767340, train.get(213).x().get(0), 1E-7);
+        assertEquals( 0.0526316, train.get(213).x().get(1), 1E-7);
+        assertEquals(-1.0000000, train.get(213).x().get(2), 1E-7);
+        assertEquals( 0.1152650, train.get(213).x().get(3), 1E-7);
+        assertEquals( 0.2678570, train.get(213).x().get(4), 1E-7);
+        assertEquals(-1.0000000, train.get(213).x().get(5), 1E-7);
+        assertEquals(-0.4070630, train.get(213).x().get(6), 1E-7);
+        assertEquals( 0.0603174, train.get(213).x().get(7), 1E-7);
+        assertEquals(-1.0000000, train.get(213).x().get(8), 1E-7);
     }
 }

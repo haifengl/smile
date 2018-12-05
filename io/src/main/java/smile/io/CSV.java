@@ -35,7 +35,7 @@ import smile.data.AttributeDataset;
  *
  * @author Haifeng Li
  */
-public class DelimitedTextParser {
+public class CSV {
 
     /**
      * The delimiter character to separate columns.
@@ -71,7 +71,7 @@ public class DelimitedTextParser {
      * starting with '%', missing value placeholder "?", no column names,
      * no row names.
      */
-    public DelimitedTextParser() {
+    public CSV() {
     }
 
     /**
@@ -84,7 +84,7 @@ public class DelimitedTextParser {
     /**
      * Set the delimiter character/string.
      */
-    public DelimitedTextParser setDelimiter(String delimiter) {
+    public CSV setDelimiter(String delimiter) {
         this.delimiter = delimiter;
         return this;
     }
@@ -99,7 +99,7 @@ public class DelimitedTextParser {
     /**
      * Set the character/string that starts a comment line.
      */
-    public DelimitedTextParser setCommentStartWith(String comment) {
+    public CSV setCommentStartWith(String comment) {
         this.comment = comment;
         return this;
     }
@@ -114,7 +114,7 @@ public class DelimitedTextParser {
     /**
      * Set the missing value placeholder.
      */
-    public DelimitedTextParser setMissingValuePlaceholder(String missing) {
+    public CSV setMissingValuePlaceholder(String missing) {
         this.missing = missing;
         return this;
     }
@@ -122,7 +122,7 @@ public class DelimitedTextParser {
     /**
      * Sets the list of column indices to ignore (starting at 0)
      */
-    public DelimitedTextParser setIgnoredColumns(List<Integer> ignoredColumns) {
+    public CSV setIgnoredColumns(List<Integer> ignoredColumns) {
         this.ignoredColumns = ignoredColumns;
         return this;
     }
@@ -130,7 +130,7 @@ public class DelimitedTextParser {
     /**
      * Adds one columns index to ignore
      */
-    public DelimitedTextParser addIgnoredColumn(int index) {
+    public CSV addIgnoredColumn(int index) {
         this.ignoredColumns.add(index);
         return this;
     }
@@ -138,7 +138,7 @@ public class DelimitedTextParser {
     /**
      * Adds several column indices to ignore
      */
-    public DelimitedTextParser addIgnoredColumns(List<Integer> ignoredColumns) {
+    public CSV addIgnoredColumns(List<Integer> ignoredColumns) {
         this.ignoredColumns.addAll(ignoredColumns);
         return this;
     }
@@ -154,7 +154,7 @@ public class DelimitedTextParser {
     /**
      * Set if the dataset has row names (at column 0).
      */
-    public DelimitedTextParser setRowNames(boolean hasRowNames) {
+    public CSV setRowNames(boolean hasRowNames) {
         this.hasRowNames = hasRowNames;
         return this;
     }
@@ -169,7 +169,7 @@ public class DelimitedTextParser {
     /**
      * Set if the dataset has column names (at row 0).
      */
-    public DelimitedTextParser setColumnNames(boolean hasColNames) {
+    public CSV setColumnNames(boolean hasColNames) {
         this.hasColumnNames = hasColNames;
         return this;
     }

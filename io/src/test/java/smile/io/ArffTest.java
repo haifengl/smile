@@ -21,7 +21,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.data.AttributeDataset;
+import java.time.LocalDateTime;
+import smile.data.DataFrame;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
+import smile.util.Paths;
 
 /**
  *
@@ -49,134 +54,143 @@ public class ArffTest {
     }
 
     /**
-     * Test of parse method, of class ArffParser.
+     * Test of read method, of class Arff.
      */
-    @Test
+    @Test(expected = Test.None.class)
     public void testParseWeather() throws Exception {
         System.out.println("weather");
-        try {
-            Arff arff = new Arff();
-            AttributeDataset weather = arff.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.nominal.arff"));
-            double[][] x = weather.toArray(new double[weather.size()][]);
-            int[] y = weather.toArray(new int[weather.size()]);
-            
-            assertEquals(Attribute.Type.NOMINAL, weather.responseAttribute().getType());
-            for (Attribute attribute : weather.attributes()) {
-                assertEquals(Attribute.Type.NOMINAL, attribute.getType());
-            }
-            
-            assertEquals(14, weather.size());
-            assertEquals(4, weather.attributes().length);
-            assertEquals("no", weather.responseAttribute().toString(y[0]));
-            assertEquals("no", weather.responseAttribute().toString(y[1]));
-            assertEquals("yes", weather.responseAttribute().toString(y[2]));
-            assertEquals("sunny", weather.attributes()[0].toString(x[0][0]));
-            assertEquals("hot", weather.attributes()[1].toString(x[0][1]));
-            assertEquals("high", weather.attributes()[2].toString(x[0][2]));
-            assertEquals("FALSE", weather.attributes()[3].toString(x[0][3]));
+        Arff arff = new Arff(Paths.getTestData("weka/weather.nominal.arff"));
+        DataFrame weather = arff.read();
 
-            assertEquals("no", weather.responseAttribute().toString(y[13]));
-            assertEquals("rainy", weather.attributes()[0].toString(x[13][0]));
-            assertEquals("mild", weather.attributes()[1].toString(x[13][1]));
-            assertEquals("high", weather.attributes()[2].toString(x[13][2]));
-            assertEquals("TRUE", weather.attributes()[3].toString(x[13][3]));
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        StructType schema = DataTypes.struct(
+                new StructField("outlook", DataTypes.IntegerType),
+                new StructField("temperature", DataTypes.IntegerType),
+                new StructField("humidity", DataTypes.IntegerType),
+                new StructField("windy", DataTypes.IntegerType),
+                new StructField("play", DataTypes.IntegerType));
+        assertEquals(schema, weather.schema());
+
+        assertEquals(14, weather.nrows());
+        assertEquals(4, weather.ncols());
+        assertEquals("no",    weather.get(0).get("play"));
+        assertEquals("no",    weather.get(1).get("play"));
+        assertEquals("yes",   weather.get(2).get("play"));
+        assertEquals("sunny", weather.get(0).get(0));
+        assertEquals("hot",   weather.get(0).get(1));
+        assertEquals("high",  weather.get(0).get(2));
+        assertEquals("FALSE", weather.get(0).get(3));
+
+        assertEquals("no",    weather.get(13).get("play"));
+        assertEquals("rainy", weather.get(13).get(0));
+        assertEquals("mild",  weather.get(13).get(1));
+        assertEquals("high",  weather.get(13).get(2));
+        assertEquals("TRUE",  weather.get(13).get(3));
     }
 
     /**
-     * Test of parse method, of class ArffParser.
+     * Test of read method, of class Arff.
      */
-    @Test
+    @Test(expected = Test.None.class)
     public void testParseIris() throws Exception {
         System.out.println("iris");
-        try {
-            ArffParser arffParser = new ArffParser();
-            arffParser.setResponseIndex(4);
-            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            int[] y = iris.toArray(new int[iris.size()]);
-            
-            assertEquals(Attribute.Type.NOMINAL, iris.responseAttribute().getType());
-            for (Attribute attribute : iris.attributes()) {
-                assertEquals(Attribute.Type.NUMERIC, attribute.getType());
-            }
-            
-            assertEquals(150, iris.size());
-            assertEquals(4, iris.attributes().length);
-            assertEquals("Iris-setosa", iris.responseAttribute().toString(y[0]));
-            assertEquals("Iris-setosa", iris.responseAttribute().toString(y[1]));
-            assertEquals("Iris-setosa", iris.responseAttribute().toString(y[2]));
-            assertEquals(5.1, x[0][0], 1E-7);
-            assertEquals(3.5, x[0][1], 1E-7);
-            assertEquals(1.4, x[0][2], 1E-7);
-            assertEquals(0.2, x[0][3], 1E-7);
+        Arff arff = new Arff(Paths.getTestData("weka/iris.arff"));
+        DataFrame iris = arff.read();
 
-            assertEquals("Iris-virginica", iris.responseAttribute().toString(y[149]));
-            assertEquals(5.9, x[149][0], 1E-7);
-            assertEquals(3.0, x[149][1], 1E-7);
-            assertEquals(5.1, x[149][2], 1E-7);
-            assertEquals(1.8, x[149][3], 1E-7);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        StructType schema = DataTypes.struct(
+                new StructField("sepallength", DataTypes.FloatType),
+                new StructField("sepalwidth", DataTypes.FloatType),
+                new StructField("petallength", DataTypes.FloatType),
+                new StructField("petalwidth", DataTypes.FloatType),
+                new StructField("class", DataTypes.IntegerType));
+        assertEquals(schema, iris.schema());
+
+        assertEquals(150, iris.nrows());
+        assertEquals(4,   iris.ncols());
+        assertEquals("Iris-setosa", iris.get(0).get("class"));
+        assertEquals("Iris-setosa", iris.get(1).get("class"));
+        assertEquals("Iris-setosa", iris.get(2).get("class"));
+        assertEquals(5.1, iris.get(0).getFloat(0), 1E-7);
+        assertEquals(3.5, iris.get(0).getFloat(1), 1E-7);
+        assertEquals(1.4, iris.get(0).getFloat(2), 1E-7);
+        assertEquals(0.2, iris.get(0).getFloat(3), 1E-7);
+
+        assertEquals("Iris-virginica", iris.get(149).get("class"));
+        assertEquals(5.9, iris.get(149).getFloat(0), 1E-7);
+        assertEquals(3.0, iris.get(149).getFloat(1), 1E-7);
+        assertEquals(5.1, iris.get(149).getFloat(2), 1E-7);
+        assertEquals(1.8, iris.get(149).getFloat(3), 1E-7);
     }
 
     /**
-     * Test of parse method, of class ArffParser.
+     * Test of read method, of class Arff.
      */
-    @Test
+    @Test(expected = Test.None.class)
     public void testParseString() throws Exception {
         System.out.println("string");
-        try {
-            ArffParser arffParser = new ArffParser();
-            AttributeDataset string = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/string.arff"));
-            double[][] x = string.toArray(new double[string.size()][]);
-            
-            for (Attribute attribute : string.attributes()) {
-                assertEquals(Attribute.Type.STRING, attribute.getType());
-            }
-            
-            Attribute[] attributes = string.attributes();
-            assertEquals(5, string.size());
-            assertEquals(2, attributes.length);
-            assertEquals("AG5", attributes[0].toString(x[0][0]));
-            assertEquals("Encyclopedias and dictionaries.;Twentieth century.", attributes[1].toString(x[0][1]));
-            assertEquals("AS281", attributes[0].toString(x[4][0]));
-            assertEquals("Astronomy, Assyro-Babylonian.;Moon -- Tables.", attributes[1].toString(x[4][1]));
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        Arff arff = new Arff(Paths.getTestData("weka/string.arff"));
+        DataFrame string = arff.read();
+
+        StructType schema = DataTypes.struct(
+                new StructField("LCC", DataTypes.StringType),
+                new StructField("LCSH", DataTypes.StringType));
+        assertEquals(schema, string.schema());
+
+        assertEquals(5, string.nrows());
+        assertEquals(2, string.ncols());
+        assertEquals("AG5", string.get(0).get(0));
+        assertEquals("Encyclopedias and dictionaries.;Twentieth century.", string.get(0).get(1));
+        assertEquals("AS281", string.get(4).get(0));
+        assertEquals("Astronomy, Assyro-Babylonian.;Moon -- Tables.", string.get(4).get(1));
     }
 
     /**
-     * Test of parse method, of class ArffParser.
+     * Test of read method, of class Arff.
      */
-    @Test
+    @Test(expected = Test.None.class)
+    public void testParseDate() throws Exception {
+        System.out.println("date");
+        Arff arff = new Arff(Paths.getTestData("weka/date.arff"));
+        DataFrame date = arff.read();
+
+        StructType schema = DataTypes.struct(new StructField("timestamp", DataTypes.DateTimeType));
+        assertEquals(schema, date.schema());
+
+        assertEquals(2, date.nrows());
+        assertEquals(1, date.ncols());
+        assertEquals(LocalDateTime.parse("2001-04-03 12:12:12"), date.get(0).get(0));
+        assertEquals(LocalDateTime.parse("2001-05-03 12:59:55"), date.get(0).get(1));
+    }
+
+    /**
+     * Test of read method, of class Arff.
+     */
+    @Test(expected = Test.None.class)
     public void testParseSparse() throws Exception {
         System.out.println("sparse");
-        try {
-            ArffParser arffParser = new ArffParser();
-            AttributeDataset sparse = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/sparse.arff"));
-            double[][] x = sparse.toArray(new double[sparse.size()][]);
-                        
-            assertEquals(2, sparse.size());
-            assertEquals(5, sparse.attributes().length);
+        Arff arff = new Arff(Paths.getTestData("weka/sparse.arff"));
+        DataFrame sparse = arff.read();
+
+        StructType schema = DataTypes.struct(
+                new StructField("V1", DataTypes.IntegerType),
+                new StructField("V2", DataTypes.IntegerType),
+                new StructField("V3", DataTypes.IntegerType),
+                new StructField("V4", DataTypes.IntegerType),
+                new StructField("class", DataTypes.IntegerType));
+        assertEquals(schema, sparse.schema());
+
+        assertEquals(2, sparse.nrows());
+        assertEquals(5, sparse.ncols());
             
-            assertEquals(0.0, x[0][0], 1E-7);
-            assertEquals(2.0, x[0][1], 1E-7);
-            assertEquals(0.0, x[0][2], 1E-7);
-            assertEquals(3.0, x[0][3], 1E-7);
-            assertEquals(0.0, x[0][4], 1E-7);
+        assertEquals(0.0, sparse.get(0).getDouble(0), 1E-7);
+        assertEquals(2.0, sparse.get(0).getDouble(1), 1E-7);
+        assertEquals(0.0, sparse.get(0).getDouble(2), 1E-7);
+        assertEquals(3.0, sparse.get(0).getDouble(3), 1E-7);
+        assertEquals(0.0, sparse.get(0).getDouble(4), 1E-7);
             
-            assertEquals(0.0, x[1][0], 1E-7);
-            assertEquals(0.0, x[1][1], 1E-7);
-            assertEquals(1.0, x[1][2], 1E-7);
-            assertEquals(0.0, x[1][3], 1E-7);
-            assertEquals(1.0, x[1][4], 1E-7);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        assertEquals(0.0, sparse.get(1).getDouble(0), 1E-7);
+        assertEquals(0.0, sparse.get(1).getDouble(1), 1E-7);
+        assertEquals(1.0, sparse.get(1).getDouble(2), 1E-7);
+        assertEquals(0.0, sparse.get(1).getDouble(3), 1E-7);
+        assertEquals(1.0, sparse.get(1).getDouble(4), 1E-7);
     }
 }

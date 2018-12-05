@@ -203,7 +203,7 @@ public class Arff implements Closeable {
             // We may meet an relational attribute, which parseAttribute returns null
             // as it flats the relational attribute out.
             if (attribute != null) {
-                fields.add(parseAttribute());
+                fields.add(attribute);
             }
         }
 
