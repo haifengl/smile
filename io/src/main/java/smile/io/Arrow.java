@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data.arrow;
+package smile.io;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,7 +43,6 @@ import org.apache.arrow.vector.types.pojo.Schema;
 import static org.apache.arrow.vector.types.FloatingPointPrecision.DOUBLE;
 import static org.apache.arrow.vector.types.FloatingPointPrecision.SINGLE;
 
-import scala.Char;
 import smile.data.DataFrame;
 import smile.data.type.*;
 

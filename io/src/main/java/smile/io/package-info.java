@@ -15,7 +15,7 @@
  *******************************************************************************/
 
 /**
- * Parsers for various data formats.
+ * Interfaces to read/write a Dataset.
  * 
  * @author Haifeng Li
  */

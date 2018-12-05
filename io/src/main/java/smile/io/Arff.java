@@ -17,11 +17,12 @@ package smile.io;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StreamTokenizer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -98,8 +99,7 @@ public class Arff implements Closeable {
      * Constructor.
      */
     public Arff(Path path) throws IOException, ParseException {
-        FileInputStream stream = new FileInputStream(path.toFile());
-        reader = new BufferedReader(new InputStreamReader(stream));
+        reader = Files.newBufferedReader(path);
 
         tokenizer = new StreamTokenizer(reader);
         tokenizer.resetSyntax();
@@ -350,6 +350,10 @@ public class Arff implements Closeable {
      * @param limit reads a limited number of records.
      */
     public DataFrame read(int limit) throws IOException, ParseException {
+        if (limit <= 0) {
+            throw new IllegalArgumentException("Invalid limit: " + limit);
+        }
+
         List<Tuple> data = new ArrayList<>();
         for (int i = 0; i < limit; i++) {
             // Check if end of file reached.

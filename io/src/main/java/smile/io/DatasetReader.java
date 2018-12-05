@@ -17,19 +17,21 @@
 package smile.io;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import smile.data.DataFrame;
 import smile.data.Dataset;
 import smile.data.Instance;
 import smile.math.SparseArray;
 
 /**
- * LIBSVM (and SVMLight) data reader. The format of libsvm file is:
+ * Interface to load a Dataset from external storage systems.LIBSVM (and SVMLight) data reader. The format of libsvm file is:
  * <p>
  * &lt;label&gt; &lt;index1&gt;:&lt;value1&gt; &lt;index2&gt;:&lt;value2&gt; ...
  * <p>
@@ -44,24 +46,94 @@ import smile.math.SparseArray;
  * 
  * @author Haifeng Li
  */
-public class Libsvm {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Libsvm.class);
+public class DatasetReader {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DatasetReader.class);
+
+    /** Reads a limited number of records. */
+     private int limit = Integer.MAX_VALUE;
 
     /**
      * Constructor.
      */
-    public Libsvm() {
-
+    public DatasetReader() {
+        this(Integer.MAX_VALUE);
     }
 
     /**
-     * Reads a libsvm sparse dataset.
-     * @param path the input file path.
-     * @throws java.io.IOException
+     * Constructor.
+     * @param limit reads a limited number of records.
      */
-    public Dataset<Instance<SparseArray>> read(Path path) throws IOException, ParseException {
-        try (FileInputStream stream = new FileInputStream(path.toFile());
-             BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+    public DatasetReader(int limit) {
+        if (limit <= 0) {
+            throw new IllegalArgumentException("Invalid limit: " + limit);
+        }
+        this.limit = limit;
+    }
+
+    /**
+     * Reads an ARFF file. Weka ARFF (attribute relation file format) is an ASCII
+     * text file format that is essentially a CSV file with a header that describes
+     * the meta-data. ARFF was developed for use in the Weka machine learning
+     * software.
+     * <p>
+     * A dataset is firstly described, beginning with the name of the dataset
+     * (or the relation in ARFF terminology). Each of the variables (or attribute
+     * in ARFF terminology) used to describe the observations is then identified,
+     * together with their data type, each definition on a single line.
+     * The actual observations are then listed, each on a single line, with fields
+     * separated by commas, much like a CSV file.
+     * <p>
+     * Missing values in an ARFF dataset are identified using the question mark '?'.
+     * <p>
+     * Comments can be included in the file, introduced at the beginning of a line
+     * with a '%', whereby the remainder of the line is ignored.
+     * <p>
+     * A significant advantage of the ARFF data file over the CSV data file is
+     * the meta data information.
+     * <p>
+     * Also, the ability to include comments ensure we can record extra information
+     * about the data set, including how it was derived, where it came from, and
+     * how it might be cited.
+     *
+     * @param path the input file path.
+     */
+    public DataFrame arff(Path path) throws IOException, ParseException {
+        Arff arff = new Arff(path);
+        return arff.read(limit);
+    }
+
+    /**
+     * Reads an Apache Arrow file.
+     * Apache Arrow is a cross-language development platform for in-memory data.
+     * It specifies a standardized language-independent columnar memory format
+     * for flat and hierarchical data, organized for efficient analytic
+     * operations on modern hardware.
+     *
+     * @param path the input file path.
+     */
+    public DataFrame arrow(Path path) throws IOException, ParseException {
+        Arrow arrow = new Arrow();
+        return arrow.read(path);
+    }
+
+    /**
+     * Reads a libsvm sparse dataset. The format of libsvm file is:
+     * <p>
+     * &lt;label&gt; &lt;index1&gt;:&lt;value1&gt; &lt;index2&gt;:&lt;value2&gt; ...
+     * <p>
+     * where &lt;label&gt; is the target value of the training data.
+     * For classification, it should be an integer which identifies a class
+     * (multi-class classification is supported). For regression, it's any real
+     * number. For one-class SVM, it's not used so can be any number.
+     * &lt;index&gt; is an integer starting from 1, and &lt;value&gt;
+     * is a real number. The indices must be in an ascending order. The labels in
+     * the testing data file are only used to calculate accuracy or error. If they
+     * are unknown, just fill this column with a number.
+     *
+     * @param path the input file path.
+     */
+    public Dataset<Instance<SparseArray>> libsvm(Path path) throws IOException, ParseException {
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
             String line = reader.readLine();
             if (line == null) {
                 throw new IOException("Empty data source.");

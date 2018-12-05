@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data.parser;
+package smile.io;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -21,16 +21,15 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.data.Attribute;
 import smile.data.AttributeDataset;
 
 /**
  *
  * @author Haifeng Li
  */
-public class ArffParserTest {
+public class ArffTest {
     
-    public ArffParserTest() {
+    public ArffTest() {
     }
 
     @BeforeClass
@@ -56,9 +55,8 @@ public class ArffParserTest {
     public void testParseWeather() throws Exception {
         System.out.println("weather");
         try {
-            ArffParser arffParser = new ArffParser();
-            arffParser.setResponseIndex(4);
-            AttributeDataset weather = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.nominal.arff"));
+            Arff arff = new Arff();
+            AttributeDataset weather = arff.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.nominal.arff"));
             double[][] x = weather.toArray(new double[weather.size()][]);
             int[] y = weather.toArray(new int[weather.size()]);
             
