@@ -22,4 +22,4 @@
  *
  * @author Haifeng Li
  */
-package smile.data.frame;
+package smile.data.arrow;

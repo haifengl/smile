@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package smile.data.parser;
+package smile.io;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -22,14 +22,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import smile.data.SparseDataset;
+import smile.math.SparseArray;
 
 /**
  *
  * @author Haifeng Li
  */
-public class LibsvmParserTest {
+public class LibsvmTest {
     
-    public LibsvmParserTest() {
+    public LibsvmTest() {
     }
 
     @BeforeClass
@@ -54,10 +55,10 @@ public class LibsvmParserTest {
     @Test
     public void testParseNG20() throws Exception {
         System.out.println("NG20");
-        LibsvmParser parser = new LibsvmParser();
+        DatasetReader reader = new DatasetReader();
         try {
-            SparseDataset train = parser.parse("NG20 Train", smile.data.parser.IOUtils.getTestDataFile("libsvm/news20.dat"));
-            SparseDataset test = parser.parse("NG20 Test", smile.data.parser.IOUtils.getTestDataFile("libsvm/news20.t.dat"));
+            Dataset<Instance<SparseArray>> train = reader.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
+            Dataset<Instance<SparseArray>> test  = reader.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
             int[] y = train.toArray(new int[train.size()]);
             int[] testy = test.toArray(new int[test.size()]);
             

@@ -14,22 +14,14 @@
  * limitations under the License.
  *******************************************************************************/
 
-package smile.data.parser;
+package smile.io;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URI;
 import java.text.ParseException;
-
 import java.util.ArrayList;
 import java.util.List;
-import smile.data.Attribute;
 import smile.data.AttributeDataset;
-import smile.data.NumericAttribute;
 
 /**
  * The delimited text file parser. By default, the parser expects a
@@ -65,10 +57,6 @@ public class DelimitedTextParser {
      * The dataset has row names at first column.
      */
     private boolean hasRowNames = false;
-    /**
-     * The attribute of dependent/response variable.
-     */
-    private Attribute response = null;
     /**
      * The column index of dependent/response variable.
      */
@@ -132,19 +120,6 @@ public class DelimitedTextParser {
     }
 
     /**
-     * Sets the attribute and column index (starting at 0) of dependent/response variable.
-     */
-    public DelimitedTextParser setResponseIndex(Attribute response, int index) {
-        if (response.getType() != Attribute.Type.NOMINAL && response.getType() != Attribute.Type.NUMERIC) {
-            throw new IllegalArgumentException("The response variable is not numeric or nominal.");
-        }
-        
-        this.response = response;
-        this.responseIndex = index;
-        return this;
-    }
-
-    /**
      * Sets the list of column indices to ignore (starting at 0)
      */
     public DelimitedTextParser setIgnoredColumns(List<Integer> ignoredColumns) {
@@ -200,114 +175,12 @@ public class DelimitedTextParser {
     }
 
     /**
-     * Parse a dataset from given URI.
-     * @throws java.io.FileNotFoundException
-     */
-    public AttributeDataset parse(URI uri) throws IOException, ParseException {
-        return parse(new File(uri));
-    }
-
-    /**
-     * Parse a dataset from given URI.
-     * @param uri the URI of data source.
-     * @param attributes the list attributes of data in proper order.
-     * @throws java.io.FileNotFoundException
-     */
-    public AttributeDataset parse(String name, Attribute[] attributes, URI uri) throws IOException, ParseException {
-        return parse(name, attributes, new File(uri));
-    }
-
-    /**
-     * Parse a dataset from given file.
-     * @param path the file path of data source.
-     * @throws java.io.FileNotFoundException
-     */
-    public AttributeDataset parse(String path) throws IOException, ParseException {
-        return parse(new File(path));
-    }
-
-    /**
-     * Parse a dataset from given file.
-     * @param path the file path of data source.
-     * @param attributes the list attributes of data in proper order.
-     * @throws java.io.FileNotFoundException
-     */
-    public AttributeDataset parse(Attribute[] attributes, String path) throws IOException, ParseException {
-        return parse(attributes, new File(path));
-    }
-
-    /**
-     * Parse a dataset from given file.
-     * @param path the file path of data source.
-     * @param attributes the list attributes of data in proper order.
-     * @throws java.io.FileNotFoundException
-     */
-    public AttributeDataset parse(String name, Attribute[] attributes, String path) throws IOException, ParseException {
-        return parse(name, attributes, new File(path));
-    }
-
-    /**
-     * Parse a dataset from given file.
-     * @param file the file of data source.
-     * @throws java.io.FileNotFoundException
-     */
-    public AttributeDataset parse(File file) throws IOException, ParseException {
-        String name = file.getPath();
-        return parse(name, new FileInputStream(file));
-    }
-
-    /**
-     * Parse a dataset from given file.
-     * @param file the file of data source.
-     * @throws java.io.IOException
-     */
-    public AttributeDataset parse(String name, File file) throws IOException, ParseException {
-        return parse(name, new FileInputStream(file));
-    }
-
-    /**
-     * Parse a dataset from given file.
-     * @param file the file of data source.
-     * @param attributes the list attributes of data in proper order.
-     * @throws java.io.IOException
-     */
-    public AttributeDataset parse(Attribute[] attributes, File file) throws IOException, ParseException {
-        String name = file.getPath();
-        return parse(name, attributes, file);
-    }
-
-    /**
-     * Parse a dataset from given file.
-     * @param file the file of data source.
-     * @param attributes the list attributes of data in proper order.
-     * @throws java.io.FileNotFoundException
-     */
-    public AttributeDataset parse(String name, Attribute[] attributes, File file) throws IOException, ParseException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
-           return parse(name, attributes, reader);
-        }
-    }
-
-    /**
-     * Parse a dataset from an input stream.
-     * @param name the name of dataset.
-     * @param stream the input stream of data.
-     * @throws java.io.FileNotFoundException
-     */
-    public AttributeDataset parse(String name, InputStream stream) throws IOException, ParseException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-            return parse(name, null, reader);
-        }
-    }
-    
-    /**
      * Parse a dataset from a buffered reader.
      * @param name the name of dataset.
-     * @param attributes the list attributes of data in proper order.
      * @param reader the buffered reader for data.
      * @throws java.io.IOException
      */
-    private AttributeDataset parse(String name, Attribute[] attributes, BufferedReader reader) throws IOException, ParseException {
+    private AttributeDataset parse(String name, BufferedReader reader) throws IOException, ParseException {
         String line = reader.readLine();
         while (line != null) {
             if (line.isEmpty() || line.startsWith(comment)) {
@@ -348,7 +221,7 @@ public class DelimitedTextParser {
         if (responseIndex >= 0) {
           p--;
         }
-
+/*
         if (attributes == null) {
             attributes = new Attribute[p];
             for (int i = 0, k = 0; i < s.length; i++) {
@@ -433,7 +306,7 @@ public class DelimitedTextParser {
             AttributeDataset.Row datum = Double.isNaN(y) ? data.add(x) : data.add(x, y);
             datum.name = rowName;
         }
-
-        return data;
+*/
+        return null;
     }
 }

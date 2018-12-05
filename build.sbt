@@ -62,7 +62,7 @@ lazy val nonPubishSettings = commonSettings ++ Seq(
 )
 
 lazy val root = project.in(file(".")).settings(nonPubishSettings: _*)
-  .aggregate(core, data, arrow, math, nd4j, netlib, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
+  .aggregate(core, data, math, nd4j, netlib, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
@@ -71,8 +71,6 @@ lazy val nd4j = project.in(file("nd4j")).settings(commonSettings: _*).dependsOn(
 lazy val netlib = project.in(file("netlib")).settings(commonSettings: _*).dependsOn(math)
 
 lazy val data = project.in(file("data")).settings(commonSettings: _*).dependsOn(math)
-
-lazy val arrow = project.in(file("arrow")).settings(commonSettings: _*).dependsOn(data)
 
 lazy val io = project.in(file("io")).settings(commonSettings: _*).dependsOn(data)
 
