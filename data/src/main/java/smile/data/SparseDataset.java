@@ -16,13 +16,14 @@
 package smile.data;
 
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Scanner;
 import smile.math.MathEx;
 import smile.math.SparseArray;
 import smile.math.matrix.SparseMatrix;
@@ -178,7 +179,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
     }
 
     /**
-     * Parses spare dataset in coordinate triple tuple list format.
+     * Reads spare dataset in coordinate triple tuple list format.
      * Coordinate file stores a list of (row, column, value) tuples:
      * <pre>
      * instanceID attributeID value
@@ -194,18 +195,16 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * improve random access times. This format is good for incremental matrix
      * construction.
      * <p>
-     * Optionally, there may be 2 header lines
+     * In addition, there may a header line
      * <pre>
-     * D    // The number of instances
-     * W    // The number of attributes
+     * D W N   // The number of rows, columns and nonzero entries.
      * </pre>
      * or 3 header lines
      * <pre>
-     * D    // The number of instances
-     * W    // The number of attributes
-     * N    // The total number of nonzero items in the dataset.
+     * D    // The number of rows
+     * W    // The number of columns
+     * N    // The total number of nonzero entries in the dataset.
      * </pre>
-     * These header lines will be ignored.
      *
      * @param path the input file path.
      * @param arrayIndexOrigin the starting index of array. By default, it is
@@ -216,25 +215,33 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * @exception ParseException if an index is not an integer or the value is not a double.
      */
     static SparseDataset from(Path path, int arrayIndexOrigin) throws IOException, ParseException {
-        try (Stream<String> stream = Files.lines(path)) {
-            List<SparseArray> rows = new ArrayList<>();
-            stream.forEach(line -> {
+        try (LineNumberReader reader = new LineNumberReader(Files.newBufferedReader(path));
+             Scanner scanner = new Scanner(reader)) {
+            int nrow = scanner.nextInt();
+            int ncol = scanner.nextInt();
+            int nz = scanner.nextInt();
+            List<SparseArray> rows = new ArrayList<>(nrow);
+            for (int i = 0; i < nrow; i++) {
+                rows.add(new SparseArray());
+            }
+
+            // read the EOL of header line(s).
+            scanner.nextLine();
+            do {
+                String line = scanner.nextLine();
+
                 String[] tokens = line.trim().split("\\s+");
                 if (tokens.length != 3) {
-                    return; // Silent on header rows
+                    throw new ParseException("Invalid line: " + line, reader.getLineNumber());
                 }
 
                 int i = Integer.parseInt(tokens[0]) - arrayIndexOrigin;
                 int j = Integer.parseInt(tokens[1]) - arrayIndexOrigin;
                 double x = Double.parseDouble(tokens[2]);
 
-                while (i >= rows.size()) {
-                    rows.add(new SparseArray());
-                }
-
                 SparseArray row = rows.get(i);
                 row.set(j, x);
-            });
+            } while (scanner.hasNextLine());
 
             return of(rows);
         }
