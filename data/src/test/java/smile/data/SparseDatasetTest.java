@@ -113,29 +113,25 @@ public class SparseDatasetTest {
         assertEquals(0.4, sm.get(0, 1), 1E-7);
     }
 
-    @Test
+    @Test(expected = Test.None.class)
     public void testParse() throws Exception {
         System.out.println("from");
-        try {
-            SparseDataset data = SparseDataset.from(smile.util.Paths.getTestData("text/kos.txt"), 1);
-            assertEquals(3430, data.size());
-            assertEquals(6906, data.ncols());
-            assertEquals(353160, data.nz());
-            assertEquals(2.0, data.get(0, 60), 1E-7);
-            assertEquals(1.0, data.get(1, 1062), 1E-7);
-            assertEquals(0.0, data.get(1, 1063), 1E-7);
-            assertEquals(1.0, data.get(3429, 6821), 1E-7);
+        SparseDataset data = SparseDataset.from(smile.util.Paths.getTestData("text/kos.txt"), 1);
+        assertEquals(3430, data.size());
+        assertEquals(6906, data.ncols());
+        assertEquals(353160, data.nz());
+        assertEquals(2.0, data.get(0, 60), 1E-7);
+        assertEquals(1.0, data.get(1, 1062), 1E-7);
+        assertEquals(0.0, data.get(1, 1063), 1E-7);
+        assertEquals(1.0, data.get(3429, 6821), 1E-7);
 
-            SparseMatrix sm = data.toMatrix();
-            assertEquals(3430, sm.nrows());
-            assertEquals(6906, sm.ncols());
-            assertEquals(353160, sm.length());
-            assertEquals(2.0, sm.get(0, 60), 1E-7);
-            assertEquals(1.0, sm.get(1, 1062), 1E-7);
-            assertEquals(0.0, sm.get(1, 1063), 1E-7);
-            assertEquals(1.0, sm.get(3429, 6821), 1E-7);
-        } catch (Exception ex) {
-            assertTrue(String.format("Unexpected exception: %s", ex), false);
-        }
+        SparseMatrix sm = data.toMatrix();
+        assertEquals(3430, sm.nrows());
+        assertEquals(6906, sm.ncols());
+        assertEquals(353160, sm.length());
+        assertEquals(2.0, sm.get(0, 60), 1E-7);
+        assertEquals(1.0, sm.get(1, 1062), 1E-7);
+        assertEquals(0.0, sm.get(1, 1063), 1E-7);
+        assertEquals(1.0, sm.get(3429, 6821), 1E-7);
     }
 }
