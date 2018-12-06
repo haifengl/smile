@@ -63,15 +63,8 @@ public class NominalScale extends DiscreteMeasure {
     @Override
     public boolean equals(Object o) {
         if (o instanceof NominalScale) {
-            NominalScale t = (NominalScale) o;
-
-            if (levels.length == t.levels.length) {
-                for (int i = 0; i < levels.length; i++) {
-                    if (!levels[i].equals(t.levels[i]))
-                        return false;
-                }
-                return true;
-            }
+            NominalScale scale = (NominalScale) o;
+            return Arrays.equals(levels, scale.levels);
         }
 
         return false;

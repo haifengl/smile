@@ -22,7 +22,7 @@ package smile.data.type;
  *
  * @author Haifeng Li
  */
-public enum ContinuousMeasure {
+public enum ContinuousMeasure implements Measure {
     /**
      * The interval scale allows for the degree of difference between items,
      * but not the ratio between them. Examples include temperature with

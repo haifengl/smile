@@ -15,9 +15,9 @@
  *******************************************************************************/
 package smile.data.type;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Discrete data can only take particular values. There may potentially
@@ -29,15 +29,15 @@ import java.util.HashMap;
  *
  * @author Haifeng Li
  */
-public abstract class DiscreteMeasure implements Serializable {
+public abstract class DiscreteMeasure implements Measure {
     /**
      * The string values of the discrete scale.
      */
-    String[] levels;
+    final String[] levels;
     /**
      * Map a string to an integer level.
      */
-    HashMap<String, Integer> map = new HashMap<>();
+    final HashMap<String, Number> map;
 
     /**
      * Constructor.
@@ -45,19 +45,25 @@ public abstract class DiscreteMeasure implements Serializable {
      */
     public DiscreteMeasure(String... values) {
         this.levels = values;
-        for (int i = 0; i < values.length; i++) {
-            map.put(values[i], i);
+        map = new HashMap<>();
+        if (values.length <= Byte.MAX_VALUE + 1) {
+            for (byte i = 0; i < values.length; i++) {
+                map.put(values[i], i);
+            }
+        } else if (values.length <= Short.MAX_VALUE + 1) {
+            for (short i = 0; i < values.length; i++) {
+                map.put(values[i], i);
+            }
+        } else {
+            for (int i = 0; i < values.length; i++) {
+                map.put(values[i], i);
+            }
         }
     }
 
     /** Returns the string value of a level. */
     public String toString(int level) {
         return levels[level];
-    }
-
-    /** Returns the level of a string value. */
-    public int valueOf(String s) {
-        return map.get(s);
     }
 
     /** Returns the number of levels. */
@@ -74,16 +80,14 @@ public abstract class DiscreteMeasure implements Serializable {
     public boolean equals(Object o) {
         if (o instanceof DiscreteMeasure) {
             DiscreteMeasure measure = (DiscreteMeasure) o;
-
-            if (levels.length == measure.levels.length) {
-                for (int i = 0; i < levels.length; i++) {
-                    if (!levels[i].equals(measure.levels[i]))
-                        return false;
-                }
-                return true;
-            }
+            return Arrays.equals(levels, measure.levels);
         }
 
         return false;
+    }
+
+    /** Returns a measurement value object represented by the argument string s. */
+    public Number valueOf(String s) {
+        return map.get(s);
     }
 }

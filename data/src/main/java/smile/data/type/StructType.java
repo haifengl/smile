@@ -16,10 +16,7 @@
 package smile.data.type;
 
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import smile.data.Tuple;
 
@@ -35,29 +32,26 @@ public class StructType implements DataType {
     /** Struct fields. */
     private final StructField[] fields;
     /** Field name to index map. */
-    private final Map<String, Integer> index = new HashMap<>();
+    private final Map<String, Integer> index;
+    /** Optional scale of measurement of fields. */
+    private final Map<String, Measure> measures;
+
+    /**
+     * Constructor.
+     */
+    StructType(List<StructField> fields) {
+        this(fields.toArray(new StructField[fields.size()]));
+    }
 
     /**
      * Constructor.
      */
     StructType(StructField... fields) {
         this.fields = fields;
-        initFieldIndex();
-    }
-
-    /**
-     * Constructor.
-     */
-    StructType(List<StructField> fields) {
-        this.fields = fields.toArray(new StructField[fields.size()]);
-        initFieldIndex();
-    }
-
-    /** Initialize the field index mapping. */
-    private void initFieldIndex() {
-        for (int i = 0; i < this.fields.length; i++) {
-            StructField field = this.fields[i];
-            index.put(field.name, i);
+        index = new HashMap<>(fields.length * 4 / 3);
+        measures = new HashMap<>(fields.length * 4 / 3);
+        for (int i = 0; i < fields.length; i++) {
+            index.put(fields[i].name, i);
         }
     }
 
@@ -74,6 +68,17 @@ public class StructType implements DataType {
     /** Returns the index of a field. */
     public int fieldIndex(String field) {
         return index.get(field);
+    }
+
+    /** Sets the scale of measurement of a field. */
+    public StructType setMeasure(String field, Measure measure) {
+        measures.put(field, measure);
+        return this;
+    }
+
+    /** Gets the scale of measurement of a field. */
+    public Optional<Measure> getMeasure(String field) {
+        return Optional.ofNullable(measures.get(field));
     }
 
     @Override
