@@ -15,9 +15,7 @@
  *******************************************************************************/
 package smile.data;
 
-import java.sql.JDBCType;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collector;

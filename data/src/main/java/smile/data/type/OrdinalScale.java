@@ -65,15 +65,8 @@ public class OrdinalScale extends DiscreteMeasure {
     @Override
     public boolean equals(Object o) {
         if (o instanceof OrdinalScale) {
-            OrdinalScale t = (OrdinalScale) o;
-
-            if (levels.length == t.levels.length) {
-                for (int i = 0; i < levels.length; i++) {
-                    if (!levels[i].equals(t.levels[i]))
-                        return false;
-                }
-                return true;
-            }
+            OrdinalScale scale = (OrdinalScale) o;
+            return Arrays.equals(levels, scale.levels);
         }
 
         return false;
