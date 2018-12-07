@@ -52,6 +52,11 @@ public class IntegerType implements DataType {
     }
 
     @Override
+    public String toString(Object o) {
+        return String.format("%,d", o);
+    }
+
+    @Override
     public Integer valueOf(String s) {
         return Integer.valueOf(s);
     }

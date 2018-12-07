@@ -96,10 +96,12 @@ public class StructType implements DataType {
         Tuple t = (Tuple) o;
         return Arrays.stream(fields)
                 .map(field -> {
+                    Object v = t.get(field.name);
                     Measure m = measure().get(field.name);
-                    String value = (m != null && m instanceof DiscreteMeasure) ?
-                            t.getScale(field.name) :
-                            field.type.toString(t.get(field.name));
+                    String value = v == null ? "null" :
+                            ((m != null && m instanceof DiscreteMeasure) ?
+                                    t.getScale(field.name) :
+                                    field.type.toString(v));
                     return String.format("  %s: %s", field.name, value);
                 })
                 .collect(Collectors.joining(",\n", "{\n", "\n}"));

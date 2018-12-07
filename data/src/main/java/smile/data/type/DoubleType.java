@@ -15,12 +15,16 @@
  *******************************************************************************/
 package smile.data.type;
 
+import java.text.DecimalFormat;
+
 /**
  * Double data type.
  *
  * @author Haifeng Li
  */
 public class DoubleType implements DataType {
+    /** Format for toString. */
+    private DecimalFormat format = new DecimalFormat("#.######");
 
     /** Singleton instance. */
     static DoubleType instance = new DoubleType();
@@ -49,6 +53,11 @@ public class DoubleType implements DataType {
     @Override
     public String toString() {
         return "double";
+    }
+
+    @Override
+    public String toString(Object o) {
+        return format.format(o);
     }
 
     @Override
