@@ -15,12 +15,16 @@
  *******************************************************************************/
 package smile.data.type;
 
+import java.text.DecimalFormat;
+
 /**
  * Float data type.
  *
  * @author Haifeng Li
  */
 public class FloatType implements DataType {
+    /** Format for toString. */
+    private DecimalFormat format = new DecimalFormat("#.####");
 
     /** Singleton instance. */
     static FloatType instance = new FloatType();
@@ -49,6 +53,11 @@ public class FloatType implements DataType {
     @Override
     public String toString() {
         return "float";
+    }
+
+    @Override
+    public String toString(Object o) {
+        return format.format(o);
     }
 
     @Override
