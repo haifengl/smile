@@ -22,6 +22,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import smile.data.type.DataType;
+import smile.data.type.DiscreteMeasure;
+import smile.data.type.Measure;
 import smile.data.type.StructType;
 
 /**
@@ -73,6 +76,11 @@ public interface Tuple extends Serializable {
         return get(i) == null;
     }
 
+    /** Checks whether the field value is null. */
+    default boolean isNullAt(String field) {
+        return get(field) == null;
+    }
+
     /**
      * Returns the value at position i as a primitive boolean.
      *
@@ -81,6 +89,16 @@ public interface Tuple extends Serializable {
      */
     default boolean getBoolean(int i) {
         return getAs(i);
+    }
+
+    /**
+     * Returns the field value as a primitive boolean.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default boolean getBoolean(String field) {
+        return getAs(field);
     }
 
     /**
@@ -94,6 +112,16 @@ public interface Tuple extends Serializable {
     }
 
     /**
+     * Returns the field value as a primitive byte.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default char getChar(String field) {
+        return getAs(field);
+    }
+
+    /**
      * Returns the value at position i as a primitive byte.
      *
      * @throws ClassCastException when data type does not match.
@@ -101,6 +129,16 @@ public interface Tuple extends Serializable {
      */
     default byte getByte(int i) {
         return getAs(i);
+    }
+
+    /**
+     * Returns the field value as a primitive byte.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default byte getByte(String field) {
+        return getAs(field);
     }
 
     /**
@@ -114,6 +152,16 @@ public interface Tuple extends Serializable {
     }
 
     /**
+     * Returns the field value as a primitive short.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default short getShort(String field) {
+        return getAs(field);
+    }
+
+    /**
      * Returns the value at position i as a primitive int.
      *
      * @throws ClassCastException when data type does not match.
@@ -124,6 +172,16 @@ public interface Tuple extends Serializable {
     }
 
     /**
+     * Returns the field value as a primitive int.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default int getInt(String field) {
+        return getAs(field);
+    }
+
+    /**
      * Returns the value at position i as a primitive long.
      *
      * @throws ClassCastException when data type does not match.
@@ -131,6 +189,16 @@ public interface Tuple extends Serializable {
      */
     default long getLong(int i) {
         return getAs(i);
+    }
+
+    /**
+     * Returns the field value as a primitive long.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default long getLong(String field) {
+        return getAs(field);
     }
 
     /**
@@ -145,6 +213,17 @@ public interface Tuple extends Serializable {
     }
 
     /**
+     * Returns the field value as a primitive float.
+     * Throws an exception if the type mismatches or if the value is null.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default float getFloat(String field) {
+        return getAs(field);
+    }
+
+    /**
      * Returns the value at position i as a primitive double.
      *
      * @throws ClassCastException when data type does not match.
@@ -152,6 +231,16 @@ public interface Tuple extends Serializable {
      */
     default double getDouble(int i) {
         return getAs(i);
+    }
+
+    /**
+     * Returns the field value as a primitive double.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default double getDouble(String field) {
+        return getAs(field);
     }
 
     /**
@@ -164,12 +253,56 @@ public interface Tuple extends Serializable {
     }
 
     /**
+     * Returns the field value as a String object.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default String getString(String field) {
+        return getAs(field);
+    }
+
+    /**
+     * Returns the string representation of the value at position i.
+     */
+    default String toString(int i) {
+        Object o = get(i);
+        if (o == null) return "null";
+
+        if (o instanceof String) {
+            return (String) o;
+        } else {
+            Measure m = schema().measure().get(schema().fields()[i].name);
+            if (m != null && m instanceof DiscreteMeasure) {
+                return getScale(i);
+            } else {
+                return schema().fields()[i].type.toString(o);
+            }
+        }
+    }
+
+    /**
+     * Returns the string representation of the field value.
+     */
+    default String toString(String field) {
+        return toString(fieldIndex(field));
+    }
+
+    /**
      * Returns the value at position i of decimal type as java.math.BigDecimal.
      *
      * @throws ClassCastException when data type does not match.
      */
     default java.math.BigDecimal getDecimal(int i) {
         return getAs(i);
+    }
+
+    /**
+     * Returns the field value of decimal type as java.math.BigDecimal.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default java.math.BigDecimal getDecimal(String field) {
+        return getAs(field);
     }
 
     /**
@@ -182,12 +315,30 @@ public interface Tuple extends Serializable {
     }
 
     /**
+     * Returns the field value of date type as java.time.LocalDate.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default java.time.LocalDate getDate(String field) {
+        return getAs(field);
+    }
+
+    /**
      * Returns the value at position i of date type as java.time.LocalTime.
      *
      * @throws ClassCastException when data type does not match.
      */
     default java.time.LocalTime getTime(int i) {
         return getAs(i);
+    }
+
+    /**
+     * Returns the field value of date type as java.time.LocalTime.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default java.time.LocalTime getTime(String field) {
+        return getAs(field);
     }
 
     /**
@@ -200,12 +351,66 @@ public interface Tuple extends Serializable {
     }
 
     /**
-     * Returns the value at position i of array type as `java.util.List`.
+     * Returns the field value of date type as java.time.LocalDateTime.
      *
      * @throws ClassCastException when data type does not match.
      */
-    default <T> java.util.List<T> getList(int i) {
+    default java.time.LocalDateTime getDateTime(String field) {
+        return getAs(field);
+    }
+
+    /**
+     * Returns the value at position i of NominalScale or OridnalScale.
+     *
+     * @throws ClassCastException when the data is not nominal or ordinal.
+     */
+    default String getScale(int i) {
+        return ((DiscreteMeasure) schema().measure().get(schema().fields()[i].name)).toString(getInt(i));
+    }
+
+    /**
+     * Returns the field value of NominalScale or OridnalScale.
+     *
+     * @throws ClassCastException when the data is not nominal or ordinal.
+     */
+    default String getScale(String field) {
+        return getScale(fieldIndex(field));
+    }
+
+    /**
+     * Returns the value at position i of array type.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default <T> T[] getArray(int i) {
         return getAs(i);
+    }
+
+    /**
+     * Returns the field value of array type.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default <T> T[] getArray(String field) {
+        return getAs(field);
+    }
+
+    /**
+     * Returns the value at position i of struct type.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default Tuple getStruct(int i) {
+        return getAs(i);
+    }
+
+    /**
+     * Returns the field value of struct type.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default Tuple getStruct(String field) {
+        return getAs(field);
     }
 
     /**

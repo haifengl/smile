@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.data.type;
 
-import java.text.ParseException;
-
 /**
  * Long data type.
  *
@@ -54,7 +52,7 @@ public class LongType implements DataType {
     }
 
     @Override
-    public Long valueOf(String s) throws ParseException {
+    public Long valueOf(String s) {
         return Long.valueOf(s);
     }
 

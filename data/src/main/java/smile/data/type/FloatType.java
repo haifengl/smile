@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.data.type;
 
-import java.text.ParseException;
-
 /**
  * Float data type.
  *
@@ -54,7 +52,7 @@ public class FloatType implements DataType {
     }
 
     @Override
-    public Float valueOf(String s) throws ParseException {
+    public Float valueOf(String s) {
         return Float.valueOf(s);
     }
 

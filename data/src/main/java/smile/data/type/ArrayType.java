@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.data.type;
 
-import java.text.ParseException;
 import java.util.Arrays;
 
 /**
@@ -80,7 +79,7 @@ public class ArrayType implements DataType {
     }
 
     @Override
-    public Object[] valueOf(String s) throws ParseException {
+    public Object[] valueOf(String s) {
         // strip surrounding []
         String[] elements = s.substring(1, s.length() - 1).split(",");
         Object[] array = new Object[elements.length];

@@ -155,7 +155,7 @@ public class Arrow {
                             FloatingPointPrecision precision = ((ArrowType.FloatingPoint) type).getPrecision();
                             switch (precision) {
                                 case DOUBLE:
-                                    readDoubleField(fieldVector);
+                                    vectors[j] = readDoubleField(fieldVector);
                                     break;
                                 case SINGLE:
                                     vectors[j] = readFloatField(fieldVector);
@@ -251,6 +251,18 @@ public class Arrow {
                             break;
                         case Char:
                             writeCharField(df, vector, from, count);
+                            break;
+                        case String:
+                            writeStringField(df, vector, from, count);
+                            break;
+                        case Date:
+                            writeDateField(df, vector, from, count);
+                            break;
+                        case Time:
+                            writeTimeField(df, vector, from, count);
+                            break;
+                        case DateTime:
+                            writeDateTimeField(df, vector, from, count);
                             break;
                         case Object: {
                             Class clazz = ((ObjectType) type).getObjectClass();
@@ -956,7 +968,7 @@ public class Arrow {
     }
 
     /** Writes a date column. */
-    private void writeDateField(DataFrame df, FieldVector fieldVector, int from, int count) throws UnsupportedEncodingException {
+    private void writeDateField(DataFrame df, FieldVector fieldVector, int from, int count) {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
@@ -976,7 +988,7 @@ public class Arrow {
     }
 
     /** Writes a time column. */
-    private void writeTimeField(DataFrame df, FieldVector fieldVector, int from, int count) throws UnsupportedEncodingException {
+    private void writeTimeField(DataFrame df, FieldVector fieldVector, int from, int count) {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
@@ -996,7 +1008,7 @@ public class Arrow {
     }
 
     /** Writes a datetime column. */
-    private void writeDateTimeField(DataFrame df, FieldVector fieldVector, int from, int count) throws UnsupportedEncodingException {
+    private void writeDateTimeField(DataFrame df, FieldVector fieldVector, int from, int count) {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 

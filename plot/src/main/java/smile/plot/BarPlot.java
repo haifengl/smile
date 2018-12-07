@@ -183,7 +183,7 @@ public class BarPlot extends Plot {
             if (rightTop[i][1] > rightBottom[i][1]) {
                 if (coord[0] < rightBottom[i][0] && coord[0] > leftBottom[i][0] && coord[1] < rightTop[i][1] && coord[1] > rightBottom[i][1]) {
                     if (description == null) {
-                        return String.format("data[%d] = %g", i, data[i][1]);
+                        return String.format("data[%d] = %G", i, data[i][1]);
                     } else {
                         return String.format("%s = %g", description[i], data[i][1]);
                     }
@@ -191,9 +191,9 @@ public class BarPlot extends Plot {
             } else {
                 if (coord[0] < rightBottom[i][0] && coord[0] > leftBottom[i][0] && coord[1] > rightTop[i][1] && coord[1] < rightBottom[i][1]) {
                     if (description == null) {
-                        return String.format("data[%d] = %g", i, data[i][1]);
+                        return String.format("data[%d] = %G", i, data[i][1]);
                     } else {
-                        return String.format("%s = %g", description[i], data[i][1]);
+                        return String.format("%s = %G", description[i], data[i][1]);
                     }
                 }
             }

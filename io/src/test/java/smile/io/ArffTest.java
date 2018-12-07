@@ -61,30 +61,31 @@ public class ArffTest {
         System.out.println("weather");
         Arff arff = new Arff(Paths.getTestData("weka/weather.nominal.arff"));
         DataFrame weather = arff.read();
+        System.out.println(weather);
 
         StructType schema = DataTypes.struct(
-                new StructField("outlook", DataTypes.IntegerType),
-                new StructField("temperature", DataTypes.IntegerType),
-                new StructField("humidity", DataTypes.IntegerType),
-                new StructField("windy", DataTypes.IntegerType),
-                new StructField("play", DataTypes.IntegerType));
+                new StructField("outlook", DataTypes.ByteType),
+                new StructField("temperature", DataTypes.ByteType),
+                new StructField("humidity", DataTypes.ByteType),
+                new StructField("windy", DataTypes.ByteType),
+                new StructField("play", DataTypes.ByteType));
         assertEquals(schema, weather.schema());
 
         assertEquals(14, weather.nrows());
-        assertEquals(4, weather.ncols());
-        assertEquals("no",    weather.get(0).get("play"));
-        assertEquals("no",    weather.get(1).get("play"));
-        assertEquals("yes",   weather.get(2).get("play"));
-        assertEquals("sunny", weather.get(0).get(0));
-        assertEquals("hot",   weather.get(0).get(1));
-        assertEquals("high",  weather.get(0).get(2));
-        assertEquals("FALSE", weather.get(0).get(3));
+        assertEquals(5, weather.ncols());
+        assertEquals("no",    weather.get(0).getScale("play"));
+        assertEquals("no",    weather.get(1).getScale("play"));
+        assertEquals("yes",   weather.get(2).getScale("play"));
+        assertEquals("sunny", weather.get(0).getScale(0));
+        assertEquals("hot",   weather.get(0).getScale(1));
+        assertEquals("high",  weather.get(0).getScale(2));
+        assertEquals("FALSE", weather.get(0).getScale(3));
 
-        assertEquals("no",    weather.get(13).get("play"));
-        assertEquals("rainy", weather.get(13).get(0));
-        assertEquals("mild",  weather.get(13).get(1));
-        assertEquals("high",  weather.get(13).get(2));
-        assertEquals("TRUE",  weather.get(13).get(3));
+        assertEquals("no",    weather.get(13).getScale("play"));
+        assertEquals("rainy", weather.get(13).getScale(0));
+        assertEquals("mild",  weather.get(13).getScale(1));
+        assertEquals("high",  weather.get(13).getScale(2));
+        assertEquals("TRUE",  weather.get(13).getScale(3));
     }
 
     /**
@@ -101,20 +102,20 @@ public class ArffTest {
                 new StructField("sepalwidth", DataTypes.FloatType),
                 new StructField("petallength", DataTypes.FloatType),
                 new StructField("petalwidth", DataTypes.FloatType),
-                new StructField("class", DataTypes.IntegerType));
+                new StructField("class", DataTypes.ByteType));
         assertEquals(schema, iris.schema());
 
         assertEquals(150, iris.nrows());
-        assertEquals(4,   iris.ncols());
-        assertEquals("Iris-setosa", iris.get(0).get("class"));
-        assertEquals("Iris-setosa", iris.get(1).get("class"));
-        assertEquals("Iris-setosa", iris.get(2).get("class"));
+        assertEquals(5,   iris.ncols());
+        assertEquals("Iris-setosa", iris.get(0).getScale("class"));
+        assertEquals("Iris-setosa", iris.get(1).getScale("class"));
+        assertEquals("Iris-setosa", iris.get(2).getScale("class"));
         assertEquals(5.1, iris.get(0).getFloat(0), 1E-7);
         assertEquals(3.5, iris.get(0).getFloat(1), 1E-7);
         assertEquals(1.4, iris.get(0).getFloat(2), 1E-7);
         assertEquals(0.2, iris.get(0).getFloat(3), 1E-7);
 
-        assertEquals("Iris-virginica", iris.get(149).get("class"));
+        assertEquals("Iris-virginica", iris.get(149).getScale("class"));
         assertEquals(5.9, iris.get(149).getFloat(0), 1E-7);
         assertEquals(3.0, iris.get(149).getFloat(1), 1E-7);
         assertEquals(5.1, iris.get(149).getFloat(2), 1E-7);
@@ -157,8 +158,8 @@ public class ArffTest {
 
         assertEquals(2, date.nrows());
         assertEquals(1, date.ncols());
-        assertEquals(LocalDateTime.parse("2001-04-03 12:12:12"), date.get(0).get(0));
-        assertEquals(LocalDateTime.parse("2001-05-03 12:59:55"), date.get(0).get(1));
+        assertEquals(LocalDateTime.parse("2001-04-03T12:12:12"), date.get(0).get(0));
+        assertEquals(LocalDateTime.parse("2001-05-03T12:59:55"), date.get(1).get(0));
     }
 
     /**
@@ -172,10 +173,10 @@ public class ArffTest {
 
         StructType schema = DataTypes.struct(
                 new StructField("V1", DataTypes.IntegerType),
-                new StructField("V2", DataTypes.IntegerType),
-                new StructField("V3", DataTypes.IntegerType),
-                new StructField("V4", DataTypes.IntegerType),
-                new StructField("class", DataTypes.IntegerType));
+                new StructField("V2", DataTypes.ByteType),
+                new StructField("V3", DataTypes.ByteType),
+                new StructField("V4", DataTypes.ByteType),
+                new StructField("class", DataTypes.ByteType));
         assertEquals(schema, sparse.schema());
 
         assertEquals(2, sparse.nrows());

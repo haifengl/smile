@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.data.type;
 
-import java.text.ParseException;
-
 /**
  * Boolean data type.
  *
@@ -54,7 +52,7 @@ public class BooleanType implements DataType {
     }
 
     @Override
-    public Boolean valueOf(String s) throws ParseException {
+    public Boolean valueOf(String s) {
         return Boolean.valueOf(s);
     }
 

@@ -71,7 +71,7 @@ public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
      * @param n Number of elements to show
      */
     default String toString(int n) {
-        String suffix = n >= size() ? "]" : String.format(", ... %d more]", size() - n);
+        String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
         return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
     }
 
