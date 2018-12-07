@@ -17,7 +17,6 @@ package smile.data.type;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -66,7 +65,7 @@ public interface DataType extends Serializable {
      * Returns the value from its string representation.
      * @param s the string representation of a value of this type.
      */
-    Object valueOf(String s) throws ParseException;
+    Object valueOf(String s);
 
     /** Returns the string representation of a value of the type. */
     default String toString(Object o) {
@@ -222,6 +221,16 @@ public interface DataType extends Serializable {
             return DataTypes.TimeType;
         else if (clazz.isArray())
             return DataTypes.array(DataType.of(clazz.getComponentType()));
+        else if (clazz.isEnum()) {
+            int levels = clazz.getEnumConstants().length;
+            if (levels < Byte.MAX_VALUE + 1) {
+                return DataTypes.ByteType;
+            } else if (levels < Short.MAX_VALUE + 1) {
+                return DataTypes.ShortType;
+            } else {
+                return DataTypes.IntegerType;
+            }
+        }
         else
             return DataTypes.object(clazz);
     }

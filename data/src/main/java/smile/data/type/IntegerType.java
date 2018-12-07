@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.data.type;
 
-import java.text.ParseException;
-
 /**
  * Integer data type.
  *
@@ -54,7 +52,7 @@ public class IntegerType implements DataType {
     }
 
     @Override
-    public Integer valueOf(String s) throws ParseException {
+    public Integer valueOf(String s) {
         return Integer.valueOf(s);
     }
 

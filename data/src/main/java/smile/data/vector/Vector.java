@@ -88,7 +88,7 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
      * @param n Number of elements to show
      */
     default String toString(int n) {
-        String suffix = n >= size() ? "]" : String.format(", ... %d more]", size() - n);
+        String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
         return stream().limit(n).map(Object::toString).collect(Collectors.joining(", ", "[", suffix));
     }
 

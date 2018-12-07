@@ -21,10 +21,8 @@ import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import smile.data.type.DataType;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
+
+import smile.data.type.*;
 import smile.data.vector.*;
 import smile.data.vector.Vector;
 import smile.math.matrix.DenseMatrix;
@@ -72,9 +70,15 @@ public interface DataFrame extends Dataset<Tuple> {
 
     /** Returns the structure of data frame. */
     default DataFrame structure() {
+        Measure[] measures = new Measure[ncols()];
+        for (Map.Entry<String, Measure> e : schema().measure().entrySet()) {
+            measures[columnIndex(e.getKey())] = e.getValue();
+        }
+
         List<BaseVector> vectors = Arrays.asList(
                 Vector.of("Column", names()),
-                Vector.of("Type", types())
+                Vector.of("Type", types()),
+                Vector.of("Measure", measures)
         );
 
         return new DataFrameImpl(vectors);
@@ -405,8 +409,7 @@ public interface DataFrame extends Dataset<Tuple> {
         List<String[]> rows = stream().limit(numRows).map( row -> {
             String[] cells = new String[numCols];
             for (int i = 0; i < numCols; i++) {
-                Object x = row.get(i);
-                String str = x == null ? "null" : types[i].toString(x);
+                String str = row.toString(i);
                 cells[i] = (truncate && str.length() > maxColumnWidth) ? str.substring(0, maxColumnWidth - 3) + "..." : str;
             }
             return cells;

@@ -27,14 +27,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Spliterator;
-import java.util.stream.Stream;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
-import smile.data.type.DataType;
-import smile.data.type.DataTypes;
-import smile.data.type.ObjectType;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
+import smile.data.type.*;
 import smile.data.vector.*;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
@@ -53,6 +50,14 @@ class DataFrameImpl implements DataFrame {
     private List<BaseVector> columns;
     /** The number of rows. */
     private final int size;
+    /** The lambda to retrieve a field value. */
+    private final Getter[] getter;
+
+    /** The lambda to retrieve a field value. */
+    interface Getter {
+        /** Returns the field of row i. */
+        Object apply(int i);
+    }
 
     /**
      * Constructor.
@@ -70,6 +75,9 @@ class DataFrameImpl implements DataFrame {
                 .collect(Collectors.toList())
                 .toArray(new StructField[columns.size()]);
         this.schema = DataTypes.struct(fields);
+        this.getter = IntStream.of(fields.length)
+                .<Getter>mapToObj(j -> (i -> get(i, j)))
+                .toArray(Getter[]::new);
 
         Set<String> set = new HashSet<>();
         for (BaseVector v : columns) {
@@ -153,6 +161,26 @@ class DataFrameImpl implements DataFrame {
                         for (int i = 0; i < size; i++) values[i] = (char) read.invoke(data.get(i));
                         CharVector vector = CharVector.of(name, values);
                         columns.add(vector);
+                    } else if (type.isEnum()) {
+                        Object[] levels = type.getEnumConstants();
+                        NominalScale scale = new NominalScale(Arrays.stream(levels).map(Object::toString).toArray(String[]::new));
+                        schema.measure().put(name, scale);
+                        if (levels.length < Byte.MAX_VALUE + 1) {
+                            byte[] values = new byte[size];
+                            for (int i = 0; i < size; i++) values[i] = (byte) ((Enum) read.invoke(data.get(i))).ordinal();
+                            ByteVector vector = ByteVector.of(name, values);
+                            columns.add(vector);
+                        } else if (levels.length < Short.MAX_VALUE + 1) {
+                            short[] values = new short[size];
+                            for (int i = 0; i < size; i++) values[i] = (short) ((Enum) read.invoke(data.get(i))).ordinal();
+                            ShortVector vector = ShortVector.of(name, values);
+                            columns.add(vector);
+                        } else {
+                            int[] values = new int[size];
+                            for (int i = 0; i < size; i++) values[i] = ((Enum) read.invoke(data.get(i))).ordinal();
+                            IntVector vector = IntVector.of(name, values);
+                            columns.add(vector);
+                        }
                     } else {
                         Object[] values = new Object[size];
                         for (int i = 0; i < size; i++) values[i] = read.invoke(data.get(i));
@@ -168,6 +196,8 @@ class DataFrameImpl implements DataFrame {
             logger.error("Failed to call property read method: ", ex);
             throw new RuntimeException(ex);
         }
+
+        this.getter = IntStream.of(schema.fields().length).<Getter>mapToObj(j -> (i -> get(i, j))).toArray(Getter[]::new);
     }
 
     /** Returns the struct field of a property. */
@@ -188,6 +218,7 @@ class DataFrameImpl implements DataFrame {
         this.schema = data.get(0).schema();
         StructField[] fields = schema.fields();
         this.columns = new ArrayList<>(fields.length);
+        this.getter = IntStream.of(fields.length).<Getter>mapToObj(j -> (i -> columns.get(j).get(i))).toArray(Getter[]::new);
 
         for (int j = 0; j < fields.length; j++) {
             StructField field = fields[j];
@@ -276,6 +307,7 @@ class DataFrameImpl implements DataFrame {
         this.schema = formula.bind(df.schema());
         StructField[] fields = schema.fields();
         this.columns = new ArrayList<>(fields.length);
+        this.getter = IntStream.of(fields.length).<Getter>mapToObj(j -> (i -> get(i, j))).toArray(Getter[]::new);
 
         smile.data.formula.Factor[] factors = formula.factors();
         for (int j = 0; j < fields.length; j++) {
@@ -396,6 +428,11 @@ class DataFrameImpl implements DataFrame {
     }
 
     @Override
+    public Object get(int i, int j) {
+        return columns.get(j).get(i);
+    }
+
+    @Override
     public Stream<Tuple> stream() {
         Spliterator<Tuple> spliterator = new DatasetSpliterator<>(this, Spliterator.ORDERED);
         return java.util.stream.StreamSupport.stream(spliterator, true);
@@ -458,7 +495,16 @@ class DataFrameImpl implements DataFrame {
         for (int i = 0; i < cols.length; i++) {
             sub.add(columns.get(cols[i]));
         }
-        return new DataFrameImpl(sub);
+
+        DataFrameImpl df = new DataFrameImpl(sub);
+        for (StructField field : df.schema.fields()) {
+            Measure measure = schema.measure().get(field.name);
+            if (measure != null) {
+                df.schema.measure().put(field.name, measure);
+            }
+        }
+
+        return df;
     }
 
     @Override
@@ -469,7 +515,16 @@ class DataFrameImpl implements DataFrame {
             drops.add(columns.get(cols[i]));
         }
         sub.removeAll(drops);
-        return new DataFrameImpl(sub);
+
+        DataFrameImpl df = new DataFrameImpl(sub);
+        for (StructField field : df.schema.fields()) {
+            Measure measure = schema.measure().get(field.name);
+            if (measure != null) {
+                df.schema.measure().put(field.name, measure);
+            }
+        }
+
+        return df;
     }
 
     @Override
@@ -480,14 +535,23 @@ class DataFrameImpl implements DataFrame {
                 all.add(df.column(i));
             }
         }
-        return new DataFrameImpl(all);
+
+        DataFrameImpl df = new DataFrameImpl(all);
+        df.schema.measure().putAll(schema.measure());
+        for (DataFrame dataframe : dataframes) {
+            df.schema.measure().putAll(dataframe.schema().measure());
+        }
+
+        return df;
     }
 
     @Override
     public DataFrame merge(BaseVector... vectors) {
         List<BaseVector> columns = new ArrayList<>(this.columns);
         Collections.addAll(columns, vectors);
-        return new DataFrameImpl(columns);
+        DataFrameImpl df = new DataFrameImpl(columns);
+        df.schema.measure().putAll(schema.measure());
+        return df;
     }
 
     @Override
@@ -592,7 +656,7 @@ class DataFrameImpl implements DataFrame {
 
     class DataFrameRow implements Tuple {
         /** Row index. */
-        int i;
+        private int i;
 
         DataFrameRow(int i) {
             this.i = i;
@@ -610,7 +674,7 @@ class DataFrameImpl implements DataFrame {
 
         @Override
         public Object get(int j) {
-            return columns.get(j).get(i);
+            return DataFrameImpl.this.get(i, j);
         }
 
         @Override

@@ -415,7 +415,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
             }
             avg /= size;
 
-            logger.info(String.format("Genetic Algorithm: generation %d, best fitness %g, average fitness %g", g, best.fitness(), avg));
+            logger.info(String.format("Genetic Algorithm: generation %d, best fitness %G, average fitness %G", g, best.fitness(), avg));
         }
 
         return best;

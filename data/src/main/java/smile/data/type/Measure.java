@@ -18,11 +18,13 @@ package smile.data.type;
 import java.io.Serializable;
 
 /**
- * Scales of measurement refer to ways in which variables/numbers are defined
- * and categorized. Each scale of measurement has certain properties
- * which in turn determines the appropriateness for use of certain
- * statistical analyses. The four scales of measurement are nominal,
- * ordinal, interval, and ratio.
+ * Level of measurement or scale of measure is a classification that
+ * describes the nature of information within the values assigned to
+ * variables. Psychologist Stanley Smith Stevens developed the best-known
+ * classification with four levels, or scales, of measurement: nominal,
+ * ordinal, interval, and ratio. Each scale of measurement has certain
+ * properties which in turn determines the appropriateness for use of
+ * certain statistical analyses.
  *
  * @author Haifeng Li
  */

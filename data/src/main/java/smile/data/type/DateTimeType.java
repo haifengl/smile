@@ -15,9 +15,9 @@
  *******************************************************************************/
 package smile.data.type;
 
-import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
 /**
  * DateTime data type.
  *
@@ -76,7 +76,7 @@ public class DateTimeType implements DataType {
     }
 
     @Override
-    public LocalDateTime valueOf(String s) throws ParseException {
+    public LocalDateTime valueOf(String s) {
         return LocalDateTime.parse(s, formatter);
     }
 

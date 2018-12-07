@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.data.type;
 
-import java.text.ParseException;
-
 /**
  * Double data type.
  *
@@ -54,7 +52,7 @@ public class DoubleType implements DataType {
     }
 
     @Override
-    public Double valueOf(String s) throws ParseException {
+    public Double valueOf(String s) {
         return Double.valueOf(s);
     }
 

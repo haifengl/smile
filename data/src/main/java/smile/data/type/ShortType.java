@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.data.type;
 
-import java.text.ParseException;
-
 /**
  * Short data type.
  *
@@ -54,7 +52,7 @@ public class ShortType implements DataType {
     }
 
     @Override
-    public Short valueOf(String s) throws ParseException {
+    public Short valueOf(String s) {
         return Short.valueOf(s);
     }
 

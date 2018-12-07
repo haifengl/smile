@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.data.type;
 
-import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 import smile.data.Tuple;
@@ -34,7 +33,7 @@ public class StructType implements DataType {
     /** Field name to index map. */
     private final Map<String, Integer> index;
     /** Optional scale of measurement of fields. */
-    private final Map<String, Measure> measures;
+    private final Map<String, Measure> measure;
 
     /**
      * Constructor.
@@ -49,7 +48,7 @@ public class StructType implements DataType {
     StructType(StructField... fields) {
         this.fields = fields;
         index = new HashMap<>(fields.length * 4 / 3);
-        measures = new HashMap<>(fields.length * 4 / 3);
+        measure = new HashMap<>(fields.length * 4 / 3);
         for (int i = 0; i < fields.length; i++) {
             index.put(fields[i].name, i);
         }
@@ -70,15 +69,9 @@ public class StructType implements DataType {
         return index.get(field);
     }
 
-    /** Sets the scale of measurement of a field. */
-    public StructType setMeasure(String field, Measure measure) {
-        measures.put(field, measure);
-        return this;
-    }
-
-    /** Gets the scale of measurement of a field. */
-    public Optional<Measure> getMeasure(String field) {
-        return Optional.ofNullable(measures.get(field));
+    /** Returns the map of field name to its (optional) scale of measure. */
+    public Map<String, Measure> measure() {
+        return measure;
     }
 
     @Override
@@ -102,12 +95,18 @@ public class StructType implements DataType {
     public String toString(Object o) {
         Tuple t = (Tuple) o;
         return Arrays.stream(fields)
-                .map(field -> String.format("  %s: %s", field.name, field.type.toString(t.get(field.name))))
+                .map(field -> {
+                    Measure m = measure().get(field.name);
+                    String value = (m != null && m instanceof DiscreteMeasure) ?
+                            t.getScale(field.name) :
+                            field.type.toString(t.get(field.name));
+                    return String.format("  %s: %s", field.name, value);
+                })
                 .collect(Collectors.joining(",\n", "{\n", "\n}"));
     }
 
     @Override
-    public Tuple valueOf(String s) throws ParseException {
+    public Tuple valueOf(String s) {
         // strip surrounding []
         String[] elements = s.substring(1, s.length() - 1).split(",");
         final Object[] row = new Object[fields.length];
