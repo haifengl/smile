@@ -205,4 +205,57 @@ public class Complex implements Serializable {
     public Complex tan() {
         return sin().div(cos());
     }
+
+    /** Packed array of complex numbers for better memory efficiency. */
+    public static class Array {
+        public final int length;
+        private double[] data;
+
+        /** Constructor.
+         *
+         * @param length the length of array.
+         */
+        public Array(int length) {
+            if (length < 0) {
+                throw new IllegalArgumentException("Negative array length: " + length);
+            }
+            this.length = length;
+            data = new double[length * 2];
+        }
+
+        /** Returns the i-th element. */
+        public Complex get(int i) {
+            int idx = i << 1;
+            return new Complex(data[idx], data[idx+1]);
+        }
+
+        /** Returns the i-th element. For Scala convenience. */
+        public Complex apply(int i) {
+            return get(i);
+        }
+
+        /** Sets the i-th element. */
+        public void set(int i, Complex c) {
+            int idx = i << 1;
+            data[idx] = c.re;
+            data[idx+1] = c.im;
+        }
+
+        /** Sets the i-th element with a real value. */
+        public void set(int i, double re) {
+            int idx = i << 1;
+            data[idx] = re;
+        }
+
+        /** Sets the i-th element. For Scala convenience. */
+        public void update(int i, Complex c) {
+            set(i, c);
+        }
+
+        /** Sets the i-th element with a real value. For Scala convenience. */
+        public void update(int i, double re) {
+            set(i, re);
+        }
+
+    }
 }
