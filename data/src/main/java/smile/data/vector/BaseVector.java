@@ -41,7 +41,11 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
     /** Number of elements in the vector. */
     int size();
 
-    /** Returns the array that backs this vector. */
+    /**
+     * Returns the array that backs this vector.
+     * This is mostly for smile internal use for high performance.
+     * The application developers should not use this method.
+     */
     Object array();
 
     /**

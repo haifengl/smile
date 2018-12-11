@@ -23,10 +23,11 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 import smile.data.DataFrame;
 import smile.data.Tuple;
+import smile.data.measure.NominalScale;
 import smile.data.type.*;
 
 /**

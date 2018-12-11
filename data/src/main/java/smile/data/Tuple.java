@@ -22,8 +22,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import smile.data.type.DiscreteMeasure;
-import smile.data.type.Measure;
+import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.Measure;
 import smile.data.type.StructType;
 
 /**
@@ -361,7 +361,7 @@ public interface Tuple extends Serializable {
     }
 
     /**
-     * Returns the value at position i of NominalScale or OridnalScale.
+     * Returns the value at position i of NominalScale or OrdinalScale.
      *
      * @throws ClassCastException when the data is not nominal or ordinal.
      */
@@ -370,7 +370,7 @@ public interface Tuple extends Serializable {
     }
 
     /**
-     * Returns the field value of NominalScale or OridnalScale.
+     * Returns the field value of NominalScale or OrdinalScale.
      *
      * @throws ClassCastException when the data is not nominal or ordinal.
      */

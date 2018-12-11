@@ -30,7 +30,8 @@ import java.util.Spliterator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
+import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
 import smile.data.type.*;
 import smile.data.vector.*;
 import smile.math.matrix.DenseMatrix;
@@ -50,8 +51,6 @@ class DataFrameImpl implements DataFrame {
     private List<BaseVector> columns;
     /** The number of rows. */
     private final int size;
-    /** The lambda to retrieve a field value. */
-    private final Getter[] getter;
 
     /** The lambda to retrieve a field value. */
     interface Getter {
@@ -75,9 +74,6 @@ class DataFrameImpl implements DataFrame {
                 .collect(Collectors.toList())
                 .toArray(new StructField[columns.size()]);
         this.schema = DataTypes.struct(fields);
-        this.getter = IntStream.of(fields.length)
-                .<Getter>mapToObj(j -> (i -> get(i, j)))
-                .toArray(Getter[]::new);
 
         Set<String> set = new HashSet<>();
         for (BaseVector v : columns) {
@@ -196,8 +192,6 @@ class DataFrameImpl implements DataFrame {
             logger.error("Failed to call property read method: ", ex);
             throw new RuntimeException(ex);
         }
-
-        this.getter = IntStream.of(schema.length()).<Getter>mapToObj(j -> (i -> get(i, j))).toArray(Getter[]::new);
     }
 
     /** Returns the struct field of a property. */
@@ -218,7 +212,6 @@ class DataFrameImpl implements DataFrame {
         this.schema = data.get(0).schema();
         StructField[] fields = schema.fields();
         this.columns = new ArrayList<>(fields.length);
-        this.getter = IntStream.of(fields.length).<Getter>mapToObj(j -> (i -> columns.get(j).get(i))).toArray(Getter[]::new);
 
         for (int j = 0; j < fields.length; j++) {
             StructField field = fields[j];
@@ -307,7 +300,6 @@ class DataFrameImpl implements DataFrame {
         this.schema = formula.bind(df.schema());
         StructField[] fields = schema.fields();
         this.columns = new ArrayList<>(fields.length);
-        this.getter = IntStream.of(fields.length).<Getter>mapToObj(j -> (i -> get(i, j))).toArray(Getter[]::new);
 
         smile.data.formula.Factor[] factors = formula.factors();
         for (int j = 0; j < fields.length; j++) {

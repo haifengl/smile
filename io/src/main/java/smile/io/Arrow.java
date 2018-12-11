@@ -134,6 +134,10 @@ public class Arrow {
             // The holder for a set of vectors to be loaded/unloaded.
             VectorSchemaRoot root = reader.getVectorSchemaRoot();
             List<ArrowBlock> blocks = reader.getRecordBlocks();
+            if (blocks.isEmpty()) {
+                throw new IOException("No data blocks in Arrow file");
+            }
+
             DataFrame[] frames = new DataFrame[blocks.size()];
             int size = 0;
             for (int i = 0; i < frames.length && size < limit; i++) {
@@ -216,7 +220,12 @@ public class Arrow {
                 size += frames[i].size();
             }
 
-            return frames[0];
+            if (frames.length == 1) {
+                return frames[0];
+            } else {
+                DataFrame df = frames[0];
+                return df.union(Arrays.copyOfRange(frames, 1, frames.length));
+            }
         }
     }
 

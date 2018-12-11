@@ -16,12 +16,10 @@
 
 package smile.data.vector;
 
-import smile.data.type.DataType;
-import smile.data.type.DataTypes;
-import smile.data.type.DiscreteMeasure;
-
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
 
 /**
  * An immutable short vector.
@@ -36,12 +34,6 @@ public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
 
     @Override
     short[] array();
-
-    /** Returns the scale of measure. Returns null if unknown. */
-    DiscreteMeasure getScale();
-
-    /** Sets the (optional) scale of measure. */
-    void setScale(DiscreteMeasure scale);
 
     @Override
     default byte getByte(int i) {
