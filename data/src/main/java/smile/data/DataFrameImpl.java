@@ -197,7 +197,7 @@ class DataFrameImpl implements DataFrame {
             throw new RuntimeException(ex);
         }
 
-        this.getter = IntStream.of(schema.fields().length).<Getter>mapToObj(j -> (i -> get(i, j))).toArray(Getter[]::new);
+        this.getter = IntStream.of(schema.length()).<Getter>mapToObj(j -> (i -> get(i, j))).toArray(Getter[]::new);
     }
 
     /** Returns the struct field of a property. */
@@ -665,11 +665,6 @@ class DataFrameImpl implements DataFrame {
         @Override
         public StructType schema() {
             return schema;
-        }
-
-        @Override
-        public int size() {
-            return columns.size();
         }
 
         @Override

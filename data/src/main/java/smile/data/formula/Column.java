@@ -116,6 +116,6 @@ final class Column implements Factor {
     @Override
     public void bind(StructType schema) {
         index = schema.fieldIndex(name);
-        type = schema.fields()[index].type;
+        type = schema.field(index).type;
     }
 }

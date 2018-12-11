@@ -41,7 +41,6 @@ import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
 import static org.apache.arrow.vector.types.FloatingPointPrecision.DOUBLE;
 import static org.apache.arrow.vector.types.FloatingPointPrecision.SINGLE;
-
 import smile.data.DataFrame;
 import smile.data.type.*;
 
@@ -57,11 +56,20 @@ public class Arrow {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Arrow.class);
 
     /**
-     * The memory limit for allocator.
+     * The root allocator. Typically only one created for a JVM.
+     * Arrow provides a tree-based model for memory allocation.
+     * The RootAllocator is created first, then all allocators are
+     * created as children of that allocator. The RootAllocator is
+     * responsible for being the master bookeeper for memory
+     * allocations. All other allocators are created as children
+     * of this tree. Each allocator can first determine whether
+     * it has enough local memory to satisfy a particular request.
+     * If not, the allocator can ask its parent for an additional
+     * memory allocation.
      */
-    private long limit;
+    private static RootAllocator allocator;
     /**
-     * The number of rows in a record batch.
+     * The number of records in a record batch.
      * An Apache Arrow record batch is conceptually similar
      * to the Parquet row group. Parquet recommends a
      * disk/block/row group/file size of 512 to 1024 MB on HDFS.
@@ -72,33 +80,34 @@ public class Arrow {
 
     /** Constructor. */
     public Arrow() {
-        this(Long.MAX_VALUE);
+        this(1000000);
     }
 
     /**
      * Constructor.
-     * @param limit the maximum amount of memory in bytes that can be allocated.
+     * @param batch the number of records in a record batch.
      */
-    public Arrow(long limit) {
-        this(limit, 1000000);
-    }
-
-    /**
-     * Constructor.
-     * @param limit the maximum amount of memory in bytes that can be allocated.
-     * @param batch the number of rows in each record batch.
-     */
-    public Arrow(long limit, int batch) {
-        if (limit <= 0) {
-            throw new IllegalArgumentException("Invalid limit: " + limit);
-        }
-
+    public Arrow(int batch) {
         if (batch <= 0) {
             throw new IllegalArgumentException("Invalid batch size: " + batch);
         }
 
-        this.limit = limit;
         this.batch = batch;
+    }
+
+    /**
+     * Creates the root allocator.
+     * The RootAllocator is responsible for being the master
+     * bookeeper for memory allocations.
+     *
+     * @param limit memory allocation limit in bytes.
+     */
+    public static void allocate(long limit) {
+        if (limit <= 0) {
+            throw new IllegalArgumentException("Invalid RootAllocator limit: " + limit);
+        }
+
+        allocator = new RootAllocator(limit);
     }
 
     /**
@@ -106,15 +115,28 @@ public class Arrow {
      * @param path an Apache Arrow file path.
      */
     public DataFrame read(Path path) throws IOException {
-        try (RootAllocator allocator = new RootAllocator(limit);
-             FileInputStream input = new FileInputStream(path.toFile());
+        return read(path, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from an arrow file.
+     * @param path an Apache Arrow file path.
+     * @param limit reads a limited number of records.
+     */
+    public DataFrame read(Path path, int limit) throws IOException {
+        if (allocator == null) {
+            allocator = new RootAllocator(Long.MAX_VALUE);
+        }
+
+        try (FileInputStream input = new FileInputStream(path.toFile());
              ArrowFileReader reader = new ArrowFileReader(input.getChannel(), allocator)) {
 
             // The holder for a set of vectors to be loaded/unloaded.
             VectorSchemaRoot root = reader.getVectorSchemaRoot();
             List<ArrowBlock> blocks = reader.getRecordBlocks();
             DataFrame[] frames = new DataFrame[blocks.size()];
-            for (int i = 0; i < frames.length; i++) {
+            int size = 0;
+            for (int i = 0; i < frames.length && size < limit; i++) {
                 ArrowBlock block = blocks.get(i);
                 if (!reader.loadRecordBatch(block)) {
                     throw new IOException("Failed to load record batch: " + block);
@@ -191,6 +213,7 @@ public class Arrow {
                 }
 
                 frames[i] = DataFrame.of(vectors);
+                size += frames[i].size();
             }
 
             return frames[0];
@@ -199,6 +222,10 @@ public class Arrow {
 
     /** Writes the DataFrame to a file. */
     public void write(DataFrame df, Path path) throws IOException {
+        if (allocator == null) {
+            allocator = new RootAllocator(Long.MAX_VALUE);
+        }
+
         Schema schema = toArrowSchema(df.schema());
         /**
          * When a field is dictionary encoded, the values are represented
@@ -212,8 +239,7 @@ public class Arrow {
          * it must send at least one DictionaryBatch for this id.
          */
         DictionaryProvider provider = new DictionaryProvider.MapDictionaryProvider();
-        try (RootAllocator allocator = new RootAllocator(limit);
-             VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator);
+        try (VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator);
              FileOutputStream output = new FileOutputStream(path.toFile());
              ArrowFileWriter writer = new ArrowFileWriter(root, provider, output.getChannel())) {
 
@@ -317,11 +343,6 @@ public class Arrow {
                 writer.writeBatch();
                 logger.info("write {} rows", count);
             }
-
-            writer.end();
-            writer.close();
-            output.flush();
-            output.close();
         }
     }
 
@@ -1068,7 +1089,7 @@ public class Arrow {
     }
 
     /** Converts a smile struct field to arrow field. */
-    public static Field toArrowField(smile.data.type.StructField field) {
+    public static Field toArrowField(StructField field) {
         switch (field.type.id()) {
             case Integer:
                 return new Field(field.name, new FieldType(false, new ArrowType.Int(32, true), null), null);
@@ -1114,9 +1135,8 @@ public class Arrow {
                     return new Field(field.name, FieldType.nullable(new ArrowType.Int(16, true)), null);
                 } else if (clazz == Character.class) {
                     return new Field(field.name, FieldType.nullable(new ArrowType.Int(16, false)), null);
-                } else {
-                    throw new UnsupportedOperationException("Unsupported smile to arrow type conversion: " + field.type);
                 }
+                break;
             }
             case Array: {
                 DataType etype = ((ArrayType) field.type).getComponentType();
@@ -1161,21 +1181,20 @@ public class Arrow {
                         );
                     case Char:
                         return new Field(field.name, FieldType.nullable(new ArrowType.Utf8()), null);
-                    default:
-                        throw new UnsupportedOperationException("Unsupported smile to arrow type conversion: " + field.type);
                 }
+                break;
             }
             case Struct: {
-                smile.data.type.StructType children = (smile.data.type.StructType) field.type;
+                StructType children = (StructType) field.type;
                 return new Field(field.name,
                         new FieldType(false, new ArrowType.Struct(), null),
                         // children type
                         Arrays.stream(children.fields()).map(Arrow::toArrowField).collect(Collectors.toList())
                 );
             }
-            default:
-                throw new UnsupportedOperationException("Unsupported smile to arrow type conversion: " + field.type);
         }
+
+        throw new UnsupportedOperationException("Unsupported smile to arrow type conversion: " + field.type);
     }
 
     /** Converts an arrow field to smile struct field. */
@@ -1227,7 +1246,7 @@ public class Arrow {
 
             case Binary:
             case FixedSizeBinary:
-                return new StructField(name, DataTypes.array(DataTypes.ByteType));
+                return new StructField(name, DataTypes.ByteArrayType);
 
             case List:
             case FixedSizeList:

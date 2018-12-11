@@ -54,6 +54,11 @@ public class StructType implements DataType {
         }
     }
 
+    /** Returns the number of fields. */
+    public int length() {
+        return fields.length;
+    }
+
     /** Returns the fields. */
     public StructField[] fields() {
         return fields;
@@ -62,6 +67,11 @@ public class StructType implements DataType {
     /** Return the field of given name. */
     public StructField field(String name) {
         return fields[fieldIndex(name)];
+    }
+
+    /** Return the field at position i. */
+    public StructField field(int i) {
+        return fields[i];
     }
 
     /** Returns the index of a field. */

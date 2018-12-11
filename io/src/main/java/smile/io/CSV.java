@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 Haifeng Li
- *   
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -18,18 +18,24 @@ package smile.io;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.text.ParseException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import smile.data.AttributeDataset;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
+import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 
 /**
- * The delimited text file parser. By default, the parser expects a
- * white-space-separated-values file. Each line in the file corresponds
- * to a row in the table. Within a line, fields are separated by white spaces,
- * each field belonging to one table column. This class can also be
- * used to read other text tabular files by setting delimiter character
- * such ash ','. The file may contain comment lines (starting with '%')
+ * Reads and writes files in variations of the Comma Separated Value
+ * (CSV) format. The file may contain comment lines (starting with '%')
  * and missing values (indicated by placeholder '?'), which both can be
  * parameterized.
  *
@@ -37,276 +43,81 @@ import smile.data.AttributeDataset;
  */
 public class CSV {
 
-    /**
-     * The delimiter character to separate columns.
-     */
-    private String delimiter = "\\s+";
-    /**
-     * The start of comments.
-     */
-    private String comment = "%";
-    /**
-     * The placeholder of missing values in the data.
-     */
-    private String missing = "?";
-    /**
-     * The dataset has column names at first row.
-     */
-    private boolean hasColumnNames = false;
-    /**
-     * The dataset has row names at first column.
-     */
-    private boolean hasRowNames = false;
-    /**
-     * The column index of dependent/response variable.
-     */
-    private int responseIndex = -1;
-    /**
-     * Indices of columns to ignore
-     */
-    private List<Integer> ignoredColumns = new ArrayList<>();
+    /** The schema of data structure. */
+    private StructType schema;
+    /** The CSV file format. */
+    private CSVFormat format;
 
     /**
-     * Constructor with default delimiter of white space, comment line
-     * starting with '%', missing value placeholder "?", no column names,
-     * no row names.
+     * Constructor.
+     * Standard Comma Separated Value format,
+     * as for RFC4180 but allowing empty lines.
      */
     public CSV() {
+        this(CSVFormat.DEFAULT);
     }
 
     /**
-     * Returns the delimiter character/string.
+     * Constructor.
+     * @param format The format of a CSV file.
      */
-    public String getDelimiter() {
-        return delimiter;
+    public CSV(CSVFormat format) {
+        this.format = format;
     }
 
     /**
-     * Set the delimiter character/string.
+     * Sets the schema.
+     * @param schema the schema of file.
      */
-    public CSV setDelimiter(String delimiter) {
-        this.delimiter = delimiter;
+    public CSV withSchema(StructType schema) {
+        this.schema = schema;
         return this;
     }
-
     /**
-     * Returns the character/string that starts a comment line.
+     * Reads a CSV file.
+     * @param path a CSV file path.
      */
-    public String getCommentStartWith() {
-        return comment;
+    public DataFrame read(Path path) throws IOException {
+        return read(path, Integer.MAX_VALUE);
     }
 
     /**
-     * Set the character/string that starts a comment line.
+     * Reads a limited number of records from a CSV file.
+     * @param path a CSV file path.
+     * @param limit reads a limited number of records.
      */
-    public CSV setCommentStartWith(String comment) {
-        this.comment = comment;
-        return this;
-    }
+    public DataFrame read(Path path, int limit) throws IOException {
+        StructField[] fields = schema.fields();
 
-    /**
-     * Returns the missing value placeholder.
-     */
-    public String getMissingValuePlaceholder() {
-        return missing;
-    }
-
-    /**
-     * Set the missing value placeholder.
-     */
-    public CSV setMissingValuePlaceholder(String missing) {
-        this.missing = missing;
-        return this;
-    }
-
-    /**
-     * Sets the list of column indices to ignore (starting at 0)
-     */
-    public CSV setIgnoredColumns(List<Integer> ignoredColumns) {
-        this.ignoredColumns = ignoredColumns;
-        return this;
-    }
-
-    /**
-     * Adds one columns index to ignore
-     */
-    public CSV addIgnoredColumn(int index) {
-        this.ignoredColumns.add(index);
-        return this;
-    }
-
-    /**
-     * Adds several column indices to ignore
-     */
-    public CSV addIgnoredColumns(List<Integer> ignoredColumns) {
-        this.ignoredColumns.addAll(ignoredColumns);
-        return this;
-    }
-
-
-    /**
-     * Returns if the dataset has row names (at column 0).
-     */
-    public boolean hasRowNames() {
-        return hasRowNames;
-    }
-
-    /**
-     * Set if the dataset has row names (at column 0).
-     */
-    public CSV setRowNames(boolean hasRowNames) {
-        this.hasRowNames = hasRowNames;
-        return this;
-    }
-
-    /**
-     * Returns if the dataset has column namesS (at row 0).
-     */
-    public boolean hasColumnNames() {
-        return hasColumnNames;
-    }
-
-    /**
-     * Set if the dataset has column names (at row 0).
-     */
-    public CSV setColumnNames(boolean hasColNames) {
-        this.hasColumnNames = hasColNames;
-        return this;
-    }
-
-    /**
-     * Parse a dataset from a buffered reader.
-     * @param name the name of dataset.
-     * @param reader the buffered reader for data.
-     * @throws java.io.IOException
-     */
-    private AttributeDataset parse(String name, BufferedReader reader) throws IOException, ParseException {
-        String line = reader.readLine();
-        while (line != null) {
-            if (line.isEmpty() || line.startsWith(comment)) {
-                line = reader.readLine();
-            } else {
-                break;
-            }
-        }
-
-        if (line == null) {
-            throw new IOException("Empty data source.");
-        }
-
-        if (hasRowNames) {
-            addIgnoredColumn(0);
-        }
-
-        String[] s = line.split(delimiter, 0);
-
-        int p = s.length - ignoredColumns.size();
-
-        if (p <= 0) {
-          throw new IllegalArgumentException("There are more ignored columns (" + ignoredColumns.size() + ") than columns in the file (" + s.length + ").");
-        }
-
-        if (responseIndex >= s.length) {
-          throw new ParseException("Invalid response variable index: " + responseIndex, responseIndex);
-        }
-
-        if (ignoredColumns.contains(responseIndex)) {
-          throw new IllegalArgumentException("The response variable is present in the list of ignored columns.");
-        }
-
-        if (p == 1) {
-          throw new IllegalArgumentException("All columns are ignored, except the response variable.");
-        }
-
-        if (responseIndex >= 0) {
-          p--;
-        }
-/*
-        if (attributes == null) {
-            attributes = new Attribute[p];
-            for (int i = 0, k = 0; i < s.length; i++) {
-                if (!ignoredColumns.contains(i) && i != responseIndex) {
-                    attributes[k++] = new NumericAttribute("V" + (i + 1));
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
+            CSVParser parser = format.parse(reader);
+            List<Tuple> rows = new ArrayList<>();
+            for (CSVRecord record : parser) {
+                Object[] row = new Object[fields.length];
+                for (int i = 0; i < fields.length; i++) {
+                    row[i] = fields[i].type.valueOf(record.get(i));
                 }
+                rows.add(Tuple.of(row, schema));
+                if (rows.size() >= limit) break;
+            }
+            return DataFrame.of(rows);
+        }
+    }
+
+    public void write(DataFrame df, Path path) throws IOException {
+        write(df, path, StandardCharsets.UTF_8);
+    }
+
+    public void write(DataFrame df, Path path, Charset charset) throws IOException {
+        int p = schema.length();
+        List<String> record = new ArrayList<>(p);
+        try (CSVPrinter printer = format.print(path, charset)) {
+            for (int i = 0; i < df.size(); i++) {
+                Tuple row = df.get(i);
+                for (int j = 0; j < p; j++) record.add(row.getString(j));
+                printer.printRecord(record);
+                record.clear();
             }
         }
-
-        int ncols = attributes.length;
-
-        if (responseIndex >= 0) {
-            ncols++;
-        }
-
-        ncols += ignoredColumns.size();
-
-        if (ncols != s.length)
-            throw new ParseException(String.format("%d columns, expected %d", s.length, ncols), s.length);
-
-        AttributeDataset data = new AttributeDataset(name, attributes, response);
-
-        if (hasColumnNames) {
-            for (int i = 0, k = 0; i < s.length; i++) {
-                if (!ignoredColumns.contains(i)) {
-                    if (i != responseIndex) {
-                        attributes[k++].setName(s[i]);
-                    } else {
-                        response.setName(s[i]);
-                    }
-                }
-            }
-        } else {
-            String rowName = hasRowNames ? s[0] : null;
-            double[] x = new double[attributes.length];
-            double y = Double.NaN;
-
-            for (int i = 0, k = 0; i < s.length; i++) {
-                if (!ignoredColumns.contains(i)) {
-                    if (i == responseIndex) {
-                        y = response.valueOf(s[i]);
-                    } else if (missing != null && missing.equalsIgnoreCase(s[i])) {
-                        x[k++] = Double.NaN;
-                    } else {
-                        x[k] = attributes[k].valueOf(s[i]);
-                        k++;
-                    }
-                }
-            }
-
-            AttributeDataset.Row datum = Double.isNaN(y) ? data.add(x) : data.add(x, y);
-            datum.name = rowName;
-        }
-
-        while ((line = reader.readLine()) != null) {
-            if (line.isEmpty() || line.startsWith(comment)) {
-                continue;
-            }
-
-            s = line.split(delimiter, 0);
-            if (s.length != ncols) {
-                throw new ParseException(String.format("%d columns, expected %d", s.length, ncols), s.length);
-            }
-
-            String rowName = hasRowNames ? s[0] : null;
-            double[] x = new double[attributes.length];
-            double y = Double.NaN;
-
-            for (int i = 0, k = 0; i < s.length; i++) {
-                if (!ignoredColumns.contains(i)) {
-                    if (i == responseIndex) {
-                        y = response.valueOf(s[i]);
-                    } else if (missing != null && missing.equalsIgnoreCase(s[i])) {
-                        x[k++] = Double.NaN;
-                    } else {
-                        x[k] = attributes[k].valueOf(s[i]);
-                        k++;
-                    }
-                }
-            }
-
-            AttributeDataset.Row datum = Double.isNaN(y) ? data.add(x) : data.add(x, y);
-            datum.name = rowName;
-        }
-*/
-        return null;
     }
 }

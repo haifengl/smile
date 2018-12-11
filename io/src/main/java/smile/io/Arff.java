@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.io;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StreamTokenizer;
@@ -57,7 +56,7 @@ import smile.data.type.*;
  *
  * @author Haifeng Li
  */
-public class Arff implements Closeable {
+public class Arff implements AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Arff.class);
 
     /** The keyword used to denote the start of an arff header */
@@ -96,6 +95,8 @@ public class Arff implements Closeable {
     private Parser[] parser;
     /** If a field has missing values, the corresponding entry will be true. */
     private boolean[] missing;
+    /** Attribute name path in case of sub-relations. */
+    private String path = "";
 
     /** Parser lambda interface that allows throw a checked exception. */
     interface Parser {
@@ -127,6 +128,18 @@ public class Arff implements Closeable {
     @Override
     public void close() throws IOException {
         reader.close();
+    }
+
+    /** Returns the name of relation. */
+    public String name() {
+        return name;
+    }
+
+    /**
+     * Returns the attribute set of given stream.
+     */
+    public StructType schema() {
+        return schema;
     }
 
     /**
@@ -251,26 +264,26 @@ public class Arff implements Closeable {
 
         // Get attribute name.
         getNextToken();
-        String attributeName = tokenizer.sval;
+        String name = attributeName(tokenizer.sval);
         getNextToken();
 
         // Check if attribute is nominal.
         if (tokenizer.ttype == StreamTokenizer.TT_WORD) {
             // Attribute is real, integer, or string.
             if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_NUMERIC)) {
-                attribute = new StructField(attributeName, DataTypes.DoubleType);
+                attribute = new StructField(name, DataTypes.DoubleType);
                 readTillEOL();
 
             } else if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_REAL)) {
-                attribute = new StructField(attributeName, DataTypes.FloatType);
+                attribute = new StructField(name, DataTypes.FloatType);
                 readTillEOL();
 
             } else if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_INTEGER)) {
-                attribute = new StructField(attributeName, DataTypes.IntegerType);
+                attribute = new StructField(name, DataTypes.IntegerType);
                 readTillEOL();
 
             } else if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_STRING)) {
-                attribute = new StructField(attributeName, DataTypes.StringType);
+                attribute = new StructField(name, DataTypes.StringType);
                 readTillEOL();
 
             } else if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_DATE)) {
@@ -278,19 +291,21 @@ public class Arff implements Closeable {
                     if ((tokenizer.ttype != StreamTokenizer.TT_WORD) && (tokenizer.ttype != '\'') && (tokenizer.ttype != '\"')) {
                         throw new ParseException("not a valid date format", tokenizer.lineno());
                     }
-                    attribute = new StructField(attributeName, DataTypes.datetime(tokenizer.sval));
+                    attribute = new StructField(name, DataTypes.datetime(tokenizer.sval));
                     readTillEOL();
                 } else {
-                    attribute = new StructField(attributeName, DataTypes.DateTimeType);
+                    attribute = new StructField(name, DataTypes.DateTimeType);
                     tokenizer.pushBack();
                 }
                 readTillEOL();
 
             } else if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_RELATIONAL)) {
-                logger.info("Encounter relational attribute {}. Flat out its attributes to top level.", attributeName);
+                logger.info("Encounter relational attribute {}. Flat out its attributes to top level.", name);
+                path = path + "." + name;
                 readTillEOL();
 
             } else if (tokenizer.sval.equalsIgnoreCase(ARFF_END_SUBRELATION)) {
+                path = path.substring(0, path.lastIndexOf('.'));
                 getNextToken();
 
             } else {
@@ -317,13 +332,13 @@ public class Arff implements Closeable {
 
             String[] levels = attributeValues.toArray(new String[attributeValues.size()]);
             if (levels.length <= Byte.MAX_VALUE + 1) {
-                attribute = new StructField(attributeName, DataTypes.ByteType);
+                attribute = new StructField(name, DataTypes.ByteType);
             } else if (levels.length <= Short.MAX_VALUE + 1) {
-                attribute = new StructField(attributeName, DataTypes.ShortType);
+                attribute = new StructField(name, DataTypes.ShortType);
             } else {
-                attribute = new StructField(attributeName, DataTypes.IntegerType);
+                attribute = new StructField(name, DataTypes.IntegerType);
             }
-            measure.put(attributeName, new NominalScale(levels));
+            measure.put(name, new NominalScale(levels));
         }
 
         getLastToken(false);
@@ -333,6 +348,11 @@ public class Arff implements Closeable {
         }
 
         return attribute;
+    }
+
+    /** Returns the attribute name. */
+    private String attributeName(String name) {
+        return path.length() == 0 ? name : path + "." + name;
     }
 
     /**
@@ -347,18 +367,6 @@ public class Arff implements Closeable {
 
         // push back the EOL token
         tokenizer.pushBack();
-    }
-
-    /** Returns the name of relation. */
-    public String name() {
-        return name;
-    }
-
-    /**
-     * Returns the attribute set of given stream.
-     */
-    public StructType schema() {
-        return schema;
     }
 
     /**
@@ -388,6 +396,35 @@ public class Arff implements Closeable {
             // Parse instance
             Object[] row = tokenizer.ttype == '{' ? readSparseInstance() : readInstance();
             data.add(Tuple.of(row, schema));
+        }
+
+        for (int i = 0; i < missing.length; i++) {
+            if (missing[i]) {
+                StructField field = schema.field(i);
+                switch (field.type.id()) {
+                    case Byte:
+                        schema.fields()[i] = new StructField(field.name, DataTypes.ByteObjectType);
+                        break;
+                    case Char:
+                        schema.fields()[i] = new StructField(field.name, DataTypes.CharObjectType);
+                        break;
+                    case Short:
+                        schema.fields()[i] = new StructField(field.name, DataTypes.ShortObjectType);
+                        break;
+                    case Integer:
+                        schema.fields()[i] = new StructField(field.name, DataTypes.IntegerObjectType);
+                        break;
+                    case Long:
+                        schema.fields()[i] = new StructField(field.name, DataTypes.LongObjectType);
+                        break;
+                    case Float:
+                        schema.fields()[i] = new StructField(field.name, DataTypes.FloatObjectType);
+                        break;
+                    case Double:
+                        schema.fields()[i] = new StructField(field.name, DataTypes.DoubleObjectType);
+                        break;
+                }
+            }
         }
 
         return DataFrame.of(data);
@@ -453,7 +490,7 @@ public class Arff implements Closeable {
 
         for (int i = 0; i < x.length; i++) {
             if (x[i] == null) {
-                StructField field = schema.fields()[i];
+                StructField field = schema.field(i);
                 if (field.type.isByte()) {
                     x[i] = (byte) 0;
                 } else if (field.type.isShort()) {
