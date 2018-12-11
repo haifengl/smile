@@ -36,6 +36,11 @@ class CharVectorImpl implements CharVector {
     }
 
     @Override
+    public char[] array() {
+        return vector;
+    }
+
+    @Override
     public char getChar(int i) {
         return vector[i];
     }

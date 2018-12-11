@@ -41,6 +41,11 @@ class DoubleVectorImpl implements DoubleVector {
     }
 
     @Override
+    public double[] array() {
+        return vector;
+    }
+
+    @Override
     public ContinuousMeasure getScale() {
         return scale;
     }

@@ -34,6 +34,9 @@ public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
         return DataTypes.ShortType;
     }
 
+    @Override
+    short[] array();
+
     /** Returns the scale of measure. Returns null if unknown. */
     DiscreteMeasure getScale();
 

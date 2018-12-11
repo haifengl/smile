@@ -15,10 +15,11 @@
  *******************************************************************************/
 package smile.data.type;
 
-import java.sql.JDBCType;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
+import java.math.BigDecimal;
+import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -105,7 +106,7 @@ public class DataTypes {
     }
 
     /** Creates an object data type of a given class. */
-    public static ObjectType object(Class clazz) {
+    public static DataType object(Class clazz) {
         if (clazz == Integer.class) return IntegerObjectType;
         if (clazz == Long.class) return LongObjectType;
         if (clazz == Float.class) return FloatObjectType;
@@ -114,6 +115,11 @@ public class DataTypes {
         if (clazz == Character.class) return CharObjectType;
         if (clazz == Byte.class) return ByteObjectType;
         if (clazz == Short.class) return ShortObjectType;
+        if (clazz == BigDecimal.class) return DecimalType;
+        if (clazz == String.class) return StringType;
+        if (clazz == LocalDate.class) return DateType;
+        if (clazz == LocalTime.class) return TimeType;
+        if (clazz == LocalDateTime.class) return DateTimeType;
         return new ObjectType(clazz);
     }
 

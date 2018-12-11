@@ -34,6 +34,9 @@ public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
         return DataTypes.FloatType;
     }
 
+    @Override
+    float[] array();
+
     /** Returns the scale of measure. Returns null if unknown. */
     ContinuousMeasure getScale();
 

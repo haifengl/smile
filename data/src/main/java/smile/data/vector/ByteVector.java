@@ -34,6 +34,9 @@ public interface ByteVector extends BaseVector<Byte, Integer, IntStream> {
         return DataTypes.ByteType;
     }
 
+    @Override
+    byte[] array();
+
     /** Returns the scale of measure. Returns null if unknown. */
     DiscreteMeasure getScale();
 

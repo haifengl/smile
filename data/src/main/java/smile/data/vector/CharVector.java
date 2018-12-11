@@ -33,6 +33,9 @@ public interface CharVector extends BaseVector<Character, Integer, IntStream> {
         return DataTypes.CharType;
     }
 
+    @Override
+    char[] array();
+
     /**
      * Returns the value at position i.
      */

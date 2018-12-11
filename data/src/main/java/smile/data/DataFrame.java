@@ -70,18 +70,28 @@ public interface DataFrame extends Dataset<Tuple> {
 
     /** Returns the structure of data frame. */
     default DataFrame structure() {
-        Measure[] measures = new Measure[ncols()];
-        for (Map.Entry<String, Measure> e : schema().measure().entrySet()) {
-            measures[columnIndex(e.getKey())] = e.getValue();
+        if (schema().measure().isEmpty()) {
+            List<BaseVector> vectors = Arrays.asList(
+                    Vector.of("Column", String.class, names()),
+                    Vector.of("Type", DataType.class, types())
+            );
+
+            return new DataFrameImpl(vectors);
+
+        } else {
+            Measure[] measures = new Measure[ncols()];
+            for (Map.Entry<String, Measure> e : schema().measure().entrySet()) {
+                measures[columnIndex(e.getKey())] = e.getValue();
+            }
+
+            List<BaseVector> vectors = Arrays.asList(
+                    Vector.of("Column", String.class, names()),
+                    Vector.of("Type", DataType.class, types()),
+                    Vector.of("Measure", Measure.class, measures)
+            );
+
+            return new DataFrameImpl(vectors);
         }
-
-        List<BaseVector> vectors = Arrays.asList(
-                Vector.of("Column", names()),
-                Vector.of("Type", types()),
-                Vector.of("Measure", measures)
-        );
-
-        return new DataFrameImpl(vectors);
     }
 
     /** Returns the cell at (i, j). */
@@ -248,16 +258,24 @@ public interface DataFrame extends Dataset<Tuple> {
     DataFrame drop(int... cols);
 
     /**
-     * Returns a new DataFrame that combines this DataFrame
+     * Merges data frames horizontally by columns.
+     * @return a new data frame that combines this DataFrame
      * with one more more other DataFrames by columns.
      */
     DataFrame merge(DataFrame... dataframes);
 
     /**
-     * Returns a new DataFrame that combines this DataFrame
+     * Merges data frames horizontally by columns.
+     * @return a new data frame that combines this DataFrame
      * with one more more additional vectors.
      */
     DataFrame merge(BaseVector... vectors);
+
+    /**
+     * Merges data frames vertically by rows.
+     * @return a new data frame that combines all the rows.
+     */
+    DataFrame union(DataFrame... dataframes);
 
     /** Returns a new DataFrame without given column names. */
     default DataFrame drop(String... cols) {
@@ -362,7 +380,7 @@ public interface DataFrame extends Dataset<Tuple> {
         }
 
         return DataFrame.of(
-                Vector.of("column", Arrays.copyOf(col, k)),
+                Vector.of("column", String.class, Arrays.copyOf(col, k)),
                 LongVector.of("count", Arrays.copyOf(count, k)),
                 DoubleVector.of("min", Arrays.copyOf(min, k)),
                 DoubleVector.of("avg", Arrays.copyOf(avg, k)),
@@ -434,6 +452,19 @@ public interface DataFrame extends Dataset<Tuple> {
                 header.append(Strings.leftPad(names[i], colWidths[i], ' '));
             } else {
                 header.append(Strings.rightPad(names[i], colWidths[i], ' '));
+            }
+            header.append('|');
+        }
+        header.append('\n');
+        sb.append(header.toString());
+
+        header = new StringBuilder();
+        header.append('|');
+        for (int i = 0; i < numCols; i++) {
+            if (truncate) {
+                header.append(Strings.leftPad(types[i].toString(), colWidths[i], ' '));
+            } else {
+                header.append(Strings.rightPad(types[i].toString(), colWidths[i], ' '));
             }
             header.append('|');
         }

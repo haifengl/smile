@@ -16,11 +16,9 @@
 
 package smile.data.vector;
 
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import smile.data.type.DataType;
-import smile.data.type.DataTypes;
 
 /**
  * An immutable generic vector.
@@ -28,15 +26,6 @@ import smile.data.type.DataTypes;
  * @author Haifeng Li
  */
 public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
-    @Override
-    default DataType type() {
-        return stream()
-                .filter(Objects::nonNull)
-                .findFirst()
-                .map(Object::getClass)
-                .map(DataType::of)
-                .orElse(DataTypes.ObjectType);
-    }
 
     @Override
     default byte getByte(int i) {
@@ -92,12 +81,25 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
         return stream().limit(n).map(Object::toString).collect(Collectors.joining(", ", "[", suffix));
     }
 
-    /** Creates a named vector.
+    /**
+     * Creates a named vector.
      *
      * @param name the name of vector.
+     * @param clazz the class of data type.
      * @param vector the data of vector.
      */
-    static <T> Vector<T> of(String name, T[] vector) {
-        return new VectorImpl<>(name, vector);
+    static <T> Vector<T> of(String name, Class clazz, T[] vector) {
+        return new VectorImpl<>(name, clazz, vector);
+    }
+
+    /**
+     * Creates a named vector.
+     *
+     * @param name the name of vector.
+     * @param type the data type of vector.
+     * @param vector the data of vector.
+     */
+    static <T> Vector<T> of(String name, DataType type, T[] vector) {
+        return new VectorImpl<>(name, type, vector);
     }
 }

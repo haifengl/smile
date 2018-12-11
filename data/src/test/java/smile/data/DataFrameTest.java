@@ -30,6 +30,7 @@ import smile.data.formula.Formula;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.data.vector.Vector;
 import smile.math.matrix.DenseMatrix;
 
 import static smile.data.formula.Formula.*;
@@ -146,6 +147,52 @@ public class DataFrameTest {
         System.out.println("names");
         DataType[] types = {DataTypes.IntegerType, DataTypes.DateType, DataTypes.CharType, DataTypes.StringType, DataTypes.object(Double.class)};
         assertTrue(Arrays.equals(types, df.types()));
+    }
+
+    /**
+     * Test of union method, of class DataFrame.
+     */
+    @Test
+    public void testUnion() {
+        System.out.println("union");
+        DataFrame two = df.union(df);
+        assertEquals(2*df.nrows(), two.nrows());
+        assertEquals(df.ncols(), two.ncols());
+
+        assertEquals(38, two.get(0).getInt(0));
+        assertEquals("Alex", two.get(0).getString(3));
+        assertEquals(10000., two.get(0).get(4));
+        assertEquals(13, two.get(3).getInt(0));
+        assertEquals("Amy", two.get(3).getString(3));
+        assertEquals(null, two.get(3).get(4));
+
+        assertEquals(38, two.get(4).getInt(0));
+        assertEquals("Alex", two.get(4).getString(3));
+        assertEquals(10000., two.get(4).get(4));
+        assertEquals(13, two.get(7).getInt(0));
+        assertEquals("Amy", two.get(7).getString(3));
+        assertEquals(null, two.get(7).get(4));
+    }
+
+    /**
+     * Test of merge method, of class DataFrame.
+     */
+    @Test
+    public void testMerge() {
+        System.out.println("union");
+        Vector<String> edu = Vector.of("Education", String.class, smile.math.MathEx.c("MS", "BS", "Ph.D", "Middle School"));
+        DataFrame two = df.merge(edu);
+        assertEquals(df.nrows(), two.nrows());
+        assertEquals(df.ncols()+1, two.ncols());
+
+        assertEquals(38, two.get(0).getInt(0));
+        assertEquals("Alex", two.get(0).getString(3));
+        assertEquals(10000., two.get(0).get(4));
+        assertEquals("MS", two.get(0).get(5));
+        assertEquals(13, two.get(3).getInt(0));
+        assertEquals("Amy", two.get(3).getString(3));
+        assertEquals(null, two.get(3).get(4));
+        assertEquals("Middle School", two.get(3).get(5));
     }
 
     /**

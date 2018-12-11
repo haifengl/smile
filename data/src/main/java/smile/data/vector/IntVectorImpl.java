@@ -41,6 +41,11 @@ class IntVectorImpl implements IntVector {
     }
 
     @Override
+    public int[] array() {
+        return vector;
+    }
+
+    @Override
     public DiscreteMeasure getScale() {
         return scale;
     }

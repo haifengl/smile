@@ -367,7 +367,7 @@ public class Arrow {
                     a[i] = vector.get(i) != 0;
             }
 
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Boolean.class, a);
         }
     }
 
@@ -392,7 +392,7 @@ public class Arrow {
                     a[i] = vector.get(i);
             }
 
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Byte.class, a);
         }
     }
 
@@ -417,7 +417,7 @@ public class Arrow {
                     a[i] = (char) vector.get(i);
             }
 
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Character.class, a);
         }
     }
 
@@ -442,7 +442,7 @@ public class Arrow {
                     a[i] = vector.get(i);
             }
 
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Short.class, a);
         }
     }
 
@@ -467,7 +467,7 @@ public class Arrow {
                     a[i] = vector.get(i);
             }
 
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Integer.class, a);
         }
     }
 
@@ -492,7 +492,7 @@ public class Arrow {
                     a[i] = vector.get(i);
             }
 
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Long.class, a);
         }
     }
 
@@ -517,7 +517,7 @@ public class Arrow {
                     a[i] = vector.get(i);
             }
 
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Float.class, a);
         }
     }
 
@@ -542,11 +542,11 @@ public class Arrow {
                     a[i] = vector.get(i);
             }
 
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Double.class, a);
         }
     }
 
-    /** Reads a decmal column. */
+    /** Reads a decimal column. */
     private smile.data.vector.BaseVector readDecimalField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         BigDecimal[] a = new BigDecimal[count];
@@ -555,7 +555,7 @@ public class Arrow {
             a[i] = vector.isNull(i) ? null : vector.getObject(i);
         }
 
-        return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.DecimalType, a);
     }
 
     /** Reads a date column. */
@@ -575,7 +575,7 @@ public class Arrow {
             }
         }
 
-        return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.DateType, a);
     }
 
     /** Reads a time column. */
@@ -603,7 +603,7 @@ public class Arrow {
                 a[i] = vector.isNull(i) ? null : LocalTime.ofSecondOfDay(vector.get(i));
             }
         }
-        return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.TimeType, a);
     }
 
     /** Reads a DateTime column. */
@@ -631,7 +631,7 @@ public class Arrow {
             }
         }
 
-        return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.DateTimeType, a);
     }
 
     /** Reads a byte[] column. */
@@ -658,7 +658,7 @@ public class Arrow {
             throw new UnsupportedOperationException("Unsupported binary vector: " + fieldVector);
         }
 
-        return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.ByteArrayType, a);
     }
 
     /** Reads a String column. */
@@ -673,7 +673,7 @@ public class Arrow {
                 a[i] = new String(vector.get(i));
         }
 
-        return smile.data.vector.Vector.of(fieldVector.getField().getName(), a);
+        return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.StringType, a);
     }
 
     /** Writes an int column. */

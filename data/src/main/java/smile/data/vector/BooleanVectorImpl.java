@@ -36,6 +36,11 @@ class BooleanVectorImpl implements BooleanVector {
     }
 
     @Override
+    public boolean[] array() {
+        return vector;
+    }
+
+    @Override
     public boolean getBoolean(int i) {
         return vector[i];
     }
