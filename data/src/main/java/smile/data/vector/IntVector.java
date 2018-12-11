@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
-import smile.data.type.DiscreteMeasure;
 
 /**
  * An immutable integer vector.
@@ -35,12 +34,6 @@ public interface IntVector extends BaseVector<Integer, Integer, IntStream> {
 
     @Override
     int[] array();
-
-    /** Returns the scale of measure. Returns null if unknown. */
-    DiscreteMeasure getScale();
-
-    /** Sets the (optional) scale of measure. */
-    void setScale(DiscreteMeasure scale);
 
     @Override
     default byte getByte(int i) {

@@ -18,8 +18,6 @@ package smile.data.vector;
 
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
-
-import smile.data.type.ContinuousMeasure;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 
@@ -36,12 +34,6 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
 
     @Override
     double[] array();
-
-    /** Returns the scale of measure. Returns null if unknown. */
-    ContinuousMeasure getScale();
-
-    /** Sets the (optional) scale of measure. */
-    void setScale(ContinuousMeasure scale);
 
     @Override
     default byte getByte(int i) {

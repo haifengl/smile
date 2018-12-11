@@ -18,6 +18,8 @@ package smile.data.type;
 import java.util.*;
 import java.util.stream.Collectors;
 import smile.data.Tuple;
+import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.Measure;
 
 /**
  * Struct data type is determined by the fixed order of the fields

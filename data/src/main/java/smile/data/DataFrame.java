@@ -21,7 +21,7 @@ import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
+import smile.data.measure.Measure;
 import smile.data.type.*;
 import smile.data.vector.*;
 import smile.data.vector.Vector;
@@ -405,7 +405,6 @@ public interface DataFrame extends Dataset<Tuple> {
         StringBuilder sb = new StringBuilder();
         boolean hasMoreData = size() > numRows;
         String[] names = names();
-        DataType[] types = types();
         int numCols = names.length;
         int maxColWidth = 20;
         switch (numCols) {
@@ -452,19 +451,6 @@ public interface DataFrame extends Dataset<Tuple> {
                 header.append(Strings.leftPad(names[i], colWidths[i], ' '));
             } else {
                 header.append(Strings.rightPad(names[i], colWidths[i], ' '));
-            }
-            header.append('|');
-        }
-        header.append('\n');
-        sb.append(header.toString());
-
-        header = new StringBuilder();
-        header.append('|');
-        for (int i = 0; i < numCols; i++) {
-            if (truncate) {
-                header.append(Strings.leftPad(types[i].toString(), colWidths[i], ' '));
-            } else {
-                header.append(Strings.rightPad(types[i].toString(), colWidths[i], ' '));
             }
             header.append('|');
         }
