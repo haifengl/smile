@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.Path;
 import java.time.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -54,6 +55,23 @@ public class Parquet {
 
     /** Constructor. */
     public Parquet() {
+    }
+
+    /**
+     * Reads a local parquet file.
+     * @param path an Apache Parquet file path.
+     */
+    public DataFrame read(Path path) throws IOException {
+        return read(new LocalInputFile(path));
+    }
+
+    /**
+     * Reads a local parquet file.
+     * @param path an Apache Parquet file path.
+     * @param limit reads a limited number of records.
+     */
+    public DataFrame read(Path path, int limit) throws IOException {
+        return read(new LocalInputFile(path), limit);
     }
 
     /**
@@ -104,6 +122,7 @@ public class Parquet {
             StructField field = schema.field(i);
             ColumnDescriptor column = columns.get(i);
             PrimitiveType primitiveType = column.getPrimitiveType();
+            OriginalType originalType = primitiveType.getOriginalType();
 
             switch (primitiveType.getPrimitiveTypeName()) {
                 case BOOLEAN:
@@ -118,8 +137,20 @@ public class Parquet {
                     break;
 
                 case INT32:
-                    switch (field.type.id()) {
-                        case Byte:
+                    if (originalType == null) {
+                        if (rep == 1) {
+                            o[i] = g.getInteger(i, 0);
+                        } else if (rep > 1) {
+                            int[] a = new int[rep];
+                            for (int j = 0; j < rep; j++)
+                                a[j] = g.getInteger(i, j);
+                            o[i] = a;
+                        }
+                        break;
+                    }
+
+                    switch (originalType) {
+                        case INT_8:
                             if (rep == 1) {
                                 o[i] = (byte) g.getInteger(i, 0);
                             } else if (rep > 1) {
@@ -129,7 +160,8 @@ public class Parquet {
                                 o[i] = a;
                             }
                             break;
-                        case Short:
+                        case UINT_8:
+                        case INT_16:
                             if (rep == 1) {
                                 o[i] = (short) g.getInteger(i, 0);
                             } else if (rep > 1) {
@@ -139,7 +171,8 @@ public class Parquet {
                                 o[i] = a;
                             }
                             break;
-                        case Integer:
+                        case UINT_16:
+                        case INT_32:
                             if (rep == 1) {
                                 o[i] = g.getInteger(i, 0);
                             } else if (rep > 1) {
@@ -149,7 +182,7 @@ public class Parquet {
                                 o[i] = a;
                             }
                             break;
-                        case Decimal:
+                        case DECIMAL:
                             if (rep == 1) {
                                 int unscaledValue = g.getInteger(i, 0);
                                 DecimalMetadata decimalMetadata = primitiveType.getDecimalMetadata();
@@ -157,13 +190,13 @@ public class Parquet {
                                 o[i] = BigDecimal.valueOf(unscaledValue, scale);
                             }
                             break;
-                        case Date:
+                        case DATE:
                             if (rep == 1) {
                                 int days = g.getInteger(i, 0);
                                 o[i] = LocalDate.ofEpochDay(days);
                             }
                             break;
-                        case Time:
+                        case TIME_MILLIS:
                             if (rep == 1) {
                                 int millis = g.getInteger(i, 0);
                                 o[i] = LocalTime.ofNanoOfDay(millis * 1000000);
@@ -173,8 +206,20 @@ public class Parquet {
                     break;
 
                 case INT64:
-                    switch (field.type.id()) {
-                        case Long:
+                    if (originalType == null) {
+                        if (rep == 1) {
+                            o[i] = g.getLong(i, 0);
+                        } else if (rep > 1) {
+                            long[] a = new long[rep];
+                            for (int j = 0; j < rep; j++)
+                                a[j] = g.getLong(i, j);
+                            o[i] = a;
+                        }
+                        break;
+                    }
+
+                    switch (originalType) {
+                        case INT_64:
                             if (rep == 1) {
                                 o[i] = g.getLong(i, 0);
                             } else if (rep > 1) {
@@ -184,7 +229,7 @@ public class Parquet {
                                 o[i] = a;
                             }
                             break;
-                        case Decimal:
+                        case DECIMAL:
                             if (rep == 1) {
                                 long unscaledValue = g.getLong(i, 0);
                                 DecimalMetadata decimalMetadata = primitiveType.getDecimalMetadata();
@@ -192,26 +237,24 @@ public class Parquet {
                                 o[i] = BigDecimal.valueOf(unscaledValue, scale);
                             }
                             break;
-                        case Time:
+                        case TIME_MICROS:
                             if (rep == 1) {
                                 long micros = g.getLong(i, 0);
                                 o[i] = LocalTime.ofNanoOfDay(micros * 1000);
                             }
                             break;
-                        case DateTime:
+                        case TIMESTAMP_MILLIS:
                             if (rep == 1) {
-                                switch (primitiveType.getOriginalType()) {
-                                    case TIMESTAMP_MILLIS:
-                                        long millis = g.getLong(i, 0);
-                                        o[i] = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneOffset.UTC);
-                                        break;
-                                    case TIMESTAMP_MICROS:
-                                        long micros = g.getLong(i, 0);
-                                        long second = micros / 1000000;
-                                        int nano = (int) (micros % 1000000) * 1000;
-                                        o[i] = LocalDateTime.ofEpochSecond(second, nano, ZoneOffset.UTC);
-                                        break;
-                                }
+                                long millis = g.getLong(i, 0);
+                                o[i] = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneOffset.UTC);
+                            }
+                            break;
+                        case TIMESTAMP_MICROS:
+                            if (rep == 1) {
+                                long micros = g.getLong(i, 0);
+                                long second = micros / 1000000;
+                                int nano = (int) (micros % 1000000) * 1000;
+                                o[i] = LocalDateTime.ofEpochSecond(second, nano, ZoneOffset.UTC);
                             }
                             break;
                     }
@@ -219,14 +262,14 @@ public class Parquet {
 
                 case INT96:
                     if (rep == 1) {
-                        ByteBuffer buf = g.getBinary(i, 0).toByteBuffer().order(ByteOrder.LITTLE_ENDIAN);
+                        ByteBuffer buf = g.getInt96(i, 0).toByteBuffer().order(ByteOrder.LITTLE_ENDIAN);
                         long nanoOfDay = buf.getLong();
                         int julianDay = buf.getInt();
                         // see http://stackoverflow.com/questions/466321/convert-unix-timestamp-to-julian
                         // it's 2440587.5, rounding up to compatible with Hive
                         LocalDate date = LocalDate.ofEpochDay(julianDay - 2440588);
                         LocalTime time = LocalTime.ofNanoOfDay(nanoOfDay);
-                        o[i] = LocalDateTime.of(date, time).atOffset(ZoneOffset.UTC);
+                        o[i] = LocalDateTime.of(date, time);
                     }
                     break;
 
@@ -314,6 +357,17 @@ public class Parquet {
                 }
 
             case INT32:
+                if (originalType == null) {
+                    switch (repetition) {
+                        case REQUIRED:
+                            return new StructField(name, DataTypes.IntegerType);
+                        case OPTIONAL:
+                            return new StructField(name, DataTypes.IntegerObjectType);
+                        case REPEATED:
+                            return new StructField(name, DataTypes.IntegerArrayType);
+                    }
+                }
+
                 switch (originalType) {
                     case INT_8:
                         switch (repetition) {
@@ -344,15 +398,6 @@ public class Parquet {
                             case REPEATED:
                                 return new StructField(name, DataTypes.IntegerArrayType);
                         }
-                    case UINT_32:
-                        switch (repetition) {
-                            case REQUIRED:
-                                return new StructField(name, DataTypes.LongType);
-                            case OPTIONAL:
-                                return new StructField(name, DataTypes.LongObjectType);
-                            case REPEATED:
-                                return new StructField(name, DataTypes.LongArrayType);
-                        }
                     case DECIMAL:
                         return new StructField(name, DataTypes.DecimalType);
                     case DATE:
@@ -363,6 +408,17 @@ public class Parquet {
                 break;
 
             case INT64:
+                if (originalType == null) {
+                    switch (repetition) {
+                        case REQUIRED:
+                            return new StructField(name, DataTypes.LongType);
+                        case OPTIONAL:
+                            return new StructField(name, DataTypes.LongObjectType);
+                        case REPEATED:
+                            return new StructField(name, DataTypes.LongArrayType);
+                    }
+                }
+
                 switch (originalType) {
                     case INT_64:
                         switch (repetition) {
@@ -408,6 +464,10 @@ public class Parquet {
 
             case BINARY:
             case FIXED_LEN_BYTE_ARRAY :
+                if (originalType == null) {
+                    return new StructField(name, DataTypes.ByteArrayType);
+                }
+
                 switch (originalType) {
                     case UTF8:
                     case JSON:
