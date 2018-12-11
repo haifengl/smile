@@ -582,8 +582,8 @@ public class DataFrameTest {
         assertEquals(48., output.get(2, 0), 1E-10);
         assertEquals(13., output.get(3, 0), 1E-10);
         assertEquals(10000., output.get(0, 1), 1E-10);
-        assertEquals(Double.NaN, output.get(1, 1), 1E-10);
+        assertTrue(Double.isNaN(output.get(1, 1)));
         assertEquals(230000., output.get(2, 1), 1E-10);
-        assertEquals(Double.NaN, output.get(3, 1), 1E-10);
+        assertTrue(Double.isNaN(output.get(3, 1)));
     }
 }
