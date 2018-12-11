@@ -17,14 +17,14 @@
 package smile.io;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.data.Dataset;
 import smile.data.Instance;
@@ -70,6 +70,18 @@ public class DatasetReader {
         this.limit = limit;
     }
 
+    /** Reads a CSV file. */
+    public DataFrame csv(Path path) throws IOException {
+        CSV csv = new CSV();
+        return csv.read(path, limit);
+    }
+
+    /** Reads a CSV file with customized format. */
+    public DataFrame csv(Path path, CSVFormat format) throws IOException {
+        CSV csv = new CSV(format);
+        return csv.read(path, limit);
+    }
+
     /**
      * Reads an ARFF file. Weka ARFF (attribute relation file format) is an ASCII
      * text file format that is essentially a CSV file with a header that describes
@@ -111,9 +123,9 @@ public class DatasetReader {
      *
      * @param path the input file path.
      */
-    public DataFrame arrow(Path path) throws IOException, ParseException {
+    public DataFrame arrow(Path path) throws IOException {
         Arrow arrow = new Arrow();
-        return arrow.read(path);
+        return arrow.read(path, limit);
     }
 
     /**
@@ -132,7 +144,7 @@ public class DatasetReader {
      *
      * @param path the input file path.
      */
-    public Dataset<Instance<SparseArray>> libsvm(Path path) throws IOException, ParseException {
+    public Dataset<Instance<SparseArray>> libsvm(Path path) throws IOException {
         try (BufferedReader reader = Files.newBufferedReader(path)) {
             String line = reader.readLine();
             if (line == null) {

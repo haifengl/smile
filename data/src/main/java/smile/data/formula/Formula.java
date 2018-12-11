@@ -66,11 +66,6 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public int size() {
-                return schema.fields().length;
-            }
-
-            @Override
             public Object get(int i) {
                 return factors[i].apply(t);
             }

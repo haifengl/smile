@@ -563,7 +563,7 @@ public interface DataFrame extends Dataset<Tuple> {
                         throw new IllegalArgumentException("Empty list of tuples");
                     }
                     int nrows = container.size();
-                    int ncols = container.get(0).size();
+                    int ncols = container.get(0).length();
                     DenseMatrix m = Matrix.of(nrows, ncols, 0);
                     for (int i = 0; i < nrows; i++) {
                         for (int j = 0; j < ncols; j++) {
