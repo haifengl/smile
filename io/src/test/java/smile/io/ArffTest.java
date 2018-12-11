@@ -152,6 +152,7 @@ public class ArffTest {
         System.out.println("date");
         Arff arff = new Arff(Paths.getTestData("weka/date.arff"));
         DataFrame date = arff.read();
+        System.out.println(date);
 
         StructType schema = DataTypes.struct(new StructField("timestamp", DataTypes.DateTimeType));
         assertEquals(schema, date.schema());

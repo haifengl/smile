@@ -65,7 +65,7 @@ public class DateType implements DataType {
 
     @Override
     public String toString() {
-        return "date";
+        return "Date";
     }
 
     @Override

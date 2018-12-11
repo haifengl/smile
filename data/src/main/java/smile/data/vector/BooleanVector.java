@@ -32,6 +32,9 @@ public interface BooleanVector extends BaseVector<Boolean, Integer, IntStream> {
         return DataTypes.BooleanType;
     }
 
+    @Override
+    boolean[] array();
+
     /**
      * Returns the value at position i.
      */

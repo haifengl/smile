@@ -41,6 +41,11 @@ class FloatVectorImpl implements FloatVector {
     }
 
     @Override
+    public float[] array() {
+        return vector;
+    }
+
+    @Override
     public ContinuousMeasure getScale() {
         return scale;
     }

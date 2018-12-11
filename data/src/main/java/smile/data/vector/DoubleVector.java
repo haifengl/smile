@@ -34,6 +34,9 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
         return DataTypes.DoubleType;
     }
 
+    @Override
+    double[] array();
+
     /** Returns the scale of measure. Returns null if unknown. */
     ContinuousMeasure getScale();
 

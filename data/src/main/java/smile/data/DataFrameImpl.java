@@ -184,7 +184,7 @@ class DataFrameImpl implements DataFrame {
                     } else {
                         Object[] values = new Object[size];
                         for (int i = 0; i < size; i++) values[i] = read.invoke(data.get(i));
-                        Vector<?> vector = Vector.of(name, values);
+                        Vector<?> vector = Vector.of(name, type, values);
                         columns.add(vector);
                     }
                 }
@@ -290,7 +290,7 @@ class DataFrameImpl implements DataFrame {
                 default: {
                     Object[] values = new Object[size];
                     for (int i = 0; i < size; i++) values[i] = data.get(i).get(j);
-                    Vector vector = Vector.of(field.name, values);
+                    Vector vector = Vector.of(field.name, field.type, values);
                     columns.add(vector);
                 }
             }
@@ -395,7 +395,7 @@ class DataFrameImpl implements DataFrame {
                 default: {
                     Object[] values = new Object[size];
                     for (int i = 0; i < size; i++) values[i] = data.get(i).get(j);
-                    Vector vector = Vector.of(field.name, values);
+                    Vector vector = Vector.of(field.name, field.type, values);
                     columns.add(vector);
                 }
             }
@@ -550,6 +550,99 @@ class DataFrameImpl implements DataFrame {
         List<BaseVector> columns = new ArrayList<>(this.columns);
         Collections.addAll(columns, vectors);
         DataFrameImpl df = new DataFrameImpl(columns);
+        df.schema.measure().putAll(schema.measure());
+        return df;
+    }
+
+    @Override
+    public DataFrame union(DataFrame... dataframes) {
+        for (DataFrame df : dataframes) {
+            if (!schema.equals(df.schema())) {
+                throw new IllegalArgumentException("Union data frames with different schema: " + schema + " vs " + df.schema());
+            }
+        }
+
+        int nrows = nrows();
+        for (DataFrame df : dataframes) {
+            nrows += df.nrows();
+        }
+
+        Object[] vectors = new Object[ncols()];
+        for (int i = 0; i < vectors.length; i++) {
+            BaseVector column = columns.get(i);
+            switch (column.type().id()) {
+                case Boolean:
+                    vectors[i] = new boolean[nrows];
+                    break;
+                case Char:
+                    vectors[i] = new char[nrows];
+                    break;
+                case Byte:
+                    vectors[i] = new byte[nrows];
+                    break;
+                case Short:
+                    vectors[i] = new short[nrows];
+                    break;
+                case Integer:
+                    vectors[i] = new int[nrows];
+                    break;
+                case Long:
+                    vectors[i] = new long[nrows];
+                    break;
+                case Float:
+                    vectors[i] = new float[nrows];
+                    break;
+                case Double:
+                    vectors[i] = new double[nrows];
+                    break;
+                default:
+                    vectors[i] = new Object[nrows];
+            }
+            System.arraycopy(column.array(), 0, vectors[i], 0, nrows());
+        }
+
+        int destPos = nrows();
+        for (DataFrame df : dataframes) {
+            for (int i = 0; i < vectors.length; i++) {
+                System.arraycopy(df.column(i).array(), 0, vectors[i], destPos, df.nrows());
+            }
+            destPos += df.nrows();
+        }
+
+        List<BaseVector> data = new ArrayList<>();
+        for (int i = 0; i < vectors.length; i++) {
+            BaseVector column = columns.get(i);
+            switch (column.type().id()) {
+                case Boolean:
+                    data.add(BooleanVector.of(column.name(), (boolean[]) vectors[i]));
+                    break;
+                case Char:
+                    data.add(CharVector.of(column.name(), (char[]) vectors[i]));
+                    break;
+                case Byte:
+                    data.add(ByteVector.of(column.name(), (byte[]) vectors[i]));
+                    break;
+                case Short:
+                    data.add(ShortVector.of(column.name(), (short[]) vectors[i]));
+                    break;
+                case Integer:
+                    data.add(IntVector.of(column.name(), (int[]) vectors[i]));
+                    break;
+                case Long:
+                    data.add(LongVector.of(column.name(), (long[]) vectors[i]));
+                    break;
+                case Float:
+                    data.add(FloatVector.of(column.name(), (float[]) vectors[i]));
+                    break;
+                case Double:
+                    data.add(DoubleVector.of(column.name(), (double[]) vectors[i]));
+                    break;
+                default:
+                    data.add(Vector.of(column.name(), column.type(), (Object[]) vectors[i]));
+            }
+        }
+
+        DataFrameImpl df = new DataFrameImpl(data);
         df.schema.measure().putAll(schema.measure());
         return df;
     }

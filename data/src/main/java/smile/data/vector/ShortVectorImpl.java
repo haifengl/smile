@@ -40,6 +40,11 @@ class ShortVectorImpl implements ShortVector {
     }
 
     @Override
+    public short[] array() {
+        return vector;
+    }
+
+    @Override
     public DiscreteMeasure getScale() {
         return scale;
     }

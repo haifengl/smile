@@ -33,6 +33,9 @@ public interface LongVector extends BaseVector<Long, Long, LongStream> {
     }
 
     @Override
+    long[] array();
+
+    @Override
     default byte getByte(int i) {
         throw new UnsupportedOperationException("cast long to byte");
     }

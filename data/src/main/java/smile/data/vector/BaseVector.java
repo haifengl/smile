@@ -41,6 +41,9 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
     /** Number of elements in the vector. */
     int size();
 
+    /** Returns the array that backs this vector. */
+    Object array();
+
     /**
      * Returns the value at position i, which may be null.
      */

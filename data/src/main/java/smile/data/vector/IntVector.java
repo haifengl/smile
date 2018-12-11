@@ -33,6 +33,9 @@ public interface IntVector extends BaseVector<Integer, Integer, IntStream> {
         return DataTypes.IntegerType;
     }
 
+    @Override
+    int[] array();
+
     /** Returns the scale of measure. Returns null if unknown. */
     DiscreteMeasure getScale();
 

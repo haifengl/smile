@@ -18,6 +18,8 @@ package smile.data.vector;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
 
 /**
  * An immutable vector.
@@ -27,13 +29,33 @@ import java.util.stream.Stream;
 class VectorImpl<T> implements Vector<T> {
     /** The name of vector. */
     private String name;
+    /** The data type of vector. */
+    private DataType type;
     /** The vector data. */
     private T[] vector;
 
     /** Constructor. */
-    public VectorImpl(String name, T[] vector) {
+    public VectorImpl(String name, Class clazz, T[] vector) {
         this.name = name;
+        this.type = DataTypes.object(clazz);
         this.vector = vector;
+    }
+
+    /** Constructor. */
+    public VectorImpl(String name, DataType type, T[] vector) {
+        this.name = name;
+        this.type = type;
+        this.vector = vector;
+    }
+
+    @Override
+    public DataType type() {
+        return type;
+    }
+
+    @Override
+    public Object array() {
+        return vector;
     }
 
     @Override

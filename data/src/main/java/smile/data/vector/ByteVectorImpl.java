@@ -39,6 +39,11 @@ class ByteVectorImpl implements ByteVector {
     }
 
     @Override
+    public byte[] array() {
+        return vector;
+    }
+
+    @Override
     public DiscreteMeasure getScale() {
         return scale;
     }

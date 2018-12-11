@@ -24,7 +24,10 @@ import java.nio.file.Path;
 import org.apache.parquet.io.InputFile;
 import org.apache.parquet.io.SeekableInputStream;
 
-/** Parquet InputFile with a local java.nio.Path. */
+/**
+ * Parquet InputFile with a local java.nio.Path.
+ * Adapted from https://github.com/tideworks/arvo2parquet
+ */
 public class LocalInputFile implements InputFile {
     /** Local file path. */
     private final Path path;
