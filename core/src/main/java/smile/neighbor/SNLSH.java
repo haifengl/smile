@@ -15,10 +15,6 @@
  *******************************************************************************/
 package smile.neighbor;
 
-import smile.hash.MurmurHash;
-import smile.math.distance.HammingDistance;
-import smile.sort.HeapSelect;
-
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
@@ -29,6 +25,9 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.HashSet;
+import smile.hash.MurmurHash2;
+import smile.math.distance.HammingDistance;
+import smile.sort.HeapSelect;
 
 /**
  * Locality-Sensitive Hashing for Signatures.
@@ -220,7 +219,7 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         int[] bits = new int[BITS];
         for (String s : tokens) {
             ByteBuffer buffer = ByteBuffer.wrap(s.getBytes());
-            long hc = MurmurHash.hash2_64(buffer, 0, buffer.array().length, seed);
+            long hc = MurmurHash2.hash64(buffer, 0, buffer.array().length, seed);
             for (int i = 0; i < BITS; i++) {
                 if (((hc >>> i) & 1) == 1) {
                     bits[i]++;

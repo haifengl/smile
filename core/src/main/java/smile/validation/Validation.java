@@ -26,7 +26,7 @@ import smile.regression.RegressionTrainer;
  * 
  * @author Haifeng
  */
-public class Validation {
+public interface Validation {
     /**
      * Tests a classifier on a validation set.
      * 
@@ -36,7 +36,7 @@ public class Validation {
      * @param y the test data labels.
      * @return the accuracy on the test dataset
      */
-    public static <T> double test(Classifier<T> classifier, T[] x, int[] y) {
+    static <T> double test(Classifier<T> classifier, T[] x, int[] y) {
         int n = x.length;
         int[] predictions = new int[n];
         for (int i = 0; i < n; i++) {
@@ -55,7 +55,7 @@ public class Validation {
      * @param y the test data response values.
      * @return root mean squared error
      */
-    public static <T> double test(Regression<T> regression, T[] x, double[] y) {
+    static <T> double test(Regression<T> regression, T[] x, double[] y) {
         int n = x.length;
         double[] predictions = new double[n];
         for (int i = 0; i < n; i++) {
@@ -75,7 +75,7 @@ public class Validation {
      * @param measure the performance measures of classification.
      * @return the test results with the same size of order of measures
      */
-    public static <T> double test(Classifier<T> classifier, T[] x, int[] y, ClassificationMeasure measure) {
+    static <T> double test(Classifier<T> classifier, T[] x, int[] y, ClassificationMeasure measure) {
         int n = x.length;
         int[] predictions = new int[n];
         for (int i = 0; i < n; i++) {
@@ -95,7 +95,7 @@ public class Validation {
      * @param measures the performance measures of classification.
      * @return the test results with the same size of order of measures
      */
-    public static <T> double[] test(Classifier<T> classifier, T[] x, int[] y, ClassificationMeasure[] measures) {
+    static <T> double[] test(Classifier<T> classifier, T[] x, int[] y, ClassificationMeasure[] measures) {
         int n = x.length;
         int[] predictions = new int[n];
         for (int i = 0; i < n; i++) {
@@ -121,7 +121,7 @@ public class Validation {
      * @param measure the performance measure of regression.
      * @return the test results with the same size of order of measures
      */
-    public static <T> double test(Regression<T> regression, T[] x, double[] y, RegressionMeasure measure) {
+    static <T> double test(Regression<T> regression, T[] x, double[] y, RegressionMeasure measure) {
         int n = x.length;
         double[] predictions = new double[n];
         for (int i = 0; i < n; i++) {
@@ -141,7 +141,7 @@ public class Validation {
      * @param measures the performance measures of regression.
      * @return the test results with the same size of order of measures
      */
-    public static <T> double[] test(Regression<T> regression, T[] x, double[] y, RegressionMeasure[] measures) {
+    static <T> double[] test(Regression<T> regression, T[] x, double[] y, RegressionMeasure[] measures) {
         int n = x.length;
         double[] predictions = new double[n];
         for (int i = 0; i < n; i++) {
@@ -166,7 +166,7 @@ public class Validation {
      * @param y the test data labels.
      * @return the accuracy on test dataset
      */
-    public static <T> double loocv(ClassifierTrainer<T> trainer, T[] x, int[] y) {
+    static <T> double loocv(ClassifierTrainer<T> trainer, T[] x, int[] y) {
         int m = 0;
         int n = x.length;
         
@@ -194,7 +194,7 @@ public class Validation {
      * @param y the test data response values.
      * @return root mean squared error
      */
-    public static <T> double loocv(RegressionTrainer<T> trainer, T[] x, double[] y) {
+    static <T> double loocv(RegressionTrainer<T> trainer, T[] x, double[] y) {
         double rmse = 0.0;
         int n = x.length;        
         LOOCV loocv = new LOOCV(n);
@@ -220,7 +220,7 @@ public class Validation {
      * @param measure the performance measure of classification.
      * @return the test results with the same size of order of measures
      */
-    public static <T> double loocv(ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure measure) {
+    static <T> double loocv(ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure measure) {
         int n = x.length;
         int[] predictions = new int[n];
         
@@ -247,7 +247,7 @@ public class Validation {
      * @param measures the performance measures of classification.
      * @return the test results with the same size of order of measures
      */
-    public static <T> double[] loocv(ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure[] measures) {
+    static <T> double[] loocv(ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure[] measures) {
         int n = x.length;
         int[] predictions = new int[n];
         
@@ -280,7 +280,7 @@ public class Validation {
      * @param measure the performance measure of regression.
      * @return the test results with the same size of order of measures
      */
-    public static <T> double loocv(RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure measure) {
+    static <T> double loocv(RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure measure) {
         int n = x.length;
         double[] predictions = new double[n];
         
@@ -307,7 +307,7 @@ public class Validation {
      * @param measures the performance measures of regression.
      * @return the test results with the same size of order of measures
      */
-    public static <T> double[] loocv(RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure[] measures) {
+    static <T> double[] loocv(RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure[] measures) {
         int n = x.length;
         double[] predictions = new double[n];
         
@@ -340,7 +340,7 @@ public class Validation {
      * @param y the test data labels.
      * @return the accuracy on test dataset
      */
-    public static <T> double cv(int k, ClassifierTrainer<T> trainer, T[] x, int[] y) {
+    static <T> double cv(int k, ClassifierTrainer<T> trainer, T[] x, int[] y) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold cross validation: " + k);
         }
@@ -373,7 +373,7 @@ public class Validation {
      * @param y the test data response values.
      * @return root mean squared error
      */
-    public static <T> double cv(int k, RegressionTrainer<T> trainer, T[] x, double[] y) {
+    static <T> double cv(int k, RegressionTrainer<T> trainer, T[] x, double[] y) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold cross validation: " + k);
         }
@@ -407,7 +407,7 @@ public class Validation {
      * @param measure the performance measure of classification.
      * @return the test results with the same size of order of measures
      */
-    public static <T> double cv(int k, ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure measure) {
+    static <T> double cv(int k, ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure measure) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold cross validation: " + k);
         }
@@ -441,7 +441,7 @@ public class Validation {
      * @param measures the performance measures of classification.
      * @return the test results with the same size of order of measures
      */
-    public static <T> double[] cv(int k, ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure[] measures) {
+    static <T> double[] cv(int k, ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure[] measures) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold cross validation: " + k);
         }
@@ -481,7 +481,7 @@ public class Validation {
      * @param measure the performance measure of regression.
      * @return the test results with the same size of order of measures
      */
-    public static <T> double cv(int k, RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure measure) {
+    static <T> double cv(int k, RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure measure) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold cross validation: " + k);
         }
@@ -515,7 +515,7 @@ public class Validation {
      * @param measures the performance measures of regression.
      * @return the test results with the same size of order of measures
      */
-    public static <T> double[] cv(int k, RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure[] measures) {
+    static <T> double[] cv(int k, RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure[] measures) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold cross validation: " + k);
         }
@@ -554,7 +554,7 @@ public class Validation {
      * @param y the test data labels.
      * @return the k-round accuracies
      */
-    public static <T> double[] bootstrap(int k, ClassifierTrainer<T> trainer, T[] x, int[] y) {
+    static <T> double[] bootstrap(int k, ClassifierTrainer<T> trainer, T[] x, int[] y) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold bootstrap: " + k);
         }
@@ -595,7 +595,7 @@ public class Validation {
      * @param y the test data response values.
      * @return the k-round root mean squared errors
      */
-    public static <T> double[] bootstrap(int k, RegressionTrainer<T> trainer, T[] x, double[] y) {
+    static <T> double[] bootstrap(int k, RegressionTrainer<T> trainer, T[] x, double[] y) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold bootstrap: " + k);
         }
@@ -638,7 +638,7 @@ public class Validation {
      * @return k-by-m test result matrix, where k is the number of
      * bootstrap samples and m is the number of performance measures.
      */
-    public static <T> double[] bootstrap(int k, ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure measure) {
+    static <T> double[] bootstrap(int k, ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure measure) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold bootstrap: " + k);
         }
@@ -680,7 +680,7 @@ public class Validation {
      * @return k-by-m test result matrix, where k is the number of
      * bootstrap samples and m is the number of performance measures.
      */
-    public static <T> double[][] bootstrap(int k, ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure[] measures) {
+    static <T> double[][] bootstrap(int k, ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure[] measures) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold bootstrap: " + k);
         }
@@ -725,7 +725,7 @@ public class Validation {
      * @return k-by-m test result matrix, where k is the number of 
      * bootstrap samples and m is the number of performance measures.
      */
-    public static <T> double[] bootstrap(int k, RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure measure) {
+    static <T> double[] bootstrap(int k, RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure measure) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold bootstrap: " + k);
         }
@@ -767,7 +767,7 @@ public class Validation {
      * @return k-by-m test result matrix, where k is the number of 
      * bootstrap samples and m is the number of performance measures.
      */
-    public static <T> double[][] bootstrap(int k, RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure[] measures) {
+    static <T> double[][] bootstrap(int k, RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure[] measures) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold bootstrap: " + k);
         }
