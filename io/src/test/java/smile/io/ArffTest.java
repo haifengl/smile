@@ -73,19 +73,19 @@ public class ArffTest {
 
         assertEquals(14, weather.nrows());
         assertEquals(5, weather.ncols());
-        assertEquals("no",    weather.get(0).getScale("play"));
-        assertEquals("no",    weather.get(1).getScale("play"));
-        assertEquals("yes",   weather.get(2).getScale("play"));
-        assertEquals("sunny", weather.get(0).getScale(0));
-        assertEquals("hot",   weather.get(0).getScale(1));
-        assertEquals("high",  weather.get(0).getScale(2));
-        assertEquals("FALSE", weather.get(0).getScale(3));
+        assertEquals("no",    weather.getScale(0, "play"));
+        assertEquals("no",    weather.getScale(1, "play"));
+        assertEquals("yes",   weather.getScale(2, "play"));
+        assertEquals("sunny", weather.getScale(0, 0));
+        assertEquals("hot",   weather.getScale(0, 1));
+        assertEquals("high",  weather.getScale(0, 2));
+        assertEquals("FALSE", weather.getScale(0, 3));
 
-        assertEquals("no",    weather.get(13).getScale("play"));
-        assertEquals("rainy", weather.get(13).getScale(0));
-        assertEquals("mild",  weather.get(13).getScale(1));
-        assertEquals("high",  weather.get(13).getScale(2));
-        assertEquals("TRUE",  weather.get(13).getScale(3));
+        assertEquals("no",    weather.getScale(13, "play"));
+        assertEquals("rainy", weather.getScale(13, 0));
+        assertEquals("mild",  weather.getScale(13, 1));
+        assertEquals("high",  weather.getScale(13, 2));
+        assertEquals("TRUE",  weather.getScale(13, 3));
     }
 
     /**
@@ -107,19 +107,19 @@ public class ArffTest {
 
         assertEquals(150, iris.nrows());
         assertEquals(5,   iris.ncols());
-        assertEquals("Iris-setosa", iris.get(0).getScale("class"));
-        assertEquals("Iris-setosa", iris.get(1).getScale("class"));
-        assertEquals("Iris-setosa", iris.get(2).getScale("class"));
-        assertEquals(5.1, iris.get(0).getFloat(0), 1E-7);
-        assertEquals(3.5, iris.get(0).getFloat(1), 1E-7);
-        assertEquals(1.4, iris.get(0).getFloat(2), 1E-7);
-        assertEquals(0.2, iris.get(0).getFloat(3), 1E-7);
+        assertEquals("Iris-setosa", iris.getScale(0, "class"));
+        assertEquals("Iris-setosa", iris.getScale(1, "class"));
+        assertEquals("Iris-setosa", iris.getScale(2, "class"));
+        assertEquals(5.1, iris.getFloat(0, 0), 1E-7);
+        assertEquals(3.5, iris.getFloat(0, 1), 1E-7);
+        assertEquals(1.4, iris.getFloat(0, 2), 1E-7);
+        assertEquals(0.2, iris.getFloat(0, 3), 1E-7);
 
-        assertEquals("Iris-virginica", iris.get(149).getScale("class"));
-        assertEquals(5.9, iris.get(149).getFloat(0), 1E-7);
-        assertEquals(3.0, iris.get(149).getFloat(1), 1E-7);
-        assertEquals(5.1, iris.get(149).getFloat(2), 1E-7);
-        assertEquals(1.8, iris.get(149).getFloat(3), 1E-7);
+        assertEquals("Iris-virginica", iris.getScale(149, "class"));
+        assertEquals(5.9, iris.getFloat(149, 0), 1E-7);
+        assertEquals(3.0, iris.getFloat(149, 1), 1E-7);
+        assertEquals(5.1, iris.getFloat(149, 2), 1E-7);
+        assertEquals(1.8, iris.getFloat(149, 3), 1E-7);
     }
 
     /**
@@ -139,9 +139,9 @@ public class ArffTest {
         assertEquals(5, string.nrows());
         assertEquals(2, string.ncols());
         assertEquals("AG5", string.get(0).get(0));
-        assertEquals("Encyclopedias and dictionaries.;Twentieth century.", string.get(0).get(1));
-        assertEquals("AS281", string.get(4).get(0));
-        assertEquals("Astronomy, Assyro-Babylonian.;Moon -- Tables.", string.get(4).get(1));
+        assertEquals("Encyclopedias and dictionaries.;Twentieth century.", string.get(0, 1));
+        assertEquals("AS281", string.get(4, 0));
+        assertEquals("Astronomy, Assyro-Babylonian.;Moon -- Tables.", string.get(4, 1));
     }
 
     /**
@@ -159,8 +159,8 @@ public class ArffTest {
 
         assertEquals(2, date.nrows());
         assertEquals(1, date.ncols());
-        assertEquals(LocalDateTime.parse("2001-04-03T12:12:12"), date.get(0).get(0));
-        assertEquals(LocalDateTime.parse("2001-05-03T12:59:55"), date.get(1).get(0));
+        assertEquals(LocalDateTime.parse("2001-04-03T12:12:12"), date.get(0, 0));
+        assertEquals(LocalDateTime.parse("2001-05-03T12:59:55"), date.get(1, 0));
     }
 
     /**
@@ -183,16 +183,16 @@ public class ArffTest {
         assertEquals(2, sparse.nrows());
         assertEquals(5, sparse.ncols());
             
-        assertEquals(0.0, sparse.get(0).getDouble(0), 1E-7);
-        assertEquals(2.0, sparse.get(0).getDouble(1), 1E-7);
-        assertEquals(0.0, sparse.get(0).getDouble(2), 1E-7);
-        assertEquals(3.0, sparse.get(0).getDouble(3), 1E-7);
-        assertEquals(0.0, sparse.get(0).getDouble(4), 1E-7);
+        assertEquals(0.0, sparse.getDouble(0, 0), 1E-7);
+        assertEquals(2.0, sparse.getDouble(0, 1), 1E-7);
+        assertEquals(0.0, sparse.getDouble(0, 2), 1E-7);
+        assertEquals(3.0, sparse.getDouble(0, 3), 1E-7);
+        assertEquals(0.0, sparse.getDouble(0, 4), 1E-7);
             
-        assertEquals(0.0, sparse.get(1).getDouble(0), 1E-7);
-        assertEquals(0.0, sparse.get(1).getDouble(1), 1E-7);
-        assertEquals(1.0, sparse.get(1).getDouble(2), 1E-7);
-        assertEquals(0.0, sparse.get(1).getDouble(3), 1E-7);
-        assertEquals(1.0, sparse.get(1).getDouble(4), 1E-7);
+        assertEquals(0.0, sparse.getDouble(1, 0), 1E-7);
+        assertEquals(0.0, sparse.getDouble(1, 1), 1E-7);
+        assertEquals(1.0, sparse.getDouble(1, 2), 1E-7);
+        assertEquals(0.0, sparse.getDouble(1, 3), 1E-7);
+        assertEquals(1.0, sparse.getDouble(1, 4), 1E-7);
     }
 }

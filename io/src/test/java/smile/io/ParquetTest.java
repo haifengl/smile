@@ -118,18 +118,18 @@ public class ParquetTest {
         System.out.println(df.get(0));
         System.out.println(df.get(1));
         assertEquals(LocalDateTime.parse("2016-02-03T07:55:29"), df.get(0).getDateTime(0));
-        assertEquals(1, df.get(0).getInt(1));
-        assertEquals("Amanda", df.get(0).getString(2));
-        assertEquals("Jordan", df.get(0).getString(3));
-        assertEquals("ajordan0@com.com", df.get(0).getString(4));
-        assertEquals("Female", df.get(0).getString(5));
-        assertEquals("1.197.201.2", df.get(0).getString(6));
-        assertEquals("6759521864920116", df.get(0).getString(7));
-        assertEquals("Indonesia", df.get(0).getString(8));
-        assertEquals("3/8/1971", df.get(0).getString(9));
-        assertEquals(49756.53, df.get(0).getDouble(10), 1E-10);
-        assertEquals("Internal Auditor", df.get(0).getString(11));
-        assertEquals("1E+02", df.get(0).getString(12));
+        assertEquals(1, df.getInt(0, 1));
+        assertEquals("Amanda", df.getString(0, 2));
+        assertEquals("Jordan", df.getString(0, 3));
+        assertEquals("ajordan0@com.com", df.getString(0, 4));
+        assertEquals("Female", df.getString(0, 5));
+        assertEquals("1.197.201.2", df.getString(0, 6));
+        assertEquals("6759521864920116", df.getString(0, 7));
+        assertEquals("Indonesia", df.getString(0, 8));
+        assertEquals("3/8/1971", df.getString(0, 9));
+        assertEquals(49756.53, df.getDouble(0, 10), 1E-10);
+        assertEquals("Internal Auditor", df.getString(0, 11));
+        assertEquals("1E+02", df.getString(0, 12));
     }
 
     /**

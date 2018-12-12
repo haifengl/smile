@@ -131,19 +131,19 @@ public class ArrowTest {
         System.out.println("get");
         System.out.println(df.get(0));
         System.out.println(df.get(1));
-        assertEquals("Jane", df.get(0).getString(0));
-        assertEquals("Peacock", df.get(0).getString(1));
-        assertEquals("Luís", df.get(0).getString(2));
-        assertEquals("Gonçalves", df.get(0).getString(3));
-        assertEquals("Brazil", df.get(0).getString(4));
-        assertEquals(3.98, df.get(0).getDouble(5), 1E-10);
+        assertEquals("Jane", df.getString(0, 0));
+        assertEquals("Peacock", df.getString(0, 1));
+        assertEquals("Luís", df.getString(0, 2));
+        assertEquals("Gonçalves", df.getString(0, 3));
+        assertEquals("Brazil", df.getString(0, 4));
+        assertEquals(3.98, df.getDouble(0, 5), 1E-10);
 
-        assertEquals("Steve", df.get(7).getString(0));
-        assertEquals("Johnson", df.get(7).getString(1));
-        assertEquals("Leonie", df.get(7).getString(2));
-        assertEquals("Köhler", df.get(7).getString(3));
-        assertEquals("Germany", df.get(7).getString(4));
-        assertEquals(1.98, df.get(7).getDouble(5), 1E-10);
+        assertEquals("Steve", df.getString(7, 0));
+        assertEquals("Johnson", df.getString(7, 1));
+        assertEquals("Leonie", df.getString(7, 2));
+        assertEquals("Köhler", df.getString(7, 3));
+        assertEquals("Germany", df.getString(7, 4));
+        assertEquals(1.98, df.getDouble(7, 5), 1E-10);
     }
 
     /**

@@ -23,26 +23,15 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.data.Dataset;
 import smile.data.Instance;
+import smile.data.type.StructType;
 import smile.math.SparseArray;
 
 /**
- * Interface to load a Dataset from external storage systems.LIBSVM (and SVMLight) data reader. The format of libsvm file is:
- * <p>
- * &lt;label&gt; &lt;index1&gt;:&lt;value1&gt; &lt;index2&gt;:&lt;value2&gt; ...
- * <p>
- * where &lt;label&gt; is the target value of the training data.
- * For classification, it should be an integer which identifies a class
- * (multi-class classification is supported). For regression, it's any real
- * number. For one-class SVM, it's not used so can be any number.
- * &lt;index&gt; is an integer starting from 1, and &lt;value&gt;
- * is a real number. The indices must be in an ascending order. The labels in
- * the testing data file are only used to calculate accuracy or error. If they
- * are unknown, just fill this column with a number. 
+ * Interface to load a Dataset from external storage systems.
  * 
  * @author Haifeng Li
  */
@@ -77,8 +66,8 @@ public class DatasetReader {
     }
 
     /** Reads a CSV file with customized format. */
-    public DataFrame csv(Path path, CSVFormat format) throws IOException {
-        CSV csv = new CSV(format);
+    public DataFrame csv(Path path, CSVFormat format, StructType schema) throws IOException {
+        CSV csv = new CSV(format).withSchema(schema);
         return csv.read(path, limit);
     }
 
@@ -126,6 +115,16 @@ public class DatasetReader {
     public DataFrame arrow(Path path) throws IOException {
         Arrow arrow = new Arrow();
         return arrow.read(path, limit);
+    }
+
+    /**
+     * Reads an Apache Parquet file.
+     *
+     * @param path the input file path.
+     */
+    public DataFrame parquet(Path path) throws IOException {
+        Parquet parquet = new Parquet();
+        return parquet.read(path, limit);
     }
 
     /**
