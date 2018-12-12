@@ -69,7 +69,7 @@ public class HeapSelect<T extends Comparable<? super T>> {
             n++;
             if (datum.compareTo(heap[0]) < 0) {
                 heap[0] = datum;
-                SortUtils.siftDown(heap, 0, k-1);
+                Sort.siftDown(heap, 0, k-1);
             }
         }
     }
@@ -84,7 +84,7 @@ public class HeapSelect<T extends Comparable<? super T>> {
             throw new IllegalStateException();
         }
 
-        SortUtils.siftDown(heap, 0, k-1);
+        Sort.siftDown(heap, 0, k-1);
     }
 
     /**
@@ -132,7 +132,7 @@ public class HeapSelect<T extends Comparable<? super T>> {
     private static <T extends Comparable<? super T>> void heapify(T[] arr) {
         int n = arr.length;
         for (int i = n / 2 - 1; i >= 0; i--)
-            SortUtils.siftDown(arr, i, n - 1);
+            Sort.siftDown(arr, i, n - 1);
     }
 
     /**

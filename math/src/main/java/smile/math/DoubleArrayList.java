@@ -17,7 +17,10 @@
 package smile.math;
 
 import java.io.Serializable;
+import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 /**
  * A resizeable, array-backed list of double primitives.
@@ -27,11 +30,13 @@ import java.util.Arrays;
 
 public final class DoubleArrayList implements Serializable {
     private static final long serialVersionUID = 1L;
+    /** Format for toString. */
+    private static DecimalFormat format = new DecimalFormat("#.######");
 
     /**
      * The data of the list.
      */
-    private double[] data;
+    double[] data;
 
     /**
      * The index after the last entry in the list.
@@ -67,7 +72,12 @@ public final class DoubleArrayList implements Serializable {
 
     @Override
     public String toString() {
-        return Arrays.stream(data).limit(size).mapToObj(String::valueOf).collect(java.util.stream.Collectors.joining(",", "[", "]"));
+        return Arrays.stream(data).limit(size).mapToObj(format::format).collect(Collectors.joining(", ", "[", "]"));
+    }
+
+    /** Returns the stream of the array list. */
+    public DoubleStream stream() {
+        return DoubleStream.of(data).limit(size);
     }
 
     /**

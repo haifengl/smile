@@ -27,12 +27,7 @@ package smile.sort;
  * 
  * @author Haifeng Li
  */
-public class QuickSelect {
-    /** Utility classes should not have public constructors. */
-    private QuickSelect() {
-
-    }
-
+public interface QuickSelect {
     /**
      * Given k in [0, n-1], returns an array value from arr such that k array
      * values are less than or equal to the one returned. The input array will
@@ -40,7 +35,7 @@ public class QuickSelect {
      * elements moved to arr[0, k-1] (in arbitrary order) and all larger elements
      * in arr[k+1, n-1] (also in arbitrary order).
      */
-    public static int select(int[] arr, int k) {
+    static int select(int[] arr, int k) {
         int n = arr.length;
         int l = 0;
         int ir = n - 1;
@@ -50,20 +45,20 @@ public class QuickSelect {
         for (;;) {
             if (ir <= l + 1) {
                 if (ir == l + 1 && arr[ir] < arr[l]) {
-                    SortUtils.swap(arr, l, ir);
+                    Sort.swap(arr, l, ir);
                 }
                 return arr[k];
             } else {
                 mid = (l + ir) >> 1;
-                SortUtils.swap(arr, mid, l + 1);
+                Sort.swap(arr, mid, l + 1);
                 if (arr[l] > arr[ir]) {
-                    SortUtils.swap(arr, l, ir);
+                    Sort.swap(arr, l, ir);
                 }
                 if (arr[l + 1] > arr[ir]) {
-                    SortUtils.swap(arr, l + 1, ir);
+                    Sort.swap(arr, l + 1, ir);
                 }
                 if (arr[l] > arr[l + 1]) {
-                    SortUtils.swap(arr, l, l + 1);
+                    Sort.swap(arr, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
@@ -78,7 +73,7 @@ public class QuickSelect {
                     if (j < i) {
                         break;
                     }
-                    SortUtils.swap(arr, i, j);
+                    Sort.swap(arr, i, j);
                 }
                 arr[l + 1] = arr[j];
                 arr[j] = a;
@@ -99,7 +94,7 @@ public class QuickSelect {
      * elements moved to arr[0, k-1] (in arbitrary order) and all larger elements
      * in arr[k+1, n-1] (also in arbitrary order).
      */
-    public static float select(float[] arr, int k) {
+    static float select(float[] arr, int k) {
         int n = arr.length;
         int l = 0;
         int ir = n - 1;
@@ -109,20 +104,20 @@ public class QuickSelect {
         for (;;) {
             if (ir <= l + 1) {
                 if (ir == l + 1 && arr[ir] < arr[l]) {
-                    SortUtils.swap(arr, l, ir);
+                    Sort.swap(arr, l, ir);
                 }
                 return arr[k];
             } else {
                 mid = (l + ir) >> 1;
-                SortUtils.swap(arr, mid, l + 1);
+                Sort.swap(arr, mid, l + 1);
                 if (arr[l] > arr[ir]) {
-                    SortUtils.swap(arr, l, ir);
+                    Sort.swap(arr, l, ir);
                 }
                 if (arr[l + 1] > arr[ir]) {
-                    SortUtils.swap(arr, l + 1, ir);
+                    Sort.swap(arr, l + 1, ir);
                 }
                 if (arr[l] > arr[l + 1]) {
-                    SortUtils.swap(arr, l, l + 1);
+                    Sort.swap(arr, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
@@ -137,7 +132,7 @@ public class QuickSelect {
                     if (j < i) {
                         break;
                     }
-                    SortUtils.swap(arr, i, j);
+                    Sort.swap(arr, i, j);
                 }
                 arr[l + 1] = arr[j];
                 arr[j] = a;
@@ -158,7 +153,7 @@ public class QuickSelect {
      * elements moved to arr[0, k-1] (in arbitrary order) and all larger elements
      * in arr[k+1, n-1] (also in arbitrary order).
      */
-    public static double select(double[] arr, int k) {
+    static double select(double[] arr, int k) {
         int n = arr.length;
         int l = 0;
         int ir = n - 1;
@@ -168,20 +163,20 @@ public class QuickSelect {
         for (;;) {
             if (ir <= l + 1) {
                 if (ir == l + 1 && arr[ir] < arr[l]) {
-                    SortUtils.swap(arr, l, ir);
+                    Sort.swap(arr, l, ir);
                 }
                 return arr[k];
             } else {
                 mid = (l + ir) >> 1;
-                SortUtils.swap(arr, mid, l + 1);
+                Sort.swap(arr, mid, l + 1);
                 if (arr[l] > arr[ir]) {
-                    SortUtils.swap(arr, l, ir);
+                    Sort.swap(arr, l, ir);
                 }
                 if (arr[l + 1] > arr[ir]) {
-                    SortUtils.swap(arr, l + 1, ir);
+                    Sort.swap(arr, l + 1, ir);
                 }
                 if (arr[l] > arr[l + 1]) {
-                    SortUtils.swap(arr, l, l + 1);
+                    Sort.swap(arr, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
@@ -196,7 +191,7 @@ public class QuickSelect {
                     if (j < i) {
                         break;
                     }
-                    SortUtils.swap(arr, i, j);
+                    Sort.swap(arr, i, j);
                 }
                 arr[l + 1] = arr[j];
                 arr[j] = a;
@@ -217,7 +212,7 @@ public class QuickSelect {
      * elements moved to arr[0, k-1] (in arbitrary order) and all larger elements
      * in arr[k+1, n-1] (also in arbitrary order).
      */
-    public static <T extends Comparable<? super T>> T select(T[] arr, int k) {
+    static <T extends Comparable<? super T>> T select(T[] arr, int k) {
         int n = arr.length;
         int l = 0;
         int ir = n - 1;
@@ -227,20 +222,20 @@ public class QuickSelect {
         for (;;) {
             if (ir <= l + 1) {
                 if (ir == l + 1 && arr[ir].compareTo(arr[l]) < 0) {
-                    SortUtils.swap(arr, l, ir);
+                    Sort.swap(arr, l, ir);
                 }
                 return arr[k];
             } else {
                 mid = (l + ir) >> 1;
-                SortUtils.swap(arr, mid, l + 1);
+                Sort.swap(arr, mid, l + 1);
                 if (arr[l].compareTo(arr[ir]) > 0) {
-                    SortUtils.swap(arr, l, ir);
+                    Sort.swap(arr, l, ir);
                 }
                 if (arr[l + 1].compareTo(arr[ir]) > 0) {
-                    SortUtils.swap(arr, l + 1, ir);
+                    Sort.swap(arr, l + 1, ir);
                 }
                 if (arr[l].compareTo(arr[l + 1]) > 0) {
-                    SortUtils.swap(arr, l, l + 1);
+                    Sort.swap(arr, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
@@ -255,7 +250,7 @@ public class QuickSelect {
                     if (j < i) {
                         break;
                     }
-                    SortUtils.swap(arr, i, j);
+                    Sort.swap(arr, i, j);
                 }
                 arr[l + 1] = arr[j];
                 arr[j] = a;
@@ -272,7 +267,7 @@ public class QuickSelect {
     /**
      * Find the median of an array of type integer.
      */
-    public static int median(int[] a) {
+    static int median(int[] a) {
         int k = a.length / 2;
         return select(a, k);
     }
@@ -280,7 +275,7 @@ public class QuickSelect {
     /**
      * Find the median of an array of type float.
      */
-    public static float median(float[] a) {
+    static float median(float[] a) {
         int k = a.length / 2;
         return select(a, k);
     }
@@ -288,7 +283,7 @@ public class QuickSelect {
     /**
      * Find the median of an array of type double.
      */
-    public static double median(double[] a) {
+    static double median(double[] a) {
         int k = a.length / 2;
         return select(a, k);
     }
@@ -296,7 +291,7 @@ public class QuickSelect {
     /**
      * Find the median of an array of type double.
      */
-    public static <T extends Comparable<? super T>> T median(T[] a) {
+    static <T extends Comparable<? super T>> T median(T[] a) {
         int k = a.length / 2;
         return select(a, k);
     }
@@ -304,7 +299,7 @@ public class QuickSelect {
     /**
      * Find the first quantile (p = 1/4) of an array of type integer.
      */
-    public static int q1(int[] a) {
+    static int q1(int[] a) {
         int k = a.length / 4;
         return select(a, k);
     }
@@ -312,7 +307,7 @@ public class QuickSelect {
     /**
      * Find the first quantile (p = 1/4) of an array of type float.
      */
-    public static float q1(float[] a) {
+    static float q1(float[] a) {
         int k = a.length / 4;
         return select(a, k);
     }
@@ -320,7 +315,7 @@ public class QuickSelect {
     /**
      * Find the first quantile (p = 1/4) of an array of type double.
      */
-    public static double q1(double[] a) {
+    static double q1(double[] a) {
         int k = a.length / 4;
         return select(a, k);
     }
@@ -328,7 +323,7 @@ public class QuickSelect {
     /**
      * Find the first quantile (p = 1/4) of an array of type double.
      */
-    public static <T extends Comparable<? super T>> T q1(T[] a) {
+    static <T extends Comparable<? super T>> T q1(T[] a) {
         int k = a.length / 4;
         return select(a, k);
     }
@@ -336,7 +331,7 @@ public class QuickSelect {
     /**
      * Find the third quantile (p = 3/4) of an array of type integer.
      */
-    public static int q3(int[] a) {
+    static int q3(int[] a) {
         int k = 3 * a.length / 4;
         return select(a, k);
     }
@@ -344,7 +339,7 @@ public class QuickSelect {
     /**
      * Find the third quantile (p = 3/4) of an array of type float.
      */
-    public static float q3(float[] a) {
+    static float q3(float[] a) {
         int k = 3 * a.length / 4;
         return select(a, k);
     }
@@ -352,7 +347,7 @@ public class QuickSelect {
     /**
      * Find the third quantile (p = 3/4) of an array of type double.
      */
-    public static double q3(double[] a) {
+    static double q3(double[] a) {
         int k = 3 * a.length / 4;
         return select(a, k);
     }
@@ -360,7 +355,7 @@ public class QuickSelect {
     /**
      * Find the third quantile (p = 3/4) of an array of type double.
      */
-    public static <T extends Comparable<? super T>> T q3(T[] a) {
+    static <T extends Comparable<? super T>> T q3(T[] a) {
         int k = 3 * a.length / 4;
         return select(a, k);
     }

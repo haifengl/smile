@@ -41,16 +41,11 @@ package smile.sort;
  *
  * @author Haifeng Li
  */
-public class ShellSort {
-    /** Utility classes should not have public constructors. */
-    private ShellSort() {
-
-    }
-
+public interface ShellSort {
     /**
      * Sorts the specified array into ascending numerical order.
      */
-    public static void sort(int[] a) {
+    static void sort(int[] a) {
         int n = a.length;
 
         int inc = 1;
@@ -79,7 +74,7 @@ public class ShellSort {
     /**
      * Sorts the specified array into ascending numerical order.
      */
-    public static void sort(float[] a) {
+    static void sort(float[] a) {
         int n = a.length;
 
         int inc = 1;
@@ -108,7 +103,7 @@ public class ShellSort {
     /**
      * Sorts the specified array into ascending numerical order.
      */
-    public static void sort(double[] a) {
+    static void sort(double[] a) {
         int n = a.length;
 
         int inc = 1;
@@ -137,7 +132,7 @@ public class ShellSort {
     /**
      * Sorts the specified array into ascending order.
      */
-    public static <T extends Comparable<? super T>> void sort(T[] a) {
+    static <T extends Comparable<? super T>> void sort(T[] a) {
         int n = a.length;
 
         int inc = 1;

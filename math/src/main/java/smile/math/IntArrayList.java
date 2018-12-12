@@ -18,6 +18,8 @@ package smile.math;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * A resizeable, array-backed list of integer primitives.
@@ -31,7 +33,7 @@ public final class IntArrayList implements Serializable {
     /**
      * The data of the list.
      */
-    private int[] data;
+    int[] data;
 
     /**
      * The index after the last entry in the list.
@@ -67,7 +69,12 @@ public final class IntArrayList implements Serializable {
 
     @Override
     public String toString() {
-        return Arrays.stream(data).limit(size).mapToObj(String::valueOf).collect(java.util.stream.Collectors.joining(",", "[", "]"));
+        return Arrays.stream(data).limit(size).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
+    }
+
+    /** Returns the stream of the array list. */
+    public IntStream stream() {
+        return IntStream.of(data).limit(size);
     }
 
     /**

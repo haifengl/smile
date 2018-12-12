@@ -17,21 +17,17 @@
 package smile.sort;
 
 /**
- * Some useful functions such as swap and swift-down used in many sorting
- * algorithms.
+ * Sort algorithm trait that includes useful static functions
+ * such as swap and swift up/down used in many sorting algorithms.
  * 
  * @author Haifeng Li
  */
-public class SortUtils {
-    /** Utility classes should not have public constructors. */
-    private SortUtils() {
-
-    }
+public interface Sort {
 
     /**
      * Swap two positions.
      */
-    public static void swap(int arr[], int i, int j) {
+    static void swap(int arr[], int i, int j) {
         int a = arr[i];
         arr[i] = arr[j];
         arr[j] = a;
@@ -40,7 +36,7 @@ public class SortUtils {
     /**
      * Swap two positions.
      */
-    public static void swap(float arr[], int i, int j) {
+    static void swap(float arr[], int i, int j) {
         float a = arr[i];
         arr[i] = arr[j];
         arr[j] = a;
@@ -49,7 +45,7 @@ public class SortUtils {
     /**
      * Swap two positions.
      */
-    public static void swap(double arr[], int i, int j) {
+    static void swap(double arr[], int i, int j) {
         double a;
         a = arr[i];
         arr[i] = arr[j];
@@ -59,7 +55,7 @@ public class SortUtils {
     /**
      * Swap two positions.
      */
-    public static void swap(Object arr[], int i, int j) {
+    static void swap(Object arr[], int i, int j) {
         Object a;
         a = arr[i];
         arr[i] = arr[j];
@@ -72,7 +68,7 @@ public class SortUtils {
      * (at postion k/2) if necessary, continuing as long as a[k/2] &lt; a[k] or
      * until we reach the top of the heap.
      */
-    public static void siftUp(int[] arr, int k) {
+    static void siftUp(int[] arr, int k) {
         while (k > 1 && arr[k/2] < arr[k]) {
             swap(arr, k, k/2);
             k = k/2;
@@ -85,7 +81,7 @@ public class SortUtils {
      * (at postion k/2) if necessary, continuing as long as a[k/2] &lt; a[k] or
      * until we reach the top of the heap.
      */
-    public static void siftUp(float[] arr, int k) {
+    static void siftUp(float[] arr, int k) {
         while (k > 1 && arr[k/2] < arr[k]) {
             swap(arr, k, k/2);
             k = k/2;
@@ -98,7 +94,7 @@ public class SortUtils {
      * (at postion k/2) if necessary, continuing as long as a[k/2] &lt; a[k] or
      * until we reach the top of the heap.
      */
-    public static void siftUp(double[] arr, int k) {
+    static void siftUp(double[] arr, int k) {
         while (k > 1 && arr[k/2] < arr[k]) {
             swap(arr, k, k/2);
             k = k/2;
@@ -111,7 +107,7 @@ public class SortUtils {
      * (at postion k/2) if necessary, continuing as long as a[k/2] &lt; a[k] or
      * until we reach the top of the heap.
      */
-    public static <T extends Comparable<? super T>> void siftUp(T[] arr, int k) {
+    static <T extends Comparable<? super T>> void siftUp(T[] arr, int k) {
         while (k > 1 && arr[k/2].compareTo(arr[k]) < 0) {
             swap(arr, k, k/2);
             k = k/2;
@@ -126,7 +122,7 @@ public class SortUtils {
      * if n is even and k is n/2, then the node at k has only one child -- this
      * case must be treated properly.
      */
-    public static void siftDown(int[] arr, int k, int n) {
+    static void siftDown(int[] arr, int k, int n) {
         while (2*k <= n) {
             int j = 2 * k;
             if (j < n && arr[j] < arr[j + 1]) {
@@ -148,7 +144,7 @@ public class SortUtils {
      * if n is even and k is n/2, then the node at k has only one child -- this
      * case must be treated properly.
      */
-    public static void siftDown(float[] arr, int k, int n) {
+    static void siftDown(float[] arr, int k, int n) {
         while (2*k <= n) {
             int j = 2 * k;
             if (j < n && arr[j] < arr[j + 1]) {
@@ -170,7 +166,7 @@ public class SortUtils {
      * if n is even and k is n/2, then the node at k has only one child -- this
      * case must be treated properly.
      */
-    public static void siftDown(double[] arr, int k, int n) {
+    static void siftDown(double[] arr, int k, int n) {
         while (2*k <= n) {
             int j = 2 * k;
             if (j < n && arr[j] < arr[j + 1]) {
@@ -192,7 +188,7 @@ public class SortUtils {
      * if n is even and k is n/2, then the node at k has only one child -- this
      * case must be treated properly.
      */
-    public static <T extends Comparable<? super T>> void siftDown(T[] arr, int k, int n) {
+    static <T extends Comparable<? super T>> void siftDown(T[] arr, int k, int n) {
         while (2*k <= n) {
             int j = 2 * k;
             if (j < n && arr[j].compareTo(arr[j + 1]) < 0) {
@@ -201,7 +197,7 @@ public class SortUtils {
             if (arr[k].compareTo(arr[j]) >= 0) {
                 break;
             }
-            SortUtils.swap(arr, k, j);
+            swap(arr, k, j);
             k = j;
         }
     }

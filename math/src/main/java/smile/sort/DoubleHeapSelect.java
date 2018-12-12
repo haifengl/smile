@@ -77,7 +77,7 @@ public class DoubleHeapSelect {
             n++;
             if (datum < heap[0]) {
                 heap[0] = datum;
-                SortUtils.siftDown(heap, 0, k-1);
+                Sort.siftDown(heap, 0, k-1);
             }
         }
     }
@@ -128,7 +128,7 @@ public class DoubleHeapSelect {
     private static void heapify(double[] arr) {
         int n = arr.length;
         for (int i = n / 2 - 1; i >= 0; i--)
-            SortUtils.siftDown(arr, i, n - 1);
+            Sort.siftDown(arr, i, n - 1);
     }
 
     /**
