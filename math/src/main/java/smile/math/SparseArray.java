@@ -17,11 +17,14 @@
 package smile.math;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.List;
+import java.util.OptionalInt;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
+import smile.sort.QuickSort;
 
 /**
  * Sparse array of double values.
@@ -29,13 +32,15 @@ import java.util.stream.Collectors;
  *
  */
 public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The entry in a sparse array of double values.
      */
     public static class Entry implements Serializable {
         private static final long serialVersionUID = 1L;
+        /** Format for toString. */
+        private static DecimalFormat format = new DecimalFormat("#.######");
 
         /**
          * The index of entry.
@@ -58,11 +63,16 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
 
         @Override
         public String toString() {
-            return String.format("%d:%G", i, x);
+            return String.format("%d:%s", i, format.format(x));
         }
     }
-    
-    private List<Entry> array;
+
+    /**
+     * Entry as an object has too much overhead and not CPU cache friendly.
+     * Use two continuous array lists for index and value correspondingly.
+     */
+    private IntArrayList index;
+    private DoubleArrayList value;
     
     /**
      * Constructor.
@@ -75,14 +85,20 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      * Constructor.
      */
     public SparseArray(List<Entry> entries) {
-        this.array = entries;
+        index = new IntArrayList(entries.size());
+        value = new DoubleArrayList(entries.size());
+
+        for (Entry e : entries) {
+            index.add(e.i);
+            value.add(e.x);
+        }
     }
 
     /**
      * Constructor.
      */
     public SparseArray(Stream<Entry> stream) {
-        this.array = stream.collect(Collectors.toList());
+        this(stream.collect(Collectors.toList()));
     }
 
     /**
@@ -90,12 +106,13 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      * @param initialCapacity the number of rows in the matrix.
      */
     private SparseArray(int initialCapacity) {
-        array = new ArrayList<>(initialCapacity);
+        index = new IntArrayList(initialCapacity);
+        value = new DoubleArrayList(initialCapacity);
     }
 
     @Override
     public String toString() {
-        return array.toString();
+        return stream().map(Entry::toString).collect(Collectors.joining(", ", "[", "]"));
     }
 
     /**
@@ -103,7 +120,7 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      * @return the number of nonzero entries
      */
     public int size() {
-        return array.size();
+        return index.size();
     }
 
     /**
@@ -111,7 +128,7 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      * @return true if the array is empty.
      */
     public boolean isEmpty() {
-        return array.isEmpty();
+        return index.isEmpty();
     }
     
     /**
@@ -119,17 +136,30 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      * @return an iterator of nonzero entries
      */
     public Iterator<Entry> iterator() {
-        return array.iterator();
+        return new Iterator<Entry>() {
+            int i = 0;
+            @Override
+            public boolean hasNext() {
+                return i < size();
+            }
+
+            @Override
+            public Entry next() {
+                Entry e = new Entry(index.get(i), value.get(i));
+                i += 1;
+                return e;
+            }
+        };
     }
 
     /** Returns the stream of nonzero entries. */
     public Stream<Entry> stream() {
-        return array.stream();
+        return IntStream.range(0, size()).mapToObj(i -> new Entry(index.get(i), value.get(i)));
     }
 
     /** Sorts the array elements such that the indices are in ascending order. */
     public void sort() {
-        array.sort((a, b) -> a.i - b.i);
+        QuickSort.sort(index.data, value.data, size());
     }
 
     /**
@@ -137,13 +167,11 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      * @param i the index of entry.
      * @return the value of entry, 0.0 if the index doesn't exist in the array.
      */
-    public double get(int i) {
-        for (Entry e : array) {
-            if (e.i == i) {
-                return e.x;
-            }
+    public double get(final int i) {
+        int length = size();
+        for (int k = 0; k < length; k++) {
+            if (index.get(k) == i) return value.get(k);
         }
-
         return 0.0;
     }
 
@@ -158,31 +186,30 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
             remove(i);
             return false;
         }
-        
-        Iterator<Entry> it = array.iterator();
-        for (int k = 0; it.hasNext(); k++) {
-            Entry e = it.next();
-            if (e.i == i) {
-                e.x = x;
+
+        int length = size();
+        for (int k = 0; k < length; k++) {
+            if (index.get(k) == i) {
+                value.set(k, x);
                 return false;
-            } else if (e.i > i) {
-                array.add(k, new Entry(i, x));
-                return true;
             }
         }
-        
-        array.add(new Entry(i, x));
+
+        index.add(i);
+        value.add(x);
         return true;
     }
 
     /**
-     * Append an entry to the array, optimizing for the case where the index is greater than all existing indices in the array.
+     * Append an entry to the array, optimizing for the case where the
+     * index is greater than all existing indices in the array.
      * @param i the index of entry.
      * @param x the value of entry.
      */
     public void append(int i, double x) {
         if (x != 0.0) {
-            array.add(new Entry(i, x));
+            index.add(i);
+            value.add(x);
         }
     }
     
@@ -191,12 +218,12 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      * @param i the index of entry.
      */
     public void remove(int i) {
-        Iterator<Entry> it = array.iterator();
-        while (it.hasNext()) {
-            Entry e = it.next();
-            if (e.i == i) {
-                it.remove();
-                break;
+        int length = size();
+        for (int k = 0; k < length; k++) {
+            if (index.get(k) == i) {
+                index.remove(k);
+                value.remove(k);
+                return;
             }
         }
     }
