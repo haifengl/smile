@@ -24,7 +24,7 @@ import java.text.DecimalFormat;
  */
 public class DoubleType implements DataType {
     /** Format for toString. */
-    private DecimalFormat format = new DecimalFormat("#.######");
+    private static DecimalFormat format = new DecimalFormat("#.######");
 
     /** Singleton instance. */
     static DoubleType instance = new DoubleType();

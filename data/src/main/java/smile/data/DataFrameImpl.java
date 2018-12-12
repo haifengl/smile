@@ -559,6 +559,9 @@ class DataFrameImpl implements DataFrame {
             nrows += df.nrows();
         }
 
+        // Single line solution
+        // Stream.of(a, b).flatMap(Stream::of).toArray(Object[]::new)
+        // It doesn't work for boolean, byte, char, short though.
         Object[] vectors = new Object[ncols()];
         for (int i = 0; i < vectors.length; i++) {
             BaseVector column = columns.get(i);
