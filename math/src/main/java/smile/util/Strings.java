@@ -22,12 +22,7 @@ import java.util.Arrays;
  *
  * @author Haifeng Li
  */
-public class Strings {
-    /** Utility classes should not have public constructors. */
-    private Strings() {
-
-    }
-
+public interface Strings {
     /** Left pad a String with a specified character.
      *
      * @param str  the String to pad out, may be null
@@ -36,7 +31,7 @@ public class Strings {
      * @return left padded String or original String if no padding is necessary,
      *         null if null String input
      */
-    public static String leftPad(String str, int size, char padChar) {
+    static String leftPad(String str, int size, char padChar) {
         if (str == null)
             return null;
 
@@ -55,7 +50,7 @@ public class Strings {
      * @return left padded String or original String if no padding is necessary,
      *         null if null String input
      */
-    public static String rightPad(String str, int size, char padChar) {
+    static String rightPad(String str, int size, char padChar) {
         if (str == null)
             return null;
 
@@ -67,7 +62,7 @@ public class Strings {
     }
 
     /** Returns a string with a single repeated character to a specific length. */
-    public static String fill(char ch, int len) {
+    static String fill(char ch, int len) {
         char[] chars = new char[len];
         Arrays.fill(chars, ch);
         return new String(chars);

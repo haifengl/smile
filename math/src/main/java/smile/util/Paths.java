@@ -22,16 +22,12 @@ import java.nio.file.Path;
  *
  * @author Haifeng Li
  */
-public class Paths {
-    /** Utility classes should not have public constructors. */
-    private Paths() {
-
-    }
-
-    private static String home = System.getProperty("smile.home", "shell/src/universal/");
+public interface Paths {
+    /** Smile home directory. */
+    String home = System.getProperty("smile.home", "shell/src/universal/");
 
     /** Get the file path of a test sample dataset. */
-    public static Path getTestData(String... path) {
+    static Path getTestData(String... path) {
         return java.nio.file.Paths.get(home + "/data", path);
     }
 }

@@ -35,12 +35,7 @@ import java.util.Arrays;
  * 
  * @author Haifeng Li
  */
-public class Histogram {
-    /** Utility classes should not have public constructors. */
-    private Histogram() {
-
-    }
-
+public interface Histogram {
     /**
      * Generate the histogram of given data. The number of bins k is decided by
      * square-root choice.
@@ -49,8 +44,8 @@ public class Histogram {
      * second row is the upper bound of bins, and the third row is the frequence
      * count.
      */
-    public static double[][] histogram(int[] data) {
-        return histogram(data, bins(data.length));
+    static double[][] of(int[] data) {
+        return of(data, bins(data.length));
     }
     
     /**
@@ -61,8 +56,8 @@ public class Histogram {
      * second row is the upper bound of bins, and the third row is the frequence
      * count.
      */
-    public static double[][] histogram(float[] data) {
-        return histogram(data, bins(data.length));
+    static double[][] of(float[] data) {
+        return of(data, bins(data.length));
     }
     
     /**
@@ -73,8 +68,8 @@ public class Histogram {
      * second row is the upper bound of bins, and the third row is the frequence
      * count.
      */
-    public static double[][] histogram(double[] data) {
-        return histogram(data, bins(data.length));
+    static double[][] of(double[] data) {
+        return of(data, bins(data.length));
     }
     
     /**
@@ -85,7 +80,7 @@ public class Histogram {
      * second row is the upper bound of bins, and the third row is the frequence
      * count.
      */
-    public static double[][] histogram(int[] data, int k) {
+    static double[][] of(int[] data, int k) {
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
@@ -116,7 +111,7 @@ public class Histogram {
             breaks[i] = breaks[i - 1] + width;
         }
         
-        return histogram(data, breaks);
+        return of(data, breaks);
     }
 
     /**
@@ -128,7 +123,7 @@ public class Histogram {
      * second row is the upper bound of bins, and the third row is the frequence
      * count.
      */
-    public static double[][] histogram(int[] data, double[] breaks) {
+    static double[][] of(int[] data, double[] breaks) {
         int k = breaks.length - 1;
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
@@ -168,7 +163,7 @@ public class Histogram {
      * second row is the upper bound of bins, and the third row is the frequence
      * count.
      */
-    public static double[][] histogram(float[] data, int k) {
+    static double[][] of(float[] data, int k) {
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
@@ -188,7 +183,7 @@ public class Histogram {
         }
         breaks[k] = max;
 
-        return histogram(data, breaks);
+        return of(data, breaks);
     }
 
     /**
@@ -200,7 +195,7 @@ public class Histogram {
      * second row is the upper bound of bins, and the third row is the frequence
      * count.
      */
-    public static double[][] histogram(float[] data, float[] breaks) {
+    static double[][] of(float[] data, float[] breaks) {
         int k = breaks.length - 1;
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
@@ -240,7 +235,7 @@ public class Histogram {
      * second row is the upper bound of bins, and the third row is the frequence
      * count.
      */
-    public static double[][] histogram(double[] data, int k) {
+    static double[][] of(double[] data, int k) {
         double min = MathEx.min(data);
         double max = MathEx.max(data);
         double span = max - min;
@@ -256,7 +251,7 @@ public class Histogram {
         }
         breaks[k] = max;
 
-        return histogram(data, breaks);
+        return of(data, breaks);
     }
 
     /**
@@ -268,7 +263,7 @@ public class Histogram {
      * second row is the upper bound of bins, and the third row is the frequence
      * count.
      */
-    public static double[][] histogram(double[] data, double[] breaks) {
+    static double[][] of(double[] data, double[] breaks) {
         int k = breaks.length - 1;
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
@@ -307,7 +302,7 @@ public class Histogram {
      * @param h the bin width.
      * @return the breakpoints between histogram cells
      */
-    public static double[] breaks(double[] x, double h) {
+    static double[] breaks(double[] x, double h) {
         return breaks(MathEx.min(x), MathEx.max(x), h);
     }
     
@@ -319,7 +314,7 @@ public class Histogram {
      * @param h the bin width.
      * @return the breakpoints between histogram cells
      */
-    public static double[] breaks(double min, double max, double h) {
+    static double[] breaks(double min, double max, double h) {
         if (h <= 0.0) {
             throw new IllegalArgumentException("Invalid bin width: " + h);
         }
@@ -346,7 +341,7 @@ public class Histogram {
      * @param k the number of bins.
      * @return the breakpoints between histogram cells
      */
-    public static double[] breaks(double[] x, int k) {
+    static double[] breaks(double[] x, int k) {
         return breaks(MathEx.min(x), MathEx.max(x), k);
     }
     
@@ -357,7 +352,7 @@ public class Histogram {
      * @param k the number of bins.
      * @return the breakpoints between histogram cells
      */
-    public static double[] breaks(double min, double max, int k) {
+    static double[] breaks(double min, double max, int k) {
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
@@ -376,7 +371,7 @@ public class Histogram {
      * @param h the bin width.
      * @return the number of bins k = ceil((max - min) / h)
      */
-    public static int bins(double[] x, double h) {
+    static int bins(double[] x, double h) {
         if (h <= 0.0) {
             throw new IllegalArgumentException("Invalid bin width: " + h);
         }
@@ -394,7 +389,7 @@ public class Histogram {
      * @param n the number of data points.
      * @return the number of bins
      */
-    public static int bins(int n) {
+    static int bins(int n) {
         int k = (int) Math.sqrt(n);
         if (k < 5) k = 5;
         return k;
@@ -405,7 +400,7 @@ public class Histogram {
      * @param n the number of data points.
      * @return the number of bins
      */
-    public static int sturges(int n) {
+    static int sturges(int n) {
         int k = (int) Math.ceil(MathEx.log2(n) + 1);
         if (k < 5) k = 5;
         return k;
@@ -416,7 +411,7 @@ public class Histogram {
      * @param x the data set.
      * @return the number of bins
      */
-    public static int scott(double[] x) {
+    static int scott(double[] x) {
         double h = Math.ceil(3.5 * MathEx.sd(x) / Math.pow(x.length, 1.0/3));
         return bins(x, h);
     }

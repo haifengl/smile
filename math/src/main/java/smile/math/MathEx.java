@@ -16,7 +16,6 @@
 package smile.math;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -26,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
-import smile.sort.SortUtils;
+import smile.sort.Sort;
 
 /**
  * Extra basic numeric functions. The following functions are
@@ -795,7 +794,7 @@ public class MathEx {
     public static void reverse(int[] a) {
         int i = 0, j = a.length - 1;
         while (i < j) {
-            SortUtils.swap(a, i++, j--);  // code for swap not shown, but easy enough
+            Sort.swap(a, i++, j--);  // code for swap not shown, but easy enough
         }
     }
 
@@ -806,7 +805,7 @@ public class MathEx {
     public static void reverse(float[] a) {
         int i = 0, j = a.length - 1;
         while (i < j) {
-            SortUtils.swap(a, i++, j--);  // code for swap not shown, but easy enough
+            Sort.swap(a, i++, j--);  // code for swap not shown, but easy enough
         }
     }
 
@@ -817,7 +816,7 @@ public class MathEx {
     public static void reverse(double[] a) {
         int i = 0, j = a.length - 1;
         while (i < j) {
-            SortUtils.swap(a, i++, j--);  // code for swap not shown, but easy enough
+            Sort.swap(a, i++, j--);  // code for swap not shown, but easy enough
         }
     }
 
@@ -828,7 +827,7 @@ public class MathEx {
     public static <T> void reverse(T[] a) {
         int i = 0, j = a.length - 1;
         while (i < j) {
-            SortUtils.swap(a, i++, j--);
+            Sort.swap(a, i++, j--);
         }
     }
 

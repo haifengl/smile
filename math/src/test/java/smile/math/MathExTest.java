@@ -165,7 +165,7 @@ public class MathExTest {
         System.out.println("random");
         double[] prob = {0.473646292, 0.206116725, 0.009308497, 0.227844687, 0.083083799};
         int[] sample = MathEx.random(prob, 300);
-        double[][] hist = Histogram.histogram(sample, 5);
+        double[][] hist = Histogram.of(sample, 5);
         double[] p = new double[5];
         for (int i = 0; i < 5; i++) {
             p[i] = hist[2][i] / 300.0;
@@ -185,7 +185,7 @@ public class MathExTest {
             sample[i] = MathEx.random(prob);
         }
 
-        double[][] hist = Histogram.histogram(sample, 5);
+        double[][] hist = Histogram.of(sample, 5);
         double[] p = new double[5];
         for (int i = 0; i < 5; i++) {
             p[i] = hist[2][i] / 300.0;
