@@ -22,55 +22,50 @@ import java.awt.Color;
  *
  * @author Haifeng Li
  */
-public class Palette {
-    /** Utility classes should not have public constructors. */
-    private Palette() {
+public interface Palette {
+    Color WHITE = Color.WHITE;
+    Color BLACK = Color.BLACK;
+    Color LIGHT_GRAY = Color.LIGHT_GRAY;
+    Color DARK_GRAY = Color.DARK_GRAY;
+    Color SLATE_GRAY = new Color(0X708090);
+    Color LIGHT_SLATE_GRAY = new Color(0X6D7B8D);
+    Color DARK_SLATE_GRAY = new Color(0X2F4F4F);
+    Color RED = Color.RED;
+    Color DARK_RED = new Color(0X8B0000);
+    Color VIOLET_RED = new Color(0XF6358A);
+    Color GREEN = Color.GREEN;
+    Color DARK_GREEN = new Color(0X006400);
+    Color LIGHT_GREEN = new Color(0X90EE90);
+    Color PASTEL_GREEN = new Color(0X00FF00);
+    Color FOREST_GREEN = new Color(0X808000);
+    Color GRASS_GREEN = new Color(0X408080);
+    Color BLUE = Color.BLUE;
+    Color NAVY_BLUE = new Color(0X000080);
+    Color SLATE_BLUE = new Color(0X6A5ACD);
+    Color ROYAL_BLUE = new Color(0X2B60DE);
+    Color CADET_BLUE = new Color(0X4C787E);
+    Color MIDNIGHT_BLUE = new Color(0X151B54);
+    Color SKY_BLUE = new Color(0X6698FF);
+    Color STEEL_BLUE = new Color(0X4863A0);
+    Color DARK_BLUE = new Color(0X00008B);
+    Color MAGENTA = Color.MAGENTA;
+    Color DARK_MAGENTA = new Color(0X8B008B);
+    Color CYAN = Color.CYAN;
+    Color DARK_CYAN = new Color(0X008B8B);
+    Color PURPLE = new Color(0XA020F0);
+    Color LIGHT_PURPLE = new Color(0XFF0080);
+    Color DARK_PURPLE = new Color(0X800080);
+    Color ORANGE = Color.ORANGE;
+    Color PINK = Color.PINK;
+    Color YELLOW = Color.YELLOW;
+    Color GOLD = new Color(0XFFD700);
+    Color BROWN = new Color(0XA52A2A);
+    Color SALMON = new Color(0XFA8072);
+    Color TURQUOISE = new Color(0X00FFFF);
+    Color BURGUNDY = new Color(0X800000);
+    Color PLUM = new Color(0XB93B8F);
 
-    }
-
-    public static final Color WHITE = Color.WHITE;
-    public static final Color BLACK = Color.BLACK;
-    public static final Color LIGHT_GRAY = Color.LIGHT_GRAY;
-    public static final Color DARK_GRAY = Color.DARK_GRAY;
-    public static final Color SLATE_GRAY = new Color(0X708090);
-    public static final Color LIGHT_SLATE_GRAY = new Color(0X6D7B8D);
-    public static final Color DARK_SLATE_GRAY = new Color(0X2F4F4F);
-    public static final Color RED = Color.RED;
-    public static final Color DARK_RED = new Color(0X8B0000);
-    public static final Color VIOLET_RED = new Color(0XF6358A);
-    public static final Color GREEN = Color.GREEN;
-    public static final Color DARK_GREEN = new Color(0X006400);
-    public static final Color LIGHT_GREEN = new Color(0X90EE90);
-    public static final Color PASTEL_GREEN = new Color(0X00FF00);
-    public static final Color FOREST_GREEN = new Color(0X808000);
-    public static final Color GRASS_GREEN = new Color(0X408080);
-    public static final Color BLUE = Color.BLUE;
-    public static final Color NAVY_BLUE = new Color(0X000080);
-    public static final Color SLATE_BLUE = new Color(0X6A5ACD);
-    public static final Color ROYAL_BLUE = new Color(0X2B60DE);
-    public static final Color CADET_BLUE = new Color(0X4C787E);
-    public static final Color MIDNIGHT_BLUE = new Color(0X151B54);
-    public static final Color SKY_BLUE = new Color(0X6698FF);
-    public static final Color STEEL_BLUE = new Color(0X4863A0);
-    public static final Color DARK_BLUE = new Color(0X00008B);
-    public static final Color MAGENTA = Color.MAGENTA;
-    public static final Color DARK_MAGENTA = new Color(0X8B008B);
-    public static final Color CYAN = Color.CYAN;
-    public static final Color DARK_CYAN = new Color(0X008B8B);
-    public static final Color PURPLE = new Color(0XA020F0);
-    public static final Color LIGHT_PURPLE = new Color(0XFF0080);
-    public static final Color DARK_PURPLE = new Color(0X800080);
-    public static final Color ORANGE = Color.ORANGE;
-    public static final Color PINK = Color.PINK;
-    public static final Color YELLOW = Color.YELLOW;
-    public static final Color GOLD = new Color(0XFFD700);
-    public static final Color BROWN = new Color(0XA52A2A);
-    public static final Color SALMON = new Color(0XFA8072);
-    public static final Color TURQUOISE = new Color(0X00FFFF);
-    public static final Color BURGUNDY = new Color(0X800000);
-    public static final Color PLUM = new Color(0XB93B8F);
-
-    public static final Color[] COLORS = {
+    Color[] COLORS = {
         RED,
         BLUE,
         GREEN,
@@ -117,7 +112,7 @@ public class Palette {
      * Generate terrain color palette.
      * @param n the number of colors in the palette.
      */
-    public static Color[] terrain(int n) {
+    static Color[] terrain(int n) {
         return terrain(n, 1.0f);
     }
 
@@ -126,7 +121,7 @@ public class Palette {
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
      */
-    public static Color[] terrain(int n, float alpha) {
+    static Color[] terrain(int n, float alpha) {
         int k = n / 2;
         float[] H = {4 / 12f, 2 / 12f, 0 / 12f};
         float[] S = {1f, 1f, 0f};
@@ -177,7 +172,7 @@ public class Palette {
      * Generate topo color palette.
      * @param n the number of colors in the palette.
      */
-    public static Color[] topo(int n) {
+    static Color[] topo(int n) {
         return topo(n, 1.0f);
     }
 
@@ -186,7 +181,7 @@ public class Palette {
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
      */
-    public static Color[] topo(int n, float alpha) {
+    static Color[] topo(int n, float alpha) {
         int j = n / 3;
         int k = n / 3;
         int i = n - j - k;
@@ -225,7 +220,7 @@ public class Palette {
      * Generate jet color palette.
      * @param n the number of colors in the palette.
      */
-    public static Color[] jet(int n) {
+    static Color[] jet(int n) {
         return jet(n, 1.0f);
     }
 
@@ -234,7 +229,7 @@ public class Palette {
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
      */
-    public static Color[] jet(int n, float alpha) {
+    static Color[] jet(int n, float alpha) {
         int m = (int) Math.ceil(n / 4);
 
         float[] u = new float[3 * m];
@@ -280,7 +275,7 @@ public class Palette {
      * Generate red-green color palette.
      * @param n the number of colors in the palette.
      */
-    public static Color[] redgreen(int n) {
+    static Color[] redgreen(int n) {
         return redgreen(n, 1.0f);
     }
 
@@ -289,7 +284,7 @@ public class Palette {
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
      */
-    public static Color[] redgreen(int n, float alpha) {
+    static Color[] redgreen(int n, float alpha) {
         Color[] palette = new Color[n];
         for (int i = 0; i < n; i++) {
             palette[i] = new Color((float) Math.sqrt((i + 1.0f) / n), (float) Math.sqrt(1 - (i + 1.0f) / n), 0.0f, alpha);
@@ -302,7 +297,7 @@ public class Palette {
      * Generate red-blue color palette.
      * @param n the number of colors in the palette.
      */
-    public static Color[] redblue(int n) {
+    static Color[] redblue(int n) {
         return redblue(n, 1.0f);
     }
 
@@ -311,7 +306,7 @@ public class Palette {
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
      */
-    public static Color[] redblue(int n, float alpha) {
+    static Color[] redblue(int n, float alpha) {
         Color[] palette = new Color[n];
         for (int i = 0; i < n; i++) {
             palette[i] = new Color((float) Math.sqrt((i + 1.0f) / n), 0.0f, (float) Math.sqrt(1 - (i + 1.0f) / n), alpha);
@@ -324,7 +319,7 @@ public class Palette {
      * Generate heat color palette.
      * @param n the number of colors in the palette.
      */
-    public static Color[] heat(int n) {
+    static Color[] heat(int n) {
         return heat(n, 1.0f);
     }
 
@@ -333,7 +328,7 @@ public class Palette {
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
      */
-    public static Color[] heat(int n, float alpha) {
+    static Color[] heat(int n, float alpha) {
         int j = n / 4;
         int k = n - j;
         float h = 1.0f / 6;
@@ -359,7 +354,7 @@ public class Palette {
      * Generate rainbow color palette.
      * @param n the number of colors in the palette.
      */
-    public static Color[] rainbow(int n) {
+    static Color[] rainbow(int n) {
         return rainbow(n, 1.0f);
     }
 
@@ -368,7 +363,7 @@ public class Palette {
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
      */
-    public static Color[] rainbow(int n, float alpha) {
+    static Color[] rainbow(int n, float alpha) {
         return rainbow(n, 0.0f, (float) (n - 1) / n, alpha);
     }
 
@@ -379,7 +374,7 @@ public class Palette {
      * @param end the start of h in the HSV color model.
      * @param alpha the parameter in [0,1] for transparency.
      */
-    private static Color[] rainbow(int n, float start, float end, float alpha) {
+    static Color[] rainbow(int n, float start, float end, float alpha) {
         return rainbow(n, start, end, 1.0f, 1.0f, alpha);
     }
 
@@ -392,7 +387,7 @@ public class Palette {
      * @param v the v in the HSV color model.
      * @param alpha the parameter in [0,1] for transparency.
      */
-    private static Color[] rainbow(int n, float start, float end, float s, float v, float alpha) {
+    static Color[] rainbow(int n, float start, float end, float s, float v, float alpha) {
         Color[] palette = new Color[n];
         float h = start;
         float w = (end - start) / (n - 1);
@@ -407,7 +402,7 @@ public class Palette {
     /**
      * Generate a color based on HSV model.
      */
-    private static Color hsv(float h, float s, float v, float alpha) {
+    static Color hsv(float h, float s, float v, float alpha) {
         float r = 0;
         float g = 0;
         float b = 0;
