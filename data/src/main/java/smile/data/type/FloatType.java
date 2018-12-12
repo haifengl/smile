@@ -24,7 +24,7 @@ import java.text.DecimalFormat;
  */
 public class FloatType implements DataType {
     /** Format for toString. */
-    private DecimalFormat format = new DecimalFormat("#.####");
+    private static DecimalFormat format = new DecimalFormat("#.####");
 
     /** Singleton instance. */
     static FloatType instance = new FloatType();
