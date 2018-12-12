@@ -21,6 +21,8 @@ import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import smile.data.measure.DiscreteMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.*;
 import smile.data.vector.*;
@@ -97,6 +99,353 @@ public interface DataFrame extends Dataset<Tuple> {
     /** Returns the cell at (i, j). */
     default Object get(int i, int j) {
         return get(i).get(j);
+    }
+
+    /** Returns the cell at (i, j). */
+    default Object get(int i, String field) {
+        return get(i).get(field);
+    }
+
+    /** Checks whether the value at position (i, j) is null. */
+    default boolean isNullAt(int i, int j) {
+        return get(i).isNullAt(j);
+    }
+
+    /** Checks whether the field value is null. */
+    default boolean isNullAt(int i, String field) {
+        return get(i).isNullAt(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) as a primitive boolean.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default boolean getBoolean(int i, int j) {
+        return get(i).getBoolean(j);
+    }
+
+    /**
+     * Returns the field value as a primitive boolean.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default boolean getBoolean(int i, String field) {
+        return get(i).getBoolean(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) as a primitive byte.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default char getChar(int i, int j) {
+        return get(i).getChar(j);
+    }
+
+    /**
+     * Returns the field value as a primitive byte.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default char getChar(int i, String field) {
+        return get(i).getChar(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) as a primitive byte.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default byte getByte(int i, int j) {
+        return get(i).getByte(j);
+    }
+
+    /**
+     * Returns the field value as a primitive byte.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default byte getByte(int i, String field) {
+        return get(i).getByte(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) as a primitive short.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default short getShort(int i, int j) {
+        return get(i).getShort(j);
+    }
+
+    /**
+     * Returns the field value as a primitive short.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default short getShort(int i, String field) {
+        return get(i).getShort(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) as a primitive int.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default int getInt(int i, int j) {
+        return get(i).getInt(j);
+    }
+
+    /**
+     * Returns the field value as a primitive int.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default int getInt(int i, String field) {
+        return get(i).getInt(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) as a primitive long.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default long getLong(int i, int j) {
+        return get(i).getLong(j);
+    }
+
+    /**
+     * Returns the field value as a primitive long.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default long getLong(int i, String field) {
+        return get(i).getLong(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) as a primitive float.
+     * Throws an exception if the type mismatches or if the value is null.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default float getFloat(int i, int j) {
+        return get(i).getFloat(j);
+    }
+
+    /**
+     * Returns the field value as a primitive float.
+     * Throws an exception if the type mismatches or if the value is null.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default float getFloat(int i, String field) {
+        return get(i).getFloat(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) as a primitive double.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default double getDouble(int i, int j) {
+        return get(i).getDouble(j);
+    }
+
+    /**
+     * Returns the field value as a primitive double.
+     *
+     * @throws ClassCastException when data type does not match.
+     * @throws NullPointerException when value is null.
+     */
+    default double getDouble(int i, String field) {
+        return get(i).getDouble(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) as a String object.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default String getString(int i, int j) {
+        return get(i).getString(j);
+    }
+
+    /**
+     * Returns the field value as a String object.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default String getString(int i, String field) {
+        return get(i).getString(field);
+    }
+
+    /**
+     * Returns the string representation of the value at position (i, j).
+     */
+    default String toString(int i, int j) {
+        Object o = get(i, j);
+        if (o == null) return "null";
+
+        if (o instanceof String) {
+            return (String) o;
+        } else {
+            Measure m = schema().measure().get(schema().field(j).name);
+            if (m != null && m instanceof DiscreteMeasure) {
+                return getScale(i, j);
+            } else {
+                return schema().field(j).type.toString(o);
+            }
+        }
+    }
+
+    /**
+     * Returns the string representation of the field value.
+     */
+    default String toString(int i, String field) {
+        return toString(columnIndex(field));
+    }
+
+    /**
+     * Returns the value at position (i, j) of decimal type as java.math.BigDecimal.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default java.math.BigDecimal getDecimal(int i, int j) {
+        return get(i).getDecimal(j);
+    }
+
+    /**
+     * Returns the field value of decimal type as java.math.BigDecimal.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default java.math.BigDecimal getDecimal(int i, String field) {
+        return get(i).getDecimal(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) of date type as java.time.LocalDate.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default java.time.LocalDate getDate(int i, int j) {
+        return get(i).getDate(j);
+    }
+
+    /**
+     * Returns the field value of date type as java.time.LocalDate.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default java.time.LocalDate getDate(int i, String field) {
+        return get(i).getDate(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) of date type as java.time.LocalTime.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default java.time.LocalTime getTime(int i, int j) {
+        return get(i).getTime(j);
+    }
+
+    /**
+     * Returns the field value of date type as java.time.LocalTime.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default java.time.LocalTime getTime(int i, String field) {
+        return get(i).getTime(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) as java.time.LocalDateTime.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default java.time.LocalDateTime getDateTime(int i, int j) {
+        return get(i).getDateTime(j);
+    }
+
+    /**
+     * Returns the field value as java.time.LocalDateTime.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default java.time.LocalDateTime getDateTime(int i, String field) {
+        return get(i).getDateTime(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) of NominalScale or OrdinalScale.
+     *
+     * @throws ClassCastException when the data is not nominal or ordinal.
+     */
+    default String getScale(int i, int j) {
+        return ((DiscreteMeasure) schema().measure().get(schema().field(j).name)).toString(getInt(i, j));
+    }
+
+    /**
+     * Returns the field value of NominalScale or OrdinalScale.
+     *
+     * @throws ClassCastException when the data is not nominal or ordinal.
+     */
+    default String getScale(int i, String field) {
+        return getScale(i, columnIndex(field));
+    }
+
+    /**
+     * Returns the value at position (i, j) of array type.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default <T> T[] getArray(int i, int j) {
+        return get(i).getArray(j);
+    }
+
+    /**
+     * Returns the field value of array type.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default <T> T[] getArray(int i, String field) {
+        return get(i).getArray(field);
+    }
+
+    /**
+     * Returns the value at position (i, j) of struct type.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default Tuple getStruct(int i, int j) {
+        return get(i).getStruct(j);
+    }
+
+    /**
+     * Returns the field value of struct type.
+     *
+     * @throws ClassCastException when data type does not match.
+     */
+    default Tuple getStruct(int i, String field) {
+        return get(i).getStruct(field);
     }
 
     /**
