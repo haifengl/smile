@@ -51,7 +51,7 @@ public class ComplexTest {
     }
 
     /**
-     * Test of toString method, of class Complex.
+     * Test of all methods, of class Complex.
      */
     @Test
     public void testAll() {
@@ -69,5 +69,27 @@ public class ComplexTest {
         assertTrue(a.div(b).mul(b).equals(Complex.of(5.0, 6.0)));
         assertTrue(a.conjugate().equals(Complex.of(5.0, -6.0)));
         assertTrue(a.tan().equals(Complex.of(-6.685231390243073E-6, 1.00001031089812)));
+    }
+
+    /**
+     * Test of Complex.Array.
+     */
+    @Test
+    public void testArray() {
+        System.out.println("Complex.Array");
+        Complex.Array array = Complex.Array.of(a, b);
+        System.out.println("a = " + a);
+        System.out.println("b = " + b);
+        assertEquals(a.re, array.get(0).re, 1E-15);
+        assertEquals(a.im, array.get(0).im, 1E-15);
+        assertEquals(b.re, array.get(1).re, 1E-15);
+        assertEquals(b.im, array.get(1).im, 1E-15);
+
+        Complex c = Complex.of(3.0);
+        array.set(1, c);
+        assertEquals(a.re, array.get(0).re, 1E-15);
+        assertEquals(a.im, array.get(0).im, 1E-15);
+        assertEquals(c.re, array.get(1).re, 1E-15);
+        assertEquals(c.im, array.get(1).im, 1E-15);
     }
 }
