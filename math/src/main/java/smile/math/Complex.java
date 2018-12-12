@@ -257,5 +257,12 @@ public class Complex implements Serializable {
             set(i, re);
         }
 
+        public static Array of(Complex... x) {
+            Array a = new Array(x.length);
+            for (int i = 0; i < x.length; i++) {
+                a.set(i, x[i]);
+            }
+            return a;
+        }
     }
 }
