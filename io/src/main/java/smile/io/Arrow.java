@@ -125,7 +125,7 @@ public class Arrow {
      */
     public DataFrame read(Path path, int limit) throws IOException {
         if (allocator == null) {
-            allocator = new RootAllocator(Long.MAX_VALUE);
+            allocate(Long.MAX_VALUE);
         }
 
         try (FileInputStream input = new FileInputStream(path.toFile());
@@ -232,7 +232,7 @@ public class Arrow {
     /** Writes the DataFrame to a file. */
     public void write(DataFrame df, Path path) throws IOException {
         if (allocator == null) {
-            allocator = new RootAllocator(Long.MAX_VALUE);
+            allocate(Long.MAX_VALUE);
         }
 
         Schema schema = toArrowSchema(df.schema());
@@ -1078,7 +1078,7 @@ public class Arrow {
     }
 
     /** Converts a smile schema to arrow schema. */
-    public static Schema toArrowSchema(StructType schema) {
+    private Schema toArrowSchema(StructType schema) {
         List<Field> fields = new ArrayList<>();
         for (StructField field : schema.fields()) {
             fields.add(toArrowField(field));
@@ -1088,7 +1088,7 @@ public class Arrow {
     }
 
     /** Converts an arrow schema to smile schema. */
-    public static StructType toSmileSchema(Schema schema) {
+    private StructType toSmileSchema(Schema schema) {
         List<StructField> fields = new ArrayList<>();
         for (Field field : schema.getFields()) {
             fields.add(toSmileField(field));
@@ -1098,7 +1098,7 @@ public class Arrow {
     }
 
     /** Converts a smile struct field to arrow field. */
-    public static Field toArrowField(StructField field) {
+    private Field toArrowField(StructField field) {
         switch (field.type.id()) {
             case Integer:
                 return new Field(field.name, new FieldType(false, new ArrowType.Int(32, true), null), null);
@@ -1198,7 +1198,7 @@ public class Arrow {
                 return new Field(field.name,
                         new FieldType(false, new ArrowType.Struct(), null),
                         // children type
-                        Arrays.stream(children.fields()).map(Arrow::toArrowField).collect(Collectors.toList())
+                        Arrays.stream(children.fields()).map(this::toArrowField).collect(Collectors.toList())
                 );
             }
         }
@@ -1207,7 +1207,7 @@ public class Arrow {
     }
 
     /** Converts an arrow field to smile struct field. */
-    public static StructField toSmileField(Field field) {
+    private StructField toSmileField(Field field) {
         String name = field.getName();
         ArrowType type = field.getType();
         boolean nullable = field.isNullable();
@@ -1267,7 +1267,7 @@ public class Arrow {
                 return new StructField(name, DataTypes.array(toSmileField(child.get(0)).type));
 
             case Struct:
-                List<StructField> children = field.getChildren().stream().map(Arrow::toSmileField).collect(Collectors.toList());
+                List<StructField> children = field.getChildren().stream().map(this::toSmileField).collect(Collectors.toList());
                 return new StructField(name, DataTypes.struct(children));
 
             default:

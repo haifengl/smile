@@ -86,11 +86,9 @@ public class MultivariateGaussianDistributionTest {
             data[i] = instance.rand();
         }
         MultivariateGaussianDistribution est = new MultivariateGaussianDistribution(data, true);
+        assertArrayEquals(mu, est.mean(), 0.15);
         for (int i = 0; i < mu.length; i++) {
-            assertEquals(mu[i], est.mean()[i], 1.5E-1);
-        }
-        for (int i = 0; i < mu.length; i++) {
-            assertEquals(sigma[0][i], est.cov()[i][i], 1.5E-1);
+            assertEquals(sigma[0][i], est.cov()[i][i], 0.15);
             for (int j = 0; j < mu.length; j++) {
                 if (i != j) {
                     assertEquals(0, est.cov()[i][j], 1E-10);
@@ -104,23 +102,18 @@ public class MultivariateGaussianDistributionTest {
             data[i] = instance.rand();
         }
         est = new MultivariateGaussianDistribution(data);
+        assertArrayEquals(mu, est.mean(), 0.15);
+
         for (int i = 0; i < mu.length; i++) {
-            assertEquals(mu[i], est.mean()[i], 1E-1);
-        }
-        for (int i = 0; i < mu.length; i++) {
-            for (int j = 0; j < mu.length; j++) {
-                assertEquals(sigma[i][j], est.cov()[i][j], 1E-1);
-            }
+            assertArrayEquals(sigma[i], est.cov()[i], 0.15);
         }
 
         est = new MultivariateGaussianDistribution(data, true);
-        for (int i = 0; i < mu.length; i++) {
-            assertEquals(mu[i], est.mean()[i], 1E-1);
-        }
+        assertArrayEquals(mu, est.mean(), 0.15);
         for (int i = 0; i < mu.length; i++) {
             for (int j = 0; j < mu.length; j++) {
                 if (i == j) {
-                    assertEquals(sigma[i][j], est.cov()[i][j], 1E-1);
+                    assertEquals(sigma[i][j], est.cov()[i][j], 0.15);
                 } else {
                     assertEquals(0.0, est.cov()[i][j], 1E-10);
                 }
@@ -213,7 +206,6 @@ public class MultivariateGaussianDistributionTest {
         MultivariateGaussianDistribution mvn = new MultivariateGaussianDistribution(M, S);
 
         //According to R, the result should be 0.0904191282120575
-        double tol = 0.001;
         assertEquals(0.0904191282120575, mvn.cdf(X), 1E-3);
     }
 }

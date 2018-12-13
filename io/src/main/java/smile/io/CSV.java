@@ -59,7 +59,7 @@ public class CSV {
     /** Regex for time. */
     private static Pattern timePattern = Pattern.compile("(([0-1][0-9])|(2[0-3])):([0-5][0-9])(:([0-5][0-9]))?");
     /** Regex for datetime. */
-    private static Pattern datetimePattern = Pattern.compile("\\d{4}(-|\\/)((0[1-9])|(1[0-2]))(-|\\/)((0[1-9])|([1-2][0-9])|(3[0-1]))(T|\\s)(([0-1][0-9])|(2[0-3])):([0-5][0-9]):([0-5][0-9])");
+    private static Pattern datetimePattern = Pattern.compile("\\d{4}(-|\\/)((0[1-9])|(1[0-2]))(-|\\/)((0[1-9])|([1-2][0-9])|(3[0-1]))(T|\\s)(([0-1][0-9])|(2[0-3])):([0-5][0-9]):([0-5][0-9])(Z)?");
     /** The schema of data structure. */
     private StructType schema;
     /** The CSV file format. */

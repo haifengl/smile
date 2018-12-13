@@ -20,6 +20,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.apache.avro.Schema;
 import java.time.LocalDateTime;
 import smile.data.DataFrame;
 import smile.data.type.DataTypes;
@@ -33,14 +34,15 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class ParquetTest {
+public class AvroTest {
 
     DataFrame df;
 
-    public ParquetTest() {
+    public AvroTest() {
         try {
-            Parquet parquet = new Parquet();
-            df = parquet.read(Paths.getTestData("parquet/userdata1.parquet"));
+            Schema schema = new Schema.Parser().parse(Paths.getTestData("avro/userdata.avsc").toFile());
+            Avro avro = new Avro(schema);
+            df = avro.read(Paths.getTestData("avro/userdata1.avro"));
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -91,14 +93,14 @@ public class ParquetTest {
         System.out.println(df.structure());
         System.out.println(df);
         smile.data.type.StructType schema = DataTypes.struct(
-                new StructField("registration_dttm", DataTypes.DateTimeType),
-                new StructField("id", DataTypes.IntegerObjectType),
+                new StructField("registration_dttm", DataTypes.StringType),
+                new StructField("id", DataTypes.LongType),
                 new StructField("first_name", DataTypes.StringType),
                 new StructField("last_name", DataTypes.StringType),
                 new StructField("email", DataTypes.StringType),
                 new StructField("gender", DataTypes.StringType),
                 new StructField("ip_address", DataTypes.StringType),
-                new StructField("cc", DataTypes.StringType),
+                new StructField("cc", DataTypes.IntegerObjectType),
                 new StructField("country", DataTypes.StringType),
                 new StructField("birthdate", DataTypes.StringType),
                 new StructField("salary", DataTypes.DoubleObjectType),
@@ -116,14 +118,14 @@ public class ParquetTest {
         System.out.println("get");
         System.out.println(df.get(0));
         System.out.println(df.get(1));
-        assertEquals(LocalDateTime.parse("2016-02-03T07:55:29"), df.getDateTime(0, 0));
-        assertEquals(1, df.getInt(0, 1));
+        assertEquals("2016-02-03T07:55:29Z", df.get(0,0));
+        assertEquals(1, df.getLong(0, 1));
         assertEquals("Amanda", df.getString(0, 2));
         assertEquals("Jordan", df.getString(0, 3));
         assertEquals("ajordan0@com.com", df.getString(0, 4));
         assertEquals("Female", df.getString(0, 5));
         assertEquals("1.197.201.2", df.getString(0, 6));
-        assertEquals("6759521864920116", df.getString(0, 7));
+        assertEquals(6759521864920116L, df.getLong(0, 7));
         assertEquals("Indonesia", df.getString(0, 8));
         assertEquals("3/8/1971", df.getString(0, 9));
         assertEquals(49756.53, df.getDouble(0, 10), 1E-10);
