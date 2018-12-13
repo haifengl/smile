@@ -1,0 +1,21 @@
+The userdata sample file is from Teradata Kylo project
+(https://github.com/Teradata/kylo/tree/master/samples/sample-data/avro).
+Kylo is licensed under Apache 2.0. Contributed by Teradata Inc.
+
+-> Number of rows in each file: 1000
+-> Column details:
+column#		column_name		hive_datatype
+=====================================================
+1		registration_dttm 	timestamp
+2		id 			int
+3		first_name 		string
+4		last_name 		string
+5		email 			string
+6		gender 			string
+7		ip_address 		string
+8		cc 			string
+9		country 		string
+10		birthdate 		string
+11		salary 			double
+12		title 			string
+13		comments 		string
