@@ -195,26 +195,12 @@ public class Avro {
             case Boolean: return DataTypes.BooleanObjectType;
             case Char: return DataTypes.CharObjectType;
             case Byte: return DataTypes.ByteObjectType;
-            case Short: return DataTypes.ByteObjectType;
-            case Integer: return DataTypes.ShortObjectType;
-            case Long: return DataTypes.IntegerObjectType;
-            case Float: return DataTypes.LongObjectType;
+            case Short: return DataTypes.ShortObjectType;
+            case Integer: return DataTypes.IntegerObjectType;
+            case Long: return DataTypes.LongObjectType;
+            case Float: return DataTypes.FloatObjectType;
             case Double: return DataTypes.DoubleObjectType;
             default: return type;
-        }
-    }
-
-    /**
-     * Writes the DataFrame to a file.
-     */
-    public void write(DataFrame df, Path path) throws IOException {
-        DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(schema);
-        try (DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter)) {
-            dataFileWriter.create(schema, path.toFile());
-            for (int i = 0; i < df.nrows(); i++) {
-                GenericRecord record = new GenericData.Record(schema);
-                dataFileWriter.append(record);
-            }
         }
     }
 }

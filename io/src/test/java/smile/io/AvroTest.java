@@ -21,7 +21,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.apache.avro.Schema;
-import java.time.LocalDateTime;
 import smile.data.DataFrame;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
@@ -100,7 +99,7 @@ public class AvroTest {
                 new StructField("email", DataTypes.StringType),
                 new StructField("gender", DataTypes.StringType),
                 new StructField("ip_address", DataTypes.StringType),
-                new StructField("cc", DataTypes.IntegerObjectType),
+                new StructField("cc", DataTypes.LongObjectType),
                 new StructField("country", DataTypes.StringType),
                 new StructField("birthdate", DataTypes.StringType),
                 new StructField("salary", DataTypes.DoubleObjectType),
@@ -142,7 +141,7 @@ public class AvroTest {
         DataFrame output = df.summary();
         System.out.println(output);
         System.out.println(output.schema());
-        assertEquals(2, output.nrows());
+        assertEquals(3, output.nrows());
         assertEquals(5, output.ncols());
         assertEquals("id", output.get(0,0));
         assertEquals(1000L, output.get(0,1));
@@ -150,11 +149,17 @@ public class AvroTest {
         assertEquals(500.5, output.get(0,3));
         assertEquals(1000.0, output.get(0,4));
 
-        assertEquals("salary", output.get(1,0));
-        assertEquals(932L, output.get(1,1));
-        assertEquals(12380.49, output.get(1,2));
-        assertEquals(149005.35665236053, output.get(1,3));
-        assertEquals(286592.99, output.get(1,4));
+        assertEquals("cc", output.get(1,0));
+        assertEquals(709L, output.get(1,1));
+        assertEquals(4017951658384.0, output.get(1,2));
+        assertEquals(-5976352263699199.0, output.get(1,3));
+        assertEquals(6771600305307320300.0, output.get(1,4));
+
+        assertEquals("salary", output.get(2,0));
+        assertEquals(933L, output.get(2,1));
+        assertEquals(12380.49, output.get(2,2));
+        assertEquals(148911.96545551985, output.get(2,3));
+        assertEquals(286592.99, output.get(2,4));
     }
 
     /**
