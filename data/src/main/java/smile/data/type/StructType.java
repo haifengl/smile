@@ -16,10 +16,12 @@
 package smile.data.type;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import smile.data.Tuple;
 import smile.data.measure.DiscreteMeasure;
 import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
 
 /**
  * Struct data type is determined by the fixed order of the fields
@@ -86,6 +88,23 @@ public class StructType implements DataType {
         return measure;
     }
 
+    /** Returns the lambda functions that parse field values. */
+    public List<Function<String, Object>> parser() {
+        List<Function<String, Object>> parser = new ArrayList<>();
+        for (int i = 0; i < fields.length; i++) {
+            StructField field = fields[i];
+            Measure m = measure.get(field.name);
+            if (m != null && m instanceof DiscreteMeasure) {
+                final DiscreteMeasure scale = (DiscreteMeasure) m;
+                parser.add(s -> scale.valueOf(s));
+            } else {
+                final DataType type = field.type;
+                parser.add(s -> type.valueOf(s));
+            }
+        }
+        return parser;
+    }
+
     /**
      * Updates the field type to the boxed one if the field has
      * null/missing values in the data.
@@ -144,11 +163,17 @@ public class StructType implements DataType {
         String[] elements = s.substring(1, s.length() - 1).split(",");
         final Object[] row = new Object[fields.length];
         for (String element : elements) {
-            String[] field = element.split(":");
-            DataType type = fields[index.get(field[0])].type;
-            Object value = type.valueOf(field[1]);
-            int i = index.get(field[0]);
-            row[i] = value;
+            String[] pair = element.split(":");
+            int i = index.get(pair[0]);
+            StructField field = fields[i];
+            Measure m = measure.get(field.name);
+            if (m != null && m instanceof DiscreteMeasure) {
+                DiscreteMeasure scale = (DiscreteMeasure) m;
+                row[i] = scale.valueOf(pair[1]);
+            } else {
+                final DataType type = field.type;
+                row[i] = field.type.valueOf(pair[1]);
+            }
         }
 
         return Tuple.of(row, this);

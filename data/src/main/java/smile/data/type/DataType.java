@@ -15,17 +15,17 @@
  *******************************************************************************/
 package smile.data.type;
 
+import smile.util.Strings;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.regex.Pattern;
 
 /**
- * The data type in the sense of encoding and storage.
- *
- * @see DiscreteMeasure
- * @see ContinuousMeasure
+ * The interface of data types.
  *
  * @author Haifeng Li
  */
@@ -51,6 +51,21 @@ public interface DataType extends Serializable {
         Array,
         Struct
     }
+
+    /** Regex for boolean. */
+    Pattern BooleanPattern = Pattern.compile("(true|false)", Pattern.CASE_INSENSITIVE);
+    /** Regex for integer. */
+    Pattern IntPattern = Pattern.compile("[-+]?\\d{1,9}");
+    /** Regex for long. */
+    Pattern LongPattern = Pattern.compile("[-+]?\\d{1,19}");
+    /** Regex for double. */
+    Pattern DoublePattern = Pattern.compile("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?");
+    /** Regex for date. */
+    Pattern DatePattern = Pattern.compile("\\d{4}(-|\\/)((0[1-9])|(1[0-2]))(-|\\/)((0[1-9])|([1-2][0-9])|(3[0-1]))");
+    /** Regex for time. */
+    Pattern TimePattern = Pattern.compile("(([0-1][0-9])|(2[0-3])):([0-5][0-9])(:([0-5][0-9]))?");
+    /** Regex for datetime. */
+    Pattern DateTimePattern = Pattern.compile("\\d{4}(-|\\/)((0[1-9])|(1[0-2]))(-|\\/)((0[1-9])|([1-2][0-9])|(3[0-1]))(T|\\s)(([0-1][0-9])|(2[0-3])):([0-5][0-9]):([0-5][0-9])");
 
     /**
      * Returns the type name used in external catalogs.
@@ -135,7 +150,6 @@ public interface DataType extends Serializable {
         return false;
     }
 
-
     /**
      * Returns the boxed data type if this is a primitive type.
      * Otherwise, return this type.
@@ -152,6 +166,19 @@ public interface DataType extends Serializable {
             case Double: return DataTypes.DoubleObjectType;
             default: return this;
         }
+    }
+
+    /** Infers the type of a string. */
+    static DataType infer(String str) {
+        if (Strings.isNullOrEmpty(str)) return null;
+        if (DateTimePattern.matcher(str).matches()) return DataTypes.DateTimeType;
+        if (DatePattern.matcher(str).matches()) return DataTypes.DateType;
+        if (TimePattern.matcher(str).matches()) return DataTypes.TimeType;
+        if (IntPattern.matcher(str).matches()) return DataTypes.IntegerType;
+        if (LongPattern.matcher(str).matches()) return DataTypes.LongType;
+        if (DoublePattern.matcher(str).matches()) return DataTypes.DoubleType;
+        if (BooleanPattern.matcher(str).matches()) return DataTypes.BooleanType;
+        return DataTypes.StringType;
     }
 
     /** Returns a DataType from its string representation. */
@@ -359,6 +386,28 @@ public interface DataType extends Serializable {
             return DataTypes.IntegerObjectType;
         else
             return DataTypes.IntegerType;
+    }
+
+    /**
+     * Returns the common type. This method is intended to be
+     * used for inferring the schema from text files.
+     * This is NOT a general implementation of type coercion.
+     */
+    static DataType coerce(DataType a, DataType b) {
+        if (a == null) return b;
+        if (b == null) return a;
+
+        if (a.id() == b.id()) return a;
+
+        if ((a.id() == DataType.ID.Integer && b.id() == DataType.ID.Double) ||
+            (b.id() == DataType.ID.Integer && a.id() == DataType.ID.Double))
+            return DataTypes.DoubleType;
+
+        if ((a.id() == DataType.ID.Date && b.id() == DataType.ID.DateTime) ||
+            (b.id() == DataType.ID.Date && a.id() == DataType.ID.DateTime))
+            return DataTypes.DateTimeType;
+
+        return DataTypes.StringType;
     }
 
     /**

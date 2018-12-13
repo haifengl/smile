@@ -17,7 +17,10 @@ package smile.data.measure;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
 
 /**
  * Discrete data can only take particular values. There may potentially
@@ -37,7 +40,7 @@ public abstract class DiscreteMeasure implements Measure {
     /**
      * Map a string to an integer level.
      */
-    final HashMap<String, Number> map;
+    final Map<String, Number> map;
 
     /**
      * Constructor.
@@ -61,6 +64,14 @@ public abstract class DiscreteMeasure implements Measure {
         }
     }
 
+    /**
+     * Constructor.
+     * @param values the levels of discrete values.
+     */
+    public DiscreteMeasure(List<String> values) {
+        this(values.toArray(new String[values.size()]));
+    }
+
     /** Returns the string value of a level. */
     public String toString(int level) {
         return levels[level];
@@ -74,6 +85,17 @@ public abstract class DiscreteMeasure implements Measure {
     /** Returns the levels. */
     public String[] levels() {
         return levels;
+    }
+
+    /** Returns the data type that is suitable for this measure scale. */
+    public DataType type() {
+        if (levels.length <= Byte.MAX_VALUE + 1) {
+            return DataTypes.ByteType;
+        } else if (levels.length <= Short.MAX_VALUE + 1) {
+            return DataTypes.ShortType;
+        } else {
+            return DataTypes.IntegerType;
+        }
     }
 
     @Override
