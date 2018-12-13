@@ -86,6 +86,25 @@ public class StructType implements DataType {
         return measure;
     }
 
+    /**
+     * Updates the field type to the boxed one if the field has
+     * null/missing values in the data.
+     *
+     * @param rows a set of tuples.
+     */
+    public void boxed(Collection<Tuple> rows) {
+        for (int i = 0; i < fields.length; i++) {
+            StructField field = fields[i];
+            if (field.type.isPrimitive()) {
+                final int idx = i;
+                boolean missing = rows.stream().filter(t -> t.isNullAt(idx)).findAny().isPresent();
+                if (missing) {
+                    fields[i] = new StructField(field.name, field.type.boxed());
+                }
+            }
+        }
+    }
+
     @Override
     public String name() {
         return Arrays.stream(fields)

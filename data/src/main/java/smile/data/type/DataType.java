@@ -135,6 +135,25 @@ public interface DataType extends Serializable {
         return false;
     }
 
+
+    /**
+     * Returns the boxed data type if this is a primitive type.
+     * Otherwise, return this type.
+     */
+    default DataType boxed() {
+        switch (id()) {
+            case Boolean: return DataTypes.BooleanObjectType;
+            case Char: return DataTypes.CharObjectType;
+            case Byte: return DataTypes.ByteObjectType;
+            case Short: return DataTypes.ShortObjectType;
+            case Integer: return DataTypes.IntegerObjectType;
+            case Long: return DataTypes.LongObjectType;
+            case Float: return DataTypes.FloatObjectType;
+            case Double: return DataTypes.DoubleObjectType;
+            default: return this;
+        }
+    }
+
     /** Returns a DataType from its string representation. */
     static DataType of(String s) throws ClassNotFoundException {
         switch (s) {

@@ -232,4 +232,53 @@ public class CSVTest {
         assertEquals(0.53, abalone.getDouble(3132, 2), 1E-7);
         assertEquals(10, abalone.getInt(3132, 8));
     }
+
+    /**
+     * Test of read method, of class CSV.
+     */
+    @Test(expected = Test.None.class)
+    public void testUserdata() throws Exception {
+        System.out.println("userdata");
+
+        CSVFormat format = CSVFormat.DEFAULT.withFirstRecordAsHeader();
+        CSV csv = new CSV(format);
+        DataFrame df = csv.read(Paths.getTestData("csv/userdata1.csv"));
+
+        System.out.println(df);
+        System.out.println(df.schema());
+
+        assertEquals(1000, df.nrows());
+        assertEquals(13, df.ncols());
+
+        smile.data.type.StructType schema = DataTypes.struct(
+                new StructField("registration_dttm", DataTypes.StringType),
+                new StructField("id", DataTypes.IntegerType),
+                new StructField("first_name", DataTypes.StringType),
+                new StructField("last_name", DataTypes.StringType),
+                new StructField("email", DataTypes.StringType),
+                new StructField("gender", DataTypes.StringType),
+                new StructField("ip_address", DataTypes.StringType),
+                new StructField("cc", DataTypes.LongObjectType),
+                new StructField("country", DataTypes.StringType),
+                new StructField("birthdate", DataTypes.StringType),
+                new StructField("salary", DataTypes.DoubleObjectType),
+                new StructField("title", DataTypes.StringType),
+                new StructField("comments", DataTypes.StringType)
+        );
+        assertEquals(schema, df.schema());
+
+        assertEquals("2016-02-03T07:55:29Z", df.get(0,0));
+        assertEquals(1, df.getLong(0, 1));
+        assertEquals("Amanda", df.getString(0, 2));
+        assertEquals("Jordan", df.getString(0, 3));
+        assertEquals("ajordan0@com.com", df.getString(0, 4));
+        assertEquals("Female", df.getString(0, 5));
+        assertEquals("1.197.201.2", df.getString(0, 6));
+        assertEquals(6759521864920116L, df.getLong(0, 7));
+        assertEquals("Indonesia", df.getString(0, 8));
+        assertEquals("3/8/1971", df.getString(0, 9));
+        assertEquals(49756.53, df.getDouble(0, 10), 1E-10);
+        assertEquals("Internal Auditor", df.getString(0, 11));
+        assertEquals("1E+02", df.getString(0, 12));
+    }
 }
