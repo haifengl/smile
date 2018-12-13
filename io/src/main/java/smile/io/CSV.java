@@ -26,9 +26,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.function.Function;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
@@ -39,7 +37,6 @@ import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.util.Strings;
 
 /**
  * Reads and writes files in variations of the Comma Separated Value
@@ -48,20 +45,6 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
 public class CSV {
-    /** Regex for boolean. */
-    private static Pattern booleanPattern = Pattern.compile("(true|false)", Pattern.CASE_INSENSITIVE);
-    /** Regex for integer. */
-    private static Pattern intPattern = Pattern.compile("[-+]?\\d{1,9}");
-    /** Regex for long. */
-    private static Pattern longPattern = Pattern.compile("[-+]?\\d{1,19}");
-    /** Regex for double. */
-    private static Pattern doublePattern = Pattern.compile("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?");
-    /** Regex for date. */
-    private static Pattern datePattern = Pattern.compile("\\d{4}(-|\\/)((0[1-9])|(1[0-2]))(-|\\/)((0[1-9])|([1-2][0-9])|(3[0-1]))");
-    /** Regex for time. */
-    private static Pattern timePattern = Pattern.compile("(([0-1][0-9])|(2[0-3])):([0-5][0-9])(:([0-5][0-9]))?");
-    /** Regex for datetime. */
-    private static Pattern datetimePattern = Pattern.compile("\\d{4}(-|\\/)((0[1-9])|(1[0-2]))(-|\\/)((0[1-9])|([1-2][0-9])|(3[0-1]))(T|\\s)(([0-1][0-9])|(2[0-3])):([0-5][0-9]):([0-5][0-9])");
     /** The schema of data structure. */
     private StructType schema;
     /** The CSV file format. */
@@ -112,16 +95,16 @@ public class CSV {
         }
 
         StructField[] fields = schema.fields();
+        List<Function<String, Object>> parser = schema.parser();
 
         try (BufferedReader reader = Files.newBufferedReader(path)) {
-            CSVParser parser = format.parse(reader);
             List<Tuple> rows = new ArrayList<>();
-            for (CSVRecord record : parser) {
+            for (CSVRecord record : format.parse(reader)) {
                 Object[] row = new Object[fields.length];
                 for (int i = 0; i < fields.length; i++) {
                     String s = record.get(i).trim();
                     if (!s.isEmpty()) {
-                        row[i] = fields[i].type.valueOf(s);
+                        row[i] = parser.get(i).apply(s);
                     }
                 }
                 rows.add(Tuple.of(row, schema));
@@ -163,14 +146,14 @@ public class CSV {
                 types = new DataType[record.size()];
                 for (int i = 0; i < names.length; i++) {
                     names[i] = String.format("V%d", i+1);
-                    types[i] = typeOf(record.get(i).trim());
+                    types[i] = DataType.infer(record.get(i).trim());
                 }
             }
 
             int k = 0;
             for (CSVRecord record : parser) {
                 for (int i = 0; i < names.length; i++) {
-                    types[i] = typeCoercion(types[i], typeOf(record.get(i).trim()));
+                    types[i] = DataType.coerce(types[i], DataType.infer(record.get(i).trim()));
                 }
 
                 if (++k >= nrows) break;
@@ -182,46 +165,6 @@ public class CSV {
             }
             return DataTypes.struct(fields);
         }
-    }
-
-    /** Guess the type of a string. */
-    private DataType typeOf(String s) {
-        if (Strings.isNullOrEmpty(s)) return null;
-        if (match(datetimePattern, s)) return DataTypes.DateTimeType;
-        if (match(datePattern, s)) return DataTypes.DateType;
-        if (match(timePattern, s)) return DataTypes.TimeType;
-        if (match(intPattern, s)) return DataTypes.IntegerType;
-        if (match(longPattern, s)) return DataTypes.LongType;
-        if (match(doublePattern, s)) return DataTypes.DoubleType;
-        if (match(booleanPattern, s)) return DataTypes.BooleanType;
-        return DataTypes.StringType;
-    }
-
-    /** Returns true if the whole string matches the regex pattern. */
-    private boolean match(Pattern pattern, String s) {
-        Matcher m = pattern.matcher(s);
-        return m.matches();
-    }
-
-    /** Returns the common type. */
-    private DataType typeCoercion(DataType a, DataType b) {
-        if (a == null) return b;
-        if (b == null) return a;
-
-        if (a.id() == b.id()) return a;
-
-        if (a.id() == DataType.ID.String || b.id() == DataType.ID.String)
-            return DataTypes.StringType;
-
-        if ((a.id() == DataType.ID.Integer && b.id() == DataType.ID.Double) ||
-            (b.id() == DataType.ID.Integer && a.id() == DataType.ID.Double))
-            return DataTypes.DoubleType;
-
-        if ((a.id() == DataType.ID.Date && b.id() == DataType.ID.DateTime) ||
-            (b.id() == DataType.ID.Date && a.id() == DataType.ID.DateTime))
-            return DataTypes.DateTimeType;
-
-        return DataTypes.StringType;
     }
 
     /** Writes a data frame to a file with UTF-8. */

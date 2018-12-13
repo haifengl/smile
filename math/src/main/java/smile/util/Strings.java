@@ -24,8 +24,8 @@ import java.util.Arrays;
  */
 public interface Strings {
     /** Returns true if the string is null or empty. */
-    static boolean isNullOrEmpty(String s) {
-        return s == null || s.isEmpty();
+    static boolean isNullOrEmpty(String str) {
+        return str == null || str.isEmpty();
     }
 
     /** Left pad a String with a specified character.

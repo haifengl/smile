@@ -57,85 +57,64 @@ public class DataTypeTest {
     /**
      * Test of of method, of class DataType.
      */
-    @Test
-    public void testInt() {
+    @Test(expected = Test.None.class)
+    public void testInt() throws ClassNotFoundException {
         System.out.println("int");
-        try {
-            assertEquals(DataTypes.IntegerType, DataType.of("int"));
-        } catch (Exception ex) {
-            assertTrue(String.format("Unexpected exception: %s", ex), false);
-        }
+        assertEquals(DataTypes.IntegerType, DataType.of("int"));
     }
 
     /**
      * Test of of method, of class DataType.
      */
-    @Test
-    public void testLong() {
+    @Test(expected = Test.None.class)
+    public void testLong() throws ClassNotFoundException {
         System.out.println("long");
-        try {
-            assertEquals(DataTypes.LongType, DataType.of("long"));
-        } catch (Exception ex) {
-            assertTrue(String.format("Unexpected exception: %s", ex), false);
-        }
+        assertEquals(DataTypes.LongType, DataType.of("long"));
     }
 
     /**
      * Test of of method, of class DataType.
      */
-    @Test
-    public void testDouble() {
+    @Test(expected = Test.None.class)
+    public void testDouble() throws ClassNotFoundException {
         System.out.println("double");
-        try {
-            assertEquals(DataTypes.DoubleType, DataType.of("double"));
-        } catch (Exception ex) {
-            assertTrue(String.format("Unexpected exception: %s", ex), false);
-        }
+        assertEquals(DataTypes.DoubleType, DataType.of("double"));
     }
 
     /**
      * Test of of method, of class DataType.
      */
-    @Test
-    public void testArray() {
+    @Test(expected = Test.None.class)
+    public void testArray() throws ClassNotFoundException {
         System.out.println("array");
-        try {
-            assertEquals(DataTypes.array(DataTypes.IntegerType), DataType.of("Array[int]"));
-        } catch (Exception ex) {
-            assertTrue(String.format("Unexpected exception: %s", ex), false);
-        }
+        assertEquals(DataTypes.array(DataTypes.IntegerType), DataType.of("Array[int]"));
     }
 
     /**
      * Test of of method, of class DataType.
      */
-    @Test
-    public void testObject() {
+    @Test(expected = Test.None.class)
+    public void testObject() throws ClassNotFoundException {
         System.out.println("object");
-        try {
-            assertEquals(DataTypes.object(Integer.class), DataType.of("Object[java.lang.Integer]"));
-        } catch (Exception ex) {
-            assertTrue(String.format("Unexpected exception: %s", ex), false);
-        }
+        assertEquals(DataTypes.object(Integer.class), DataType.of("Object[java.lang.Integer]"));
     }
 
     /**
      * Test of of method, of class DataType.
      */
-    @Test
-    public void testStruct() {
+    @Test(expected = Test.None.class)
+    public void testStruct() throws ClassNotFoundException {
         System.out.println("struct");
-        try {
-            assertEquals(DataTypes.struct(
-                    new StructField("age", DataTypes.IntegerType),
-                    new StructField("birthday", DataTypes.DateType),
-                    new StructField("gender", DataTypes.CharType),
-                    new StructField("name", DataTypes.StringType),
-                    new StructField("salary", DataTypes.object(Integer.class))
-                    ),
-                    DataType.of("Struct[age: int, birthday: Date[uuuu-MM-dd], gender: char, name: String, salary: Object[java.lang.Integer]]"));
-        } catch (Exception ex) {
-            assertTrue(String.format("Unexpected exception: %s", ex), false);
-        }
+        StructType type = DataTypes.struct(
+                new StructField("age", DataTypes.IntegerType),
+                new StructField("birthday", DataTypes.DateType),
+                new StructField("gender", DataTypes.CharType),
+                new StructField("name", DataTypes.StringType),
+                new StructField("salary", DataTypes.object(Integer.class))
+        );
+        System.out.println(type.name());
+        System.out.println(type.toString());
+        assertEquals(type,
+                DataType.of("Struct[age: int, birthday: Date[uuuu-MM-dd], gender: char, name: String, salary: Object[java.lang.Integer]]"));
     }
 }

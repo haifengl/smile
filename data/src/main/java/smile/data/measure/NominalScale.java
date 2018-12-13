@@ -17,6 +17,7 @@ package smile.data.measure;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -53,6 +54,14 @@ public class NominalScale extends DiscreteMeasure {
                 .map(Object::toString)
                 .toArray(String[]::new)
         );
+    }
+
+    /**
+     * Constructor.
+     * @param values the levels of discrete values.
+     */
+    public NominalScale(List<String> values) {
+        super(values);
     }
 
     @Override
