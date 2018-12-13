@@ -23,6 +23,11 @@ import java.util.Arrays;
  * @author Haifeng Li
  */
 public interface Strings {
+    /** Returns true if the string is null or empty. */
+    static boolean isNullOrEmpty(String s) {
+        return s == null || s.isEmpty();
+    }
+
     /** Left pad a String with a specified character.
      *
      * @param str  the String to pad out, may be null

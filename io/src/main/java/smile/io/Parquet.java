@@ -329,7 +329,7 @@ public class Parquet {
     }
 
     /** Converts a parquet schema to smile schema. */
-    public static StructType toSmileSchema(MessageType schema) {
+    private StructType toSmileSchema(MessageType schema) {
         List<StructField> fields = new ArrayList<>();
         for (ColumnDescriptor column : schema.getColumns()) {
             fields.add(toSmileField(column));
@@ -339,7 +339,7 @@ public class Parquet {
     }
 
     /** Converts a parquet column to smile struct field. */
-    public static StructField toSmileField(ColumnDescriptor column) {
+    private StructField toSmileField(ColumnDescriptor column) {
         String name = String.join(".", column.getPath());
         PrimitiveType primitiveType = column.getPrimitiveType();
         OriginalType originalType = primitiveType.getOriginalType();

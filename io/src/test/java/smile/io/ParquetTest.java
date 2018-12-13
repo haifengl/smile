@@ -25,7 +25,6 @@ import smile.data.DataFrame;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.SparseMatrix;
 import smile.util.Paths;
 
 import static org.junit.Assert.*;
@@ -117,7 +116,7 @@ public class ParquetTest {
         System.out.println("get");
         System.out.println(df.get(0));
         System.out.println(df.get(1));
-        assertEquals(LocalDateTime.parse("2016-02-03T07:55:29"), df.get(0).getDateTime(0));
+        assertEquals(LocalDateTime.parse("2016-02-03T07:55:29"), df.getDateTime(0, 0));
         assertEquals(1, df.getInt(0, 1));
         assertEquals("Amanda", df.getString(0, 2));
         assertEquals("Jordan", df.getString(0, 3));
