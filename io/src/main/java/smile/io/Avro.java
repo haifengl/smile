@@ -22,16 +22,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
-import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
 import org.apache.avro.util.Utf8;
 import smile.data.DataFrame;
 import smile.data.Tuple;
+import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
@@ -117,15 +115,10 @@ public class Avro {
     private StructType toSmileSchema(Schema schema) {
         List<StructField> fields = new ArrayList<>();
         for (Schema.Field field : schema.getFields()) {
-            fields.add(toSmileField(field));
+            fields.add(new StructField(field.name(), typeOf(field.schema())));
         }
 
         return DataTypes.struct(fields);
-    }
-
-    /** Converts an avro field to a smile struct field. */
-    private StructField toSmileField(Schema.Field field) {
-        return new StructField(field.name(), typeOf(field.schema()));
     }
 
     /** Converts an avro type to smile type. */
@@ -179,28 +172,13 @@ public class Avro {
         Schema b = union.get(1);
 
         if (a.getType() == Schema.Type.NULL && b.getType() != Schema.Type.NULL) {
-            return prompt(typeOf(b));
+            return typeOf(b).boxed();
         }
 
         if (a.getType() != Schema.Type.NULL && b.getType() == Schema.Type.NULL) {
-            return prompt(typeOf(a));
+            return typeOf(a).boxed();
         }
 
         return DataTypes.object(Object.class);
-    }
-
-    /** Prompts a primitive type to boxed type. */
-    private DataType prompt(DataType type) {
-        switch (type.id()) {
-            case Boolean: return DataTypes.BooleanObjectType;
-            case Char: return DataTypes.CharObjectType;
-            case Byte: return DataTypes.ByteObjectType;
-            case Short: return DataTypes.ShortObjectType;
-            case Integer: return DataTypes.IntegerObjectType;
-            case Long: return DataTypes.LongObjectType;
-            case Float: return DataTypes.FloatObjectType;
-            case Double: return DataTypes.DoubleObjectType;
-            default: return type;
-        }
     }
 }

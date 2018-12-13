@@ -94,8 +94,6 @@ public class Arff implements AutoCloseable {
     private Map<String, NominalScale> measure;
     /** The lambda to parse fields. */
     private Parser[] parser;
-    /** If a field has missing values, the corresponding entry will be true. */
-    private boolean[] missing;
     /** Attribute name path in case of sub-relations. */
     private String path = "";
 
@@ -241,7 +239,6 @@ public class Arff implements AutoCloseable {
         
         schema = DataTypes.struct(fields);
         schema.measure().putAll(measure);
-        missing = new boolean[fields.size()];
         parser = new Parser[fields.size()];
         for (int i = 0; i < parser.length; i++) {
             final StructField field = fields.get(i);
@@ -386,7 +383,7 @@ public class Arff implements AutoCloseable {
             throw new IllegalArgumentException("Invalid limit: " + limit);
         }
 
-        List<Tuple> data = new ArrayList<>();
+        List<Tuple> rows = new ArrayList<>();
         for (int i = 0; i < limit; i++) {
             // Check if end of file reached.
             getFirstToken();
@@ -396,39 +393,11 @@ public class Arff implements AutoCloseable {
 
             // Parse instance
             Object[] row = tokenizer.ttype == '{' ? readSparseInstance() : readInstance();
-            data.add(Tuple.of(row, schema));
+            rows.add(Tuple.of(row, schema));
         }
 
-        for (int i = 0; i < missing.length; i++) {
-            if (missing[i]) {
-                StructField field = schema.field(i);
-                switch (field.type.id()) {
-                    case Byte:
-                        schema.fields()[i] = new StructField(field.name, DataTypes.ByteObjectType);
-                        break;
-                    case Char:
-                        schema.fields()[i] = new StructField(field.name, DataTypes.CharObjectType);
-                        break;
-                    case Short:
-                        schema.fields()[i] = new StructField(field.name, DataTypes.ShortObjectType);
-                        break;
-                    case Integer:
-                        schema.fields()[i] = new StructField(field.name, DataTypes.IntegerObjectType);
-                        break;
-                    case Long:
-                        schema.fields()[i] = new StructField(field.name, DataTypes.LongObjectType);
-                        break;
-                    case Float:
-                        schema.fields()[i] = new StructField(field.name, DataTypes.FloatObjectType);
-                        break;
-                    case Double:
-                        schema.fields()[i] = new StructField(field.name, DataTypes.DoubleObjectType);
-                        break;
-                }
-            }
-        }
-
-        return DataFrame.of(data);
+        schema.boxed(rows);
+        return DataFrame.of(rows);
     }
 
     /**
@@ -449,8 +418,6 @@ public class Arff implements AutoCloseable {
 
             if (tokenizer.ttype != '?') {
                 x[i] = parser[i].apply(tokenizer.sval);
-            } else {
-                missing[i] = true;
             }
         }
 
@@ -484,8 +451,6 @@ public class Arff implements AutoCloseable {
             String val = tokenizer.sval.trim();
             if (!val.equals("?")) {
                 x[i] = parser[i].apply(val);
-            } else {
-                missing[i] = true;
             }
         } while (tokenizer.ttype == StreamTokenizer.TT_WORD);
 
