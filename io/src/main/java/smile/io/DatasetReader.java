@@ -39,34 +39,43 @@ public class DatasetReader {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DatasetReader.class);
 
     /** Reads a limited number of records. */
-     private int limit = Integer.MAX_VALUE;
+    private int limit = Integer.MAX_VALUE;
+
+     /** CSV format. */
+    private CSVFormat format = CSVFormat.DEFAULT;
 
     /**
      * Constructor.
      */
     public DatasetReader() {
-        this(Integer.MAX_VALUE);
+
     }
 
     /**
-     * Constructor.
-     * @param limit reads a limited number of records.
+     * Reads a limited number of records.
      */
-    public DatasetReader(int limit) {
-        if (limit <= 0) {
-            throw new IllegalArgumentException("Invalid limit: " + limit);
+    public void limit(int max) {
+        if (max <= 0) {
+            throw new IllegalArgumentException("Invalid limit: " + max);
         }
-        this.limit = limit;
+        this.limit = max;
+    }
+
+    /**
+     * Sets the CSV format.
+     */
+    public void format(CSVFormat format) {
+        this.format = format;
     }
 
     /** Reads a CSV file. */
     public DataFrame csv(Path path) throws IOException {
-        CSV csv = new CSV();
+        CSV csv = new CSV(format);
         return csv.read(path, limit);
     }
 
     /** Reads a CSV file with customized format. */
-    public DataFrame csv(Path path, CSVFormat format, StructType schema) throws IOException {
+    public DataFrame csv(Path path, StructType schema) throws IOException {
         CSV csv = new CSV(format).withSchema(schema);
         return csv.read(path, limit);
     }
