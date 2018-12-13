@@ -1,5 +1,5 @@
 The userdata sample file is from Teradata Kylo project
-(https://github.com/Teradata/kylo/tree/master/samples/sample-data/parquet).
+(https://github.com/Teradata/kylo/tree/master/samples/sample-data/avro).
 Kylo is licensed under Apache 2.0. Contributed by Teradata Inc.
 
 -> Number of rows in each file: 1000

@@ -1,0 +1,19 @@
+{
+  "type" : "record",
+  "name" : "twitter_schema",
+  "namespace" : "com.miguno.avro",
+  "fields" : [ {
+    "name" : "username",
+    "type" : "string",
+    "doc" : "Name of the user account on Twitter.com"
+  }, {
+    "name" : "tweet",
+    "type" : "string",
+    "doc" : "The content of the user's Twitter message"
+  }, {
+    "name" : "timestamp",
+    "type" : "long",
+    "doc" : "Unix epoch time in seconds"
+  } ],
+  "doc:" : "A basic schema for storing Twitter messages"
+}
