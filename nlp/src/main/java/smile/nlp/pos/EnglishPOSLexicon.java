@@ -52,21 +52,21 @@ public class EnglishPOSLexicon {
      * 
      * Where the POS tag is one or more of the following:
      * 
-     * N	Noun
-     * P	Plural
-     * h	Noun Phrase
-     * V	Verb (usu participle)
-     * t	Verb (transitive)
-     * i	Verb (intransitive)
-     * A	Adjective
-     * v	Adverb
-     * C	Conjunction
-     * P	Preposition
-     * !	Interjection
-     * r	Pronoun
-     * D	Definite Article
-     * I	Indefinite Article
-     * o	Nominative
+     * N    Noun
+     * P    Plural
+     * h    Noun Phrase
+     * V    Verb (usu participle)
+     * t    Verb (transitive)
+     * i    Verb (intransitive)
+     * A    Adjective
+     * v    Adverb
+     * C    Conjunction
+     * P    Preposition
+     * !    Interjection
+     * r    Pronoun
+     * D    Definite Article
+     * I    Indefinite Article
+     * o    Nominative
      * 
      * The parts of speech before any '|' (if at all) come from the original
      * Moby database.  Anything after the '|' comes from the WordNet

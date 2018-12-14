@@ -592,7 +592,7 @@ public class SVR<T> implements Regression<T> {
      * @return the soft margin penalty parameter.
      */
     public double getC() {
-    	return C;
+        return C;
     }
     
     /**
@@ -600,7 +600,7 @@ public class SVR<T> implements Regression<T> {
      * @return the loss function error threshold.
      */
     public double getEpsilon() {
-    	return eps;
+        return eps;
     }
     
     /**
@@ -608,6 +608,6 @@ public class SVR<T> implements Regression<T> {
      * @return tolerance of convergence test.
      */
     public double getTolerance() {
-    	return tol;
+        return tol;
     }
 }

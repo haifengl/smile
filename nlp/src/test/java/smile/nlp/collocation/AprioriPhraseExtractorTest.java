@@ -87,10 +87,10 @@ public class AprioriPhraseExtractorTest {
 
         assertEquals(5, result.size());
         for (ArrayList<NGram> ngrams : result) {
-        	for (NGram ngram : ngrams) {
+            for (NGram ngram : ngrams) {
                 System.out.print(ngram);
-        	}
-        	System.out.println();
+            }
+            System.out.println();
         }
     }
 }

@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 Haifeng Li
- *   
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -47,12 +47,12 @@ public class MersenneTwister64 implements RandomNumberGenerator {
      */
     private static final long LM = 0x7FFFFFFFL;
 
-    private static final long[] mag01 = { 0L, MATRIX_A };
+    private static final long[] mag01 = {0L, MATRIX_A};
 
     private long[] mt = new long[NN];
 
     private int mti = NN + 1;
-    
+
     /**
      * Internal to hold 64 bits, that might
      * used to generate two 32 bit values.
@@ -62,17 +62,18 @@ public class MersenneTwister64 implements RandomNumberGenerator {
 
     private final static long MAGIC_SEED = (180927757L << 32) | 976716835L;
     private final static long MAGIC_FACTOR1 = 6364136223846793005L;
-    
+
     /**
      * Constructor.
      */
     public MersenneTwister64() {
-	this(MAGIC_SEED);
+        this(MAGIC_SEED);
     }
 
     /**
      * Constructor.
-     * @param seed 
+     *
+     * @param seed
      */
     public MersenneTwister64(long seed) {
         setSeed(seed);
@@ -97,7 +98,7 @@ public class MersenneTwister64 implements RandomNumberGenerator {
             return ((int) bits64) >>> (32 - numbits);
         }
     }
-    
+
     @Override
     public double nextDouble() {
         return (nextLong() >>> 1) / (double) Long.MAX_VALUE;
@@ -110,12 +111,12 @@ public class MersenneTwister64 implements RandomNumberGenerator {
             d[i] = nextDouble();
         }
     }
-    
+
     @Override
     public int nextInt() {
         return next(32);
     }
-    
+
     @Override
     public int nextInt(int n) {
         if (n <= 0) {
@@ -132,40 +133,40 @@ public class MersenneTwister64 implements RandomNumberGenerator {
             bits = next(31);
             val = bits % n;
         } while (bits - val + (n - 1) < 0);
-        
+
         return val;
     }
 
     @Override
     public long nextLong() {
-	int i;
-	long x;
-        
-	if (mti >= NN) { /* generate NN words at one time */
+        int i;
+        long x;
 
-	    for (i = 0; i < NN - MM; i++) {
-		x = (mt[i] & UM) | (mt[i + 1] & LM);
-		mt[i] = mt[i + MM] ^ (x >>> 1) ^ mag01[(int) (x & 1L)];
-	    }
-	    for (; i < NN - 1; i++) {
-		x = (mt[i] & UM) | (mt[i + 1] & LM);
-		mt[i] = mt[i + (MM - NN)] ^ (x >>> 1) ^ mag01[(int) (x & 1L)];
-	    }
-	    x = (mt[NN - 1] & UM) | (mt[0] & LM);
-	    mt[NN - 1] = mt[MM - 1] ^ (x >>> 1) ^ mag01[(int) (x & 1L)];
+        if (mti >= NN) { /* generate NN words at one time */
+            for (i = 0; i < NN - MM; i++) {
+                x = (mt[i] & UM) | (mt[i + 1] & LM);
+                mt[i] = mt[i + MM] ^ (x >>> 1) ^ mag01[(int) (x & 1L)];
+            }
 
-	    mti = 0;
-	}
+            for (; i < NN - 1; i++) {
+                x = (mt[i] & UM) | (mt[i + 1] & LM);
+                mt[i] = mt[i + (MM - NN)] ^ (x >>> 1) ^ mag01[(int) (x & 1L)];
+            }
+            x = (mt[NN - 1] & UM) | (mt[0] & LM);
+            mt[NN - 1] = mt[MM - 1] ^ (x >>> 1) ^ mag01[(int) (x & 1L)];
 
-	x = mt[mti++];
-        
+            mti = 0;
+        }
+
+        x = mt[mti++];
+
         // Tempering
-	x ^= (x >>> 29) & 0x5555555555555555L;
-	x ^= (x << 17)  & 0x71D67FFFEDA60000L;
-	x ^= (x << 37)  & 0xFFF7EEE000000000L;
-	x ^= (x >>> 43);
+        x ^= (x >>> 29) & 0x5555555555555555L;
+        x ^= (x << 17) & 0x71D67FFFEDA60000L;
+        x ^= (x << 37) & 0xFFF7EEE000000000L;
+        x ^= (x >>> 43);
 
-	return x;
+        return x;
     }
 }
 

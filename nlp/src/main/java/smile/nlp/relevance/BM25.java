@@ -120,11 +120,11 @@ public class BM25 implements RelevanceRanker {
         double tf = wBody * termFreq / (1.0 + bBody * (docLen / avgDocLen - 1.0));
         
         if (titleTermFreq > 0) {
-        	tf += wTitle * titleTermFreq / (1.0 + bTitle * (titleLen / avgTitleLen - 1.0));
+            tf += wTitle * titleTermFreq / (1.0 + bTitle * (titleLen / avgTitleLen - 1.0));
         }
         
         if (anchorTermFreq > 0) {
-        	tf += wAnchor * anchorTermFreq / (1.0 + bAnchor * (anchorLen / avgAnchorLen - 1.0));
+            tf += wAnchor * anchorTermFreq / (1.0 + bAnchor * (anchorLen / avgAnchorLen - 1.0));
         }
         
         tf = tf / (kf + tf);

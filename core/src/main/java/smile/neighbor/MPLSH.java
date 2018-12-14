@@ -957,7 +957,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
      * Returns the approximate k-nearest neighbors. A posteriori multiple probe
      * model has to be trained already.
      * @param q the query object.
-     * @param k	the number of nearest neighbors to search for.
+     * @param k the number of nearest neighbors to search for.
      * @param recall the expected recall rate.
      * @param T the maximum number of probes.
      */

@@ -97,41 +97,6 @@ public class JSONTest {
      * Test of read method, of class JSON.
      */
     @Test(expected = Test.None.class)
-    public void testColors() throws Exception {
-        System.out.println("colors");
-
-        JSON json = new JSON();
-        DataFrame df = json.read(Paths.getTestData("json/colors.json"));
-
-        System.out.println(df);
-        System.out.println(df.schema());
-
-        assertEquals(7291, df.nrows());
-        assertEquals(257, df.ncols());
-
-        StructField[] fields = df.schema().fields();
-        assertEquals(DataTypes.IntegerType, fields[0].type);
-        for (int i = 1; i < fields.length; i++) {
-            assertEquals(DataTypes.DoubleType, fields[i].type);
-        }
-
-        assertEquals(6, df.getInt(0, 0));
-        assertEquals(5, df.getInt(1, 0));
-        assertEquals(4, df.getInt(2, 0));
-        assertEquals(-1.0000, df.getDouble(0, 7), 1E-7);
-        assertEquals(-0.6310, df.getDouble(0, 8), 1E-7);
-        assertEquals(0.8620, df.getDouble(0, 9), 1E-7);
-
-        assertEquals(1, df.getInt(7290, 0));
-        assertEquals(-1.0000, df.getDouble(7290, 5), 1E-7);
-        assertEquals(-0.1080, df.getDouble(7290, 6), 1E-7);
-        assertEquals(1.0000, df.getDouble(7290, 7), 1E-7);
-    }
-
-    /**
-     * Test of read method, of class JSON.
-     */
-    @Test(expected = Test.None.class)
     public void testBooksMultiLine() throws Exception {
         System.out.println("books multi-line");
         JSON json = new JSON().mode(JSON.Mode.MULTI_LINE);

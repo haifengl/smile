@@ -49,7 +49,7 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
      * @param words the word list of document.
      */
     public SimpleText(String id, String title, String body, String[] words) {
-    	super(id, title, body);
+        super(id, title, body);
 
         this.words = words;
 
@@ -106,7 +106,7 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
      * anchor text in the corpus pointing to this text.
      */
     public String getAnchor() {
-    	return anchor;
+        return anchor;
     }
     
     /**
@@ -114,16 +114,16 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
      * pointing to this text. So addAnchor is more appropriate in most cases.
      */
     public SimpleText setAnchor(String anchor) {
-    	this.anchor = anchor;
+        this.anchor = anchor;
         return this;
     }
     
     public SimpleText addAnchor(String linkLabel) {
-    	if (anchor == null) {
-    		anchor = linkLabel;
-    	} else {
-    		anchor = anchor + " " + linkLabel;
-    	}
+        if (anchor == null) {
+            anchor = linkLabel;
+        } else {
+            anchor = anchor + " " + linkLabel;
+        }
         return this;
     }
     
@@ -148,6 +148,6 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
 
     @Override
     public int hashCode() {
-    	return getID().hashCode();
+        return getID().hashCode();
     }
 }

@@ -274,7 +274,7 @@ public class Maxent implements SoftClassifier<int[]> {
      * @return the dimension of input space.
      */
     public int getDimension() {
-    	return p;
+        return p;
     }
     
     /**

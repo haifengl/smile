@@ -72,7 +72,7 @@ import org.slf4j.LoggerFactory;
  *   FontChooser fontChooser = FontChooser.getInstance();
  *   int result = fontChooser.showDialog(parent);
  *   if (result == FontChooser.OK_OPTION) {
- *   	Font font = fontChooser.getSelectedFont(); 
+ *       Font font = fontChooser.getSelectedFont();
  *   }
  * }
  * </pre>
@@ -80,8 +80,7 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("serial")
 public class FontChooser extends JComponent {
     private static final Logger logger = LoggerFactory.getLogger(FontChooser.class);
-
-	/**
+    /**
      * Return value from <code>showDialog()</code>.
      * @see #showDialog
      */

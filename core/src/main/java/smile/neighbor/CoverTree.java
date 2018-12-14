@@ -395,8 +395,8 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
      * Returns the distance/value of a given scale/level, i.e. the value of
      * base^i (e.g. 2^i).
      *
-     * @param s 	the level/scale
-     * @return 		base^s
+     * @param s the level/scale
+     * @return base^s
      */
     private double getCoverRadius(int s) {
         return Math.pow(base, s);
@@ -405,8 +405,8 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
     /**
      * Find the scale/level of a given value, i.e. the "i" in base^i.
      *
-     * @param d 	the value whose scale/level is to be determined.
-     * @return 		the scale/level of the given value.
+     * @param d the value whose scale/level is to be determined.
+     * @return the scale/level of the given value.
      */
     private int getScale(double d) {
         return (int) Math.ceil(invLogBase * Math.log(d));

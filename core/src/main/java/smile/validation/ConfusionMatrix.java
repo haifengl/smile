@@ -23,52 +23,52 @@ import java.util.Set;
  * @author owlmsj
  */
 public class ConfusionMatrix {
-	
-	private int[][] matrix;
-	
-	public ConfusionMatrix(int[] truth, int[] prediction) {
-		if (truth.length != prediction.length) {
-			 throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
-		}
-		
-		Set<Integer> y = new HashSet<>();
 
-		// Sometimes, small test data doesn't have all the classes.
-		for (int i = 0; i < truth.length; i++) {
-			y.add(truth[i]);
-			y.add(prediction[i]);
-		}
+    private int[][] matrix;
 
-		int k = 0;
-		for (int c : y) {
-			if (k < c) k = c;
-		}
-		matrix = new int[k+1][k+1];
-		
-		for (int i = 0; i < truth.length; i++) {
-			matrix[truth[i]][prediction[i]] += 1;
-		}
-	}
-	
+    public ConfusionMatrix(int[] truth, int[] prediction) {
+        if (truth.length != prediction.length) {
+             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
+        }
+
+        Set<Integer> y = new HashSet<>();
+
+        // Sometimes, small test data doesn't have all the classes.
+        for (int i = 0; i < truth.length; i++) {
+            y.add(truth[i]);
+            y.add(prediction[i]);
+        }
+
+        int k = 0;
+        for (int c : y) {
+            if (k < c) k = c;
+        }
+        matrix = new int[k+1][k+1];
+
+        for (int i = 0; i < truth.length; i++) {
+            matrix[truth[i]][prediction[i]] += 1;
+        }
+    }
+
     public int[][] getMatrix() {
         return matrix;
     }
     
-	@Override
-	public String toString() {
-		
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append("ROW=truth and COL=predicted\n");
-		
-		for(int i = 0; i < matrix.length; i++){
-			sb.append(String.format("class %2d |", i));
-			for(int j = 0; j < matrix.length; j++){
-				sb.append(String.format("%8d |", matrix[i][j]));
-			}
-			sb.append("\n");
- 		}
-		
-		return sb.toString().trim();
-	}
+    @Override
+    public String toString() {
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("ROW=truth and COL=predicted\n");
+
+        for(int i = 0; i < matrix.length; i++){
+            sb.append(String.format("class %2d |", i));
+            for(int j = 0; j < matrix.length; j++){
+                sb.append(String.format("%8d |", matrix[i][j]));
+            }
+            sb.append("\n");
+        }
+
+        return sb.toString().trim();
+    }
 }

@@ -235,9 +235,9 @@ public class BKTree<E> implements RNNSearch<E, E>, Serializable {
      * Search the neighbors in the given radius of query object, i.e.
      * d(q, v) &le; radius.
      *
-     * @param q 	the query object.
-     * @param radius	the radius of search range from target.
-     * @param neighbors	the list to store found neighbors in the given range on output.
+     * @param q the query object.
+     * @param radius the radius of search range from target.
+     * @param neighbors the list to store found neighbors in the given range on output.
      */
     public void range(E q, int radius, List<Neighbor<E, E>> neighbors) {
         search(root, q, radius, neighbors);
