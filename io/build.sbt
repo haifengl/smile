@@ -8,7 +8,11 @@ libraryDependencies ++= {
   )
 }
 
+// parquet-jackson includes jackson
 libraryDependencies += "org.apache.parquet" % "parquet-hadoop" % "1.10.0"
+
+// required by parquet
+libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "3.0.3"
 
 libraryDependencies += "org.apache.avro" % "avro" % "1.8.2"
 

@@ -864,6 +864,22 @@ public interface DataFrame extends Dataset<Tuple> {
     }
 
     /**
+     * Creates a DataFrame from a set of Maps.
+     * @param data The data collection.
+     */
+    static <T> DataFrame of(List<Map<String, T>> data, StructType schema) {
+        List<Tuple> rows = new ArrayList<>(data.size());
+        for (Map<String, T> map : data) {
+            Object[] row = new Object[schema.length()];
+            for (int i = 0; i < row.length; i++) {
+                row[i] = map.get(schema.field(i).name);
+            }
+            rows.add(Tuple.of(row, schema));
+        }
+        return of(rows);
+    }
+
+    /**
      * Creates a DataFrame from a JDBC ResultSet.
      * @param rs The JDBC result set.
      */

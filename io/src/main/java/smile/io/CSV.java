@@ -49,6 +49,8 @@ public class CSV {
     private StructType schema;
     /** The CSV file format. */
     private CSVFormat format;
+    /** Charset of file. */
+    private Charset charset = StandardCharsets.UTF_8;
 
     /**
      * Constructor.
@@ -71,10 +73,20 @@ public class CSV {
      * Sets the schema.
      * @param schema the schema of file.
      */
-    public CSV withSchema(StructType schema) {
+    public CSV schema(StructType schema) {
         this.schema = schema;
         return this;
     }
+
+    /**
+     * Sets the charset.
+     * @param charset the charset of file.
+     */
+    public CSV charset(Charset charset) {
+        this.charset = charset;
+        return this;
+    }
+
     /**
      * Reads a CSV file.
      * @param path a CSV file path.
@@ -90,16 +102,16 @@ public class CSV {
      */
     public DataFrame read(Path path, int limit) throws IOException {
         if (schema == null) {
-            // infer the schema from top 100 rows.
-            schema = inferSchema(path, Math.min(100, limit));
+            // infer the schema from top 1000 rows.
+            schema = inferSchema(path, Math.min(1000, limit));
         }
 
         StructField[] fields = schema.fields();
         List<Function<String, Object>> parser = schema.parser();
 
-        try (BufferedReader reader = Files.newBufferedReader(path)) {
+        try (CSVParser reader = CSVParser.parse(path, charset, format)) {
             List<Tuple> rows = new ArrayList<>();
-            for (CSVRecord record : format.parse(reader)) {
+            for (CSVRecord record : reader) {
                 Object[] row = new Object[fields.length];
                 for (int i = 0; i < fields.length; i++) {
                     String s = record.get(i).trim();
@@ -122,12 +134,11 @@ public class CSV {
      *  - Merge row types to find common type
      *  - String type by default.
      */
-    private StructType inferSchema(Path path, int nrows) throws IOException {
-        try (BufferedReader reader = Files.newBufferedReader(path)) {
+    public StructType inferSchema(Path path, int limit) throws IOException {
+        try (CSVParser parser = CSVParser.parse(path, charset, format)) {
             String[] names;
             DataType[] types;
 
-            CSVParser parser = format.parse(reader);
             Map<String, Integer> header = parser.getHeaderMap();
             if (header != null) {
                 names = new String[header.size()];
@@ -156,7 +167,7 @@ public class CSV {
                     types[i] = DataType.coerce(types[i], DataType.infer(record.get(i).trim()));
                 }
 
-                if (++k >= nrows) break;
+                if (++k >= limit) break;
             }
 
             StructField[] fields = new StructField[names.length];
@@ -169,11 +180,6 @@ public class CSV {
 
     /** Writes a data frame to a file with UTF-8. */
     public void write(DataFrame df, Path path) throws IOException {
-        write(df, path, StandardCharsets.UTF_8);
-    }
-
-    /** Writes a data frame to a file with given charset. */
-    public void write(DataFrame df, Path path, Charset charset) throws IOException {
         int p = df.schema().length();
         String[] header = new String[p];
         for (int i = 0; i < p; i++) {

@@ -47,6 +47,8 @@ public class DatasetReader {
 
     /** Avro schema. */
     private Schema schema;
+    /** CSV or JSON schema. */
+    private StructType struct;
 
     /**
      * Constructor.
@@ -79,16 +81,25 @@ public class DatasetReader {
         this.schema = schema;
     }
 
+    /**
+     * Sets the CSV or JSON schema.
+     */
+    public void schema(StructType schema) {
+        this.struct = schema;
+    }
+
     /** Reads a CSV file. */
     public DataFrame csv(Path path) throws IOException {
         CSV csv = new CSV(format);
+        if (struct != null) csv.schema(struct);
         return csv.read(path, limit);
     }
 
-    /** Reads a CSV file with customized format. */
-    public DataFrame csv(Path path, StructType schema) throws IOException {
-        CSV csv = new CSV(format).withSchema(schema);
-        return csv.read(path, limit);
+    /** Reads a JSON file. */
+    public DataFrame json(Path path) throws IOException {
+        JSON json = new JSON();
+        if (struct != null) json.schema(struct);
+        return json.read(path, limit);
     }
 
     /**
