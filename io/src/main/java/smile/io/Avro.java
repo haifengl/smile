@@ -20,7 +20,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
@@ -95,7 +94,6 @@ public class Avro {
     public DataFrame read(Path path, int limit) throws IOException {
         DatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>(schema);
         try (DataFileReader<GenericRecord> dataFileReader = new DataFileReader<GenericRecord>(path.toFile(), datumReader)) {
-            GenericRecord record = null;
             StructType struct = toSmileSchema(schema);
             DiscreteMeasure[] scale = new DiscreteMeasure[struct.length()];
             for (Map.Entry<String, Measure> e : struct.measure().entrySet()) {
@@ -103,6 +101,7 @@ public class Avro {
             }
 
             List<Tuple> rows = new ArrayList<>();
+            GenericRecord record = null;
             while (dataFileReader.hasNext() && rows.size() < limit) {
                 // Reuse the record to save memory
                 record = dataFileReader.next(record);
