@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.avro.Schema;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.data.Dataset;
@@ -43,6 +44,9 @@ public class DatasetReader {
 
      /** CSV format. */
     private CSVFormat format = CSVFormat.DEFAULT;
+
+    /** Avro schema. */
+    private Schema schema;
 
     /**
      * Constructor.
@@ -66,6 +70,13 @@ public class DatasetReader {
      */
     public void format(CSVFormat format) {
         this.format = format;
+    }
+
+    /**
+     * Sets the Avro schema.
+     */
+    public void schema(Schema schema) {
+        this.schema = schema;
     }
 
     /** Reads a CSV file. */
@@ -113,6 +124,16 @@ public class DatasetReader {
     }
 
     /**
+     * Reads a SAS7BDAT file.
+     *
+     * @param path the input file path.
+     */
+    public DataFrame sas(Path path) throws IOException {
+        SAS sas = new SAS();
+        return sas.read(path, limit);
+    }
+
+    /**
      * Reads an Apache Arrow file.
      * Apache Arrow is a cross-language development platform for in-memory data.
      * It specifies a standardized language-independent columnar memory format
@@ -124,6 +145,20 @@ public class DatasetReader {
     public DataFrame arrow(Path path) throws IOException {
         Arrow arrow = new Arrow();
         return arrow.read(path, limit);
+    }
+
+    /**
+     * Reads an Apache Avro file.
+     *
+     * @param path the input file path.
+     */
+    public DataFrame avro(Path path) throws IOException {
+        if (schema == null) {
+            throw new IllegalStateException("Avro schema is not set yet. Call schema(org.apache.avro.Schema) first.");
+        }
+
+        Avro avro = new Avro(schema);
+        return avro.read(path, limit);
     }
 
     /**
