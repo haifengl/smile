@@ -46,7 +46,7 @@ public class InverseMultiquadricRadialBasis implements RadialBasisFunction {
         this(1.0);
     }
 
-	public InverseMultiquadricRadialBasis(double scale) {
+    public InverseMultiquadricRadialBasis(double scale) {
         r02 = scale * scale;
     }
 

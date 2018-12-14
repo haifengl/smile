@@ -869,8 +869,8 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         }
     }
 
-	@Override
-	public void learn(double[] x, int y) {
+    @Override
+    public void learn(double[] x, int y) {
         if (y < 0 || y >= k) {
             throw new IllegalArgumentException("Invalid label");
         }
@@ -924,7 +924,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
      */
     public void setLearningRate(double eta) {
         this.eta = eta;
-	}
+    }
 
     /**
      * Calculate softmax function without overflow.

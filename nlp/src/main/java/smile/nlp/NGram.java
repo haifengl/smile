@@ -42,7 +42,7 @@ public class NGram implements Comparable<NGram> {
      * @param words the n-gram word sequence.
      */
     public NGram(String[] words) {
-    	this(words, 0);
+        this(words, 0);
     }
 
     /**
@@ -57,8 +57,8 @@ public class NGram implements Comparable<NGram> {
 
     @Override
     public String toString() {
-    	StringBuilder sb = new StringBuilder();
-    	sb.append('(')
+        StringBuilder sb = new StringBuilder();
+        sb.append('(')
           .append(Arrays.toString(words))
           .append(", ")
           .append(freq)
@@ -68,7 +68,7 @@ public class NGram implements Comparable<NGram> {
 
     @Override
     public int hashCode() {
-    	return Arrays.deepHashCode(words);
+        return Arrays.deepHashCode(words);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class NGram implements Comparable<NGram> {
         }
 
         final NGram other = (NGram) obj;
-    	return Arrays.equals(words, other.words);
+        return Arrays.equals(words, other.words);
     }
 
     @Override

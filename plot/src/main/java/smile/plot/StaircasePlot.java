@@ -50,7 +50,7 @@ public class StaircasePlot extends Plot {
     @Override
     public void paint(Graphics g) {
         Color c = g.getColor();
-		g.setColor(getColor());
+        g.setColor(getColor());
 
         double[] begin = new double[data[0].length];
         double[] end = new double[data[0].length];

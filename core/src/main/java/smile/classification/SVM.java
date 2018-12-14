@@ -687,7 +687,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
             }
 
             // Determine curvature
-            double curv = v1.k + v2.k - 2 * kernel.k(v1.x, v2.x);		
+            double curv = v1.k + v2.k - 2 * kernel.k(v1.x, v2.x);
             if (curv <= 0.0) curv = TAU;
             
             double step = (v2.g - v1.g) / curv;

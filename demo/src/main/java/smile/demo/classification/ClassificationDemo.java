@@ -69,7 +69,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
             if (parser == null) {
                 parser = new DelimitedTextParser();
                 parser.setDelimiter("[\t ]+");
-                parser.setResponseIndex(new NominalAttribute("class"), 0);            	
+                parser.setResponseIndex(new NominalAttribute("class"), 0);
             }
             try {
                 dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
@@ -133,7 +133,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
      * @return
      */
     protected double[] getContourLevels() {
-        return new double[]{0.5};	
+        return new double[]{0.5};
     }
     
     /**
@@ -189,28 +189,28 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
         }
         
         try {
-        	double[][] f = learn(x, y);
+            double[][] f = learn(x, y);
 
-        	if (f != null) {
-        		for (int i = 0; i < y.length; i++) {
-        			for (int j = 0; j < x.length; j++) {
-        				double[] p = {x[j], y[i]};
-        				canvas.point('.', Palette.COLORS[(int) f[i][j]], p);
-        			}
-        		}
+            if (f != null) {
+                for (int i = 0; i < y.length; i++) {
+                    for (int j = 0; j < x.length; j++) {
+                        double[] p = {x[j], y[i]};
+                        canvas.point('.', Palette.COLORS[(int) f[i][j]], p);
+                    }
+                }
 
-        		double[] levels = getContourLevels();
-        		Contour contour = new Contour(x, y, f, levels);
-        		contour.showLevelValue(false);
-        		canvas.add(contour);
+                double[] levels = getContourLevels();
+                Contour contour = new Contour(x, y, f, levels);
+                contour.showLevelValue(false);
+                canvas.add(contour);
                 
-        		BorderLayout layout = (BorderLayout) getLayout();
-        		remove(layout.getLayoutComponent(BorderLayout.CENTER));
-        		add(canvas, BorderLayout.CENTER);
-        		validate();
-        	}
+                BorderLayout layout = (BorderLayout) getLayout();
+                remove(layout.getLayoutComponent(BorderLayout.CENTER));
+                add(canvas, BorderLayout.CENTER);
+                validate();
+            }
         } catch (Exception ex) {
-        	System.err.println(ex);
+            System.err.println(ex);
         }
         
         startButton.setEnabled(true);

@@ -153,25 +153,25 @@ public class LancasterStemmer implements Stemmer {
 
         //integer varables
 
-        int pll = 0;		//position of last letter
-        int xl;				//counter for nuber of chars to be replaced and length of stemmed word if rule was aplied
-        int pfv;			//poition of first vowel
-        int prt;			//pointer into rule table
-        int ir;				//index of rule
-        int iw;				//index of word
+        int pll = 0; //position of last letter
+        int xl;  //counter for nuber of chars to be replaced and length of stemmed word if rule was aplied
+        int pfv; //poition of first vowel
+        int prt; //pointer into rule table
+        int ir;  //index of rule
+        int iw;  //index of word
 
         //char variables
 
-        char ll;			// last letter
+        char ll; // last letter
 
         //String variables eqiverlent of tenchar variables
 
-        String rule = "";		//varlable holding the current rule
-        String stem = "";  		// string holding the word as it is being stemmed this is returned as a stemmed word.
+        String rule = ""; //varlable holding the current rule
+        String stem = ""; // string holding the word as it is being stemmed this is returned as a stemmed word.
 
         //boolean varable
 
-        boolean intact = true; 		//intact if the word has not yet been stemmed to determin a requirement of some stemming rules
+        boolean intact = true; //intact if the word has not yet been stemmed to determin a requirement of some stemming rules
 
         //set stem = to word
         stem = cleanup(word.toLowerCase());
@@ -310,7 +310,7 @@ public class LancasterStemmer implements Stemmer {
                         prt = prt + 1;
                         // move to next rule in RULETABLE
                         if (prt >= rules.size()) {
-                            Continue = -1;                        	
+                            Continue = -1;
                         } else {
                             rule = rules.get(prt);
                             if (rule.charAt(0) != ll) {

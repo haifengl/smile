@@ -560,7 +560,7 @@ public class Lanczos {
 
     /**
      * Based on the input operation flag, stores to or retrieves from memory a vector.
-     * @param s	   contains the vector to be stored
+     * @param s contains the vector to be stored
      */
     private static void store(double[][] q, int j, double[] s) {
         if (null == q[j]) {

@@ -36,19 +36,19 @@ public class Text {
     private String body;
     
     public Text(String id, String title, String body) {
-    	this.id = id;
-    	this.title = title;
-    	this.body = body;
+        this.id = id;
+        this.title = title;
+        this.body = body;
     }
     /**
      * Returns the id of document in the corpus.
      */
     public String getID() {
-    	return id;
+        return id;
     }
 
     public Text setID(String id) {
-    	this.id = id;
+        this.id = id;
         return this;
     }
     
@@ -56,11 +56,11 @@ public class Text {
      * Returns the title of text.
      */
     public String getTitle() {
-    	return title;
+        return title;
     }
 
     public Text setTitle(String title) {
-    	this.title = title;
+        this.title = title;
         return this;
     }
     
@@ -68,11 +68,11 @@ public class Text {
      * Returns the body of text.
      */
     public String getBody() {
-    	return body;
+        return body;
     }
 
     public Text setBody(String body) {
-    	this.body = body;
+        this.body = body;
         return this;
     }
 }

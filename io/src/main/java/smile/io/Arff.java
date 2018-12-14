@@ -242,7 +242,7 @@ public class Arff implements AutoCloseable {
      * Reads the attribute declaration.
      *
      * @return an attributes in this relation
-     * @throws IOException 	if the information is not read successfully
+     * @throws IOException if the information is not read successfully
      */
     private StructField nextAttribute() throws IOException, ParseException {
         StructField attribute = null;

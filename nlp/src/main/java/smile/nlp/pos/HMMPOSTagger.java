@@ -34,10 +34,10 @@ public class HMMPOSTagger implements POSTagger, Serializable {
     private static final Logger logger = LoggerFactory.getLogger(HMMPOSTagger.class);
 
     /**
-	 * Serialization Version UID.
-	 */
-	private static final long serialVersionUID = 6600840654340610562L;
-	/**
+     * Serialization Version UID.
+     */
+    private static final long serialVersionUID = 6600840654340610562L;
+    /**
      * The emission symbols of HMM and corresponding indices.
      */
     private Map<String, Integer> symbol;

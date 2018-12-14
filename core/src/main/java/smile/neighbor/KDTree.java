@@ -344,9 +344,9 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
      * Returns the neighbors in the given range of search target from the give
      * tree node.
      *
-     * @param q    the query key.
-     * @param node      the root of subtree.
-     * @param radius	the radius of search range from target.
+     * @param q the query key.
+     * @param node the root of subtree.
+     * @param radius the radius of search range from target.
      * @param neighbors the list of found neighbors in the range.
      */
     private void search(double[] q, Node node, double radius, List<Neighbor<double[], E>> neighbors) {

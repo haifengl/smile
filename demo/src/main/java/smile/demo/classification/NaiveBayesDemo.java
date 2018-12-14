@@ -34,7 +34,7 @@ import smile.plot.ScatterPlot;
  */
 @SuppressWarnings("serial")
 public class NaiveBayesDemo extends ClassificationDemo {
-	
+
     /**
      * The number of classes.
      */
@@ -47,45 +47,45 @@ public class NaiveBayesDemo extends ClassificationDemo {
      * demo variables chosen from original iris data feature for easy-to-understand visualization: like Sepal.Length and Petal.Length
      */
     private static int[] pIdx = null;
-	
-    static {
-    	pIdx = new int[] {0, 2};//this combination has the best training error among all 6 alternatives
-    	
-    	datasetName = new String[]{
-    	        "Iris"
-    	};
 
-    	datasource = new String[]{
-    	        "classification/iris.txt"
-    	};
-    	
-    	parser = new DelimitedTextParser();
+    static {
+        pIdx = new int[] {0, 2};//this combination has the best training error among all 6 alternatives
+
+        datasetName = new String[]{
+                "Iris"
+        };
+
+        datasource = new String[]{
+                "classification/iris.txt"
+        };
+
+        parser = new DelimitedTextParser();
         parser.setColumnNames(true);// iris data set has column names at row 0
         parser.setResponseIndex(new NominalAttribute("class"), 4);// iris data set has response label at index position equals to 4 
     }
-	    
+
 
     /**
      * Constructor.
      */
-    public NaiveBayesDemo() {    	
-    	super();
+    public NaiveBayesDemo() {
+        super();
     }
     
     @Override
     protected PlotCanvas paintOnCanvas(double[][] data, int[] label) {
-    	
-    	int rows = data.length;
-    	int features = data[0].length;
-    	
-    	double[][] paintPoints = new double[rows][features - 2];// iris data set has 4 features
-    	for(int i = 0;i < rows;i++) {
-    		for(int j = 0;j < pIdx.length;j++) {
-    			paintPoints[i][j] = data[i][pIdx[j]];
-    		}
-    	}
-    	
-    	PlotCanvas canvas = ScatterPlot.plot(paintPoints, pointLegend);
+
+        int rows = data.length;
+        int features = data[0].length;
+
+        double[][] paintPoints = new double[rows][features - 2];// iris data set has 4 features
+        for(int i = 0;i < rows;i++) {
+            for(int j = 0;j < pIdx.length;j++) {
+                paintPoints[i][j] = data[i][pIdx[j]];
+            }
+        }
+
+        PlotCanvas canvas = ScatterPlot.plot(paintPoints, pointLegend);
         for (int i = 0; i < data.length; i++) {
             canvas.point(pointLegend, Palette.COLORS[label[i]], paintPoints[i]);
         }
@@ -94,7 +94,7 @@ public class NaiveBayesDemo extends ClassificationDemo {
     
     @Override
     protected double[] getContourLevels() {
-        return new double[]{0.5, 2};	
+        return new double[]{0.5, 2};
     }
 
     @Override
@@ -105,17 +105,17 @@ public class NaiveBayesDemo extends ClassificationDemo {
         int[] labelPredict = new int[label.length];
         
         double[][] trainData = new double[label.length][p];
-    	for(int i = 0;i < label.length;i++) {
-    		for(int j = 0;j < pIdx.length;j++) {
-    			trainData[i][j] = data[i][pIdx[j]];
-    		}
-    	}
-    	
+        for(int i = 0;i < label.length;i++) {
+            for(int j = 0;j < pIdx.length;j++) {
+                trainData[i][j] = data[i][pIdx[j]];
+            }
+        }
+
         NaiveBayes nbc = new NaiveBayes(NaiveBayes.Model.POLYAURN, k, p);
         nbc.learn(trainData, label);
         
         for (int i = 0; i < label.length; i++) {
-        	labelPredict[i] = nbc.predict(trainData[i]);
+            labelPredict[i] = nbc.predict(trainData[i]);
         }
         double trainError = error(label, labelPredict);
 

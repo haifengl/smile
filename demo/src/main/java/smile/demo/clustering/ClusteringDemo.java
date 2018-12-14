@@ -138,15 +138,15 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
         datasetBox.setEnabled(false);
 
         try {
-        	JComponent plot = learn();
-        	if (plot != null) {
-        		remove(canvas);
-        		canvas = plot;
-        		add(canvas, BorderLayout.CENTER);
-        	}
-        	validate();
+            JComponent plot = learn();
+            if (plot != null) {
+                remove(canvas);
+                canvas = plot;
+                add(canvas, BorderLayout.CENTER);
+            }
+            validate();
         } catch (Exception ex) {
-        	System.err.println(ex);
+            System.err.println(ex);
         }
 
         startButton.setEnabled(true);

@@ -52,8 +52,7 @@ import javax.swing.table.TableColumnModel;
  * @author Haifeng Li
  */
 @SuppressWarnings("serial")
-public class ButtonCellRenderer extends AbstractCellEditor
-	implements TableCellRenderer, TableCellEditor, ActionListener, MouseListener
+public class ButtonCellRenderer extends AbstractCellEditor implements TableCellRenderer, TableCellEditor, ActionListener, MouseListener
 {
     private JTable table;
     private transient Action action;
@@ -184,7 +183,7 @@ public class ButtonCellRenderer extends AbstractCellEditor
     }
 
     /*
-     *	The button has been pressed. Stop editing and invoke the custom Action
+     * The button has been pressed. Stop editing and invoke the custom Action
      */
     @Override
     public void actionPerformed(ActionEvent e) {

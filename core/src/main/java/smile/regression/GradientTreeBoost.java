@@ -511,7 +511,7 @@ public class GradientTreeBoost implements Regression<double[]> {
      * @return the sampling rate for stochastic gradient tree boosting.
      */
     public double getSamplingRate() {
-    	return f;
+        return f;
     }
   
     /**
@@ -519,7 +519,7 @@ public class GradientTreeBoost implements Regression<double[]> {
      * @return the maximum number of leaves in decision tree.
      */
     public int getmaxNodes() {
-    	return maxNodes;
+        return maxNodes;
     }
     
     /**
@@ -527,7 +527,7 @@ public class GradientTreeBoost implements Regression<double[]> {
      * @return the loss function.
      */
     public Loss getLossFunction() {
-    	return loss;
+        return loss;
     }
     
     /**

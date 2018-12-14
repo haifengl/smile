@@ -243,8 +243,9 @@ public class DeterministicAnnealing extends KMeans {
      * @return the annealing parameter
      */
     public double getAlpha() {
-    	return alpha;
+        return alpha;
     }
+
     /**
      *  Update the system at a given temperature until convergence.
      */

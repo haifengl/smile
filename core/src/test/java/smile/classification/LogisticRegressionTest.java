@@ -128,7 +128,7 @@ public class LogisticRegressionTest {
                 int[] by = new int[sgdIdx];
                 for(int j = 0;j < sgdIdx;j++) {     
                     for(int k = 0;k < trainx[0].length;k++) {
-                    	 bx[j][k] = trainx[j][k];
+                         bx[j][k] = trainx[j][k];
                     }
                     by[j] = trainy[j];   
                 }
@@ -136,9 +136,9 @@ public class LogisticRegressionTest {
                 int[] ysgd = new int[trainx.length - sgdIdx];
                 for(int l = sgdIdx;l < trainx.length;l++) {     
                     for(int m = 0;m < trainx[0].length;m++) {
-                      	 xsgd[l - sgdIdx][m] = trainx[l][m];
+                         xsgd[l - sgdIdx][m] = trainx[l][m];
                     }
-                    ysgd[l - sgdIdx] = trainy[l];      	
+                    ysgd[l - sgdIdx] = trainy[l];
                 }
                 
                 logit = new LogisticRegression(bx, by);
@@ -150,11 +150,11 @@ public class LogisticRegressionTest {
                 //
                 int[] idxsgd = new int[ysgd.length];
                 for(int isgd = 0;isgd < ysgd.length;isgd++) {
-                	idxsgd[isgd] = isgd;
+                    idxsgd[isgd] = isgd;
                 }
                 MathEx.permutate(idxsgd);
                 for(int a = 0;a < ysgd.length;a++) {
-                	logit.learn(xsgd[idxsgd[a]], ysgd[idxsgd[a]]);
+                    logit.learn(xsgd[idxsgd[a]], ysgd[idxsgd[a]]);
                 }                
                 
                 if (y[loocv.test[i]] != logit.predict(x[loocv.test[i]]))
@@ -262,11 +262,11 @@ public class LogisticRegressionTest {
             //
             int[] idx = new int[ysgd.length];
             for(int i = 0;i < ysgd.length;i++) {
-            	idx[i] = i;
+                idx[i] = i;
             }
             MathEx.permutate(idx);
             for(int i = 0;i < ysgd.length;i++) {
-            	logit.learn(xsgd[idx[i]], ysgd[idx[i]]);
+                logit.learn(xsgd[idx[i]], ysgd[idx[i]]);
             }
             
             int error = 0;
@@ -344,11 +344,11 @@ public class LogisticRegressionTest {
             //
             int[] idx = new int[ysgd.length];
             for(int i = 0;i < ysgd.length;i++) {
-            	idx[i] = i;
+                idx[i] = i;
             }
             MathEx.permutate(idx);
             for(int i = 0;i < ysgd.length;i++) {
-            	logit.learn(xsgd[idx[i]], ysgd[idx[i]]);
+                logit.learn(xsgd[idx[i]], ysgd[idx[i]]);
             }
             
             int error = 0;

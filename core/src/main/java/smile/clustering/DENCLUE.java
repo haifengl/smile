@@ -226,7 +226,7 @@ public class DENCLUE extends PartitionClustering<double[]> {
      * @return the smooth (standard deviation) parameter in the Gaussian kernel.
      */
     public double getSigma() {
-    	return sigma;
+        return sigma;
     }
     
     /**

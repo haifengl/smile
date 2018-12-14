@@ -177,27 +177,26 @@ public class IsotonicMDS {
      * Isotonic regression.
      */
     static class ObjectiveFunction implements DifferentiableMultivariateFunction {
-
-        int[] ord;		/* ranks of dissimilarities */
-
-        int[] ord2;		/* inverse ordering (which one is rank i?) */
-
-        int n;			/* number of  dissimilarities */
-
-        int nr;			/* number of data points */
-
-        int nc;			/* # cols of  fitted configuration */
-
-        int dimx;		/* Size of configuration array */
-
-        double[] d;		/* dissimilarities */
-
-        double[] y;		/* fitted distances (in rank of d order) */
-
-        double[] yc;		/* cumulative fitted distances (in rank of d order) */
-
-        double[] yf;		/* isotonic regression fitted values (ditto) */
-
+        /** ranks of dissimilarities */
+        int[] ord;
+        /** inverse ordering (which one is rank i?) */
+        int[] ord2;
+        /** number of dissimilarities */
+        int n;
+        /** number of data points */
+        int nr;
+        /** # cols of fitted configuration */
+        int nc;
+        /** Size of configuration array */
+        int dimx;
+        /** dissimilarities */
+        double[] d;
+        /** fitted distances (in rank of d order) */
+        double[] y;
+        /** cumulative fitted distances (in rank of d order) */
+        double[] yc;
+        /** isotonic regression fitted values (ditto) */
+        double[] yf;
 
         ObjectiveFunction(int nr, int nc, double[] d, int[] ord, int[] ord2) {
             this.d = d;

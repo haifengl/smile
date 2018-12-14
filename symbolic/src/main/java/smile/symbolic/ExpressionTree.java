@@ -148,11 +148,9 @@ public class ExpressionTree {
             if(ExpressionParser.isOperator(root.getLeftChild().getType()) && (ExpressionParser.getPrecedence(root.getLeftChild().getType()) < parentPrecedence)) {
                 leftOpenParen = "(";
                 leftCloseParen = ")";
-            }
-			else if(ExpressionParser.isOperator(root.getRightChild().getType()) && (ExpressionParser.getPrecedence(root.getRightChild().getType()) < parentPrecedence)) {
-					str += "(";
-					closeParen = ")";
-
+            } else if(ExpressionParser.isOperator(root.getRightChild().getType()) && (ExpressionParser.getPrecedence(root.getRightChild().getType()) < parentPrecedence)) {
+                str += "(";
+                closeParen = ")";
             }
         }
 

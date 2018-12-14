@@ -114,15 +114,15 @@ public class BFGS {
      * @param func the function to be minimized.
      *
      * @param m the number of corrections used in the L-BFGS update.
-     *		Values of <code>m</code> less than 3 are not recommended;
-     *		large values of <code>m</code> will result in excessive
-     *		computing time. <code>3 &lt;= m &lt;= 7</code> is recommended.
+     *          Values of <code>m</code> less than 3 are not recommended;
+     *          large values of <code>m</code> will result in excessive
+     *          computing time. <code>3 &lt;= m &lt;= 7</code> is recommended.
      *          A common choice for m is m = 5.
      *
      * @param x on initial entry this must be set by the user to the values
-     *		of the initial estimate of the solution vector. On exit with
-     *		<code>iflag = 0</code>, it contains the values of the variables
-     *		at the best point found (usually a solution).
+     *          of the initial estimate of the solution vector. On exit with
+     *          <code>iflag = 0</code>, it contains the values of the variables
+     *          at the best point found (usually a solution).
      *
      * @return the minimum value of the function.
      */
@@ -271,7 +271,7 @@ public class BFGS {
      * @param func the function to be minimized.
      *
      * @param x on initial entry this must be set by the user to the values
-     *		of the initial estimate of the solution vector. On exit, it
+     *          of the initial estimate of the solution vector. On exit, it
      *          contains the values of the variables at the best point found
      *          (usually a solution).
      *
@@ -441,10 +441,10 @@ public class BFGS {
      * @param xold on input this contains the base point for the line search.
      *
      * @param fold on input this contains the value of the objective function
-     *		at <code>x</code>.
+     *             at <code>x</code>.
      *
      * @param g on input this contains the gradient of the objective function
-     *		at <code>x</code>.
+     *          at <code>x</code>.
      *
      * @param p the search direction.
      *

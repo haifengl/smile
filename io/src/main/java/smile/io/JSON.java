@@ -15,7 +15,6 @@
  *******************************************************************************/
 package smile.io;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -34,7 +33,7 @@ import smile.data.type.StructType;
 import smile.util.Strings;
 
 /**
- * Reads JSON datasets.
+ * Reads JSON datasets. No nested objects are currently allowed.
  *
  * @author Haifeng Li
  */
@@ -130,6 +129,7 @@ public class JSON {
             });
         }
 
+        schema.boxed(rows);
         return DataFrame.of(rows);
     }
 
@@ -181,12 +181,13 @@ public class JSON {
         for (Map<String, String> row : rows) {
             for (Map.Entry<String, String> e : row.entrySet()) {
                 String name = e.getKey();
-                types.put(name, DataType.coerce(types.get(name), DataType.infer(e.getValue())));
+                String value = e.getValue();
+                types.put(name, DataType.coerce(types.get(name), DataType.infer(value)));
             }
         }
 
-        StructField[] fields = new StructField[types.size()];
         int i = 0;
+        StructField[] fields = new StructField[types.size()];
         for (Map.Entry<String, DataType> type : types.entrySet()) {
             fields[i++] = new StructField(type.getKey(), type.getValue());
         }

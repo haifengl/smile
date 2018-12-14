@@ -129,16 +129,15 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
         datasetBox.setEnabled(false);
 
         try {
-        	JComponent plot = learn();
-        	if (plot != null) {
-        		if (canvas != null)
-        			remove(canvas);
-        		canvas = plot;
-        		add(plot, BorderLayout.CENTER);
-        	}
-        	validate();
+            JComponent plot = learn();
+            if (plot != null) {
+                if (canvas != null) remove(canvas);
+                canvas = plot;
+                add(plot, BorderLayout.CENTER);
+            }
+            validate();
         } catch (Exception ex) {
-        	System.err.println(ex);
+            System.err.println(ex);
         }
         
         startButton.setEnabled(true);
