@@ -38,7 +38,7 @@ public class Formula implements Serializable {
     /** The predictor terms. */
     private Term[] terms;
     /** The factors after binding to a schema and expanding the terms. */
-    private Factor[] factors;
+    private Function[] factors;
     /** The formula output schema. */
     private StructType schema;
 
@@ -51,7 +51,7 @@ public class Formula implements Serializable {
     }
 
     /** Returns the factors of formula. This should be called after bind() called. */
-    public Factor[] factors() {
+    public Function[] factors() {
         return factors;
     }
 
@@ -101,12 +101,12 @@ public class Formula implements Serializable {
     public StructType bind(StructType inputSchema) {
         Arrays.stream(terms).forEach(term -> term.bind(inputSchema));
 
-        List<Factor> factors = Arrays.stream(terms)
+        List<Function> factors = Arrays.stream(terms)
                 .filter(term -> !(term instanceof All) && !(term instanceof Remove))
                 .flatMap(term -> term.factors().stream())
                 .collect(Collectors.toList());
 
-        List<Factor> removes = Arrays.stream(terms)
+        List<Function> removes = Arrays.stream(terms)
                 .filter(term -> term instanceof Remove)
                 .flatMap(term -> term.factors().stream())
                 .collect(Collectors.toList());
@@ -120,10 +120,10 @@ public class Formula implements Serializable {
                 .map(term -> (All) term)
                 .findAny();
 
-        List<Factor> result = new ArrayList<>();
+        List<Function> result = new ArrayList<>();
         if (hasAll.isPresent()) {
             All all = hasAll.get();
-            java.util.stream.Stream<Column> stream = all.factors().stream();
+            java.util.stream.Stream<Variable> stream = all.factors().stream();
             if (all.rest()) {
                 stream = stream.filter(factor -> !variables.contains(factor.name()));
             }
@@ -133,7 +133,7 @@ public class Formula implements Serializable {
 
         result.addAll(factors);
         result.removeAll(removes);
-        this.factors = result.toArray(new Factor[result.size()]);
+        this.factors = result.toArray(new Function[result.size()]);
 
         List<StructField> fields = result.stream()
                 .map(factor -> new StructField(factor.toString(), factor.type()))
@@ -154,103 +154,103 @@ public class Formula implements Serializable {
     }
 
     /** Returns a column factor. */
-    public static Factor col(String name) {
-        return new Column(name);
+    public static Function col(String name) {
+        return new Variable(name);
     }
 
     /** Removes a column from the formula/model. */
-    public static Factor remove(String name) {
+    public static Function remove(String name) {
         return remove(col(name));
     }
 
     /** Removes a factor from the formula/model. */
-    public static Factor remove(Factor x) {
+    public static Function remove(Function x) {
         return new Remove(x);
     }
 
     /** Adds two factors. */
-    public static Factor add(Factor a, Factor b) {
+    public static Function add(Function a, Function b) {
         return new Add(a, b);
     }
 
     /** Adds two factors. */
-    public static Factor add(String a, String b) {
+    public static Function add(String a, String b) {
         return new Add(col(a), col(b));
     }
 
     /** Adds two factors. */
-    public static Factor add(Factor a, String b) {
+    public static Function add(Function a, String b) {
         return new Add(a, col(b));
     }
 
     /** Adds two factors. */
-    public static Factor add(String a, Factor b) {
+    public static Function add(String a, Function b) {
         return new Add(col(a), b);
     }
 
     /** Subtracts two factors. */
-    public static Factor sub(Factor a, Factor b) {
+    public static Function sub(Function a, Function b) {
         return new Sub(a, b);
     }
 
     /** Subtracts two factors. */
-    public static Factor sub(String a, String b) {
+    public static Function sub(String a, String b) {
         return new Sub(col(a), col(b));
     }
 
     /** Subtracts two factors. */
-    public static Factor sub(Factor a, String b) {
+    public static Function sub(Function a, String b) {
         return new Sub(a, col(b));
     }
 
     /** Subtracts two factors. */
-    public static Factor sub(String a, Factor b) {
+    public static Function sub(String a, Function b) {
         return new Sub(col(a), b);
     }
 
     /** Multiplies two factors. */
-    public static Factor mul(Factor a, Factor b) {
+    public static Function mul(Function a, Function b) {
         return new Mul(a, b);
     }
 
     /** Multiplies two factors. */
-    public static Factor mul(String a, String b) {
+    public static Function mul(String a, String b) {
         return new Mul(col(a), col(b));
     }
 
     /** Multiplies two factors. */
-    public static Factor mul(Factor a, String b) {
+    public static Function mul(Function a, String b) {
         return new Mul(a, col(b));
     }
 
     /** Multiplies two factors. */
-    public static Factor mul(String a, Factor b) {
+    public static Function mul(String a, Function b) {
         return new Mul(col(a), b);
     }
 
     /** Divides two factors. */
-    public static Factor div(Factor a, Factor b) {
+    public static Function div(Function a, Function b) {
         return new Div(a, b);
     }
 
     /** Divides two factors. */
-    public static Factor div(String a, String b) {
+    public static Function div(String a, String b) {
         return new Div(col(a), col(b));
     }
 
     /** Divides two factors. */
-    public static Factor div(Factor a, String b) {
+    public static Function div(Function a, String b) {
         return new Div(a, col(b));
     }
 
     /** Divides two factors. */
-    public static Factor div(String a, Factor b) {
+    public static Function div(String a, Function b) {
         return new Div(col(a), b);
     }
 
     /** Returns a const boolean factor. */
-    public static Factor val(final boolean x) {
-        return new Factor() {
+    public static Function val(final boolean x) {
+        return new Function() {
             @Override
             public String name() {
                 return String.valueOf(x);
@@ -267,7 +267,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -293,8 +293,8 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const char factor. */
-    public static Factor val(final char x) {
-        return new Factor() {
+    public static Function val(final char x) {
+        return new Function() {
             @Override
             public String name() {
                 return String.valueOf(x);
@@ -311,7 +311,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -352,8 +352,8 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const byte factor. */
-    public static Factor val(final byte x) {
-        return new Factor() {
+    public static Function val(final byte x) {
+        return new Function() {
             @Override
             public String name() {
                 return String.valueOf(x);
@@ -370,7 +370,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -411,8 +411,8 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const short factor. */
-    public static Factor val(final short x) {
-        return new Factor() {
+    public static Function val(final short x) {
+        return new Function() {
             @Override
             public String name() {
                 return String.valueOf(x);
@@ -429,7 +429,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -470,8 +470,8 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const integer factor. */
-    public static Factor val(final int x) {
-        return new Factor() {
+    public static Function val(final int x) {
+        return new Function() {
             @Override
             public String name() {
                 return String.valueOf(x);
@@ -488,7 +488,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -529,8 +529,8 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const long factor. */
-    public static Factor val(final long x) {
-        return new Factor() {
+    public static Function val(final long x) {
+        return new Function() {
             @Override
             public String name() {
                 return String.valueOf(x);
@@ -547,7 +547,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -583,8 +583,8 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const float factor. */
-    public static Factor val(final float x) {
-        return new Factor() {
+    public static Function val(final float x) {
+        return new Function() {
             @Override
             public String name() {
                 return String.valueOf(x);
@@ -601,7 +601,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -637,8 +637,8 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const double factor. */
-    public static Factor val(final double x) {
-        return new Factor() {
+    public static Function val(final double x) {
+        return new Function() {
             @Override
             public String name() {
                 return String.valueOf(x);
@@ -655,7 +655,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -686,14 +686,14 @@ public class Formula implements Serializable {
     }
 
     /** Returns a const object factor. */
-    public static Factor val(final Object x) {
+    public static Function val(final Object x) {
         final DataType type = x instanceof String ? DataTypes.StringType :
                 x instanceof LocalDate ? DataTypes.DateType :
                 x instanceof LocalDateTime ? DataTypes.DateTimeType :
                 x instanceof LocalTime ? DataTypes.TimeType :
                 DataType.of(x.getClass());
 
-        return new Factor() {
+        return new Function() {
             @Override
             public String name() {
                 return x.toString();
@@ -710,7 +710,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -741,7 +741,7 @@ public class Formula implements Serializable {
      * @param x the column name.
      * @param f the lambda to apply on the column.
      */
-    public static <T> Factor apply(final String name, final String x, ToIntFunction<T> f) {
+    public static <T> Function apply(final String name, final String x, ToIntFunction<T> f) {
         return apply(name, col(x), f);
     }
 
@@ -752,8 +752,8 @@ public class Formula implements Serializable {
      * @param f the lambda to apply on the factor.
      */
     @SuppressWarnings("unchecked")
-    public static <T> Factor apply(final String name, final Factor x, ToIntFunction<T> f) {
-        return new Factor() {
+    public static <T> Function apply(final String name, final Function x, ToIntFunction<T> f) {
+        return new Function() {
             @Override
             public String name() {
                 return String.format("%s(%s)", name, x);
@@ -770,7 +770,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -822,7 +822,7 @@ public class Formula implements Serializable {
      * @param x the column name.
      * @param f the lambda to apply on the column.
      */
-    public static <T> Factor apply(final String name, final String x, ToLongFunction<T> f) {
+    public static <T> Function apply(final String name, final String x, ToLongFunction<T> f) {
         return apply(name, col(x), f);
     }
 
@@ -833,8 +833,8 @@ public class Formula implements Serializable {
      * @param f the lambda to apply on the factor.
      */
     @SuppressWarnings("unchecked")
-    public static <T> Factor apply(final String name, final Factor x, ToLongFunction<T> f) {
-        return new Factor() {
+    public static <T> Function apply(final String name, final Function x, ToLongFunction<T> f) {
+        return new Function() {
             @Override
             public String name() {
                 return String.format("%s(%s)", name, x);
@@ -851,7 +851,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -898,7 +898,7 @@ public class Formula implements Serializable {
      * @param x the column name.
      * @param f the lambda to apply on the column.
      */
-    public static <T> Factor apply(final String name, final String x, ToDoubleFunction<T> f) {
+    public static <T> Function apply(final String name, final String x, ToDoubleFunction<T> f) {
         return apply(name, col(x), f);
     }
 
@@ -909,8 +909,8 @@ public class Formula implements Serializable {
      * @param f the lambda to apply on the factor.
      */
     @SuppressWarnings("unchecked")
-    public static <T> Factor apply(final String name, final Factor x, ToDoubleFunction<T> f) {
-        return new Factor() {
+    public static <T> Function apply(final String name, final Function x, ToDoubleFunction<T> f) {
+        return new Function() {
             @Override
             public String name() {
                 return String.format("%s(%s)", name, x);
@@ -927,7 +927,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -965,7 +965,7 @@ public class Formula implements Serializable {
      * @param clazz the class of return object.
      * @param f the lambda to apply on the column.
      */
-    public static <T, R> Factor apply(final String name, final String x, final Class<R> clazz, Function<T, R> f) {
+    public static <T, R> Function apply(final String name, final String x, final Class<R> clazz, java.util.function.Function f) {
         return apply(name, col(x), clazz, f);
     }
 
@@ -977,8 +977,8 @@ public class Formula implements Serializable {
      * @param f the lambda to apply on the factor.
      */
     @SuppressWarnings("unchecked")
-    public static <T, R> Factor apply(final String name, final Factor x, final Class<R> clazz, Function<T, R> f) {
-        return new Factor() {
+    public static <T, R> Function apply(final String name, final Function x, final Class<R> clazz, java.util.function.Function f) {
+        return new Function() {
             @Override
             public String name() {
                 return String.format("%s(%s)", name, x);
@@ -995,7 +995,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -1028,7 +1028,7 @@ public class Formula implements Serializable {
      * @param y the second parameter of function.
      * @param f the lambda to apply on the columns.
      */
-    public static <T, U> Factor apply(final String name, final String x, final String y, ToIntBiFunction<T, U> f) {
+    public static <T, U> Function apply(final String name, final String x, final String y, ToIntBiFunction<T, U> f) {
         return apply(name, col(x), col(y), f);
     }
 
@@ -1040,8 +1040,8 @@ public class Formula implements Serializable {
      * @param f the lambda to apply on the factors.
      */
     @SuppressWarnings("unchecked")
-    public static <T, U> Factor apply(final String name, final Factor x, final Factor y, ToIntBiFunction<T, U> f) {
-        return new Factor() {
+    public static <T, U> Function apply(final String name, final Function x, final Function y, ToIntBiFunction<T, U> f) {
+        return new Function() {
             @Override
             public String name() {
                 return String.format("%s(%s, %s)", name, x, y);
@@ -1058,7 +1058,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -1099,7 +1099,7 @@ public class Formula implements Serializable {
      * @param y the second parameter of function.
      * @param f the lambda to apply on the columns.
      */
-    public static <T, U> Factor apply(final String name, final String x, final String y, ToLongBiFunction<T, U> f) {
+    public static <T, U> Function apply(final String name, final String x, final String y, ToLongBiFunction<T, U> f) {
         return apply(name, col(x), col(y), f);
     }
 
@@ -1111,8 +1111,8 @@ public class Formula implements Serializable {
      * @param f the lambda to apply on the factors.
      */
     @SuppressWarnings("unchecked")
-    public static <T, U> Factor apply(final String name, final Factor x, final Factor y, ToLongBiFunction<T, U> f) {
-        return new Factor() {
+    public static <T, U> Function apply(final String name, final Function x, final Function y, ToLongBiFunction<T, U> f) {
+        return new Function() {
             @Override
             public String name() {
                 return String.format("%s(%s, %s)", name, x, y);
@@ -1129,7 +1129,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -1170,7 +1170,7 @@ public class Formula implements Serializable {
      * @param y the second parameter of function.
      * @param f the lambda to apply on the columns.
      */
-    public static <T, U> Factor apply(final String name, final String x, final String y, ToDoubleBiFunction<T, U> f) {
+    public static <T, U> Function apply(final String name, final String x, final String y, ToDoubleBiFunction<T, U> f) {
         return apply(name, col(x), col(y), f);
     }
 
@@ -1182,8 +1182,8 @@ public class Formula implements Serializable {
      * @param f the lambda to apply on the factors.
      */
     @SuppressWarnings("unchecked")
-    public static <T, U> Factor apply(final String name, final Factor x, final Factor y, ToDoubleBiFunction<T, U> f) {
-        return new Factor() {
+    public static <T, U> Function apply(final String name, final Function x, final Function y, ToDoubleBiFunction<T, U> f) {
+        return new Function() {
             @Override
             public String name() {
                 return String.format("%s(%s, %s)", name, x, y);
@@ -1200,7 +1200,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 
@@ -1242,7 +1242,7 @@ public class Formula implements Serializable {
      * @param clazz the class of return object.
      * @param f the lambda to apply on the columns.
      */
-    public static <T, U, R> Factor apply(final String name, final String x, final String y, final Class<R> clazz, BiFunction<T, U, R> f) {
+    public static <T, U, R> Function apply(final String name, final String x, final String y, final Class<R> clazz, BiFunction<T, U, R> f) {
         return apply(name, col(x), col(y), clazz, f);
     }
 
@@ -1255,8 +1255,8 @@ public class Formula implements Serializable {
      * @param f the lambda to apply on the factors.
      */
     @SuppressWarnings("unchecked")
-    public static <T, U, R> Factor apply(final String name, final Factor x, final Factor y, final Class<R> clazz, BiFunction<T, U, R> f) {
-        return new Factor() {
+    public static <T, U, R> Function apply(final String name, final Function x, final Function y, final Class<R> clazz, BiFunction<T, U, R> f) {
+        return new Function() {
             @Override
             public String name() {
                 return String.format("%s(%s, %s)", name, x, y);
@@ -1273,7 +1273,7 @@ public class Formula implements Serializable {
             }
 
             @Override
-            public List<? extends Factor> factors() {
+            public List<? extends Function> factors() {
                 return Collections.singletonList(this);
             }
 

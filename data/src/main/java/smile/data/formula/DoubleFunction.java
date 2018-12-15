@@ -23,18 +23,17 @@ import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructType;
-import smile.math.Function;
 
 /**
  * The generic term of applying a double function.
  *
  * @author Haifeng Li
  */
-class DoubleFunction implements Factor {
+class DoubleFunction implements Function {
     /** The operand factor of ceil expression. */
-    private Factor child;
-    /** The transform lambda. */
-    private Function lambda;
+    private Function child;
+    /** The function on a double. */
+    private smile.math.Function lambda;
     /** The name of lambda. */
     private String name;
 
@@ -45,7 +44,7 @@ class DoubleFunction implements Factor {
      * @param factor the factor that the function is applied to.
      * @param lambda the function/lambda.
      */
-    public DoubleFunction(String name, Factor factor, Function lambda) {
+    public DoubleFunction(String name, Function factor, smile.math.Function lambda) {
         this.name = name;
         this.child = factor;
         this.lambda = lambda;
@@ -67,7 +66,7 @@ class DoubleFunction implements Factor {
     }
 
     @Override
-    public List<? extends Factor> factors() {
+    public List<? extends Function> factors() {
         return Collections.singletonList(this);
     }
 

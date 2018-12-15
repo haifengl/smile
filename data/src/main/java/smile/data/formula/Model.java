@@ -18,7 +18,6 @@ package smile.data.formula;
 import smile.data.Instance;
 import smile.data.Tuple;
 import smile.data.type.DataType;
-import smile.data.type.DataTypes;
 import smile.data.type.StructType;
 
 /**
@@ -30,13 +29,13 @@ import smile.data.type.StructType;
  */
 public class Model extends Formula {
     /** The response variable. */
-    private Factor y;
+    private Function y;
 
     /**
      * Constructor.
      * @param y the response variable. All other columns will be used as predictors.
      */
-    public Model(Factor y) {
+    public Model(Function y) {
         this(y, all());
     }
 
@@ -45,7 +44,7 @@ public class Model extends Formula {
      * @param y the response variable.
      * @param x the predictor terms.
      */
-    public Model(Factor y, Term... x) {
+    public Model(Function y, Term... x) {
         super(removey(y, x));
         this.y = y;
 
@@ -56,7 +55,7 @@ public class Model extends Formula {
     }
 
     /** Returns a new array of terms that includes x but removes y. */
-    private static Term[] removey(Factor y, Term... x) {
+    private static Term[] removey(Function y, Term... x) {
         Term[] terms = new Term[x.length+1];
         System.arraycopy(x, 0, terms, 0, x.length);
         terms[x.length] = remove(y);

@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  */
 class Cross implements Term {
     /** The children factors. */
-    private List<Factor> factors;
+    private List<Function> factors;
 
     /**
      * Constructor.
@@ -47,7 +47,7 @@ class Cross implements Term {
      * @param factors the factors to be crossed.
      */
     @SafeVarargs
-    public Cross(Factor... factors) {
+    public Cross(Function... factors) {
         if (factors.length < 2) {
             throw new IllegalArgumentException("Cross constructor takes at least two factors");
         }
@@ -56,17 +56,17 @@ class Cross implements Term {
 
     @Override
     public String toString() {
-        return factors.stream().map(Factor::toString).collect(Collectors.joining(" + ", "(", ")^2"));
+        return factors.stream().map(Function::toString).collect(Collectors.joining(" + ", "(", ")^2"));
     }
 
     @Override
-    public List<? extends Factor> factors() {
-        List<Factor> crossings = new ArrayList<>(factors);
+    public List<? extends Function> factors() {
+        List<Function> crossings = new ArrayList<>(factors);
         int n = factors.size();
         for (int i = 0; i < n; i++) {
-            Factor fi = factors.get(i);
+            Function fi = factors.get(i);
             for (int j = i + 1; j < n; j++) {
-                Factor cross = new Mul(fi, factors.get(j));
+                Function cross = new Mul(fi, factors.get(j));
                 crossings.add(cross);
             }
         }

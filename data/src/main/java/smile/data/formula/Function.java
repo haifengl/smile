@@ -19,43 +19,43 @@ import smile.data.Tuple;
 import smile.data.type.DataType;
 
 /**
- * A factor is a term that generates single value
+ * A function is a term that generates a single value
  * when applied to a data object (e.g. Tuple).
  *
  * @author Haifeng Li
  */
-public interface Factor extends Term {
-    /** Returns the name of factor. */
+public interface Function extends Term {
+    /** Returns the name of function. */
     String name();
 
     /** Returns the data type of output values. */
     DataType type();
 
-    /** Applies the factor formula on a data object. */
+    /** Applies the function on a data object. */
     Object apply(Tuple o);
 
-    /** Applies the factor formula on a data object and produces an double-valued result. */
+    /** Applies the function on a data object and produces an double-valued result. */
     default double applyAsDouble(Tuple o) {
         throw new UnsupportedOperationException();
     }
 
-    /** Applies the factor formula on a data object and produces an float-valued result. */
+    /** Applies the function on a data object and produces an float-valued result. */
     default float applyAsFloat(Tuple o) {
         throw new UnsupportedOperationException();
     }
 
-    /** Applies the factor formula on a data object and produces an int-valued result. */
+    /** Applies the function on a data object and produces an int-valued result. */
     default int applyAsInt(Tuple o) {
         throw new UnsupportedOperationException();
     }
 
-    /** Applies the factor formula on a data object and produces an long-valued result. */
+    /** Applies the function on a data object and produces an long-valued result. */
     default long applyAsLong(Tuple o) {
         throw new UnsupportedOperationException();
     }
 
-    /** Returns true if the factor represents a plain column of input DataFrame. */
-    default boolean isColumn() {
+    /** Returns true if the function represents a plain variable. */
+    default boolean isVariable() {
         return false;
     }
 }

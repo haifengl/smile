@@ -27,16 +27,16 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Remove implements Factor {
+class Remove implements Function {
     /** The factor to remove. */
-    private Factor factor;
+    private Function factor;
 
     /**
      * Constructor.
      *
      * @param factor the factor to remove.
      */
-    public Remove(Factor factor) {
+    public Remove(Function factor) {
         this.factor = factor;
     }
 
@@ -56,7 +56,7 @@ class Remove implements Factor {
     }
 
     @Override
-    public List<? extends Factor> factors() {
+    public List<? extends Function> factors() {
         return Collections.singletonList(factor);
     }
 
