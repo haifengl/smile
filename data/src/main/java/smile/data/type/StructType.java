@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 import smile.data.Tuple;
 import smile.data.measure.DiscreteMeasure;
 import smile.data.measure.Measure;
-import smile.data.measure.NominalScale;
 
 /**
  * Struct data type is determined by the fixed order of the fields
