@@ -32,8 +32,8 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.vector.Vector;
 import smile.math.matrix.DenseMatrix;
-
 import static smile.data.formula.Formula.*;
+import static smile.data.formula.Terms.*;
 
 import static org.junit.Assert.*;
 

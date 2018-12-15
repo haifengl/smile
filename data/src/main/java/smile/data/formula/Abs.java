@@ -72,10 +72,10 @@ class Abs implements Factor {
         Object x = child.apply(o);
         if (x == null) return null;
 
-        if (x instanceof Double) return Math.abs((Double) x);
-        else if (x instanceof Integer) return Math.abs((Integer) x);
-        else if (x instanceof Float) return Math.abs((Float) x);
-        else if (x instanceof Long) return Math.abs((Long) x);
+        if (x instanceof Double) return Math.abs((double) x);
+        else if (x instanceof Integer) return Math.abs((int) x);
+        else if (x instanceof Float) return Math.abs((float) x);
+        else if (x instanceof Long) return Math.abs((long) x);
         else throw new IllegalArgumentException("Invalid argument for abs(): " + x);
     }
 

@@ -41,14 +41,14 @@ public class DatasetReader {
 
     /** Reads a limited number of records. */
     private int limit = Integer.MAX_VALUE;
-
-     /** CSV format. */
+    /** CSV format. */
     private CSVFormat format = CSVFormat.DEFAULT;
-
     /** Avro schema. */
     private Schema schema;
     /** CSV or JSON schema. */
     private StructType struct;
+    /** JSON mode. */
+    private JSON.Mode mode = JSON.Mode.SINGLE_LINE;
 
     /**
      * Constructor.
@@ -75,6 +75,13 @@ public class DatasetReader {
     }
 
     /**
+     * Sets the JSON read mode.
+     */
+    public void mode(JSON.Mode mode) {
+        this.mode = mode;
+    }
+
+    /**
      * Sets the Avro schema.
      */
     public void schema(Schema schema) {
@@ -97,7 +104,7 @@ public class DatasetReader {
 
     /** Reads a JSON file. */
     public DataFrame json(Path path) throws IOException {
-        JSON json = new JSON();
+        JSON json = new JSON().mode(mode);
         if (struct != null) json.schema(struct);
         return json.read(path, limit);
     }

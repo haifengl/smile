@@ -169,15 +169,15 @@ public interface DataType extends Serializable {
     }
 
     /** Infers the type of a string. */
-    static DataType infer(String str) {
-        if (Strings.isNullOrEmpty(str)) return null;
-        if (DateTimePattern.matcher(str).matches()) return DataTypes.DateTimeType;
-        if (DatePattern.matcher(str).matches()) return DataTypes.DateType;
-        if (TimePattern.matcher(str).matches()) return DataTypes.TimeType;
-        if (IntPattern.matcher(str).matches()) return DataTypes.IntegerType;
-        if (LongPattern.matcher(str).matches()) return DataTypes.LongType;
-        if (DoublePattern.matcher(str).matches()) return DataTypes.DoubleType;
-        if (BooleanPattern.matcher(str).matches()) return DataTypes.BooleanType;
+    static DataType infer(String s) {
+        if (Strings.isNullOrEmpty(s)) return null;
+        if (DateTimePattern.matcher(s).matches()) return DataTypes.DateTimeType;
+        if (DatePattern.matcher(s).matches()) return DataTypes.DateType;
+        if (TimePattern.matcher(s).matches()) return DataTypes.TimeType;
+        if (IntPattern.matcher(s).matches()) return DataTypes.IntegerType;
+        if (LongPattern.matcher(s).matches()) return DataTypes.LongType;
+        if (DoublePattern.matcher(s).matches()) return DataTypes.DoubleType;
+        if (BooleanPattern.matcher(s).matches()) return DataTypes.BooleanType;
         return DataTypes.StringType;
     }
 
