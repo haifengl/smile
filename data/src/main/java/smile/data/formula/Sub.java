@@ -17,29 +17,27 @@ package smile.data.formula;
 
 import smile.data.Tuple;
 import smile.data.type.DataType;
-import smile.data.type.DataTypes;
 import smile.data.type.StructType;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * The term of a - b subtraction expression.
  *
  * @author Haifeng Li
  */
-class Sub implements Factor {
+class Sub implements Function {
     /** The left factor. */
-    private Factor a;
+    private Function a;
     /** The right factor. */
-    private Factor b;
+    private Function b;
     /** The data type of output. */
     private DataType type;
     /** The lambda to get int value with type promotion. */
-    private Function<Tuple, Object> f;
+    private java.util.function.Function<Tuple, Object> f;
 
     /**
      * Constructor.
@@ -47,7 +45,7 @@ class Sub implements Factor {
      * @param a the first factor.
      * @param b the second factor.
      */
-    public Sub(Factor a, Factor b) {
+    public Sub(Function a, Function b) {
         this.a = a;
         this.b = b;
     }
@@ -68,7 +66,7 @@ class Sub implements Factor {
     }
 
     @Override
-    public List<? extends Factor> factors() {
+    public List<? extends Function> factors() {
         return Collections.singletonList(this);
     }
 

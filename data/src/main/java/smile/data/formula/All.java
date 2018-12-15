@@ -30,7 +30,7 @@ class All implements Term {
     /** If true, keep the original columns. */
     private boolean rest;
     /** All columns in the schema. */
-    private List<Column> columns;
+    private List<Variable> columns;
 
     /**
      * Constructor. All columns not otherwise in the formula.
@@ -61,19 +61,19 @@ class All implements Term {
     }
 
     @Override
-    public List<Column> factors() {
+    public List<Variable> factors() {
         return columns;
     }
 
     @Override
     public Set<String> variables() {
-        return columns.stream().map(Column::name).collect(Collectors.toSet());
+        return columns.stream().map(Variable::name).collect(Collectors.toSet());
     }
 
     @Override
     public void bind(StructType schema) {
         columns = Arrays.stream(schema.fields())
-                .map(field -> new Column(field.name))
+                .map(field -> new Variable(field.name))
                 .collect(Collectors.toList());
 
         columns.forEach(column -> column.bind(schema));

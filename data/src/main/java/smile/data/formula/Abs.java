@@ -21,7 +21,6 @@ import java.util.Set;
 
 import smile.data.Tuple;
 import smile.data.type.DataType;
-import smile.data.type.DataTypes;
 import smile.data.type.StructType;
 
 /**
@@ -29,16 +28,16 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Abs implements Factor {
+class Abs implements Function {
     /** The operand factor of abs expression. */
-    private Factor child;
+    private Function child;
 
     /**
      * Constructor.
      *
      * @param factor the factor that abs function is applied to.
      */
-    public Abs(Factor factor) {
+    public Abs(Function factor) {
         this.child = factor;
     }
 
@@ -58,7 +57,7 @@ class Abs implements Factor {
     }
 
     @Override
-    public List<? extends Factor> factors() {
+    public List<? extends Function> factors() {
         return Collections.singletonList(this);
     }
 

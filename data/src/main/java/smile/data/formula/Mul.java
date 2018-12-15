@@ -17,14 +17,12 @@ package smile.data.formula;
 
 import smile.data.Tuple;
 import smile.data.type.DataType;
-import smile.data.type.DataTypes;
 import smile.data.type.StructType;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * The term of a * b multiplication expression.
@@ -34,15 +32,15 @@ import java.util.function.Function;
  *
  * @author Haifeng Li
  */
-class Mul implements Factor {
+class Mul implements Function {
     /** The first factor. */
-    private Factor a;
+    private Function a;
     /** The second factor. */
-    private Factor b;
+    private Function b;
     /** The data type of output. */
     private DataType type;
     /** The lambda to get int value with type promotion. */
-    private Function<Tuple, Object> f;
+    private java.util.function.Function<Tuple, Object> f;
 
     /**
      * Constructor.
@@ -50,7 +48,7 @@ class Mul implements Factor {
      * @param a the first factor.
      * @param b the second factor.
      */
-    public Mul(Factor a, Factor b) {
+    public Mul(Function a, Function b) {
         this.a = a;
         this.b = b;
     }
@@ -71,7 +69,7 @@ class Mul implements Factor {
     }
 
     @Override
-    public List<? extends Factor> factors() {
+    public List<? extends Function> factors() {
         return Collections.singletonList(this);
     }
 

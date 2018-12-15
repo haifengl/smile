@@ -22,7 +22,6 @@ import java.util.Set;
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
-import smile.data.type.ObjectType;
 import smile.data.type.StructType;
 
 /**
@@ -30,16 +29,16 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Round implements Factor {
+class Round implements Function {
     /** The operand factor of round expression. */
-    private Factor child;
+    private Function child;
 
     /**
      * Constructor.
      *
      * @param factor the factor that round function is applied to.
      */
-    public Round(Factor factor) {
+    public Round(Function factor) {
         this.child = factor;
     }
 
@@ -59,7 +58,7 @@ class Round implements Factor {
     }
 
     @Override
-    public List<? extends Factor> factors() {
+    public List<? extends Function> factors() {
         return Collections.singletonList(this);
     }
 

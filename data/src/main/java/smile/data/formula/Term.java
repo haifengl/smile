@@ -22,12 +22,13 @@ import java.util.Set;
 import smile.data.type.StructType;
 
 /**
- * A model consists of a series of terms. The terms themselves
- * consist of a single factor or can be expanded to multiple
- * factors including the the interaction of multiple factors.
+ * A term is recursively constructed from constant symbols,
+ * variables and function symbols. A model consists of a series
+ * of terms. The terms themselves consist of a single variable/arithmetic expression or can be
+ * expanded to multiple expressions including the the interaction
+ * of multiple variables.
  *
- * While formulae usually involve just variable and factor names,
- * they can also involve arithmetic expressions.
+ *
  *
  * @author Haifeng Li
  */
@@ -36,7 +37,7 @@ public interface Term extends Serializable {
     void bind(StructType schema);
 
     /** Returns the list of factors after expanding the term. */
-    List<? extends Factor> factors();
+    List<? extends Function> factors();
 
     /** Returns the list of variables used in this term. */
     Set<String> variables();

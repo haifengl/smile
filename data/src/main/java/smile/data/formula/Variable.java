@@ -18,25 +18,22 @@ package smile.data.formula;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.ToDoubleFunction;
-import java.util.function.ToIntFunction;
-import java.util.function.ToLongFunction;
 
 import smile.data.Tuple;
 import smile.data.type.DataType;
-import smile.data.type.DataTypes;
 import smile.data.type.StructType;
-import smile.util.ToFloatFunction;
 
 /**
- * A column in a DataFrame.
+ * A variable in the formula. A variable can be regarded as the
+ * identity function that always returns the same value that was
+ * used as its argument.
  *
  * @author Haifeng Li
  */
-final class Column implements Factor {
-    /** Column name. */
+final class Variable implements Function {
+    /** Variable name. */
     private final String name;
-    /** Data type of column. Only available after calling bind(). */
+    /** Data type of variable. Only available after calling bind(). */
     private DataType type;
     /** Column index after binding to a schema. */
     private int index = -1;
@@ -44,9 +41,9 @@ final class Column implements Factor {
     /**
      * Constructor.
      *
-     * @param name the column name.
+     * @param name the variable name.
      */
-    public Column(String name) {
+    public Variable(String name) {
         this.name = name;
     }
 
@@ -61,7 +58,7 @@ final class Column implements Factor {
     }
 
     @Override
-    public boolean isColumn() {
+    public boolean isVariable() {
         return true;
     }
 
@@ -71,7 +68,7 @@ final class Column implements Factor {
     }
 
     @Override
-    public List<Column> factors() {
+    public List<Variable> factors() {
         return Collections.singletonList(this);
     }
 

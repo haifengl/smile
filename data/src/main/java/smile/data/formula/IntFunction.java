@@ -29,10 +29,10 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class IntFunction implements Factor {
+class IntFunction implements Function {
     /** The operand factor of ceil expression. */
-    private Factor child;
-    /** The transform lambda. */
+    private Function child;
+    /** The function on an integer. */
     private smile.math.IntFunction lambda;
     /** The name of lambda. */
     private String name;
@@ -44,7 +44,7 @@ class IntFunction implements Factor {
      * @param factor the factor that the function is applied to.
      * @param lambda the function/lambda.
      */
-    public IntFunction(String name, Factor factor, smile.math.IntFunction lambda) {
+    public IntFunction(String name, Function factor, smile.math.IntFunction lambda) {
         this.child = factor;
         this.lambda = lambda;
         this.name = name;
@@ -66,7 +66,7 @@ class IntFunction implements Factor {
     }
 
     @Override
-    public List<? extends Factor> factors() {
+    public List<? extends Function> factors() {
         return Collections.singletonList(this);
     }
 
