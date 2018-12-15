@@ -16,6 +16,7 @@
 
 package smile.data.vector;
 
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import smile.data.type.DataType;
@@ -26,6 +27,11 @@ import smile.data.type.DataType;
  * @author Haifeng Li
  */
 public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
+
+    /** Returns the distinct values. */
+    default List<T> distinct() {
+        return stream().distinct().collect(Collectors.toList());
+    }
 
     @Override
     default byte getByte(int i) {

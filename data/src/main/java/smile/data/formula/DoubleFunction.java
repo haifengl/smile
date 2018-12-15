@@ -22,30 +22,38 @@ import java.util.Set;
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
-import smile.data.type.ObjectType;
 import smile.data.type.StructType;
+import smile.math.Function;
 
 /**
- * The term of sqrt function.
+ * The generic term of applying a double function.
  *
  * @author Haifeng Li
  */
-class Sqrt implements Factor {
-    /** The operand factor of sqrt expression. */
+class DoubleFunction implements Factor {
+    /** The operand factor of ceil expression. */
     private Factor child;
+    /** The transform lambda. */
+    private Function lambda;
+    /** The name of lambda. */
+    private String name;
 
     /**
      * Constructor.
      *
-     * @param factor the factor that sqrt function is applied to.
+     * @param name the name of function.
+     * @param factor the factor that the function is applied to.
+     * @param lambda the function/lambda.
      */
-    public Sqrt(Factor factor) {
+    public DoubleFunction(String name, Factor factor, Function lambda) {
+        this.name = name;
         this.child = factor;
+        this.lambda = lambda;
     }
 
     @Override
     public String name() {
-        return String.format("sqrt(%s)", child.name());
+        return String.format("%s(%s)", name, child.name());
     }
 
     @Override
@@ -70,27 +78,27 @@ class Sqrt implements Factor {
 
     @Override
     public DataType type() {
-        return child.type() instanceof ObjectType ? DataTypes.object(Double.class) : DataTypes.DoubleType;
+        return child.type().id() == DataType.ID.Object ? DataTypes.DoubleObjectType : DataTypes.DoubleType;
     }
 
     @Override
     public void bind(StructType schema) {
         child.bind(schema);
 
-        if (!(child.type().isInt() || child.type().isLong() || child.type().isDouble() || child.type().isFloat())) {
-            throw new IllegalStateException(String.format("Invalid expression: sqrt(%s)", child.type()));
+        if (!(child.type().isDouble() || child.type().isFloat() || child.type().isInt() || child.type().isLong() || child.type().isShort() || child.type().isByte())) {
+            throw new IllegalStateException(String.format("Invalid expression: %s(%s)", name, child.type()));
         }
     }
 
     @Override
     public double applyAsDouble(Tuple o) {
-        return Math.sqrt(child.applyAsDouble(o));
+        return lambda.apply(child.applyAsDouble(o));
     }
 
     @Override
     public Double apply(Tuple o) {
         Object x = child.apply(o);
         if (x == null) return null;
-        else return Math.sqrt(((Number) x).doubleValue());
+        else return lambda.apply(((Number) x).doubleValue());
     }
 }
