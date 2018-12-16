@@ -828,28 +828,10 @@ public interface Terms {
      */
     @SuppressWarnings("unchecked")
     static <T, U> Term apply(final String name, final Term x, final Term y, ToIntBiFunction<T, U> f) {
-        return new Term() {
-            @Override
-            public String toString() {
-                return String.format("%s(%s, %s)", name, x, y);
-            }
-
-            @Override
-            public Set<String> variables() {
-                Set<String> vars = new HashSet<>(x.variables());
-                vars.addAll(y.variables());
-                return vars;
-            }
-
+        return new AbstractBiFunction(name, x, y) {
             @Override
             public DataType type() {
                 return DataTypes.IntegerType;
-            }
-
-            @Override
-            public void bind(StructType schema) {
-                x.bind(schema);
-                y.bind(schema);
             }
 
             @Override
@@ -884,28 +866,10 @@ public interface Terms {
      */
     @SuppressWarnings("unchecked")
     static <T, U> Term apply(final String name, final Term x, final Term y, ToLongBiFunction<T, U> f) {
-        return new Term() {
-            @Override
-            public String toString() {
-                return String.format("%s(%s, %s)", name, x, y);
-            }
-
-            @Override
-            public Set<String> variables() {
-                Set<String> vars = new HashSet<>(x.variables());
-                vars.addAll(y.variables());
-                return vars;
-            }
-
+        return new AbstractBiFunction(name, x, y) {
             @Override
             public DataType type() {
                 return DataTypes.LongType;
-            }
-
-            @Override
-            public void bind(StructType schema) {
-                x.bind(schema);
-                y.bind(schema);
             }
 
             @Override
@@ -940,28 +904,10 @@ public interface Terms {
      */
     @SuppressWarnings("unchecked")
     static <T, U> Term apply(final String name, final Term x, final Term y, ToDoubleBiFunction<T, U> f) {
-        return new Term() {
-            @Override
-            public String toString() {
-                return String.format("%s(%s, %s)", name, x, y);
-            }
-
-            @Override
-            public Set<String> variables() {
-                Set<String> vars = new HashSet<>(x.variables());
-                vars.addAll(y.variables());
-                return vars;
-            }
-
+        return new AbstractBiFunction(name, x, y) {
             @Override
             public DataType type() {
                 return DataTypes.DoubleType;
-            }
-
-            @Override
-            public void bind(StructType schema) {
-                x.bind(schema);
-                y.bind(schema);
             }
 
             @Override
@@ -998,27 +944,10 @@ public interface Terms {
      */
     @SuppressWarnings("unchecked")
     static <T, U, R> Term apply(final String name, final Term x, final Term y, final Class<R> clazz, BiFunction<T, U, R> f) {
-        return new Term() {
-            @Override
-            public String toString() {
-                return String.format("%s(%s, %s)", name, x, y);
-            }
-
-            @Override
-            public Set<String> variables() {
-                Set<String> vars = new HashSet<>(x.variables());
-                vars.addAll(y.variables());
-                return vars;
-            }
-
+        return new AbstractBiFunction(name, x, y) {
             @Override
             public DataType type() {
                 return DataTypes.object(clazz);
-            }
-
-            @Override
-            public void bind(StructType schema) {
-                x.bind(schema);
             }
 
             @Override
