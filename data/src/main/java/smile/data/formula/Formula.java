@@ -123,7 +123,7 @@ public class Formula implements Serializable {
         List<Term> result = new ArrayList<>();
         if (hasAll.isPresent()) {
             All all = hasAll.get();
-            java.util.stream.Stream<Variable> stream = all.factors().stream();
+            java.util.stream.Stream<Variable> stream = all.terms().stream();
             if (all.rest()) {
                 stream = stream.filter(term -> !variables.contains(term.name()));
             }

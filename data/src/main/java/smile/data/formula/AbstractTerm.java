@@ -22,30 +22,28 @@ package smile.data.formula;
  * @author Haifeng Li
  */
 public abstract class AbstractTerm implements HyperTerm {
-    /** The name of term. */
-    String name;
-
     /**
      * Constructor.
-     *
-     * @param name the name of function.
      */
-    public AbstractTerm(String name) {
-        this.name = name;
-    }
+    public AbstractTerm() {
 
-    @Override
-    public String toString() {
-        return name();
     }
 
     @Override
     public boolean equals(Object o) {
-        return name().equals(o);
+        if (o == this) {
+            return true;
+        }
+
+        if (o instanceof HyperTerm) {
+            return toString().equals(o.toString());
+        }
+
+        return false;
     }
 
     @Override
     public int hashCode() {
-        return name().hashCode();
+        return toString().hashCode();
     }
 }

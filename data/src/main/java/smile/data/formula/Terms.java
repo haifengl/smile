@@ -379,7 +379,7 @@ public interface Terms {
     static Term val(final boolean x) {
         return new Constant() {
             @Override
-            public String name() {
+            public String toString() {
                 return String.valueOf(x);
             }
 
@@ -399,7 +399,7 @@ public interface Terms {
     static Term val(final char x) {
         return new Constant() {
             @Override
-            public String name() {
+            public String toString() {
                 return String.valueOf(x);
             }
 
@@ -434,7 +434,7 @@ public interface Terms {
     static Term val(final byte x) {
         return new Constant() {
             @Override
-            public String name() {
+            public String toString() {
                 return String.valueOf(x);
             }
 
@@ -469,7 +469,7 @@ public interface Terms {
     static Term val(final short x) {
         return new Constant() {
             @Override
-            public String name() {
+            public String toString() {
                 return String.valueOf(x);
             }
 
@@ -504,7 +504,7 @@ public interface Terms {
     static Term val(final int x) {
         return new Constant() {
             @Override
-            public String name() {
+            public String toString() {
                 return String.valueOf(x);
             }
 
@@ -539,7 +539,7 @@ public interface Terms {
     static Term val(final long x) {
         return new Constant() {
             @Override
-            public String name() {
+            public String toString() {
                 return String.valueOf(x);
             }
 
@@ -569,7 +569,7 @@ public interface Terms {
     static Term val(final float x) {
         return new Constant() {
             @Override
-            public String name() {
+            public String toString() {
                 return String.valueOf(x);
             }
 
@@ -599,7 +599,7 @@ public interface Terms {
     static Term val(final double x) {
         return new Constant() {
             @Override
-            public String name() {
+            public String toString() {
                 return String.valueOf(x);
             }
 
@@ -626,7 +626,7 @@ public interface Terms {
 
         return new Constant() {
             @Override
-            public String name() {
+            public String toString() {
                 return x.toString();
             }
 
@@ -662,18 +662,8 @@ public interface Terms {
     static <T> Term apply(final String name, final Term x, ToIntFunction<T> f) {
         return new Term() {
             @Override
-            public String name() {
-                return String.format("%s(%s)", name, x);
-            }
-
-            @Override
             public String toString() {
                 return String.format("%s(%s)", name, x);
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                return name().equals(o);
             }
 
             @Override
@@ -738,18 +728,8 @@ public interface Terms {
     static <T> Term apply(final String name, final Term x, ToLongFunction<T> f) {
         return new Term() {
             @Override
-            public String name() {
-                return String.format("%s(%s)", name, x);
-            }
-
-            @Override
             public String toString() {
                 return String.format("%s(%s)", name, x);
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                return name().equals(o);
             }
 
             @Override
@@ -809,18 +789,8 @@ public interface Terms {
     static <T> Term apply(final String name, final Term x, ToDoubleFunction<T> f) {
         return new Term() {
             @Override
-            public String name() {
-                return String.format("%s(%s)", name, x);
-            }
-
-            @Override
             public String toString() {
                 return String.format("%s(%s)", name, x);
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                return name().equals(o);
             }
 
             @Override
@@ -872,18 +842,8 @@ public interface Terms {
     static <T, R> Term apply(final String name, final Term x, final Class<R> clazz, java.util.function.Function f) {
         return new Term() {
             @Override
-            public String name() {
-                return String.format("%s(%s)", name, x);
-            }
-
-            @Override
             public String toString() {
                 return String.format("%s(%s)", name, x);
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                return name().equals(o);
             }
 
             @Override
@@ -930,18 +890,8 @@ public interface Terms {
     static <T, U> Term apply(final String name, final Term x, final Term y, ToIntBiFunction<T, U> f) {
         return new Term() {
             @Override
-            public String name() {
-                return String.format("%s(%s, %s)", name, x, y);
-            }
-
-            @Override
             public String toString() {
                 return String.format("%s(%s, %s)", name, x, y);
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                return name().equals(o);
             }
 
             @Override
@@ -996,18 +946,8 @@ public interface Terms {
     static <T, U> Term apply(final String name, final Term x, final Term y, ToLongBiFunction<T, U> f) {
         return new Term() {
             @Override
-            public String name() {
-                return String.format("%s(%s, %s)", name, x, y);
-            }
-
-            @Override
             public String toString() {
                 return String.format("%s(%s, %s)", name, x, y);
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                return name().equals(o);
             }
 
             @Override
@@ -1062,18 +1002,8 @@ public interface Terms {
     static <T, U> Term apply(final String name, final Term x, final Term y, ToDoubleBiFunction<T, U> f) {
         return new Term() {
             @Override
-            public String name() {
-                return String.format("%s(%s, %s)", name, x, y);
-            }
-
-            @Override
             public String toString() {
                 return String.format("%s(%s, %s)", name, x, y);
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                return name().equals(o);
             }
 
             @Override
@@ -1130,18 +1060,8 @@ public interface Terms {
     static <T, U, R> Term apply(final String name, final Term x, final Term y, final Class<R> clazz, BiFunction<T, U, R> f) {
         return new Term() {
             @Override
-            public String name() {
-                return String.format("%s(%s, %s)", name, x, y);
-            }
-
-            @Override
             public String toString() {
                 return String.format("%s(%s, %s)", name, x, y);
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                return name().equals(o);
             }
 
             @Override

@@ -37,11 +37,6 @@ public abstract class Constant implements Term {
     }
 
     @Override
-    public String toString() {
-        return name();
-    }
-
-    @Override
     public Set<String> variables() {
         return Collections.emptySet();
     }
