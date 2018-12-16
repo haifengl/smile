@@ -16,7 +16,6 @@
 package smile.data.formula;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import smile.data.Tuple;
@@ -30,7 +29,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-final class Variable implements Function {
+final class Variable implements Term {
     /** Variable name. */
     private final String name;
     /** Data type of variable. Only available after calling bind(). */
@@ -65,11 +64,6 @@ final class Variable implements Function {
     @Override
     public boolean equals(Object o) {
         return name().equals(o);
-    }
-
-    @Override
-    public List<Variable> factors() {
-        return Collections.singletonList(this);
     }
 
     @Override

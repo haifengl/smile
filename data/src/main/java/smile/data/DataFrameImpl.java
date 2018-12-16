@@ -30,7 +30,7 @@ import java.util.Spliterator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import smile.data.formula.Function;
+import smile.data.formula.Term;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.*;
@@ -302,21 +302,21 @@ class DataFrameImpl implements DataFrame {
         StructField[] fields = schema.fields();
         this.columns = new ArrayList<>(fields.length);
 
-        Function[] factors = formula.factors();
+        Term[] terms = formula.terms();
         for (int j = 0; j < fields.length; j++) {
             StructField field = fields[j];
-            if (factors[j].isVariable()) {
+            if (terms[j].isVariable()) {
                 columns.add(df.column(field.name));
             }
         }
 
         // We are done if all factors are raw columns.
-        if (columns.size() == factors.length) return;
+        if (columns.size() == terms.length) return;
 
         List<Tuple> data = df.stream().map(formula::apply).collect(Collectors.toList());
         for (int j = 0; j < fields.length; j++) {
             StructField field = fields[j];
-            if (formula.factors()[j].isVariable()) {
+            if (formula.terms()[j].isVariable()) {
                 continue;
             }
 

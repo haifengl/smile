@@ -15,89 +15,55 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructType;
 
 /**
- * The generic term of applying a double function.
+ * The generic term of applying an integer function.
  *
  * @author Haifeng Li
  */
-class IntFunction implements Function {
-    /** The operand factor of ceil expression. */
-    private Function child;
+class IntFunction extends AbstractFunction {
     /** The function on an integer. */
     private smile.math.IntFunction lambda;
-    /** The name of lambda. */
-    private String name;
 
     /**
      * Constructor.
      *
      * @param name the name of function.
-     * @param factor the factor that the function is applied to.
+     * @param x the term that the function is applied to.
      * @param lambda the function/lambda.
      */
-    public IntFunction(String name, Function factor, smile.math.IntFunction lambda) {
-        this.child = factor;
+    public IntFunction(String name, Term x, smile.math.IntFunction lambda) {
+        super(name, x);
         this.lambda = lambda;
-        this.name = name;
-    }
-
-    @Override
-    public String name() {
-        return String.format("%s(%s)", name, child.name());
-    }
-
-    @Override
-    public String toString() {
-        return name();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return name().equals(o);
-    }
-
-    @Override
-    public List<? extends Function> factors() {
-        return Collections.singletonList(this);
-    }
-
-    @Override
-    public Set<String> variables() {
-        return child.variables();
     }
 
     @Override
     public DataType type() {
-        return child.type().id() == DataType.ID.Object ? DataTypes.IntegerObjectType : DataTypes.IntegerType;
+        return x.type().id() == DataType.ID.Object ? DataTypes.IntegerObjectType : DataTypes.IntegerType;
     }
 
     @Override
     public void bind(StructType schema) {
-        child.bind(schema);
+        x.bind(schema);
 
-        if (!(child.type().isInt() || child.type().isShort() || child.type().isLong())) {
-            throw new IllegalStateException(String.format("Invalid expression: %s(%s)", name, child.type()));
+        if (!(x.type().isInt() || x.type().isShort() || x.type().isLong())) {
+            throw new IllegalStateException(String.format("Invalid expression: %s(%s)", name, x.type()));
         }
     }
 
     @Override
     public int applyAsInt(Tuple o) {
-        return lambda.apply(child.applyAsInt(o));
+        return lambda.apply(x.applyAsInt(o));
     }
 
     @Override
     public Integer apply(Tuple o) {
-        Object x = child.apply(o);
-        if (x == null) return null;
-        else return lambda.apply(((Number) x).intValue());
+        Object y = x.apply(o);
+        if (y == null) return null;
+        else return lambda.apply(((Number) y).intValue());
     }
 }

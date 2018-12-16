@@ -26,7 +26,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class All implements Term {
+class All implements HyperTerm {
     /** If true, keep the original columns. */
     private boolean rest;
     /** All columns in the schema. */

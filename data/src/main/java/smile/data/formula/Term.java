@@ -15,30 +15,58 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Set;
+import smile.data.Tuple;
+import smile.data.type.DataType;
 
-import smile.data.type.StructType;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * A term is recursively constructed from constant symbols,
- * variables and function symbols. A model consists of a series
- * of terms. The terms themselves consist of a single variable/arithmetic expression or can be
- * expanded to multiple expressions including the the interaction
- * of multiple variables.
- *
- *
+ * variables and function symbols. A term returns a single value
+ * when applied to a data object (e.g. Tuple).
  *
  * @author Haifeng Li
  */
-public interface Term extends Serializable {
-    /** Binds the term to a schema. */
-    void bind(StructType schema);
+public interface Term extends HyperTerm {
+    @Override
+    default List<Term> terms() {
+        return Collections.singletonList(this);
+    }
 
-    /** Returns the list of factors after expanding the term. */
-    List<? extends Function> factors();
+    /** Returns the data type of output values. */
+    DataType type();
 
-    /** Returns the list of variables used in this term. */
-    Set<String> variables();
+    /** Applies the term on a data object. */
+    Object apply(Tuple o);
+
+    /** Applies the term on a data object and produces an double-valued result. */
+    default double applyAsDouble(Tuple o) {
+        throw new UnsupportedOperationException();
+    }
+
+    /** Applies the term on a data object and produces an float-valued result. */
+    default float applyAsFloat(Tuple o) {
+        throw new UnsupportedOperationException();
+    }
+
+    /** Applies the term on a data object and produces an int-valued result. */
+    default int applyAsInt(Tuple o) {
+        throw new UnsupportedOperationException();
+    }
+
+    /** Applies the term on a data object and produces an long-valued result. */
+    default long applyAsLong(Tuple o) {
+        throw new UnsupportedOperationException();
+    }
+
+    /** Returns true if the term represents a plain variable. */
+    default boolean isVariable() {
+        return false;
+    }
+
+    /** Returns true if the term represents a constant value. */
+    default boolean isConstant() {
+        return false;
+    }
 }

@@ -15,6 +15,13 @@
  *******************************************************************************/
 package smile.data.formula;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.*;
+import smile.data.Tuple;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+import smile.data.type.StructType;
 import smile.math.MathEx;
 
 /**
@@ -28,13 +35,103 @@ public interface Terms {
         return new Variable(x);
     }
 
+    /** Deletes a variable from the formula. */
+    static HyperTerm delete(String x) {
+        return delete($(x));
+    }
+
+    /** Deletes a term from the formula. */
+    static HyperTerm delete(Term x) {
+        return new Delete(x);
+    }
+
+    /** Adds two terms. */
+    static Term add(Term a, Term b) {
+        return new Add(a, b);
+    }
+
+    /** Adds two terms. */
+    static Term add(String a, String b) {
+        return new Add($(a), $(b));
+    }
+
+    /** Adds two terms. */
+    static Term add(Term a, String b) {
+        return new Add(a, $(b));
+    }
+
+    /** Adds two terms. */
+    static Term add(String a, Term b) {
+        return new Add($(a), b);
+    }
+
+    /** Subtracts two terms. */
+    static Term sub(Term a, Term b) {
+        return new Sub(a, b);
+    }
+
+    /** Subtracts two terms. */
+    static Term sub(String a, String b) {
+        return new Sub($(a), $(b));
+    }
+
+    /** Subtracts two terms. */
+    static Term sub(Term a, String b) {
+        return new Sub(a, $(b));
+    }
+
+    /** Subtracts two terms. */
+    static Term sub(String a, Term b) {
+        return new Sub($(a), b);
+    }
+
+    /** Multiplies two terms. */
+    static Term mul(Term a, Term b) {
+        return new Mul(a, b);
+    }
+
+    /** Multiplies two terms. */
+    static Term mul(String a, String b) {
+        return new Mul($(a), $(b));
+    }
+
+    /** Multiplies two terms. */
+    static Term mul(Term a, String b) {
+        return new Mul(a, $(b));
+    }
+
+    /** Multiplies two terms. */
+    static Term mul(String a, Term b) {
+        return new Mul($(a), b);
+    }
+
+    /** Divides two terms. */
+    static Term div(Term a, Term b) {
+        return new Div(a, b);
+    }
+
+    /** Divides two terms. */
+    static Term div(String a, String b) {
+        return new Div($(a), $(b));
+    }
+
+    /** Divides two terms. */
+    static Term div(Term a, String b) {
+        return new Div(a, $(b));
+    }
+
+    /** Divides two terms. */
+    static Term div(String a, Term b) {
+        return new Div($(a), b);
+    }
+    
     /** Applies Math.abs. */
     static Abs abs(String x) {
         return abs($(x));
     }
 
     /** Applies Math.abs. */
-    static Abs abs(Function x) {
+    static Abs abs(Term x) {
         return new Abs(x);
     }
 
@@ -44,7 +141,7 @@ public interface Terms {
     }
 
     /** Applies Math.ceil. */
-    static DoubleFunction ceil(Function x) {
+    static DoubleFunction ceil(Term x) {
         return new DoubleFunction("ceil", x, Math::ceil);
     }
 
@@ -54,7 +151,7 @@ public interface Terms {
     }
 
     /** Applies Math.floor. */
-    static DoubleFunction floor(Function x) {
+    static DoubleFunction floor(Term x) {
         return new DoubleFunction("floor", x, Math::floor);
     }
 
@@ -64,7 +161,7 @@ public interface Terms {
     }
 
     /** Applies Math.round. */
-    static Round round(Function x) {
+    static Round round(Term x) {
         return new Round(x);
     }
 
@@ -74,7 +171,7 @@ public interface Terms {
     }
 
     /** Applies Math.rint. */
-    static DoubleFunction rint(Function x) {
+    static DoubleFunction rint(Term x) {
         return new DoubleFunction("rint", x, Math::rint);
     }
 
@@ -84,7 +181,7 @@ public interface Terms {
     }
 
     /** Applies Math.exp. */
-    static DoubleFunction exp(Function x) {
+    static DoubleFunction exp(Term x) {
         return new DoubleFunction("exp", x, Math::exp);
     }
 
@@ -94,7 +191,7 @@ public interface Terms {
     }
 
     /** Applies Math.expm1. */
-    static DoubleFunction expm1(Function x) {
+    static DoubleFunction expm1(Term x) {
         return new DoubleFunction("expm1", x, Math::expm1);
     }
 
@@ -104,7 +201,7 @@ public interface Terms {
     }
 
     /** Applies Math.log. */
-    static DoubleFunction log(Function x) {
+    static DoubleFunction log(Term x) {
         return new DoubleFunction("log", x, Math::log);
     }
 
@@ -114,7 +211,7 @@ public interface Terms {
     }
 
     /** Applies Math.log1p. */
-    static DoubleFunction log1p(Function x) {
+    static DoubleFunction log1p(Term x) {
         return new DoubleFunction("log1p", x, Math::log1p);
     }
 
@@ -124,7 +221,7 @@ public interface Terms {
     }
 
     /** Applies Math.log10. */
-    static DoubleFunction log10(Function x) {
+    static DoubleFunction log10(Term x) {
         return new DoubleFunction("log10", x, Math::log10);
     }
 
@@ -134,7 +231,7 @@ public interface Terms {
     }
 
     /** Applies MathEx.log2. */
-    static DoubleFunction log2(Function x) {
+    static DoubleFunction log2(Term x) {
         return new DoubleFunction("log2", x, MathEx::log2);
     }
 
@@ -144,7 +241,7 @@ public interface Terms {
     }
 
     /** Applies Math.signum. */
-    static DoubleFunction signum(Function x) {
+    static DoubleFunction signum(Term x) {
         return new DoubleFunction("signum", x, Math::signum);
     }
 
@@ -154,7 +251,7 @@ public interface Terms {
     }
 
     /** Applies Integer.signum. */
-    static IntFunction sign(Function x) {
+    static IntFunction sign(Term x) {
         return new IntFunction("sign", x, Integer::signum);
     }
 
@@ -164,7 +261,7 @@ public interface Terms {
     }
 
     /** Applies Math.sqrt. */
-    static DoubleFunction sqrt(Function x) {
+    static DoubleFunction sqrt(Term x) {
         return new DoubleFunction("sqrt", x, Math::sqrt);
     }
 
@@ -174,7 +271,7 @@ public interface Terms {
     }
 
     /** Applies Math.cbrt. */
-    static DoubleFunction cbrt(Function x) {
+    static DoubleFunction cbrt(Term x) {
         return new DoubleFunction("cbrt", x, Math::cbrt);
     }
 
@@ -184,7 +281,7 @@ public interface Terms {
     }
 
     /** Applies Math.sin. */
-    static DoubleFunction sin(Function x) {
+    static DoubleFunction sin(Term x) {
         return new DoubleFunction("sin", x, Math::sin);
     }
 
@@ -194,7 +291,7 @@ public interface Terms {
     }
 
     /** Applies Math.cos. */
-    static DoubleFunction cos(Function x) {
+    static DoubleFunction cos(Term x) {
         return new DoubleFunction("cos", x, Math::cos);
     }
 
@@ -204,7 +301,7 @@ public interface Terms {
     }
 
     /** Applies Math.tan. */
-    static DoubleFunction tan(Function x) {
+    static DoubleFunction tan(Term x) {
         return new DoubleFunction("tan", x, Math::tan);
     }
 
@@ -214,7 +311,7 @@ public interface Terms {
     }
 
     /** Applies Math.sinh. */
-    static DoubleFunction sinh(Function x) {
+    static DoubleFunction sinh(Term x) {
         return new DoubleFunction("sinh", x, Math::sinh);
     }
 
@@ -224,7 +321,7 @@ public interface Terms {
     }
 
     /** Applies Math.cosh. */
-    static DoubleFunction cosh(Function x) {
+    static DoubleFunction cosh(Term x) {
         return new DoubleFunction("cosh", x, Math::cosh);
     }
 
@@ -234,7 +331,7 @@ public interface Terms {
     }
 
     /** Applies Math.tanh. */
-    static DoubleFunction tanh(Function x) {
+    static DoubleFunction tanh(Term x) {
         return new DoubleFunction("tanh", x, Math::tanh);
     }
 
@@ -244,7 +341,7 @@ public interface Terms {
     }
 
     /** Applies Math.asin. */
-    static DoubleFunction asin(Function x) {
+    static DoubleFunction asin(Term x) {
         return new DoubleFunction("asin", x, Math::asin);
     }
 
@@ -254,7 +351,7 @@ public interface Terms {
     }
 
     /** Applies Math.acos. */
-    static DoubleFunction acos(Function x) {
+    static DoubleFunction acos(Term x) {
         return new DoubleFunction("acos", x, Math::acos);
     }
 
@@ -264,7 +361,7 @@ public interface Terms {
     }
 
     /** Applies Math.atan. */
-    static DoubleFunction atan(Function x) {
+    static DoubleFunction atan(Term x) {
         return new DoubleFunction("atan", x, Math::acos);
     }
 
@@ -274,7 +371,800 @@ public interface Terms {
     }
 
     /** Applies Math.ulp. */
-    static DoubleFunction ulp(Function x) {
+    static DoubleFunction ulp(Term x) {
         return new DoubleFunction("ulp", x, Math::ulp);
+    }
+
+    /** Returns a constant boolean term. */
+    static Term val(final boolean x) {
+        return new Constant() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.BooleanType;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a constant char term. */
+    static Term val(final char x) {
+        return new Constant() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.CharType;
+            }
+
+            @Override
+            public int applyAsInt(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a constant byte term. */
+    static Term val(final byte x) {
+        return new Constant() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.ByteType;
+            }
+
+            @Override
+            public int applyAsInt(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a constant short term. */
+    static Term val(final short x) {
+        return new Constant() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.ShortType;
+            }
+
+            @Override
+            public int applyAsInt(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a constant integer term. */
+    static Term val(final int x) {
+        return new Constant() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.IntegerType;
+            }
+
+            @Override
+            public int applyAsInt(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a constant long term. */
+    static Term val(final long x) {
+        return new Constant() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.LongType;
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a constant float term. */
+    static Term val(final float x) {
+        return new Constant() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.FloatType;
+            }
+
+            @Override
+            public float applyAsFloat(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a constant double term. */
+    static Term val(final double x) {
+        return new Constant() {
+            @Override
+            public String name() {
+                return String.valueOf(x);
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.DoubleType;
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return x;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /** Returns a constant object term. */
+    static Term val(final Object x) {
+        final DataType type = DataType.of(x.getClass());
+
+        return new Constant() {
+            @Override
+            public String name() {
+                return x.toString();
+            }
+
+            @Override
+            public DataType type() {
+                return type;
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return x;
+            }
+        };
+    }
+
+    /**
+     * Returns a term that applies a lambda on given column.
+     * @param name the function name.
+     * @param x the column name.
+     * @param f the lambda to apply on the column.
+     */
+    static <T> Term apply(final String name, final String x, ToIntFunction<T> f) {
+        return apply(name, $(x), f);
+    }
+
+    /**
+     * Returns a term that applies a lambda on given term.
+     * @param name the function name.
+     * @param x the term.
+     * @param f the lambda to apply on the term.
+     */
+    @SuppressWarnings("unchecked")
+    static <T> Term apply(final String name, final Term x, ToIntFunction<T> f) {
+        return new Term() {
+            @Override
+            public String name() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return x.variables();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.IntegerType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+            }
+
+            @Override
+            public int applyAsInt(Tuple o) {
+                return f.applyAsInt((T) x.apply(o));
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return f.applyAsInt((T) x.apply(o));
+            }
+
+            @Override
+            public float applyAsFloat(Tuple o) {
+                return f.applyAsInt((T) x.apply(o));
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return f.applyAsInt((T) x.apply(o));
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.applyAsInt((T) x.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a term that applies a lambda on given column.
+     * @param name the function name.
+     * @param x the column name.
+     * @param f the lambda to apply on the column.
+     */
+    static <T> Term apply(final String name, final String x, ToLongFunction<T> f) {
+        return apply(name, $(x), f);
+    }
+
+    /**
+     * Returns a term that applies a lambda on given term.
+     * @param name the function name.
+     * @param x the term.
+     * @param f the lambda to apply on the term.
+     */
+    @SuppressWarnings("unchecked")
+    static <T> Term apply(final String name, final Term x, ToLongFunction<T> f) {
+        return new Term() {
+            @Override
+            public String name() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return x.variables();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.LongType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return f.applyAsLong((T) x.apply(o));
+            }
+
+            @Override
+            public float applyAsFloat(Tuple o) {
+                return f.applyAsLong((T) x.apply(o));
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return f.applyAsLong((T) x.apply(o));
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.applyAsLong((T) x.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a term that applies a lambda on given column.
+     * @param name the function name.
+     * @param x the column name.
+     * @param f the lambda to apply on the column.
+     */
+    static <T> Term apply(final String name, final String x, ToDoubleFunction<T> f) {
+        return apply(name, $(x), f);
+    }
+
+    /**
+     * Returns a term that applies a lambda on given term.
+     * @param name the function name.
+     * @param x the term.
+     * @param f the lambda to apply on the term.
+     */
+    @SuppressWarnings("unchecked")
+    static <T> Term apply(final String name, final Term x, ToDoubleFunction<T> f) {
+        return new Term() {
+            @Override
+            public String name() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return x.variables();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.DoubleType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return f.applyAsDouble((T) x.apply(o));
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.applyAsDouble((T) x.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a term that applies a lambda on given column.
+     * @param name the function name.
+     * @param x the column name.
+     * @param clazz the class of return object.
+     * @param f the lambda to apply on the column.
+     */
+    static <T, R> Term apply(final String name, final String x, final Class<R> clazz, java.util.function.Function f) {
+        return apply(name, $(x), clazz, f);
+    }
+
+    /**
+     * Returns a term that applies a lambda on given term.
+     * @param name the function name.
+     * @param x the term.
+     * @param clazz the class of return object.
+     * @param f the lambda to apply on the term.
+     */
+    @SuppressWarnings("unchecked")
+    static <T, R> Term apply(final String name, final Term x, final Class<R> clazz, java.util.function.Function f) {
+        return new Term() {
+            @Override
+            public String name() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s)", name, x);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public Set<String> variables() {
+                return x.variables();
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.object(clazz);
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.apply((T) x.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a term that applies a lambda on given columns.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param f the lambda to apply on the columns.
+     */
+    static <T, U> Term apply(final String name, final String x, final String y, ToIntBiFunction<T, U> f) {
+        return apply(name, $(x), $(y), f);
+    }
+
+    /**
+     * Returns a term that applies a lambda on given terms.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param f the lambda to apply on the terms.
+     */
+    @SuppressWarnings("unchecked")
+    static <T, U> Term apply(final String name, final Term x, final Term y, ToIntBiFunction<T, U> f) {
+        return new Term() {
+            @Override
+            public String name() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public Set<String> variables() {
+                Set<String> vars = new HashSet<>(x.variables());
+                vars.addAll(y.variables());
+                return vars;
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.IntegerType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+                y.bind(schema);
+            }
+
+            @Override
+            public int applyAsInt(Tuple o) {
+                return f.applyAsInt((T) x.apply(o), (U) y.apply(o));
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.applyAsInt((T) x.apply(o), (U) y.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a term that applies a lambda on given columns.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param f the lambda to apply on the columns.
+     */
+    static <T, U> Term apply(final String name, final String x, final String y, ToLongBiFunction<T, U> f) {
+        return apply(name, $(x), $(y), f);
+    }
+
+    /**
+     * Returns a term that applies a lambda on given terms.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param f the lambda to apply on the terms.
+     */
+    @SuppressWarnings("unchecked")
+    static <T, U> Term apply(final String name, final Term x, final Term y, ToLongBiFunction<T, U> f) {
+        return new Term() {
+            @Override
+            public String name() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public Set<String> variables() {
+                Set<String> vars = new HashSet<>(x.variables());
+                vars.addAll(y.variables());
+                return vars;
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.LongType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+                y.bind(schema);
+            }
+
+            @Override
+            public long applyAsLong(Tuple o) {
+                return f.applyAsLong((T) x.apply(o), (U) y.apply(o));
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.applyAsLong((T) x.apply(o), (U) y.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a term that applies a lambda on given columns.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param f the lambda to apply on the columns.
+     */
+    static <T, U> Term apply(final String name, final String x, final String y, ToDoubleBiFunction<T, U> f) {
+        return apply(name, $(x), $(y), f);
+    }
+
+    /**
+     * Returns a term that applies a lambda on given terms.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param f the lambda to apply on the terms.
+     */
+    @SuppressWarnings("unchecked")
+    static <T, U> Term apply(final String name, final Term x, final Term y, ToDoubleBiFunction<T, U> f) {
+        return new Term() {
+            @Override
+            public String name() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public Set<String> variables() {
+                Set<String> vars = new HashSet<>(x.variables());
+                vars.addAll(y.variables());
+                return vars;
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.DoubleType;
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+                y.bind(schema);
+            }
+
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return f.applyAsDouble((T) x.apply(o), (U) y.apply(o));
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.applyAsDouble((T) x.apply(o), (U) y.apply(o));
+            }
+        };
+    }
+
+    /**
+     * Returns a term that applies a lambda on given columns.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param clazz the class of return object.
+     * @param f the lambda to apply on the columns.
+     */
+    static <T, U, R> Term apply(final String name, final String x, final String y, final Class<R> clazz, BiFunction<T, U, R> f) {
+        return apply(name, $(x), $(y), clazz, f);
+    }
+
+    /**
+     * Returns a term that applies a lambda on given terms.
+     * @param name the function name.
+     * @param x the first parameter of function.
+     * @param y the second parameter of function.
+     * @param clazz the class of return object.
+     * @param f the lambda to apply on the terms.
+     */
+    @SuppressWarnings("unchecked")
+    static <T, U, R> Term apply(final String name, final Term x, final Term y, final Class<R> clazz, BiFunction<T, U, R> f) {
+        return new Term() {
+            @Override
+            public String name() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s, %s)", name, x, y);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return name().equals(o);
+            }
+
+            @Override
+            public Set<String> variables() {
+                Set<String> vars = new HashSet<>(x.variables());
+                vars.addAll(y.variables());
+                return vars;
+            }
+
+            @Override
+            public DataType type() {
+                return DataTypes.object(clazz);
+            }
+
+            @Override
+            public void bind(StructType schema) {
+                x.bind(schema);
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                return f.apply((T) x.apply(o), (U) y.apply(o));
+            }
+        };
     }
 }

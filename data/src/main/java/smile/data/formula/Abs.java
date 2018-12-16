@@ -15,10 +15,6 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.StructType;
@@ -28,90 +24,62 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Abs implements Function {
-    /** The operand factor of abs expression. */
-    private Function child;
-
+class Abs extends AbstractFunction {
     /**
      * Constructor.
      *
-     * @param factor the factor that abs function is applied to.
+     * @param x the term that the function is applied to.
      */
-    public Abs(Function factor) {
-        this.child = factor;
-    }
-
-    @Override
-    public String name() {
-        return String.format("abs(%s)", child.name());
-    }
-
-    @Override
-    public String toString() {
-        return name();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return name().equals(o);
-    }
-
-    @Override
-    public List<? extends Function> factors() {
-        return Collections.singletonList(this);
-    }
-
-    @Override
-    public Set<String> variables() {
-        return child.variables();
+    public Abs(Term x) {
+        super("abs", x);
     }
 
     @Override
     public Object apply(Tuple o) {
-        Object x = child.apply(o);
-        if (x == null) return null;
+        Object y = x.apply(o);
+        if (y == null) return null;
 
-        if (x instanceof Double) return Math.abs((double) x);
-        else if (x instanceof Integer) return Math.abs((int) x);
-        else if (x instanceof Float) return Math.abs((float) x);
-        else if (x instanceof Long) return Math.abs((long) x);
-        else throw new IllegalArgumentException("Invalid argument for abs(): " + x);
+        if (y instanceof Double) return Math.abs((double) y);
+        else if (y instanceof Integer) return Math.abs((int) y);
+        else if (y instanceof Float) return Math.abs((float) y);
+        else if (y instanceof Long) return Math.abs((long) y);
+        else throw new IllegalArgumentException("Invalid argument for abs(): " + y);
     }
 
     @Override
     public int applyAsInt(Tuple o) {
-        return Math.abs(child.applyAsInt(o));
+        return Math.abs(x.applyAsInt(o));
     }
 
     @Override
     public long applyAsLong(Tuple o) {
-        return Math.abs(child.applyAsLong(o));
+        return Math.abs(x.applyAsLong(o));
     }
 
     @Override
     public float applyAsFloat(Tuple o) {
-        return Math.abs(child.applyAsFloat(o));
+        return Math.abs(x.applyAsFloat(o));
     }
 
     @Override
     public double applyAsDouble(Tuple o) {
-        return Math.abs(child.applyAsDouble(o));
+        return Math.abs(x.applyAsDouble(o));
     }
 
     @Override
     public DataType type() {
-        return child.type();
+        return x.type();
     }
 
     @Override
     public void bind(StructType schema) {
-        child.bind(schema);
+        x.bind(schema);
 
-        if (!(child.type().isInt() ||
-              child.type().isLong() ||
-              child.type().isDouble() ||
-              child.type().isFloat())) {
-            throw new IllegalStateException(String.format("Invalid expression: abs(%s)", child.type()));
+        if (!(x.type().isInt() ||
+              x.type().isLong() ||
+              x.type().isDouble() ||
+              x.type().isFloat())) {
+            throw new IllegalStateException(String.format("Invalid expression: abs(%s)", x.type()));
         }
     }
 }
