@@ -16,6 +16,7 @@
 package smile.data.formula;
 
 import java.util.Set;
+import smile.data.type.StructType;
 
 /**
  * This class provides a skeletal implementation of the function term.
@@ -47,5 +48,10 @@ public abstract class AbstractFunction extends AbstractTerm implements Term {
     @Override
     public Set<String> variables() {
         return x.variables();
+    }
+
+    @Override
+    public void bind(StructType schema) {
+        x.bind(schema);
     }
 }
