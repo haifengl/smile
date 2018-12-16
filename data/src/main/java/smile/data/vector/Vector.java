@@ -16,9 +16,17 @@
 
 package smile.data.vector;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import smile.data.measure.NominalScale;
+import smile.data.measure.OrdinalScale;
 import smile.data.type.DataType;
 
 /**
@@ -27,6 +35,86 @@ import smile.data.type.DataType;
  * @author Haifeng Li
  */
 public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
+
+    /**
+     * Returns a vector of LocalDate. If the vector is of strings, it uses the default
+     * ISO date formatter that parses a date without an offset, such as '2011-12-03'.
+     * If the vector is of other time related objects such as Instant, java.util.Date,
+     * java.sql.Timestamp, etc., do a proper conversion.
+     */
+    Vector<LocalDate> toDate();
+
+    /**
+     * Returns a vector of LocalDate. This method assumes that this is a string vector and
+     * uses the given date format pattern to parse strings.
+     */
+    default Vector<LocalDate> toDate(String pattern) {
+        return toDate(DateTimeFormatter.ofPattern(pattern));
+    }
+
+    /**
+     * Returns a vector of LocalDate. This method assumes that this is a string vector and
+     * uses the given date format pattern to parse strings.
+     */
+    Vector<LocalDate> toDate(DateTimeFormatter format);
+
+    /**
+     * Returns a vector of LocalTime. If the vector is of strings, it uses the default
+     * ISO time formatter that parses a time without an offset, such as '10:15' or '10:15:30'.
+     * If the vector is of other time related objects such as Instant, java.util.Date,
+     * java.sql.Timestamp, etc., do a proper conversion.
+     */
+    Vector<LocalTime> toTime();
+
+    /**
+     * Returns a vector of LocalTime. This method assumes that this is a string vector and
+     * uses the given time format pattern to parse strings.
+     */
+    default Vector<LocalTime> toTime(String pattern) {
+        return toTime(DateTimeFormatter.ofPattern(pattern));
+    }
+
+    /**
+     * Returns a vector of LocalDate. This method assumes that this is a string vector and
+     * uses the given time format pattern to parse strings.
+     */
+    Vector<LocalTime> toTime(DateTimeFormatter format);
+
+    /**
+     * Returns a vector of LocalDateTime. If the vector is of strings, it uses the default
+     * ISO date time formatter that parses a date without an offset, such as '2011-12-03T10:15:30'.
+     * If the vector is of other time related objects such as Instant, java.util.Date,
+     * java.sql.Timestamp, etc., do a proper conversion.
+     */
+    Vector<LocalDateTime> toDateTime();
+
+    /**
+     * Returns a vector of LocalDateTime. This method assumes that this is a string vector and
+     * uses the given date time format pattern to parse strings.
+     */
+    default Vector<LocalDateTime> toDateTime(String pattern) {
+        return toDateTime(DateTimeFormatter.ofPattern(pattern));
+    }
+
+    /**
+     * Returns a vector of LocalDateTime. This method assumes that this is a string vector and
+     * uses the given date time format pattern to parse strings.
+     */
+    Vector<LocalDateTime> toDateTime(DateTimeFormatter format);
+
+    /**
+     * Converts strings to nominal values. Depending on how many levels
+     * in the nominal scale, the type of returned vector may be byte, short
+     * or integer. The missing values/nulls will be converted to -1.
+     */
+    BaseVector toNomial(NominalScale scale);
+
+    /**
+     * Converts strings to ordinal values. Depending on how many levels
+     * in the nominal scale, the type of returned vector may be byte, short
+     * or integer. The missing values/nulls will be converted to -1.
+     */
+    BaseVector toOrdinal(OrdinalScale scale);
 
     /** Returns the distinct values. */
     default List<T> distinct() {
@@ -72,10 +160,7 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
 
     /** Returns true if there are any NULL values in this row. */
     default boolean anyNull() {
-        for (int i = 0; i < size(); i++) {
-            if (isNullAt(i)) return true;
-        }
-        return false;
+        return stream().filter(Objects::isNull).findAny().isPresent();
     }
 
     /**
