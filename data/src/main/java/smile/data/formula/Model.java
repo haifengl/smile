@@ -29,13 +29,13 @@ import smile.data.type.StructType;
  */
 public class Model extends Formula {
     /** The response variable. */
-    private Function y;
+    private Term y;
 
     /**
      * Constructor.
      * @param y the response variable. All other columns will be used as predictors.
      */
-    public Model(Function y) {
+    public Model(Term y) {
         this(y, all());
     }
 
@@ -44,8 +44,8 @@ public class Model extends Formula {
      * @param y the response variable.
      * @param x the predictor terms.
      */
-    public Model(Function y, Term... x) {
-        super(removey(y, x));
+    public Model(Term y, HyperTerm... x) {
+        super(removeY(y, x));
         this.y = y;
 
         DataType type = y.type();
@@ -55,10 +55,10 @@ public class Model extends Formula {
     }
 
     /** Returns a new array of terms that includes x but removes y. */
-    private static Term[] removey(Function y, Term... x) {
-        Term[] terms = new Term[x.length+1];
+    private static HyperTerm[] removeY(Term y, HyperTerm... x) {
+        HyperTerm[] terms = new HyperTerm[x.length+1];
         System.arraycopy(x, 0, terms, 0, x.length);
-        terms[x.length] = remove(y);
+        terms[x.length] = new Delete(y);
         return terms;
     }
 

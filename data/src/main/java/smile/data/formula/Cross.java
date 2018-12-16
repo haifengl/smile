@@ -37,9 +37,9 @@ import java.util.stream.Collectors;
  *
  * @author Haifeng Li
  */
-class Cross implements Term {
+class Cross implements HyperTerm {
     /** The children factors. */
-    private List<Function> factors;
+    private List<Term> factors;
 
     /**
      * Constructor.
@@ -47,7 +47,7 @@ class Cross implements Term {
      * @param factors the factors to be crossed.
      */
     @SafeVarargs
-    public Cross(Function... factors) {
+    public Cross(Term... factors) {
         if (factors.length < 2) {
             throw new IllegalArgumentException("Cross constructor takes at least two factors");
         }
@@ -56,17 +56,17 @@ class Cross implements Term {
 
     @Override
     public String toString() {
-        return factors.stream().map(Function::toString).collect(Collectors.joining(" + ", "(", ")^2"));
+        return factors.stream().map(Term::toString).collect(Collectors.joining(" + ", "(", ")^2"));
     }
 
     @Override
-    public List<? extends Function> factors() {
-        List<Function> crossings = new ArrayList<>(factors);
+    public List<? extends Term> factors() {
+        List<Term> crossings = new ArrayList<>(factors);
         int n = factors.size();
         for (int i = 0; i < n; i++) {
-            Function fi = factors.get(i);
+            Term fi = factors.get(i);
             for (int j = i + 1; j < n; j++) {
-                Function cross = new Mul(fi, factors.get(j));
+                Term cross = new Mul(fi, factors.get(j));
                 crossings.add(cross);
             }
         }

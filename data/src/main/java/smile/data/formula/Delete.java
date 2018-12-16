@@ -27,56 +27,37 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Remove implements Function {
-    /** The factor to remove. */
-    private Function factor;
+class Delete extends AbstractTerm {
+    /** The term to delete. */
+    HyperTerm x;
 
     /**
      * Constructor.
      *
-     * @param factor the factor to remove.
+     * @param x the term to delete.
      */
-    public Remove(Function factor) {
-        this.factor = factor;
+    public Delete(HyperTerm x) {
+        super("delete");
+        this.x = x;
     }
 
     @Override
     public String name() {
-        return factor.name();
-    }
-
-    @Override
-    public String toString() {
-        return String.format("remove(%s)", factor);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return name().equals(o);
-    }
-
-    @Override
-    public List<? extends Function> factors() {
-        return Collections.singletonList(factor);
-    }
-
-    @Override
-    public Set<String> variables() {
-        return factor.variables();
-    }
-
-    @Override
-    public Object apply(Tuple o) {
-        throw new UnsupportedOperationException("Remove.apply() should never be called");
-    }
-
-    @Override
-    public DataType type() {
-        throw new UnsupportedOperationException("Remove.type() should never be called");
+        return String.format("delete(%s)", x.name());
     }
 
     @Override
     public void bind(StructType schema) {
-        factor.bind(schema);
+        x.bind(schema);
+    }
+
+    @Override
+    public List<Term> terms() {
+        return x.terms();
+    }
+
+    @Override
+    public Set<String> variables() {
+        return x.variables();
     }
 }

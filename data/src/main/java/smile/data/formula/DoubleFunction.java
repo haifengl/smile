@@ -15,10 +15,6 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
@@ -29,75 +25,45 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class DoubleFunction implements Function {
-    /** The operand factor of ceil expression. */
-    private Function child;
+public class DoubleFunction extends AbstractFunction {
     /** The function on a double. */
     private smile.math.Function lambda;
-    /** The name of lambda. */
-    private String name;
 
     /**
      * Constructor.
      *
      * @param name the name of function.
-     * @param factor the factor that the function is applied to.
+     * @param x the term that the function is applied to.
      * @param lambda the function/lambda.
      */
-    public DoubleFunction(String name, Function factor, smile.math.Function lambda) {
-        this.name = name;
-        this.child = factor;
+    public DoubleFunction(String name, Term x, smile.math.Function lambda) {
+        super(name, x);
         this.lambda = lambda;
     }
 
     @Override
-    public String name() {
-        return String.format("%s(%s)", name, child.name());
-    }
-
-    @Override
-    public String toString() {
-        return name();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return name().equals(o);
-    }
-
-    @Override
-    public List<? extends Function> factors() {
-        return Collections.singletonList(this);
-    }
-
-    @Override
-    public Set<String> variables() {
-        return child.variables();
-    }
-
-    @Override
     public DataType type() {
-        return child.type().id() == DataType.ID.Object ? DataTypes.DoubleObjectType : DataTypes.DoubleType;
+        return x.type().id() == DataType.ID.Object ? DataTypes.DoubleObjectType : DataTypes.DoubleType;
     }
 
     @Override
     public void bind(StructType schema) {
-        child.bind(schema);
+        x.bind(schema);
 
-        if (!(child.type().isDouble() || child.type().isFloat() || child.type().isInt() || child.type().isLong() || child.type().isShort() || child.type().isByte())) {
-            throw new IllegalStateException(String.format("Invalid expression: %s(%s)", name, child.type()));
+        if (!(x.type().isDouble() || x.type().isFloat() || x.type().isInt() || x.type().isLong() || x.type().isShort() || x.type().isByte())) {
+            throw new IllegalStateException(String.format("Invalid expression: %s(%s)", name, x.type()));
         }
     }
 
     @Override
     public double applyAsDouble(Tuple o) {
-        return lambda.apply(child.applyAsDouble(o));
+        return lambda.apply(x.applyAsDouble(o));
     }
 
     @Override
     public Double apply(Tuple o) {
-        Object x = child.apply(o);
-        if (x == null) return null;
-        else return lambda.apply(((Number) x).doubleValue());
+        Object y = x.apply(o);
+        if (y == null) return null;
+        else return lambda.apply(((Number) y).doubleValue());
     }
 }
