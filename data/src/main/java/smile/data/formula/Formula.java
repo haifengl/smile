@@ -142,14 +142,4 @@ public class Formula implements Serializable {
         schema = DataTypes.struct(fields);
         return schema;
     }
-
-    /** Returns all columns not otherwise in the formula. */
-    public static HyperTerm all() {
-        return new All();
-    }
-
-    /** Returns all columns if rest is true or only those not otherwise in the formula. */
-    public static HyperTerm all(boolean rest) {
-        return new All(rest);
-    }
 }

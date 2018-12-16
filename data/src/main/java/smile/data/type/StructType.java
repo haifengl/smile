@@ -92,9 +92,8 @@ public class StructType implements DataType {
         List<Function<String, Object>> parser = new ArrayList<>();
         for (int i = 0; i < fields.length; i++) {
             StructField field = fields[i];
-            Measure m = measure.get(field.name);
-            if (m != null && m instanceof DiscreteMeasure) {
-                final DiscreteMeasure scale = (DiscreteMeasure) m;
+            Measure scale = measure.get(field.name);
+            if (scale != null) {
                 parser.add(s -> scale.valueOf(s));
             } else {
                 final DataType type = field.type;
@@ -147,10 +146,7 @@ public class StructType implements DataType {
                 .map(field -> {
                     Object v = t.get(field.name);
                     Measure m = measure().get(field.name);
-                    String value = v == null ? "null" :
-                            ((m != null && m instanceof DiscreteMeasure) ?
-                                    t.getScale(field.name) :
-                                    field.type.toString(v));
+                    String value = v == null ? "null" : ((m != null) ? m.toString(v) : field.type.toString(v));
                     return String.format("  %s: %s", field.name, value);
                 })
                 .collect(Collectors.joining(",\n", "{\n", "\n}"));
@@ -165,12 +161,10 @@ public class StructType implements DataType {
             String[] pair = element.split(":");
             int i = index.get(pair[0]);
             StructField field = fields[i];
-            Measure m = measure.get(field.name);
-            if (m != null && m instanceof DiscreteMeasure) {
-                DiscreteMeasure scale = (DiscreteMeasure) m;
+            Measure scale = measure.get(field.name);
+            if (scale != null) {
                 row[i] = scale.valueOf(pair[1]);
             } else {
-                final DataType type = field.type;
                 row[i] = field.type.valueOf(pair[1]);
             }
         }

@@ -16,6 +16,7 @@
 package smile.data.measure;
 
 import java.io.Serializable;
+import java.text.NumberFormat;
 
 /**
  * Level of measurement or scale of measure is a classification that
@@ -29,5 +30,15 @@ import java.io.Serializable;
  * @author Haifeng Li
  */
 public interface Measure extends Serializable {
+    /** Currency. */
+    RatioScale Currency = new RatioScale(NumberFormat.getCurrencyInstance());
 
+    /** Percent. */
+    RatioScale Percent = new RatioScale(NumberFormat.getPercentInstance());
+
+    /** Returns a measurement value object represented by the argument string s. */
+    Number valueOf(String s) throws NumberFormatException;
+
+    /** Returns the string representation of a value of the measure. */
+    String toString(Object o);
 }

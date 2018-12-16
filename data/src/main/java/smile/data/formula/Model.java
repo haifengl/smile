@@ -36,7 +36,7 @@ public class Model extends Formula {
      * @param y the response variable. All other columns will be used as predictors.
      */
     public Model(Term y) {
-        this(y, all());
+        this(y, Terms.all());
     }
 
     /**

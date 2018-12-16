@@ -306,9 +306,9 @@ public interface DataFrame extends Dataset<Tuple> {
         if (o instanceof String) {
             return (String) o;
         } else {
-            Measure m = schema().measure().get(schema().field(j).name);
-            if (m != null && m instanceof DiscreteMeasure) {
-                return getScale(i, j);
+            Measure measure = schema().measure().get(schema().field(j).name);
+            if (measure != null) {
+                return measure.toString(o);
             } else {
                 return schema().field(j).type.toString(o);
             }
