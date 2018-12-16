@@ -15,14 +15,10 @@
  *******************************************************************************/
 package smile.data.formula;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.function.*;
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
-import smile.data.type.StructType;
-import smile.math.MathEx;
 
 /**
  * Predefined terms.
@@ -33,6 +29,16 @@ public interface Terms {
     /** Returns a variable. */
     static Variable $(String x) {
         return new Variable(x);
+    }
+
+    /** Returns all columns not otherwise in the formula. */
+    static HyperTerm all() {
+        return all(true);
+    }
+
+    /** Returns all columns if rest is true or only those not otherwise in the formula. */
+    static HyperTerm all(boolean rest) {
+        return new All(rest);
     }
 
     /** Deletes a variable from the formula. */
@@ -232,7 +238,7 @@ public interface Terms {
 
     /** Applies MathEx.log2. */
     static DoubleFunction log2(Term x) {
-        return new DoubleFunction("log2", x, MathEx::log2);
+        return new DoubleFunction("log2", x, smile.math.MathEx::log2);
     }
 
     /** Applies Math.signum. */

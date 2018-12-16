@@ -272,12 +272,8 @@ public interface Tuple extends Serializable {
         if (o instanceof String) {
             return (String) o;
         } else {
-            Measure m = schema().measure().get(schema().field(i).name);
-            if (m != null && m instanceof DiscreteMeasure) {
-                return getScale(i);
-            } else {
-                return schema().field(i).type.toString(o);
-            }
+            Measure scale = schema().measure().get(schema().field(i).name);
+            return scale != null ? scale.toString(o) : schema().field(i).type.toString(o);
         }
     }
 
