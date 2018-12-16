@@ -643,10 +643,10 @@ public interface Terms {
     }
 
     /**
-     * Returns a term that applies a lambda on given column.
+     * Returns a term that applies a lambda on given variable.
      * @param name the function name.
-     * @param x the column name.
-     * @param f the lambda to apply on the column.
+     * @param x the variable name.
+     * @param f the lambda to apply on the variable.
      */
     static <T> Term apply(final String name, final String x, ToIntFunction<T> f) {
         return apply(name, $(x), f);
@@ -660,25 +660,10 @@ public interface Terms {
      */
     @SuppressWarnings("unchecked")
     static <T> Term apply(final String name, final Term x, ToIntFunction<T> f) {
-        return new Term() {
-            @Override
-            public String toString() {
-                return String.format("%s(%s)", name, x);
-            }
-
-            @Override
-            public Set<String> variables() {
-                return x.variables();
-            }
-
+        return new AbstractFunction(name, x) {
             @Override
             public DataType type() {
                 return DataTypes.IntegerType;
-            }
-
-            @Override
-            public void bind(StructType schema) {
-                x.bind(schema);
             }
 
             @Override
@@ -709,10 +694,10 @@ public interface Terms {
     }
 
     /**
-     * Returns a term that applies a lambda on given column.
+     * Returns a term that applies a lambda on given variable.
      * @param name the function name.
-     * @param x the column name.
-     * @param f the lambda to apply on the column.
+     * @param x the variable name.
+     * @param f the lambda to apply on the variable.
      */
     static <T> Term apply(final String name, final String x, ToLongFunction<T> f) {
         return apply(name, $(x), f);
@@ -726,25 +711,10 @@ public interface Terms {
      */
     @SuppressWarnings("unchecked")
     static <T> Term apply(final String name, final Term x, ToLongFunction<T> f) {
-        return new Term() {
-            @Override
-            public String toString() {
-                return String.format("%s(%s)", name, x);
-            }
-
-            @Override
-            public Set<String> variables() {
-                return x.variables();
-            }
-
+        return new AbstractFunction(name, x) {
             @Override
             public DataType type() {
                 return DataTypes.LongType;
-            }
-
-            @Override
-            public void bind(StructType schema) {
-                x.bind(schema);
             }
 
             @Override
@@ -770,10 +740,10 @@ public interface Terms {
     }
 
     /**
-     * Returns a term that applies a lambda on given column.
+     * Returns a term that applies a lambda on given variable.
      * @param name the function name.
-     * @param x the column name.
-     * @param f the lambda to apply on the column.
+     * @param x the variable name.
+     * @param f the lambda to apply on the variable.
      */
     static <T> Term apply(final String name, final String x, ToDoubleFunction<T> f) {
         return apply(name, $(x), f);
@@ -787,25 +757,10 @@ public interface Terms {
      */
     @SuppressWarnings("unchecked")
     static <T> Term apply(final String name, final Term x, ToDoubleFunction<T> f) {
-        return new Term() {
-            @Override
-            public String toString() {
-                return String.format("%s(%s)", name, x);
-            }
-
-            @Override
-            public Set<String> variables() {
-                return x.variables();
-            }
-
+        return new AbstractFunction(name, x) {
             @Override
             public DataType type() {
                 return DataTypes.DoubleType;
-            }
-
-            @Override
-            public void bind(StructType schema) {
-                x.bind(schema);
             }
 
             @Override
@@ -821,11 +776,11 @@ public interface Terms {
     }
 
     /**
-     * Returns a term that applies a lambda on given column.
+     * Returns a term that applies a lambda on given variable.
      * @param name the function name.
-     * @param x the column name.
+     * @param x the variable name.
      * @param clazz the class of return object.
-     * @param f the lambda to apply on the column.
+     * @param f the lambda to apply on the variable.
      */
     static <T, R> Term apply(final String name, final String x, final Class<R> clazz, java.util.function.Function f) {
         return apply(name, $(x), clazz, f);
@@ -840,25 +795,10 @@ public interface Terms {
      */
     @SuppressWarnings("unchecked")
     static <T, R> Term apply(final String name, final Term x, final Class<R> clazz, java.util.function.Function f) {
-        return new Term() {
-            @Override
-            public String toString() {
-                return String.format("%s(%s)", name, x);
-            }
-
-            @Override
-            public Set<String> variables() {
-                return x.variables();
-            }
-
+        return new AbstractFunction(name, x) {
             @Override
             public DataType type() {
                 return DataTypes.object(clazz);
-            }
-
-            @Override
-            public void bind(StructType schema) {
-                x.bind(schema);
             }
 
             @Override
@@ -869,11 +809,11 @@ public interface Terms {
     }
 
     /**
-     * Returns a term that applies a lambda on given columns.
+     * Returns a term that applies a lambda on given variables.
      * @param name the function name.
      * @param x the first parameter of function.
      * @param y the second parameter of function.
-     * @param f the lambda to apply on the columns.
+     * @param f the lambda to apply on the variables.
      */
     static <T, U> Term apply(final String name, final String x, final String y, ToIntBiFunction<T, U> f) {
         return apply(name, $(x), $(y), f);
@@ -925,11 +865,11 @@ public interface Terms {
     }
 
     /**
-     * Returns a term that applies a lambda on given columns.
+     * Returns a term that applies a lambda on given variables.
      * @param name the function name.
      * @param x the first parameter of function.
      * @param y the second parameter of function.
-     * @param f the lambda to apply on the columns.
+     * @param f the lambda to apply on the variables.
      */
     static <T, U> Term apply(final String name, final String x, final String y, ToLongBiFunction<T, U> f) {
         return apply(name, $(x), $(y), f);
@@ -981,11 +921,11 @@ public interface Terms {
     }
 
     /**
-     * Returns a term that applies a lambda on given columns.
+     * Returns a term that applies a lambda on given variables.
      * @param name the function name.
      * @param x the first parameter of function.
      * @param y the second parameter of function.
-     * @param f the lambda to apply on the columns.
+     * @param f the lambda to apply on the variables.
      */
     static <T, U> Term apply(final String name, final String x, final String y, ToDoubleBiFunction<T, U> f) {
         return apply(name, $(x), $(y), f);
@@ -1037,12 +977,12 @@ public interface Terms {
     }
 
     /**
-     * Returns a term that applies a lambda on given columns.
+     * Returns a term that applies a lambda on given variables.
      * @param name the function name.
      * @param x the first parameter of function.
      * @param y the second parameter of function.
      * @param clazz the class of return object.
-     * @param f the lambda to apply on the columns.
+     * @param f the lambda to apply on the variables.
      */
     static <T, U, R> Term apply(final String name, final String x, final String y, final Class<R> clazz, BiFunction<T, U, R> f) {
         return apply(name, $(x), $(y), clazz, f);
