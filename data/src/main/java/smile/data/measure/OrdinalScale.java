@@ -40,10 +40,18 @@ import java.util.stream.Collectors;
 public class OrdinalScale extends DiscreteMeasure {
     /**
      * Constructor.
-     * @param values the levels of ordinal values.
+     * @param levels the levels of ordinal values.
      */
-    public OrdinalScale(String... values) {
-        super(values);
+    public OrdinalScale(String... levels) {
+        super(levels);
+    }
+
+    /**
+     * Constructor.
+     * @param levels the levels of discrete values.
+     */
+    public OrdinalScale(List<String> levels) {
+        super(levels);
     }
 
     /**
@@ -56,14 +64,6 @@ public class OrdinalScale extends DiscreteMeasure {
                 .map(Object::toString)
                 .toArray(String[]::new)
         );
-    }
-
-    /**
-     * Constructor.
-     * @param values the levels of discrete values.
-     */
-    public OrdinalScale(List<String> values) {
-        super(values);
     }
 
     @Override

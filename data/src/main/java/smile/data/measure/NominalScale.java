@@ -38,10 +38,18 @@ import java.util.stream.Collectors;
 public class NominalScale extends DiscreteMeasure {
     /**
      * Constructor.
-     * @param values the levels of nominal values.
+     * @param levels the levels of nominal values.
      */
-    public NominalScale(String... values) {
-        super(values);
+    public NominalScale(String... levels) {
+        super(levels);
+    }
+
+    /**
+     * Constructor.
+     * @param levels the levels of discrete values.
+     */
+    public NominalScale(List<String> levels) {
+        super(levels);
     }
 
     /**
@@ -54,14 +62,6 @@ public class NominalScale extends DiscreteMeasure {
                 .map(Object::toString)
                 .toArray(String[]::new)
         );
-    }
-
-    /**
-     * Constructor.
-     * @param values the levels of discrete values.
-     */
-    public NominalScale(List<String> values) {
-        super(values);
     }
 
     @Override

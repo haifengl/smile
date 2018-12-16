@@ -53,7 +53,7 @@ public class LongType implements DataType {
 
     @Override
     public String toString(Object o) {
-        return String.format("%,d", o);
+        return String.format("%d", o);
     }
 
     @Override
