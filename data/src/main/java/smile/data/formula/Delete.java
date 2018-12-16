@@ -37,13 +37,12 @@ class Delete extends AbstractTerm {
      * @param x the term to delete.
      */
     public Delete(HyperTerm x) {
-        super("delete");
         this.x = x;
     }
 
     @Override
-    public String name() {
-        return String.format("delete(%s)", x.name());
+    public String toString() {
+        return String.format("delete(%s)", x);
     }
 
     @Override
@@ -52,7 +51,7 @@ class Delete extends AbstractTerm {
     }
 
     @Override
-    public List<Term> terms() {
+    public List<? extends Term> terms() {
         return x.terms();
     }
 

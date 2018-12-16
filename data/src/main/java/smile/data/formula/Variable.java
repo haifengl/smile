@@ -46,7 +46,7 @@ final class Variable implements Term {
         this.name = name;
     }
 
-    @Override
+    /** Returns the name of variable. */
     public String name() {
         return name;
     }
@@ -63,7 +63,15 @@ final class Variable implements Term {
 
     @Override
     public boolean equals(Object o) {
-        return name().equals(o);
+        if (o == this) {
+            return true;
+        }
+
+        if (o instanceof Variable) {
+            return name.equals(((Variable)o).name);
+        }
+
+        return false;
     }
 
     @Override

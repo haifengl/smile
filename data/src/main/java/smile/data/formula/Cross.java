@@ -60,7 +60,7 @@ class Cross implements HyperTerm {
     }
 
     @Override
-    public List<? extends Term> factors() {
+    public List<? extends Term> terms() {
         List<Term> crossings = new ArrayList<>(factors);
         int n = factors.size();
         for (int i = 0; i < n; i++) {

@@ -27,6 +27,8 @@ import smile.data.type.StructType;
  * @author Haifeng Li
  */
 public abstract class Operator extends AbstractTerm implements Term {
+    /** The operator name. */
+    String name;
     /** The left operand. */
     Term a;
     /** The right operand. */
@@ -44,14 +46,14 @@ public abstract class Operator extends AbstractTerm implements Term {
      * @param b the right operand.
      */
     public Operator(String name, Term a, Term b) {
-        super(name);
+        this.name = name;
         this.a = a;
         this.b = b;
     }
 
     @Override
-    public String name() {
-        return String.format("%s %s %s", a.name(), name, b.name());
+    public String toString() {
+        return String.format("%s %s %s", a, name, b);
     }
 
     @Override

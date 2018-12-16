@@ -61,7 +61,7 @@ class All implements HyperTerm {
     }
 
     @Override
-    public List<Variable> factors() {
+    public List<Variable> terms() {
         return columns;
     }
 

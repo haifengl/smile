@@ -23,6 +23,8 @@ import java.util.Set;
  * @author Haifeng Li
  */
 public abstract class AbstractFunction extends AbstractTerm implements Term {
+    /** The name of function. */
+    String name;
     /** The operand. */
     Term x;
 
@@ -33,13 +35,13 @@ public abstract class AbstractFunction extends AbstractTerm implements Term {
      * @param x the term that the function is applied to.
      */
     public AbstractFunction(String name, Term x) {
-        super(name);
+        this.name = name;
         this.x = x;
     }
 
     @Override
-    public String name() {
-        return String.format("%s(%s)", name, x.name());
+    public String toString() {
+        return String.format("%s(%s)", name, x);
     }
 
     @Override
