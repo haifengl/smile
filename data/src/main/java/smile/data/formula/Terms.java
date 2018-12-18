@@ -654,8 +654,8 @@ public interface Terms {
      * @param x the variable name.
      * @param f the lambda to apply on the variable.
      */
-    static <T> Term apply(final String name, final String x, ToIntFunction<T> f) {
-        return apply(name, $(x), f);
+    static <T> Term of(final String name, final String x, ToIntFunction<T> f) {
+        return of(name, $(x), f);
     }
 
     /**
@@ -665,7 +665,7 @@ public interface Terms {
      * @param f the lambda to apply on the term.
      */
     @SuppressWarnings("unchecked")
-    static <T> Term apply(final String name, final Term x, ToIntFunction<T> f) {
+    static <T> Term of(final String name, final Term x, ToIntFunction<T> f) {
         return new AbstractFunction(name, x) {
             @Override
             public DataType type() {
@@ -705,8 +705,8 @@ public interface Terms {
      * @param x the variable name.
      * @param f the lambda to apply on the variable.
      */
-    static <T> Term apply(final String name, final String x, ToLongFunction<T> f) {
-        return apply(name, $(x), f);
+    static <T> Term of(final String name, final String x, ToLongFunction<T> f) {
+        return of(name, $(x), f);
     }
 
     /**
@@ -716,7 +716,7 @@ public interface Terms {
      * @param f the lambda to apply on the term.
      */
     @SuppressWarnings("unchecked")
-    static <T> Term apply(final String name, final Term x, ToLongFunction<T> f) {
+    static <T> Term of(final String name, final Term x, ToLongFunction<T> f) {
         return new AbstractFunction(name, x) {
             @Override
             public DataType type() {
@@ -751,8 +751,8 @@ public interface Terms {
      * @param x the variable name.
      * @param f the lambda to apply on the variable.
      */
-    static <T> Term apply(final String name, final String x, ToDoubleFunction<T> f) {
-        return apply(name, $(x), f);
+    static <T> Term of(final String name, final String x, ToDoubleFunction<T> f) {
+        return of(name, $(x), f);
     }
 
     /**
@@ -762,7 +762,7 @@ public interface Terms {
      * @param f the lambda to apply on the term.
      */
     @SuppressWarnings("unchecked")
-    static <T> Term apply(final String name, final Term x, ToDoubleFunction<T> f) {
+    static <T> Term of(final String name, final Term x, ToDoubleFunction<T> f) {
         return new AbstractFunction(name, x) {
             @Override
             public DataType type() {
@@ -788,8 +788,8 @@ public interface Terms {
      * @param clazz the class of return object.
      * @param f the lambda to apply on the variable.
      */
-    static <T, R> Term apply(final String name, final String x, final Class<R> clazz, java.util.function.Function f) {
-        return apply(name, $(x), clazz, f);
+    static <T, R> Term of(final String name, final String x, final Class<R> clazz, java.util.function.Function f) {
+        return of(name, $(x), clazz, f);
     }
 
     /**
@@ -800,7 +800,7 @@ public interface Terms {
      * @param f the lambda to apply on the term.
      */
     @SuppressWarnings("unchecked")
-    static <T, R> Term apply(final String name, final Term x, final Class<R> clazz, java.util.function.Function f) {
+    static <T, R> Term of(final String name, final Term x, final Class<R> clazz, java.util.function.Function f) {
         return new AbstractFunction(name, x) {
             @Override
             public DataType type() {
@@ -821,8 +821,8 @@ public interface Terms {
      * @param y the second parameter of function.
      * @param f the lambda to apply on the variables.
      */
-    static <T, U> Term apply(final String name, final String x, final String y, ToIntBiFunction<T, U> f) {
-        return apply(name, $(x), $(y), f);
+    static <T, U> Term of(final String name, final String x, final String y, ToIntBiFunction<T, U> f) {
+        return of(name, $(x), $(y), f);
     }
 
     /**
@@ -833,7 +833,7 @@ public interface Terms {
      * @param f the lambda to apply on the terms.
      */
     @SuppressWarnings("unchecked")
-    static <T, U> Term apply(final String name, final Term x, final Term y, ToIntBiFunction<T, U> f) {
+    static <T, U> Term of(final String name, final Term x, final Term y, ToIntBiFunction<T, U> f) {
         return new AbstractBiFunction(name, x, y) {
             @Override
             public DataType type() {
@@ -859,8 +859,8 @@ public interface Terms {
      * @param y the second parameter of function.
      * @param f the lambda to apply on the variables.
      */
-    static <T, U> Term apply(final String name, final String x, final String y, ToLongBiFunction<T, U> f) {
-        return apply(name, $(x), $(y), f);
+    static <T, U> Term of(final String name, final String x, final String y, ToLongBiFunction<T, U> f) {
+        return of(name, $(x), $(y), f);
     }
 
     /**
@@ -871,7 +871,7 @@ public interface Terms {
      * @param f the lambda to apply on the terms.
      */
     @SuppressWarnings("unchecked")
-    static <T, U> Term apply(final String name, final Term x, final Term y, ToLongBiFunction<T, U> f) {
+    static <T, U> Term of(final String name, final Term x, final Term y, ToLongBiFunction<T, U> f) {
         return new AbstractBiFunction(name, x, y) {
             @Override
             public DataType type() {
@@ -897,8 +897,8 @@ public interface Terms {
      * @param y the second parameter of function.
      * @param f the lambda to apply on the variables.
      */
-    static <T, U> Term apply(final String name, final String x, final String y, ToDoubleBiFunction<T, U> f) {
-        return apply(name, $(x), $(y), f);
+    static <T, U> Term of(final String name, final String x, final String y, ToDoubleBiFunction<T, U> f) {
+        return of(name, $(x), $(y), f);
     }
 
     /**
@@ -909,7 +909,7 @@ public interface Terms {
      * @param f the lambda to apply on the terms.
      */
     @SuppressWarnings("unchecked")
-    static <T, U> Term apply(final String name, final Term x, final Term y, ToDoubleBiFunction<T, U> f) {
+    static <T, U> Term of(final String name, final Term x, final Term y, ToDoubleBiFunction<T, U> f) {
         return new AbstractBiFunction(name, x, y) {
             @Override
             public DataType type() {
@@ -936,8 +936,8 @@ public interface Terms {
      * @param clazz the class of return object.
      * @param f the lambda to apply on the variables.
      */
-    static <T, U, R> Term apply(final String name, final String x, final String y, final Class<R> clazz, BiFunction<T, U, R> f) {
-        return apply(name, $(x), $(y), clazz, f);
+    static <T, U, R> Term of(final String name, final String x, final String y, final Class<R> clazz, BiFunction<T, U, R> f) {
+        return of(name, $(x), $(y), clazz, f);
     }
 
     /**
@@ -949,7 +949,7 @@ public interface Terms {
      * @param f the lambda to apply on the terms.
      */
     @SuppressWarnings("unchecked")
-    static <T, U, R> Term apply(final String name, final Term x, final Term y, final Class<R> clazz, BiFunction<T, U, R> f) {
+    static <T, U, R> Term of(final String name, final Term x, final Term y, final Class<R> clazz, BiFunction<T, U, R> f) {
         return new AbstractBiFunction(name, x, y) {
             @Override
             public DataType type() {
