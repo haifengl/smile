@@ -107,7 +107,7 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
      * in the nominal scale, the type of returned vector may be byte, short
      * or integer. The missing values/nulls will be converted to -1.
      */
-    BaseVector toNomial(NominalScale scale);
+    BaseVector toNominal(NominalScale scale);
 
     /**
      * Converts strings to ordinal values. Depending on how many levels
