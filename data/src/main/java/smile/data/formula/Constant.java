@@ -17,10 +17,6 @@ package smile.data.formula;
 
 import java.util.Collections;
 import java.util.Set;
-
-import smile.data.Tuple;
-import smile.data.type.DataType;
-import smile.data.type.DataTypes;
 import smile.data.type.StructType;
 
 /**
