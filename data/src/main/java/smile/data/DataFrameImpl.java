@@ -522,6 +522,12 @@ class DataFrameImpl implements DataFrame {
 
     @Override
     public DataFrame merge(DataFrame... dataframes) {
+        for (DataFrame df : dataframes) {
+            if (df.size() != size()) {
+                throw new IllegalArgumentException("Merge data frames with different size: " + size() + " vs " + df.size());
+            }
+        }
+
         List<BaseVector> all = new ArrayList<>(columns);
         for (DataFrame df : dataframes) {
             for (int i = 0; i < df.ncols(); i++) {
@@ -540,6 +546,12 @@ class DataFrameImpl implements DataFrame {
 
     @Override
     public DataFrame merge(BaseVector... vectors) {
+        for (BaseVector vector : vectors) {
+            if (vector.size() != size()) {
+                throw new IllegalArgumentException("Merge data frames with different size: " + size() + " vs " + vector.size());
+            }
+        }
+
         List<BaseVector> columns = new ArrayList<>(this.columns);
         Collections.addAll(columns, vectors);
         DataFrameImpl df = new DataFrameImpl(columns);
