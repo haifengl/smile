@@ -110,7 +110,7 @@ class OneHot implements HyperTerm {
 
         @Override
         public Object apply(Tuple o) {
-            return i == (int) o.get(index) ? (byte) 1 : (byte) 0;
+            return i == ((Number) o.get(index)).intValue() ? (byte) 1 : (byte) 0;
         }
 
         @Override

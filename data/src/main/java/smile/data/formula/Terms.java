@@ -51,6 +51,16 @@ public interface Terms {
         return new Delete(x);
     }
 
+    /** One-hot encoding of a nominal scale. */
+    static HyperTerm onehot(String x) {
+        return new OneHot(x);
+    }
+
+    /** Extracts date/time features. */
+    static HyperTerm date(String x, DateFeature... features) {
+        return new Date(x, features);
+    }
+
     /** Adds two terms. */
     static Term add(Term a, Term b) {
         return new Add(a, b);
