@@ -263,7 +263,9 @@ trait Operators {
     * @param trainer a code block to return a classifier trained on the given data.
     * @return measure results.
     */
-  def loocv[T <: Object](x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+  def loocv[T <: Object](x: Array[T], y: Array[Int])
+                        (trainer: => (Array[T], Array[Int]) => Classifier[T])
+                        (measures: ClassificationMeasure*): Array[Double] = {
     val n = x.length
     val predictions = new Array[Int](n)
 
@@ -293,7 +295,9 @@ trait Operators {
     * @param trainer a code block to return a regression model trained on the given data.
     * @return measure results.
     */
-  def loocv[T <: Object](x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+  def loocv[T <: Object](x: Array[T], y: Array[Double])
+                        (trainer: => (Array[T], Array[Double]) => Regression[T])
+                        (measures: RegressionMeasure*): Array[Double] = {
     val n = x.length
     val predictions = new Array[Double](n)
 
@@ -332,11 +336,13 @@ trait Operators {
     * @param trainer a code block to return a classifier trained on the given data.
     * @return measure results.
     */
-  def cv[T <: Object](x: Array[T], y: Array[Int], k: Int, measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+  def cv[T <: Object](x: Array[T], y: Array[Int], k: Int, shuffle: Boolean = false)
+                     (trainer: => (Array[T], Array[Int]) => Classifier[T])
+                     (measures: ClassificationMeasure*): Array[Double] = {
     val n = x.length
     val predictions = new Array[Int](n)
 
-    val split = new CrossValidation(n, k)
+    val split = new CrossValidation(n, k, shuffle)
     for (i <- 0 until k) {
       print(s"cv ${i+1}...")
       val trainx = Math.slice[T](x, split.train(i))
@@ -365,11 +371,13 @@ trait Operators {
     * @param trainer a code block to return a regression model trained on the given data.
     * @return measure results.
     */
-  def cv[T <: Object](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+  def cv[T <: Object](x: Array[T], y: Array[Double], k: Int, shuffle: Boolean = false)
+                     (trainer: => (Array[T], Array[Double]) => Regression[T])
+                     (measures: RegressionMeasure*): Array[Double] = {
     val n = x.length
     val predictions = new Array[Double](n)
 
-    val split = new CrossValidation(n, k)
+    val split = new CrossValidation(n, k, shuffle)
     for (i <- 0 until k) {
       print(s"cv ${i+1}...")
       val trainx = Math.slice[T](x, split.train(i))
@@ -402,7 +410,9 @@ trait Operators {
     * @param trainer a code block to return a classifier trained on the given data.
     * @return measure results.
     */
-  def bootstrap[T <: Object](x: Array[T], y: Array[Int], k: Int, measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+  def bootstrap[T <: Object](x: Array[T], y: Array[Int], k: Int)
+                            (trainer: => (Array[T], Array[Int]) => Classifier[T])
+                            (measures: ClassificationMeasure*): Array[Double] = {
     val split = new Bootstrap(x.length, k)
 
     val m = measuresOrAccuracy(measures)
@@ -446,7 +456,9 @@ trait Operators {
     * @param trainer a code block to return a regression model trained on the given data.
     * @return measure results.
     */
-  def bootstrap[T <: Object](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+  def bootstrap[T <: Object](x: Array[T], y: Array[Double], k: Int)
+                            (trainer: => (Array[T], Array[Double]) => Regression[T])
+                            (measures: RegressionMeasure*): Array[Double] = {
     val split = new Bootstrap(x.length, k)
 
     val m = measuresOrRMSE(measures)
