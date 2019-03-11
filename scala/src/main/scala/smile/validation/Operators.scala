@@ -334,6 +334,7 @@ trait Operators {
     * @param k k-fold cross validation.
     * @param measures validation measures such as accuracy, specificity, etc.
     * @param trainer a code block to return a classifier trained on the given data.
+    * @param shuffle whether the data should be shuffled before running cross validation.
     * @return measure results.
     */
   def cv[T <: Object](x: Array[T], y: Array[Int], k: Int, shuffle: Boolean = false)
@@ -369,6 +370,7 @@ trait Operators {
     * @param k k-fold cross validation.
     * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
     * @param trainer a code block to return a regression model trained on the given data.
+    * @param shuffle whether the data should be shuffled before running cross validation.
     * @return measure results.
     */
   def cv[T <: Object](x: Array[T], y: Array[Double], k: Int, shuffle: Boolean = false)
