@@ -128,7 +128,7 @@ public class Heatmap extends Plot {
      * @param z a data matrix to be shown in pseudo heat map.
      */
     public Heatmap(double[] x, double[] y, double[][] z) {
-        this(z, 16);
+        this(x, y, z, 16);
     }
 
     /**
