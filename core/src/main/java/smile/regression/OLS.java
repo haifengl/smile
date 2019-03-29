@@ -17,10 +17,8 @@
 package smile.regression;
 
 import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import smile.data.Attribute;
-import smile.data.AttributeDataset;
+import smile.data.DataFrame;
+import smile.data.formula.Model;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
@@ -78,7 +76,7 @@ import smile.math.special.Beta;
  */
 public class OLS implements Regression<double[]> {
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(OLS.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OLS.class);
 
     /**
      * The dimensionality.
@@ -93,9 +91,9 @@ public class OLS implements Regression<double[]> {
      */
     private double[] w;
     /**
-     * The variable attributes.
+     * The variable names.
      */
-    private Attribute[] attributes;
+    private String[] names;
     /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
@@ -152,64 +150,103 @@ public class OLS implements Regression<double[]> {
     private double pvalue;
 
     /**
-     * Trainer for linear regression by ordinary least squares.
+     * Immutable hyper parameters of ordinary least squares.
      */
-    public static class Trainer extends RegressionTrainer<double[]> {
+    public static class Hyperparameters {
+        /** Fitting method. Supported methods include "qr" and "svd". */
+        private String method = "qr";
+        /** If true, compute the estimated standard errors of the estimate of parameters. */
+        private boolean se = true;
+
         /**
          * Constructor.
          */
-        public Trainer() {
+        public Hyperparameters() {
+
+        }
+
+        /**
+         * Constructor.
+         * @param method The fitting method. Supported methods include "qr" and "svd".
+         *               SVD is slower than QR but can handle rank-deficient matrix.
+         * @param se If true, compute the estimated standard errors of the estimate of parameters.
+         */
+        public Hyperparameters(String method, boolean se) {
+            if (method != "qr" && method != "svd") {
+                throw new IllegalArgumentException("Invalid method: " + method);
+            }
+            this.method = method;
+            this.se = se;
+        }
+
+        /** Returns the fitting method. */
+        public String method() {
+            return method;
+        }
+
+        /** Returns if compute the estimated standard errors of the estimate of parameters. */
+        public boolean se() {
+            return se;
+        }
+
+        public static class Builder {
+            private Hyperparameters hyperparameters = new Hyperparameters();
+
+            /**
+             * Sets the fitting method.
+             */
+            public Builder method(String method) {
+                if (method != "qr" && method != "svd") {
+                    throw new IllegalArgumentException("Invalid method: " + method);
+                }
+
+                hyperparameters.method = method;
+                return this;
+            }
+
+            /**
+             * If true, compute the estimated standard errors of the estimate of parameters.
+             */
+            public Builder se(boolean se) {
+                hyperparameters.se = se;
+                return this;
+            }
+
+            public Hyperparameters build() {
+                return hyperparameters;
+            }
         }
 
         @Override
-        public OLS train(double[][] x, double[] y) {
-            return new OLS(x, y);
+        public String toString() {
+            return String.format("OLS.Hyperparameters(method = '%s', se.fit = %b)", method, se);
         }
     }
 
+    /** Private constructor. */
+    private OLS() {
+
+    }
     /**
-     * Constructor. Learn the ordinary least squares model with QR decomposition.
-     * @param x a matrix containing the explanatory variables. NO NEED to include a constant column of 1s for bias.
-     * @param y the response values.
+     * Learns the ordinary least squares model.
+     * @param data the dataset containing the explanatory and response variables and their attributes.
+     *            NO NEED to include a constant column of 1s for bias.
      */
-    public OLS(double[][] x, double[] y) {
-        this(x, y, false);
+    public static OLS train(Model model, DataFrame data, Hyperparameters hyperparameters) {
     }
 
     /**
-     * Constructor. Learn the ordinary least squares model.
-     * @param x a matrix containing the explanatory variables. NO NEED to include a constant column of 1s for bias.
-     * @param y the response values.
-     * @param SVD If true, use SVD to fit the model. Otherwise, use QR decomposition. SVD is slower than QR but
-     *            can handle rank-deficient matrix.
+     * Learns the ordinary least squares model.
+     * @param data the dataset containing the explanatory and response variables and their attributes.
+     *            NO NEED to include a constant column of 1s for bias.
      */
-    public OLS(double[][] x, double[] y, boolean SVD) {
-        this(new AttributeDataset("OLS", x, y), SVD);
-    }
-
-    /**
-     * Constructor. Learn the ordinary least squares model.
-     * @param data the dataset containing the explanatory and response variables and their attributes. NO NEED to include a constant column of 1s for bias.
-     */
-    public OLS(AttributeDataset data) {
-        this(data, false);
-    }
-
-    /**
-     * Constructor. Learn the ordinary least squares model.
-     * @param data the dataset containing the explanatory and response variables and their attributes. NO NEED to include a constant column of 1s for bias.
-     * @param SVD If true, use SVD to fit the model. Otherwise, use QR decomposition. SVD is slower than QR but
-     *            can handle rank-deficient matrix.
-     */
-    public OLS(AttributeDataset data, boolean SVD) {
-        double[][] x = data.x();
-        double[] y = data.y();
+    public static OLS train(double[][] x, double[] y, Hyperparameters hyperparameters) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
         int n = x.length;
-        p = x[0].length;
+        int p = x[0].length;
         
         if (n <= p) {
             throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
@@ -231,7 +268,8 @@ public class OLS implements Regression<double[]> {
 
         QR qr = null;
         SVD svd = null;
-        if (SVD) {
+        String method = hyperparameters.method;
+        if (method.equalsIgnoreCase("svd")) {
             svd = X.svd();
             svd.solve(y, w1);
         } else {
@@ -240,75 +278,83 @@ public class OLS implements Regression<double[]> {
                 qr.solve(y, w1);
             } catch (RuntimeException e) {
                 logger.warn("Matrix is not of full rank, try SVD instead");
-                SVD = true;
+                method = "svd";
                 svd = X.svd();
                 Arrays.fill(w1, 0.0);//re-init w1 with zero after exception caught
                 svd.solve(y, w1);
             }
         }
 
-        b = w1[p];
-        w = new double[p];
-        System.arraycopy(w1, 0, w, 0, p);
+        OLS model = new OLS();
+        model.p = p;
+        model.b = w1[p];
+        model.w = new double[p];
+        System.arraycopy(w1, 0, model.w, 0, p);
 
         double[] yhat = new double[n];
-        Matrix.of(x).ax(w, yhat);
+        Matrix.of(x).ax(model.w, yhat);
 
         double TSS = 0.0;
-        RSS = 0.0;
+        double RSS = 0.0;
         double ybar = MathEx.mean(y);
-        fittedValues = new double[n];
-        residuals = new double[n];
+        model.fittedValues = new double[n];
+        model.residuals = new double[n];
         for (int i = 0; i < n; i++) {
-            fittedValues[i] = yhat[i] + b;
-            double r = y[i] - fittedValues[i];
-            residuals[i] = r;
+            model.fittedValues[i] = yhat[i] + model.b;
+            double r = y[i] - model.fittedValues[i];
+            model.residuals[i] = r;
             RSS += MathEx.sqr(r);
             TSS += MathEx.sqr(y[i] - ybar);
         }
 
-        error = MathEx.sqrt(RSS / (n - p - 1));
-        df = n - p - 1;
+        model.error = Math.sqrt(RSS / (n - p - 1));
+        int df = n - p - 1;
+        model.df = df;
 
-        RSquared = 1.0 - RSS / TSS;
-        adjustedRSquared = 1.0 - ((1 - RSquared) * (n-1) / (n-p-1));
+        model.RSquared = 1.0 - RSS / TSS;
+        model.adjustedRSquared = 1.0 - ((1 - model.RSquared) * (n-1) / (n-p-1));
 
-        F = (TSS - RSS) * (n - p - 1) / (RSS * p);
+        model.F = (TSS - RSS) * (n - p - 1) / (RSS * p);
         int df1 = p;
         int df2 = n - p - 1;
-        pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
+        model.pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * model.F));
 
-        coefficients = new double[p+1][4];
-        if (SVD) {
-            for (int i = 0; i <= p; i++) {
-                coefficients[i][0] = w1[i];
-                double s = svd.getSingularValues()[i];
-                if (!MathEx.isZero(s, 1E-10)) {
-                    double se = error / s;
+        if (hyperparameters.se) {
+            double[][] coefficients = new double[p + 1][4];
+            model.coefficients = coefficients;
+            if (method.equalsIgnoreCase("svd")) {
+                for (int i = 0; i <= p; i++) {
+                    coefficients[i][0] = w1[i];
+                    double s = svd.getSingularValues()[i];
+                    if (!MathEx.isZero(s, 1E-10)) {
+                        double se = model.error / s;
+                        coefficients[i][1] = se;
+                        double t = w1[i] / se;
+                        coefficients[i][2] = t;
+                        coefficients[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
+                    } else {
+                        coefficients[i][1] = Double.NaN;
+                        coefficients[i][2] = 0.0;
+                        coefficients[i][3] = 1.0;
+                    }
+                }
+            } else {
+                Cholesky cholesky = qr.CholeskyOfAtA();
+
+                DenseMatrix inv = cholesky.inverse();
+
+                for (int i = 0; i <= p; i++) {
+                    coefficients[i][0] = w1[i];
+                    double se = model.error * Math.sqrt(inv.get(i, i));
                     coefficients[i][1] = se;
                     double t = w1[i] / se;
                     coefficients[i][2] = t;
                     coefficients[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
-                } else {
-                    coefficients[i][1] = Double.NaN;
-                    coefficients[i][2] = 0.0;
-                    coefficients[i][3] = 1.0;
                 }
             }
-        } else {
-            Cholesky cholesky = qr.CholeskyOfAtA();
-
-            DenseMatrix inv = cholesky.inverse();
-
-            for (int i = 0; i <= p; i++) {
-                coefficients[i][0] = w1[i];
-                double se = error * MathEx.sqrt(inv.get(i, i));
-                coefficients[i][1] = se;
-                double t = w1[i] / se;
-                coefficients[i][2] = t;
-                coefficients[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
-            }
         }
+
+        return model;
     }
 
     /**
