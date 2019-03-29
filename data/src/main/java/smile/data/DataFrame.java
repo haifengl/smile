@@ -672,7 +672,7 @@ public interface DataFrame extends Dataset<Tuple> {
         for (int j = 0; j < ncols; j++) {
             Measure measure = schema().measure().get(names[j]);
             if (measure != null && measure instanceof DiscreteMeasure) continue;
-            
+
             DataType type = types[j];
             if (type.isInt()) {
                 IntSummaryStatistics s = type.isObject() ?
