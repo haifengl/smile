@@ -148,16 +148,22 @@ public class RandomForest implements SoftClassifier<double[]> {
         /**
          * Default constructor of 500 trees.
          */
-        public Trainer() {
+        private Trainer() {
 
         }
 
         /**
          * Constructor.
-         * 
+         *
+         * @param mtry the number of random selected features to be used to determine
          * @param ntrees the number of trees.
          */
-        public Trainer(int ntrees) {
+        public Trainer(int mtry, int ntrees) {
+            if (mtry < 1) {
+                throw new IllegalArgumentException("Invalid number of random selected features for splitting: " + mtry);
+            }
+
+            this.mtry = mtry;
             if (ntrees < 1) {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
             }
@@ -173,7 +179,7 @@ public class RandomForest implements SoftClassifier<double[]> {
          */
         public Trainer(Attribute[] attributes, int ntrees) {
             super(attributes);
-
+            this.mtry = (int) Math.floor(Math.sqrt(attributes.length));
             if (ntrees < 1) {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
             }
