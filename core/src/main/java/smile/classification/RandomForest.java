@@ -179,7 +179,7 @@ public class RandomForest implements SoftClassifier<double[]> {
          */
         public Trainer(Attribute[] attributes, int ntrees) {
             super(attributes);
-            this.mtry = (int) Math.floor(Math.sqrt(attributes.length))
+            this.mtry = (int) Math.floor(Math.sqrt(attributes.length));
             if (ntrees < 1) {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
             }
