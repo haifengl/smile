@@ -895,11 +895,11 @@ public class DecisionTree implements SoftClassifier<double[]> {
         
         for (int i = 0; i < labels.length; i++) {
             if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
+                throw new IllegalArgumentException("Negative class label: " + labels[i]);
             }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
+
+            if (labels[i] != i) {
+                throw new IllegalArgumentException("Missing class: " + i);
             }
         }
 
