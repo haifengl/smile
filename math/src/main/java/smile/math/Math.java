@@ -974,18 +974,18 @@ public class Math {
         return y;
     }
 
-    /** Concatenates multiple vectors into one array of strings. Uses .toString(), which is a no-op if already strings. */
-    public static <T> String[] c(T[]... list) {
+    /** Concatenates multiple vectors into one array of strings. */
+    public static String[] c(String[]... list) {
         int n = 0;
-        for (T[] x: list) {
+        for (String[] x: list) {
             n += x.length;
         }
 
         String[] y = new String[n];
         int i = 0;
-        for (T[] x: list) {
-            for (T xi: x) {
-                y[i++] = xi.toString();
+        for (String[] x: list) {
+            for (String xi: x) {
+                y[i++] = xi;
             }
         }
         return y;
@@ -1007,7 +1007,7 @@ public class Math {
     }
 
     /** Take a sequence of vector arguments and combine by columns. */
-    public static String[] cbind(Object[]... x) {
+    public static String[] cbind(String[]... x) {
         return c(x);
     }
 
