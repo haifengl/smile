@@ -15,28 +15,14 @@
  *******************************************************************************/
 package smile.data;
 
-import java.beans.BeanInfo;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Spliterator;
+import java.util.Iterator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import smile.data.formula.Term;
-import smile.data.measure.Measure;
-import smile.data.measure.NominalScale;
 import smile.data.type.*;
 import smile.data.vector.*;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.Matrix;
 
 /**
  * A data frame with a new index instead of the default [0, n) row index.
@@ -69,6 +55,11 @@ class IndexDataFrame implements DataFrame {
     @Override
     public String toString() {
         return toString(10, true);
+    }
+
+    @Override
+    public Iterator<BaseVector> iterator() {
+        return df.iterator();
     }
 
     @Override
