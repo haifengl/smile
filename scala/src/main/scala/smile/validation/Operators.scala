@@ -313,7 +313,9 @@ trait Operators {
     }.toArray
   }
 
-  /** Cross validation on a generic classifier.
+  /** Cross validation on a generic classifier. Samples will be randomly
+    * shuffled first. So the results will not be repeatable. To disable
+    * shuffle, pass a customized CrossValidation object.
     * Cross-validation is a technique for assessing how the results of a
     * statistical analysis will generalize to an independent data set.
     * It is mainly used in settings where the goal is prediction, and one
@@ -333,10 +335,33 @@ trait Operators {
     * @return measure results.
     */
   def cv[T <: Object](x: Array[T], y: Array[Int], k: Int, measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+    cv(x, y, new CrossValidation(x.length, k), measures: _*)(trainer)
+  }
+
+  /** Cross validation on a generic classifier.
+    * Cross-validation is a technique for assessing how the results of a
+    * statistical analysis will generalize to an independent data set.
+    * It is mainly used in settings where the goal is prediction, and one
+    * wants to estimate how accurately a predictive model will perform in
+    * practice. One round of cross-validation involves partitioning a sample
+    * of data into complementary subsets, performing the analysis on one subset
+    * (called the training set), and validating the analysis on the other subset
+    * (called the validation set or testing set). To reduce variability, multiple
+    * rounds of cross-validation are performed using different partitions, and the
+    * validation results are averaged over the rounds.
+    *
+    * @param x data samples.
+    * @param y sample labels.
+    * @param split k-fold cross validation.
+    * @param measures validation measures such as accuracy, specificity, etc.
+    * @param trainer a code block to return a classifier trained on the given data.
+    * @return measure results.
+    */
+  def cv[T <: Object](x: Array[T], y: Array[Int], split: CrossValidation, measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
     val n = x.length
+    val k = split.k
     val predictions = new Array[Int](n)
 
-    val split = new CrossValidation(n, k)
     for (i <- 0 until k) {
       print(s"cv ${i+1}...")
       val trainx = Math.slice[T](x, split.train(i))
@@ -356,7 +381,9 @@ trait Operators {
     }.toArray
   }
 
-  /** Cross validation on a generic regression model.
+  /** Cross validation on a generic regression model. Samples will be randomly
+    * shuffled first. So the results will not be repeatable. To disable
+    * shuffle, pass a customized CrossValidation object.
     *
     * @param x data samples.
     * @param y response variable.
@@ -365,11 +392,11 @@ trait Operators {
     * @param trainer a code block to return a regression model trained on the given data.
     * @return measure results.
     */
-  def cv[T <: Object](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+  def cv[T <: Object](x: Array[T], y: Array[Double], split: CrossValidation, measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
     val n = x.length
+    val k = split.k
     val predictions = new Array[Double](n)
 
-    val split = new CrossValidation(n, k)
     for (i <- 0 until k) {
       print(s"cv ${i+1}...")
       val trainx = Math.slice[T](x, split.train(i))
@@ -385,6 +412,19 @@ trait Operators {
       println(f"$measure%s: $result%.4f")
       result
     }.toArray
+  }
+
+  /** Cross validation on a generic regression model.
+    *
+    * @param x data samples.
+    * @param y response variable.
+    * @param k k-fold cross validation.
+    * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
+    * @param trainer a code block to return a regression model trained on the given data.
+    * @return measure results.
+    */
+  def cv[T <: Object](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+    cv(x, y, new CrossValidation(x.length, k), measures: _*)(trainer)
   }
 
   /** Bootstrap validation on a generic classifier.
