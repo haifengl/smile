@@ -19,14 +19,7 @@ import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Spliterator;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,6 +28,7 @@ import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.*;
 import smile.data.vector.*;
+import smile.data.vector.Vector;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
@@ -403,6 +397,11 @@ class DataFrameImpl implements DataFrame {
     @Override
     public String toString() {
         return toString(10, true);
+    }
+
+    @Override
+    public Iterator<BaseVector> iterator() {
+        return columns.iterator();
     }
 
     @Override
