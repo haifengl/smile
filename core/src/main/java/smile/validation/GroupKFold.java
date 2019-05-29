@@ -17,7 +17,7 @@
 package smile.validation;
 
 import smile.math.Histogram;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.QuickSort;
 
 import java.util.Arrays;
@@ -60,7 +60,7 @@ public class GroupKFold {
             throw new IllegalArgumentException("Groups array must be of size n, but length is " + groups.length);
         }
 
-        int[] uniqueGroups = Math.unique(groups);
+        int[] uniqueGroups = MathEx.unique(groups);
         int numGroups = uniqueGroups.length;
 
         if (k > numGroups) {
@@ -97,7 +97,7 @@ public class GroupKFold {
 
     private TestFolds calculateTestFolds(int[] groups, int numGroups) {
         // sort the groups by number of samples so that we can distribute test samples from largest groups first
-        int[] numSamplesPerGroup = Arrays.stream(Histogram.histogram(groups, numGroups)[2])
+        int[] numSamplesPerGroup = Arrays.stream(Histogram.of(groups, numGroups)[2])
                 .mapToInt(x -> (int) x)
                 .toArray();
 
@@ -109,7 +109,7 @@ public class GroupKFold {
         int[] groupToTestFoldIndex = new int[numGroups];
 
         for (int i = numGroups - 1; i >= 0; i--) {
-            int smallestFoldIndex = Math.whichMin(numTestSamplesPerFold);
+            int smallestFoldIndex = MathEx.whichMin(numTestSamplesPerFold);
             numTestSamplesPerFold[smallestFoldIndex] += numSamplesPerGroup[i];
             groupToTestFoldIndex[toOriginalGroupIndex[i]] = smallestFoldIndex;
         }
