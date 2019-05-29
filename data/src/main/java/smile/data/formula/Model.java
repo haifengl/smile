@@ -27,7 +27,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class Model extends Formula {
+class Model extends Formula {
     /** The response variable. */
     private Term y;
 
