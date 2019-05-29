@@ -79,7 +79,7 @@ class IndexDataFrame implements DataFrame {
 
     @Override
     public Object get(int i, int j) {
-        return df.get(i, j);
+        return df.get(index[i], j);
     }
 
     @Override
@@ -150,6 +150,11 @@ class IndexDataFrame implements DataFrame {
     /** Returns a new data frame with regular index. */
     private DataFrame rebase() {
         return DataFrame.of(stream().collect(Collectors.toList()));
+    }
+
+    @Override
+    public BaseVector apply(smile.data.formula.Term term) {
+        return df.apply(term);
     }
 
     @Override

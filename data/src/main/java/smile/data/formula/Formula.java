@@ -16,17 +16,15 @@
 package smile.data.formula;
 
 import java.io.Serializable;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.*;
-import java.util.function.*;
 import java.util.stream.Collectors;
+
+import smile.data.DataFrame;
 import smile.data.Tuple;
-import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
+import smile.data.vector.*;
 
 /**
  * A formula extracts the variables from a context
@@ -35,8 +33,10 @@ import smile.data.type.StructType;
  * @author Haifeng Li
  */
 public class Formula implements Serializable {
-    /** The hyper-terms. */
-    private HyperTerm[] hyperterms;
+    /** The left-hand side of formula. */
+    private Term lhs;
+    /** The right-hand side of formula. */
+    private HyperTerm[] rhs;
     /** The terms after binding to a schema and expanding the hyper-terms. */
     private Term[] terms;
     /** The formula output schema. */
@@ -44,10 +44,54 @@ public class Formula implements Serializable {
 
     /**
      * Constructor.
-     * @param terms the predictor terms.
+     * @param lhs the left-hand side of formula, i.e. dependent variable.
      */
-    public Formula(HyperTerm... terms) {
-        this.hyperterms = terms;
+    public Formula(Term lhs) {
+        this.lhs = lhs;
+        this.rhs = new HyperTerm[] { new All() };
+    }
+
+    /**
+     * Constructor.
+     * @param rhs the right-hand side of formula, i.e. independent/predictor variables.
+     */
+    public Formula(HyperTerm[] rhs) {
+        this.rhs = rhs;
+    }
+
+    /**
+     * Constructor.
+     * @param lhs the left-hand side of formula, i.e. dependent variable.
+     * @param rhs the right-hand side of formula, i.e. independent/predictor variables.
+     */
+    public Formula(Term lhs, HyperTerm[] rhs) {
+        this.lhs = lhs;
+        this.rhs = rhs;
+    }
+
+    /**
+     * Factory method.
+     * @param lhs the left-hand side of formula, i.e. dependent variable.
+     */
+    public static Formula lhs(Term lhs) {
+        return new Formula(lhs);
+    }
+
+    /**
+     * Factory method.
+     * @param rhs the right-hand side of formula, i.e. independent/predictor variables.
+     */
+    public static Formula rhs(HyperTerm... rhs) {
+        return new Formula(rhs);
+    }
+
+    /**
+     * Factory method.
+     * @param lhs the left-hand side of formula, i.e. dependent variable.
+     * @param rhs the right-hand side of formula, i.e. independent/predictor variables.
+     */
+    public static Formula of(Term lhs, HyperTerm... rhs) {
+        return new Formula(lhs, rhs);
     }
 
     /** Returns the terms of formula. This should be called after bind() called. */
@@ -99,14 +143,19 @@ public class Formula implements Serializable {
 
     /** Binds the formula to a schema and returns the output schema of formula. */
     public StructType bind(StructType inputSchema) {
-        Arrays.stream(hyperterms).forEach(term -> term.bind(inputSchema));
+        Arrays.stream(rhs).forEach(term -> term.bind(inputSchema));
 
-        List<Term> factors = Arrays.stream(hyperterms)
+        List<Term> factors = Arrays.stream(rhs)
                 .filter(term -> !(term instanceof All) && !(term instanceof Delete))
                 .flatMap(term -> term.terms().stream())
                 .collect(Collectors.toList());
 
-        List<Term> removes = Arrays.stream(hyperterms)
+        if (lhs != null) {
+            lhs.bind(inputSchema);
+            factors.add(lhs);
+        }
+
+        List<Term> removes = Arrays.stream(rhs)
                 .filter(term -> term instanceof Delete)
                 .flatMap(term -> term.terms().stream())
                 .collect(Collectors.toList());
@@ -115,7 +164,7 @@ public class Formula implements Serializable {
             .flatMap(factor -> factor.variables().stream())
             .collect(Collectors.toSet());
 
-        Optional<All> hasAll = Arrays.stream(hyperterms)
+        Optional<All> hasAll = Arrays.stream(rhs)
                 .filter(term -> term instanceof All)
                 .map(term -> (All) term)
                 .findAny();
@@ -141,5 +190,27 @@ public class Formula implements Serializable {
 
         schema = DataTypes.struct(fields);
         return schema;
+    }
+
+    /**
+     * Apply the formula on a DataFrame.
+     * @param df The input DataFrame.
+     */
+    public DataFrame apply(DataFrame df) {
+        StructType schema = bind(df.schema());
+        StructField[] fields = schema.fields();
+
+        Term[] terms = terms();
+        BaseVector[] vectors = new BaseVector[fields.length];
+        for (int i = 0; i < fields.length; i++) {
+            StructField field = fields[i];
+            if (terms[i].isVariable()) {
+                vectors[i] = df.column(field.name);
+            } else {
+                vectors[i] = df.apply(terms[i]);
+            }
+        }
+
+        return DataFrame.of(vectors);
     }
 }

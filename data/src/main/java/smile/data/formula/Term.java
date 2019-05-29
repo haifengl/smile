@@ -60,6 +60,26 @@ public interface Term extends HyperTerm {
         throw new UnsupportedOperationException();
     }
 
+    /** Applies the term on a data object and produces an boolean-valued result. */
+    default boolean applyAsBoolean(Tuple o) {
+        throw new UnsupportedOperationException();
+    }
+
+    /** Applies the term on a data object and produces an byte-valued result. */
+    default byte applyAsByte(Tuple o) {
+        throw new UnsupportedOperationException();
+    }
+
+    /** Applies the term on a data object and produces an short-valued result. */
+    default short applyAsShort(Tuple o) {
+        throw new UnsupportedOperationException();
+    }
+
+    /** Applies the term on a data object and produces an char-valued result. */
+    default char applyAsChar(Tuple o) {
+        throw new UnsupportedOperationException();
+    }
+
     /** Returns true if the term represents a plain variable. */
     default boolean isVariable() {
         return false;

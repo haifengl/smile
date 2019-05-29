@@ -23,7 +23,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import smile.data.formula.Term;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.*;
@@ -46,12 +45,6 @@ class DataFrameImpl implements DataFrame {
     private List<BaseVector> columns;
     /** The number of rows. */
     private final int size;
-
-    /** The lambda to retrieve a field value. */
-    interface Getter {
-        /** Returns the field of row i. */
-        Object apply(int i);
-    }
 
     /**
      * Constructor.
@@ -287,104 +280,67 @@ class DataFrameImpl implements DataFrame {
 
     /**
      * Constructor.
-     * @param df The input DataFrame.
-     * @param formula The formula that transforms from the input DataFrame.
+     * @param vectors The column vectors.
      */
-    public DataFrameImpl(DataFrame df, smile.data.formula.Formula formula) {
-        this.size = df.size();
-        this.schema = formula.bind(df.schema());
-        StructField[] fields = schema.fields();
-        this.columns = new ArrayList<>(fields.length);
+    public DataFrameImpl(BaseVector... vectors) {
+        this(Arrays.asList(vectors));
+    }
 
-        Term[] terms = formula.terms();
-        for (int j = 0; j < fields.length; j++) {
-            StructField field = fields[j];
-            if (terms[j].isVariable()) {
-                columns.add(df.column(field.name));
-            }
-        }
-
-        // We are done if all factors are raw columns.
-        if (columns.size() == terms.length) return;
-
-        List<Tuple> data = df.stream().map(formula::apply).collect(Collectors.toList());
-        for (int j = 0; j < fields.length; j++) {
-            StructField field = fields[j];
-            if (formula.terms()[j].isVariable()) {
-                continue;
+    @Override
+    public BaseVector apply(smile.data.formula.Term term) {
+        switch (term.type().id()) {
+            case Integer: {
+                int[] values = new int[size];
+                for (int i = 0; i < size; i++) values[i] = term.applyAsInt(get(i));
+                return IntVector.of(term.toString(), values);
             }
 
-            switch (field.type.id()) {
-                case Integer: {
-                    int[] values = new int[size];
-                    for (int i = 0; i < size; i++) values[i] = data.get(i).getInt(j);
-                    IntVector vector = IntVector.of(field.name, values);
-                    columns.add(vector);
-                    break;
-                }
+            case Long: {
+                long[] values = new long[size];
+                for (int i = 0; i < size; i++) values[i] = term.applyAsLong(get(i));
+                return LongVector.of(term.toString(), values);
+            }
 
-                case Long: {
-                    long[] values = new long[size];
-                    for (int i = 0; i < size; i++) values[i] = data.get(i).getLong(j);
-                    LongVector vector = LongVector.of(field.name, values);
-                    columns.add(vector);
-                    break;
-                }
+            case Double: {
+                double[] values = new double[size];
+                for (int i = 0; i < size; i++) values[i] = term.applyAsDouble(get(i));
+                return DoubleVector.of(term.toString(), values);
+            }
 
-                case Double: {
-                    double[] values = new double[size];
-                    for (int i = 0; i < size; i++) values[i] = data.get(i).getDouble(j);
-                    DoubleVector vector = DoubleVector.of(field.name, values);
-                    columns.add(vector);
-                    break;
-                }
+            case Float: {
+                float[] values = new float[size];
+                for (int i = 0; i < size; i++) values[i] = term.applyAsFloat(get(i));
+                return FloatVector.of(term.toString(), values);
+            }
 
-                case Float: {
-                    float[] values = new float[size];
-                    for (int i = 0; i < size; i++) values[i] = data.get(i).getFloat(j);
-                    FloatVector vector = FloatVector.of(field.name, values);
-                    columns.add(vector);
-                    break;
-                }
+            case Boolean: {
+                boolean[] values = new boolean[size];
+                for (int i = 0; i < size; i++) values[i] = term.applyAsBoolean(get(i));
+                return BooleanVector.of(term.toString(), values);
+            }
 
-                case Boolean: {
-                    boolean[] values = new boolean[size];
-                    for (int i = 0; i < size; i++) values[i] = data.get(i).getBoolean(j);
-                    BooleanVector vector = BooleanVector.of(field.name, values);
-                    columns.add(vector);
-                    break;
-                }
+            case Byte: {
+                byte[] values = new byte[size];
+                for (int i = 0; i < size; i++) values[i] = term.applyAsByte(get(i));
+                return ByteVector.of(term.toString(), values);
+            }
 
-                case Byte: {
-                    byte[] values = new byte[size];
-                    for (int i = 0; i < size; i++) values[i] = data.get(i).getByte(j);
-                    ByteVector vector = ByteVector.of(field.name, values);
-                    columns.add(vector);
-                    break;
-                }
+            case Short: {
+                short[] values = new short[size];
+                for (int i = 0; i < size; i++) values[i] = term.applyAsShort(get(i));
+                return ShortVector.of(term.toString(), values);
+            }
 
-                case Short: {
-                    short[] values = new short[size];
-                    for (int i = 0; i < size; i++) values[i] = data.get(i).getShort(j);
-                    ShortVector vector = ShortVector.of(field.name, values);
-                    columns.add(vector);
-                    break;
-                }
+            case Char: {
+                char[] values = new char[size];
+                for (int i = 0; i < size; i++) values[i] = term.applyAsChar(get(i));
+                return CharVector.of(term.toString(), values);
+            }
 
-                case Char: {
-                    char[] values = new char[size];
-                    for (int i = 0; i < size; i++) values[i] = data.get(i).getChar(j);
-                    CharVector vector = CharVector.of(field.name, values);
-                    columns.add(vector);
-                    break;
-                }
-
-                default: {
-                    Object[] values = new Object[size];
-                    for (int i = 0; i < size; i++) values[i] = data.get(i).get(j);
-                    Vector vector = Vector.of(field.name, field.type, values);
-                    columns.add(vector);
-                }
+            default: {
+                Object[] values = new Object[size];
+                for (int i = 0; i < size; i++) values[i] = term.apply(get(i));
+                return Vector.of(term.toString(), term.type(), values);
             }
         }
     }
