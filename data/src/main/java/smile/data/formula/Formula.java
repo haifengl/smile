@@ -80,19 +80,19 @@ public class Formula implements Serializable {
 
     /**
      * Factory method.
-     * @param rhs the right-hand side of formula, i.e. independent/predictor variables.
+     * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
-    public static Formula rhs(HyperTerm... rhs) {
-        return new Formula(rhs);
+    public static Formula rhs(HyperTerm... predictors) {
+        return new Formula(predictors);
     }
 
     /**
      * Factory method.
-     * @param lhs the left-hand side of formula, i.e. dependent variable.
-     * @param rhs the right-hand side of formula, i.e. independent/predictor variables.
+     * @param response the left-hand side of formula, i.e. dependent variable.
+     * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
-    public static Formula of(Term lhs, HyperTerm... rhs) {
-        return new Formula(lhs, rhs);
+    public static Formula of(Term response, HyperTerm... predictors) {
+        return new Formula(response, predictors);
     }
 
     /** Returns the terms of formula. This should be called after bind() called. */
@@ -208,16 +208,17 @@ public class Formula implements Serializable {
         return DataFrame.of(vectors);
     }
     /**
-     * Creates a design (or model) matrix with bias column.
+     * Creates a design (or model) matrix without bias column.
      * @param df The input DataFrame.
      */
     public DenseMatrix matrix(DataFrame df) {
-        return matrix(df, true);
+        return matrix(df, false);
     }
 
     /**
      * Creates a design (or model) matrix.
      * @param df The input DataFrame.
+     * @param bias If true, the design matrix includes an all-one column for intercept.
      */
     public DenseMatrix matrix(DataFrame df, boolean bias) {
         bind(df.schema());
@@ -234,7 +235,7 @@ public class Formula implements Serializable {
 
         ncols += bias ? 1 : 0;
         DenseMatrix m = Matrix.of(nrows, ncols, 0.0);
-        if (bias) for (int i = 0; i < nrows; i++) m.set(i, ncols, 1.0);
+        if (bias) for (int i = 0; i < nrows; i++) m.set(i, ncols-1, 1.0);
 
         for (int j = 0, jj = j0; jj < terms.length; j++, jj++) {
             BaseVector v = terms[jj].apply(df);
