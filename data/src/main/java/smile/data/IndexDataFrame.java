@@ -153,11 +153,6 @@ class IndexDataFrame implements DataFrame {
     }
 
     @Override
-    public BaseVector apply(smile.data.formula.Term term) {
-        return df.apply(term);
-    }
-
-    @Override
     public DataFrame merge(DataFrame... dataframes) {
         for (DataFrame df : dataframes) {
             if (df.size() != size()) {

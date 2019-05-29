@@ -17,7 +17,8 @@ package smile.data.formula;
 
 import smile.data.Tuple;
 import smile.data.type.DataType;
-
+import smile.data.vector.*;
+import smile.data.DataFrame;
 import java.util.Collections;
 import java.util.List;
 
@@ -88,5 +89,68 @@ public interface Term extends HyperTerm {
     /** Returns true if the term represents a constant value. */
     default boolean isConstant() {
         return false;
+    }
+
+    default BaseVector apply(DataFrame df) {
+        if (isVariable()) {
+            return df.column(toString());
+        }
+
+        int size = df.size();
+        switch (type().id()) {
+            case Integer: {
+                int[] values = new int[size];
+                for (int i = 0; i < size; i++) values[i] = applyAsInt(df.get(i));
+                return IntVector.of(toString(), values);
+            }
+
+            case Long: {
+                long[] values = new long[size];
+                for (int i = 0; i < size; i++) values[i] = applyAsLong(df.get(i));
+                return LongVector.of(toString(), values);
+            }
+
+            case Double: {
+                double[] values = new double[size];
+                for (int i = 0; i < size; i++) values[i] = applyAsDouble(df.get(i));
+                return DoubleVector.of(toString(), values);
+            }
+
+            case Float: {
+                float[] values = new float[size];
+                for (int i = 0; i < size; i++) values[i] = applyAsFloat(df.get(i));
+                return FloatVector.of(toString(), values);
+            }
+
+            case Boolean: {
+                boolean[] values = new boolean[size];
+                for (int i = 0; i < size; i++) values[i] = applyAsBoolean(df.get(i));
+                return BooleanVector.of(toString(), values);
+            }
+
+            case Byte: {
+                byte[] values = new byte[size];
+                for (int i = 0; i < size; i++) values[i] = applyAsByte(df.get(i));
+                return ByteVector.of(toString(), values);
+            }
+
+            case Short: {
+                short[] values = new short[size];
+                for (int i = 0; i < size; i++) values[i] = applyAsShort(df.get(i));
+                return ShortVector.of(toString(), values);
+            }
+
+            case Char: {
+                char[] values = new char[size];
+                for (int i = 0; i < size; i++) values[i] = applyAsChar(df.get(i));
+                return CharVector.of(toString(), values);
+            }
+
+            default: {
+                Object[] values = new Object[size];
+                for (int i = 0; i < size; i++) values[i] = apply(df.get(i));
+                return Vector.of(toString(), type(), values);
+            }
+        }
     }
 }
