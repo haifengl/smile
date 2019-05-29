@@ -241,6 +241,8 @@ public class SammonMapping {
 
             if (stress > eprev) {
                 stress = eprev;
+                // early stop when the step size is too small.
+                // TODO: customize 0.2 and 1E-3
                 lambda = lambda * 0.2;
                 if (lambda < 1E-3) {
                     logger.info(String.format("Sammon's Mapping stress after %3d iterations: %.5f", iter-1, stress));
