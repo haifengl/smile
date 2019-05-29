@@ -114,6 +114,11 @@ class OneHot implements HyperTerm {
         }
 
         @Override
+        public byte applyAsByte(Tuple o) {
+            return i == ((Number) o.get(index)).intValue() ? (byte) 1 : (byte) 0;
+        }
+
+        @Override
         public DataType type() {
             return DataTypes.ByteType;
         }

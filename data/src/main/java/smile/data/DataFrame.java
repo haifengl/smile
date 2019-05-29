@@ -633,22 +633,6 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     }
 
     /**
-     * Creates a default columnar implementation of DataFrame by a formula.
-     * @param formula The formula that transforms this DataFrame.
-     */
-    default DataFrame apply(smile.data.formula.Formula formula) {
-        return map(formula);
-    }
-
-    /**
-     * Creates a default columnar implementation of DataFrame by a formula.
-     * @param formula The formula that transforms this DataFrame.
-     */
-    default DataFrame map(smile.data.formula.Formula formula) {
-        return new DataFrameImpl(this, formula);
-    }
-
-    /**
      * Return the matrix obtained by converting all the variables
      * in a data frame to numeric mode and then binding them together
      * as the columns of a matrix. Nominal and ordinal variables are
@@ -731,7 +715,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             }
         }
 
-        return DataFrame.of(
+        return new DataFrameImpl(
                 Vector.of("column", String.class, Arrays.copyOf(col, k)),
                 LongVector.of("count", Arrays.copyOf(count, k)),
                 DoubleVector.of("min", Arrays.copyOf(min, k)),
@@ -841,11 +825,17 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     }
 
     /**
+     * Returns a vector defined by the term.
+     * @param term The formula term that transforms this DataFrame.
+     */
+    BaseVector apply(smile.data.formula.Term term);
+
+    /**
      * Creates a DataFrame from a set of vectors.
      * @param vectors The column vectors.
      */
     static DataFrame of(BaseVector... vectors) {
-        return new DataFrameImpl(Arrays.asList(vectors));
+        return new DataFrameImpl(vectors);
     }
 
     /**
