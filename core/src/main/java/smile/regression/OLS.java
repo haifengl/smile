@@ -17,8 +17,10 @@
 package smile.regression;
 
 import java.util.Arrays;
+import java.util.Properties;
+
 import smile.data.DataFrame;
-import smile.data.formula.Model;
+import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
@@ -149,177 +151,92 @@ public class OLS implements Regression<double[]> {
      */
     private double pvalue;
 
-    /**
-     * Immutable hyper parameters of ordinary least squares.
-     */
-    public static class Hyperparameters {
-        /** Fitting method. Supported methods include "qr" and "svd". */
-        private String method = "qr";
-        /** If true, compute the estimated standard errors of the estimate of parameters. */
-        private boolean se = true;
-
-        /**
-         * Constructor.
-         */
-        public Hyperparameters() {
-
-        }
-
-        /**
-         * Constructor.
-         * @param method The fitting method. Supported methods include "qr" and "svd".
-         *               SVD is slower than QR but can handle rank-deficient matrix.
-         * @param se If true, compute the estimated standard errors of the estimate of parameters.
-         */
-        public Hyperparameters(String method, boolean se) {
-            if (method != "qr" && method != "svd") {
-                throw new IllegalArgumentException("Invalid method: " + method);
-            }
-            this.method = method;
-            this.se = se;
-        }
-
-        /** Returns the fitting method. */
-        public String method() {
-            return method;
-        }
-
-        /** Returns if compute the estimated standard errors of the estimate of parameters. */
-        public boolean se() {
-            return se;
-        }
-
-        public static class Builder {
-            private Hyperparameters hyperparameters = new Hyperparameters();
-
-            /**
-             * Sets the fitting method.
-             */
-            public Builder method(String method) {
-                if (method != "qr" && method != "svd") {
-                    throw new IllegalArgumentException("Invalid method: " + method);
-                }
-
-                hyperparameters.method = method;
-                return this;
-            }
-
-            /**
-             * If true, compute the estimated standard errors of the estimate of parameters.
-             */
-            public Builder se(boolean se) {
-                hyperparameters.se = se;
-                return this;
-            }
-
-            public Hyperparameters build() {
-                return hyperparameters;
-            }
-        }
-
-        @Override
-        public String toString() {
-            return String.format("OLS.Hyperparameters(method = '%s', se.fit = %b)", method, se);
-        }
-    }
-
     /** Private constructor. */
     private OLS() {
 
     }
     /**
      * Learns the ordinary least squares model.
-     * @param data the dataset containing the explanatory and response variables and their attributes.
-     *            NO NEED to include a constant column of 1s for bias.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
+     * @param prop Training algorithm properties and hyper-parameters (if any) including "method" (svd or qr)
+     *             for the fitting method and "standard.error" (boolean) to compute the estimated standard
+     *             errors of the estimate of parameters.
      */
-    public static OLS train(Model model, DataFrame data, Hyperparameters hyperparameters) {
-    }
+    public static OLS train(Formula formula, DataFrame data, Properties prop) {
+        DenseMatrix X = formula.matrix(data, true);
+        double[] y = formula.response(data).toDoubleArray();
 
-    /**
-     * Learns the ordinary least squares model.
-     * @param data the dataset containing the explanatory and response variables and their attributes.
-     *            NO NEED to include a constant column of 1s for bias.
-     */
-    public static OLS train(double[][] x, double[] y, Hyperparameters hyperparameters) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
-        }
-
-        int n = x.length;
-        int p = x[0].length;
+        int n = X.nrows();
+        int p = X.ncols() - 1;
         
         if (n <= p) {
             throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
         }
 
-        attributes = data.attributes();
-        if (attributes.length != p) {
-            throw new IllegalArgumentException(String.format("There are %d variables, but %d variable attributes", attributes.length, p));
-        }
-
         // weights and intercept
         double[] w1 = new double[p+1];
-        DenseMatrix X = Matrix.zeros(n, p+1);
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++)
-                X.set(i, j, x[i][j]);
-            X.set(i, p, 1.0);
-        }
+
 
         QR qr = null;
         SVD svd = null;
-        String method = hyperparameters.method;
+        String method = prop.getProperty("method", "svd").toLowerCase();
         if (method.equalsIgnoreCase("svd")) {
-            svd = X.svd();
+            svd = X.svd(false);
             svd.solve(y, w1);
         } else {
             try {
-                qr = X.qr();
+                qr = X.qr(false);
                 qr.solve(y, w1);
             } catch (RuntimeException e) {
                 logger.warn("Matrix is not of full rank, try SVD instead");
                 method = "svd";
-                svd = X.svd();
+                svd = X.svd(false);
                 Arrays.fill(w1, 0.0);//re-init w1 with zero after exception caught
                 svd.solve(y, w1);
             }
         }
 
         OLS model = new OLS();
+        model.names = new String[p];
+        smile.data.formula.Term[] terms = formula.terms();
+        for (int i = 0; i < p; i++) {
+            model.names[i] = terms[i+1].toString();
+        }
+
         model.p = p;
         model.b = w1[p];
         model.w = new double[p];
         System.arraycopy(w1, 0, model.w, 0, p);
 
-        double[] yhat = new double[n];
-        Matrix.of(x).ax(model.w, yhat);
-
-        double TSS = 0.0;
-        double RSS = 0.0;
-        double ybar = MathEx.mean(y);
         model.fittedValues = new double[n];
         model.residuals = new double[n];
+        X.ax(w1, model.fittedValues);
+
+        double TSS = 0.0;
+        model.RSS = 0.0;
+        double ybar = MathEx.mean(y);
         for (int i = 0; i < n; i++) {
-            model.fittedValues[i] = yhat[i] + model.b;
             double r = y[i] - model.fittedValues[i];
             model.residuals[i] = r;
-            RSS += MathEx.sqr(r);
+            model.RSS += MathEx.sqr(r);
             TSS += MathEx.sqr(y[i] - ybar);
         }
 
-        model.error = Math.sqrt(RSS / (n - p - 1));
+        model.error = Math.sqrt(model.RSS / (n - p - 1));
         int df = n - p - 1;
         model.df = df;
 
-        model.RSquared = 1.0 - RSS / TSS;
+        model.RSquared = 1.0 - model.RSS / TSS;
         model.adjustedRSquared = 1.0 - ((1 - model.RSquared) * (n-1) / (n-p-1));
 
-        model.F = (TSS - RSS) * (n - p - 1) / (RSS * p);
+        model.F = (TSS - model.RSS) * (n - p - 1) / (model.RSS * p);
         int df1 = p;
         int df2 = n - p - 1;
         model.pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * model.F));
 
-        if (hyperparameters.se) {
+        if (prop.getProperty("standard.error", "true").equalsIgnoreCase("true")) {
             double[][] coefficients = new double[p + 1][4];
             model.coefficients = coefficients;
             if (method.equalsIgnoreCase("svd")) {
@@ -497,7 +414,7 @@ public class OLS implements Regression<double[]> {
         builder.append("            Estimate        Std. Error        t value        Pr(>|t|)\n");
         builder.append(String.format("Intercept%11.4f%18.4f%15.4f%16.4f %s%n", coefficients[p][0], coefficients[p][1], coefficients[p][2], coefficients[p][3], significance(coefficients[p][3])));
         for (int i = 0; i < p; i++) {
-            builder.append(String.format("%s\t %11.4f%18.4f%15.4f%16.4f %s%n", attributes[i].getName(), coefficients[i][0], coefficients[i][1], coefficients[i][2], coefficients[i][3], significance(coefficients[i][3])));
+            builder.append(String.format("%s\t %11.4f%18.4f%15.4f%16.4f %s%n", names[i], coefficients[i][0], coefficients[i][1], coefficients[i][2], coefficients[i][3], significance(coefficients[i][3])));
         }
 
         builder.append("---------------------------------------------------------------------\n");
