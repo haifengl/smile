@@ -42,6 +42,18 @@ class IntVectorImpl implements IntVector {
     }
 
     @Override
+    public int[] toIntArray() {
+        return vector;
+    }
+
+    @Override
+    public double[] toDoubleArray() {
+        double[] a = new double[vector.length];
+        for (int i = 0; i < a.length; i++) a[i] = vector[i];
+        return a;
+    }
+
+    @Override
     public int getInt(int i) {
         return vector[i];
     }

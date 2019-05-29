@@ -294,7 +294,7 @@ public class Formula implements Serializable {
      */
     public BaseVector response(DataFrame df) {
         if (response == null) {
-            throw new IllegalStateException("Formula doesn't have a response variable");
+            throw new UnsupportedOperationException("Formula doesn't have a response variable");
         }
 
         response.bind(df.schema());
