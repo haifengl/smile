@@ -42,6 +42,13 @@ class FloatVectorImpl implements FloatVector {
     }
 
     @Override
+    public double[] toDoubleArray() {
+        double[] a = new double[vector.length];
+        for (int i = 0; i < a.length; i++) a[i] = vector[i];
+        return a;
+    }
+
+    @Override
     public float getFloat(int i) {
         return vector[i];
     }

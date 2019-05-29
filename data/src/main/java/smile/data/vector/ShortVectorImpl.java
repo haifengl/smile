@@ -41,6 +41,20 @@ class ShortVectorImpl implements ShortVector {
     }
 
     @Override
+    public int[] toIntArray() {
+        int[] a = new int[vector.length];
+        for (int i = 0; i < a.length; i++) a[i] = vector[i];
+        return a;
+    }
+
+    @Override
+    public double[] toDoubleArray() {
+        double[] a = new double[vector.length];
+        for (int i = 0; i < a.length; i++) a[i] = vector[i];
+        return a;
+    }
+
+    @Override
     public short getShort(int i) {
         return vector[i];
     }
