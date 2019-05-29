@@ -287,65 +287,6 @@ class DataFrameImpl implements DataFrame {
     }
 
     @Override
-    public BaseVector apply(smile.data.formula.Term term) {
-        switch (term.type().id()) {
-            case Integer: {
-                int[] values = new int[size];
-                for (int i = 0; i < size; i++) values[i] = term.applyAsInt(get(i));
-                return IntVector.of(term.toString(), values);
-            }
-
-            case Long: {
-                long[] values = new long[size];
-                for (int i = 0; i < size; i++) values[i] = term.applyAsLong(get(i));
-                return LongVector.of(term.toString(), values);
-            }
-
-            case Double: {
-                double[] values = new double[size];
-                for (int i = 0; i < size; i++) values[i] = term.applyAsDouble(get(i));
-                return DoubleVector.of(term.toString(), values);
-            }
-
-            case Float: {
-                float[] values = new float[size];
-                for (int i = 0; i < size; i++) values[i] = term.applyAsFloat(get(i));
-                return FloatVector.of(term.toString(), values);
-            }
-
-            case Boolean: {
-                boolean[] values = new boolean[size];
-                for (int i = 0; i < size; i++) values[i] = term.applyAsBoolean(get(i));
-                return BooleanVector.of(term.toString(), values);
-            }
-
-            case Byte: {
-                byte[] values = new byte[size];
-                for (int i = 0; i < size; i++) values[i] = term.applyAsByte(get(i));
-                return ByteVector.of(term.toString(), values);
-            }
-
-            case Short: {
-                short[] values = new short[size];
-                for (int i = 0; i < size; i++) values[i] = term.applyAsShort(get(i));
-                return ShortVector.of(term.toString(), values);
-            }
-
-            case Char: {
-                char[] values = new char[size];
-                for (int i = 0; i < size; i++) values[i] = term.applyAsChar(get(i));
-                return CharVector.of(term.toString(), values);
-            }
-
-            default: {
-                Object[] values = new Object[size];
-                for (int i = 0; i < size; i++) values[i] = term.apply(get(i));
-                return Vector.of(term.toString(), term.type(), values);
-            }
-        }
-    }
-
-    @Override
     public StructType schema() {
         return schema;
     }

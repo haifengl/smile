@@ -825,12 +825,6 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     }
 
     /**
-     * Returns a vector defined by the term.
-     * @param term The formula term that transforms this DataFrame.
-     */
-    BaseVector apply(smile.data.formula.Term term);
-
-    /**
      * Creates a DataFrame from a set of vectors.
      * @param vectors The column vectors.
      */
@@ -923,6 +917,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /**
      * Returns a stream collector that accumulates tuples into a Matrix.
+     * @param bias add a bias column (all ones) if true.
      */
     static Collector<Tuple, List<Tuple>, DenseMatrix> collectMatrix() {
         return Collector.of(
@@ -939,7 +934,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
                     }
                     int nrows = container.size();
                     int ncols = container.get(0).length();
-                    DenseMatrix m = Matrix.of(nrows, ncols, 0);
+                    DenseMatrix m = Matrix.of(nrows, ncols, 0.0);
                     for (int i = 0; i < nrows; i++) {
                         for (int j = 0; j < ncols; j++) {
                             m.set(i, j, container.get(i).getDouble(j));
