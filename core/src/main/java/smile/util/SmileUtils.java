@@ -20,7 +20,6 @@ import java.util.Arrays;
 
 import smile.clustering.CLARANS;
 import smile.clustering.KMeans;
-import smile.data.Attribute;
 import smile.math.MathEx;
 import smile.math.distance.Metric;
 import smile.math.rbf.GaussianRadialBasis;
