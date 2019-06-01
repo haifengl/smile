@@ -1,6 +1,6 @@
 name := "smile-scala"
 
-crossScalaVersions := Seq("2.10.6", "2.11.11", "2.12.4")
+crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.8")
 
 // Parent project disables Scala as most libraries are in Java.
 // Enable it as this is a Scala project.
@@ -18,4 +18,4 @@ target in Compile in doc := baseDirectory.value / "../shell/src/universal/doc/ap
 
 libraryDependencies += "com.thoughtworks.xstream" % "xstream" % "1.4.11.1"
 
-libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.8.0"
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
