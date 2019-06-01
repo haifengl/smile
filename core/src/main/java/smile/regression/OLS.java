@@ -155,6 +155,17 @@ public class OLS implements Regression<double[]> {
     private OLS() {
 
     }
+
+    /**
+     * Learns the ordinary least squares model.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
+     */
+    public static OLS train(Formula formula, DataFrame data) {
+        return train(formula, data, new Properties());
+    }
+
     /**
      * Learns the ordinary least squares model.
      * @param formula a symbolic description of the model to be fitted.
