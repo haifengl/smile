@@ -61,3 +61,5 @@ buildInfoOptions += BuildInfoOption.BuildTime
 libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.12.8"
 
 libraryDependencies += "com.lihaoyi" % "ammonite" % "1.6.7" cross CrossVersion.full
+
+libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.26"
