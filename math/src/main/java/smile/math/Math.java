@@ -924,65 +924,49 @@ public class Math {
     }
 
     /** Merges multiple vectors into one. */
-    public static int[] c(int[]... x) {
-        int n = 0;
-        for (int i = 0; i < x.length; i++) {
-            n += x.length;
-        }
-
+    public static int[] c(int[]... list) {
+        int n = Arrays.stream(list).mapToInt(x -> x.length).sum();
         int[] y = new int[n];
-        for (int i = 0, k = 0; i < x.length; i++) {
-            for (int xi : x[i]) {
-                y[k++] = xi;
-            }
+        int pos = 0;
+        for (int[] x: list) {
+            System.arraycopy(x, 0, y, pos, x.length);
+            pos += x.length;
         }
         return y;
     }
 
     /** Merges multiple vectors into one. */
-    public static float[] c(float[]... x) {
-        int n = 0;
-        for (int i = 0; i < x.length; i++) {
-            n += x.length;
-        }
-
+    public static float[] c(float[]... list) {
+        int n = Arrays.stream(list).mapToInt(x -> x.length).sum();
         float[] y = new float[n];
-        for (int i = 0, k = 0; i < x.length; i++) {
-            for (float xi : x[i]) {
-                y[k++] = xi;
-            }
+        int pos = 0;
+        for (float[] x: list) {
+            System.arraycopy(x, 0, y, pos, x.length);
+            pos += x.length;
         }
         return y;
     }
 
     /** Merges multiple vectors into one. */
-    public static double[] c(double[]... x) {
-        int n = 0;
-        for (int i = 0; i < x.length; i++) {
-            n += x.length;
-        }
-
+    public static double[] c(double[]... list) {
+        int n = Arrays.stream(list).mapToInt(x -> x.length).sum();
         double[] y = new double[n];
-        for (int i = 0, k = 0; i < x.length; i++) {
-            for (double xi : x[i]) {
-                y[k++] = xi;
-            }
+        int pos = 0;
+        for (double[] x: list) {
+            System.arraycopy(x, 0, y, pos, x.length);
+            pos += x.length;
         }
         return y;
     }
 
-    /** Merges multiple vectors into one. */
-    public static String[] c(String[]... x) {
-        int n = 0;
-        for (int i = 0; i < x.length; i++) {
-            n += x.length;
-        }
-
+    /** Concatenates multiple vectors into one array of strings. */
+    public static String[] c(String[]... list) {
+        int n = Arrays.stream(list).mapToInt(x -> x.length).sum();
         String[] y = new String[n];
-        for (int i = 0, k = 0; i < x.length; i++) {
-            for (String xi : x[i]) {
-                y[k++] = xi;
-            }
+        int pos = 0;
+        for (String[] x: list) {
+            System.arraycopy(x, 0, y, pos, x.length);
+            pos += x.length;
         }
         return y;
     }
