@@ -20,9 +20,9 @@ import java.util.Arrays;
 import java.util.Properties;
 
 import smile.data.DataFrame;
+import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QR;
 import smile.math.matrix.SVD;
@@ -80,6 +80,10 @@ public class OLS implements Regression<double[]> {
     private static final long serialVersionUID = 1L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OLS.class);
 
+    /**
+     * Design matrix formula
+     */
+    private Formula formula;
     /**
      * The dimensionality.
      */
@@ -162,8 +166,8 @@ public class OLS implements Regression<double[]> {
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
      */
-    public static OLS train(Formula formula, DataFrame data) {
-        return train(formula, data, new Properties());
+    public static OLS fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Properties());
     }
 
     /**
@@ -172,10 +176,11 @@ public class OLS implements Regression<double[]> {
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
      * @param prop Training algorithm properties and hyper-parameters (if any) including "method" (svd or qr)
-     *             for the fitting method and "standard.error" (boolean) to compute the estimated standard
-     *             errors of the estimate of parameters.
+     *             for the fitting method, "standard.error" (boolean) to compute the estimated standard
+     *             errors of the estimate of parameters, "eps" (default 1E-7) as the tolerance in SVD
+     *             to detect if a singular value is zero.
      */
-    public static OLS train(Formula formula, DataFrame data, Properties prop) {
+    public static OLS fit(Formula formula, DataFrame data, Properties prop) {
         DenseMatrix X = formula.matrix(data, true);
         double[] y = formula.response(data).toDoubleArray();
 
@@ -216,6 +221,7 @@ public class OLS implements Regression<double[]> {
             model.names[i] = terms[i+1].toString();
         }
 
+        model.formula = formula;
         model.p = p;
         model.b = w1[p];
         model.w = new double[p];
@@ -248,13 +254,14 @@ public class OLS implements Regression<double[]> {
         model.pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * model.F));
 
         if (prop.getProperty("standard.error", "true").equalsIgnoreCase("true")) {
+            double eps = Double.valueOf(prop.getProperty("eps", "1E-7"));
             double[][] coefficients = new double[p + 1][4];
             model.coefficients = coefficients;
             if (method.equalsIgnoreCase("svd")) {
                 for (int i = 0; i <= p; i++) {
                     coefficients[i][0] = w1[i];
                     double s = svd.getSingularValues()[i];
-                    if (!MathEx.isZero(s, 1E-10)) {
+                    if (!MathEx.isZero(s, eps)) {
                         double se = model.error / s;
                         coefficients[i][1] = se;
                         double t = w1[i] / se;
@@ -392,6 +399,15 @@ public class OLS implements Regression<double[]> {
         }
 
         return b + MathEx.dot(x, w);
+    }
+
+    /** Predicts the dependent variables of instances in a data frame. */
+    public double[] predict(DataFrame df) {
+        DenseMatrix X = formula.matrix(df, false);
+        double[] y = new double[X.nrows()];
+        Arrays.fill(y, b);
+        X.axpy(w, y);
+        return y;
     }
 
     /**
