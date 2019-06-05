@@ -136,7 +136,7 @@ public class SVD {
     }
 
     /**
-     * Returns the effective numerical matrix rank. The number of nonnegligible
+     * Returns the effective numerical matrix rank. The number of non-negligible
      * singular values.
      */
     public int rank() {
