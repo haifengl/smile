@@ -46,6 +46,15 @@ public interface Tuple extends Serializable {
         return schema().length();
     }
 
+    /** Returns the tuple as an array of doubles. */
+    default double[] toArray() {
+        double[] x = new double[length()];
+        for (int i = 0; i < x.length; i++) {
+            x[i] = getDouble(i);
+        }
+        return x;
+    }
+
     /**
      * Returns the value at position i. The value may be null.
      */

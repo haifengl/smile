@@ -23,7 +23,6 @@ import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.type.*;
 import smile.data.vector.*;
-import smile.data.vector.Vector;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
@@ -207,6 +206,7 @@ public class Formula implements Serializable {
 
         return DataFrame.of(vectors);
     }
+
     /**
      * Creates a design (or model) matrix without bias column.
      * @param df The input DataFrame.
