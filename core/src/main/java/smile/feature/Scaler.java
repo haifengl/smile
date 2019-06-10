@@ -16,8 +16,16 @@
 
 package smile.feature;
 
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.Collectors;
+import smile.data.type.DataType;
+import smile.data.vector.BaseVector;
+import smile.data.vector.DoubleVector;
 import smile.math.MathEx;
-import smile.data.Attribute;
+import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.type.StructType;
 
 /**
  * Scales all numeric variables into the range [0, 1].
@@ -31,7 +39,11 @@ import smile.data.Attribute;
  *
  * @author Haifeng Li
  */
-public class Scaler extends FeatureTransform {
+public class Scaler implements FeatureTransform {
+    /**
+     * The schema of data.
+     */
+    protected StructType schema;
     /**
      * Lower bound.
      */
@@ -41,66 +53,104 @@ public class Scaler extends FeatureTransform {
      */
     protected double[] hi;
 
-    /** Constructor. Inplace transformation. */
-    public Scaler() {
+    /**
+     * Constructor.
+     * @param schema the schema of data.
+     * @param lo the lower bound.
+     * @param hi the upper bound.
+     */
+    public Scaler(StructType schema, double[] lo, double[] hi) {
+        this.schema = schema;
+        this.lo = lo;
+        this.hi = hi;
 
+        for (int i = 0; i < lo.length; i++) {
+            hi[i] -= lo[i];
+            if (MathEx.isZero(hi[i])) {
+                hi[i] = 1.0;
+            }
+        }
     }
 
     /**
-     * Constructor.
-     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
+     * Learns transformation parameters from a dataset.
+     * @param data The training data.
      */
-    public Scaler(boolean copy) {
-        super(copy);
+    public static Scaler fit(DataFrame data) {
+        if (data.isEmpty()) {
+            throw new IllegalArgumentException("Empty data frame");
+        }
+
+        StructType schema = data.schema();
+        int p = schema.length();
+        double[] lo = new double[p];
+        double[] hi = new double[p];
+
+        for (int i = 0; i < p; i++) {
+            if (DataType.isDouble(schema.field(i).type)) {
+                lo[i] = data.doubleVector(i).stream().min().getAsDouble();
+                lo[i] = data.doubleVector(i).stream().max().getAsDouble();
+            }
+        }
+
+        return new Scaler(schema, lo, hi);
     }
 
     @Override
-    public void learn(Attribute[] attributes, double[][] data) {
-        lo = MathEx.colMin(data);
-        hi = MathEx.colMax(data);
+    public Tuple transform(Tuple x) {
+        if (!schema.equals(x.schema())) {
+            throw new IllegalArgumentException(String.format("Invalid schema %s, expected %s", x.schema(), schema));
+        }
 
-        for (int i = 0; i < lo.length; i++) {
-            if (attributes[i].getType() != Attribute.Type.NUMERIC) {
-                lo[i] = Double.NaN;
-            } else {
-                hi[i] -= lo[i];
-                if (MathEx.isZero(hi[i])) {
-                    hi[i] = 1.0;
+        return new Tuple() {
+            @Override
+            public Object get(int i) {
+                if (DataType.isDouble(schema.field(i).type)) {
+                    double xi = x.getDouble(i);
+                    double y = (xi - lo[i]) / hi[i];
+                    if (y < 0.0) y = 0.0;
+                    if (y > 1.0) y = 1.0;
+                    return y;
+                } else {
+                    return x.get(i);
                 }
             }
-        }
+
+            @Override
+            public StructType schema() {
+                return schema;
+            }
+        };
     }
 
     @Override
-    public double[] transform(double[] x) {
-        if (x.length != lo.length) {
-            throw new IllegalArgumentException(String.format("Invalid vector size %d, expected %d", x.length, lo.length));
+    public DataFrame transform(DataFrame data) {
+        if (!schema.equals(data.schema())) {
+            throw new IllegalArgumentException(String.format("Invalid schema %s, expected %s", data.schema(), schema));
         }
 
-        double[] y = copy ? new double[x.length] : x;
-        for (int i = 0; i < x.length; i++) {
-            if (!Double.isNaN(lo[i])) {
-                double yi = (x[i] - lo[i]) / hi[i];
-                if (yi < 0.0) yi = 0.0;
-                if (yi > 1.0) yi = 1.0;
-                y[i] = yi;
+        BaseVector[] vectors = new BaseVector[schema.length()];
+        for (int i = 0; i < lo.length; i++) {
+            if (DataType.isDouble(schema.field(i).type)) {
+                final int idx = i;
+                DoubleStream stream = data.doubleVector(i).stream().map(x -> {
+                    double y = (x - lo[idx]) / hi[idx];
+                    if (y < 0.0) y = 0.0;
+                    if (y > 1.0) y = 1.0;
+                    return y;
+                });
+                vectors[i] = DoubleVector.of(schema.field(i).name, stream);
+            } else {
+                vectors[i] = data.vector(i);
             }
         }
-
-        return y;
+        return DataFrame.of(vectors);
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Scaler(");
-        if (lo != null) {
-            sb.append("\n");
-            for (int i = 0; i < lo.length; i++) {
-                sb.append(String.format("  [%.4f, %.4f]%n", lo[i], hi[i]));
-            }
-        }
-        sb.append(")");
-        return sb.toString();
+        return IntStream.range(0, lo.length).mapToObj(
+                i -> String.format("%s[%.4f, %.4f]%n", schema.field(i).name, lo[i], hi[i])
+        ).collect(Collectors.joining(",", "Scaler(", ")"));
     }
 }

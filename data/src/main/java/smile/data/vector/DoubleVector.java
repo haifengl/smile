@@ -77,4 +77,13 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
     static DoubleVector of(String name, double[] vector) {
         return new DoubleVectorImpl(name, vector);
     }
+
+    /** Creates a named double vector.
+     *
+     * @param name the name of vector.
+     * @param stream the data stream of vector.
+     */
+    static DoubleVector of(String name, DoubleStream stream) {
+        return new DoubleVectorImpl(name, stream.toArray());
+    }
 }

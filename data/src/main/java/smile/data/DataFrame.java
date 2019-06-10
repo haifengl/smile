@@ -917,9 +917,8 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /**
      * Returns a stream collector that accumulates tuples into a Matrix.
-     * @param bias add a bias column (all ones) if true.
      */
-    static Collector<Tuple, List<Tuple>, DenseMatrix> collectMatrix() {
+    static Collector<Tuple, List<Tuple>, DenseMatrix> matrix() {
         return Collector.of(
                 // supplier
                 () -> new ArrayList<Tuple>(),
@@ -934,7 +933,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
                     }
                     int nrows = container.size();
                     int ncols = container.get(0).length();
-                    DenseMatrix m = Matrix.of(nrows, ncols, 0.0);
+                    DenseMatrix m = Matrix.zeros(nrows, ncols);
                     for (int i = 0; i < nrows; i++) {
                         for (int j = 0; j < ncols; j++) {
                             m.set(i, j, container.get(i).getDouble(j));
