@@ -16,9 +16,11 @@
 
 package smile.feature;
 
-import smile.math.MathEx;
-import smile.data.Attribute;
-import smile.sort.QuickSelect;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import smile.data.DataFrame;
+import smile.data.type.DataType;
+import smile.data.type.StructType;
 
 /**
  * Scales all numeric variables into the range [0, 1].
@@ -34,48 +36,36 @@ import smile.sort.QuickSelect;
  */
 public class WinsorScaler extends Scaler {
     /**
-     * Lower limit.
-     */
-    protected double lower;
-    /**
-     * Upper limit.
-     */
-    protected double upper;
-
-    /**
-     * Constructor. Inplace transformation.
-     * @param lower the lower limit in terms of percentiles of the original
-     *              distribution (say 5th percentile).
-     * @param upper the upper limit in terms of percentiles of the original
-     *              distribution (say 95th percentile).
-     */
-    public WinsorScaler(double lower, double upper) {
-        if (lower < 0.0 || lower > 0.5) {
-            throw new IllegalArgumentException("Invalid lower limit: " + lower);
-        }
-
-        if (upper < 0.5 || upper > 1.0) {
-            throw new IllegalArgumentException("Invalid upper limit: " + upper);
-        }
-
-        if (upper <= lower) {
-            throw new IllegalArgumentException("Invalid lower and upper limit pair: " + lower + " >= " + upper);
-        }
-
-        this.lower = lower;
-        this.upper = upper;
-    }
-
-    /**
      * Constructor.
+     * @param schema the schema of data.
+     * @param lo the lower bound.
+     * @param hi the upper bound.
+     */
+    public WinsorScaler(StructType schema, double[] lo, double[] hi) {
+        super(schema, lo, hi);
+    }
+
+    /**
+     * Learns transformation parameters from a dataset with 5% lower limit
+     * and 95% upper limit.
+     * @param data The training data.
+     */
+    public static WinsorScaler fit(DataFrame data) {
+        return fit(data, 0.05, 0.95);
+    }
+
+    /**
+     * Learns transformation parameters from a dataset.
+     * @param data The training data.
      * @param lower the lower limit in terms of percentiles of the original
      *              distribution (say 5th percentile).
      * @param upper the upper limit in terms of percentiles of the original
      *              distribution (say 95th percentile).
-     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
      */
-    public WinsorScaler(double lower, double upper, boolean copy) {
-        super(copy);
+    public static WinsorScaler fit(DataFrame data, double lower, double upper) {
+        if (data.isEmpty()) {
+            throw new IllegalArgumentException("Empty data frame");
+        }
 
         if (lower < 0.0 || lower > 0.5) {
             throw new IllegalArgumentException("Invalid lower limit: " + lower);
@@ -89,52 +79,26 @@ public class WinsorScaler extends Scaler {
             throw new IllegalArgumentException("Invalid lower and upper limit pair: " + lower + " >= " + upper);
         }
 
-        this.lower = lower;
-        this.upper = upper;
-    }
+        StructType schema = data.schema();
+        double[] lo = new double[schema.length()];
+        double[] hi = new double[schema.length()];
 
-    @Override
-    public void learn(Attribute[] attributes, double[][] data) {
-        int n = data.length;
-        int p = data[0].length;
-        int i1 = (int) Math.round(lower * n);
-        int i2 = (int) Math.round(upper * n);
-        if (i2 == n) {
-            i2 = n - 1;
-        }
-
-        lo = new double[p];
-        hi = new double[p];
-        double[] x = new double[n];
-
-        for (int j = 0; j < p; j++) {
-            if (attributes[j].getType() != Attribute.Type.NUMERIC) {
-                lo[j] = Double.NaN;
-            } else {
-                for (int i = 0; i < n; i++) {
-                    x[i] = data[i][j];
-                }
-
-                lo[j] = QuickSelect.select(x, i1);
-                hi[j] = QuickSelect.select(x, i2) - lo[j];
-                if (MathEx.isZero(hi[j])) {
-                    throw new IllegalArgumentException("Attribute " + j + " has constant values in the given range.");
-                }
+        for (int i = 0; i < lo.length; i++) {
+            if (DataType.isDouble(schema.field(i).type)) {
+                final smile.sort.IQAgent agent = new smile.sort.IQAgent();
+                data.doubleVector(i).stream().forEach(agent::add);
+                lo[i] = agent.quantile(lower);
+                hi[i] = agent.quantile(upper);
             }
         }
+
+        return new WinsorScaler(schema, lo, hi);
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.format("WinsorScaler(%f, %f", lower, upper));
-        if (lo != null) {
-            sb.append("\n");
-            for (int i = 0; i < lo.length; i++) {
-                sb.append(String.format("  [%.4f, %.4f]%n", lo[i], hi[i]));
-            }
-        }
-        sb.append(")");
-        return sb.toString();
+        return IntStream.range(0, lo.length).mapToObj(
+                i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, lo[i], hi[i])
+        ).collect(Collectors.joining(",", "WinsorScaler(", ")"));
     }
 }

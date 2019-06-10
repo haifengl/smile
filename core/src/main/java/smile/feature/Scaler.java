@@ -60,6 +60,10 @@ public class Scaler implements FeatureTransform {
      * @param hi the upper bound.
      */
     public Scaler(StructType schema, double[] lo, double[] hi) {
+        if (schema.length() != lo.length || lo.length != hi.length) {
+            throw new IllegalArgumentException("Schema and scaling factor size don't match");
+        }
+
         this.schema = schema;
         this.lo = lo;
         this.hi = hi;
@@ -82,18 +86,25 @@ public class Scaler implements FeatureTransform {
         }
 
         StructType schema = data.schema();
-        int p = schema.length();
-        double[] lo = new double[p];
-        double[] hi = new double[p];
+        double[] lo = new double[schema.length()];
+        double[] hi = new double[schema.length()];
 
-        for (int i = 0; i < p; i++) {
+        for (int i = 0; i < lo.length; i++) {
             if (DataType.isDouble(schema.field(i).type)) {
                 lo[i] = data.doubleVector(i).stream().min().getAsDouble();
-                lo[i] = data.doubleVector(i).stream().max().getAsDouble();
+                hi[i] = data.doubleVector(i).stream().max().getAsDouble();
             }
         }
 
         return new Scaler(schema, lo, hi);
+    }
+
+    /** Scales a value with i-th column parameters. */
+    private double scale(double x, int i) {
+        double y = (x - lo[i]) / hi[i];
+        if (y < 0.0) y = 0.0;
+        if (y > 1.0) y = 1.0;
+        return y;
     }
 
     @Override
@@ -106,11 +117,7 @@ public class Scaler implements FeatureTransform {
             @Override
             public Object get(int i) {
                 if (DataType.isDouble(schema.field(i).type)) {
-                    double xi = x.getDouble(i);
-                    double y = (xi - lo[i]) / hi[i];
-                    if (y < 0.0) y = 0.0;
-                    if (y > 1.0) y = 1.0;
-                    return y;
+                    return scale(x.getDouble(i), i);
                 } else {
                     return x.get(i);
                 }
@@ -133,12 +140,7 @@ public class Scaler implements FeatureTransform {
         for (int i = 0; i < lo.length; i++) {
             if (DataType.isDouble(schema.field(i).type)) {
                 final int idx = i;
-                DoubleStream stream = data.doubleVector(i).stream().map(x -> {
-                    double y = (x - lo[idx]) / hi[idx];
-                    if (y < 0.0) y = 0.0;
-                    if (y > 1.0) y = 1.0;
-                    return y;
-                });
+                DoubleStream stream = data.doubleVector(i).stream().map(x -> scale(x, idx));
                 vectors[i] = DoubleVector.of(schema.field(i).name, stream);
             } else {
                 vectors[i] = data.vector(i);
@@ -150,7 +152,7 @@ public class Scaler implements FeatureTransform {
     @Override
     public String toString() {
         return IntStream.range(0, lo.length).mapToObj(
-                i -> String.format("%s[%.4f, %.4f]%n", schema.field(i).name, lo[i], hi[i])
+                i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, lo[i], hi[i])
         ).collect(Collectors.joining(",", "Scaler(", ")"));
     }
 }
