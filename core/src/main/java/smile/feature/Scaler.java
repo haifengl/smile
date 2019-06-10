@@ -43,15 +43,15 @@ public class Scaler implements FeatureTransform {
     /**
      * The schema of data.
      */
-    protected StructType schema;
+    StructType schema;
     /**
      * Lower bound.
      */
-    protected double[] lo;
+    double[] lo;
     /**
      * Upper bound.
      */
-    protected double[] hi;
+    double[] hi;
 
     /**
      * Constructor.

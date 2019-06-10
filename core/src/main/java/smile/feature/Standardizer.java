@@ -16,8 +16,16 @@
 
 package smile.feature;
 
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.type.DataType;
+import smile.data.type.StructType;
+import smile.data.vector.BaseVector;
+import smile.data.vector.DoubleVector;
 import smile.math.MathEx;
-import smile.data.Attribute;
 
 /**
  * Standardizes numeric feature to 0 mean and unit variance.
@@ -28,7 +36,11 @@ import smile.data.Attribute;
  *
  * @author Haifeng Li
  */
-public class Standardizer extends FeatureTransform {
+public class Standardizer implements FeatureTransform {
+    /**
+     * The schema of data.
+     */
+    StructType schema;
     /**
      * Mean or median.
      */
@@ -40,64 +52,103 @@ public class Standardizer extends FeatureTransform {
 
     /**
      * Constructor.
+     * @param schema the schema of data.
+     * @param mu mean.
+     * @param std standard deviation.
      */
-    public Standardizer() {
+    public Standardizer(StructType schema, double[] mu, double[] std) {
+        if (schema.length() != mu.length || mu.length != std.length) {
+            throw new IllegalArgumentException("Schema and scaling factor size don't match");
+        }
 
+        for (int i = 0; i < std.length; i++) {
+            if (MathEx.isZero(std[i])) {
+                throw new IllegalArgumentException("Invalid standard deviation: 0");
+            }
+        }
+
+        this.schema = schema;
+        this.mu = mu;
+        this.std = std;
     }
 
     /**
-     * Constructor.
-     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
+     * Learns transformation parameters from a dataset.
+     * @param data The training data.
      */
-    public Standardizer(boolean copy) {
-        super(copy);
+    public static Standardizer fit(DataFrame data) {
+        if (data.isEmpty()) {
+            throw new IllegalArgumentException("Empty data frame");
+        }
+
+        StructType schema = data.schema();
+        double[] mu = new double[schema.length()];
+        double[] std = new double[schema.length()];
+
+        int n = data.nrows();
+        for (int i = 0; i < mu.length; i++) {
+            if (DataType.isDouble(schema.field(i).type)) {
+                double sum = data.doubleVector(i).stream().sum();
+                double squaredSum = data.doubleVector(i).stream().map(x -> x*x).sum();
+                mu[i] = sum / n;
+                std[i] = Math.sqrt(squaredSum / n - mu[i] * mu[i]);
+            }
+        }
+
+        return new Standardizer(schema, mu, std);
+    }
+
+    /** Scales a value with i-th column parameters. */
+    private double scale(double x, int i) {
+        return (x - mu[i]) / std[i];
     }
 
     @Override
-    public void learn(Attribute[] attributes, double[][] data) {
-        mu = MathEx.colMeans(data);
-        std = MathEx.colSds(data);
-
-        for (int i = 0; i < std.length; i++) {
-            if (attributes[i].getType() != Attribute.Type.NUMERIC) {
-                mu[i] = Double.NaN;
-            }
-
-            if (MathEx.isZero(std[i])) {
-                std[i] = 1.0;
-            }
+    public Tuple transform(Tuple x) {
+        if (!schema.equals(x.schema())) {
+            throw new IllegalArgumentException(String.format("Invalid schema %s, expected %s", x.schema(), schema));
         }
+
+        return new Tuple() {
+            @Override
+            public Object get(int i) {
+                if (DataType.isDouble(schema.field(i).type)) {
+                    return scale(x.getDouble(i), i);
+                } else {
+                    return x.get(i);
+                }
+            }
+
+            @Override
+            public StructType schema() {
+                return schema;
+            }
+        };
     }
 
     @Override
-    public double[] transform(double[] x) {
-        if (x.length != mu.length) {
-            throw new IllegalArgumentException(String.format("Invalid vector size %d, expected %d", x.length, mu.length));
+    public DataFrame transform(DataFrame data) {
+        if (!schema.equals(data.schema())) {
+            throw new IllegalArgumentException(String.format("Invalid schema %s, expected %s", data.schema(), schema));
         }
 
-        double[] y = copy ? new double[x.length] : x;
-        for (int i = 0; i < x.length; i++) {
-            if (!Double.isNaN(mu[i])) {
-                y[i] = (x[i] - mu[i]) / std[i];
+        BaseVector[] vectors = new BaseVector[schema.length()];
+        for (int i = 0; i < mu.length; i++) {
+            if (DataType.isDouble(schema.field(i).type)) {
+                final int idx = i;
+                DoubleStream stream = data.doubleVector(i).stream().map(x -> scale(x, idx));
+                vectors[i] = DoubleVector.of(schema.field(i).name, stream);
             } else {
-                y[i] = x[i];
+                vectors[i] = data.vector(i);
             }
         }
-
-        return y;
+        return DataFrame.of(vectors);
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Standardizer(");
-        if (mu != null) {
-            sb.append("\n");
-            for (int i = 0; i < mu.length; i++) {
-                sb.append(String.format("  [%.4f, %.4f]%n", mu[i], std[i]));
-            }
-        }
-        sb.append(")");
-        return sb.toString();
+        return IntStream.range(0, mu.length).mapToObj(
+                i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, mu[i], std[i])
+        ).collect(Collectors.joining(",", "Standardizer(", ")"));
     }
 }
