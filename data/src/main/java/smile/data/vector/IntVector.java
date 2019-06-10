@@ -77,4 +77,13 @@ public interface IntVector extends BaseVector<Integer, Integer, IntStream> {
     static IntVector of(String name, int[] vector) {
         return new IntVectorImpl(name, vector);
     }
+
+    /** Creates a named integer vector.
+     *
+     * @param name the name of vector.
+     * @param stream the data stream of vector.
+     */
+    static IntVector of(String name, IntStream stream) {
+        return new IntVectorImpl(name, stream.toArray());
+    }
 }

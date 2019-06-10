@@ -77,4 +77,13 @@ public interface LongVector extends BaseVector<Long, Long, LongStream> {
     static LongVector of(String name, long[] vector) {
         return new LongVectorImpl(name, vector);
     }
+
+    /** Creates a named long vector.
+     *
+     * @param name the name of vector.
+     * @param stream the data stream of vector.
+     */
+    static LongVector of(String name, LongStream stream) {
+        return new LongVectorImpl(name, stream.toArray());
+    }
 }
