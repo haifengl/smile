@@ -16,9 +16,14 @@
 
 package smile.feature;
 
-import smile.data.Attribute;
+import smile.data.DataFrame;
+import smile.data.type.DataType;
+import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.sort.QuickSelect;
+
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Robustly standardizes numeric feature by subtracting
@@ -30,56 +35,43 @@ public class RobustStandardizer extends Standardizer {
 
     /**
      * Constructor.
+     * @param schema the schema of data.
+     * @param median median.
+     * @param iqr IQR.
      */
-    public RobustStandardizer() {
-
+    public RobustStandardizer(StructType schema, double[] median, double[] iqr) {
+        super(schema, median, iqr);
     }
 
     /**
-     * Constructor.
-     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
+     * Learns transformation parameters from a dataset.
+     * @param data The training data.
      */
-    public RobustStandardizer(boolean copy) {
-        super(copy);
-    }
+    public static RobustStandardizer fit(DataFrame data) {
+        if (data.isEmpty()) {
+            throw new IllegalArgumentException("Empty data frame");
+        }
 
-    @Override
-    public void learn(Attribute[] attributes, double[][] data) {
-        int n = data.length;
-        int p = data[0].length;
+        StructType schema = data.schema();
+        double[] median = new double[schema.length()];
+        double[] iqr = new double[schema.length()];
 
-        mu = new double[p];
-        std = new double[p];
-        double[] x = new double[n];
-
-        for (int j = 0; j < p; j++) {
-            if (attributes[j].getType() != Attribute.Type.NUMERIC) {
-                mu[j] = Double.NaN;
-            } else {
-                for (int i = 0; i < n; i++) {
-                    x[i] = data[i][j];
-                }
-
-                mu[j] = QuickSelect.median(x);
-                std[j] = QuickSelect.q3(x) - QuickSelect.q1(x);
-                if (MathEx.isZero(std[j])) {
-                    throw new IllegalArgumentException("Column " + j + " has constant values between Q1 and Q3.");
-                }
+        for (int i = 0; i < median.length; i++) {
+            if (DataType.isDouble(schema.field(i).type)) {
+                final smile.sort.IQAgent agent = new smile.sort.IQAgent();
+                data.doubleVector(i).stream().forEach(agent::add);
+                median[i] = agent.quantile(0.5);
+                iqr[i] = agent.quantile(0.75) - agent.quantile(0.25);
             }
         }
+
+        return new RobustStandardizer(schema, median, iqr);
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("RobustStandardizer(");
-        if (mu != null) {
-            sb.append("\n");
-            for (int i = 0; i < mu.length; i++) {
-                sb.append(String.format("  [%.4f, %.4f]%n", mu[i], std[i]));
-            }
-        }
-        sb.append(")");
-        return sb.toString();
+        return IntStream.range(0, mu.length).mapToObj(
+                i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, mu[i], std[i])
+        ).collect(Collectors.joining(",", "RobustStandardizer(", ")"));
     }
 }
