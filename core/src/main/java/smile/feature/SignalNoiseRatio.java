@@ -71,7 +71,7 @@ public class SignalNoiseRatio implements FeatureRanking {
         int p = mu1.length;
         double[] s2n = new double[p];
         for (int i = 0; i < p; i++) {
-            s2n[i] = MathEx.abs(mu1[i] - mu2[i]) / (sd1[i] + sd2[i]);
+            s2n[i] = Math.abs(mu1[i] - mu2[i]) / (sd1[i] + sd2[i]);
         }
         return s2n;
     }

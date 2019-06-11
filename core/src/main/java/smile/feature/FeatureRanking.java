@@ -32,6 +32,6 @@ public interface FeatureRanking {
      * @param y class labels in [0, k), where k is the number of classes.
      * @return the metric values of each feature.
      */
-    public double[] rank(double[][] x, int[] y);
+    double[] rank(double[][] x, int[] y);
     
 }

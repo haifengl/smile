@@ -18,29 +18,20 @@ package smile.feature;
 
 import java.util.HashMap;
 import java.util.Map;
-import smile.data.Attribute;
-import smile.data.NominalAttribute;
-import smile.data.NumericAttribute;
 
 /**
  * The bag-of-words feature of text used in natural language
  * processing and information retrieval. In this model, a text (such as a
  * sentence or a document) is represented as an unordered collection of words,
- * disregarding grammar and even word order. This is a generic implementations.
- * Thus, it can be used for sequences of any (discrete) data types with limited
- * number of values.
+ * disregarding grammar and even word order.
  * 
  * @author Haifeng Li
  */
-public class Bag<T> implements FeatureGenerator<T[]> {
-    /**
-     * The attributes of generated features.
-     */
-    private Attribute[] attributes;
+public class Bag {
     /**
      * The mapping from feature words to indices.
      */
-    private Map<T, Integer> features;
+    private Map<String, Integer> words;
 
     /**
      * True to check if feature words appear in a document instead of their
@@ -50,41 +41,28 @@ public class Bag<T> implements FeatureGenerator<T[]> {
 
     /**
      * Constructor.
-     * @param features the list of feature objects.
+     * @param words the list of feature words.
      */
-    public Bag(T[] features) {
-        this(features, false);
+    public Bag(String[] words) {
+        this(words, false);
     }
 
     /**
      * Constructor.
-     * @param features the list of feature objects. The feature objects should be unique in the list.
+     * @param words the list of feature words. The feature words should be unique in the list.
      * Note that the Bag class doesn't learn the features, but just use them as attributes.
      * @param binary true to check if feature object appear in a collection
      * instead of their frequencies.
      */
-    public Bag(T[] features, boolean binary) {
+    public Bag(String[] words, boolean binary) {
         this.binary = binary;
-        this.features = new HashMap<>();
-        for (int i = 0, k = 0; i < features.length; i++) {
-            if (!this.features.containsKey(features[i])) {
-                this.features.put(features[i], k++);
+        this.words = new HashMap<>();
+        for (int i = 0, k = 0; i < words.length; i++) {
+            if (this.words.containsKey(words[i])) {
+                throw new IllegalArgumentException("Duplicated word:" + words[i]);
             }
+            this.words.put(words[i], k++);
         }
-
-        attributes = new Attribute[this.features.size()];
-        for (Map.Entry<T, Integer> entry : this.features.entrySet()) {
-            if (binary) {
-                attributes[entry.getValue()] = new NominalAttribute(entry.getKey().toString(), new String[]{"No", "Yes"});
-            } else {
-                attributes[entry.getValue()] = new NumericAttribute(entry.getKey().toString());
-            }
-        }
-    }
-
-    @Override
-    public Attribute[] attributes() {
-        return attributes;
     }
 
     /**
@@ -92,20 +70,19 @@ public class Bag<T> implements FeatureGenerator<T[]> {
      * in convenience of most learning algorithms although they take only integer
      * or binary values.
      */
-    @Override
-    public double[] feature(T[] x) {
-        double[] bag = new double[features.size()];
+    public double[] apply(String[] x) {
+        double[] bag = new double[words.size()];
 
         if (binary) {
-            for (T word : x) {
-                Integer f = features.get(word);
+            for (String word : x) {
+                Integer f = words.get(word);
                 if (f != null) {
                     bag[f] = 1.0;
                 }
             }
         } else {
-            for (T word : x) {
-                Integer f = features.get(word);
+            for (String word : x) {
+                Integer f = words.get(word);
                 if (f != null) {
                     bag[f]++;
                 }
