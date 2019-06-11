@@ -16,9 +16,6 @@
 
 package smile.feature;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import smile.data.Attribute;
 import smile.math.MathEx;
 
 /**
@@ -31,13 +28,11 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class Normalizer extends FeatureTransform {
-    private static final Logger logger = LoggerFactory.getLogger(Normalizer.class);
-
+public class Normalizer {
     /**
      * The types of data scaling.
      */
-    public static enum Norm {
+    public enum Norm {
         /**
          * L1 vector norm.
          */
@@ -61,14 +56,6 @@ public class Normalizer extends FeatureTransform {
     }
 
     /**
-     * Constructor with L2 norm.
-     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
-     */
-    public Normalizer(boolean copy) {
-        super(copy);
-    }
-
-    /**
      * Constructor.
      * @param norm The norm to use to normalize each non zero sample.
      */
@@ -76,22 +63,6 @@ public class Normalizer extends FeatureTransform {
         this.norm = norm;
     }
 
-    /**
-     * Constructor.
-     * @param norm The norm to use to normalize each non zero sample.
-     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
-     */
-    public Normalizer(Norm norm, boolean copy) {
-        super(copy);
-        this.norm = norm;
-    }
-
-    @Override
-    public void learn(Attribute[] attributes, double[][] data) {
-        logger.info("Normalizer is stateless and learn() does nothing.");
-    }
-
-    @Override
     public double[] transform(double[] x) {
         double scale;
 
@@ -109,7 +80,7 @@ public class Normalizer extends FeatureTransform {
                 throw new IllegalStateException("Unknown type of norm: " + norm);
         }
 
-        double[] y = copy ? new double[x.length] : x;
+        double[] y = new double[x.length];
         if (MathEx.isZero(scale)) {
             if (y != x) {
                 System.arraycopy(x, 0, y, 0, x.length);
@@ -125,6 +96,6 @@ public class Normalizer extends FeatureTransform {
 
     @Override
     public String toString() {
-        return "Normalizer()";
+        return String.format("Normalizer(%s)", norm);
     }
 }
