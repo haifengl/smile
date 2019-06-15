@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Properties;
 
 import smile.data.DataFrame;
-import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
@@ -85,6 +84,10 @@ public class OLS implements Regression<double[]> {
      */
     private Formula formula;
     /**
+     * The variable names.
+     */
+    private String[] names;
+    /**
      * The dimensionality.
      */
     private int p;
@@ -96,10 +99,6 @@ public class OLS implements Regression<double[]> {
      * The linear weights.
      */
     private double[] w;
-    /**
-     * The variable names.
-     */
-    private String[] names;
     /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
@@ -161,7 +160,7 @@ public class OLS implements Regression<double[]> {
     }
 
     /**
-     * Learns the ordinary least squares model.
+     * Fits an ordinary least squares model.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
@@ -171,7 +170,7 @@ public class OLS implements Regression<double[]> {
     }
 
     /**
-     * Learns the ordinary least squares model.
+     * Fits an ordinary least squares model.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
