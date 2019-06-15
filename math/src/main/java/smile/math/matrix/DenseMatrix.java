@@ -159,6 +159,55 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     DenseMatrix transpose();
 
     /**
+     * Centers and scales the columns of matrix.
+     * @return a new matrix with zero mean and unit variance for each column.
+     */
+    default DenseMatrix scale() {
+        double[] center = colMeans();
+        double[] scale = colSds();
+        return scale(center, scale);
+    }
+
+    /**
+     * Centers and scales the columns of matrix.
+     * @param center column center. If null, no centering.
+     * @param scale column scale. If null, no scaling.
+     * @return a new matrix with zero mean and unit variance for each column.
+     */
+    default DenseMatrix scale(double[] center, double[] scale) {
+        if (center == null && scale == null) {
+            throw new IllegalArgumentException("Both center and scale are null");
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        DenseMatrix x = Matrix.zeros(m, n);
+
+        if (center == null) {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    x.set(i, j, get(i, j) / scale[j]);
+                }
+            }
+        } else if (scale == null) {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    x.set(i, j, get(i, j) - center[j]);
+                }
+            }
+        } else {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    x.set(i, j, (get(i, j) - center[j]) / scale[j]);
+                }
+            }
+        }
+
+        return x;
+    }
+
+    /**
      * Returns the inverse matrix.
      */
     default DenseMatrix inverse() {
@@ -271,7 +320,7 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
-     * Returns the sum of each row for a matrix.
+     * Returns the sum of each row.
      */
     default double[] rowSums() {
         int m = nrows();
@@ -288,7 +337,7 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
-     * Returns the mean of each row for a matrix.
+     * Returns the mean of each row.
      */
     default double[] rowMeans() {
         int m = nrows();
@@ -309,7 +358,32 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
-     * Returns the sum of each column for a matrix.
+     * Returns the standard deviations of each row.
+     */
+    default double[] rowSds() {
+        int m = nrows();
+        int n = ncols();
+        double[] x = new double[m];
+        double[] x2 = new double[m];
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                double a = get(i, j);
+                x[i] += a;
+                x2[i] += a * a;
+            }
+        }
+
+        for (int i = 0; i < m; i++) {
+            double mu = x[i] / n;
+            x[i] = Math.sqrt(x2[i] / n - mu * mu);
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the sum of each column.
      */
     default double[] colSums() {
         int m = nrows();
@@ -326,7 +400,7 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
-     * Returns the mean of each column for a matrix.
+     * Returns the mean of each column.
      */
     default double[] colMeans() {
         int m = nrows();
@@ -338,6 +412,29 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
                 x[j] += get(i, j);
             }
             x[j] /= m;
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the standard deviations of each column.
+     */
+    default double[] colSds() {
+        int m = nrows();
+        int n = ncols();
+        double[] x = new double[n];
+
+        for (int j = 0; j < n; j++) {
+            double mu = 0.0;
+            double sumsq = 0.0;
+            for (int i = 0; i < m; i++) {
+                double a = get(i, j);
+                mu += a;
+                sumsq += a * a;
+            }
+            mu /= m;
+            x[j] = Math.sqrt(sumsq / m - mu * mu);
         }
 
         return x;
