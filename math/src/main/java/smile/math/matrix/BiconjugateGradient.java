@@ -63,6 +63,15 @@ public class BiconjugateGradient {
 
     }
 
+    /**
+     * Constructor.
+     */
+    public BiconjugateGradient(double tol, int itol, int maxIter) {
+        setTolerance(tol);
+        setConvergenceTest(itol);
+        setMaxIter(maxIter);
+    }
+
     /** Returns the instance with default settings. */
     public static BiconjugateGradient getInstance() {
         return instance;

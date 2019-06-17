@@ -180,19 +180,14 @@ public class RidgeRegression implements Regression<double[]> {
         double[] y = formula.response(data).toDoubleArray();
 
         int n = X.nrows();
-        int p = X.ncols() - 1;
+        int p = X.ncols();
 
         if (n <= p) {
             throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
         }
 
         RidgeRegression model = new RidgeRegression();
-        model.names = new String[p];
-        smile.data.formula.Term[] terms = formula.terms();
-        for (int i = 0; i < p; i++) {
-            model.names[i] = terms[i+1].toString();
-        }
-
+        model.names = formula.predictors();
         model.formula = formula;
         model.p = p;
         model.ym = MathEx.mean(y);
