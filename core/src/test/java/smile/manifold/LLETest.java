@@ -1080,7 +1080,7 @@ public class LLETest {
         double[][] coords = lle.getCoordinates();
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
-                assertEquals(MathEx.abs(points[i][j]), MathEx.abs(coords[i][j]), 1E-4);
+                assertEquals(Math.abs(points[i][j]), Math.abs(coords[i][j]), 1E-4);
             }
         }
     }

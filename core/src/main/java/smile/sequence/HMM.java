@@ -146,7 +146,7 @@ public class HMM<O> implements SequenceLabeler<O> {
                 sum += a[i][j];
             }
 
-            if (MathEx.abs(1.0 - sum) > 1E-7) {
+            if (Math.abs(1.0 - sum) > 1E-7) {
                 throw new IllegalArgumentException(String.format("The row %d of state transition probability matrix doesn't sum to 1.", i));
             }
         }
@@ -165,7 +165,7 @@ public class HMM<O> implements SequenceLabeler<O> {
                 sum += b[i][j];
             }
 
-            if (MathEx.abs(1.0 - sum) > 1E-7) {
+            if (Math.abs(1.0 - sum) > 1E-7) {
                 throw new IllegalArgumentException(String.format("The row %d of symbol emission probability matrix doesn't sum to 1.", i));
             }
         }
@@ -232,7 +232,7 @@ public class HMM<O> implements SequenceLabeler<O> {
      * @return the joint probability P(o, s | H) given the model H.
      */
     public double p(int[] o, int[] s) {
-        return MathEx.exp(logp(o, s));
+        return Math.exp(logp(o, s));
     }
 
     /**
@@ -264,7 +264,7 @@ public class HMM<O> implements SequenceLabeler<O> {
      * @return the probability of this sequence.
      */
     public double p(int[] o) {
-        return MathEx.exp(logp(o));
+        return Math.exp(logp(o));
     }
 
     /**
@@ -443,8 +443,8 @@ public class HMM<O> implements SequenceLabeler<O> {
                 throw new IllegalArgumentException(String.format("The length of observation sequence %d and that of corresponding label sequence are different.", i));
             }
 
-            numStates = MathEx.max(numStates, MathEx.max(labels[i]) + 1);
-            numSymbols = MathEx.max(numSymbols, MathEx.max(observations[i]) + 1);
+            numStates = Math.max(numStates, MathEx.max(labels[i]) + 1);
+            numSymbols = Math.max(numSymbols, MathEx.max(observations[i]) + 1);
         }
 
         pi = new double[numStates];
@@ -504,8 +504,8 @@ public class HMM<O> implements SequenceLabeler<O> {
         numSymbols = 0;
 
         for (int i = 0; i < obs.length; i++) {
-            numStates = MathEx.max(numStates, MathEx.max(labels[i]) + 1);
-            numSymbols = MathEx.max(numSymbols, MathEx.max(obs[i]) + 1);
+            numStates = Math.max(numStates, MathEx.max(labels[i]) + 1);
+            numSymbols = Math.max(numSymbols, MathEx.max(obs[i]) + 1);
         }
 
         pi = new double[numStates];
@@ -777,7 +777,7 @@ public class HMM<O> implements SequenceLabeler<O> {
      * @return the joint probability P(o, s | H) given the model H.
      */
     public double p(O[] o, int[] s) {
-        return MathEx.exp(logp(o, s));
+        return Math.exp(logp(o, s));
     }
 
     /**
@@ -799,7 +799,7 @@ public class HMM<O> implements SequenceLabeler<O> {
      * @return the probability of this sequence.
      */
     public double p(O[] o) {
-        return MathEx.exp(logp(o));
+        return Math.exp(logp(o));
     }
 
     /**

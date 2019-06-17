@@ -37,7 +37,7 @@ public class RMSE implements RegressionMeasure {
             rss += MathEx.sqr(truth[i] - prediction[i]);
         }
 
-        return MathEx.sqrt(rss/n);
+        return Math.sqrt(rss/n);
     }
 
     @Override

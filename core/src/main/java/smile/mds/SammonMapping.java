@@ -209,7 +209,7 @@ public class SammonMapping {
                         rij += xd * xd;
                         xv[l] = xd;
                     }
-                    rij = MathEx.sqrt(rij);
+                    rij = Math.sqrt(rij);
                     if (rij == 0.0) rij = 1.0E-10;
 
                     double dq = dij - rij;
@@ -222,7 +222,7 @@ public class SammonMapping {
 
                 // Correction
                 for (int l = 0; l < k; l++) {
-                    xu[i][l] = ri[l] + lambda * e1[l] / MathEx.abs(e2[l]);
+                    xu[i][l] = ri[l] + lambda * e1[l] / Math.abs(e2[l]);
                 }
             }
 

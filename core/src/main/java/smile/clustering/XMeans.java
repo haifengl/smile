@@ -181,12 +181,12 @@ public class XMeans extends KMeans {
         double variance = distortion / (n - 1);
 
         double p1 = -n * LOG2PI;
-        double p2 = -n * d * MathEx.log(variance);
+        double p2 = -n * d * Math.log(variance);
         double p3 = -(n - 1);
         double L = (p1 + p2 + p3) / 2;
 
         int numParameters = d + 1;
-        return L - 0.5 * numParameters * MathEx.log(n);
+        return L - 0.5 * numParameters * Math.log(n);
     }
 
     /**
@@ -207,7 +207,7 @@ public class XMeans extends KMeans {
         }
 
         int numParameters = k + k * d;
-        return L - 0.5 * numParameters * MathEx.log(n);
+        return L - 0.5 * numParameters * Math.log(n);
     }
 
     /**
@@ -222,10 +222,10 @@ public class XMeans extends KMeans {
      */
     private static double logLikelihood(int k, int n, int ni, int d, double variance) {
         double p1 = -ni * LOG2PI;
-        double p2 = -ni * d * MathEx.log(variance);
+        double p2 = -ni * d * Math.log(variance);
         double p3 = -(ni - k);
-        double p4 = ni * MathEx.log(ni);
-        double p5 = -ni * MathEx.log(n);
+        double p4 = ni * Math.log(ni);
+        double p5 = -ni * Math.log(n);
         double loglike = (p1 + p2 + p3) / 2 + p4 + p5;
         return loglike;
     }

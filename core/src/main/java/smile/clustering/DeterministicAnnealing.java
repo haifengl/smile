@@ -291,7 +291,7 @@ public class DeterministicAnnealing extends KMeans {
 
                     for (int j = 0; j < k; j++) {
                         dist[j] = MathEx.squaredDistance(data[i], centroids[j]);
-                        posteriori[i][j] = priori[j] * MathEx.exp(-dist[j] / T);
+                        posteriori[i][j] = priori[j] * Math.exp(-dist[j] / T);
                         p += posteriori[i][j];
                     }
 
@@ -299,7 +299,7 @@ public class DeterministicAnnealing extends KMeans {
                     for (int j = 0; j < k; j++) {
                         posteriori[i][j] /= p;
                         D += posteriori[i][j] * dist[j];
-                        r += -posteriori[i][j] * MathEx.log(posteriori[i][j]);
+                        r += -posteriori[i][j] * Math.log(posteriori[i][j]);
                     }
                     H += r;
                 }
@@ -392,7 +392,7 @@ public class DeterministicAnnealing extends KMeans {
 
                 for (int j = 0; j < k; j++) {
                     dist[j] = MathEx.squaredDistance(data[i], centroids[j]);
-                    posteriori[i][j] = priori[j] * MathEx.exp(-dist[j] / T);
+                    posteriori[i][j] = priori[j] * Math.exp(-dist[j] / T);
                     p += posteriori[i][j];
                 }
 
@@ -400,7 +400,7 @@ public class DeterministicAnnealing extends KMeans {
                 for (int j = 0; j < k; j++) {
                     posteriori[i][j] /= p;
                     D += posteriori[i][j] * dist[j];
-                    r += -posteriori[i][j] * MathEx.log(posteriori[i][j]);
+                    r += -posteriori[i][j] * Math.log(posteriori[i][j]);
                 }
                 H += r;
             }

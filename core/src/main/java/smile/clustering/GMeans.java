@@ -191,7 +191,7 @@ public class GMeans extends KMeans {
 
         double A = 0.0;
         for (int i = 0; i < n; i++) {
-            A -= (2*i+1) * (MathEx.log(x[i]) + MathEx.log(1-x[n-i-1]));
+            A -= (2*i+1) * (Math.log(x[i]) + Math.log(1-x[n-i-1]));
         }
 
         A = A / n - n;

@@ -158,7 +158,7 @@ public class PCA implements Projection<double[]>, Serializable {
             if (cor) {
                 sd = new double[n];
                 for (int i = 0; i < n; i++) {
-                    sd[i] = MathEx.sqrt(cov.get(i, i));
+                    sd[i] = Math.sqrt(cov.get(i, i));
                 }
 
                 for (int i = 0; i < n; i++) {

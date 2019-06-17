@@ -1529,7 +1529,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
         final double minProb = 1e-7;
         final double maxProb = 1 - minProb;
 
-        return MathEx.min(MathEx.max(svm.platt.predict(y), minProb), maxProb);
+        return Math.min(Math.max(svm.platt.predict(y), minProb), maxProb);
     }
 
     @Override

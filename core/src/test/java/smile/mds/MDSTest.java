@@ -119,7 +119,7 @@ public class MDSTest {
         double[][] coords = mds.getCoordinates();
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
-                assertEquals(MathEx.abs(points[i][j]), MathEx.abs(coords[i][j]), 1E-2);
+                assertEquals(Math.abs(points[i][j]), Math.abs(coords[i][j]), 1E-2);
             }
         }
     }
@@ -162,7 +162,7 @@ public class MDSTest {
         double[][] coords = mds.getCoordinates();
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
-                assertEquals(MathEx.abs(points[i][j]), MathEx.abs(coords[i][j]), 1E-2);
+                assertEquals(Math.abs(points[i][j]), Math.abs(coords[i][j]), 1E-2);
             }
         }
     }

@@ -103,7 +103,7 @@ public class MissingValueImputationTest {
             }
         }
 
-        rmse = MathEx.sqrt(rmse / n);
+        rmse = Math.sqrt(rmse / n);
         return rmse;
     }
 

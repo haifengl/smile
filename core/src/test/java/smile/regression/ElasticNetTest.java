@@ -85,7 +85,7 @@ public class ElasticNetTest {
                 }
             }
 
-            System.out.println("CPU 10-CV RMSE = " + MathEx.sqrt(rss / n));
+            System.out.println("CPU 10-CV RMSE = " + Math.sqrt(rss / n));
         } catch (Exception ex) {
             System.err.println(ex);
         }
@@ -198,7 +198,7 @@ public class ElasticNetTest {
                 }
             }
 
-            System.out.println("Diabetes 40-CV RMSE = " + MathEx.sqrt(rss / n));
+            System.out.println("Diabetes 40-CV RMSE = " + Math.sqrt(rss / n));
         } catch (Exception ex) {
             System.err.println(ex);
         }

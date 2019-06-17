@@ -128,11 +128,11 @@ public class RandomForestTest {
                 for (int j = 0; j < testx.length; j++) {
                     double r = testy[j] - forest.predict(testx[j]);
                     rss += r * r;
-                    ad += MathEx.abs(r);
+                    ad += Math.abs(r);
                 }
             }
 
-            System.out.format("10-CV RMSE = %.4f \t AbsoluteDeviation = %.4f%n", MathEx.sqrt(rss/n), ad/n);
+            System.out.format("10-CV RMSE = %.4f \t AbsoluteDeviation = %.4f%n", Math.sqrt(rss/n), ad/n);
          } catch (Exception ex) {
              System.err.println(ex);
          }

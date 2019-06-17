@@ -175,14 +175,14 @@ public class PCATest {
 
         for (int i = 0; i < loadings.length; i++) {
             for (int j = 0; j < loadings[i].length; j++) {
-                assertEquals(MathEx.abs(loadings[i][j]), MathEx.abs(pca.getLoadings().get(i, j)), 1E-5);
+                assertEquals(Math.abs(loadings[i][j]), Math.abs(pca.getLoadings().get(i, j)), 1E-5);
             }
         }
 
         double[][] p = pca.project(USArrests);
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {
-                assertEquals(MathEx.abs(points[i][j]), MathEx.abs(p[i][j]), 1E-5);
+                assertEquals(Math.abs(points[i][j]), Math.abs(p[i][j]), 1E-5);
             }
         }
     }
@@ -261,14 +261,14 @@ public class PCATest {
 
         for (int i = 0; i < loadings.length; i++) {
             for (int j = 0; j < loadings[i].length; j++) {
-                assertEquals(MathEx.abs(loadings[i][j]), MathEx.abs(pca.getLoadings().get(i, j)), 1E-5);
+                assertEquals(Math.abs(loadings[i][j]), Math.abs(pca.getLoadings().get(i, j)), 1E-5);
             }
         }
 
         double[][] p = pca.project(USArrests);
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {
-                assertEquals(MathEx.abs(points[i][j]), MathEx.abs(p[i][j]), 1E-5);
+                assertEquals(Math.abs(points[i][j]), Math.abs(p[i][j]), 1E-5);
             }
         }
     }
