@@ -16,8 +16,6 @@
 
 package smile.math.matrix;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 
 /**
@@ -27,7 +25,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class BiconjugateGradient {
-    private static final Logger logger = LoggerFactory.getLogger(BiconjugateGradient.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BiconjugateGradient.class);
 
     /** The instance with default settings. */
     private static BiconjugateGradient instance = new BiconjugateGradient();

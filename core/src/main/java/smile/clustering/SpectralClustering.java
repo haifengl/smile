@@ -15,12 +15,12 @@
  *******************************************************************************/
 package smile.clustering;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
+
+import java.io.Serializable;
 
 /**
  * Spectral Clustering. Given a set of data points, the similarity matrix may
@@ -42,9 +42,9 @@ import smile.math.matrix.EVD;
  * 
  * @author Haifeng Li
  */
-public class SpectralClustering {
+public class SpectralClustering implements Serializable {
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(SpectralClustering.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SpectralClustering.class);
 
     /**
      * The number of clusters.

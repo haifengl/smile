@@ -20,8 +20,6 @@ import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Cholesky;
 import com.github.fommil.netlib.LAPACK;
 import org.netlib.util.intW;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * For an m-by-n matrix A with m &ge; n, the QR decomposition is an m-by-n
@@ -39,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * @author Haifeng Li
  */
 class QR extends smile.math.matrix.QR {
-    private static final Logger logger = LoggerFactory.getLogger(QR.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QR.class);
 
     /**
      * Constructor.

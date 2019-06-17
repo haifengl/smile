@@ -16,8 +16,6 @@
 package smile.mds;
 
 import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 
 /**
@@ -55,7 +53,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class SammonMapping {
-    private static final Logger logger = LoggerFactory.getLogger(SammonMapping.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SammonMapping.class);
 
     /**
      * The final stress achieved.

@@ -16,8 +16,6 @@
 package smile.classification;
 
 import java.io.Serializable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 
 /**
@@ -105,7 +103,7 @@ import smile.math.MathEx;
  */
 public class NeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier<double[]> {
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(NeuralNetwork.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NeuralNetwork.class);
 
     /**
      * The types of error functions.

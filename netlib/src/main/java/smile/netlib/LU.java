@@ -19,8 +19,6 @@ package smile.netlib;
 import smile.math.matrix.DenseMatrix;
 import com.github.fommil.netlib.LAPACK;
 import org.netlib.util.intW;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.matrix.Matrix;
 
 /**
@@ -38,7 +36,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 class LU extends smile.math.matrix.LU {
-    private static final Logger logger = LoggerFactory.getLogger(LU.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LU.class);
 
     /**
      * Constructor.

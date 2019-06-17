@@ -16,8 +16,6 @@
 package smile.math.matrix;
 
 import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 
 /**
@@ -33,7 +31,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class PageRank {
-    private static final Logger logger = LoggerFactory.getLogger(PageRank.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageRank.class);
     /**
      * Calculate the page rank vector.
      * @param A the matrix supporting matrix vector multiplication operation.

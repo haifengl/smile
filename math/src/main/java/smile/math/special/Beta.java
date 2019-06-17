@@ -15,10 +15,6 @@
  *******************************************************************************/
 package smile.math.special;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import smile.math.MathEx;
-
 /**
  * The beta function, also called the Euler integral of the first kind.
  * <p>
@@ -29,7 +25,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class Beta {
-    private static final Logger logger = LoggerFactory.getLogger(Beta.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Beta.class);
 
     /** Utility classes should not have public constructors. */
     private Beta() {

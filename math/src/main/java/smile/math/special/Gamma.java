@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.math.special;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 
 /**
@@ -25,7 +23,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class Gamma {
-    private static final Logger logger = LoggerFactory.getLogger(Gamma.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Gamma.class);
 
     /** Utility classes should not have public constructors. */
     private Gamma() {

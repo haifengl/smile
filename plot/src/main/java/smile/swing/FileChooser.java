@@ -38,9 +38,6 @@ import javax.swing.JFileChooser;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * File chooser for with file/images preview. A simple file filter based on
  * file extensions is also provided.
@@ -49,7 +46,7 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings("serial")
 public class FileChooser extends JFileChooser {
-    private static final Logger logger = LoggerFactory.getLogger(FileChooser.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileChooser.class);
 
     /**
      * Shared file chooser. An application should have only one file chooser

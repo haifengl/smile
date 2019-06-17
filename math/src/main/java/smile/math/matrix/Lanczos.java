@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.math.matrix;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 
 /**
@@ -33,7 +31,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class Lanczos {
-    private static final Logger logger = LoggerFactory.getLogger(Lanczos.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Lanczos.class);
 
     /**
      * Find k largest approximate eigen pairs of a symmetric matrix by the

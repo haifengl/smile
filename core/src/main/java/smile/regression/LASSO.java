@@ -16,8 +16,6 @@
 package smile.regression;
 
 import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
@@ -66,7 +64,7 @@ import smile.math.special.Beta;
  */
 public class LASSO  implements Regression<double[]> {
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(LASSO.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LASSO.class);
 
     /**
      * The dimensionality.

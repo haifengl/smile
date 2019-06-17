@@ -21,8 +21,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinPool;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.Sort;
@@ -46,7 +44,7 @@ import smile.sort.Sort;
  * @author Haifeng Li
  */
 public class MathEx {
-    private static final Logger logger = LoggerFactory.getLogger(MathEx.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MathEx.class);
 
     /**
      * Dynamically determines the machine parameters of the floating-point arithmetic.

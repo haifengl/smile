@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.DoubleArrayList;
 import smile.math.MathEx;
 import smile.math.SparseArray;
@@ -87,7 +85,7 @@ import smile.util.MulticoreExecutor;
  */
 public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(SVM.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SVM.class);
 
     /**
      * The type of multi-class SVMs.

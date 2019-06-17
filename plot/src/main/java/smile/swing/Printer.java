@@ -23,16 +23,13 @@ import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.swing.JOptionPane;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * A printer controller object.
  * 
  * @author Haifeng Li
  */
 public class Printer {
-    private static final Logger logger = LoggerFactory.getLogger(Printer.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Printer.class);
 
     /**
      * Printer attributes.
