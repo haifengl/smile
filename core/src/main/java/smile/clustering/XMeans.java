@@ -16,8 +16,6 @@
 package smile.clustering;
 
 import java.util.ArrayList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 
@@ -42,9 +40,9 @@ import smile.sort.QuickSort;
  */
 public class XMeans extends KMeans {
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(XMeans.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMeans.class);
 
-    private static final double LOG2PI = MathEx.log(MathEx.PI * 2.0);
+    private static final double LOG2PI = Math.log(Math.PI * 2.0);
 
     /**
      * Constructor. Clustering data with the number of clusters being

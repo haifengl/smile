@@ -17,8 +17,6 @@ package smile.clustering;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 import smile.stat.distribution.GaussianDistribution;
@@ -43,7 +41,7 @@ import smile.stat.distribution.GaussianDistribution;
  */
 public class GMeans extends KMeans {
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(GMeans.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GMeans.class);
 
     /**
      * Constructor. Clustering data with the number of clusters being

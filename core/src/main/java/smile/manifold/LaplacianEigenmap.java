@@ -16,8 +16,6 @@
 package smile.manifold;
 
 import java.util.Collection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.data.SparseDataset;
 import smile.graph.AdjacencyList;
 import smile.graph.Graph;
@@ -56,7 +54,7 @@ import smile.neighbor.Neighbor;
  * @author Haifeng Li
  */
 public class LaplacianEigenmap {
-    private static final Logger logger = LoggerFactory.getLogger(LaplacianEigenmap.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LaplacianEigenmap.class);
 
     /**
      * The width of heat kernel.

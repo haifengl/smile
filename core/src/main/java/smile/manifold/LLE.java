@@ -17,8 +17,6 @@ package smile.manifold;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.graph.AdjacencyList;
 import smile.graph.Graph;
 import smile.math.MathEx;
@@ -57,7 +55,7 @@ import smile.neighbor.Neighbor;
  * @author Haifeng Li
  */
 public class LLE {
-    private static final Logger logger = LoggerFactory.getLogger(LLE.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LLE.class);
 
     /**
      * The original sample index.

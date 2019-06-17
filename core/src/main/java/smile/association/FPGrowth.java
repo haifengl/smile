@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.association.FPTree.HeaderTableItem;
 import smile.association.FPTree.Node;
 import smile.util.MulticoreExecutor;
@@ -63,7 +61,7 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class FPGrowth {
-    private static final Logger logger = LoggerFactory.getLogger(FPGrowth.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FPGrowth.class);
 
     /**
      * The required minimum support of item sets.

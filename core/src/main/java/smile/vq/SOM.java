@@ -16,8 +16,6 @@
 package smile.vq;
 
 import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.clustering.Clustering;
 import smile.clustering.HierarchicalClustering;
 import smile.clustering.BBDTree;
@@ -88,7 +86,7 @@ import smile.math.matrix.EVD;
  * @author Haifeng Li
  */
 public class SOM implements Clustering<double[]> {
-    private static final Logger logger = LoggerFactory.getLogger(SOM.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SOM.class);
 
     /**
      * Self-Organizing Map Neuron.

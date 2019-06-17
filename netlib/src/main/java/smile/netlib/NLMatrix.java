@@ -23,8 +23,6 @@ import smile.math.matrix.EVD;
 import com.github.fommil.netlib.BLAS;
 import com.github.fommil.netlib.LAPACK;
 import org.netlib.util.intW;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Column-major matrix that employs netlib for matrix-vector and matrix-matrix
@@ -35,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public class NLMatrix extends JMatrix {
     private static final long serialVersionUID = 1L;
 
-    private static final Logger logger = LoggerFactory.getLogger(NLMatrix.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NLMatrix.class);
 
     static String NoTranspose = "N";
     static String Transpose   = "T";

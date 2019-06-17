@@ -20,8 +20,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * An English lexicon with part-of-speech tags.
@@ -34,7 +32,7 @@ public class EnglishPOSLexicon {
 
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(EnglishPOSLexicon.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnglishPOSLexicon.class);
 
     /**
      * A list of English words with POS tags.

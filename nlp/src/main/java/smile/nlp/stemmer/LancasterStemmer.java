@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The Paice/Husk Lancaster stemming algorithm. The stemmer is a conflation
@@ -38,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * @author Haifeng Li
  */
 public class LancasterStemmer implements Stemmer {
-    private static final Logger logger = LoggerFactory.getLogger(LancasterStemmer.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LancasterStemmer.class);
 
     /**
      * Array of rules

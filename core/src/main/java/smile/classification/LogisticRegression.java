@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 import smile.data.AttributeDataset;
 import smile.math.DifferentiableMultivariateFunction;
@@ -78,7 +76,7 @@ import smile.util.MulticoreExecutor;
  */
 public class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]> {
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(LogisticRegression.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LogisticRegression.class);
 
     /**
      * The dimension of input space.

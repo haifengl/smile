@@ -19,10 +19,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import smile.math.MathEx;
 import smile.math.distance.Metric;
 import smile.sort.DoubleHeapSelect;
@@ -59,7 +55,7 @@ import smile.sort.DoubleHeapSelect;
  */
 public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E>, RNNSearch<E, E>, Serializable {
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(CoverTree.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CoverTree.class);
 
     /**
      * The dataset to build the cover tree.

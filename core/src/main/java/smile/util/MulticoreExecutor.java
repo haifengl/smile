@@ -23,8 +23,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Utility class to run tasks in a thread pool on multi-core systems.
@@ -32,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * @author Haifeng Li
  */
 public class MulticoreExecutor {
-    private static final Logger logger = LoggerFactory.getLogger(MulticoreExecutor.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MulticoreExecutor.class);
 
     /** Utility classes should not have public constructors. */
     private MulticoreExecutor() {

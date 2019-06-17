@@ -15,8 +15,6 @@
  *******************************************************************************/
 package smile.mds;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.sort.QuickSort;
@@ -33,7 +31,7 @@ import smile.sort.QuickSort;
  * @author Haifeng Li
  */
 public class IsotonicMDS {
-    private static final Logger logger = LoggerFactory.getLogger(IsotonicMDS.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IsotonicMDS.class);
 
     /**
      * The final stress achieved.

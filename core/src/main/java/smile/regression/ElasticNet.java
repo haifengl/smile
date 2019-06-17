@@ -127,8 +127,7 @@ public class ElasticNet implements Regression<double[]> {
     @Override
     public double predict(double[] x) {
         if (x.length != p) {
-            throw new IllegalArgumentException(
-                    String.format("Invalid input vector size: %d, expected: %d", x.length, p));
+            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
         return MathEx.dot(x, w) + b;

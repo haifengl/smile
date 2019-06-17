@@ -16,9 +16,7 @@
  *******************************************************************************/
 
 package smile.regression;
- 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import java.io.Serializable;
 import smile.math.MathEx;
  
@@ -38,7 +36,7 @@ import smile.math.MathEx;
   */
  public class NeuralNetwork implements OnlineRegression<double[]> {
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(NeuralNetwork.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NeuralNetwork.class);
 
     public enum ActivationFunction {
         /**

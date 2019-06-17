@@ -17,8 +17,6 @@
 package smile.math.matrix;
 
 import java.lang.reflect.Constructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * An abstract interface of dense matrix.
@@ -26,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * @author Haifeng Li
  */
 class Factory {
-    private static final Logger logger = LoggerFactory.getLogger(Factory.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Factory.class);
 
     private static Class<?> nlmatrix;
     private static Constructor<?> nlmatrixArray;
