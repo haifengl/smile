@@ -88,7 +88,7 @@ public class RidgeRegressionTest {
     @Test
     public void testLearn() {
         System.out.println("learn");
-        RidgeRegression model = new RidgeRegression(longley, y, 0.0);
+        RidgeRegression model = RidgeRegression.fit(longley, y, 0.0);
 
         double rss = 0.0;
         int n = longley.length;

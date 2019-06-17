@@ -214,12 +214,7 @@ public class OLS implements Regression<double[]> {
         }
 
         OLS model = new OLS();
-        model.names = new String[p];
-        smile.data.formula.Term[] terms = formula.terms();
-        for (int i = 0; i < p; i++) {
-            model.names[i] = terms[i+1].toString();
-        }
-
+        model.names = formula.predictors();
         model.formula = formula;
         model.p = p;
         model.b = w1[p];
