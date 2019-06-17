@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 import smile.data.AttributeDataset;
 import smile.math.DifferentiableMultivariateFunction;
+import smile.math.BFGS;
 import smile.util.MulticoreExecutor;
 
 /**
@@ -301,10 +302,10 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
 
             L = 0.0;
             try {
-                L = -MathEx.min(func, 5, w, tol, maxIter);
+                L = -BFGS.min(func, 5, w, tol, maxIter);
             } catch (Exception ex) {
                 // If L-BFGS doesn't work, let's try BFGS.
-                L = -MathEx.min(func, w, tol, maxIter);
+                L = -BFGS.min(func, w, tol, maxIter);
             }
         } else {
             MultiClassObjectiveFunction func = new MultiClassObjectiveFunction(x, y, k, lambda);
@@ -337,7 +338,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         if (x > 15) {
             y = x;
         } else {
-            y += MathEx.log1p(MathEx.exp(x));
+            y += Math.log1p(Math.exp(x));
         }
 
         return y;
@@ -586,7 +587,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         if (x < 1E-300) {
             y = -690.7755;
         } else {
-            y = MathEx.log(x);
+            y = Math.log(x);
         }
         return y;
     }
@@ -939,7 +940,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
 
         double Z = 0.0;
         for (int i = 0; i < prob.length; i++) {
-            double p = MathEx.exp(prob[i] - max);
+            double p = Math.exp(prob[i] - max);
             prob[i] = p;
             Z += p;
         }
@@ -1000,7 +1001,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         }
 
         if (k == 2) {
-            double f = 1.0 / (1.0 + MathEx.exp(-dot(x, w)));
+            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
 
             if (posteriori != null) {
                 posteriori[0] = 1.0 - f;
@@ -1030,7 +1031,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
             if (posteriori != null) {
                 double Z = 0.0;
                 for (int i = 0; i < k; i++) {
-                    posteriori[i] = MathEx.exp(posteriori[i] - max);
+                    posteriori[i] = Math.exp(posteriori[i] - max);
                     Z += posteriori[i];
                 }
 

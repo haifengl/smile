@@ -91,7 +91,7 @@ public class SmileUtils {
             }
         }
 
-        r0 /= MathEx.sqrt(2*k);
+        r0 /= Math.sqrt(2*k);
         return new GaussianRadialBasis(r0);
     }
     
@@ -116,7 +116,7 @@ public class SmileUtils {
         KMeans kmeans = new KMeans(x, k, 10);
         System.arraycopy(kmeans.centroids(), 0, centers, 0, k);
 
-        p = MathEx.min(p, k-1);
+        p = Math.min(p, k-1);
         double[] r = new double[k];
         GaussianRadialBasis[] rbf = new GaussianRadialBasis[k];
         for (int i = 0; i < k; i++) {
@@ -166,7 +166,7 @@ public class SmileUtils {
         GaussianRadialBasis[] rbf = new GaussianRadialBasis[k];
         for (int i = 0; i < k; i++) {
             if (ni[i] >= 5 || sigma[i] != 0.0) {
-                sigma[i] = MathEx.sqrt(sigma[i] / ni[i]);
+                sigma[i] = Math.sqrt(sigma[i] / ni[i]);
             } else {
                 sigma[i] = Double.POSITIVE_INFINITY;
                 for (int j = 0; j < k; j++) {
@@ -202,7 +202,7 @@ public class SmileUtils {
      */
     public static <T> GaussianRadialBasis learnGaussianRadialBasis(T[] x, T[] centers, Metric<T> distance) {
         int k = centers.length;
-        CLARANS<T> clarans = new CLARANS<>(x, distance, k, MathEx.min(100, (int) MathEx.round(0.01 * k * (x.length - k))));
+        CLARANS<T> clarans = new CLARANS<>(x, distance, k, Math.min(100, (int) Math.round(0.01 * k * (x.length - k))));
         System.arraycopy(clarans.medoids(), 0, centers, 0, k);
 
         double r0 = 0.0;
@@ -215,7 +215,7 @@ public class SmileUtils {
             }
         }
 
-        r0 /= MathEx.sqrt(2*k);
+        r0 /= Math.sqrt(2*k);
         return new GaussianRadialBasis(r0);
     }    
     
@@ -238,10 +238,10 @@ public class SmileUtils {
         }
         
         int k = centers.length;
-        CLARANS<T> clarans = new CLARANS<>(x, distance, k, MathEx.min(100, (int) MathEx.round(0.01 * k * (x.length - k))));
+        CLARANS<T> clarans = new CLARANS<>(x, distance, k, Math.min(100, (int) Math.round(0.01 * k * (x.length - k))));
         System.arraycopy(clarans.medoids(), 0, centers, 0, k);
 
-        p = MathEx.min(p, k-1);
+        p = Math.min(p, k-1);
         double[] r = new double[k];
         GaussianRadialBasis[] rbf = new GaussianRadialBasis[k];
         for (int i = 0; i < k; i++) {
@@ -278,7 +278,7 @@ public class SmileUtils {
         }
         
         int k = centers.length;
-        CLARANS<T> clarans = new CLARANS<>(x, distance, k, MathEx.min(100, (int) MathEx.round(0.01 * k * (x.length - k))));
+        CLARANS<T> clarans = new CLARANS<>(x, distance, k, Math.min(100, (int) Math.round(0.01 * k * (x.length - k))));
         System.arraycopy(clarans.medoids(), 0, centers, 0, k);
 
         int n = x.length;
@@ -292,7 +292,7 @@ public class SmileUtils {
         GaussianRadialBasis[] rbf = new GaussianRadialBasis[k];
         for (int i = 0; i < k; i++) {
             if (ni[i] >= 5 || sigma[i] == 0.0) {
-                sigma[i] = MathEx.sqrt(sigma[i] / ni[i]);
+                sigma[i] = Math.sqrt(sigma[i] / ni[i]);
             } else {
                 sigma[i] = Double.POSITIVE_INFINITY;
                 for (int j = 0; j < k; j++) {

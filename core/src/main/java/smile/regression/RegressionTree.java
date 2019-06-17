@@ -23,11 +23,6 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.stream.IntStream;
-
-import smile.data.Attribute;
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.NumericAttribute;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 import smile.util.MulticoreExecutor;

@@ -388,7 +388,7 @@ public class GradientTreeBoost implements Regression<double[]> {
         this.f = f;
 
         int n = x.length;
-        int N = (int) MathEx.round(n * f);
+        int N = (int) Math.round(n * f);
         
         int[] perm = new int[n];
         int[] samples = new int[n];
@@ -413,7 +413,7 @@ public class GradientTreeBoost implements Regression<double[]> {
             response = new double[n];
             for (int i = 0; i < n; i++) {
                 residual[i] = y[i] - b;
-                response[i] = MathEx.signum(residual[i]);
+                response[i] = Math.signum(residual[i]);
             }
         } else if (loss == Loss.Huber) {
             response = new double[n];
@@ -444,7 +444,7 @@ public class GradientTreeBoost implements Regression<double[]> {
             for (int i = 0; i < n; i++) {
                 residual[i] -= shrinkage * trees[m].predict(x[i]);
                 if (loss == Loss.LeastAbsoluteDeviation) {
-                    response[i] = MathEx.signum(residual[i]);
+                    response[i] = Math.signum(residual[i]);
                 }
             }
         }
@@ -561,16 +561,16 @@ public class GradientTreeBoost implements Regression<double[]> {
             
             int n = residual.length;
             for (int i = 0; i < n; i++) {
-                response[i] = MathEx.abs(residual[i]);
+                response[i] = Math.abs(residual[i]);
             }
             
             delta = QuickSelect.select(response, (int) (n * alpha));
             
             for (int i = 0; i < n; i++) {
-                if (MathEx.abs(residual[i]) <= delta) {
+                if (Math.abs(residual[i]) <= delta) {
                     response[i] = residual[i];
                 } else {
-                    response[i] = delta * MathEx.signum(residual[i]);
+                    response[i] = delta * Math.signum(residual[i]);
                 }
             }
         }
@@ -594,7 +594,7 @@ public class GradientTreeBoost implements Regression<double[]> {
             for (int i = 0; i < samples.length; i++) {
                 if (samples[i] > 0) {
                     double d = residual[i] - r;
-                    output += MathEx.signum(d) * MathEx.min(delta, MathEx.abs(d));
+                    output += Math.signum(d) * Math.min(delta, Math.abs(d));
                 }
             }
             

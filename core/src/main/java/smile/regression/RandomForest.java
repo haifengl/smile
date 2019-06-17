@@ -313,7 +313,7 @@ public class RandomForest implements Regression<double[]> {
                 }
 
                 MathEx.permutate(perm);
-                int m = (int) MathEx.round(n * subsample);
+                int m = (int) Math.round(n * subsample);
                 for (int i = 0; i < m; i++) {
                     samples[perm[i]]++;
                 }
@@ -573,7 +573,7 @@ public class RandomForest implements Regression<double[]> {
         }
 
         if (m > 0) {
-            error = MathEx.sqrt(error / m);
+            error = Math.sqrt(error / m);
         }
 
         importance = calculateImportance(trees, attributes.length);
