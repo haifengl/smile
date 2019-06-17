@@ -17,10 +17,10 @@
 
 package smile.regression;
 
-import smile.math.MathEx;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
 import smile.math.matrix.Cholesky;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.Matrix;
 import smile.math.matrix.SVD;
 
 /**
@@ -58,7 +58,7 @@ public class RLS implements OnlineRegression<double[]> {
      * The forgetting factor in (0, 1]. Values closer to 1 will have
      * longer memory and values closer to 0 will be have shorter memory.
      */
-    private double lambda;
+    private double lambda = 1.0;
     /**
      * First initialized to the matrix (X<sup>T</sup>X)<sup>-1</sup>,
      * it is updated with each new learning instance.
@@ -74,43 +74,22 @@ public class RLS implements OnlineRegression<double[]> {
     private double[] Vx;
 
     /**
-     * Constructor. Learn the ordinary least squares model to initialize gamma and coefficients.
-     * @param x a matrix containing the explanatory variables. NO NEED to include a constant column of 1s for bias.
-     * @param y the response values.
+     * Initializes the model.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
      */
-    public RLS(double[][] x, double[] y) {
-        this(x, y, 1);
-    }
+    public RLS(Formula formula, DataFrame data) {
+        setForgettingFactor(lambda);
 
-    /**
-     * Constructor. Learn the ordinary least squares model to initialize gamma and coefficients.
-     * @param x a matrix containing the explanatory variables. NO NEED to include a constant column of 1s for bias.
-     * @param y the response values.
-     * @param lambda the forgetting factor.
-     */
-    public RLS(double[][] x, double[] y, double lambda) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
-        }
+        DenseMatrix X = formula.matrix(data, true);
+        double[] y = formula.response(data).toDoubleArray();
 
-        if (lambda <= 0 || lambda > 1){
-           throw new IllegalArgumentException("The forgetting factor must be in (0, 1]");
-        }
-        
-        this.lambda = lambda;
+        int n = X.nrows();
+        p = X.ncols() - 1;
 
-        int n = x.length;
-        p = x[0].length;
-        
         if (n <= p) {
             throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
-        }
-
-        DenseMatrix X = Matrix.zeros(n, p+1);
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++)
-                X.set(i, j, x[i][j]);
-            X.set(i, p, 1.0);
         }
 
         // Always use SVD instead of QR because it is more stable
@@ -149,28 +128,8 @@ public class RLS implements OnlineRegression<double[]> {
         return y;
     }
     
-    /**
-     * Learn a new instance with online regression.
-     * @param x the training instances. 
-     * @param y the target values.
-     */
-    public void learn(double[][] x, double y[]) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("Input vector x of size %d not equal to length %d of y", x.length, y.length));
-        }
-
-        for (int i = 0; i < x.length; i++){
-            learn(x[i], y[i]);
-        }
-    }
-    
-    /**
-     * Learn a new instance with online regression.
-     * @param x the training instance. 
-     * @param y the target value.
-     */
     @Override
-    public void learn(double[] x, double y) {
+    public void update(double[] x, double y) {
         if (x.length != p) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
@@ -222,26 +181,11 @@ public class RLS implements OnlineRegression<double[]> {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("Linear Model:\n");
-
-        double[] r = residuals.clone();
-        builder.append("\nResiduals:\n");
-        builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
-        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", MathEx.min(r), MathEx.q1(r), MathEx.median(r), MathEx.q3(r), MathEx.max(r)));
-
-        builder.append("\nCoefficients:\n");
-        builder.append("            Estimate        Std. Error        t value        Pr(>|t|)\n");
-        builder.append(String.format("Intercept%11.4f%18.4f%15.4f%16.4f %s%n", coefficients[p][0], coefficients[p][1], coefficients[p][2], coefficients[p][3], significance(coefficients[p][3])));
-        for (int i = 0; i < p; i++) {
-            builder.append(String.format("%s\t %11.4f%18.4f%15.4f%16.4f %s%n", names[i], coefficients[i][0], coefficients[i][1], coefficients[i][2], coefficients[i][3], significance(coefficients[i][3])));
+        builder.append(String.format("RLS(%f)[%f", lambda, w[0]));
+        for (int i = 1; i < w.length; i++) {
+            builder.append(String.format(", %f", w[i]));
         }
-
-        builder.append("---------------------------------------------------------------------\n");
-        builder.append("Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
-
-        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom%n", error, df));
-        builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
-        builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g%n", F, p, df, pvalue));
+        builder.append("]");
 
         return builder.toString();
     }

@@ -27,11 +27,26 @@ package smile.regression;
  */
 public interface OnlineRegression <T> extends Regression <T> {
     /**
+     * Updates the model with a (micro-)batch of new samples.
+     * @param x the training instances.
+     * @param y the target values.
+     */
+    default void learn(T[] x, double y[]) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException(String.format("Input vector x of size %d not equal to length %d of y", x.length, y.length));
+        }
+
+        for (int i = 0; i < x.length; i++){
+            update(x[i], y[i]);
+        }
+    }
+
+    /**
      * Online update the regression model with a new training instance.
      * In general, this method may be NOT multi-thread safe.
      * 
      * @param x training instance.
      * @param y response variable.
      */
-    public void learn(T x, double y);
+    void update(T x, double y);
 }
