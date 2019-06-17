@@ -100,7 +100,7 @@ public class NeuralMap implements Clustering<double[]> {
 
         @Override
         public int compareTo(Neighbor o) {
-            return (int) MathEx.signum(distance - o.distance);
+            return (int) Math.signum(distance - o.distance);
         }
     }
 
@@ -199,7 +199,7 @@ public class NeuralMap implements Clustering<double[]> {
                 long r = 0;
                 for (int i = 0; i < k; i++) {
                     double ri = hash(x, i);
-                    r += c[i] * (int) MathEx.floor(ri);
+                    r += c[i] * (int) Math.floor(ri);
                 }
 
                 int h = (int) (r % P);

@@ -269,7 +269,7 @@ public class LDA implements SoftClassifier<double[]> {
         this.priori = priori;
         ct = new double[k];
         for (int i = 0; i < k; i++) {
-            ct[i] = MathEx.log(priori[i]);
+            ct[i] = Math.log(priori[i]);
         }
         
         for (int i = 0; i < n; i++) {
@@ -359,7 +359,7 @@ public class LDA implements SoftClassifier<double[]> {
         if (posteriori != null) {
             double sum = 0.0;
             for (int i = 0; i < k; i++) {
-                posteriori[i] = MathEx.exp(posteriori[i] - max);
+                posteriori[i] = Math.exp(posteriori[i] - max);
                 sum += posteriori[i];
             }
             

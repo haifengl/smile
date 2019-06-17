@@ -110,7 +110,7 @@ public class SpectralClustering implements Serializable {
                 throw new IllegalArgumentException("Isolated vertex: " + i);                    
             }
             
-            D[i] = 1.0 / MathEx.sqrt(D[i]);
+            D[i] = 1.0 / Math.sqrt(D[i]);
         }
 
         DenseMatrix L = Matrix.zeros(n, n);
@@ -162,7 +162,7 @@ public class SpectralClustering implements Serializable {
         DenseMatrix W = Matrix.zeros(n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
-                double w = MathEx.exp(gamma * MathEx.squaredDistance(data[i], data[j]));
+                double w = Math.exp(gamma * MathEx.squaredDistance(data[i], data[j]));
                 W.set(i, j, w);
                 W.set(j, i, w);
             }
@@ -178,7 +178,7 @@ public class SpectralClustering implements Serializable {
                 logger.error(String.format("Small D[%d] = %f. The data may contain outliers.", i, D[i]));
             }
             
-            D[i] = 1.0 / MathEx.sqrt(D[i]);
+            D[i] = 1.0 / Math.sqrt(D[i]);
         }
 
         DenseMatrix L = W;
@@ -245,7 +245,7 @@ public class SpectralClustering implements Serializable {
             double sum = 0.0;
             for (int j = 0; j < n; j++) {
                 if (i != j) {
-                    double w = MathEx.exp(gamma * MathEx.squaredDistance(data[i], data[j]));
+                    double w = Math.exp(gamma * MathEx.squaredDistance(data[i], data[j]));
                     sum += w;
                     if (j < l) {
                         C.set(i, j, w);
@@ -257,7 +257,7 @@ public class SpectralClustering implements Serializable {
                 logger.error(String.format("Small D[%d] = %f. The data may contain outliers.", i, sum));
             }
             
-            D[i] = 1.0 / MathEx.sqrt(sum);
+            D[i] = 1.0 / Math.sqrt(sum);
         }
         
         for (int i = 0; i < n; i++) {
@@ -276,7 +276,7 @@ public class SpectralClustering implements Serializable {
         W.setSymmetric(true);
         EVD eigen = W.eigen(k);
         double[] e = eigen.getEigenValues();
-        double scale = MathEx.sqrt((double)l / n);
+        double scale = Math.sqrt((double)l / n);
         for (int i = 0; i < k; i++) {
             if (e[i] <= 0.0) {
                 throw new IllegalStateException("Non-positive eigen value: " + e[i]);

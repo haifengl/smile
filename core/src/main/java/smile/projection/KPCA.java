@@ -170,7 +170,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
         projection = Matrix.zeros(p, n);
         for (int j = 0; j < p; j++) {
             latent[j] = eigen.getEigenValues()[j];
-            double s = MathEx.sqrt(latent[j]);
+            double s = Math.sqrt(latent[j]);
             for (int i = 0; i < n; i++) {
                 projection.set(j, i, eigen.getEigenVectors().get(i, j) / s);
             }

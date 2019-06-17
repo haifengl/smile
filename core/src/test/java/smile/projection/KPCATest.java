@@ -226,7 +226,7 @@ public class KPCATest {
             AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
 
             double[][] x = iris.toArray(new double[iris.size()][]);
-            KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(MathEx.sqrt(2.5)), 1E-4);
+            KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(Math.sqrt(2.5)), 1E-4);
             assertTrue(MathEx.equals(latent, kpca.getVariances(), 1E-3));
             double[][] points = kpca.project(x);
             points[0] = kpca.project(x[0]);
@@ -258,7 +258,7 @@ public class KPCATest {
             AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
 
             double[][] x = iris.toArray(new double[iris.size()][]);
-            KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(MathEx.sqrt(2.5)), 29);
+            KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(Math.sqrt(2.5)), 29);
             assertTrue(MathEx.equals(latent, kpca.getVariances(), 1E-3));
             double[][] points = kpca.project(x);
             points[0] = kpca.project(x[0]);

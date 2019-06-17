@@ -381,7 +381,7 @@ public class RegressionTree implements Regression<double[]> {
 
         @Override
         public int compareTo(TrainNode a) {
-            return (int) MathEx.signum(a.node.splitScore - node.splitScore);
+            return (int) Math.signum(a.node.splitScore - node.splitScore);
         }
 
         /**
@@ -593,12 +593,12 @@ public class RegressionTree implements Regression<double[]> {
                         if (monoRegForFeature > 0) {
                             boolean isTargetDecreasing = trueMean > falseMean;
                             if (isTargetDecreasing) {
-                                score *= 1 - MathEx.abs(monoRegForFeature);
+                                score *= 1 - Math.abs(monoRegForFeature);
                             }
                         } else if (monoRegForFeature < 0) {
                             boolean isTargetDecreasing = trueMean < falseMean;
                             if (isTargetDecreasing) {
-                                score *= 1 - MathEx.abs(monoRegForFeature);
+                                score *= 1 - Math.abs(monoRegForFeature);
                             }
                         } // monoRegForFeature == 0 - no monotonic regression
 
@@ -741,7 +741,7 @@ public class RegressionTree implements Regression<double[]> {
 
         @Override
         public int compareTo(SparseBinaryTrainNode a) {
-            return (int) MathEx.signum(a.node.splitScore - node.splitScore);
+            return (int) Math.signum(a.node.splitScore - node.splitScore);
         }
 
         /**

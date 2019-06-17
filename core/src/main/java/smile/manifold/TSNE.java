@@ -262,7 +262,7 @@ public class TSNE {
             // Perform the update
             for (int k = 0; k < d; k++) {
                 // Update gains
-                g[k] = (MathEx.signum(dC[k]) != MathEx.signum(dYi[k])) ? (g[k] + .2) : (g[k] * .8);
+                g[k] = (Math.signum(dC[k]) != Math.signum(dYi[k])) ? (g[k] + .2) : (g[k] * .8);
                 if (g[k] < minGain) g[k] = minGain;
 
                 // gradient update with momentum and gains
@@ -331,19 +331,19 @@ public class TSNE {
             double[] Di = D[i];
 
             // Use sqrt(1 / avg of distance) to initialize beta
-            double beta = MathEx.sqrt((n-1) / DiSum[i]);
+            double beta = Math.sqrt((n-1) / DiSum[i]);
             double betamin = 0.0;
             double betamax = Double.POSITIVE_INFINITY;
             logger.debug("initial beta[{}] = {}", i, beta);
 
             // Evaluate whether the perplexity is within tolerance
             double Hdiff = Double.MAX_VALUE;
-            for (int iter = 0; MathEx.abs(Hdiff) > tol && iter < 50; iter++) {
+            for (int iter = 0; Math.abs(Hdiff) > tol && iter < 50; iter++) {
                 double Pisum = 0.0;
                 double H = 0.0;
                 for (int j = 0; j < n; j++) {
                     double d = beta * Di[j];
-                    double p = MathEx.exp(-d);
+                    double p = Math.exp(-d);
                     Pi[j] = p;
                     Pisum += p;
                     H += p * d;
@@ -356,7 +356,7 @@ public class TSNE {
                 H = MathEx.log2(Pisum) + H / Pisum;
                 Hdiff = H - logU;
 
-                if (MathEx.abs(Hdiff) > tol) {
+                if (Math.abs(Hdiff) > tol) {
                     if (Hdiff > 0) {
                         betamin = beta;
                         if (Double.isInfinite(betamax))

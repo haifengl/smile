@@ -98,7 +98,7 @@ public class CLARANS <T> extends PartitionClustering<T> {
      * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
      */
     public CLARANS(T[] data, Distance<T> distance, int k, int maxNeighbor) {
-        this(data, distance, k, maxNeighbor, MathEx.max(2, MulticoreExecutor.getThreadPoolSize()));
+        this(data, distance, k, maxNeighbor, Math.max(2, MulticoreExecutor.getThreadPoolSize()));
     }
     
     /**

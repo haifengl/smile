@@ -216,7 +216,7 @@ public class IsotonicMDS {
                     for (int c = 0; c < nc; c++) {
                         tmp += MathEx.sqr(x[i * nc + c] - x[j * nc + c]);
                     }
-                    d[index++] = MathEx.sqrt(tmp);
+                    d[index++] = Math.sqrt(tmp);
                 }
             }
 
@@ -259,7 +259,7 @@ public class IsotonicMDS {
                 sstar += tmp * tmp;
                 tstar += y[i] * y[i];
             }
-            double ssq = MathEx.sqrt(sstar / tstar);
+            double ssq = Math.sqrt(sstar / tstar);
             return ssq;
         }
 
@@ -297,7 +297,7 @@ public class IsotonicMDS {
                 sstar += tmp * tmp;
                 tstar += y[i] * y[i];
             }
-            double ssq = MathEx.sqrt(sstar / tstar);
+            double ssq = Math.sqrt(sstar / tstar);
 
             int k = 0;
             for (int u = 0; u < nr; u++) {
@@ -318,7 +318,7 @@ public class IsotonicMDS {
                         }
                         double tmp1 = (x[u * nc + i] - x[s * nc + i]);
                         double sgn = (tmp1 >= 0) ? 1 : -1;
-                        tmp1 = MathEx.abs(tmp1) / y[k];
+                        tmp1 = Math.abs(tmp1) / y[k];
                         tmp += ((y[k] - yf[k]) / sstar - y[k] / tstar) * sgn * tmp1;
                     }
                     g[u * nc + i] = tmp * ssq;

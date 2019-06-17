@@ -194,7 +194,7 @@ public class MDS {
                 throw new IllegalArgumentException(String.format("Some of the first %d eigenvalues are < 0.", k));
             }
 
-            double scale = MathEx.sqrt(eigen.getEigenValues()[j]);
+            double scale = Math.sqrt(eigen.getEigenValues()[j]);
             for (int i = 0; i < n; i++) {
                 coordinates[i][j] = eigen.getEigenVectors().get(i, j) * scale;
             }

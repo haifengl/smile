@@ -163,7 +163,7 @@ public class PPCA implements Projection<double[]>, Serializable {
         loading = Matrix.zeros(n, k);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < k; j++) {
-                loading.set(i, j, evectors.get(i, j) * MathEx.sqrt(evalues[j] - noise));
+                loading.set(i, j, evectors.get(i, j) * Math.sqrt(evalues[j] - noise));
             }
         }
 

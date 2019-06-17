@@ -86,7 +86,7 @@ public class SVRTest {
                 }
             }
 
-            System.out.println("10-CV RMSE = " + MathEx.sqrt(rss / n));
+            System.out.println("10-CV RMSE = " + Math.sqrt(rss / n));
          } catch (Exception ex) {
              System.err.println(ex);
          }

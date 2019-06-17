@@ -301,7 +301,7 @@ import smile.math.MathEx;
         for (int l = 1; l < numLayers; l++) {
             net[l].weight = new double[numUnits[l]][numUnits[l - 1] + 1];
             net[l].delta = new double[numUnits[l]][numUnits[l - 1] + 1];
-            double r = 1.0 / MathEx.sqrt(net[l - 1].units);
+            double r = 1.0 / Math.sqrt(net[l - 1].units);
             for (int i = 0; i < net[l].units; i++) {
                 for (int j = 0; j <= net[l - 1].units; j++) {
                     net[l].weight[i][j] = MathEx.random(-r, r);

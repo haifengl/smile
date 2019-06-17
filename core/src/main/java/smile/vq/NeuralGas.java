@@ -89,7 +89,7 @@ public class NeuralGas extends PartitionClustering<double[]> {
 
         @Override
         public int compareTo(Neuron o) {
-            return (int) MathEx.signum(dist - o.dist);
+            return (int) Math.signum(dist - o.dist);
         }
     }
 
@@ -99,7 +99,7 @@ public class NeuralGas extends PartitionClustering<double[]> {
      * of clusters.
      */
     public NeuralGas(double[][] data, int k) {
-        this(data, k, MathEx.min(10, MathEx.max(1, k/2)), 0.01, 0.5, 0.005, 25);
+        this(data, k, Math.min(10, Math.max(1, k/2)), 0.01, 0.5, 0.005, 25);
     }
 
     /**
@@ -188,7 +188,7 @@ public class NeuralGas extends PartitionClustering<double[]> {
                 Arrays.sort(nodes);
 
                 for (int i = 0; i < k; i++) {
-                    double delta = eps * MathEx.exp(-i / lambda);
+                    double delta = eps * Math.exp(-i / lambda);
                     if (delta > 0) {
                         for (int j = 0; j < d; j++) {
                             nodes[i].w[j] += delta * (signal[j] - nodes[i].w[j]);

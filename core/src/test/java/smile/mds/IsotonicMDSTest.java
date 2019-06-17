@@ -156,12 +156,12 @@ public class IsotonicMDSTest {
 
         IsotonicMDS mds = new IsotonicMDS(swiss, 2);
 
-        double sign = MathEx.signum(points[0][0] / mds.getCoordinates()[0][0]);
+        double sign = Math.signum(points[0][0] / mds.getCoordinates()[0][0]);
         for (int i = 0; i < points.length; i++) {
             points[i][0] *= sign;
         }
 
-        sign = MathEx.signum(points[0][1] / mds.getCoordinates()[0][1]);
+        sign = Math.signum(points[0][1] / mds.getCoordinates()[0][1]);
         for (int i = 0; i < points.length; i++) {
             points[i][1] *= sign;
         }

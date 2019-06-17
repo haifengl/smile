@@ -126,7 +126,7 @@ public class BIRCH implements Clustering<double[]> {
                 double d = sum[i] / n - x[i];
                 dist += d * d;
             }
-            return MathEx.sqrt(dist);
+            return Math.sqrt(dist);
         }
 
         /**
@@ -138,7 +138,7 @@ public class BIRCH implements Clustering<double[]> {
                 double d = sum[i] / n - node.sum[i] / node.n;
                 dist += d * d;
             }
-            return MathEx.sqrt(dist);
+            return Math.sqrt(dist);
         }
 
         /**
