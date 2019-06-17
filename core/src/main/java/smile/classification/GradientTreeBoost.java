@@ -424,7 +424,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
         double[] response = new double[n]; // response variable for regression tree.
 
         double mu = MathEx.mean(y2);
-        b = 0.5 * MathEx.log((1 + mu) / (1 - mu));
+        b = 0.5 * Math.log((1 + mu) / (1 - mu));
 
         for (int i = 0; i < n; i++) {
             h[i] = b;
@@ -444,7 +444,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
             Arrays.fill(samples, 0);
             MathEx.permutate(perm);
             for (int l = 0; l < k; l++) {
-                int subj = (int) MathEx.round(nc[l] * subsample);
+                int subj = (int) Math.round(nc[l] * subsample);
                 int count = 0;
                 for (int i = 0; i < n && count < subj; i++) {
                     int xi = perm[i];
@@ -456,7 +456,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
             }
 
             for (int i = 0; i < n; i++) {
-                response[i] = 2.0 * y2[i] / (1 + MathEx.exp(2 * y2[i] * h[i]));
+                response[i] = 2.0 * y2[i] / (1 + Math.exp(2 * y2[i] * h[i]));
             }
 
             trees[m] = new RegressionTree(attributes, x, response, maxNodes, 5, x[0].length, order, samples, output);
@@ -507,7 +507,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
                 
                 double Z = 0.0;
                 for (int j = 0; j < k; j++) {
-                    p[j][i] = MathEx.exp(h[j][i] - max);
+                    p[j][i] = Math.exp(h[j][i] - max);
                     Z += p[j][i];
                 }
 
@@ -529,7 +529,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
                 Arrays.fill(samples, 0);
                 MathEx.permutate(perm);
                 for (int l = 0; l < k; l++) {
-                    int subj = (int) MathEx.round(nc[l] * subsample);
+                    int subj = (int) Math.round(nc[l] * subsample);
                     int count = 0;
                     for (int i = 0; i < n && count < subj; i++) {
                         int xi = perm[i];
@@ -572,7 +572,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
             double de = 0.0;
             for (int i = 0; i < samples.length; i++) {
                 if (samples[i] > 0) {
-                    double abs = MathEx.abs(y[i]);
+                    double abs = Math.abs(y[i]);
                     nu += y[i];
                     de += abs * (2.0 - abs);
                 }
@@ -608,7 +608,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
             for (int i = 0; i < samples.length; i++) {
                 if (samples[i] > 0) {
                     n++;
-                    double abs = MathEx.abs(y[i]);
+                    double abs = Math.abs(y[i]);
                     nu += y[i];
                     de += abs * (1.0 - abs);
                 }
@@ -707,7 +707,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
                 y += shrinkage * trees[i].predict(x);
             }
 
-            posteriori[0] = 1.0 / (1.0 + MathEx.exp(2*y));
+            posteriori[0] = 1.0 / (1.0 + Math.exp(2*y));
             posteriori[1] = 1.0 - posteriori[0];
 
             if (y > 0) {
@@ -733,7 +733,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
 
             double Z = 0.0;
             for (int i = 0; i < k; i++) {
-                posteriori[i] = MathEx.exp(posteriori[i] - max);
+                posteriori[i] = Math.exp(posteriori[i] - max);
                 Z += posteriori[i];
             }
 

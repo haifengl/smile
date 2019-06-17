@@ -285,7 +285,7 @@ public class Maxent implements SoftClassifier<int[]> {
         if (x > 15) {
             y = x;
         } else {
-            y += MathEx.log1p(MathEx.exp(x));
+            y += Math.log1p(Math.exp(x));
         }
 
         return y;
@@ -528,7 +528,7 @@ public class Maxent implements SoftClassifier<int[]> {
         if (x < 1E-300) {
             y = -690.7755;
         } else {
-            y = MathEx.log(x);
+            y = Math.log(x);
         }
         return y;
     }
@@ -837,7 +837,7 @@ public class Maxent implements SoftClassifier<int[]> {
 
         double Z = 0.0;
         for (int i = 0; i < prob.length; i++) {
-            double p = MathEx.exp(prob[i] - max);
+            double p = Math.exp(prob[i] - max);
             prob[i] = p;
             Z += p;
         }
@@ -893,7 +893,7 @@ public class Maxent implements SoftClassifier<int[]> {
         }
 
         if (w != null) {
-            double f = 1.0 / (1.0 + MathEx.exp(-dot(x, w)));
+            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
 
             if (posteriori != null) {
                 posteriori[0] = 1.0 - f;
@@ -923,7 +923,7 @@ public class Maxent implements SoftClassifier<int[]> {
             if (posteriori != null) {
                 double Z = 0.0;
                 for (int i = 0; i < k; i++) {
-                    posteriori[i] = MathEx.exp(posteriori[i] - max);
+                    posteriori[i] = Math.exp(posteriori[i] - max);
                     Z += posteriori[i];
                 }
 

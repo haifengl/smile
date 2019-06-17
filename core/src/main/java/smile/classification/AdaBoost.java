@@ -331,8 +331,8 @@ public class AdaBoost implements SoftClassifier<double[]> {
             } else failures = 0;
             
             error[t] = e;
-            alpha[t] = MathEx.log((1-e)/ MathEx.max(1E-10,e)) + b;
-            double a = MathEx.exp(alpha[t]);
+            alpha[t] = Math.log((1-e)/ Math.max(1E-10,e)) + b;
+            double a = Math.exp(alpha[t]);
             for (int i = 0; i < n; i++) {
                 if (err[i]) {
                     w[i] *= a;

@@ -379,7 +379,7 @@ public class RandomForest implements SoftClassifier<double[]> {
                 }
 
                 for (int l = 0; l < k; l++) {
-                    int subj = (int) MathEx.round(nc[l] * subsample / classWeight[l]);
+                    int subj = (int) Math.round(nc[l] * subsample / classWeight[l]);
                     int count = 0;
                     for (int i = 0; i < n && count < subj; i++) {
                         int xi = perm[i];
@@ -455,7 +455,7 @@ public class RandomForest implements SoftClassifier<double[]> {
      * @param ntrees the number of trees.
      */
     public RandomForest(Attribute[] attributes, double[][] x, int[] y, int ntrees) {
-        this(attributes, x, y, ntrees, (int) MathEx.floor(MathEx.sqrt(x[0].length)));
+        this(attributes, x, y, ntrees, (int) Math.floor(Math.sqrt(x[0].length)));
     }
 
     /**

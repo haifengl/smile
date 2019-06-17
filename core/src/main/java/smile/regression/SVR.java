@@ -295,7 +295,7 @@ public class SVR<T> implements Regression<T> {
         }
 
         minmax();
-        int phase = MathEx.min(n, 1000);
+        int phase = Math.min(n, 1000);
         for (int count = 1; smo(tol); count++) {
             if (count % phase == 0) {
                 logger.info("SVR finishes {} SMO iterations", count);

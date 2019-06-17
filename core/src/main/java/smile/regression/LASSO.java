@@ -252,7 +252,7 @@ public class LASSO  implements Regression<double[]> {
             for (int i = 0; i < n; i++) {
                 scale[j] += MathEx.sqr(X.get(i, j));
             }
-            scale[j] = MathEx.sqrt(scale[j] / n);
+            scale[j] = Math.sqrt(scale[j] / n);
         }
 
         for (int j = 0; j < p; j++) {
@@ -338,7 +338,7 @@ public class LASSO  implements Regression<double[]> {
             Y[i] = y[i] - ym;
         }
 
-        double t = MathEx.min(MathEx.max(1.0, 1.0 / lambda), 2 * p / 1e-3);
+        double t = Math.min(Math.max(1.0, 1.0 / lambda), 2 * p / 1e-3);
         double pobj = 0.0; // primal objective function value
         double dobj = Double.NEGATIVE_INFINITY; // dual objective function value
         double s = Double.POSITIVE_INFINITY;
@@ -405,7 +405,7 @@ public class LASSO  implements Regression<double[]> {
             }
 
             pobj = MathEx.dot(z, z) + lambda * MathEx.norm1(w);
-            dobj = MathEx.max(-0.25 * MathEx.dot(nu, nu) - MathEx.dot(nu, Y), dobj);
+            dobj = Math.max(-0.25 * MathEx.dot(nu, nu) - MathEx.dot(nu, Y), dobj);
             if (ntiter % 10 == 0) {
                 logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g%n", ntiter, pobj, dobj));
             }
@@ -419,7 +419,7 @@ public class LASSO  implements Regression<double[]> {
 
             // UPDATE t
             if (s >= 0.5) {
-                t = MathEx.max(MathEx.min(2 * p * MU / gap, MU * t), t);
+                t = Math.max(Math.min(2 * p * MU / gap, MU * t), t);
             }
 
             // CALCULATE NEWTON STEP    
@@ -449,7 +449,7 @@ public class LASSO  implements Regression<double[]> {
 
             // set pcg tolerance (relative)
             double normg = MathEx.norm(grad);
-            double pcgtol = MathEx.min(0.1, eta * gap / MathEx.min(1.0, normg));
+            double pcgtol = Math.min(0.1, eta * gap / Math.min(1.0, normg));
             if (ntiter != 0 && pitr == 0) {
                 pcgtol = pcgtol * 0.1;
             }
@@ -525,7 +525,7 @@ public class LASSO  implements Regression<double[]> {
             TSS += MathEx.sqr(y[i] - ybar);
         }
 
-        error = MathEx.sqrt(RSS / (n - p - 1));
+        error = Math.sqrt(RSS / (n - p - 1));
         df = n - p - 1;
 
         RSquared = 1.0 - RSS / TSS;
@@ -553,7 +553,7 @@ public class LASSO  implements Regression<double[]> {
         double sum = 0.0;
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
-                sum += MathEx.log(-f[i][j]);
+                sum += Math.log(-f[i][j]);
             }
         }
 

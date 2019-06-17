@@ -268,7 +268,7 @@ public class GaussianProcessRegression <T> implements Regression<T> {
         DenseMatrix U = eigen.getEigenVectors();
         DenseMatrix D = eigen.getD();
         for (int i = 0; i < m; i++) {
-            D.set(i, i, 1.0 / MathEx.sqrt(D.get(i, i)));
+            D.set(i, i, 1.0 / Math.sqrt(D.get(i, i)));
         }
 
         DenseMatrix UD = U.abmm(D);

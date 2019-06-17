@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import smile.math.MathEx;
 import smile.math.matrix.Cholesky;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
@@ -71,23 +72,6 @@ public class RLS implements OnlineRegression<double[]> {
      * A temporary array used in computing V * X .
      */
     private double[] Vx;
-
-    /**
-     * Trainer for linear regression by recursive least squares.
-     */
-    public static class Trainer extends RegressionTrainer<double[]> {
-        /**
-         * Constructor.
-         */
-        public Trainer() {
-
-        }
-
-        @Override
-        public RLS train(double[][] x, double[] y) {
-            return new RLS(x, y);
-        }
-    }
 
     /**
      * Constructor. Learn the ordinary least squares model to initialize gamma and coefficients.
@@ -233,5 +217,32 @@ public class RLS implements OnlineRegression<double[]> {
            throw new IllegalArgumentException("The forgetting factor must be in (0, 1]");
         }
         this.lambda = lambda;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Linear Model:\n");
+
+        double[] r = residuals.clone();
+        builder.append("\nResiduals:\n");
+        builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
+        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", MathEx.min(r), MathEx.q1(r), MathEx.median(r), MathEx.q3(r), MathEx.max(r)));
+
+        builder.append("\nCoefficients:\n");
+        builder.append("            Estimate        Std. Error        t value        Pr(>|t|)\n");
+        builder.append(String.format("Intercept%11.4f%18.4f%15.4f%16.4f %s%n", coefficients[p][0], coefficients[p][1], coefficients[p][2], coefficients[p][3], significance(coefficients[p][3])));
+        for (int i = 0; i < p; i++) {
+            builder.append(String.format("%s\t %11.4f%18.4f%15.4f%16.4f %s%n", names[i], coefficients[i][0], coefficients[i][1], coefficients[i][2], coefficients[i][3], significance(coefficients[i][3])));
+        }
+
+        builder.append("---------------------------------------------------------------------\n");
+        builder.append("Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
+
+        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom%n", error, df));
+        builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
+        builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g%n", F, p, df, pvalue));
+
+        return builder.toString();
     }
 }
