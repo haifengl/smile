@@ -43,7 +43,7 @@ import smile.math.matrix.SVD;
  *
  * @author Sam Erickson
  */
-public class RLS implements OnlineRegression<double[]> {
+public class RLS extends LinearModel implements OnlineRegression<double[]> {
     private static final long serialVersionUID = 1L;
 
     /**
