@@ -833,6 +833,56 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     }
 
     /**
+     * Creates a DataFrame from a 2-dimensional array.
+     * @param data The data array.
+     * @param names the name of columns.
+     */
+    static DataFrame of(double[][] data, String... names) {
+        int p = data[0].length;
+        if (names == null || names.length == 0) {
+            names = new String[p];
+            for (int i = 0; i < p; i++) {
+                names[i] = "V" + (i+1);
+            }
+        }
+
+        DoubleVector[] vectors = new DoubleVector[p];
+        for (int j = 0; j < p; j++) {
+            double[] x = new double[data.length];
+            for (int i = 0; i < x.length; i++) {
+                x[i] = data[i][j];
+            }
+            vectors[j] = DoubleVector.of(names[j], x);
+        }
+        return DataFrame.of(vectors);
+    }
+
+    /**
+     * Creates a DataFrame from a 2-dimensional array.
+     * @param data The data array.
+     * @param names the name of columns.
+     */
+    static DataFrame of(int[][] data, String... names) {
+        int p = data[0].length;
+        if (names == null || names.length == 0) {
+            names = new String[p];
+            for (int i = 0; i < p; i++) {
+                names[i] = "V" + (i+1);
+            }
+        }
+
+        IntVector[] vectors = new IntVector[p];
+        for (int j = 0; j < p; j++) {
+            int[] x = new int[data.length];
+            for (int i = 0; i < x.length; i++) {
+                x[i] = data[i][j];
+            }
+            vectors[j] = IntVector.of(names[j], x);
+        }
+        return DataFrame.of(vectors);
+    }
+
+    /**
      * Creates a DataFrame from a collection.
      * @param data The data collection.
      * @param clazz The class type of elements.
