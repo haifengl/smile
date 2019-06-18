@@ -53,7 +53,7 @@ public class NeuralNetworkTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(response);
         try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile(url));
+            AttributeDataset data = parser.parse(smile.util.Paths.getTestData(url));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
             

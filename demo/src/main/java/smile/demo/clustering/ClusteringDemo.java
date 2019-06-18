@@ -87,7 +87,7 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
             DelimitedTextParser parser = new DelimitedTextParser();
             parser.setDelimiter("[\t ]+");
             try {
-                AttributeDataset data = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
+                AttributeDataset data = parser.parse(datasetName[datasetIndex], smile.util.Paths.getTestData(datasource[datasetIndex]));
                 dataset[datasetIndex] = data.toArray(new double[data.size()][]);
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
@@ -181,7 +181,7 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
                 DelimitedTextParser parser = new DelimitedTextParser();
                 parser.setDelimiter("[\t ]+");
                 try {
-                    AttributeDataset data = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
+                    AttributeDataset data = parser.parse(datasetName[datasetIndex], smile.util.Paths.getTestData(datasource[datasetIndex]));
                     dataset[datasetIndex] = data.toArray(new double[data.size()][]);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);

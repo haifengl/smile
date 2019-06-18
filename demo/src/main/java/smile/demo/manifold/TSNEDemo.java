@@ -131,10 +131,10 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
             DelimitedTextParser parser = new DelimitedTextParser();
 
             try {
-                AttributeDataset dataset = parser.parse(smile.data.parser.IOUtils.getTestDataFile("mnist/mnist2500_X.txt"));
+                AttributeDataset dataset = parser.parse(smile.util.Paths.getTestData("mnist/mnist2500_X.txt"));
                 data = dataset.toArray(new double[dataset.size()][]);
 
-                dataset = parser.parse(smile.data.parser.IOUtils.getTestDataFile("mnist/mnist2500_labels.txt"));
+                dataset = parser.parse(smile.util.Paths.getTestData("mnist/mnist2500_labels.txt"));
                 labels = new int[dataset.size()];
                 for (int i = 0; i < labels.length; i++) {
                     labels[i] = (int) dataset.get(i).x[0];

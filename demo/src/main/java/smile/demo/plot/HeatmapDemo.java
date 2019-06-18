@@ -93,7 +93,7 @@ public class HeatmapDemo extends JPanel {
     public static void main(String[] args) {
         try {
             RESParser parser = new RESParser();
-            AttributeDataset data = parser.parse("RES", smile.data.parser.IOUtils.getTestDataFile("microarray/all_aml_test.res"));
+            AttributeDataset data = parser.parse("RES", smile.util.Paths.getTestData("microarray/all_aml_test.res"));
             
             double[][] x = data.toArray(new double[data.size()][]);
             String[] genes = data.toArray(new String[data.size()]);
