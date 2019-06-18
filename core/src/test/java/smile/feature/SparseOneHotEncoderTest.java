@@ -75,7 +75,7 @@ public class SparseOneHotEncoderTest {
         ArffParser arffParser = new ArffParser();
         arffParser.setResponseIndex(4);
         try {
-            AttributeDataset weather = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.nominal.arff"));
+            AttributeDataset weather = arffParser.parse(smile.util.Paths.getTestData("weka/weather.nominal.arff"));
             double[][] x = weather.toArray(new double[weather.size()][]);
 
             SparseOneHotEncoder n2sb = new SparseOneHotEncoder(weather.attributes());

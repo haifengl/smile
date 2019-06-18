@@ -106,7 +106,7 @@ public class RandomForestTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(response);
         try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile(url));
+            AttributeDataset data = parser.parse(smile.util.Paths.getTestData(url));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
             
@@ -163,7 +163,7 @@ public class RandomForestTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(6);
         try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
+            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/cpu.arff"));
             double[] datay = data.toArray(new double[data.size()]);
             double[][] datax = data.toArray(new double[data.size()][]);
 
@@ -208,7 +208,7 @@ public class RandomForestTest {
         System.out.println("Random forest merging");
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(6);
-        AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
+        AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/cpu.arff"));
         double[] datay = data.toArray(new double[data.size()]);
         double[][] datax = data.toArray(new double[data.size()][]);
 

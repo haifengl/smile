@@ -16,13 +16,14 @@
 
 package smile.regression;
 
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.DataFrame;
+import smile.io.Arff;
+import smile.util.Paths;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
@@ -141,7 +142,8 @@ public class OLSTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(6);
         try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
+            Arff arff = new Arff(Paths.getTestData("weka/cpu.arff"));
+            DataFrame data = arff.read();
 
             double[][] datax = data.toArray(new double[data.size()][]);
             double[] datay = data.toArray(new double[data.size()]);

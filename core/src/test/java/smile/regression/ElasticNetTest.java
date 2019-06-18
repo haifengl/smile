@@ -62,7 +62,7 @@ public class ElasticNetTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(6);
         try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
+            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/cpu.arff"));
             double[][] datax = data.toArray(new double[data.size()][]);
             double[] datay = data.toArray(new double[data.size()]);
 
@@ -102,9 +102,9 @@ public class ElasticNetTest {
         parser.setColumnNames(true);
         try {
             AttributeDataset train = parser.parse("prostate Train",
-                    smile.data.parser.IOUtils.getTestDataFile("regression/prostate-train.csv"));
+                    smile.util.Paths.getTestData("regression/prostate-train.csv"));
             AttributeDataset test = parser.parse("prostate Test",
-                    smile.data.parser.IOUtils.getTestDataFile("regression/prostate-test.csv"));
+                    smile.util.Paths.getTestData("regression/prostate-test.csv"));
 
             double[][] x = train.toArray(new double[train.size()][]);
             double[] y = train.toArray(new double[train.size()]);
@@ -139,9 +139,9 @@ public class ElasticNetTest {
         parser.addIgnoredColumn(0);
         try {
             AttributeDataset train = parser.parse("abalone Train",
-                    smile.data.parser.IOUtils.getTestDataFile("regression/abalone-train.data"));
+                    smile.util.Paths.getTestData("regression/abalone-train.data"));
             AttributeDataset test = parser.parse("abalone Test",
-                    smile.data.parser.IOUtils.getTestDataFile("regression/abalone-test.data"));
+                    smile.util.Paths.getTestData("regression/abalone-test.data"));
 
             double[][] x = train.toArray(new double[train.size()][]);
             double[] y = train.toArray(new double[train.size()]);
@@ -175,7 +175,7 @@ public class ElasticNetTest {
         parser.setDelimiter(",");
         try {
             AttributeDataset data = parser.parse("diabetes",
-                    smile.data.parser.IOUtils.getTestDataFile("regression/diabetes.csv"));
+                    smile.util.Paths.getTestData("regression/diabetes.csv"));
             double[][] datax = data.toArray(new double[data.size()][]);
             double[] datay = data.toArray(new double[data.size()]);
 

@@ -124,7 +124,7 @@ public abstract class ManifoldDemo extends JPanel implements Runnable, ActionLis
                 parser.setDelimiter("[\t]+");
 
                 try {
-                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
+                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.util.Paths.getTestData(datasource[datasetIndex]));
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.err.println(ex);

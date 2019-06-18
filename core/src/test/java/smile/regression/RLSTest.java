@@ -62,7 +62,7 @@ public class RLSTest {
         ArffParser parser = new ArffParser();
         parser.setResponseIndex(responseIndex);
         try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile(fileName));
+            AttributeDataset data = parser.parse(smile.util.Paths.getTestData(fileName));
 
             double[][] datax = data.toArray(new double[data.size()][]);
             double[] datay = data.toArray(new double[data.size()]);
