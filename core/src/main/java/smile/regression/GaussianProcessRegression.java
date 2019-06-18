@@ -16,7 +16,6 @@
 
 package smile.regression;
 
-import smile.math.MathEx;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
@@ -89,57 +88,20 @@ public class GaussianProcessRegression <T> implements Regression<T> {
     private double lambda;
 
     /**
-     * Trainer for Gaussian Process for Regression.
+     * Private constructor.
      */
-    public static class Trainer<T> extends RegressionTrainer<T> {
-        /**
-         * The Mercer kernel.
-         */
-        private MercerKernel<T> kernel;
-        /**
-         * The shrinkage/regularization parameter.
-         */
-        private double lambda;
+    private GaussianProcessRegression() {
 
-        /**
-         * Constructor.
-         * 
-         * @param kernel the Mercer kernel.
-         * @param lambda the shrinkage/regularization parameter.
-         */
-        public Trainer(MercerKernel<T> kernel, double lambda) {
-            this.kernel = kernel;
-            this.lambda = lambda;
-        }
-        
-        @Override
-        public GaussianProcessRegression<T> train(T[] x, double[] y) {
-            return new GaussianProcessRegression<>(x, y, kernel, lambda);
-        }
-        
-        /**
-         * Learns a Gaussian Process with given subset of regressors.
-         * 
-         * @param x training samples.
-         * @param y training labels in [0, k), where k is the number of classes.
-         * @param t the inducing input, which are pre-selected or inducing samples
-         * acting as active set of regressors. Commonly, these can be chosen as
-         * the centers of k-means clustering.
-         * @return a trained Gaussian Process.
-         */
-        public GaussianProcessRegression<T> train(T[] x, double[] y, T[] t) {
-            return new GaussianProcessRegression<>(x, y, t, kernel, lambda);
-        }
     }
-    
+
     /**
-     * Constructor. Fitting a regular Gaussian process model.
+     * Fits a regular Gaussian process model.
      * @param x the training dataset.
      * @param y the response variable.
      * @param kernel the Mercer kernel.
      * @param lambda the shrinkage/regularization parameter.
      */
-    public GaussianProcessRegression(T[] x, double[] y, MercerKernel<T> kernel, double lambda) {
+    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double lambda) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -148,9 +110,10 @@ public class GaussianProcessRegression <T> implements Regression<T> {
             throw new IllegalArgumentException("Invalid regularization parameter lambda = " + lambda);
         }
 
-        this.kernel = kernel;
-        this.lambda = lambda;
-        this.knots = x;
+        GaussianProcessRegression model = new GaussianProcessRegression();
+        model.kernel = kernel;
+        model.lambda = lambda;
+        model.knots = x;
         
         int n = x.length;
 
@@ -166,13 +129,14 @@ public class GaussianProcessRegression <T> implements Regression<T> {
         }
 
         Cholesky cholesky = K.cholesky();
-        w = y.clone();
-        cholesky.solve(w);
+        model.w = y.clone();
+        cholesky.solve(model.w);
+
+        return model;
     }
 
     /**
-     * Constructor. Fits an approximate Gaussian process model by the method
-     * of subset of regressors.
+     * Fits an approximate Gaussian process model by the method of subset of regressors.
      * @param x the training dataset.
      * @param y the response variable.
      * @param t the inducing input, which are pre-selected or inducing samples
@@ -181,7 +145,7 @@ public class GaussianProcessRegression <T> implements Regression<T> {
      * @param kernel the Mercer kernel.
      * @param lambda the shrinkage/regularization parameter.
      */
-    public GaussianProcessRegression(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double lambda) {
+    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double lambda) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -190,9 +154,10 @@ public class GaussianProcessRegression <T> implements Regression<T> {
             throw new IllegalArgumentException("Invalid regularization parameter lambda = " + lambda);
         }
 
-        this.kernel = kernel;
-        this.lambda = lambda;
-        this.knots = t;
+        GaussianProcessRegression model = new GaussianProcessRegression();
+        model.kernel = kernel;
+        model.lambda = lambda;
+        model.knots = t;
         
         int n = x.length;
         int m = t.length;
@@ -204,7 +169,7 @@ public class GaussianProcessRegression <T> implements Regression<T> {
             }
         }
 
-        DenseMatrix K = G.ata();;
+        DenseMatrix K = G.ata();
         for (int i = 0; i < m; i++) {
             for (int j = 0; j <= i; j++) {
                 K.add(i, j, lambda * kernel.k(t[i], t[j]));
@@ -212,26 +177,24 @@ public class GaussianProcessRegression <T> implements Regression<T> {
             }
         }
 
-        w = new double[m];
-        G.atx(y, w);
+        model.w = new double[m];
+        G.atx(y, model.w);
 
         LU lu = K.lu(true);
-        lu.solve(w);
+        lu.solve(model.w);
+        return model;
     }
 
     /**
-     * Constructor. Fits an approximate Gaussian process model with
-     * Nystrom approximation of kernel matrix.
+     * Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
      * @param x the training dataset.
      * @param y the response variable.
      * @param t the inducing input for Nystrom approximation. Commonly, these
      * can be chosen as the centers of k-means clustering.
      * @param kernel the Mercer kernel.
      * @param lambda the shrinkage/regularization parameter.
-     * @param nystrom THe value of this parameter doesn't really matter. The purpose is to be different from
-     *                the constructor of regressor approximation.
      */
-    GaussianProcessRegression(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double lambda, boolean nystrom) {
+    public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double lambda) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -240,9 +203,10 @@ public class GaussianProcessRegression <T> implements Regression<T> {
             throw new IllegalArgumentException("Invalid regularization parameter lambda = " + lambda);
         }
 
-        this.kernel = kernel;
-        this.lambda = lambda;
-        this.knots = x;
+        GaussianProcessRegression model = new GaussianProcessRegression();
+        model.kernel = kernel;
+        model.lambda = lambda;
+        model.knots = x;
         
         int n = x.length;
         int m = t.length;
@@ -283,13 +247,15 @@ public class GaussianProcessRegression <T> implements Regression<T> {
         Cholesky chol = LtL.cholesky();
         DenseMatrix invLtL = chol.inverse();
         DenseMatrix K = L.abmm(invLtL).abtmm(L);
-        
-        w = new double[n];
-        K.atx(y, w);
+
+        model.w = new double[n];
+        K.atx(y, model.w);
         
         for (int i = 0; i < n; i++) {
-            w[i] = (y[i] - w[i]) / lambda;
+            model.w[i] = (y[i] - model.w[i]) / lambda;
         }
+
+        return model;
     }
 
     /**
