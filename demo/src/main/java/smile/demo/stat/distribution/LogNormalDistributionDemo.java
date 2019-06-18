@@ -61,7 +61,7 @@ public class LogNormalDistributionDemo extends JPanel implements ChangeListener 
             labelTable.put(new Integer(i), new JLabel(String.valueOf(i/10)));
         }
 
-        sigmaSlider = new JSlider(0, 20, (int) MathEx.round(sigma * 10));
+        sigmaSlider = new JSlider(0, 20, (int) Math.round(sigma * 10));
         sigmaSlider.addChangeListener(this);
         sigmaSlider.setLabelTable(labelTable);
         sigmaSlider.setMajorTickSpacing(10);

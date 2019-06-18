@@ -213,7 +213,7 @@ public class Histogram extends BarPlot {
      * @param k the number of bins.
      */
     private static double[][] histogram(int[] data, int k, boolean prob) {
-        double[][] hist = smile.math.Histogram.histogram(data, k);
+        double[][] hist = smile.math.Histogram.of(data, k);
 
         // The number of bins may be extended to cover all data.
         k = hist[0].length;
@@ -239,7 +239,7 @@ public class Histogram extends BarPlot {
      * @param k the number of bins.
      */
     private static double[][] histogram(double[] data, int k, boolean prob) {
-        double[][] hist = smile.math.Histogram.histogram(data, k);
+        double[][] hist = smile.math.Histogram.of(data, k);
 
         // The number of bins may be extended to cover all data.
         k = hist[0].length;
@@ -271,7 +271,7 @@ public class Histogram extends BarPlot {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
         
-        double[][] hist = smile.math.Histogram.histogram(data, breaks);
+        double[][] hist = smile.math.Histogram.of(data, breaks);
 
         double[][] freq = new double[k][2];
         for (int i = 0; i < k; i++) {
@@ -301,7 +301,7 @@ public class Histogram extends BarPlot {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
         
-        double[][] hist = smile.math.Histogram.histogram(data, breaks);
+        double[][] hist = smile.math.Histogram.of(data, breaks);
 
         double[][] freq = new double[k][2];
         for (int i = 0; i < k; i++) {

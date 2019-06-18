@@ -522,7 +522,7 @@ public class SIB extends PartitionClustering<double[]> {
         sb.append(String.format("Sequential Information Bottleneck distortion: %.5f%n", distortion));
         sb.append(String.format("Clusters of %d data points of dimension %d:%n", y.length, centroids[0].length));
         for (int i = 0; i < k; i++) {
-            int r = (int) MathEx.round(1000.0 * size[i] / y.length);
+            int r = (int) Math.round(1000.0 * size[i] / y.length);
             sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
         

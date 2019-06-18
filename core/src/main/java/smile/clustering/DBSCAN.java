@@ -242,11 +242,11 @@ public class DBSCAN<T> extends PartitionClustering<T> {
         
         sb.append(String.format("DBSCAN clusters of %d data points:%n", y.length));
         for (int i = 0; i < k; i++) {
-            int r = (int) MathEx.round(1000.0 * size[i] / y.length);
+            int r = (int) Math.round(1000.0 * size[i] / y.length);
             sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
 
-        int r = (int) MathEx.round(1000.0 * size[k] / y.length);
+        int r = (int) Math.round(1000.0 * size[k] / y.length);
         sb.append(String.format("Noise\t%5d (%2d.%1d%%)%n", size[k], r / 10, r % 10));
         
         return sb.toString();

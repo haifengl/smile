@@ -187,11 +187,11 @@ public class DeterministicAnnealing extends KMeans {
                 T /= alpha;
             } else if (k - currentK > 2) { // too large step
                 T /= alpha; // revise back and try smaller step.
-                alpha += 5 * MathEx.pow(10, MathEx.log10(1 - alpha) - 1);
+                alpha += 5 * Math.pow(10, Math.log10(1 - alpha) - 1);
             } else {
                 // be careful since we are close to the final Kmax.
                 if (k > currentK && k == 2 * Kmax - 2) {
-                    alpha += 5 * MathEx.pow(10, MathEx.log10(1 - alpha) - 1);
+                    alpha += 5 * Math.pow(10, Math.log10(1 - alpha) - 1);
                 }
 
                 // decrease the temperature.
@@ -458,7 +458,7 @@ public class DeterministicAnnealing extends KMeans {
         sb.append(String.format("Deterministic Annealing clustering distortion: %.5f%n", distortion));
         sb.append(String.format("Clusters of %d data points:%n", y.length));
         for (int i = 0; i < k; i++) {
-            int r = (int) MathEx.round(1000.0 * size[i] / y.length);
+            int r = (int) Math.round(1000.0 * size[i] / y.length);
             sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
 
