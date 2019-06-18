@@ -95,7 +95,7 @@ public class OLS {
      * @param prop Training algorithm properties and hyper-parameters (if any) including "method" (svd or qr)
      *             for the fitting method, "standard.error" (boolean) to compute the estimated standard
      *             errors of the estimate of parameters, "eps" (default 1E-7) as the tolerance in SVD
-     *             to detect if a singular value is zero.
+     *             to detect if a singular value is zero, "recursive" (boolean) to support recursive least squares.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
         DenseMatrix X = formula.matrix(data, true);
@@ -143,6 +143,8 @@ public class OLS {
         X.ax(w1, model.fittedValues);
         model.fitness(fittedValues, y, MathEx.mean(y));
 
+        DenseMatrix inv = null;
+
         if (prop.getProperty("standard.error", "true").equalsIgnoreCase("true")) {
             double eps = Double.valueOf(prop.getProperty("eps", "1E-7"));
             double[][] ttest = new double[p + 1][4];
@@ -165,7 +167,7 @@ public class OLS {
                 }
             } else {
                 Cholesky cholesky = qr.CholeskyOfAtA();
-                DenseMatrix inv = cholesky.inverse();
+                inv = cholesky.inverse();
 
                 for (int i = 0; i <= p; i++) {
                     ttest[i][0] = w1[i];
@@ -176,6 +178,20 @@ public class OLS {
                     ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * model.df, 0.5, model.df / (model.df + t * t));
                 }
             }
+        }
+
+        if (prop.getProperty("recursive", "true").equalsIgnoreCase("true")) {
+            if (inv == null) {
+                if (method.equalsIgnoreCase("svd")) {
+                    Cholesky cholesky = svd.CholeskyOfAtA();
+                    inv = cholesky.inverse();
+                } else {
+                    Cholesky cholesky = qr.CholeskyOfAtA();
+                    inv = cholesky.inverse();
+                }
+            }
+
+            model.V = inv;
         }
 
         return model;
