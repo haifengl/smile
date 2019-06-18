@@ -171,13 +171,13 @@ public class DecisionTreeTest {
             
             for (double[] xi : x) {
                 for (int i = 0; i < xi.length; i++) {
-                    xi[i] = MathEx.round(255*(xi[i]+1)/2);
+                    xi[i] = Math.round(255*(xi[i]+1)/2);
                 }
             }
             
             for (double[] xi : testx) {
                 for (int i = 0; i < xi.length; i++) {
-                    xi[i] = MathEx.round(127 + 127*xi[i]);
+                    xi[i] = Math.round(127 + 127*xi[i]);
                 }
             }
             

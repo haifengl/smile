@@ -177,8 +177,8 @@ public class NeuralGas extends PartitionClustering<double[]> {
 
         for (int t = 0; t < steps; t++) {
             double tf = (double) t / steps;
-            double lambda = lambda_i * MathEx.pow(lambda_f / lambda_i, tf);
-            double eps = eps_i * MathEx.pow(eps_f / eps_i, tf);
+            double lambda = lambda_i * Math.pow(lambda_f / lambda_i, tf);
+            double eps = eps_i * Math.pow(eps_f / eps_i, tf);
 
             for (double[] signal : data) {
                 for (Neuron node : nodes) {
@@ -267,7 +267,7 @@ public class NeuralGas extends PartitionClustering<double[]> {
         sb.append(String.format("Neural Gas distortion: %.5f%n", distortion));
         sb.append(String.format("Clusters of %d data points of dimension %d:%n", y.length, centroids[0].length));
         for (int i = 0; i < k; i++) {
-            int r = (int) MathEx.round(1000.0 * size[i] / y.length);
+            int r = (int) Math.round(1000.0 * size[i] / y.length);
             sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
         

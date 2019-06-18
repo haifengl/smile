@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.mds;
 
+import smile.math.BFGS;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.sort.QuickSort;
@@ -144,11 +145,12 @@ public class IsotonicMDS {
         ObjectiveFunction func = new ObjectiveFunction(nr, nc, d, ord, ord2);
 
         stress = 0.0;
+        BFGS bfgs = new BFGS(tol, maxIter);
         try {
-            stress = MathEx.min(func, 5, x, tol, maxIter);
+            stress = bfgs.minimize(func, 5, x);
         } catch (Exception ex) {
             // If L-BFGS doesn't work, let's try BFGS.
-            stress = MathEx.min(func, x, tol, maxIter);
+            stress = bfgs.minimize(func, x);
         }
 
         if (stress == 0.0) {
@@ -264,7 +266,7 @@ public class IsotonicMDS {
         }
 
         @Override
-        public double f(double[] x, double[] g) {
+        public double g(double[] x, double[] g) {
             dist(x);
 
             yc[0] = 0.0;

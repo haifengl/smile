@@ -61,7 +61,7 @@ public class ExponentialDistributionDemo extends JPanel implements ChangeListene
             labelTable.put(new Integer(i), new JLabel(String.valueOf(i/10)));
         }
 
-        lambdaSlider = new JSlider(0, 50, (int) MathEx.round(lambda * 10));
+        lambdaSlider = new JSlider(0, 50, (int) Math.round(lambda * 10));
         lambdaSlider.addChangeListener(this);
         lambdaSlider.setLabelTable(labelTable);
         lambdaSlider.setMajorTickSpacing(10);

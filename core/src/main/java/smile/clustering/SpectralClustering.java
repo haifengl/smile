@@ -124,7 +124,7 @@ public class SpectralClustering implements Serializable {
 
         L.setSymmetric(true);
         EVD eigen = L.eigen(k);
-        double[][] Y = eigen.getEigenVectors().array();
+        double[][] Y = eigen.getEigenVectors().toArray();
         for (int i = 0; i < n; i++) {
             MathEx.unitize2(Y[i]);
         }
@@ -192,7 +192,7 @@ public class SpectralClustering implements Serializable {
 
         L.setSymmetric(true);
         EVD eigen = L.eigen(k);
-        double[][] Y = eigen.getEigenVectors().array();
+        double[][] Y = eigen.getEigenVectors().toArray();
         for (int i = 0; i < n; i++) {
             MathEx.unitize2(Y[i]);
         }
@@ -292,7 +292,7 @@ public class SpectralClustering implements Serializable {
             }
         }
         
-        double[][] Y = C.abmm(U).array();
+        double[][] Y = C.abmm(U).toArray();
         for (int i = 0; i < n; i++) {
             MathEx.unitize2(Y[i]);
         }
@@ -350,7 +350,7 @@ public class SpectralClustering implements Serializable {
         sb.append(String.format("Spectral Clustering distortion in feature space: %.5f%n", distortion));
         sb.append(String.format("Clusters of %d data points:%n", y.length));
         for (int i = 0; i < k; i++) {
-            int r = (int) MathEx.round(1000.0 * size[i] / y.length);
+            int r = (int) Math.round(1000.0 * size[i] / y.length);
             sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
         }
 

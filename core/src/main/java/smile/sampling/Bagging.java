@@ -90,7 +90,7 @@ public class Bagging {
             }
 
             for (int l = 0; l < k; l++) {
-                int subj = (int) MathEx.round(nc[l] * subsample / classWeight[l]);
+                int subj = (int) Math.round(nc[l] * subsample / classWeight[l]);
                 int count = 0;
                 for (int i = 0; i < n && count < subj; i++) {
                     int xi = perm[i];
