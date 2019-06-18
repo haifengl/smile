@@ -43,37 +43,7 @@ import smile.math.matrix.Matrix;
  * 
  * @author rayeaster
  */
-public class ElasticNet implements Regression<double[]> {
-    private static final long serialVersionUID = 1L;
-    /**
-     * L1 regularization parameter
-     */
-    private double lambda1 = 0.1;
-    /**
-     * L2 regularization parameter
-     */
-    private double lambda2 = 0.1;
-    /**
-     * The dimensionality.
-     */
-    private int p;
-    /**
-     * corrected coefficients
-     */
-    private double[] w;
-    /**
-     * corrected intercept
-     */
-    private double b;
-
-
-    /**
-     * Constructor.
-     */
-    private ElasticNet() {
-
-    }
-
+public class ElasticNet {
     /**
      * Fit an Elastic Net model.
      *
@@ -83,7 +53,7 @@ public class ElasticNet implements Regression<double[]> {
      * @param lambda1 the shrinkage/regularization parameter for L1
      * @param lambda2 the shrinkage/regularization parameter for L2
      */
-    public static ElasticNet fit(Formula formula, DataFrame data, double lambda1, double lambda2) {
+    public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2) {
         return fit(formula, data, lambda1, lambda2, new Properties());
     }
 
@@ -99,7 +69,7 @@ public class ElasticNet implements Regression<double[]> {
      *             iterations (relative target duality gap)
      *             and "max.iterations" as the maximum number of IPM (Newton) iterations.
      */
-    public static ElasticNet fit(Formula formula, DataFrame data, double lambda1, double lambda2, Properties prop) {
+    public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2, Properties prop) {
         if (lambda1 <= 0) {
             throw new IllegalArgumentException("Please use Ridge instead, wrong L1 portion setting: " + lambda1);
         }
@@ -132,41 +102,14 @@ public class ElasticNet implements Regression<double[]> {
             X2.set(j + n, j, padding);
         }
 
-        ElasticNet model = new ElasticNet();
-        model.lambda1 = lambda1;
-        model.lambda2 = lambda2;
-        model.p = p;
-        LASSO lasso = LASSO.train(X2, y2, lambda1 * c, prop);
+        LinearModel model = LASSO.train(X2, y2, lambda1 * c, prop);
 
         model.w = new double[p];
         for (int i = 0; i < p; i++) {
-            model.w[i] = c * lasso.coefficients()[i] / scale[i];
+            model.w[i] = c * model.w[i] / scale[i];
         }
         model.b = MathEx.mean(y) - MathEx.dot(model.w, center);
 
         return model;
-    }
-
-    @Override
-    public double predict(double[] x) {
-        if (x.length != p) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
-        }
-
-        return MathEx.dot(x, w) + b;
-    }
-
-    /**
-     * @return the linear coefficients.
-     */
-    public double[] coefficients() {
-        return w;
-    }
-    
-    /**
-     * Returns the intercept.
-     */
-    public double intercept() {
-        return b;
     }
 }

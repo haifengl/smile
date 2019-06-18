@@ -16,8 +16,6 @@
 
 package smile.regression;
 
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

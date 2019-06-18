@@ -19,7 +19,6 @@ package smile.regression;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
 import smile.math.matrix.Cholesky;
 import smile.math.matrix.DenseMatrix;
 import smile.math.special.Beta;
@@ -67,100 +66,17 @@ import java.util.Properties;
  *
  * @author Haifeng Li
  */
-public class RidgeRegression implements Regression<double[]> {
-    private static final long serialVersionUID = 1L;
-
+public class RidgeRegression {
     /**
-     * Design matrix formula
+     * Fits a ridge regression model.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
+     * @param lambda the shrinkage/regularization parameter. Large lambda means more shrinkage.
+     *               Choosing an appropriate value of lambda is important, and also difficult.
      */
-    private Formula formula;
-    /**
-     * The variable names.
-     */
-    private String[] names;
-    /**
-     * The dimensionality.
-     */
-    private int p;
-    /**
-     * The shrinkage/regularization parameter.
-     */
-    private double lambda;
-    /**
-     * The centered intercept.
-     */
-    private double b;
-    /**
-     * The scaled linear coefficients.
-     */
-    private double[] w;
-    /**
-     * The mean of response variable.
-     */
-    private double ym;
-    /**
-     * The center of input vector. The input vector should be centered
-     * before prediction.
-     */
-    private double[] center;
-    /**
-     * Scaling factor of input vector.
-     */
-    private double[] scale;
-    /**
-     * The coefficients, their standard errors, t-scores, and p-values.
-     */
-    private double[][] coefficients;
-    /**
-     * The residuals, that is response minus fitted values.
-     */
-    private double[] residuals;
-    /**
-     * Residual sum of squares.
-     */
-    private double RSS;
-    /**
-     * Residual standard error.
-     */
-    private double error;
-    /**
-     * The degree-of-freedom of residual standard error.
-     */
-    private int df;
-    /**
-     * R<sup>2</sup>. R<sup>2</sup> is a statistic that will give some information
-     * about the goodness of fit of a model. In regression, the R<sup>2</sup>
-     * coefficient of determination is a statistical measure of how well
-     * the regression line approximates the real data points. An R<sup>2</sup>
-     * of 1.0 indicates that the regression line perfectly fits the data.
-     * <p>
-     * In the case of ordinary least-squares regression, R<sup>2</sup>
-     * increases as we increase the number of variables in the model
-     * (R<sup>2</sup> will not decrease). This illustrates a drawback to
-     * one possible use of R<sup>2</sup>, where one might try to include
-     * more variables in the model until "there is no more improvement".
-     * This leads to the alternative approach of looking at the
-     * adjusted R<sup>2</sup>.
-     */
-    private double RSquared;
-    /**
-     * Adjusted R<sup>2</sup>. The adjusted R<sup>2</sup> has almost same
-     * explanation as R<sup>2</sup> but it penalizes the statistic as
-     * extra variables are included in the model.
-     */
-    private double adjustedRSquared;
-    /**
-     * The F-statistic of the goodness-of-fit of the model.
-     */
-    private double F;
-    /**
-     * The p-value of the goodness-of-fit test of the model.
-     */
-    private double pvalue;
-
-    /** Private constructor. */
-    private RidgeRegression() {
-
+    public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
+        return fit(formula, data, lambda, new Properties());
     }
 
     /**
@@ -170,8 +86,11 @@ public class RidgeRegression implements Regression<double[]> {
      *             NO NEED to include a constant column of 1s for bias.
      * @param lambda the shrinkage/regularization parameter. Large lambda means more shrinkage.
      *               Choosing an appropriate value of lambda is important, and also difficult.
+     * @param prop Training algorithm properties and hyper-parameters (if any) including "lambda"
+     *             for the shrinkage/regularization parameter, "standard.error" (boolean)
+     *             to compute the estimated standard errors of the estimate of parameters.
      */
-    public static RidgeRegression fit(Formula formula, DataFrame data, double lambda) {
+    public static LinearModel fit(Formula formula, DataFrame data, double lambda, Properties prop) {
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);
         }
@@ -186,20 +105,25 @@ public class RidgeRegression implements Regression<double[]> {
             throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
         }
 
-        RidgeRegression model = new RidgeRegression();
+        LinearModel model = new LinearModel();
         model.names = formula.predictors();
         model.formula = formula;
         model.p = p;
-        model.ym = MathEx.mean(y);
-        model.center = X.colMeans();
-        model.scale = X.colSds();
+        double[] center = X.colMeans();
+        double[] scale = X.colSds();
 
-        DenseMatrix scaledX = X.scale(model.center, model.scale);
+        for (int j = 0; j < scale.length; j++) {
+            if (!MathEx.isZero(scale[j])) {
+                throw new IllegalArgumentException(String.format("The column '%s' is constant", formula.predictors()[j]));
+            }
+        }
+
+        DenseMatrix scaledX = X.scale(center, scale);
 
         model.w = new double[p];
         scaledX.atx(y, model.w);
 
-        DenseMatrix XtX = scaledX.ata();;
+        DenseMatrix XtX = scaledX.ata();
         for (int i = 0; i < p; i++) {
             XtX.add(i, i, lambda);
         }
@@ -208,202 +132,31 @@ public class RidgeRegression implements Regression<double[]> {
         cholesky.solve(model.w);
         
         for (int j = 0; j < p; j++) {
-            if (!MathEx.isZero(model.scale[j])) {
-                model.w[j] /= model.scale[j];
-            }
+            model.w[j] /= scale[j];
         }
-        model.b = model.ym - MathEx.dot(model.w, model.center);
 
-        double[] yhat = new double[n];
-        X.ax(model.w, yhat);
-
-        double TSS = 0.0;
-        model.RSS = 0.0;
         double ybar = MathEx.mean(y);
-        model.residuals = new double[n];
-        for (int i = 0; i < n; i++) {
-            double r = y[i] - yhat[i] - model.b;
-            model.residuals[i] = r;
-            model.RSS += MathEx.sqr(r);
-            TSS += MathEx.sqr(y[i] - ybar);
-        }
+        model.b = ybar - MathEx.dot(model.w, center);
 
-        model.error = Math.sqrt(model.RSS / (n - p - 1));
-        model.df = n - p - 1;
+        double[] fittedValues = new double[n];
+        X.axpy(model.w, fittedValues, model.b);
 
-        model.RSquared = 1.0 - model.RSS / TSS;
-        model.adjustedRSquared = 1.0 - ((1 - model.RSquared) * (n-1) / (n-p-1));
-
-        model.F = (TSS - model.RSS) * (n - p - 1) / (model.RSS * p);
-        int df1 = p;
-        int df2 = n - p - 1;
-        model.pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * model.F));
+        model.fitness(fittedValues, y, ybar);
 
         DenseMatrix inv = cholesky.inverse();
 
-        model.coefficients = new double[p][4];
-        for (int i = 0; i < p; i++) {
-            model.coefficients[i][0] = model.w[i];
-            double se = model.error * Math.sqrt(inv.get(i, i));
-            model.coefficients[i][1] = se;
-            double t = model.w[i] / se;
-            model.coefficients[i][2] = t;
-            model.coefficients[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * model.df, 0.5, model.df / (model.df + t * t));
+        if (prop.getProperty("standard.error", "true").equalsIgnoreCase("true")) {
+            model.ttest = new double[p][4];
+            for (int i = 0; i < p; i++) {
+                model.ttest[i][0] = model.w[i];
+                double se = model.error * Math.sqrt(inv.get(i, i));
+                model.ttest[i][1] = se;
+                double t = model.w[i] / se;
+                model.ttest[i][2] = t;
+                model.ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * model.df, 0.5, model.df / (model.df + t * t));
+            }
         }
 
         return model;
-    }
-
-    /**
-     * Returns the (scaled) linear coefficients.
-     */
-    public double[] coefficients() {
-        return w;
-    }
-
-    /**
-     * Returns the (centered) intercept.
-     */
-    public double intercept() {
-        return b;
-    }
-
-    /**
-     * Returns the shrinkage parameter.
-     */
-    public double shrinkage() {
-        return lambda;
-    }
-
-    @Override
-    public double predict(double[] x) {
-        if (x.length != p) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
-        }
-
-        return MathEx.dot(x, w) + b;
-    }
-
-    /**
-     * Returns the t-test of the coefficients (without intercept).
-     * The first column is the coefficients, the second column is the standard
-     * error of coefficients, the third column is the t-score of the hypothesis
-     * test if the coefficient is zero, the fourth column is the p-values of
-     * test. The last row is of intercept.
-     */
-    public double[][] ttest() {
-        return coefficients;
-    }
-
-    /**
-     * Returns the residuals, that is response minus fitted values.
-     */
-    public double[] residuals() {
-        return residuals;
-    }
-
-    /**
-     * Returns the residual sum of squares.
-     */
-    public double RSS() {
-        return RSS;
-    }
-
-    /**
-     * Returns the residual standard error.
-     */
-    public double error() {
-        return error;
-    }
-
-    /**
-     * Returns the degree-of-freedom of residual standard error.
-     */
-    public int df() {
-        return df;
-    }
-
-    /**
-     * Returns R<sup>2</sup> statistic. In regression, the R<sup>2</sup>
-     * coefficient of determination is a statistical measure of how well
-     * the regression line approximates the real data points. An R<sup>2</sup>
-     * of 1.0 indicates that the regression line perfectly fits the data.
-     * <p>
-     * In the case of ordinary least-squares regression, R<sup>2</sup>
-     * increases as we increase the number of variables in the model
-     * (R<sup>2</sup> will not decrease). This illustrates a drawback to
-     * one possible use of R<sup>2</sup>, where one might try to include more
-     * variables in the model until "there is no more improvement". This leads
-     * to the alternative approach of looking at the adjusted R<sup>2</sup>.
-     */
-    public double RSquared() {
-        return RSquared;
-    }
-
-    /**
-     * Returns adjusted R<sup>2</sup> statistic. The adjusted R<sup>2</sup>
-     * has almost same explanation as R<sup>2</sup> but it penalizes the
-     * statistic as extra variables are included in the model.
-     */
-    public double adjustedRSquared() {
-        return adjustedRSquared;
-    }
-
-    /**
-     * Returns the F-statistic of goodness-of-fit.
-     */
-    public double ftest() {
-        return F;
-    }
-
-    /**
-     * Returns the p-value of goodness-of-fit test.
-     */
-    public double pvalue() {
-        return pvalue;
-    }
-
-    /**
-     * Returns the significance code given a p-value.
-     * Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-     */
-    private String significance(double pvalue) {
-        if (pvalue < 0.001)
-            return "***";
-        else if (pvalue < 0.01)
-            return "**";
-        else if (pvalue < 0.05)
-            return "*";
-        else if (pvalue < 0.1)
-            return ".";
-        else
-            return "";
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Ridge Regression:\n");
-
-        double[] r = residuals.clone();
-        builder.append("\nResiduals:\n");
-        builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
-        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", MathEx.min(r), MathEx.q1(r), MathEx.median(r), MathEx.q3(r), MathEx.max(r)));
-
-        builder.append("\nCoefficients:\n");
-        builder.append("            Estimate        Std. Error        t value        Pr(>|t|)\n");
-        builder.append(String.format("Intercept%11.4f                NA             NA              NA%n", b));
-        for (int i = 0; i < p; i++) {
-            builder.append(String.format("%s\t %11.4f%18.4f%15.4f%16.4f %s%n", names[i], coefficients[i][0], coefficients[i][1], coefficients[i][2], coefficients[i][3], significance(coefficients[i][3])));
-        }
-
-        builder.append("---------------------------------------------------------------------\n");
-        builder.append("Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
-
-        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom%n", error, df));
-        builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
-        builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g%n", F, p, df, pvalue));
-
-        return builder.toString();
     }
 }
