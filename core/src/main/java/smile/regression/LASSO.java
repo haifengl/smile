@@ -183,6 +183,33 @@ public class LASSO  implements Regression<double[]> {
      *             and "max.iterations" as the maximum number of IPM (Newton) iterations.
      */
     public static LASSO fit(Formula formula, DataFrame data, double lambda, Properties prop) {
+        DenseMatrix X = formula.matrix(data, false);
+        double[] y = formula.response(data).toDoubleArray();
+
+        double[] center = X.colMeans();
+        double[] scale = X.colSds();
+
+        DenseMatrix scaledX = X.scale(center, scale);
+
+        LASSO model = train(scaledX, y, lambda, prop);
+        model.names = formula.predictors();
+        model.formula = formula;
+        model.center = center;
+        model.scale = scale;
+
+        for (int j = 0; j < model.p; j++) {
+            if (!MathEx.isZero(model.scale[j])) {
+                model.w[j] /= model.scale[j];
+            }
+        }
+
+        model.b = model.ym - MathEx.dot(model.w, model.center);
+        model.fitness(X, y);
+
+        return model;
+    }
+
+    static LASSO train(Matrix x, double[] y, double lambda, Properties prop) {
         double tol = Double.valueOf(prop.getProperty("tolerance", "1E-4"));
         int maxIter = Integer.valueOf(prop.getProperty("max.iterations", "1000"));
 
@@ -198,38 +225,6 @@ public class LASSO  implements Regression<double[]> {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
-        DenseMatrix X = formula.matrix(data, false);
-        double[] y = formula.response(data).toDoubleArray();
-
-        int p = X.ncols();
-
-        LASSO model = new LASSO();
-        model.names = formula.predictors();
-        model.lambda = lambda;
-        model.formula = formula;
-        model.p = p;
-        model.ym = MathEx.mean(y);
-        model.p = X.ncols();
-        model.center = X.colMeans();
-        model.scale = X.colSds();
-
-        DenseMatrix scaledX = X.scale(model.center, model.scale);
-
-        train(model, scaledX, y, lambda, tol, maxIter);
-
-        for (int j = 0; j < model.p; j++) {
-            if (!MathEx.isZero(model.scale[j])) {
-                model.w[j] /= model.scale[j];
-            }
-        }
-
-        model.b = model.ym - MathEx.dot(model.w, model.center);
-        model.fitness(X, y);
-
-        return model;
-    }
-
-    private static void train(LASSO model, Matrix x, double[] y, double lambda, double tol, int maxIter) {
         // INITIALIZE
         // IPM PARAMETERS
         final int MU = 2;             // updating parameter of t
@@ -256,8 +251,7 @@ public class LASSO  implements Regression<double[]> {
         double dobj = Double.NEGATIVE_INFINITY; // dual objective function value
         double s = Double.POSITIVE_INFINITY;
 
-        model.w = new double[p];
-        double[] w = model.w;
+        double[] w = new double[p];
         double[] u = new double[p];
         double[] z = new double[n];
         double[][] f = new double[2][p];
@@ -422,6 +416,14 @@ public class LASSO  implements Regression<double[]> {
         if (ntiter == maxIter) {
             logger.error("LASSO: Too many iterations.");
         }
+
+        LASSO model = new LASSO();
+        model.lambda = lambda;
+        model.p = p;
+        model.w = w;
+        model.ym = ym;
+
+        return model;
     }
 
     private void fitness(Matrix x, double[] y) {

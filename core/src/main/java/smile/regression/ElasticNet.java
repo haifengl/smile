@@ -16,7 +16,12 @@
 
 package smile.regression;
 
+import java.util.Properties;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
 import smile.math.MathEx;
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 
 /**
  * Elastic Net regularization. The elastic net is a regularized regression
@@ -41,11 +46,11 @@ import smile.math.MathEx;
 public class ElasticNet implements Regression<double[]> {
     private static final long serialVersionUID = 1L;
     /**
-     * parameter for L1 regularization
+     * L1 regularization parameter
      */
     private double lambda1 = 0.1;
     /**
-     * parameter for L2 regularization
+     * L2 regularization parameter
      */
     private double lambda2 = 0.1;
     /**
@@ -61,67 +66,85 @@ public class ElasticNet implements Regression<double[]> {
      */
     private double b;
 
-    /** reduced to lasso problem */
-    private LASSO lasso;
-
-    /** scaling calculated from lambda2 */
-    private double c;
 
     /**
-     * Constructor. Learn the Elastic Net regularized least squares model.
-     * 
-     * @param x
-     *            a matrix containing the explanatory variables. NO NEED to include
-     *            a constant column of 1s for bias.
-     * @param y
-     *            the response values.
-     * @param lambda1
-     *            the shrinkage/regularization parameter for L1
-     * @param lambda2
-     *            the shrinkage/regularization parameter for L2
+     * Constructor.
      */
-    public ElasticNet(double[][] x, double[] y, double lambda1, double lambda2) {
-        this(x, y, lambda1, lambda2, 1E-4, 1000);
+    private ElasticNet() {
+
     }
 
     /**
-     * Constructor. Learn the Elastic Net regularized least squares model.
-     * 
-     * @param x
-     *            a matrix containing the explanatory variables. NO NEED to include
-     *            a constant column of 1s for bias.
-     * @param y
-     *            the response values.
-     * @param lambda1
-     *            the shrinkage/regularization parameter for L1
-     * @param lambda2
-     *            the shrinkage/regularization parameter for L2
-     * @param tol
-     *            the tolerance for stopping iterations (relative target duality
-     *            gap).
-     * @param maxIter
-     *            the maximum number of IPM (Newton) iterations.
+     * Fit an Elastic Net model.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
+     * @param lambda1 the shrinkage/regularization parameter for L1
+     * @param lambda2 the shrinkage/regularization parameter for L2
      */
-    public ElasticNet(double[][] x, double[] y, double lambda1, double lambda2, double tol, int maxIter) {
+    public static ElasticNet fit(Formula formula, DataFrame data, double lambda1, double lambda2) {
+        return fit(formula, data, lambda1, lambda2, new Properties());
+    }
+
+    /**
+     * Fit an Elastic Net model.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
+     * @param lambda1 the shrinkage/regularization parameter for L1
+     * @param lambda2 the shrinkage/regularization parameter for L2
+     * @param prop Training algorithm properties including "tolerance" for stopping
+     *             iterations (relative target duality gap)
+     *             and "max.iterations" as the maximum number of IPM (Newton) iterations.
+     */
+    public static ElasticNet fit(Formula formula, DataFrame data, double lambda1, double lambda2, Properties prop) {
         if (lambda1 <= 0) {
-            throw new IllegalArgumentException("Please use Ridge instead, wrong L1 portion setting:" + lambda1);
+            throw new IllegalArgumentException("Please use Ridge instead, wrong L1 portion setting: " + lambda1);
         }
         if (lambda2 <= 0) {
-            throw new IllegalArgumentException("Please use LASSO instead, wrong L2 portion setting:" + lambda2);
+            throw new IllegalArgumentException("Please use LASSO instead, wrong L2 portion setting: " + lambda2);
         }
 
-        this.lambda1 = lambda1;
-        this.lambda2 = lambda2;
-        this.c = 1 / Math.sqrt(1 + lambda2);
-        this.p = x[0].length;
-        lasso = new LASSO(getAugmentedData(x), getAugmentedResponse(y), this.lambda1 * c, tol, maxIter);
+        double c = 1 / Math.sqrt(1 + lambda2);
 
-        w = new double[lasso.coefficients().length];
-        double rescale = (1 / c);
-        for (int i = 0; i < w.length; i++) {
-            w[i] = rescale * lasso.coefficients()[i];
+        DenseMatrix X = formula.matrix(data, false);
+        double[] y = formula.response(data).toDoubleArray();
+
+        int n = X.nrows();
+        int p = X.ncols();
+        double[] center = X.colMeans();
+        double[] scale = X.colSds();
+
+        // Pads 0 at the tail
+        double[] y2 = new double[y.length + p];
+        System.arraycopy(y, 0, y2, 0, y.length);
+
+        // Scales the original data array and pads a weighted identity matrix
+        DenseMatrix X2 = Matrix.zeros(X.nrows()+ p, p);
+        double padding = c * Math.sqrt(lambda2);
+        for (int j = 0; j < p; j++) {
+            for (int i = 0; i < n; i++) {
+                X2.set(i, j, c * (X.get(i, j) - center[j]) / scale[j]);
+            }
+
+            X2.set(j + n, j, padding);
         }
-        b = rescale * lasso.intercept();
+
+        ElasticNet model = new ElasticNet();
+        model.lambda1 = lambda1;
+        model.lambda2 = lambda2;
+        model.p = p;
+        LASSO lasso = LASSO.train(X2, y2, lambda1 * c, prop);
+
+        model.w = new double[p];
+        for (int i = 0; i < p; i++) {
+            model.w[i] = c * lasso.coefficients()[i] / scale[i];
+        }
+        model.b = MathEx.mean(y) - MathEx.dot(model.w, center);
+
+        return model;
     }
 
     @Override
@@ -146,47 +169,4 @@ public class ElasticNet implements Regression<double[]> {
     public double intercept() {
         return b;
     }
-
-    /**
-     * @return the reduced {@link LASSO} model
-     */
-    public LASSO lasso() {
-        return lasso;
-    }
-
-    /**
-     * transform the original response array by padding 0 at the tail
-     * 
-     * @param y
-     *            original response array
-     * @return response array with padding 0 at tail
-     */
-    private double[] getAugmentedResponse(double[] y) {
-        double[] ret = new double[y.length + p];
-        System.arraycopy(y, 0, ret, 0, y.length);
-        return ret;
-    }
-
-    /**
-     * transform the original data array by padding a weighted identity matrix and
-     * multiply a scaling
-     * 
-     * @param x
-     *            the original data array
-     * @return data with padding
-     */
-    private double[][] getAugmentedData(double[][] x) {
-        double[][] ret = new double[x.length + p][p];
-        double padding = c * Math.sqrt(lambda2);
-        for (int i = 0; i < x.length; i++) {
-            for (int j = 0; j < p; j++) {
-                ret[i][j] = c * x[i][j];
-            }
-        }
-        for (int i = x.length; i < ret.length; i++) {
-            ret[i][i - x.length] = padding;
-        }
-        return ret;
-    }
-
 }
