@@ -46,6 +46,14 @@ public class Formula implements Serializable {
      * Constructor.
      * @param response the response formula, i.e. dependent variable.
      */
+    public Formula(String response) {
+        this(new Variable(response));
+    }
+
+    /**
+     * Constructor.
+     * @param response the response formula, i.e. dependent variable.
+     */
     public Formula(Term response) {
         this.response = response;
         this.predictors = new HyperTerm[] { new All() };
@@ -64,9 +72,26 @@ public class Formula implements Serializable {
      * @param response the left-hand side of formula, i.e. dependent variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
+    public Formula(String response, HyperTerm[] predictors) {
+        this(new Variable(response), predictors);
+    }
+
+    /**
+     * Constructor.
+     * @param response the left-hand side of formula, i.e. dependent variable.
+     * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
+     */
     public Formula(Term response, HyperTerm[] predictors) {
         this.response = response;
         this.predictors = predictors;
+    }
+
+    /**
+     * Factory method.
+     * @param lhs the left-hand side of formula, i.e. dependent variable.
+     */
+    public static Formula lhs(String lhs) {
+        return new Formula(lhs);
     }
 
     /**
@@ -83,6 +108,15 @@ public class Formula implements Serializable {
      */
     public static Formula rhs(HyperTerm... predictors) {
         return new Formula(predictors);
+    }
+
+    /**
+     * Factory method.
+     * @param response the left-hand side of formula, i.e. dependent variable.
+     * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
+     */
+    public static Formula of(String response, HyperTerm... predictors) {
+        return new Formula(response, predictors);
     }
 
     /**
