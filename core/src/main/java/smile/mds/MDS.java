@@ -143,7 +143,7 @@ public class MDS {
             for (int j = 0; j <= i; j++) {
                 double x = A.get(i, j) - mean[i] - mean[j] + mu;
                 B.set(i, j, x);
-                B.set(j, i, x);;
+                B.set(j, i, x);
             }
         }
 
