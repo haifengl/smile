@@ -103,12 +103,21 @@ public class ElasticNet {
         }
 
         LinearModel model = LASSO.train(X2, y2, lambda1 * c, prop);
+        model.names = formula.predictors();
+        model.formula = formula;
 
         model.w = new double[p];
         for (int i = 0; i < p; i++) {
             model.w[i] = c * model.w[i] / scale[i];
         }
-        model.b = MathEx.mean(y) - MathEx.dot(model.w, center);
+
+        double ybar = MathEx.mean(y);
+        model.b = ybar - MathEx.dot(model.w, center);
+
+        double[] fittedValues = new double[y.length];
+        X.axpy(model.w, fittedValues, model.b);
+
+        model.fitness(fittedValues, y, ybar);
 
         return model;
     }

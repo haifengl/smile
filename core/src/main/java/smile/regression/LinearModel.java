@@ -51,7 +51,7 @@ import smile.math.special.Beta;
  *
  * @author Haifeng Li
  */
-public class LinearModel implements Regression<double[]> {
+public class LinearModel implements Regression<double[]>, OnlineRegression<double[]> {
     private static final long serialVersionUID = 1L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LinearModel.class);
 
@@ -129,6 +129,11 @@ public class LinearModel implements Regression<double[]> {
      * The p-value of the goodness-of-fit test of the model.
      */
     double pvalue;
+    /**
+     * First initialized to the matrix (X<sup>T</sup>X)<sup>-1</sup>,
+     * it is updated with each new learning instance.
+     */
+    DenseMatrix V;
 
     /** Package-wise constructor. */
     LinearModel() {
@@ -290,6 +295,76 @@ public class LinearModel implements Regression<double[]> {
         return y;
     }
 
+    @Override
+    public void update(double[] x, double y) {
+        update(x, y, 1.0);
+    }
+
+    /**
+     * Recursive least squares. RLS updates an ordinary least squares with
+     * samples that arrive sequentially.
+     *
+     * In some adaptive configurations it can be useful not to give equal
+     * importance to all the historical data but to assign higher weights
+     * to the most recent data (and then to forget the oldest one). This
+     * may happen when the phenomenon underlying the data is non stationary
+     * or when we want to approximate a nonlinear dependence by using a
+     * linear model which is local in time. Both these situations are common
+     * in adaptive control problems.
+     *
+     * <h2>References</h2>
+     * <ol>
+     * <li> https://www.otexts.org/1582 </li>
+     * </ol>
+     *
+     * @param x training instance.
+     * @param y response variable.
+     * @param lambda The forgetting factor in (0, 1]. Values closer to 1 will have
+     *               longer memory and values closer to 0 will be have shorter memory.
+     */
+    public void update(double[] x, double y, double lambda) {
+        if (V == null) {
+            throw new UnsupportedOperationException("The model doesn't support online learning");
+        }
+
+        if (lambda <= 0 || lambda > 1){
+            throw new IllegalArgumentException("The forgetting factor must be in (0, 1]");
+        }
+
+        if (x.length != p) {
+            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
+        }
+
+        double[] x1 = new double[p+1];
+        System.arraycopy(x, 0, x1, 0, p);
+        x1[p] = 1;
+
+        double v = 1 + V.xax(x1);
+        // If 1/v is NaN, then the update to V will no longer be invertible.
+        // See https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula#Statement
+        if (Double.isNaN(1/v)){
+            throw new IllegalStateException("The updated V matrix is no longer invertible.");
+        }
+
+        double[] Vx = new double[p+1];
+        V.ax(x1, Vx);
+        for (int j = 0; j <= p; j++) {
+            for (int i = 0; i <= p; i++) {
+                double tmp = V.get(i, j) - ((Vx[i] * Vx[j])/v);
+                V.set(i, j, tmp/lambda);
+            }
+        }
+
+        // V has been updated. Compute Vx again.
+        V.ax(x1, Vx);
+
+        double err = y - predict(x);
+        for (int i = 0; i < p; i++){
+            w[i] += Vx[i] * err;
+        }
+        b += Vx[p] * err;
+    }
+
     /**
      * Returns the significance code given a p-value.
      * Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
@@ -318,14 +393,21 @@ public class LinearModel implements Regression<double[]> {
         builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", MathEx.min(r), MathEx.q1(r), MathEx.median(r), MathEx.q3(r), MathEx.max(r)));
 
         builder.append("\nCoefficients:\n");
-        builder.append("            Estimate        Std. Error        t value        Pr(>|t|)\n");
-        builder.append(String.format("Intercept%11.4f%18.4f%15.4f%16.4f %s%n", ttest[p][0], ttest[p][1], ttest[p][2], ttest[p][3], significance(ttest[p][3])));
-        for (int i = 0; i < p; i++) {
-            builder.append(String.format("%s\t %11.4f%18.4f%15.4f%16.4f %s%n", names[i], ttest[i][0], ttest[i][1], ttest[i][2], ttest[i][3], significance(ttest[i][3])));
-        }
+        if (ttest != null) {
+            builder.append("            Estimate        Std. Error        t value        Pr(>|t|)\n");
+            builder.append(String.format("Intercept%11.4f%18.4f%15.4f%16.4f %s%n", ttest[p][0], ttest[p][1], ttest[p][2], ttest[p][3], significance(ttest[p][3])));
+            for (int i = 0; i < p; i++) {
+                builder.append(String.format("%s\t %11.4f%18.4f%15.4f%16.4f %s%n", names[i], ttest[i][0], ttest[i][1], ttest[i][2], ttest[i][3], significance(ttest[i][3])));
+            }
 
-        builder.append("---------------------------------------------------------------------\n");
-        builder.append("Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
+            builder.append("---------------------------------------------------------------------\n");
+            builder.append("Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
+        } else {
+            builder.append(String.format("Intercept%11.4f%n", b));
+            for (int i = 0; i < p; i++) {
+                builder.append(String.format("%s\t %11.4f%n", names[i], w[i]));
+            }
+        }
 
         builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom%n", error, df));
         builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
