@@ -16,14 +16,13 @@
 
 package smile.regression;
 
+import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.Cholesky;
 import smile.math.matrix.DenseMatrix;
 import smile.math.special.Beta;
-
-import java.util.Properties;
 
 /**
  * Ridge Regression. Coefficient estimates for multiple linear regression models rely on
@@ -76,21 +75,26 @@ public class RidgeRegression {
      *               Choosing an appropriate value of lambda is important, and also difficult.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
-        return fit(formula, data, lambda, new Properties());
+        Properties prop = new Properties();
+        prop.setProperty("lambda", Double.toString(lambda));
+        return fit(formula, data, prop);
     }
 
     /**
-     * Fits a ridge regression model.
+     * Fits a ridge regression model. The hyper-parameters in <code>prop</code> include
+     * <ul>
+     * <li><code>lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
+     *               Choosing an appropriate value of lambda is important, and also difficult.
+     * <li><code>standard.error</code> is a boolean. If true, compute the estimated standard
+     *     errors of the estimate of parameters
+     * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param lambda the shrinkage/regularization parameter. Large lambda means more shrinkage.
-     *               Choosing an appropriate value of lambda is important, and also difficult.
-     * @param prop Training algorithm properties and hyper-parameters (if any) including "lambda"
-     *             for the shrinkage/regularization parameter, "standard.error" (boolean)
-     *             to compute the estimated standard errors of the estimate of parameters.
+     * @param prop Training algorithm hyper-parameters and properties.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, double lambda, Properties prop) {
+    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
+        double lambda = Double.valueOf(prop.getProperty("lambda"));
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);
         }

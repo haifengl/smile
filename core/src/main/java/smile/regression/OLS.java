@@ -88,14 +88,18 @@ public class OLS {
     }
 
     /**
-     * Fits an ordinary least squares model.
+     * Fits an ordinary least squares model. The hyper-parameters in <code>prop</code> include
+     * <ul>
+     * <li><code>method</code> is a string (svd or qr) for the fitting method
+     * <li><code>standard.error</code> is a boolean. If true, compute the estimated standard
+     *     errors of the estimate of parameters
+     * <li><code><eps/code> (default 1E-7) is the tolerance in SVD to detect if a singular value is zero
+     * <li><code>recursive</code> is a boolean. If true, the return model supports recursive least squares
+     * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop Training algorithm properties and hyper-parameters (if any) including "method" (svd or qr)
-     *             for the fitting method, "standard.error" (boolean) to compute the estimated standard
-     *             errors of the estimate of parameters, "eps" (default 1E-7) as the tolerance in SVD
-     *             to detect if a singular value is zero, "recursive" (boolean) to support recursive least squares.
+     * @param prop Training algorithm hyper-parameters and properties.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
         DenseMatrix X = formula.matrix(data, true);
