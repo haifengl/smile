@@ -17,7 +17,6 @@ package smile.regression;
 
 import java.util.Arrays;
 import java.util.Properties;
-
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
@@ -25,7 +24,6 @@ import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.BiconjugateGradient;
 import smile.math.matrix.Preconditioner;
-import smile.math.special.Beta;
 
 /**
  * Lasso (least absolute shrinkage and selection operator) regression.
@@ -77,20 +75,25 @@ public class LASSO {
      * @param lambda the shrinkage/regularization parameter.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
-        return fit(formula, data, lambda, new Properties());
+        Properties prop = new Properties();
+        prop.setProperty("lambda", Double.toString(lambda));
+        return fit(formula, data, prop);
     }
 
     /**
-     * Fits a L1-regularized least squares model.
+     * Fits a L1-regularized least squares model. The hyper-parameters in <code>prop</code> include
+     * <ul>
+     * <li><code>lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
+     *               Choosing an appropriate value of lambda is important, and also difficult.
+     * <li><code>tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
+     * <li><code>max.iterations</code> is the maximum number of IPM (Newton) iterations.
+     * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param lambda the shrinkage/regularization parameter.
-     * @param prop Training algorithm properties including "tolerance" for stopping
-     *             iterations (relative target duality gap)
-     *             and "max.iterations" as the maximum number of IPM (Newton) iterations.
+     * @param prop Training algorithm hyper-parameters and properties.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, double lambda, Properties prop) {
+    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
         DenseMatrix X = formula.matrix(data, false);
         double[] y = formula.response(data).toDoubleArray();
 
@@ -105,7 +108,7 @@ public class LASSO {
 
         DenseMatrix scaledX = X.scale(center, scale);
 
-        LinearModel model = train(scaledX, y, lambda, prop);
+        LinearModel model = train(scaledX, y, prop);
         model.names = formula.predictors();
         model.formula = formula;
 
@@ -124,11 +127,12 @@ public class LASSO {
         return model;
     }
 
-    static LinearModel train(Matrix x, double[] y, double lambda, Properties prop) {
+    static LinearModel train(Matrix x, double[] y, Properties prop) {
+        double lambda = Double.valueOf(prop.getProperty("lambda"));
         double tol = Double.valueOf(prop.getProperty("tolerance", "1E-4"));
         int maxIter = Integer.valueOf(prop.getProperty("max.iterations", "1000"));
 
-        if (lambda <= 0.0) {
+        if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);
         }
 
