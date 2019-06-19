@@ -17,6 +17,7 @@
 package smile.regression;
 
 import java.util.Arrays;
+import smile.base.RBF;
 import smile.math.distance.Metric;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
@@ -78,21 +79,13 @@ public class RBFNetwork<T> implements Regression<T>, smile.base.RBFNetwork {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The centers of RBF functions.
-     */
-    private T[] centers;
-    /**
      * The linear weights.
      */
     private double[] w;
     /**
-     * The distance functor.
-     */
-    private Metric<T> distance;
-    /**
      * The radial basis functions.
      */
-    private RadialBasisFunction[] rbf;
+    private RBF[] rbf;
     /**
      * True to fit a normalized RBF network.
      */
@@ -107,40 +100,27 @@ public class RBFNetwork<T> implements Regression<T>, smile.base.RBFNetwork {
 
     /**
      * Fits a RBF network.
-     * @param x the training data.
+     * @param x the training dataset.
      * @param y the response variable.
-     * @param distance the distance functor.
-     * @param rbf the radial basis function.
-     * @param centers the centers of RBF functions.
-     * @param normalized true for the normalized RBF network.
+     * @param rbf the radial basis functions.
      */
-    public static <T> RBFNetwork<T> fit(T[] x, double[] y, T[] centers, RadialBasisFunction rbf, Metric<T> distance, boolean normalized) {
-        RadialBasisFunction[] rbfs = new RadialBasisFunction[centers.length];
-        Arrays.fill(rbfs, rbf);
-        return fit(x, y, centers, rbfs, distance, normalized);
+    public static <T> RBFNetwork<T> fit(T[] x, double[] y, RBF[] rbf) {
+        return fit(x, y, rbf);
     }
-    
+
     /**
      * Fits a RBF network.
      * @param x the training dataset.
      * @param y the response variable.
-     * @param distance the distance functor.
      * @param rbf the radial basis functions.
-     * @param centers the centers of RBF functions.
      * @param normalized true for the normalized RBF network.
      */
-    public static <T> RBFNetwork<T> fit(T[] x, double[] y, T[] centers, RadialBasisFunction[] rbf, Metric<T> distance, boolean normalized) {
+    public static <T> RBFNetwork<T> fit(T[] x, double[] y, RBF[] rbf, boolean normalized) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        if (rbf.length != centers.length) {
-            throw new IllegalArgumentException(String.format("The sizes of RBF functions and centers don't match: %d != %d", rbf.length, centers.length));
-        }
-
         RBFNetwork model = new RBFNetwork();
-        model.centers = centers;
-        model.distance = distance;
         model.rbf = rbf;
         model.normalized = normalized;
         
@@ -152,7 +132,7 @@ public class RBFNetwork<T> implements Regression<T>, smile.base.RBFNetwork {
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
             for (int j = 0; j < m; j++) {
-                double r = rbf[j].f(distance.d(x[i], centers[j]));
+                double r = rbf[j].f(x[i]);
                 G.set(i, j, r);
                 sum += r;
             }
@@ -175,7 +155,7 @@ public class RBFNetwork<T> implements Regression<T>, smile.base.RBFNetwork {
     public double predict(T x) {
         double sum = 0.0, sumw = 0.0;
         for (int i = 0; i < rbf.length; i++) {
-            double f = rbf[i].f(distance.d(x, centers[i]));
+            double f = rbf[i].f(x);
             sumw += w[i] * f;
             sum += f;
         }

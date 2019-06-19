@@ -17,6 +17,7 @@
 package smile.classification;
 
 import java.util.Arrays;
+import smile.base.RBF;
 import smile.math.MathEx;
 import smile.math.distance.Metric;
 import smile.math.matrix.Matrix;
@@ -97,21 +98,13 @@ public class RBFNetwork<T> implements Classifier<T> {
      */
     private int k;
     /**
-     * The centers of RBF functions.
-     */
-    private T[] centers;
-    /**
      * The linear weights.
      */
     private DenseMatrix w;
     /**
-     * The distance metric functor.
-     */
-    private Metric<T> distance;
-    /**
      * The radial basis function.
      */
-    private RadialBasisFunction[] rbf;
+    private RBF[] rbf;
     /**
      * True to fit a normalized RBF network.
      */
@@ -126,37 +119,26 @@ public class RBFNetwork<T> implements Classifier<T> {
 
     /**
      * Fits a RBF network.
-     * 
+     *
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param distance the distance metric functor.
      * @param rbf the radial basis functions.
-     * @param centers the centers of RBF functions.
-     * @param normalized true for the normalized RBF network.
      */
-    public static <T> RBFNetwork<T> fit(T[] x, int[] y, T[] centers, RadialBasisFunction rbf, Metric<T> distance, boolean normalized) {
-        RadialBasisFunction[] rbfs = new RadialBasisFunction[centers.length];
-        Arrays.fill(rbfs, rbf);
-        return fit(x, y, centers, rbfs, distance, normalized);
+    public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF[] rbf) {
+        return fit(x, y, rbf, false);
     }
-    
+
     /**
      * Fits a RBF network.
      * 
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param distance the distance metric functor.
      * @param rbf the radial basis functions.
-     * @param centers the centers of RBF functions.
      * @param normalized true for the normalized RBF network.
      */
-    public static <T> RBFNetwork<T> fit(T[] x, int[] y, T[] centers, RadialBasisFunction[] rbf, Metric<T> distance, boolean normalized) {
+    public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF[] rbf, boolean normalized) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
-        }
-
-        if (rbf.length != centers.length) {
-            throw new IllegalArgumentException(String.format("The sizes of RBF functions and centers don't match: %d != %d", rbf.length, centers.length));
         }
 
         // class label set.
@@ -180,8 +162,6 @@ public class RBFNetwork<T> implements Classifier<T> {
 
         RBFNetwork model = new RBFNetwork();
         model.k = k;
-        model.centers = centers;
-        model.distance = distance;
         model.rbf = rbf;
         model.normalized = normalized;
         
@@ -193,7 +173,7 @@ public class RBFNetwork<T> implements Classifier<T> {
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
             for (int j = 0; j < m; j++) {
-                double r = rbf[j].f(distance.d(x[i], centers[j]));
+                double r = rbf[j].f(x[i]);
                 G.set(i, j, r);
                 sum += r;
             }
@@ -220,7 +200,7 @@ public class RBFNetwork<T> implements Classifier<T> {
 
         double sum = 0.0;
         for (int i = 0; i < rbf.length; i++) {
-            double f = rbf[i].f(distance.d(x, centers[i]));
+            double f = rbf[i].f(x);
             sum += f;
             for (int j = 0; j < k; j++) {
                 sumw[j] += w.get(i, j) * f;
@@ -229,11 +209,11 @@ public class RBFNetwork<T> implements Classifier<T> {
 
         if (normalized) {
             for (int j = 0; j < k; j++) {
-                sumw[j] = (sumw[j] + w.get(centers.length, j)) / sum;
+                sumw[j] = (sumw[j] + w.get(rbf.length, j)) / sum;
             }
         } else {
             for (int j = 0; j < k; j++) {
-                sumw[j] += w.get(centers.length, j);
+                sumw[j] += w.get(rbf.length, j);
             }
         }
 
