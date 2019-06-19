@@ -58,6 +58,28 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
+     * Returns the submatrix which top left at (i, j) and bottom right at (k, l).
+     */
+    default DenseMatrix apply(int i, int j, int k, int l) {
+        return submat(i, j, k, l);
+    }
+
+    /**
+     * Returns the submatrix which top left at (i, j) and bottom right at (k, l).
+     */
+    default DenseMatrix submat(int i, int j, int k, int l) {
+        DenseMatrix w = Matrix.zeros(k - i + 1, l - j + 1);
+
+        for (int n = 0; j < w.ncols(); j++) {
+            for (int m = 0; i < nrows(); i++) {
+                w.set(i, j, get(m, n));
+            }
+        }
+
+        return w;
+    }
+
+    /**
      * Returns the LU decomposition.
      * This input matrix will be overwritten with the decomposition.
      */

@@ -568,7 +568,7 @@ import smile.math.MathEx;
     }
 
     @Override
-    public void learn(double[] x, double y) {
+    public void update(double[] x, double y) {
         learn(x, y, 1.0);
     }
 
@@ -584,7 +584,7 @@ import smile.math.MathEx;
         int n = x.length;
         int[] index = MathEx.permutate(n);
         for (int i = 0; i < n; i++) {
-            learn(x[index[i]], y[index[i]]);
+            update(x[index[i]], y[index[i]]);
         }
     }
 }
