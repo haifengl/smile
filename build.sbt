@@ -35,7 +35,7 @@ lazy val commonSettings = Seq(
       <licenses>
         <license>
           <name>GNU Lesser General Public License, Version 3</name>
-          <url>https://www.gnu.org/licenses/</url>
+          <url>https://opensource.org/licenses/LGPL-3.0</url>
           <distribution>repo</distribution>
         </license>
       </licenses>

@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import smile.data.SparseDataset;
 import smile.graph.AdjacencyList;
@@ -135,12 +136,14 @@ public class LaplacianEigenmap {
             graph = graph.subgraph(index);
         }
 
-        SparseDataset W = new SparseDataset(n);
         double[] D = new double[n];
         double gamma = -1.0 / t;
 
+        ArrayList<SparseArray> W = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
             Collection<Edge> edges = graph.getEdges(i);
+            SparseArray row = new SparseArray();
+            W.set(i, row);
             for (Edge edge : edges) {
                 int j = edge.v2;
                 if (i == j) {
@@ -148,7 +151,7 @@ public class LaplacianEigenmap {
                 }
 
                 double w = t <= 0 ? 1.0 : Math.exp(gamma * MathEx.sqr(edge.weight));
-                W.set(i, j, w);
+                row.set(j, w);
                 D[i] += w;
             }
 
@@ -156,16 +159,19 @@ public class LaplacianEigenmap {
         }
 
         for (int i = 0; i < n; i++) {
-            SparseArray edges = W.get(i).x;
+            SparseArray edges = W.get(i);
             for (SparseArray.Entry edge : edges) {
                 int j = edge.i;
-                double s = D[i] * edge.x * D[j];
-                W.set(i, j, s);
+                if (j == i) {
+                    edge.x = 0.0;
+                } else {
+                    double s = D[i] * edge.x * D[j];
+                    edge.x = s;
+                }
             }
-            W.set(i, i, 0.0);
         }
 
-        SparseMatrix L = W.toSparseMatrix();
+        SparseMatrix L = SparseDataset.of(W).toMatrix();
         L.setSymmetric(true);
 
         // ARPACK may not find all needed eigen values for k = d + 1.
