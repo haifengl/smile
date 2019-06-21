@@ -598,15 +598,6 @@ public class AdjacencyList implements Graph {
     }
 
     @Override
-    public double[][] dijkstra() {
-        double[][] wt = new double[n][];
-        for (int i = 0; i < n; i++) {
-            wt[i] = dijkstra(i);
-        }
-        return wt;
-    }
-
-    @Override
     public AdjacencyList subgraph(int[] vertices) {
         int[] v = vertices.clone();
         Arrays.sort(v);

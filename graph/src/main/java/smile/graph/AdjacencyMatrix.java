@@ -538,15 +538,6 @@ public class AdjacencyMatrix implements Graph {
     }
 
     @Override
-    public double[][] dijkstra() {
-        double[][] wt = new double[n][];
-        for (int i = 0; i < n; i++) {
-            wt[i] = dijkstra(i);
-        }
-        return wt;
-    }
-
-    @Override
     public AdjacencyMatrix subgraph(int[] vertices) {
         int[] v = vertices.clone();
         Arrays.sort(v);
