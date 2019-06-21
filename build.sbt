@@ -34,8 +34,8 @@ lazy val commonSettings = Seq(
     <url>https://github.com/haifengl/smile</url>
       <licenses>
         <license>
-          <name>Apache License, Version 2.0</name>
-          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+          <name>GNU Lesser General Public License, Version 3</name>
+          <url>https://www.gnu.org/licenses/</url>
           <distribution>repo</distribution>
         </license>
       </licenses>
