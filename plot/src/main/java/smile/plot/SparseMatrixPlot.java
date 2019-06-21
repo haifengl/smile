@@ -127,7 +127,7 @@ public class SparseMatrixPlot extends Plot {
 
         // In case of outliers, we use 1% and 99% quantiles as lower and
         // upper limits instead of min and max.
-        double[] values = new double[sparse.size()];
+        double[] values = new double[sparse.length()];
         int i = 0;
         for (double z : sparse.values()) {
             if (!Double.isNaN(z)) {

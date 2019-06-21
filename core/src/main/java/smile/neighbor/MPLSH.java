@@ -938,7 +938,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
             }
 
             double[] key = keys.get(index);
-            double distance = Math.distance(q, key);
+            double distance = MathEx.distance(q, key);
             if (distance < neighbor.distance) {
                 neighbor.index = index;
                 neighbor.distance = distance;

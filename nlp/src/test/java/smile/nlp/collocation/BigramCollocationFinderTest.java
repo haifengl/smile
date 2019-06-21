@@ -17,6 +17,7 @@
 
 package smile.nlp.collocation;
 
+import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import org.junit.After;
@@ -60,7 +61,7 @@ public class BigramCollocationFinderTest {
         System.out.println("find");
         SimpleCorpus corpus = new SimpleCorpus();
 
-        try (BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("text/quote.tok.gt9.5000")) {
+        try (BufferedReader input = new BufferedReader(new FileReader(smile.util.Paths.getTestData("text/quote.tok.gt9.5000").toFile()))) {
             String line = null;
             int id = 0;
             while ((line = input.readLine()) != null) {
@@ -90,7 +91,7 @@ public class BigramCollocationFinderTest {
         System.out.println("find");
         SimpleCorpus corpus = new SimpleCorpus();
 
-        try (BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("text/quote.tok.gt9.5000")) {
+        try (BufferedReader input = new BufferedReader(new FileReader(smile.util.Paths.getTestData("text/quote.tok.gt9.5000").toFile()))) {
             String line = null;
             int id = 0;
             while ((line = input.readLine()) != null) {
