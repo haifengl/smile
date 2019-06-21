@@ -51,7 +51,7 @@ public interface Graph
          * The weight of edge. For unweighted graph, this is always 1.
          */
         public double weight;
-    };
+    }
 
     /**
      * Returns the number vertices.
@@ -268,7 +268,14 @@ public interface Graph
      *
      * @return the length of shortest path between vertices.
      */
-    double[][] dijkstra();
+    default double[][] dijkstra() {
+        int n = getNumVertices();
+        double[][] wt = new double[n][];
+        for (int i = 0; i < n; i++) {
+            wt[i] = dijkstra(i);
+        }
+        return wt;
+    }
 
     /**
      * Returns the (dense or sparse) matrix representation of the graph.
