@@ -44,7 +44,7 @@ public abstract class AbstractInterpolation implements Interpolation {
      * Constructor. Setup for interpolation on a table of x and y of length m.
      * The value in x must be monotonic, either increasing or decreasing.
      */
-    AbstractInterpolation(double[] x, double[] y) {
+    public AbstractInterpolation(double[] x, double[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException("x and y have different length");
         }
@@ -75,7 +75,7 @@ public abstract class AbstractInterpolation implements Interpolation {
      * returned value is not less than 0, nor greater than n-1, where n is the
      * length of xx.
      */
-    int search(double x) {
+    public int search(double x) {
         return cor ? hunt(x) : locate(x);
     }
 
@@ -168,6 +168,9 @@ public abstract class AbstractInterpolation implements Interpolation {
 
     /**
      * Subclasses provide this as the actual interpolation method.
+     * @param jlo the value jlo is such that x is (insofar as possible)
+     *        centered in the subrange xx[j..j+m-1], where xx is the stored data.
+     * @param x interpolate at this value
      */
-    abstract double rawinterp(int jlo, double x);
+    public abstract double rawinterp(int jlo, double x);
 }

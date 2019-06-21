@@ -51,7 +51,7 @@ public class CubicSplineInterpolation1D extends AbstractInterpolation {
     }
 
     @Override
-    double rawinterp(int j, double x) {
+    public double rawinterp(int j, double x) {
         int klo = j, khi = j + 1;
         double h = xx[khi] - xx[klo];
 

@@ -61,10 +61,10 @@ public class BicubicInterpolation implements Interpolation2D {
     private double[] x2;
     private LinearInterpolation x1terp, x2terp;
 
-    private double[] y;
-    private double[] y1;
-    private double[] y2;
-    private double[] y12;
+    private double[] y = new double[4];
+    private double[] y1 = new double[4];
+    private double[] y2 = new double[4];
+    private double[] y12 = new double[4];
 
 
     /**
@@ -79,11 +79,6 @@ public class BicubicInterpolation implements Interpolation2D {
         this.x1 = x1;
         this.x2 = x2;
         this.yv = y;
-
-        this.y = new double[4];
-        y1 = new double[4];
-        y2 = new double[4];
-        y12 = new double[4];
     }
 
     /**
@@ -108,17 +103,15 @@ public class BicubicInterpolation implements Interpolation2D {
             x[i + 12] = y12[i] * d1d2;
         }
 
-        double xx;
         for (int i = 0; i < 16; i++) {
-            xx = 0.0;
+            double xx = 0.0;
             for (int k = 0; k < 16; k++) {
                 xx += wt[i][k] * x[k];
             }
             cl[i] = xx;
         }
 
-        int l = 0;
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0, l = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                 c[i][j] = cl[l++];
             }
@@ -141,11 +134,12 @@ public class BicubicInterpolation implements Interpolation2D {
             throw new IllegalArgumentException("Nearby control points take same value: " + x2u);
         }
 
-        double t, u, d1 = x1u - x1l, d2 = x2u - x2l;
+        double d1 = x1u - x1l;
+        double d2 = x2u - x2l;
         double[][] c = bcucof(y, y1, y2, y12, d1, d2);
 
-        t = (x1p - x1l) / d1;
-        u = (x2p - x2l) / d2;
+        double t = (x1p - x1l) / d1;
+        double u = (x2p - x2l) / d2;
 
         double ansy = 0.0;
 
