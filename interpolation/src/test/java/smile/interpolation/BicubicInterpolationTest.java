@@ -66,15 +66,15 @@ public class BicubicInterpolationTest {
         };
 
         BicubicInterpolation instance = new BicubicInterpolation(x1, x2, y);
-        assertEquals(203.212, instance.interpolate(1970, 10), 1E-3);
-        assertEquals(179.092, instance.interpolate(1970, 20), 1E-3);
-        assertEquals(249.633, instance.interpolate(1990, 10), 1E-3);
-        assertEquals(598.243, instance.interpolate(1990, 30), 1E-3);
-//        assertEquals(182.7523, instance.interpolate(1950, 15), 1E-4);
-//        assertEquals(109.0428, instance.interpolate(1990, 15), 1E-4);
-//        assertEquals(504.0428, instance.interpolate(1985, 30), 1E-4);
-//        assertEquals(160.1369, instance.interpolate(1975, 15), 1E-4);
-        assertEquals(167.4893, instance.interpolate(1975, 20), 1E-4);
-//        assertEquals(236.9633, instance.interpolate(1975, 25), 1E-4);
+        assertEquals(203.212,    instance.interpolate(1970, 10), 1E-3);
+        assertEquals(179.092,    instance.interpolate(1970, 20), 1E-3);
+        assertEquals(249.633,    instance.interpolate(1990, 10), 1E-3);
+        assertEquals(598.243,    instance.interpolate(1990, 30), 1E-3);
+        assertEquals(178.948375, instance.interpolate(1950, 15), 1E-4);
+        assertEquals(146.99987,  instance.interpolate(1990, 15), 1E-4);
+        assertEquals(508.26462,  instance.interpolate(1985, 30), 1E-4);
+        assertEquals(175.667289, instance.interpolate(1975, 15), 1E-4);
+        assertEquals(167.4893,   instance.interpolate(1975, 20), 1E-4);
+        assertEquals(252.493726, instance.interpolate(1975, 25), 1E-4);
     }
 }

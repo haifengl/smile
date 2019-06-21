@@ -34,7 +34,7 @@ public class LinearInterpolation extends AbstractInterpolation {
     }
 
     @Override
-    double rawinterp(int j, double x) {
+    public double rawinterp(int j, double x) {
         if (xx[j] == xx[j + 1]) {
             return yy[j];
         } else {

@@ -33,7 +33,7 @@ import java.io.Serializable;
 public interface Interpolation extends Serializable {
 
     /**
-     * Given a value x, return an interploated value.
+     * Given a value x, return an interpolated value.
      */
     double interpolate(double x);
 }
