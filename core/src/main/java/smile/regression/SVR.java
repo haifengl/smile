@@ -17,7 +17,6 @@
 
 package smile.regression;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -28,7 +27,7 @@ import smile.math.kernel.MercerKernel;
 import smile.util.MulticoreExecutor;
 
 /**
- * Support vector regression. Like SVMs for classification, the model produced
+ * Epsilon support vector regression. Like SVMs for classification, the model produced
  * by SVR depends only on a subset of the training data, because the cost
  * function ignores any training data close to the model prediction (within
  * a threshold &epsilon;).
@@ -47,8 +46,7 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class SVR<T> implements Regression<T> {
-    private static final long serialVersionUID = 1L;
+public class SVR<T> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SVR.class);
 
     /**
@@ -61,13 +59,13 @@ public class SVR<T> implements Regression<T> {
      */
     private MercerKernel<T> kernel;
     /**
-     * The soft margin penalty parameter.
-     */
-    private double C = 1.0;
-    /**
      * The loss function error threshold.
      */
     private double eps = 0.1;
+    /**
+     * The soft margin penalty parameter.
+     */
+    private double C = 1.0;
     /**
      * The tolerance of convergence test.
      */
@@ -81,33 +79,23 @@ public class SVR<T> implements Regression<T> {
      */
     private double b = 0.0;
     /**
-     * The number of support vectors.
-     */
-    private int nsv = 0;
-    /**
-     * The number of bounded support vectors.
-     */
-    private int nbsv = 0;
-    /**
      * Most violating pair.
      * argmin gi of m_i < alpha_i
      * argmax gi of alpha_i < M_i
      * where m_i = min{0, y_i * C}
      * and   M_i = max{0, y_i * C}
      */
-    private transient SupportVector svmin = null;
-    private transient SupportVector svmax = null;
-    private transient double gmin = Double.MAX_VALUE;
-    private transient double gmax = -Double.MAX_VALUE;
-    private transient int gminindex;
-    private transient int gmaxindex;
+    private SupportVector svmin = null;
+    private SupportVector svmax = null;
+    private double gmin = Double.MAX_VALUE;
+    private double gmax = -Double.MAX_VALUE;
+    private int gminindex;
+    private int gmaxindex;
 
     /**
      * Support vector.
      */
-    class SupportVector implements Serializable {
-        private static final long serialVersionUID = 1L;
-
+    class SupportVector {
         /**
          * Support vector.
          */
@@ -135,118 +123,61 @@ public class SVR<T> implements Regression<T> {
         /**
          * Kernel value cache.
          */
-        DoubleArrayList kcache;
-    }
-
-    /**
-     * Trainer for support vector regression.
-     */
-    public static class Trainer<T> extends RegressionTrainer<T> {
-        /**
-         * The kernel function.
-         */
-        private MercerKernel<T> kernel;
-        /**
-         * The soft margin penalty parameter.
-         */
-        private double C = 1.0;
-        /**
-         * The loss function error threshold.
-         */
-        private double eps = 0.001;
-        /**
-         * The tolerance of convergence test.
-         */
-        private double tol = 1E-3;
-
-        /**
-         * Constructor of trainer for binary SVMs.
-         * @param kernel the kernel function.
-         * @param eps the loss function error threshold.
-         * @param C the soft margin penalty parameter.
-         */
-        public Trainer(MercerKernel<T> kernel, double eps, double C) {
-            if (C < 0) {
-                throw new IllegalArgumentException("Invalid soft margin penalty: " + C);
-            }
-
-            this.kernel = kernel;
-            this.C = C;
-            this.eps = eps;
-        }
-
-        /**
-         * Sets the tolerance of convergence test.
-         * 
-         * @param tol the tolerance of convergence test.
-         */
-        public Trainer<T> setTolerance(double tol) {
-            if (tol <= 0.0) {
-                throw new IllegalArgumentException("Invalid tolerance of convergence test:" + tol);
-            }
-
-            this.tol = tol;
-            return this;
-        }
-
-        @Override
-        public SVR<T> train(T[] x, double[] y) {
-            SVR<T> svr = new SVR<>(x, y, kernel, eps, C, tol);
-            return svr;
-        }
+        transient DoubleArrayList kcache;
     }
 
     /**
      * Constructor.
-     * @param x training instances.
-     * @param y response variable.
      * @param kernel the kernel function.
+     */
+    public SVR(MercerKernel<T> kernel) {
+        this.kernel = kernel;
+    }
+
+    /**
+     * Constructor.
      * @param eps the loss function error threshold.
+     */
+    public SVR<T> withEpsilon(double eps) {
+        this.eps = eps;
+        return this;
+    }
+
+    /**
+     * Constructor.
      * @param C the soft margin penalty parameter.
      */
-    public SVR(T[] x, double[] y, MercerKernel<T> kernel, double eps, double C) {
-        this(x, y, null, kernel, eps, C);
+    public SVR<T> withC(double C) {
+        this.C = C;
+        return this;
     }
-    
+
     /**
      * Constructor.
+     * @param tol the tolerance of convergence test.
+     */
+    public SVR<T> withTolerance(double tol) {
+        this.tol = tol;
+        return this;
+    }
+
+    /**
+     * Fits a epsilon support vector regression model.
+     * @param x training instances.
+     * @param y response variable.
+     */
+    public KernelMachine<T> fit(T[] x, double[] y) {
+        return fit(x, y, null);
+    }
+
+    /**
+     * Fits a epsilon support vector regression model.
      * @param x training instances.
      * @param y response variable.
      * @param weight positive instance weight. The soft margin penalty
      * parameter for instance i will be weight[i] * C.
-     * @param kernel the kernel function.
-     * @param eps the loss function error threshold.
-     * @param C the soft margin penalty parameter.
      */
-    public SVR(T[] x, double[] y, double[] weight, MercerKernel<T> kernel, double eps, double C) {
-        this(x, y, weight, kernel, eps, C, 1E-3);
-    }
-    
-    /**
-     * Constructor.
-     * @param x training instances.
-     * @param y response variable.
-     * @param kernel the kernel function.
-     * @param eps the loss function error threshold.
-     * @param C the soft margin penalty parameter.
-     * @param tol the tolerance of convergence test.
-     */
-    public SVR(T[] x, double[] y, MercerKernel<T> kernel, double eps, double C, double tol) {
-        this(x, y, null, kernel, eps, C, tol);
-    }
-    
-    /**
-     * Constructor.
-     * @param x training instances.
-     * @param y response variable.
-     * @param weight positive instance weight. The soft margin penalty
-     * parameter for instance i will be weight[i] * C.
-     * @param kernel the kernel function.
-     * @param eps the loss function error threshold.
-     * @param C the soft margin penalty parameter.
-     * @param tol the tolerance of convergence test.
-     */
-    public SVR(T[] x, double[] y, double[] weight, MercerKernel<T> kernel, double eps, double C, double tol) {
+    public KernelMachine<T> fit(T[] x, double[] y, double[] weight) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -267,11 +198,6 @@ public class SVR<T> implements Regression<T> {
             throw new IllegalArgumentException("Invalid tolerance of convergence test:" + tol);
         }
         
-        this.kernel = kernel;
-        this.eps = eps;
-        this.C = C;
-        this.tol = tol;
-        
         int n = x.length;
         // Initialize support vectors.
         for (int i = 0; i < n; i++) {
@@ -282,7 +208,7 @@ public class SVR<T> implements Regression<T> {
                     throw new IllegalArgumentException("Invalid instance weight: " + w);
                 }
             }
-            
+
             SupportVector v = new SupportVector();
             v.x = x[i];
             v.y = y[i];
@@ -311,9 +237,14 @@ public class SVR<T> implements Regression<T> {
         }
 
         // Cleanup kernel cache to free memory.
-        nsv = sv.size();
-        nbsv = 0;
-        for (SupportVector v : sv) {
+        int nsv = sv.size();
+        int nbsv = 0;
+        double[] w = new double[nsv];
+        T[] vectors = (T[]) new Object[nsv];
+        for (int i = 0; i < sv.size(); i++) {
+            SupportVector v = sv.get(i);
+            vectors[i] = v.x;
+            w[i] = v.alpha[1] - v.alpha[0];
             v.kcache = null;
             if (v.alpha[0] == C || v.alpha[1] == C) {
                 nbsv++;
@@ -321,17 +252,8 @@ public class SVR<T> implements Regression<T> {
         }
         
         logger.info("{} support vectors, {} bounded", nsv, nbsv);
-    }
 
-    @Override
-    public double predict(T x) {
-        double f = b;
-
-        for (SupportVector v : sv) {
-            f += (v.alpha[1] - v.alpha[0]) * kernel.k(v.x, x);
-        }
-
-        return f;
+        return new KernelMachine<>(kernel, vectors, w, b);
     }
 
     /**
@@ -584,29 +506,5 @@ public class SVR<T> implements Regression<T> {
         }
 
         return true;
-    }
-    
-    /**
-     * Returns the soft margin penalty parameter.
-     * @return the soft margin penalty parameter.
-     */
-    public double getC() {
-        return C;
-    }
-    
-    /**
-     * Returns the loss function error threshold.
-     * @return the loss function error threshold.
-     */
-    public double getEpsilon() {
-        return eps;
-    }
-    
-    /**
-     * Returns the tolerance of convergence test.
-     * @return tolerance of convergence test.
-     */
-    public double getTolerance() {
-        return tol;
     }
 }

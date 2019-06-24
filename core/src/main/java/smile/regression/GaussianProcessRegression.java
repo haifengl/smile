@@ -68,33 +68,7 @@ import smile.math.matrix.EVD;
  * </ol>
  * @author Haifeng Li
  */
-public class GaussianProcessRegression <T> implements Regression<T> {
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * The control points in the regression.
-     */
-    private T[] knots;
-    /**
-     * The linear weights.
-     */
-    private double[] w;
-    /**
-     * The distance functor.
-     */
-    private MercerKernel<T> kernel;
-    /**
-     * The shrinkage/regularization parameter.
-     */
-    private double lambda;
-
-    /**
-     * Private constructor.
-     */
-    private GaussianProcessRegression() {
-
-    }
-
+public class GaussianProcessRegression{
     /**
      * Fits a regular Gaussian process model.
      * @param x the training dataset.
@@ -102,7 +76,7 @@ public class GaussianProcessRegression <T> implements Regression<T> {
      * @param kernel the Mercer kernel.
      * @param lambda the shrinkage/regularization parameter.
      */
-    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double lambda) {
+    public static <T> KernelMachine<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double lambda) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -111,11 +85,6 @@ public class GaussianProcessRegression <T> implements Regression<T> {
             throw new IllegalArgumentException("Invalid regularization parameter lambda = " + lambda);
         }
 
-        GaussianProcessRegression model = new GaussianProcessRegression();
-        model.kernel = kernel;
-        model.lambda = lambda;
-        model.knots = x;
-        
         int n = x.length;
 
         DenseMatrix K = Matrix.zeros(n, n);
@@ -130,10 +99,10 @@ public class GaussianProcessRegression <T> implements Regression<T> {
         }
 
         Cholesky cholesky = K.cholesky();
-        model.w = y.clone();
-        cholesky.solve(model.w);
+        double[] w = y.clone();
+        cholesky.solve(w);
 
-        return model;
+        return new KernelMachine<>(kernel, x, w);
     }
 
     /**
@@ -146,7 +115,7 @@ public class GaussianProcessRegression <T> implements Regression<T> {
      * @param kernel the Mercer kernel.
      * @param lambda the shrinkage/regularization parameter.
      */
-    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double lambda) {
+    public static <T> KernelMachine<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double lambda) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -155,11 +124,6 @@ public class GaussianProcessRegression <T> implements Regression<T> {
             throw new IllegalArgumentException("Invalid regularization parameter lambda = " + lambda);
         }
 
-        GaussianProcessRegression model = new GaussianProcessRegression();
-        model.kernel = kernel;
-        model.lambda = lambda;
-        model.knots = t;
-        
         int n = x.length;
         int m = t.length;
 
@@ -178,12 +142,13 @@ public class GaussianProcessRegression <T> implements Regression<T> {
             }
         }
 
-        model.w = new double[m];
-        G.atx(y, model.w);
+        double[] w = new double[m];
+        G.atx(y, w);
 
         LU lu = K.lu(true);
-        lu.solve(model.w);
-        return model;
+        lu.solve(w);
+
+        return new KernelMachine<>(kernel, t, w);
     }
 
     /**
@@ -195,7 +160,7 @@ public class GaussianProcessRegression <T> implements Regression<T> {
      * @param kernel the Mercer kernel.
      * @param lambda the shrinkage/regularization parameter.
      */
-    public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double lambda) {
+    public static <T> KernelMachine<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double lambda) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -204,11 +169,6 @@ public class GaussianProcessRegression <T> implements Regression<T> {
             throw new IllegalArgumentException("Invalid regularization parameter lambda = " + lambda);
         }
 
-        GaussianProcessRegression model = new GaussianProcessRegression();
-        model.kernel = kernel;
-        model.lambda = lambda;
-        model.knots = x;
-        
         int n = x.length;
         int m = t.length;
 
@@ -249,38 +209,13 @@ public class GaussianProcessRegression <T> implements Regression<T> {
         DenseMatrix invLtL = chol.inverse();
         DenseMatrix K = L.abmm(invLtL).abtmm(L);
 
-        model.w = new double[n];
-        K.atx(y, model.w);
+        double[] w = new double[n];
+        K.atx(y, w);
         
         for (int i = 0; i < n; i++) {
-            model.w[i] = (y[i] - model.w[i]) / lambda;
+            w[i] = (y[i] - w[i]) / lambda;
         }
 
-        return model;
-    }
-
-    /**
-     * Returns the coefficients.
-     */
-    public double[] coefficients() {
-        return w;
-    }
-
-    /**
-     * Returns the shrinkage parameter.
-     */
-    public double shrinkage() {
-        return lambda;
-    }
-
-    @Override
-    public double predict(T x) {
-        double f = 0.0;
-        
-        for (int i = 0; i < knots.length; i++) {
-            f += w[i] * kernel.k(x, knots[i]);
-        }
-
-        return f;
+        return new KernelMachine<>(kernel, t, w);
     }
 }
