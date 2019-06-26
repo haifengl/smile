@@ -98,11 +98,16 @@ public class NDMatrix implements DenseMatrix {
         else if (value == 1.0)
             A = Nd4j.ones(rows, cols);
         else
-            A = Nd4j.zeros(rows, cols).addi(value);
+            A = Nd4j.zeros(rows, cols).assign(value);
     }
 
     public static NDMatrix eye(int n) {
         return new NDMatrix(Nd4j.eye(n));
+    }
+
+    @Override
+    public void fill(double x) {
+        A.assign(x);
     }
 
     @Override
