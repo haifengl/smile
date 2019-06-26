@@ -74,7 +74,7 @@ import smile.math.rbf.RadialBasisFunction;
  * 
  * @author Haifeng Li
  */
-public class RBFNetwork<T> implements Regression<T>, smile.base.RBFNetwork {
+public class RBFNetwork<T> implements Regression<T> {
     private static final long serialVersionUID = 1L;
 
     /**
