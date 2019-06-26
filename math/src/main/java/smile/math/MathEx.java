@@ -253,7 +253,7 @@ public class MathEx {
      * Logistic sigmoid function.
      */
     public static double logistic(double x) {
-        double y = 0.0;
+        double y;
         if (x < -40) {
             y = 2.353853e+17;
         } else if (x > 40) {
@@ -263,6 +263,14 @@ public class MathEx {
         }
 
         return 1.0 / y;
+    }
+
+    /**
+     * Hyperbolic tangent function. The tanh function is a rescaling of the
+     * logistic sigmoid, such that its outputs range from -1 to 1.
+     */
+    public static double tanh(double x) {
+        return 2.0 * logistic(2.0 * x) - 1.0;
     }
 
     /**
