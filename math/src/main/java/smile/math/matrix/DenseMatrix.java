@@ -47,6 +47,11 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     }
 
     /**
+     * Fill the matrix with a value.
+     */
+    void fill(double x);
+
+    /**
      * Set the entry value at row i and column j.
      */
     double set(int i, int j, double x);

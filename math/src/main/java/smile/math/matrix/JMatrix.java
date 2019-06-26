@@ -121,6 +121,11 @@ public class JMatrix implements DenseMatrix {
     }
 
     @Override
+    public void fill(double x) {
+        Arrays.fill(A, x);
+    }
+
+    @Override
     public JMatrix transpose() {
         JMatrix B = new JMatrix(ncols(), nrows());
         for (int i = 0; i < nrows(); i++) {
@@ -680,7 +685,7 @@ public class JMatrix implements DenseMatrix {
         int n = Math.min(nrows, y.length);
         int p = Math.min(ncols, x.length);
 
-        Arrays.fill(y, 0.0);
+        Arrays.fill(y, 0, n, 0.0);
         for (int k = 0; k < p; k++) {
             for (int i = 0; i < n; i++) {
                 y[i] += get(i, k) * x[k];
@@ -727,7 +732,7 @@ public class JMatrix implements DenseMatrix {
         int n = Math.min(ncols, y.length);
         int p = Math.min(nrows, x.length);
 
-        Arrays.fill(y, 0.0);
+        Arrays.fill(y, 0, n, 0.0);
         for (int i = 0; i < n; i++) {
             for (int k = 0; k < p; k++) {
                 y[i] += get(k, i) * x[k];
