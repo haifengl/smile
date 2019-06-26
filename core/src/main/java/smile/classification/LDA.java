@@ -91,86 +91,27 @@ public class LDA implements SoftClassifier<double[]> {
     private final double[] eigen;
 
     /**
-     * Trainer for linear discriminant analysis.
+     * Private constructor.
      */
-    public static class Trainer extends ClassifierTrainer<double[]> {
-        /**
-         * A priori probabilities of each class.
-         */
-        private double[] priori;
-        /**
-         * A tolerance to decide if a covariance matrix is singular. The trainer
-         * will reject variables whose variance is less than tol<sup>2</sup>.
-         */
-        private double tol = 1E-4;
-
-        /**
-         * Constructor. The default tolerance to covariance matrix singularity
-         * is 1E-4.
-         */
-        public Trainer() {
-        }
-        
-        /**
-         * Sets a priori probabilities of each class.
-         * @param priori a priori probabilities of each class.
-         */
-        public Trainer setPriori(double[] priori) {
-            this.priori = priori;
-            return this;
-        }
-        
-        /**
-         * Sets covariance matrix singularity tolerance.
-         * 
-         * @param tol a tolerance to decide if a covariance matrix is singular.
-         * The trainer will reject variables whose variance is less than tol<sup>2</sup>.
-         */
-        public Trainer setTolerance(double tol) {
-            if (tol < 0.0) {
-                throw new IllegalArgumentException("Invalid tol: " + tol);
-            }
-
-            this.tol = tol;
-            return this;
-        }
-        
-        @Override
-        public LDA train(double[][] x, int[] y) {
-            return new LDA(x, y, priori, tol);
-        }
-    }
-    
-    /**
-     * Constructor. Learn linear discriminant analysis.
-     * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
-     */
-    public LDA(double[][] x, int[] y) {
-        this(x, y, null);
+    private LDA(int k , int p, double[] priori, double[][] mu, double[] ct, double[] eigen, DenseMatrix scaling) {
+        this.k = k;
+        this.p = p;
+        this.priori = priori;
+        this.mu = mu;
+        this.ct = ct;
+        this.eigen = eigen;
+        this.scaling = scaling;
     }
 
     /**
      * Constructor. Learn linear discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param priori the priori probability of each class.
      */
-    public LDA(double[][] x, int[] y, double[] priori) {
-        this(x, y, priori, 1E-4);
+    public static LDA fit(double[][] x, int[] y) {
+        return fit(x, y, null, 1E-4);
     }
 
-    /**
-     * Constructor. Learn linear discriminant analysis.
-     * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
-     * @param tol a tolerance to decide if a covariance matrix is singular; it
-     * will reject variables whose variance is less than tol<sup>2</sup>.
-     */
-    public LDA(double[][] x, int[] y, double tol) {
-        this(x, y, null, tol);
-    }
-    
     /**
      * Constructor. Learn linear discriminant analysis.
      * @param x training samples.
@@ -180,7 +121,7 @@ public class LDA implements SoftClassifier<double[]> {
      * @param tol a tolerance to decide if a covariance matrix is singular; it
      * will reject variables whose variance is less than tol<sup>2</sup>.
      */
-    public LDA(double[][] x, int[] y, double[] priori, double tol) {
+    public static LDA fit(double[][] x, int[] y, double[] priori, double tol) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -217,7 +158,7 @@ public class LDA implements SoftClassifier<double[]> {
             }
         }
 
-        k = labels.length;
+        int k = labels.length;
         if (k < 2) {
             throw new IllegalArgumentException("Only one class.");            
         }
@@ -236,7 +177,7 @@ public class LDA implements SoftClassifier<double[]> {
             throw new IllegalArgumentException(String.format("Sample size is too small: %d <= %d", n, k));
         }
 
-        p = x[0].length;
+        int p = x[0].length;
         // The number of instances in each class.
         int[] ni = new int[k];
         // Common mean vector.
@@ -244,7 +185,7 @@ public class LDA implements SoftClassifier<double[]> {
         // Common covariance.
         DenseMatrix C = Matrix.zeros(p, p);
         // Class mean vectors.
-        mu = new double[k][p];
+        double[][] mu = new double[k][p];
 
         for (int i = 0; i < n; i++) {
             int c = y[i];
@@ -267,8 +208,7 @@ public class LDA implements SoftClassifier<double[]> {
             }
         }
         
-        this.priori = priori;
-        ct = new double[k];
+        double[] ct = new double[k];
         for (int i = 0; i < k; i++) {
             ct[i] = Math.log(priori[i]);
         }
@@ -302,8 +242,7 @@ public class LDA implements SoftClassifier<double[]> {
             }
         }
 
-        eigen = evd.getEigenValues();
-        scaling = evd.getEigenVectors();
+        return new LDA(k, p, priori, mu, ct, evd.getEigenValues(), evd.getEigenVectors());
     }
 
     /**
