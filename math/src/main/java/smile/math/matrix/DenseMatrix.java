@@ -76,9 +76,9 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
     default DenseMatrix submat(int i, int j, int k, int l) {
         DenseMatrix w = Matrix.zeros(k - i + 1, l - j + 1);
 
-        for (int n = 0; j < w.ncols(); j++) {
-            for (int m = 0; i < nrows(); i++) {
-                w.set(i, j, get(m, n));
+        for (int n = 0; j <= l; n++, j++) {
+            for (int m = 0; i <= k; m++, i++) {
+                w.set(m, n, get(i, j));
             }
         }
 

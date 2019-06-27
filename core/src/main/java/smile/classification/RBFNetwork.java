@@ -161,11 +161,6 @@ public class RBFNetwork<T> implements Classifier<T> {
             throw new IllegalArgumentException("Only one class.");            
         }
 
-        RBFNetwork model = new RBFNetwork();
-        model.k = k;
-        model.rbf = rbf;
-        model.normalized = normalized;
-        
         int n = x.length;
         int m = rbf.length;
 
@@ -191,32 +186,28 @@ public class RBFNetwork<T> implements Classifier<T> {
         QR qr = G.qr();
         qr.solve(b);
 
-        model.w = b.submat(0, 0, m, k-1);
+        RBFNetwork model = new RBFNetwork();
+        model.k = k;
+        model.rbf = rbf;
+        model.normalized = normalized;
+
+        model.w = Matrix.zeros(m+1, k);
+        b.submat(0, 0, m, k-1);
+
         return model;
     }
 
     @Override
     public int predict(T x) {
+        int m = rbf.length;
+        double[] f = new double[m+1];
+        f[m] = 1.0;
+        for (int i = 0; i < m; i++) {
+            f[i] = rbf[i].f(x);
+        }
+
         double[] sumw = new double[k];
-
-        double sum = 0.0;
-        for (int i = 0; i < rbf.length; i++) {
-            double f = rbf[i].f(x);
-            sum += f;
-            for (int j = 0; j < k; j++) {
-                sumw[j] += w.get(i, j) * f;
-            }
-        }
-
-        if (normalized) {
-            for (int j = 0; j < k; j++) {
-                sumw[j] = (sumw[j] + w.get(rbf.length, j)) / sum;
-            }
-        } else {
-            for (int j = 0; j < k; j++) {
-                sumw[j] += w.get(rbf.length, j);
-            }
-        }
+        w.atx(f, sumw);
 
         return MathEx.whichMax(sumw);
     }
