@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import smile.base.neuralnetwork.AbstractNeuralNetwork;
 import smile.base.neuralnetwork.Layer;
 import smile.base.neuralnetwork.ObjectiveFunction;
  
@@ -34,50 +35,41 @@ import smile.base.neuralnetwork.ObjectiveFunction;
   *
   * @author Sam Erickson
   */
- public class NeuralNetwork extends smile.base.NeuralNetwork implements OnlineRegression<double[]> {
+ public class NeuralNetwork extends AbstractNeuralNetwork implements OnlineRegression<double[]> {
     private static final long serialVersionUID = 2L;
 
-    /**
-     * layers of this net
-     */
-    private Layer[] net;
-    /**
-     * output layer
-     */
-    private Layer outputLayer;
+     /**
+      * The dimensionality of input data.
+      */
+     private int p;
 
     /**
      * Constructor.
      *
-     * @param p the dimension of input vector, i.e. the number of neuron of input layer.
      * @param net the layers in the neural network. The input layer should not be included.
      */
-    public NeuralNetwork(int p, Layer... net) {
-        super(ObjectiveFunction.LEAST_MEAN_SQUARES, p, 1);
+    public NeuralNetwork(Layer... net) {
+        super(ObjectiveFunction.LEAST_MEAN_SQUARES, net);
 
-        if (net.length < 2) {
-            throw new IllegalArgumentException("Invalid number of layers: " + net.length);
-        }
-
-        this.net = net;
-        outputLayer = net[net.length - 1];
-
+        Layer outputLayer = net[net.length - 1];
         if (outputLayer.getOutput().length != 1) {
             throw new IllegalArgumentException("The output layer must have only one output value: " + outputLayer.getOutput().length);
         }
+
+        p = net[0].getInputUnits();
     }
 
     @Override
     public double predict(double[] x) {
-        propagate(net, x);
-        return outputLayer.getOutput()[0];
+        propagate(x);
+        return net[net.length-1].getOutput()[0];
     }
 
     @Override
     public void update(double[] x, double y) {
-        propagate(net, x);
+        propagate(x);
         target[0] = y;
-        backpropagate(net, target);
+        backpropagate(target);
 
         update();
     }
@@ -85,23 +77,12 @@ import smile.base.neuralnetwork.ObjectiveFunction;
     @Override
     public void update(double[][] x, double[] y) {
         for (int i = 0; i < x.length; i++) {
-            propagate(net, x[i]);
+            propagate(x[i]);
             target[0] = y[i];
-            backpropagate(net, target);
+            backpropagate(target);
         }
 
         update();
-    }
-
-    /** Updates the weights. */
-    private void update() {
-        for (Layer layer : net) {
-            layer.update(alpha);
-
-            if (lambda != 1.0) {
-                layer.decay(lambda);
-            }
-        }
     }
 }
 
