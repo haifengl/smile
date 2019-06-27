@@ -35,7 +35,7 @@ public enum ActivationFunction {
     RECTIFIER,
 
     /**
-     * Logistic sigmoid activation function: sigma(v)=1/(1+exp(-v)).
+     * Logistic sigmoid activation function: sigmoid(v)=1/(1+exp(-v)).
      * For multi-class classification, each unit in output layer
      * corresponds to a class. For binary classification and cross
      * entropy error function, there is only one output unit whose
@@ -48,7 +48,7 @@ public enum ActivationFunction {
      * rescaling of the logistic sigmoid, such that its outputs range
      * from -1 to 1.
      */
-    TANH,
+    HYPERBOLIC_TANGENT,
 
     /**
      * Linear activation function.
@@ -60,5 +60,22 @@ public enum ActivationFunction {
      * The values of units in output layer can be regarded as posteriori
      * probabilities of each class.
      */
-    SOFTMAX
+    SOFTMAX;
+
+    /**
+     * Returns the activation function of output layer for classification
+     * based on natural pairing.
+     * @param obj the error function.
+     * @param k the number of output nodes.
+     * @return the activation function of output layer based on natural pairing
+     */
+    public static ActivationFunction of(ObjectiveFunction obj, int k) {
+        switch (obj) {
+            case CROSS_ENTROPY:
+                return k == 1 ? LOGISTIC_SIGMOID : SOFTMAX;
+
+            default:
+                return LOGISTIC_SIGMOID;
+        }
+    }
 }

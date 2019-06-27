@@ -32,7 +32,7 @@ public interface OnlineRegression <T> extends Regression <T> {
      * @param x the training instances.
      * @param y the target values.
      */
-    default void update(T[] x, double y[]) {
+    default void update(T[] x, double[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Input vector x of size %d not equal to length %d of y", x.length, y.length));
         }
