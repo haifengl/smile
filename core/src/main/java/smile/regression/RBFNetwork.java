@@ -119,10 +119,6 @@ public class RBFNetwork<T> implements Regression<T> {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        RBFNetwork model = new RBFNetwork();
-        model.rbf = rbf;
-        model.normalized = normalized;
-        
         int n = x.length;
         int m = rbf.length;
 
@@ -142,6 +138,10 @@ public class RBFNetwork<T> implements Regression<T> {
                 b[i] = y[i];
             }
         }
+
+        RBFNetwork model = new RBFNetwork();
+        model.rbf = rbf;
+        model.normalized = normalized;
 
         model.w = new double[m];
         QR qr = G.qr();
