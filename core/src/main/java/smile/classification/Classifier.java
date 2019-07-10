@@ -16,6 +16,10 @@
 
 package smile.classification;
 
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
+import smile.math.matrix.SparseMatrix;
+
 import java.io.Serializable;
 
 /**
@@ -44,6 +48,26 @@ public interface Classifier<T> extends Serializable {
      * @return the predicted class label.
      */
     int predict(T x);
+
+    default int[] predict(Matrix x) {
+        if (x instanceof DenseMatrix) {
+            return predict((DenseMatrix) x);
+        } else if (x instanceof SparseMatrix) {
+            return predict((SparseMatrix) x);
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    @SuppressWarnings("unchecked")
+    default int[] predict(DenseMatrix x) {
+        double[][] aa = x.array();
+        T[] a = (T[]) aa;
+        return predict(a);
+    }
+
+    default int[] predict(SparseMatrix x) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Predicts the class labels of an array of instances.

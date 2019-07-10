@@ -16,6 +16,9 @@
 package smile.classification;
 
 import smile.data.Attribute;
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
+import smile.math.matrix.SparseMatrix;
 
 /**
  * Abstract classifier trainer.
@@ -54,6 +57,26 @@ public abstract class ClassifierTrainer <T> {
      */
     public void setAttributes(Attribute[] attributes) {
         this.attributes = attributes;
+    }
+
+    public Classifier<T> train(Matrix x, int[] y) {
+        if (x instanceof DenseMatrix) {
+            return train((DenseMatrix) x, y);
+        } else if( x instanceof SparseMatrix) {
+            return train((SparseMatrix) x, y);
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    @SuppressWarnings("unchecked")
+    public Classifier<T> train(DenseMatrix x, int[] y) {
+        double[][] aa = x.array();
+        T[] a = (T[]) aa;
+        return train(a, y);
+    }
+
+    public Classifier<T> train(SparseMatrix x, int[] y) {
+        throw new UnsupportedOperationException();
     }
     
     /**
