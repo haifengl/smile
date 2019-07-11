@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 Haifeng Li
- *   
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -17,7 +17,11 @@ package smile.clustering;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.BitSet;
+
 import smile.neighbor.Neighbor;
 import smile.neighbor.RNNSearch;
 import smile.neighbor.LinearSearch;
@@ -82,9 +86,9 @@ import smile.math.distance.Metric;
  * <li> Martin Ester, Hans-Peter Kriegel, Jorg Sander, Xiaowei Xu (1996-). A density-based algorithm for discovering clusters in large spatial databases with noise". KDD, 1996. </li>
  * <li> Jorg Sander, Martin Ester, Hans-Peter  Kriegel, Xiaowei Xu. (1998). Density-Based Clustering in Spatial Databases: The Algorithm GDBSCAN and Its Applications. 1998. </li>
  * </ol>
- * 
+ *
  * @param <T> the type of input object.
- * 
+ *
  * @author Haifeng Li
  */
 public class DBSCAN<T> extends PartitionClustering<T> {
@@ -139,6 +143,39 @@ public class DBSCAN<T> extends PartitionClustering<T> {
      * @param radius the neighborhood radius.
      */
     public DBSCAN(T[] data, RNNSearch<T,T> nns, int minPts, double radius) {
+        initialize(nns, minPts, radius);
+
+        k = 0;
+        int n = data.length;
+        y = new int[n];
+        Arrays.fill(y, UNCLASSIFIED);
+        BitSet visited = new BitSet(n);
+
+        for (int i = 0; i < n; i++) {
+            if (y[i] == UNCLASSIFIED) {
+                List<Neighbor<T, T>> neighbors = new ArrayList<>();
+                nns.range(data[i], radius, neighbors);
+
+                if (neighbors.size() < minPts) {
+                    y[i] = OUTLIER;
+                } else {
+                    y[i] = k;
+                    classifyNeighbors(y, k, neighbors, visited);
+                    k++;
+                }
+            }
+        }
+
+        size = computeClusterSizes(y, k);
+    }
+
+    /**
+     * Initializes the DBSCAN algorithm parameters and checks for illegal values.
+     * @param nns the data structure for neighborhood search.
+     * @param minPts the minimum number of neighbors for a core data point.
+     * @param radius the neighborhood radius.
+     */
+    private void initialize(RNNSearch<T, T> nns, int minPts, double radius) {
         if (minPts < 1) {
             throw new IllegalArgumentException("Invalid minPts: " + minPts);
         }
@@ -150,52 +187,74 @@ public class DBSCAN<T> extends PartitionClustering<T> {
         this.nns = nns;
         this.minPts = minPts;
         this.radius = radius;
-        
-        k = 0;
+    }
 
-        int n = data.length;
-        y = new int[n];
-        Arrays.fill(y, UNCLASSIFIED);
+    /**
+     * Classifies the list of neighbors.
+     * @param y the array of labels.
+     * @param label the label of the cluster which is currently under construction.
+     * @param neighbors the list of neighbors.
+     * @param visited the index marking which points have already been visited.
+     */
+    private void classifyNeighbors(int[] y, int label, List<Neighbor<T, T>> neighbors, BitSet visited) {
+        Deque<Neighbor<T, T>> stack = new ArrayDeque<>(neighbors);
+        neighbors.forEach((nb) -> visited.set(nb.index));
 
-        for (int i = 0; i < data.length; i++) {
+        while (!stack.isEmpty()) {
+            Neighbor<T, T> neighbor = stack.pop();
+            int i = neighbor.index;
+
             if (y[i] == UNCLASSIFIED) {
-                List<Neighbor<T,T>> neighbors = new ArrayList<>();
-                nns.range(data[i], radius, neighbors);
-                if (neighbors.size() < minPts) {
-                    y[i] = OUTLIER;
-                } else {
-                    y[i] = k;
-                    for (int j = 0; j < neighbors.size(); j++) {
-                        if (y[neighbors.get(j).index] == UNCLASSIFIED) {
-                            y[neighbors.get(j).index] = k;
-                            Neighbor<T,T> neighbor = neighbors.get(j);
-                            List<Neighbor<T,T>> secondaryNeighbors = new ArrayList<>();
-                            nns.range(neighbor.key, radius, secondaryNeighbors);
-
-                            if (secondaryNeighbors.size() >= minPts) {
-                                neighbors.addAll(secondaryNeighbors);
-                            }
-                        }
-
-                        if (y[neighbors.get(j).index] == OUTLIER) {
-                            y[neighbors.get(j).index] = k;
-                        }
-                    }
-                    k++;
-                }
-            }
-        }
-
-        size = new int[k + 1];
-        for (int i = 0; i < n; i++) {
-            if (y[i] == OUTLIER) {
-                size[k]++;
-            } else {
-                size[y[i]]++;
+                y[i] = label;
+                expandNeighbor(neighbor, stack, visited);
+            } else if (y[i] == OUTLIER) {
+                y[i] = label;
             }
         }
     }
-    
+
+    /**
+     * Expands the neighbor to its secondary neighbors and adds these to the stack.
+     * @param neighbor the neighbor to expand.
+     * @param stack the stack containing the neighbors which still need to be processed.
+     * @param visited the index marking which points have already been visited.
+     */
+    private void expandNeighbor(Neighbor<T, T> neighbor, Deque<Neighbor<T, T>> stack, BitSet visited) {
+        List<Neighbor<T, T>> secondaryNeighbors = new ArrayList<>();
+        nns.range(neighbor.key, radius, secondaryNeighbors);
+
+        if (secondaryNeighbors.size() >= minPts) {
+            secondaryNeighbors.forEach((nb) -> {
+                if (!visited.get(nb.index)) {
+                    stack.push(nb);
+                    visited.set(nb.index);
+                }
+            });
+        }
+    }
+
+    /**
+     * Determines the amount of instances in each cluster. An array is returned where each value is equal to
+     * the amount of instances in the cluster that corresponds with the index of that value.
+     * The last value in the array is equal to the amount of outliers.
+     * @param y the array of labels.
+     * @param k the number of clusters.
+     */
+    private int[] computeClusterSizes(int[] y, int k) {
+        int[] sizes = new int[k + 1];
+        int n = y.length;
+
+        for (int i = 0; i < n; i++) {
+            if (y[i] == OUTLIER) {
+                sizes[k]++;
+            } else {
+                sizes[y[i]]++;
+            }
+        }
+
+        return sizes;
+    }
+
     /**
      * Returns the parameter of minimum number of neighbors.
      */
@@ -219,18 +278,18 @@ public class DBSCAN<T> extends PartitionClustering<T> {
     public int predict(T x) {
         List<Neighbor<T,T>> neighbors = new ArrayList<>();
         nns.range(x, radius, neighbors);
-        
+
         if (neighbors.size() < minPts) {
             return OUTLIER;
         }
-        
+
         int[] label = new int[k + 1];
         for (Neighbor<T,T> neighbor : neighbors) {
             int yi = y[neighbor.index];
             if (yi == OUTLIER) yi = k;
             label[yi]++;
         }
-        
+
         int c = Math.whichMax(label);
         if (c == k) c = OUTLIER;
         return c;
@@ -239,7 +298,7 @@ public class DBSCAN<T> extends PartitionClustering<T> {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        
+
         sb.append(String.format("DBSCAN clusters of %d data points:%n", y.length));
         for (int i = 0; i < k; i++) {
             int r = (int) Math.round(1000.0 * size[i] / y.length);
@@ -248,7 +307,7 @@ public class DBSCAN<T> extends PartitionClustering<T> {
 
         int r = (int) Math.round(1000.0 * size[k] / y.length);
         sb.append(String.format("Noise\t%5d (%2d.%1d%%)%n", size[k], r / 10, r % 10));
-        
+
         return sb.toString();
     }
 }
