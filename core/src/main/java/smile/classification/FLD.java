@@ -313,7 +313,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         
         smean = new double[L];
         scaling.atx(mean, smean);
-        smu = mu.abmm(scaling).array();
+        smu = mu.abmm(scaling).toArray();
     }
 
     @Override

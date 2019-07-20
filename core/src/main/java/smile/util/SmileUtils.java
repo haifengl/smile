@@ -17,29 +17,25 @@
 
 package smile.util;
 
+import smile.math.MathEx;
 import smile.sort.QuickSort;
+
+import java.util.Arrays;
 
 /**
  * Some useful functions.
  * 
  * @author Haifeng Li
  */
-public class SmileUtils {
-    /** Utility classes should not have public constructors. */
-    private SmileUtils() {
-
-    }
-
+public interface SmileUtils {
     /**
      * Sorts each variable and returns the index of values in ascending order.
-     * Only numeric attributes will be sorted. Note that the order of original
-     * array is NOT altered.
      * 
      * @param x a set of variables to be sorted. Each row is an instance. Each
      * column is a variable.
      * @return the index of values in ascending order
      */
-    public static int[][] sort(Attribute[] attributes, double[][] x) {
+    default int[][] sort(double[][] x) {
         int n = x.length;
         int p = x[0].length;
         
@@ -47,14 +43,34 @@ public class SmileUtils {
         int[][] index = new int[p][];
         
         for (int j = 0; j < p; j++) {
-            if (attributes[j].getType() == Attribute.Type.NUMERIC) {
-                for (int i = 0; i < n; i++) {
-                    a[i] = x[i][j];
-                }
-                index[j] = QuickSort.sort(a);
+            for (int i = 0; i < n; i++) {
+                a[i] = x[i][j];
             }
+            index[j] = QuickSort.sort(a);
         }
         
         return index;        
-    }  
+    }
+
+    /**
+     * Returns the sorted unique class labels.
+     *
+     * @param y the class labels of instances.
+     */
+    default int[] labels(int[] y) {
+        int[] labels = MathEx.unique(y);
+        Arrays.sort(labels);
+
+        for (int i = 0; i < labels.length; i++) {
+            if (labels[i] < 0) {
+                throw new IllegalArgumentException("Negative class label: " + labels[i]);
+            }
+
+            if (labels[i] != i) {
+                throw new IllegalArgumentException("Missing class: " + i);
+            }
+        }
+
+        return labels;
+    }
 }
