@@ -925,9 +925,10 @@ public class DecisionTree implements SoftClassifier<double[]> {
     }
 
     /**
-     * Returns the maximum depth" of the tree -- the number of
+     * Returns the maximum depth of the tree -- the number of
      * nodes along the longest path from the root node
-     * down to the farthest leaf node.*/
+     * down to the farthest leaf node.
+     */
     public int maxDepth() {
         return maxDepth(root);
     }

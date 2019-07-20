@@ -294,6 +294,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         }
 
         p = x[0].length;
+        BFGS bfgs = new BFGS(tol, maxIter);
         if (k == 2) {
             BinaryObjectiveFunction func = new BinaryObjectiveFunction(x, y, lambda);
 
@@ -301,10 +302,10 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
 
             L = 0.0;
             try {
-                L = -BFGS.min(func, 5, w, tol, maxIter);
+                L = -bfgs.minimize(func, 5, w);
             } catch (Exception ex) {
                 // If L-BFGS doesn't work, let's try BFGS.
-                L = -BFGS.min(func, w, tol, maxIter);
+                L = -bfgs.minimize(func, w);
             }
         } else {
             MultiClassObjectiveFunction func = new MultiClassObjectiveFunction(x, y, k, lambda);
@@ -313,10 +314,10 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
 
             L = 0.0;
             try {
-                L = -MathEx.min(func, 5, w, tol, maxIter);
+                L = -bfgs.minimize(func, 5, w);
             } catch (Exception ex) {
                 // If L-BFGS doesn't work, let's try BFGS.
-                L = -MathEx.min(func, w, tol, maxIter);
+                L = -bfgs.minimize(func, w);
             }
 
             W = new double[k][p+1];
