@@ -2442,20 +2442,11 @@ public class MathEx {
         }
 
         QuickSort.sort(wksp1, wksp2);
-        double sf = crank(wksp1);
+        crank(wksp1);
         QuickSort.sort(wksp2, wksp1);
-        double sg = crank(wksp2);
+        crank(wksp2);
 
-        double d = 0.0;
-        for (int j = 0; j < n; j++) {
-            d += sqr(wksp1[j] - wksp2[j]);
-        }
-
-        int en = n;
-        double en3n = en * en * en - en;
-        double fac = (1.0 - sf / en3n) * (1.0 - sg / en3n);
-        double rs = (1.0 - (6.0 / en3n) * (d + (sf + sg) / 12.0)) / Math.sqrt(fac);
-        return rs;
+        return cor(wksp1, wksp2);
     }
 
     /**
@@ -2478,20 +2469,11 @@ public class MathEx {
         }
 
         QuickSort.sort(wksp1, wksp2);
-        double sf = crank(wksp1);
+        crank(wksp1);
         QuickSort.sort(wksp2, wksp1);
-        double sg = crank(wksp2);
+        crank(wksp2);
 
-        double d = 0.0;
-        for (int j = 0; j < n; j++) {
-            d += sqr(wksp1[j] - wksp2[j]);
-        }
-
-        int en = n;
-        double en3n = en * en * en - en;
-        double fac = (1.0 - sf / en3n) * (1.0 - sg / en3n);
-        double rs = (1.0 - (6.0 / en3n) * (d + (sf + sg) / 12.0)) / Math.sqrt(fac);
-        return rs;
+        return cor(wksp1, wksp2);
     }
 
     /**
@@ -2505,29 +2487,15 @@ public class MathEx {
             throw new IllegalArgumentException("Input vector sizes are different.");
         }
 
-        int n = x.length;
-        double[] wksp1 = new double[n];
-        double[] wksp2 = new double[n];
-        for (int j = 0; j < n; j++) {
-            wksp1[j] = x[j];
-            wksp2[j] = y[j];
-        }
+        double[] wksp1 = x.clone();
+        double[] wksp2 = y.clone();
 
         QuickSort.sort(wksp1, wksp2);
-        double sf = crank(wksp1);
+        crank(wksp1);
         QuickSort.sort(wksp2, wksp1);
-        double sg = crank(wksp2);
+        crank(wksp2);
 
-        double d = 0.0;
-        for (int j = 0; j < n; j++) {
-            d += sqr(wksp1[j] - wksp2[j]);
-        }
-
-        int en = n;
-        double en3n = en * en * en - en;
-        double fac = (1.0 - sf / en3n) * (1.0 - sg / en3n);
-        double rs = (1.0 - (6.0 / en3n) * (d + (sf + sg) / 12.0)) / Math.sqrt(fac);
-        return rs;
+        return cor(wksp1, wksp2);
     }
 
     /**
