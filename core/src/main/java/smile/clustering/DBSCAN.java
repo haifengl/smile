@@ -93,9 +93,13 @@ public class DBSCAN<T> extends PartitionClustering<T> {
     private static final long serialVersionUID = 1L;
 
     /**
+     * Label for data samples in BFS queue.
+     */
+    private static final int QUEUED = -2;
+    /**
      * Label for unclassified data samples.
      */
-    private static final int UNCLASSIFIED = -1;
+    private static final int UNDEFINED = -1;
     /**
      * The minimum number of points required to form a cluster
      */
@@ -157,32 +161,52 @@ public class DBSCAN<T> extends PartitionClustering<T> {
 
         int n = data.length;
         y = new int[n];
-        Arrays.fill(y, UNCLASSIFIED);
+        Arrays.fill(y, UNDEFINED);
 
         for (int i = 0; i < data.length; i++) {
-            if (y[i] == UNCLASSIFIED) {
+            if (y[i] == UNDEFINED) {
                 List<Neighbor<T,T>> neighbors = new ArrayList<>();
                 nns.range(data[i], radius, neighbors);
                 if (neighbors.size() < minPts) {
                     y[i] = OUTLIER;
                 } else {
                     y[i] = k;
+
+                    for (Neighbor<T, T> neighbor : neighbors) {
+                        if (y[neighbor.index] == UNDEFINED) {
+                            y[neighbor.index] = QUEUED;
+                        }
+                    }
+
                     for (int j = 0; j < neighbors.size(); j++) {
-                        if (y[neighbors.get(j).index] == UNCLASSIFIED) {
-                            y[neighbors.get(j).index] = k;
-                            Neighbor<T,T> neighbor = neighbors.get(j);
+                        Neighbor<T,T> neighbor = neighbors.get(j);
+                        int index = neighbor.index;
+
+                        if (y[index] == OUTLIER) {
+                            y[index] = k;
+                        }
+
+                        if (y[index] == UNDEFINED || y[index] == QUEUED) {
+                            y[index] = k;
+
                             List<Neighbor<T,T>> secondaryNeighbors = new ArrayList<>();
                             nns.range(neighbor.key, radius, secondaryNeighbors);
 
                             if (secondaryNeighbors.size() >= minPts) {
-                                neighbors.addAll(secondaryNeighbors);
+                                for (Neighbor<T, T> sn : secondaryNeighbors) {
+                                    int label = y[sn.index];
+                                    if (label == UNDEFINED) {
+                                        y[sn.index] = QUEUED;
+                                    }
+
+                                    if (label == UNDEFINED || label == OUTLIER) {
+                                        neighbors.add(sn);
+                                    }
+                                }
                             }
                         }
-
-                        if (y[neighbors.get(j).index] == OUTLIER) {
-                            y[neighbors.get(j).index] = k;
-                        }
                     }
+
                     k++;
                 }
             }
