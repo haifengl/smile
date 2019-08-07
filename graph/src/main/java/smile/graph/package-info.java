@@ -55,7 +55,7 @@
  * it is 0. In computing, this matrix makes it easy to find subgraphs, and to
  * reverse a directed graph.
  * <p>
- * <i>Laplacian matrix or "Kirchhoff matrix" or "Admittance matrix"</i> 
+ * <i>Laplacian matrix or "Kirchhoff matrix" or "Admittance matrix"</i>
  * This is defined as D - A, where D is the diagonal degree matrix. It
  * explicitly contains both adjacency information and degree information.
  * (However, there are other, similar matrices that are also called
