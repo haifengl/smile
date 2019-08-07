@@ -324,6 +324,12 @@ public class DecisionTree implements SoftClassifier<double[]> {
             this.posteriori = posteriori;
         }
 
+        private void markAsLeaf() {
+            this.splitFeature = -1;
+            this.splitValue = Double.NaN;
+            this.splitScore = 0.0;
+        }
+
         /**
          * Evaluate the regression tree over an instance.
          */
@@ -705,9 +711,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
             }
 
             if (tc < nodeSize || fc < nodeSize) {
-                node.splitFeature = -1;
-                node.splitValue = Double.NaN;
-                node.splitScore = 0.0;
+                node.markAsLeaf();
                 return false;
             }
 
@@ -723,13 +727,18 @@ public class DecisionTree implements SoftClassifier<double[]> {
             int[] buffer = new int[high - split];
             partitionOrder(low, split, high, goesLeft, buffer);
 
-            TrainNode trueChild = new TrainNode(node.trueChild, x, y, samples, low, split);
+            int leaves = 0;
+            TrainNode trueChild = new TrainNode(node.trueChild, x, y, samples, low, split);         
             if (tc > nodeSize && trueChild.findBestSplit()) {
                 if (nextSplits != null) {
                     nextSplits.add(trueChild);
                 } else {
-                    trueChild.split(null);
+                    if(trueChild.split(null) == false) {
+                        leaves++;
+                    }
                 }
+            } else {
+                leaves++;
             }
 
             TrainNode falseChild = new TrainNode(node.falseChild, x, y, samples, split, high);
@@ -737,7 +746,19 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 if (nextSplits != null) {
                     nextSplits.add(falseChild);
                 } else {
-                    falseChild.split(null);
+                    if(falseChild.split(null) == false) {
+                        leaves++;
+                    }
+                }
+            } else {
+                leaves++;
+            }
+
+            // Prune meaningless branches
+            if (leaves == 2) {// both left and right child is leaf node
+                if (node.trueChild.output == node.falseChild.output) {// found meaningless branch
+                    node.markAsLeaf();
+                    return false;
                 }
             }
 
