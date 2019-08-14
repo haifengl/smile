@@ -266,32 +266,14 @@ public class SparseMatrixTest {
         SparseMatrix m = new SparseMatrix(d, 1e-10);
 
         double t0 = System.nanoTime() / 1e9;
-        double[] sum0 = new double[2000];
-        double[] values = m.values();
-        int[] colIndex = m.getColIndex();
-        for (int rep = 0; rep < 1000; rep++) {
-            for (int column = 0; column < m.ncols(); column++) {
-                for (int k = colIndex[column]; k < colIndex[column + 1]; k++) {
-                    sum0[column] += values[k];
-                }
-            }
-        }
-        double t1 = System.nanoTime() / 1e9;
-        double sum = 0;
-        for (double v : sum0) {
-            sum += v;
-        }
-        System.out.printf("%.3f (%.2f)\n", (t1 - t0), sum);
-
-        t0 = System.nanoTime() / 1e9;
         double[] sum1 = new double[2000];
         for (int rep = 0; rep < 1000; rep++) {
             m.foreachNonzero(
                     (i, j, x) -> sum1[j] += x
             );
         }
-        t1 = System.nanoTime() / 1e9;
-        sum = 0;
+        double t1 = System.nanoTime() / 1e9;
+        double sum = 0;
         for (double v : sum1) {
             sum += v;
         }
