@@ -47,6 +47,18 @@ public class UPGMALinkage extends Linkage {
             n[i] = 1;
     }
 
+    /**
+     * Constructor float.
+     * @param proximity  the proximity matrix to store the distance measure of
+     * dissimilarity. To save space, we only need the lower half of matrix.
+     */
+    public UPGMALinkage(float[] proximity) {
+        init(proximity);
+        n = new int[proximity.length];
+        for (int i = 0; i < n.length; i++)
+            n[i] = 1;
+    }
+
     @Override
     public String toString() {
         return "UPGMA linkage";

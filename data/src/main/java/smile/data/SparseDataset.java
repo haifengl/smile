@@ -380,28 +380,33 @@ public class SparseDataset implements Iterable<Datum<SparseArray>> {
      * Convert into Harwell-Boeing column-compressed sparse matrix format.
      */
     public SparseMatrix toSparseMatrix() {
-        int[] pos = new int[numColumns];
-        int[] colIndex = new int[numColumns + 1];
-        for (int i = 0; i < numColumns; i++) {
-            colIndex[i + 1] = colIndex[i] + colSize[i];
-        }
-
+        return toSparseMatrix(true);
+    }
+    
+    /**
+     * Convert into Harwell-Boeing column-compressed sparse matrix format.
+     */
+    public SparseMatrix toSparseMatrix(boolean doubles) {
         int nrows = size();
-        int[] rowIndex = new int[n];
-        double[] x = new double[n];
+        SparseMatrix sparseMatrix = new SparseMatrix(nrows, numColumns, n, doubles);
+        
+        int[] pos = new int[numColumns];
+        for (int i = 0; i < numColumns; i++) {
+            sparseMatrix.colIndex[i + 1] = sparseMatrix.colIndex[i] + colSize[i];
+        }
 
         for (int i = 0; i < nrows; i++) {
             for (SparseArray.Entry e : get(i).x) {
                 int j = e.i;
-                int k = colIndex[j] + pos[j];
+                int k = sparseMatrix.colIndex[j] + pos[j];
 
-                rowIndex[k] = i;
-                x[k] = e.x;
+                sparseMatrix.rowIndex[k] = i;
+                sparseMatrix.set(k, e.x);
                 pos[j]++;
             }
         }
 
-        return new SparseMatrix(nrows, numColumns, x, rowIndex, colIndex);
+        return sparseMatrix;
     }
     
     /**

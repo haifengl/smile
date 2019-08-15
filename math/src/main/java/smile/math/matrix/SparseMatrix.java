@@ -83,23 +83,27 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     /**
      * The number of rows.
      */
-    private int nrows;
+    public int nrows;
     /**
      * The number of columns.
      */
-    private int ncols;
+    public int ncols;
     /**
      * The index of the start of columns.
      */
-    private int[] colIndex;
+    public int[] colIndex;
     /**
      * The row indices of nonzero values.
      */
-    private int[] rowIndex;
+    public int[] rowIndex;
     /**
      * The array of nonzero values stored column by column.
      */
     private double[] x;
+    /**
+     * The float array of nonzero values stored column by column.
+     */
+    private float[] xF;
     /**
      * True if the matrix is symmetric.
      */
@@ -110,13 +114,18 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      * @param nrows the number of rows in the matrix.
      * @param ncols the number of columns in the matrix.
      * @param nvals the number of nonzero entries in the matrix.
+     * @param doubles whether to use double or float.
      */
-    private SparseMatrix(int nrows, int ncols, int nvals) {
+    public SparseMatrix(int nrows, int ncols, int nvals, boolean doubles) {
         this.nrows = nrows;
         this.ncols = ncols;
-        rowIndex = new int[nvals];
-        colIndex = new int[ncols + 1];
-        x = new double[nvals];
+        this.rowIndex = new int[nvals];
+        this.colIndex = new int[ncols + 1];
+        if (doubles) {
+            this.x = new double[nvals];
+        } else {
+            this.xF = new float[nvals];
+        }
     }
 
     /**
@@ -133,7 +142,26 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         this.rowIndex = rowIndex;
         this.colIndex = colIndex;
         this.x = x;
+        this.xF = null;
     }
+
+    /**
+     * Constructor for floating point data.
+     * @param nrows the number of rows in the matrix.
+     * @param ncols the number of columns in the matrix.
+     * @param rowIndex the row indices of nonzero values.
+     * @param colIndex the index of the start of columns.
+     * @param x the array of nonzero values stored column by column.
+     */
+    public SparseMatrix(int nrows, int ncols, float[] x, int[] rowIndex, int[] colIndex) {
+        this.nrows = nrows;
+        this.ncols = ncols;
+        this.rowIndex = rowIndex;
+        this.colIndex = colIndex;
+        this.x = null;
+        this.xF = x;
+    }
+
 
     /**
      * Constructor.
@@ -199,6 +227,22 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         return ncols;
     }
 
+    public double[][] toDense() {
+        double[][] dense = new double[this.nrows][this.ncols];
+
+        for (int iColptr = 0; iColptr < this.colIndex.length - 1; iColptr++) {
+            int firstEntrySubscript = this.colIndex[iColptr];
+            int lastSubscriptCol = this.colIndex[iColptr + 1] - 1;
+
+            for (int subscript = firstEntrySubscript; subscript <= lastSubscriptCol; subscript++) {
+                int row = this.rowIndex[subscript];
+                double value = get(subscript);
+                dense[row][iColptr] = value;
+            }
+        }
+        return dense;
+    }
+
     /**
      * Returns the number of nonzero values.
      */
@@ -225,8 +269,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
             }
         }
     }
-
-
+    
     /**
      * Calls a lambda with each non-zero value. This will be a bit faster than using a stream
      * because we can avoid boxing up the coordinates of the element being processed, but it
@@ -368,6 +411,10 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         }
     }
 
+    public double get(int i) {
+        return (x == null) ? xF[i] : x[i];
+    }
+    
     @Override
     public double get(int i, int j) {
         if (i < 0 || i >= nrows || j < 0 || j >= ncols) {
@@ -376,11 +423,19 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
 
         for (int k = colIndex[j]; k < colIndex[j + 1]; k++) {
             if (rowIndex[k] == i) {
-                return x[k];
+                return get(k);
             }
         }
 
         return 0.0;
+    }
+
+    public void set(int i, double v) {
+        if (x == null) {
+            xF[i] = (float) v;
+        } else {
+            x[i] = v;
+        }
     }
 
     @Override
@@ -389,7 +444,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
 
         for (int j = 0; j < ncols; j++) {
             for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
-                y[rowIndex[i]] += this.x[i] * x[j];
+                y[rowIndex[i]] += get(i) * x[j];
             }
         }
 
@@ -400,7 +455,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     public double[] axpy(double[] x, double[] y) {
         for (int j = 0; j < ncols; j++) {
             for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
-                y[rowIndex[i]] += this.x[i] * x[j];
+                y[rowIndex[i]] += get(i) * x[j];
             }
         }
 
@@ -415,7 +470,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
 
         for (int j = 0; j < ncols; j++) {
             for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
-                y[rowIndex[i]] += this.x[i] * x[j];
+                y[rowIndex[i]] += get(i) * x[j];
             }
         }
 
@@ -427,7 +482,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         Arrays.fill(y, 0.0);
         for (int i = 0; i < ncols; i++) {
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
-                y[i] += this.x[j] * x[rowIndex[j]];
+                y[i] += get(j) * x[rowIndex[j]];
             }
         }
 
@@ -439,7 +494,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     public double[] atxpy(double[] x, double[] y) {
         for (int i = 0; i < ncols; i++) {
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
-                y[i] += this.x[j] * x[rowIndex[j]];
+                y[i] += get(j) * x[rowIndex[j]];
             }
         }
 
@@ -451,7 +506,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         for (int i = 0; i < ncols; i++) {
             y[i] *= b;
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
-                y[i] += this.x[j] * x[rowIndex[j]];
+                y[i] += get(j) * x[rowIndex[j]];
             }
         }
 
@@ -461,7 +516,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     @Override
     public SparseMatrix transpose() {
         int m = nrows, n = ncols;
-        SparseMatrix at = new SparseMatrix(n, m, x.length);
+        SparseMatrix at = new SparseMatrix(n, m, xF == null ? x.length : xF.length, xF == null);
 
         int[] count = new int[m];
         for (int i = 0; i < n; i++) {
@@ -481,7 +536,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
                 int k = rowIndex[j];
                 int index = at.colIndex[k] + count[k];
                 at.rowIndex[index] = i;
-                at.x[index] = x[j];
+                at.set(index, get(j));
                 count[k]++;
             }
         }
@@ -511,7 +566,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
 
         int nzmax = Math.max(anz + bnz, m);
 
-        SparseMatrix C = new SparseMatrix(m, n, nzmax);
+        SparseMatrix C = new SparseMatrix(m, n, nzmax, xF == null);
         int[] Cp = C.colIndex;
         int[] Ci = C.rowIndex;
         double[] Cx = C.x;
@@ -595,6 +650,99 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         return aat(AT);
     }
 
+    public SparseMatrix aatLowerTriangular() {
+        SparseMatrix AT = transpose();
+        return lowerTriangularSparseAAT(AT);
+    }
+
+    public SparseMatrix lowerTriangularSparseAAT(SparseMatrix AT) {
+
+        int m = nrows;
+        int[] done = new int[m];
+        for (int i = 0; i < m; i++) {
+            done[i] = -1;
+        }
+
+        // First pass determines the number of nonzeros.
+        int nDiag = 0;
+        int nNonDiagLowerTri = 0;
+        // Outer loop over columns of A' in AA'
+        for (int j = 0; j < m; j++) {
+            for (int i = AT.colIndex[j]; i < AT.colIndex[j + 1]; i++) {
+                int k = AT.rowIndex[i];
+                for (int l = colIndex[k]; l < colIndex[k + 1]; l++) {
+                    int h = rowIndex[l];
+                    // Test if contribution already included.
+                    if (done[h] != j) {
+                        done[h] = j;
+                        if (j == h) {
+                            nDiag++;
+                        } else if (h > j) {
+                            nNonDiagLowerTri++;
+                        }
+                    }
+                }
+            }
+        }
+
+        SparseMatrix lowerTriangularSparseAAT =
+            new SparseMatrix(m, m, nDiag + nNonDiagLowerTri, xF == null);
+
+        int nvals = 0;
+        for (int i = 0; i < m; i++) {
+            done[i] = -1;
+        }
+
+        // Second pass determines columns of aat. Code is identical to first
+        // pass except colIndex and rowIndex get assigned at appropriate places.
+        for (int j = 0; j < m; j++) {
+            lowerTriangularSparseAAT.colIndex[j] = nvals;
+            for (int i = AT.colIndex[j]; i < AT.colIndex[j + 1]; i++) {
+                int k = AT.rowIndex[i];
+                for (int l = colIndex[k]; l < colIndex[k + 1]; l++) {
+                    int h = rowIndex[l];
+                    if (h >= j) {
+                        if (done[h] != j) {
+                            done[h] = j;
+                            lowerTriangularSparseAAT.rowIndex[nvals] = h;
+                            nvals++;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Set last get.
+        lowerTriangularSparseAAT.colIndex[m] = nvals;
+
+        // Sort columns.
+        for (int j = 0; j < m; j++) {
+            if (lowerTriangularSparseAAT.colIndex[j + 1] - lowerTriangularSparseAAT.colIndex[j] > 1) {
+                Arrays.sort(lowerTriangularSparseAAT.rowIndex, lowerTriangularSparseAAT.colIndex[j], lowerTriangularSparseAAT.colIndex[j + 1]);
+            }
+        }
+
+        double[] temp = new double[m];
+        for (int i = 0; i < m; i++) {
+            for (int j = AT.colIndex[i]; j < AT.colIndex[i + 1]; j++) {
+                int k = AT.rowIndex[j];
+                for (int l = colIndex[k]; l < colIndex[k + 1]; l++) {
+                    int h = rowIndex[l];
+                    if (h >= i) {
+                        temp[h] += AT.get(j) * get(l);
+                    }
+                }
+            }
+
+            for (int j = lowerTriangularSparseAAT.colIndex[i]; j < lowerTriangularSparseAAT.colIndex[i + 1]; j++) {
+                int k = lowerTriangularSparseAAT.rowIndex[j];
+                lowerTriangularSparseAAT.set(j, temp[k]);
+                temp[k] = 0;
+            }
+        }
+        return lowerTriangularSparseAAT;
+    }
+
     private SparseMatrix aat(SparseMatrix AT) {
         int m = nrows;
         int[] done = new int[m];
@@ -619,7 +767,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
             }
         }
 
-        SparseMatrix aat = new SparseMatrix(m, m, nvals);
+        SparseMatrix aat = new SparseMatrix(m, m, nvals, xF == null);
 
         nvals = 0;
         for (int i = 0; i < m; i++) {
@@ -659,14 +807,14 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
                 int k = AT.rowIndex[j];
                 for (int l = colIndex[k]; l < colIndex[k + 1]; l++) {
                     int h = rowIndex[l];
-                    temp[h] += AT.x[j] * x[l];
+                    temp[h] += AT.get(j) * get(l);
                 }
             }
 
             for (int j = aat.colIndex[i]; j < aat.colIndex[i + 1]; j++) {
                 int k = aat.rowIndex[j];
-                aat.x[j] = temp[k];
-                temp[k] = 0.0;
+                aat.set(j, temp[k]);
+                temp[k] = 0;
             }
         }
 
@@ -681,7 +829,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         for (int i = 0; i < n; i++) {
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
                 if (rowIndex[j] == i) {
-                    d[i] = x[j];
+                    d[i] = get(j);
                     break;
                 }
             }

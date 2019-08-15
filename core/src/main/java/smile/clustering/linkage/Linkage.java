@@ -30,7 +30,7 @@ package smile.clustering.linkage;
  */
 public abstract class Linkage {
     /** The data size. */
-    int size;
+    long size;
 
     /**
      * Linearized proximity matrix to store the pair-wise distance measure
@@ -45,7 +45,7 @@ public abstract class Linkage {
     /** Initialize the linkage with the lower triangular proximity matrix. */
     void init(double[][] proximity) {
         size = proximity.length;
-        this.proximity = new float[size * (size+1) / 2];
+        this.proximity = new float[proximity.length * (proximity.length+1) / 2];
 
         // row wise
         /*
@@ -65,16 +65,31 @@ public abstract class Linkage {
         }
     }
 
+    void init(float[] proximity) {
+        size = getSize(proximity.length);
+        this.proximity = proximity;
+    }
+
+    private int getSize(int sizeCondensed) {
+        int i = 0;
+        int result = 0;
+        while (result != sizeCondensed) {
+            i++;
+            result += i;
+        }
+        return i;
+    }
+
     int index(int i, int j) {
         // row wise
         // return i > j ? i*(i+1)/2 + j : j*(j+1)/2 + i;
         // column wise
-        return i > j ? proximity.length - (size-j)*(size-j+1)/2 + i - j : proximity.length - (size-i)*(size-i+1)/2 + j - i;
+        return (int) (i > j ? proximity.length - (size-j)*(size-j+1)/2 + i - j : proximity.length - (size-i)*(size-i+1)/2 + j - i);
     }
 
     /** Returns the proximity matrix size. */
     public int size() {
-        return size;
+        return (int) size;
     }
 
     /**
