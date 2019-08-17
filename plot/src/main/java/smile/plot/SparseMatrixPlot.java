@@ -114,7 +114,7 @@ public class SparseMatrixPlot extends Plot {
 
         // In case of outliers, we use 1% and 99% quantiles as lower and
         // upper limits instead of min and max.
-        double[] values = sparse.nonzeros().mapToDouble(entry -> entry.x).filter(x -> !Double.isNaN(x)).toArray();
+        double[] values = sparse.nonzeros().mapToDouble(entry -> entry.value).filter(x -> !Double.isNaN(x)).toArray();
 
         if (values.length == 0) {
             throw new IllegalArgumentException("Sparse matrix has no non-zero values");

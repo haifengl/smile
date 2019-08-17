@@ -225,7 +225,7 @@ public class SparseMatrixTest {
                         entry -> {
                             int i = entry.row;
                             int j = entry.col;
-                            double x = entry.x;
+                            double x = entry.value;
 
                             assertEquals(d[i][j], x, 0);
                             assertEquals(d[i][j], m.get(i, j), 0);
@@ -243,7 +243,7 @@ public class SparseMatrixTest {
                             assertTrue(col >= 100);
                             assertTrue(col < 400);
 
-                            assertEquals(d[entry.row][col], entry.x, 0);
+                            assertEquals(d[entry.row][col], entry.value, 0);
                             assertEquals(d[entry.row][col], m.get(entry.row, col), 0);
                             k.incrementAndGet();
                         }
@@ -283,7 +283,7 @@ public class SparseMatrixTest {
         double[] sum2 = new double[2000];
         for (int rep = 0; rep < 1000; rep++) {
             m.nonzeros()
-                    .forEach(entry -> sum2[entry.col] += entry.x);
+                    .forEach(entry -> sum2[entry.col] += entry.value);
         }
         t1 = System.nanoTime() / 1e9;
         sum = 0;
