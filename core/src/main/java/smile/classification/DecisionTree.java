@@ -671,7 +671,6 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 throw new IllegalStateException("Split a node with invalid feature.");
             }
 
-            int n = high - low;
             int tc = 0;
             int fc = 0;
 
@@ -1069,15 +1068,15 @@ public class DecisionTree implements SoftClassifier<double[]> {
 
     /**
      * Modifies {@link #order} and {@link #originalOrder} by partitioning the range from low
-     * (inclusive) to high (exclusive) so that all elements o for which goesLeft(o) is true come
+     * (inclusive) to high (exclusive) so that all elements i for which goesLeft(i) is true come
      * before all elements for which it is false, but element ordering is otherwise preserved. The
-     * number of true elements in left must equal split-low.
+     * number of true values returned by goesLeft must equal split-low.
      * @param low the low bound of the segment of the order arrays which will be partitioned.
      * @param split where the partition's split point will end up.
      * @param high the high bound of the segment of the order arrays which will be partitioned.
      * @param goesLeft whether an element goes to the left side or the right side of the
      *        partition.
-     * @param buffer scratch space large enough to hold all elements for which left is false.
+     * @param buffer scratch space large enough to hold all elements for which goesLeft is false.
      */
     private void partitionOrder(int low, int split, int high, IntPredicate goesLeft, int[] buffer) {
         for (int[] variableOrder : order) {
@@ -1089,14 +1088,13 @@ public class DecisionTree implements SoftClassifier<double[]> {
     }
 
     /**
-     * Modifies an array in-place by partitioning the range from low (inclusive) to high
-     * (exclusive) so that all elements i for which left[i - low] is true come before all elements
-     * for which it is false, but element ordering is otherwise preserved. The number of true
-     * elements in left must equal split-low. buffer is scratch space large enough to hold all
-     * elements for which left is false.
+     * Modifies an array in-place by partitioning the range from low (inclusive) to high (exclusive)
+     * so that all elements i for which goesLeft(i) is true come before all elements for which it is
+     * false, but element ordering is otherwise preserved. The number of true values returned by
+     * goesLeft must equal split-low. buffer is scratch space large enough (i.e., at least
+     * high-split long) to hold all elements for which goesLeft is false.
      */
     private void partitionArray(int[] a, int low, int split, int high, IntPredicate goesLeft, int[] buffer) {
-        int n = high - low;
         int j = low;
         int k = 0;
         for (int i = low; i < high; i++) {
@@ -1105,9 +1103,6 @@ public class DecisionTree implements SoftClassifier<double[]> {
             } else {
                 buffer[k++] = a[i];
             }
-        }
-        if (k != high - split || j != split) {
-            System.err.println("Messed up partition: " + low + ".." + split + ".." + high + " ended up splitting at " + j);
         }
         System.arraycopy(buffer, 0, a, split, k);
     }
