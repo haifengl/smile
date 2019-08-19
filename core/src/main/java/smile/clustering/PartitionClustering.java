@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.MathEx;
 
@@ -28,7 +29,7 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public abstract class PartitionClustering <T> implements Clustering<T> {
+public abstract class PartitionClustering <T> implements Clustering<T>, Serializable {
     /**
      * The number of clusters.
      */

@@ -114,33 +114,18 @@ public class SparseMatrixPlot extends Plot {
             y[i] = y.length - i - 0.5;
         }
 
-        min = Double.POSITIVE_INFINITY;
-        max = Double.NEGATIVE_INFINITY;
-        for (double z : sparse.values()) {
-            if (z < min) {
-                min = z;
-            }
-            if (z > max) {
-                max = z;
-            }
-        }
-
         // In case of outliers, we use 1% and 99% quantiles as lower and
         // upper limits instead of min and max.
-        double[] values = new double[sparse.length()];
-        int i = 0;
-        for (double z : sparse.values()) {
-            if (!Double.isNaN(z)) {
-                values[i++] = z;
-            }
+        double[] values = sparse.nonzeros().mapToDouble(entry -> entry.value).filter(x -> !Double.isNaN(x)).toArray();
+
+        if (values.length == 0) {
+            throw new IllegalArgumentException("Sparse matrix has no non-zero values");
         }
 
-        if (i > 0) {
-            Arrays.sort(values, 0, i);
-            min = values[(int) Math.round(0.01 * i)];
-            max = values[(int) Math.round(0.99 * (i-1))];
-            width = (max - min) / palette.length;
-        }
+        Arrays.sort(values);
+        min = values[(int) Math.round(0.01 * values.length)];
+        max = values[(int) Math.round(0.99 * (values.length-1))];
+        width = (max - min) / palette.length;
     }
 
     @Override

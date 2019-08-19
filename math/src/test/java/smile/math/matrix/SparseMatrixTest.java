@@ -17,7 +17,9 @@
 
 package smile.math.matrix;
 
+import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -33,17 +35,17 @@ import static org.junit.Assert.*;
  */
 public class SparseMatrixTest {
 
-    SparseMatrix sm;
+    private SparseMatrix sm;
     double[][] A = {
-        {0.9000, 0.4000, 0.0000},
-        {0.4000, 0.5000, 0.3000},
-        {0.0000, 0.3000, 0.8000}
+            {0.9000, 0.4000, 0.0000},
+            {0.4000, 0.5000, 0.3000},
+            {0.0000, 0.3000, 0.8000}
     };
     double[] b = {0.5, 0.5, 0.5};
-    double[][] C = {
-        {0.97, 0.56, 0.12},
-        {0.56, 0.50, 0.39},
-        {0.12, 0.39, 0.73}
+    private double[][] C = {
+            {0.97, 0.56, 0.12},
+            {0.56, 0.50, 0.39},
+            {0.12, 0.39, 0.73}
     };
 
     public SparseMatrixTest() {
@@ -54,11 +56,11 @@ public class SparseMatrixTest {
     }
 
     @BeforeClass
-    public static void setUpClass() throws Exception {
+    public static void setUpClass() {
     }
 
     @AfterClass
-    public static void tearDownClass() throws Exception {
+    public static void tearDownClass() {
     }
 
     @Before
@@ -175,8 +177,122 @@ public class SparseMatrixTest {
             data[i] = scanner.nextDouble();
         }
 
-        SparseMatrix matrix = new SparseMatrix(nrows, ncols, data, rowIndex, colIndex);
-        return matrix;
+        return new SparseMatrix(nrows, ncols, data, rowIndex, colIndex);
+    }
+
+    @Test
+    public void nonZeroIterator() {
+        Random rand = new Random();
+        double[][] d = new double[1000][2000];
+        int nonzeroCount = 10000;
+        int limitedNonZeros = 0;
+        for (int i = 0; i < nonzeroCount; i++) {
+            int row, col;
+            do {
+                row = rand.nextInt(1000);
+                col = rand.nextInt(2000);
+            } while (d[row][col] != 0);
+            if (col >= 100 && col < 400) {
+                limitedNonZeros++;
+            }
+            d[row][col] = rand.nextGaussian() + 10;
+        }
+
+        // now that we have the data, we can to the actual SparseMatrix part
+        SparseMatrix m = new SparseMatrix(d, 1e-10);
+
+        // verify all values and the number of non-zeros
+        AtomicInteger k = new AtomicInteger(0);
+        m.foreachNonzero((i, j, x) -> {
+            assertEquals(d[i][j], x, 0);
+            assertEquals(d[i][j], m.get(i, j), 0);
+            k.incrementAndGet();
+        });
+        assertEquals(nonzeroCount, k.get());
+
+        // iterate over just a few columns
+        k.set(0);
+        m.foreachNonzero(100, 400, (i, j, x) -> {
+            assertTrue(j >= 100);
+            assertTrue(j < 400);
+            assertEquals(d[i][j], x, 0);
+            assertEquals(d[i][j], m.get(i, j), 0);
+            k.incrementAndGet();
+        });
+        assertEquals(limitedNonZeros, k.get());
+
+        k.set(0);
+        m.nonzeros()
+                .forEach(
+                        entry -> {
+                            int i = entry.row;
+                            int j = entry.col;
+                            double x = entry.value;
+
+                            assertEquals(d[i][j], x, 0);
+                            assertEquals(d[i][j], m.get(i, j), 0);
+                            k.incrementAndGet();
+                        }
+                );
+        assertEquals(nonzeroCount, k.get());
+
+        k.set(0);
+        m.nonzeros(100, 400)
+                .forEach(
+                        entry -> {
+                            int col = entry.col;
+
+                            assertTrue(col >= 100);
+                            assertTrue(col < 400);
+
+                            assertEquals(d[entry.row][col], entry.value, 0);
+                            assertEquals(d[entry.row][col], m.get(entry.row, col), 0);
+                            k.incrementAndGet();
+                        }
+                );
+        assertEquals(limitedNonZeros, k.get());
+    }
+
+    @Test
+    public void iterationSpeed() {
+        Random rand = new Random();
+        double[][] d = new double[1000][2000];
+        for (int i = 0; i < 500000; i++) {
+            int row, col;
+            do {
+                row = rand.nextInt(1000);
+                col = rand.nextInt(2000);
+            } while (d[row][col] != 0);
+            d[row][col] = rand.nextGaussian();
+        }
+        SparseMatrix m = new SparseMatrix(d, 1e-10);
+
+        double t0 = System.nanoTime() / 1e9;
+        double[] sum1 = new double[2000];
+        for (int rep = 0; rep < 1000; rep++) {
+            m.foreachNonzero(
+                    (i, j, x) -> sum1[j] += x
+            );
+        }
+        double t1 = System.nanoTime() / 1e9;
+        double sum = 0;
+        for (double v : sum1) {
+            sum += v;
+        }
+        System.out.printf("%.3f (%.2f)\n", (t1 - t0), sum);
+
+        t0 = System.nanoTime() / 1e9;
+        double[] sum2 = new double[2000];
+        for (int rep = 0; rep < 1000; rep++) {
+            m.nonzeros()
+                    .forEach(entry -> sum2[entry.col] += entry.value);
+        }
+        t1 = System.nanoTime() / 1e9;
+        sum = 0;
+        for (double v : sum2) {
+            sum += v;
+        }
+        System.out.printf("%.3f (%.2f)\n", (t1 - t0), sum);
     }
 
     /**
