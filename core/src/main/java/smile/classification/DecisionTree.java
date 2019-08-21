@@ -301,14 +301,6 @@ public class DecisionTree implements SoftClassifier<double[]> {
          * Children node.
          */
         Node falseChild = null;
-        /**
-         * Predicted output for children node.
-         */
-        int trueChildOutput = -1;
-        /**
-         * Predicted output for children node.
-         */
-        int falseChildOutput = -1;
 
         /**
          * Constructor.
@@ -328,7 +320,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
          * Evaluate the regression tree over an instance.
          */
         public int predict(double[] x) {
-            if (trueChild == null && falseChild == null) {
+            if (isLeaf()) {
                 return output;
             } else {
                 if (attributes[splitFeature].getType() == Attribute.Type.NOMINAL) {
@@ -353,7 +345,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
          * Evaluate the regression tree over an instance.
          */
         public int predict(double[] x, double[] posteriori) {
-            if (trueChild == null && falseChild == null) {
+            if (isLeaf()) {
                 System.arraycopy(this.posteriori, 0, posteriori, 0, k);
                 return output;
             } else {
@@ -373,6 +365,10 @@ public class DecisionTree implements SoftClassifier<double[]> {
                     throw new IllegalStateException("Unsupported attribute type: " + attributes[splitFeature].getType());
                 }
             }
+        }
+
+        boolean isLeaf() {
+            return falseChild == null;
         }
     }
 
@@ -526,8 +522,6 @@ public class DecisionTree implements SoftClassifier<double[]> {
                         node.splitFeature = split.splitFeature;
                         node.splitValue = split.splitValue;
                         node.splitScore = split.splitScore;
-                        node.trueChildOutput = split.trueChildOutput;
-                        node.falseChildOutput = split.falseChildOutput;
                     }
                 }
             } else {
@@ -543,8 +537,6 @@ public class DecisionTree implements SoftClassifier<double[]> {
                             node.splitFeature = split.splitFeature;
                             node.splitValue = split.splitValue;
                             node.splitScore = split.splitScore;
-                            node.trueChildOutput = split.trueChildOutput;
-                            node.falseChildOutput = split.falseChildOutput;
                         }
                     }
                 } catch (Exception ex) {
@@ -555,8 +547,6 @@ public class DecisionTree implements SoftClassifier<double[]> {
                             node.splitFeature = split.splitFeature;
                             node.splitValue = split.splitValue;
                             node.splitScore = split.splitScore;
-                            node.trueChildOutput = split.trueChildOutput;
-                            node.falseChildOutput = split.falseChildOutput;
                         }
                     }
                 }
@@ -607,8 +597,6 @@ public class DecisionTree implements SoftClassifier<double[]> {
                         splitNode.splitFeature = j;
                         splitNode.splitValue = l;
                         splitNode.splitScore = gain;
-                        splitNode.trueChildOutput = Math.whichMax(trueCount[l]);
-                        splitNode.falseChildOutput = Math.whichMax(falseCount);
                     }
                 }
             } else if (attributes[j].getType() == Attribute.Type.NUMERIC) {
@@ -648,8 +636,6 @@ public class DecisionTree implements SoftClassifier<double[]> {
                         splitNode.splitFeature = j;
                         splitNode.splitValue = (x[o][j] + prevx) / 2;
                         splitNode.splitScore = gain;
-                        splitNode.trueChildOutput = Math.whichMax(trueCount);
-                        splitNode.falseChildOutput = Math.whichMax(falseCount);
                     }
 
                     prevx = x[o][j];
@@ -711,14 +697,16 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 return false;
             }
 
+            int trueChildOutput = Math.whichMax(trueChildPosteriori);
+            int falseChildOutput = Math.whichMax(falseChildPosteriori);
             // add-k smoothing of posteriori probability
             for (int i = 0; i < k; i++) {
                 trueChildPosteriori[i] = (trueChildPosteriori[i] + 1) / (tc + k);
                 falseChildPosteriori[i] = (falseChildPosteriori[i] + 1) / (fc + k);
             }
 
-            node.trueChild = new Node(node.trueChildOutput, trueChildPosteriori);
-            node.falseChild = new Node(node.falseChildOutput, falseChildPosteriori);
+            node.trueChild = new Node(trueChildOutput, trueChildPosteriori);
+            node.falseChild = new Node(falseChildOutput, falseChildPosteriori);
 
             int[] buffer = new int[high - split];
             partitionOrder(low, split, high, goesLeft, buffer);
@@ -997,6 +985,8 @@ public class DecisionTree implements SoftClassifier<double[]> {
             node.split(nextSplits); // Split the parent node into two children nodes
         }
 
+        pruneRedundantLeaves(root);
+
         this.order = null;
         this.originalOrder = null;
     }
@@ -1108,6 +1098,31 @@ public class DecisionTree implements SoftClassifier<double[]> {
     }
 
     /**
+     * Prunes redundant leaves from the tree. In some cases, a node is split into two leaves that
+     * get assigned the same label, so this recursively combines leaves when it notices this
+     * situation.
+     */
+    private void pruneRedundantLeaves(Node node) {
+        if (node.isLeaf()) {
+            return;
+        }
+
+        // The children might not be leaves now, but might collapse into leaves given the chance.
+        pruneRedundantLeaves(node.trueChild);
+        pruneRedundantLeaves(node.falseChild);
+
+        if (node.trueChild.isLeaf() && node.falseChild.isLeaf() &&
+            node.trueChild.output == node.falseChild.output) {
+            node.trueChild = null;
+            node.falseChild = null;
+            importance[node.splitFeature] -= node.splitScore;
+        } else {
+            // This is an interior node, and will remain so. Its posteriori array is dead weight.
+            node.posteriori = null;
+        }
+    }
+
+    /**
      * Returns the variable importance. Every time a split of a node is made
      * on variable the (GINI, information gain, etc.) impurity criterion for
      * the two descendent nodes is less than the parent node. Adding up the
@@ -1191,7 +1206,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
             Node node = dnode.node;
 
             // leaf node
-            if (node.trueChild == null && node.falseChild == null) {
+            if (node.isLeaf()) {
                 builder.append(String.format(" %d [label=<class = %d>, fillcolor=\"#00000000\", shape=ellipse];\n", id, node.output));
             } else {
                 Attribute attr = attributes[node.splitFeature];
