@@ -1271,7 +1271,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
 
     /**
      * Adds a string representation of each node in this subtree to "lines", in false-child-first
-     * preorder. Returns a class count for all the leaves in the subtree.
+     * postorder. Returns a class count for all the leaves in the subtree.
      */
     private int[] subtreeToLines(Node node, Node parent, int depth, BigInteger number, List<String> lines) {
         int[] count;
@@ -1348,8 +1348,8 @@ public class DecisionTree implements SoftClassifier<double[]> {
      * package.
      */
     public String toString() {
-        // We're going to build up the lines in reverse order: the false-child-first preorder turns
-        // into a true-child-first postorder, which is what's needed.
+        // We're going to build up the lines in reverse order: the false-child-first postorder turns
+        // into a true-child-first preorder, which is what's needed.
         List<String> lines = new ArrayList<>();
         int[] treeCount = subtreeToLines(getRoot(), null, 0, BigInteger.ONE, lines);
         lines.add("* denotes terminal node\n");
