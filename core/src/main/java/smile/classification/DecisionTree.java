@@ -16,6 +16,7 @@
 package smile.classification;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.IntPredicate;
@@ -278,9 +279,9 @@ public class DecisionTree implements SoftClassifier<double[]> {
          */
         int output = -1;
         /**
-         * Posteriori probability based on sample ratios in this node.
+         * Counts of samples assigned to this node.
          */
-        double[] posteriori = null;
+        int[] count = null;
         /**
          * The split feature for this node.
          */
@@ -293,6 +294,10 @@ public class DecisionTree implements SoftClassifier<double[]> {
          * Reduction in splitting criterion.
          */
         double splitScore = 0.0;
+        /**
+         * The node's impurity.
+         */
+        double impurity = 0.0;
         /**
          * Children node.
          */
@@ -311,9 +316,10 @@ public class DecisionTree implements SoftClassifier<double[]> {
         /**
          * Constructor.
          */
-        public Node(int output, double[] posteriori) {
+        public Node(int output, int[] count) {
             this.output = output;
-            this.posteriori = posteriori;
+            this.count = count;
+            impurity = impurity(count, Math.sum(count));
         }
 
         private void markAsLeaf() {
@@ -354,7 +360,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
          */
         public int predict(double[] x, double[] posteriori) {
             if (isLeaf()) {
-                System.arraycopy(this.posteriori, 0, posteriori, 0, k);
+                setPosteriori(posteriori);
                 return output;
             } else {
                 if (attributes[splitFeature].getType() == Attribute.Type.NOMINAL) {
@@ -373,6 +379,14 @@ public class DecisionTree implements SoftClassifier<double[]> {
                     throw new IllegalStateException("Unsupported attribute type: " + attributes[splitFeature].getType());
                 }
             }
+        }
+
+        /**
+         * Fills an array with this node's posterior probabilities.
+         */
+        void setPosteriori(double[] posteriori) {
+            int totalCount = Math.sum(count);
+            computePosteriori(count, totalCount, posteriori);
         }
 
         boolean isLeaf() {
@@ -447,24 +461,14 @@ public class DecisionTree implements SoftClassifier<double[]> {
              */
             int high;
             /**
-             * The sample count in each class.
-             */
-            int[] count;
-            /**
-             * The impurity of this node.
-             */
-            double impurity;
-            /**
              * The variable for this task to attempt to split on.
              */
             int j;
 
-            SplitTask(int n, int low, int high, int[] count, double impurity, int j) {
+            SplitTask(int n, int low, int high, int j) {
                 this.n = n;
                 this.low = low;
                 this.high = high;
-                this.count = count;
-                this.impurity = impurity;
                 this.j = j;
             }
 
@@ -472,7 +476,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
             public Node call() {
                 // An array to store sample count in each class for false child node.
                 int[] falseCount = new int[k];
-                return findBestSplit(n, low, high, count, falseCount, impurity, j);
+                return findBestSplit(n, low, high, falseCount, j);
             }
         }
 
@@ -483,36 +487,26 @@ public class DecisionTree implements SoftClassifier<double[]> {
         public boolean findBestSplit() {
             int label = -1;
             boolean pure = true;
-            for (int i = low; i < high; i++) {
-                int o = originalOrder[i];
-                if (label == -1) {
-                    label = y[o];
-                } else if (y[o] != label) {
-                    pure = false;
-                    break;
+            for (int i = 0; i < k; i++) {
+                if (node.count[i] > 0) {
+                    if (label == -1) {
+                        label = i;
+                    } else {
+                        pure = false;
+                        break;
+                    }
                 }
             }
-            
+
             // Since all instances have same label, stop splitting.
             if (pure) {
                 return false;
             }
 
-            // Sample count in each class.
-            int[] count = new int[k];
-            int n = 0;
-            for (int i = low; i < high; i++) {
-                int o = originalOrder[i];
-                int s = samples[o];
-                n += s;
-                count[y[o]] += s;
-            }
-
+            int n = Math.sum(node.count);
             if (n <= nodeSize) {
                 return false;
             }
-
-            double impurity = impurity(count, n);
 
             int p = attributes.length;
             if (mtry < p) {
@@ -525,7 +519,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
 
                 // Random forest already runs on parallel.
                 for (int j = 0; j < mtry; j++) {
-                    Node split = findBestSplit(n, low, high, count, falseCount, impurity, variables[j]);
+                    Node split = findBestSplit(n, low, high, falseCount, variables[j]);
                     if (split.splitScore > node.splitScore) {
                         node.splitFeature = split.splitFeature;
                         node.splitValue = split.splitValue;
@@ -536,7 +530,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
 
                 List<SplitTask> tasks = new ArrayList<>(mtry);
                 for (int j = 0; j < p; j++) {
-                    tasks.add(new SplitTask(n, low, high, count, impurity, j));
+                    tasks.add(new SplitTask(n, low, high, j));
                 }
 
                 try {
@@ -550,7 +544,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 } catch (Exception ex) {
                     int[] falseCount = new int[k];
                     for (int j = 0; j < p; j++) {
-                        Node split = findBestSplit(n, low, high, count, falseCount, impurity, j);
+                        Node split = findBestSplit(n, low, high, falseCount, j);
                         if (split.splitScore > node.splitScore) {
                             node.splitFeature = split.splitFeature;
                             node.splitValue = split.splitValue;
@@ -568,12 +562,10 @@ public class DecisionTree implements SoftClassifier<double[]> {
          * @param n the number of instances in this node.
          * @param low the lower bound (inclusive) of the samples belonging to this node.
          * @param high the upp bound (exclusive) of the samples belonging to this node.
-         * @param count the sample count in each class.
          * @param falseCount an array to store sample count in each class for false child node.
-         * @param impurity the impurity of this node.
          * @param j the attribute to split on.
          */
-        public Node findBestSplit(int n, int low, int high, int[] count, int[] falseCount, double impurity, int j) {
+        public Node findBestSplit(int n, int low, int high, int[] falseCount, int j) {
             Node splitNode = new Node();
 
             if (attributes[j].getType() == Attribute.Type.NOMINAL) {
@@ -595,10 +587,10 @@ public class DecisionTree implements SoftClassifier<double[]> {
                     }
 
                     for (int q = 0; q < k; q++) {
-                        falseCount[q] = count[q] - trueCount[l][q];
+                        falseCount[q] = node.count[q] - trueCount[l][q];
                     }
 
-                    double gain = impurity - (double) tc / n * impurity(trueCount[l], tc) - (double) fc / n * impurity(falseCount, fc);
+                    double gain = node.impurity - (double) tc / n * impurity(trueCount[l], tc) - (double) fc / n * impurity(falseCount, fc);
 
                     if (gain > splitNode.splitScore) {
                         // new best split
@@ -634,10 +626,10 @@ public class DecisionTree implements SoftClassifier<double[]> {
                     }
 
                     for (int l = 0; l < k; l++) {
-                        falseCount[l] = count[l] - trueCount[l];
+                        falseCount[l] = node.count[l] - trueCount[l];
                     }
 
-                    double gain = impurity - (double) tc / n * impurity(trueCount, tc) - (double) fc / n * impurity(falseCount, fc);
+                    double gain = node.impurity - (double) tc / n * impurity(trueCount, tc) - (double) fc / n * impurity(falseCount, fc);
 
                     if (gain > splitNode.splitScore) {
                         // new best split
@@ -668,8 +660,8 @@ public class DecisionTree implements SoftClassifier<double[]> {
             int tc = 0;
             int fc = 0;
 
-            double[] trueChildPosteriori = new double[k];
-            double[] falseChildPosteriori = new double[k];
+            int[] trueChildCount = new int[k];
+            int[] falseChildCount = new int[k];
             int split = low;
             IntPredicate goesLeft;
             if (attributes[node.splitFeature].getType() == Attribute.Type.NOMINAL) {
@@ -690,11 +682,11 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 int s = samples[o];
                 if (goesLeft.test(o)) {
                     tc += s;
-                    trueChildPosteriori[yi] += s;
+                    trueChildCount[yi] += s;
                     split++;
                 } else {
                     fc += s;
-                    falseChildPosteriori[yi] += s;
+                    falseChildCount[yi] += s;
                 }
             }
 
@@ -703,16 +695,11 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 return false;
             }
 
-            int trueChildOutput = Math.whichMax(trueChildPosteriori);
-            int falseChildOutput = Math.whichMax(falseChildPosteriori);
-            // add-k smoothing of posteriori probability
-            for (int i = 0; i < k; i++) {
-                trueChildPosteriori[i] = (trueChildPosteriori[i] + 1) / (tc + k);
-                falseChildPosteriori[i] = (falseChildPosteriori[i] + 1) / (fc + k);
-            }
+            int trueChildOutput = Math.whichMax(trueChildCount);
+            int falseChildOutput = Math.whichMax(falseChildCount);
 
-            node.trueChild = new Node(trueChildOutput, trueChildPosteriori);
-            node.falseChild = new Node(falseChildOutput, falseChildPosteriori);
+            node.trueChild = new Node(trueChildOutput, trueChildCount);
+            node.falseChild = new Node(falseChildOutput, falseChildCount);
 
             int[] buffer = new int[high - split];
             partitionOrder(low, split, high, goesLeft, buffer);
@@ -981,12 +968,8 @@ public class DecisionTree implements SoftClassifier<double[]> {
             makeCompressedOrder(samples, order != null, allPresent);
         }
 
-        double[] posteriori = new double[k];
-        for (int i = 0; i < k; i++) {
-            posteriori[i] = (double) count[i] / n;
-        }
-        root = new Node(Math.whichMax(count), posteriori);
-        
+        root = new Node(Math.whichMax(count), count);
+
         TrainNode trainRoot = new TrainNode(root, x, y, samples, 0, originalOrder.length);
         if(maxNodes == Integer.MAX_VALUE) {// depth-first split
             if (trainRoot.findBestSplit()) {
@@ -1146,8 +1129,19 @@ public class DecisionTree implements SoftClassifier<double[]> {
             node.falseChild = null;
             importance[node.splitFeature] -= node.splitScore;
         } else {
-            // This is an interior node, and will remain so. Its posteriori array is dead weight.
-            node.posteriori = null;
+            // This is an interior node, and will remain so. Its count array is dead weight.
+            node.count = null;
+        }
+    }
+
+    /**
+     * Turns a set of counts into posterior probabilities.
+     */
+    private void computePosteriori(int[] count, int totalCount, double[] posteriori) {
+        // Apply add-k smoothing to the counts to get the posterior probability estimates.
+        double scale = 1. / ((double) totalCount + k);
+        for (int i = 0; i < k; i++) {
+            posteriori[i] = (count[i] + 1) * scale;
         }
     }
 
@@ -1273,6 +1267,96 @@ public class DecisionTree implements SoftClassifier<double[]> {
 
         builder.append("}");
         return builder.toString();
+    }
+
+    /**
+     * Adds a string representation of each node in this subtree to "lines", in false-child-first
+     * preorder. Returns a class count for all the leaves in the subtree.
+     */
+    private int[] subtreeToLines(Node node, Node parent, int depth, BigInteger number, List<String> lines) {
+        int[] count;
+        if (!node.isLeaf()) {
+            BigInteger trueNumber = number.shiftLeft(1);
+            BigInteger falseNumber = trueNumber.add(BigInteger.ONE);
+            int[] falseCount = subtreeToLines(node.falseChild, node, depth + 1, falseNumber, lines);
+            int[] trueCount = subtreeToLines(node.trueChild, node, depth + 1, trueNumber, lines);
+            count = new int[k];
+            for (int i = 0; i < k; i++) {
+                count[i] = trueCount[i] + falseCount[i];
+            }
+        } else {
+            count = node.count;
+        }
+
+        StringBuilder line = new StringBuilder();
+        for (int i = 0; i < depth; i++) {
+            line.append(" ");
+        }
+        line.append(number).append(") ");
+
+        if (parent == null) {
+            line.append("root ");
+        } else {
+            boolean onTrueBranch = node == parent.trueChild;
+            Attribute splitFeature = attributes[parent.splitFeature];
+            String condition;
+            String value;
+            if (splitFeature.getType() == Attribute.Type.NOMINAL) {
+                String[] labels = ((NominalAttribute) splitFeature).values();
+                condition = "=";
+                if (onTrueBranch) {
+                    value = labels[(int) parent.splitValue];
+                } else {
+                    List<String> falseValues = new ArrayList<>(labels.length - 1);
+                    for (int i = 0; i < labels.length; i++) {
+                        if (i != (int) parent.splitValue) {
+                            falseValues.add(labels[i]);
+                        }
+                    }
+                    value = String.join(",", falseValues);
+                }
+            } else {
+                condition = onTrueBranch ? "<=" : ">";
+                value = String.format("%g", parent.splitValue);
+            }
+            line.append(splitFeature.getName()).append(condition).append(value).append(" ");
+        }
+
+        int totalCount = Math.sum(count);
+        line.append(totalCount).append(" ");
+        line.append(String.format("%.5g", totalCount * node.impurity)).append(" ");
+        line.append(node.output).append(" (");
+        double[] posteriori = new double[k];
+        computePosteriori(count, totalCount, posteriori);
+        for (int i = 0; i < posteriori.length; i++) {
+            if (i != 0) {
+                    line.append(" ");
+            }
+            line.append(String.format("%.5g", posteriori[i]));
+        }
+        line.append(")");
+        if (node.isLeaf()) {
+                line.append(" *");
+        }
+        line.append("\n");
+        lines.add(line.toString());
+        return count;
+    }
+
+    /**
+     * Returns a text representation of the tree in the same format produced by R's "rpart"
+     * package.
+     */
+    public String toString() {
+        // We're going to build up the lines in reverse order: the false-child-first preorder turns
+        // into a true-child-first postorder, which is what's needed.
+        List<String> lines = new ArrayList<>();
+        int[] treeCount = subtreeToLines(getRoot(), null, 0, BigInteger.ONE, lines);
+        lines.add("* denotes terminal node\n");
+        lines.add("node), split, n, loss, yval, (yprob)\n");
+        lines.add("n= " + Math.sum(treeCount) + "\n");
+        Collections.reverse(lines);
+        return String.join("", lines);
     }
 
     /**
