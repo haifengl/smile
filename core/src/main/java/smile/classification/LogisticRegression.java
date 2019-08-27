@@ -643,13 +643,21 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
                 int start = 0;
                 int end = step;
                 for (int i = 0; i < m - 1; i++) {
+                    if (end > n) {
+                        end = n;
+                    }
+                    if (start >= n) {
+                        break;
+                    }
                     ftasks.add(new FTask(start, end));
                     gtasks.add(new GTask(start, end));
                     start += step;
                     end += step;
                 }
-                ftasks.add(new FTask(start, n));
-                gtasks.add(new GTask(start, n));
+                if (start < n) {
+                    ftasks.add(new FTask(start, n));
+                    gtasks.add(new GTask(start, n));
+                }
             }
         }
 
