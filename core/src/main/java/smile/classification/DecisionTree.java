@@ -753,7 +753,14 @@ public class DecisionTree implements SoftClassifier<double[]> {
             }
 
             importance[node.splitFeature] += node.splitScore;
-            
+
+            if (nextSplits == null) {
+                // We're doing depth-first splitting, so this node is definitely an interior node
+                // and its posteriori array can be deleted. For best-first splitting, these are
+                // cleared in pruneRedundantLeaves.
+                node.posteriori = null;
+            }
+
             return true;
         }
     }
@@ -1012,9 +1019,8 @@ public class DecisionTree implements SoftClassifier<double[]> {
                     leaves--;
                 }
             }
+            pruneRedundantLeaves(root);
         }
-
-        pruneRedundantLeaves(root);
 
         this.order = null;
         this.originalOrder = null;
