@@ -371,12 +371,13 @@ public class Maxent implements SoftClassifier<int[]> {
                 
                 int start = 0;
                 int end = step;
-                for (int i = 0; i < m - 1; i++) {
+                for (int i = 0; i < m - 1 && start < n; i++) {
+                    if (end > n) end = n;
                     tasks.add(new FTask(w, start, end));
                     start += step;
                     end += step;
                 }
-                tasks.add(new FTask(w, start, n));
+                if (start < n) tasks.add(new FTask(w, start, n));
                 
                 try {
                     for (double fi : MulticoreExecutor.run(tasks)) {
@@ -474,12 +475,13 @@ public class Maxent implements SoftClassifier<int[]> {
                 
                 int start = 0;
                 int end = step;
-                for (int i = 0; i < m - 1; i++) {
+                for (int i = 0; i < m - 1 && start < n; i++) {
+                    if (end > n) end = n;
                     tasks.add(new GTask(w, start, end));
                     start += step;
                     end += step;
                 }
-                tasks.add(new GTask(w, start, n));
+                if (start < n) tasks.add(new GTask(w, start, n));
 
                 try {
                     for (double[] gi : MulticoreExecutor.run(tasks)) {
@@ -635,12 +637,13 @@ public class Maxent implements SoftClassifier<int[]> {
 
                 int start = 0;
                 int end = step;
-                for (int i = 0; i < m - 1; i++) {
+                for (int i = 0; i < m - 1 && start < n; i++) {
+                    if (end > n) end = n;
                     tasks.add(new FTask(w, start, end));
                     start += step;
                     end += step;
                 }
-                tasks.add(new FTask(w, start, n));
+                if (start < n) tasks.add(new FTask(w, start, n));
                 
                 try {
                     for (double fi : MulticoreExecutor.run(tasks)) {
@@ -767,12 +770,13 @@ public class Maxent implements SoftClassifier<int[]> {
                 
                 int start = 0;
                 int end = step;
-                for (int i = 0; i < m - 1; i++) {
+                for (int i = 0; i < m - 1 && start < n; i++) {
+                    if (end > n) end = n;
                     tasks.add(new GTask(w, start, end));
                     start += step;
                     end += step;
                 }
-                tasks.add(new GTask(w, start, n));
+                if (start < n) tasks.add(new GTask(w, start, n));
 
                 try {
                     for (double[] gi : MulticoreExecutor.run(tasks)) {
