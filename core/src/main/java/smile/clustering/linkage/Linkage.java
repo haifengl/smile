@@ -43,7 +43,7 @@ public abstract class Linkage {
     float[] proximity;
 
     /** Initialize the linkage with the lower triangular proximity matrix. */
-    void init(double[][] proximity) {
+    public Linkage(double[][] proximity) {
         size = proximity.length;
         this.proximity = new float[size * (size+1) / 2];
 
@@ -63,6 +63,24 @@ public abstract class Linkage {
                 this.proximity[k] = (float) proximity[i][j];
             }
         }
+    }
+
+    /**
+     * Initialize the linkage with the lower triangular proximity matrix.
+     * @param size the data size.
+     * @param proximity column-wise linearized proximity matrix that stores
+     *                  only the lower half. The length of proximity should be
+     *                  size * (size+1) / 2;
+     *                  To save space, Linkage will use this argument directly
+     *                  without copy. The elements may be modified.
+     */
+    public Linkage(int size, float[] proximity) {
+        if (proximity.length != size * (size+1) / 2) {
+            throw new IllegalArgumentException(String.format("The length of proximity is %d, expected %d", proximity.length, size * (size+1) / 2));
+        }
+
+        this.size = size;
+        this.proximity = proximity;
     }
 
     int index(int i, int j) {
