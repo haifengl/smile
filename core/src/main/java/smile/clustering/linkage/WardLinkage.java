@@ -39,14 +39,30 @@ public class WardLinkage extends Linkage {
      * dissimilarity. To save space, we only need the lower half of matrix.
      */
     public WardLinkage(double[][] proximity) {
-        init(proximity);
-        n = new int[proximity.length];
-        for (int i = 0; i < n.length; i++) {
+        super(proximity);
+        init();
+    }
+
+    /**
+     * Constructor.
+     * @param size the data size.
+     * @param proximity column-wise linearized proximity matrix that stores
+     *                  only the lower half without diagonal elements.
+     */
+    public WardLinkage(int size, float[] proximity) {
+        super(size, proximity);
+        init();
+    }
+
+    /** Initialize sample size. */
+    private void init() {
+        n = new int[size];
+        for (int i = 0; i < size; i++) {
             n[i] = 1;
         }
 
-        for (int i = 0; i < this.proximity.length; i++) {
-            this.proximity[i] *= this.proximity[i];
+        for (int i = 0; i < proximity.length; i++) {
+            proximity[i] *= proximity[i];
         }
     }
 
