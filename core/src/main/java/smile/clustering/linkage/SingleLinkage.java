@@ -39,7 +39,17 @@ public class SingleLinkage extends Linkage {
      * dissimilarity. To save space, we only need the lower half of matrix.
      */
     public SingleLinkage(double[][] proximity) {
-        init(proximity);
+        super(proximity);
+    }
+
+    /**
+     * Constructor.
+     * @param size the data size.
+     * @param proximity column-wise linearized proximity matrix that stores
+     *                  only the lower half without diagonal elements.
+     */
+    public SingleLinkage(int size, float[] proximity) {
+        super(size, proximity);
     }
 
     @Override

@@ -146,6 +146,6 @@ public class MaxentTest {
 
         System.out.format("Protein error is %d of %d%n", error, test.x.length);
         System.out.format("Hyphen error rate = %.2f%%%n", 100.0 * error / test.x.length);
-        assertEquals(765, error);
+        assertEquals(768, error);
     }
 }

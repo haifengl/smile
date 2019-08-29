@@ -30,9 +30,24 @@ public class WPGMCLinkage extends Linkage {
      * dissimilarity. To save space, we only need the lower half of matrix.
      */
     public WPGMCLinkage(double[][] proximity) {
-        init(proximity);
-        for (int i = 0; i < this.proximity.length; i++) {
-            this.proximity[i] *= this.proximity[i];
+        super(proximity);
+        init();
+    }
+    /**
+     * Constructor.
+     * @param size the data size.
+     * @param proximity column-wise linearized proximity matrix that stores
+     *                  only the lower half without diagonal elements.
+     */
+    public WPGMCLinkage(int size, float[] proximity) {
+        super(size, proximity);
+        init();
+    }
+
+    /** Intialize proximity. */
+    private void init() {
+        for (int i = 0; i < proximity.length; i++) {
+            proximity[i] *= proximity[i];
         }
     }
 
