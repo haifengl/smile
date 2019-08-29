@@ -1347,7 +1347,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
      * Returns a text representation of the tree in the same format produced by R's "rpart"
      * package.
      */
-    public String toString() {
+    public String toRpart() {
         // We're going to build up the lines in reverse order: the false-child-first postorder turns
         // into a true-child-first preorder, which is what's needed.
         List<String> lines = new ArrayList<>();
