@@ -705,12 +705,12 @@ public class DecisionTree implements SoftClassifier<double[]> {
             partitionOrder(low, split, high, goesLeft, buffer);
 
             int leaves = 0;
-            TrainNode trueChild = new TrainNode(node.trueChild, x, y, samples, low, split);
+            TrainNode trueChild = new TrainNode(node.trueChild, x, y, samples, low, split);         
             if (tc > nodeSize && trueChild.findBestSplit()) {
                 if (nextSplits != null) {
                     nextSplits.add(trueChild);
                 } else {
-                    if (trueChild.split(null) == false) {
+                    if(trueChild.split(null) == false) {
                         leaves++;
                     }
                 }
@@ -723,7 +723,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 if (nextSplits != null) {
                     nextSplits.add(falseChild);
                 } else {
-                    if (falseChild.split(null) == false) {
+                    if(falseChild.split(null) == false) {
                         leaves++;
                     }
                 }
@@ -740,7 +740,14 @@ public class DecisionTree implements SoftClassifier<double[]> {
             }
 
             importance[node.splitFeature] += node.splitScore;
-            
+
+            if (nextSplits == null) {
+                // We're doing depth-first splitting, so this node is definitely an interior node
+                // and its posteriori array can be deleted. For best-first splitting, these are
+                // cleared in pruneRedundantLeaves.
+                node.posteriori = null;
+            }
+
             return true;
         }
     }
@@ -991,13 +998,12 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 if (node == null) {
                     break;
                 }
-                if (!node.split(nextSplits)) { // Split the parent node into two children nodes
+                if(!node.split(nextSplits)) { // Split the parent node into two children nodes
                     leaves--;
                 }
             }
+            pruneRedundantLeaves(root);
         }
-
-        pruneRedundantLeaves(root);
 
         this.order = null;
         this.originalOrder = null;
