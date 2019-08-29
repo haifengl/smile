@@ -324,6 +324,14 @@ public class DecisionTree implements SoftClassifier<double[]> {
             this.posteriori = posteriori;
         }
 
+        private void markAsLeaf() {
+            this.splitFeature = -1;
+            this.splitValue = Double.NaN;
+            this.splitScore = 0.0;
+            this.trueChild = null;
+            this.falseChild = null;
+        }
+
         /**
          * Evaluate the regression tree over an instance.
          */
@@ -705,9 +713,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
             }
 
             if (tc < nodeSize || fc < nodeSize) {
-                node.splitFeature = -1;
-                node.splitValue = Double.NaN;
-                node.splitScore = 0.0;
+                node.markAsLeaf();
                 return false;
             }
 
@@ -723,13 +729,18 @@ public class DecisionTree implements SoftClassifier<double[]> {
             int[] buffer = new int[high - split];
             partitionOrder(low, split, high, goesLeft, buffer);
 
-            TrainNode trueChild = new TrainNode(node.trueChild, x, y, samples, low, split);
+            int leaves = 0;
+            TrainNode trueChild = new TrainNode(node.trueChild, x, y, samples, low, split);         
             if (tc > nodeSize && trueChild.findBestSplit()) {
                 if (nextSplits != null) {
                     nextSplits.add(trueChild);
                 } else {
-                    trueChild.split(null);
+                    if(trueChild.split(null) == false) {
+                        leaves++;
+                    }
                 }
+            } else {
+                leaves++;
             }
 
             TrainNode falseChild = new TrainNode(node.falseChild, x, y, samples, split, high);
@@ -737,7 +748,19 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 if (nextSplits != null) {
                     nextSplits.add(falseChild);
                 } else {
-                    falseChild.split(null);
+                    if(falseChild.split(null) == false) {
+                        leaves++;
+                    }
+                }
+            } else {
+                leaves++;
+            }
+
+            // Prune meaningless branches
+            if (leaves == 2) {// both left and right child is leaf node
+                if (node.trueChild.output == node.falseChild.output) {// found meaningless branch
+                    node.markAsLeaf();
+                    return false;
                 }
             }
 
@@ -950,9 +973,6 @@ public class DecisionTree implements SoftClassifier<double[]> {
             }
         }
 
-        // Priority queue for best-first tree growing.
-        PriorityQueue<TrainNode> nextSplits = new PriorityQueue<>();
-
         int n = y.length;
         int[] count = new int[k];
         if (samples == null) {
@@ -980,21 +1000,30 @@ public class DecisionTree implements SoftClassifier<double[]> {
         root = new Node(Math.whichMax(count), posteriori);
         
         TrainNode trainRoot = new TrainNode(root, x, y, samples, 0, originalOrder.length);
-        // Now add splits to the tree until max tree size is reached
-        if (trainRoot.findBestSplit()) {
-            nextSplits.add(trainRoot);
-        }
-
-        // Pop best leaf from priority queue, split it, and push
-        // children nodes into the queue if possible.
-        for (int leaves = 1; leaves < this.maxNodes; leaves++) {
-            // parent is the leaf to split
-            TrainNode node = nextSplits.poll();
-            if (node == null) {
-                break;
+        if(maxNodes == Integer.MAX_VALUE) {// depth-first split
+            if (trainRoot.findBestSplit()) {
+                trainRoot.split(null);
             }
+        } else {// best-first split
+            // Priority queue for best-first tree growing.
+            PriorityQueue<TrainNode> nextSplits = new PriorityQueue<>();
 
-            node.split(nextSplits); // Split the parent node into two children nodes
+            // Now add splits to the tree until max tree size is reached
+            if (trainRoot.findBestSplit()) {
+                nextSplits.add(trainRoot);
+            }
+            // Pop best leaf from priority queue, split it, and push
+            // children nodes into the queue if possible.
+            for (int leaves = 1; leaves < this.maxNodes; leaves++) {
+                // parent is the leaf to split
+                TrainNode node = nextSplits.poll();
+                if (node == null) {
+                    break;
+                }
+                if(!node.split(nextSplits)) { // Split the parent node into two children nodes
+                    leaves--;
+                }
+            }
         }
 
         this.order = null;
