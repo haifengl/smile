@@ -25,6 +25,7 @@ import smile.data.NumericAttribute;
 import smile.math.Math;
 import smile.sort.QuickSort;
 import smile.util.MulticoreExecutor;
+import smile.util.SmileUtils;
 
 /**
  * Decision tree for classification. A decision tree can be learned by
@@ -415,17 +416,29 @@ public class DecisionTree implements SoftClassifier<double[]> {
          * The upper bound (exclusive) in the order array of the samples belonging to this node.
          */
         int high;
+        /**
+         * Constant feature indices
+         */
+        int[] constFeatures;
 
         /**
          * Constructor.
          */
         public TrainNode(Node node, double[][] x, int[] y, int[] samples, int low, int high) {
+            this(node, x, y, samples, low, high, new int[0]);
+        }
+
+        /**
+         * Constructor.
+         */
+        public TrainNode(Node node, double[][] x, int[] y, int[] samples, int low, int high, int[] constFeatures) {
             this.node = node;
             this.x = x;
             this.y = y;
             this.samples = samples;
             this.low = low;
             this.high = high;
+            this.constFeatures = constFeatures;
         }
 
         @Override
@@ -527,8 +540,13 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 Math.permutate(variables);
                 int[] falseCount = new int[k];
 
+                final int[] constFeatures_  = this.constFeatures; // this.constFeatures may be replaced in findBestSplit but it's accepted
+
                 // Random forest already runs on parallel.
                 for (int j = 0; j < mtry; j++) {
+                    if(Arrays.binarySearch(constFeatures_, j) >= 0) {
+                        continue; // skip constant features
+                    }
                     Node split = findBestSplit(n, low, high, count, falseCount, impurity, variables[j]);
                     if (split.splitScore > node.splitScore) {
                         node.splitFeature = split.splitFeature;
@@ -540,8 +558,15 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 }
             } else {
 
+                final int[] constFeatures_;
+                synchronized (constFeatures) {
+                    constFeatures_ = this.constFeatures; // this.constFeatures may be replaced in findBestSplit but it's accepted
+                }
                 List<SplitTask> tasks = new ArrayList<>(mtry);
                 for (int j = 0; j < p; j++) {
+                    if(Arrays.binarySearch(constFeatures_, j) >= 0) {
+                        continue; // skip constant features
+                    }
                     tasks.add(new SplitTask(n, low, high, count, impurity, j));
                 }
 
@@ -558,6 +583,9 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 } catch (Exception ex) {
                     int[] falseCount = new int[k];
                     for (int j = 0; j < p; j++) {
+                        if(Arrays.binarySearch(constFeatures_, j) >= 0) {
+                            continue; // skip constant features
+                        }
                         Node split = findBestSplit(n, low, high, count, falseCount, impurity, j);
                         if (split.splitScore > node.splitScore) {
                             node.splitFeature = split.splitFeature;
@@ -585,6 +613,8 @@ public class DecisionTree implements SoftClassifier<double[]> {
          */
         public Node findBestSplit(int n, int low, int high, int[] count, int[] falseCount, double impurity, int j) {
             Node splitNode = new Node();
+            double lastx = Double.NaN;
+            int replaceCount = 0, countNaN = 0;
 
             if (attributes[j].getType() == Attribute.Type.NOMINAL) {
                 int m = ((NominalAttribute) attributes[j]).size();
@@ -592,9 +622,17 @@ public class DecisionTree implements SoftClassifier<double[]> {
 
                 for (int i = low; i < high; i++) {
                     int o = originalOrder[i];
-                    trueCount[(int) x[o][j]][y[o]] += samples[o];
+                    double x_oj = x[o][j];
+                    if (Double.isNaN(x_oj)) {
+                        countNaN++;
+                        continue; // NaN should be avoided for split value. see (int)x_o
+                    }
+                    if (lastx != x_oj) {
+                        lastx = x_oj;
+                        replaceCount++;
+                    }
+                    trueCount[(int)x_oj][y[o]] += samples[o];
                 }
-
                 for (int l = 0; l < m; l++) {
                     int tc = Math.sum(trueCount[l]);
                     int fc = n - tc;
@@ -627,10 +665,22 @@ public class DecisionTree implements SoftClassifier<double[]> {
 
                 for (int i = low; i < high; i++) {
                     int o = variableOrder[i];
-                    if (Double.isNaN(prevx) || x[o][j] == prevx || y[o] == prevy) {
-                        prevx = x[o][j];
-                        prevy = y[o];
-                        trueCount[y[o]] += samples[o];
+
+                    final double x_oj = x[o][j];
+                    if (Double.isNaN(x_oj)) {
+                        countNaN++;
+                        continue; // NaN should be avoided for split value.
+                    }
+                    if (lastx != x_oj) {
+                        lastx = x_oj;
+                        replaceCount++;
+                    }
+
+                    final int y_o = y[o];
+                    if (Double.isNaN(prevx) || x_oj == prevx || y_o == prevy) {
+                        prevx = x_oj;
+                        prevy = y_o;
+                        trueCount[y_o] += samples[o];
                         continue;
                     }
 
@@ -639,9 +689,9 @@ public class DecisionTree implements SoftClassifier<double[]> {
 
                     // If either side is empty, skip this feature.
                     if (tc < nodeSize || fc < nodeSize) {
-                        prevx = x[o][j];
-                        prevy = y[o];
-                        trueCount[y[o]] += samples[o];
+                        prevx = x_oj;
+                        prevy = y_o;
+                        trueCount[y_o] += samples[o];
                         continue;
                     }
 
@@ -654,18 +704,24 @@ public class DecisionTree implements SoftClassifier<double[]> {
                     if (gain > splitNode.splitScore) {
                         // new best split
                         splitNode.splitFeature = j;
-                        splitNode.splitValue = (x[o][j] + prevx) / 2;
+                        splitNode.splitValue = (x_oj + prevx) / 2;
                         splitNode.splitScore = gain;
                         splitNode.trueChildOutput = Math.whichMax(trueCount);
                         splitNode.falseChildOutput = Math.whichMax(falseCount);
                     }
 
-                    prevx = x[o][j];
-                    prevy = y[o];
-                    trueCount[y[o]] += samples[o];
+                    prevx = x_oj;
+                    prevy = y_o;
+                    trueCount[y_o] += samples[o];
                 }
             } else {
                 throw new IllegalStateException("Unsupported attribute type: " + attributes[j].getType());
+            }
+
+            if(replaceCount + (countNaN > 0 ? 1: 0) <= 1) {
+                synchronized (constFeatures) {
+                    this.constFeatures = SmileUtils.sortedArraySet(constFeatures, j);
+                }
             }
 
             return splitNode;
@@ -730,7 +786,10 @@ public class DecisionTree implements SoftClassifier<double[]> {
             partitionOrder(low, split, high, goesLeft, buffer);
 
             int leaves = 0;
-            TrainNode trueChild = new TrainNode(node.trueChild, x, y, samples, low, split);         
+            TrainNode trueChild = new TrainNode(node.trueChild, x, y, samples, low, split, constFeatures.clone());
+            TrainNode falseChild = new TrainNode(node.falseChild, x, y, samples, split, high, constFeatures);
+            this.constFeatures = null;
+            
             if (tc > nodeSize && trueChild.findBestSplit()) {
                 if (nextSplits != null) {
                     nextSplits.add(trueChild);
@@ -743,7 +802,6 @@ public class DecisionTree implements SoftClassifier<double[]> {
                 leaves++;
             }
 
-            TrainNode falseChild = new TrainNode(node.falseChild, x, y, samples, split, high);
             if (fc > nodeSize && falseChild.findBestSplit()) {
                 if (nextSplits != null) {
                     nextSplits.add(falseChild);

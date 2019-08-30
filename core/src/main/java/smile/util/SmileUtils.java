@@ -38,6 +38,46 @@ public class SmileUtils {
     }
 
     /**
+     * Insert an element to the given sorted array at the right position.
+     *
+     * @param sorted sorted array
+     * @param element element to add
+     * @return sorted array with an element inserted
+     */
+    public static int[] sortedArraySet(final int[] sorted, final int element) {
+        final int i = Arrays.binarySearch(sorted, element);
+        if (i >= 0) {// found element
+            return sorted;
+        } else {
+            return insert(sorted, ~i, element);
+        }
+    }
+
+    /**
+     * Insert the given element at the specified index of the given array.
+     *
+     * @param array original array
+     * @param index index to add an element
+     * @param element element to add
+     * @return an expanded array with an element inserted
+     */
+    public static int[] insert(final int[] array, final int index, final int element) {
+        final int size = array.length;
+        if (index > size) {
+            throw new IllegalArgumentException(String.format(
+                "index should be less than or equals to array.length: index=%d, array.length=%d",
+                index, array.length));
+        }
+        final int[] newArray = new int[size + 1];
+        System.arraycopy(array, 0, newArray, 0, Math.min(index, size));
+        newArray[index] = element;
+        if (index != size) {
+            System.arraycopy(array, index, newArray, index + 1, size - index);
+        }
+        return newArray;
+    }
+
+    /**
      * Sorts each variable and returns the index of values in ascending order.
      * Only numeric attributes will be sorted. Note that the order of original
      * array is NOT altered.
