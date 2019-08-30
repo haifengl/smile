@@ -743,9 +743,9 @@ public class DecisionTree implements SoftClassifier<double[]> {
 
             if (nextSplits == null) {
                 // We're doing depth-first splitting, so this node is definitely an interior node
-                // and its posteriori array can be deleted. For best-first splitting, these are
+                // and its count array can be deleted. For best-first splitting, these are
                 // cleared in pruneRedundantLeaves.
-                node.posteriori = null;
+                node.count = null;
             }
 
             return true;
