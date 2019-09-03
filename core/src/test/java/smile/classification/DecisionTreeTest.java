@@ -208,7 +208,7 @@ public class DecisionTreeTest {
                 System.out.format("%s importance is %.4f%n", train.attributes()[index[i]], importance[i]);
             }
             
-            assertEquals(324, error);
+            assertEquals(322, error);
         } catch (Exception ex) {
             System.err.println(ex);
         }
