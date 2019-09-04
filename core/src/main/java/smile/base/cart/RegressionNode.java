@@ -17,35 +17,33 @@
 
 package smile.base.cart;
 
-import java.io.Serializable;
-import smile.data.Tuple;
 import smile.data.type.StructType;
 
 /**
- * CART tree node.
+ * A leaf node in regression tree.
  */
-public interface Node extends Serializable {
-    /**
-     * Evaluate the tree over an instance.
-     */
-    LeafNode predict(Tuple x);
+public class RegressionNode implements LeafNode {
+    private static final long serialVersionUID = 1L;
+
+    /** The predicted output. */
+    private double output;
 
     /**
-     * Returns a dot representation for visualization.
+     * Constructor.
+     *
+     * @param output the predicted value for this node.
      */
-    String toDot(StructType schema, int id);
+    public RegressionNode(double output) {
+        this.output = output;
+    }
 
-    /**
-     * Returns the maximum depth of the tree -- the number of
-     * nodes along the longest path from this node
-     * down to the farthest leaf node.
-     */
-    int depth();
+    /** Returns the predicted value. */
+    public double output() {
+        return output;
+    }
 
-    /**
-     * Try to merge the children nodes and return a leaf node.
-     * If not able to merge, return this node itself.
-     */
-    Node toLeaf();
+    @Override
+    public String toDot(StructType schema, int id) {
+        return String.format(" %d [label=<%.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, output);
+    }
 }
-

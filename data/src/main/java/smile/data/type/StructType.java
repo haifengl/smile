@@ -38,7 +38,7 @@ public class StructType implements DataType {
     /** Field name to index map. */
     private final Map<String, Integer> index;
     /** Optional scale of measurement of fields. */
-    private final Map<String, Measure> measure;
+    private final Map<String, Measure> measures;
 
     /**
      * Constructor.
@@ -53,7 +53,7 @@ public class StructType implements DataType {
     StructType(StructField... fields) {
         this.fields = fields;
         index = new HashMap<>(fields.length * 4 / 3);
-        measure = new HashMap<>(fields.length * 4 / 3);
+        measures = new HashMap<>(fields.length * 4 / 3);
         for (int i = 0; i < fields.length; i++) {
             index.put(fields[i].name, i);
         }
@@ -84,9 +84,19 @@ public class StructType implements DataType {
         return index.get(field);
     }
 
+    /** Returns the name of a field. */
+    public String fieldName(int i) {
+        return fields[i].name;
+    }
+
     /** Returns the map of field name to its (optional) scale of measure. */
-    public Map<String, Measure> measure() {
-        return measure;
+    public Map<String, Measure> measures() {
+        return measures;
+    }
+
+    /** Returns the map of field name to its (optional) scale of measure. */
+    public Measure measure(String field) {
+        return measures.get(field);
     }
 
     /** Returns the lambda functions that parse field values. */
@@ -94,7 +104,7 @@ public class StructType implements DataType {
         List<Function<String, Object>> parser = new ArrayList<>();
         for (int i = 0; i < fields.length; i++) {
             StructField field = fields[i];
-            Measure scale = measure.get(field.name);
+            Measure scale = measure(field.name);
             if (scale != null) {
                 parser.add(s -> scale.valueOf(s));
             } else {
@@ -147,7 +157,7 @@ public class StructType implements DataType {
         return Arrays.stream(fields)
                 .map(field -> {
                     Object v = t.get(field.name);
-                    Measure m = measure().get(field.name);
+                    Measure m = measure(field.name);
                     String value = v == null ? "null" : ((m != null) ? m.toString(v) : field.type.toString(v));
                     return String.format("  %s: %s", field.name, value);
                 })
@@ -163,7 +173,7 @@ public class StructType implements DataType {
             String[] pair = element.split(":");
             int i = index.get(pair[0]);
             StructField field = fields[i];
-            Measure scale = measure.get(field.name);
+            Measure scale = measure(field.name);
             if (scale != null) {
                 row[i] = scale.valueOf(pair[1]);
             } else {

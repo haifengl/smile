@@ -17,6 +17,11 @@
 
 package smile.base.cart;
 
+import smile.data.Tuple;
+import smile.data.measure.DiscreteMeasure;
+import smile.data.type.StructType;
+import smile.data.measure.Measure;
+
 /**
  * A node with a nominal split variable.
  */
@@ -26,21 +31,27 @@ public class NominalNode extends InternalNode {
     /**
      * The split value.
      */
-    int splitValue = -1;
+    int splitValue = Integer.MIN_VALUE;
 
     /** Constructor. */
-    public NominalNode(int id, double output, String featureName, int splitFeature, int splitValue, double splitScore, Node trueChild, Node falseChild) {
-        super(id, output, featureName, splitFeature, splitScore, trueChild, falseChild);
+    public NominalNode(int splitFeature, int splitValue, double splitScore, Node trueChild, Node falseChild) {
+        super(splitFeature, splitScore, trueChild, falseChild);
         this.splitValue = splitValue;
     }
 
     @Override
-    public double predict(double[] x) {
-        return x[splitFeature] == splitValue ? trueChild.predict(x) : falseChild.predict(x);
+    public LeafNode predict(Tuple x) {
+        return x.getInt(splitFeature) == splitValue ? trueChild.predict(x) : falseChild.predict(x);
     }
 
     @Override
-    public String toDot() {
-        return String.format(" %d [label=<%s = %s<br/>nscore = %.4f>, fillcolor=\"#00000000\"];\n", id, featureName, splitValue, splitScore);
+    public String toDot(StructType schema, int id) {
+        String name = schema.fieldName(splitFeature);
+        Measure measure = schema.measure(name);
+        String value = (measure != null && measure instanceof DiscreteMeasure) ?
+                ((DiscreteMeasure) measure).level(splitValue) :
+                Integer.toString(splitValue);
+
+        return String.format(" %d [label=<%s = %s<br/>nscore = %.4f>, fillcolor=\"#00000000\"];\n", id, name, value, splitScore);
     }
 }

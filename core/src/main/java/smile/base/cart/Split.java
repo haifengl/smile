@@ -42,6 +42,4 @@ public class Split {
      * Reduction in splitting criterion.
      */
     double splitScore = 0.0;
-
-
 }

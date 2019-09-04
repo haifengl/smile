@@ -74,7 +74,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Returns the structure of data frame. */
     default DataFrame structure() {
-        if (schema().measure().isEmpty()) {
+        if (schema().measures().isEmpty()) {
             List<BaseVector> vectors = Arrays.asList(
                     Vector.of("Column", String.class, names()),
                     Vector.of("Type", DataType.class, types())
@@ -84,7 +84,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
         } else {
             Measure[] measures = new Measure[ncols()];
-            for (Map.Entry<String, Measure> e : schema().measure().entrySet()) {
+            for (Map.Entry<String, Measure> e : schema().measures().entrySet()) {
                 measures[columnIndex(e.getKey())] = e.getValue();
             }
 
@@ -308,7 +308,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         if (o instanceof String) {
             return (String) o;
         } else {
-            Measure measure = schema().measure().get(schema().field(j).name);
+            Measure measure = schema().measure(schema().fieldName(j));
             if (measure != null) {
                 return measure.toString(o);
             } else {
@@ -402,7 +402,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * @throws ClassCastException when the data is not nominal or ordinal.
      */
     default String getScale(int i, int j) {
-        return ((DiscreteMeasure) schema().measure().get(schema().field(j).name)).toString(getInt(i, j));
+        return ((DiscreteMeasure) schema().measure(schema().fieldName(j))).toString(getInt(i, j));
     }
 
     /**
@@ -656,7 +656,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
         int k = 0;
         for (int j = 0; j < ncols; j++) {
-            Measure measure = schema().measure().get(names[j]);
+            Measure measure = schema().measure(names[j]);
             if (measure != null && measure instanceof DiscreteMeasure) continue;
 
             DataType type = types[j];
@@ -911,7 +911,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         for (Map<String, T> map : data) {
             Object[] row = new Object[schema.length()];
             for (int i = 0; i < row.length; i++) {
-                row[i] = map.get(schema.field(i).name);
+                row[i] = map.get(schema.fieldName(i));
             }
             rows.add(Tuple.of(row, schema));
         }
