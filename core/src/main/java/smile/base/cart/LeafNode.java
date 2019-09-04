@@ -17,33 +17,29 @@
 
 package smile.base.cart;
 
+import smile.data.Tuple;
+
 /**
  * A leaf node in decision tree.
  */
-public class LeafNode extends Node {
-    private static final long serialVersionUID = 1L;
-
+public interface LeafNode extends Node {
     /**
-     * Constructor.
-     *
-     * @param output the predicted value for this node.
+     * Splits this node. If success, return an internal
+     * node with children leaf nodes. If not, return
+     * this node itself.
      */
-    public LeafNode(int id, double output) {
-        super(id, output);
+    Node split();
+
+    @Override
+    default LeafNode predict(Tuple x) {
+        return this;
     }
 
     @Override
-    public double predict(double[] x) {
-        return output;
-    }
-
-    @Override
-    public String toDot() {
-        return String.format(" %d [label=<class = %d>, fillcolor=\"#00000000\", shape=ellipse];\n", id, output);
-    }
-
-    @Override
-    public int depth() {
+    default int depth() {
         return 1;
     }
+
+    @Override
+    default Node toLeaf() { return this; }
 }

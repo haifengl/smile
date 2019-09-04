@@ -150,7 +150,7 @@ class DataFrameImpl implements DataFrame {
                     } else if (type.isEnum()) {
                         Object[] levels = type.getEnumConstants();
                         NominalScale scale = new NominalScale(Arrays.stream(levels).map(Object::toString).toArray(String[]::new));
-                        schema.measure().put(name, scale);
+                        schema.measures().put(name, scale);
                         if (levels.length < Byte.MAX_VALUE + 1) {
                             byte[] values = new byte[size];
                             for (int i = 0; i < size; i++) values[i] = (byte) ((Enum) read.invoke(data.get(i))).ordinal();
@@ -389,9 +389,9 @@ class DataFrameImpl implements DataFrame {
 
         DataFrameImpl df = new DataFrameImpl(sub);
         for (StructField field : df.schema.fields()) {
-            Measure measure = schema.measure().get(field.name);
+            Measure measure = schema.measure(field.name);
             if (measure != null) {
-                df.schema.measure().put(field.name, measure);
+                df.schema.measures().put(field.name, measure);
             }
         }
 
@@ -409,9 +409,9 @@ class DataFrameImpl implements DataFrame {
 
         DataFrameImpl df = new DataFrameImpl(sub);
         for (StructField field : df.schema.fields()) {
-            Measure measure = schema.measure().get(field.name);
+            Measure measure = schema.measure(field.name);
             if (measure != null) {
-                df.schema.measure().put(field.name, measure);
+                df.schema.measures().put(field.name, measure);
             }
         }
 
@@ -434,9 +434,9 @@ class DataFrameImpl implements DataFrame {
         }
 
         DataFrameImpl df = new DataFrameImpl(all);
-        df.schema.measure().putAll(schema.measure());
+        df.schema.measures().putAll(schema.measures());
         for (DataFrame dataframe : dataframes) {
-            df.schema.measure().putAll(dataframe.schema().measure());
+            df.schema.measures().putAll(dataframe.schema().measures());
         }
 
         return df;
@@ -453,7 +453,7 @@ class DataFrameImpl implements DataFrame {
         List<BaseVector> columns = new ArrayList<>(this.columns);
         Collections.addAll(columns, vectors);
         DataFrameImpl df = new DataFrameImpl(columns);
-        df.schema.measure().putAll(schema.measure());
+        df.schema.measures().putAll(schema.measures());
         return df;
     }
 
@@ -549,7 +549,7 @@ class DataFrameImpl implements DataFrame {
         }
 
         DataFrameImpl df = new DataFrameImpl(data);
-        df.schema.measure().putAll(schema.measure());
+        df.schema.measures().putAll(schema.measures());
         return df;
     }
 

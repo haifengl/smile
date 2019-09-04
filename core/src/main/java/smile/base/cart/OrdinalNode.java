@@ -17,6 +17,11 @@
 
 package smile.base.cart;
 
+import smile.data.Tuple;
+import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.Measure;
+import smile.data.type.StructType;
+
 /**
  * A node with a ordinal split variable (real-valued or ordinal categorical value).
  */
@@ -29,18 +34,24 @@ public class OrdinalNode extends InternalNode {
     double splitValue = Double.NaN;
 
     /** Constructor. */
-    public OrdinalNode(int id, double output, String featureName, int splitFeature, double splitValue, double splitScore, Node trueChild, Node falseChild) {
-        super(id, output, featureName, splitFeature, splitScore, trueChild, falseChild);
+    public OrdinalNode(int splitFeature, double splitValue, double splitScore, Node trueChild, Node falseChild) {
+        super(splitFeature, splitScore, trueChild, falseChild);
         this.splitValue = splitValue;
     }
 
     @Override
-    public double predict(double[] x) {
-        return x[splitFeature] <= splitValue ? trueChild.predict(x) : falseChild.predict(x);
+    public LeafNode predict(Tuple x) {
+        return x.getDouble(splitFeature) <= splitValue ? trueChild.predict(x) : falseChild.predict(x);
     }
 
     @Override
-    public String toDot() {
-        return String.format(" %d [label=<%s &le; %.4f<br/>score = %.4f>, fillcolor=\"#00000000\"];\n", id, featureName, splitValue, splitScore);
+    public String toDot(StructType schema, int id) {
+        String name = schema.fieldName(splitFeature);
+        Measure measure = schema.measure(name);
+        String value = (measure != null && measure instanceof DiscreteMeasure) ?
+                ((DiscreteMeasure) measure).level((int) splitValue) :
+                String.format("%.4f", splitValue);
+
+        return String.format(" %d [label=<%s &le; %s<br/>score = %.4f>, fillcolor=\"#00000000\"];\n", id, name, value, splitScore);
     }
 }

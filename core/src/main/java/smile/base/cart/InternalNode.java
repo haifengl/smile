@@ -17,12 +17,13 @@
 
 package smile.base.cart;
 
-import smile.math.MathEx;
+import smile.data.Tuple;
+import smile.regression.Regression;
 
 /**
  * An internal node in CART.
  */
-public abstract class InternalNode extends Node {
+public abstract class InternalNode implements Node {
 
     /**
      * Children node.
@@ -34,27 +35,27 @@ public abstract class InternalNode extends Node {
      */
     Node falseChild;
 
-    /** The name of split feature. */
-    String featureName;
-
     /**
      * The split feature for this node.
      */
     int splitFeature = -1;
 
     /**
-     * Reduction in squared error compared to parent.
+     * Reduction in impurity compared to parent.
      */
     double splitScore = 0.0;
 
-    public InternalNode(int id, double output, String featureName, int splitFeature, double splitScore, Node trueChild, Node falseChild) {
-        super(id, output);
-        this.featureName = featureName;
+    public InternalNode(int splitFeature, double splitScore, Node trueChild, Node falseChild) {
         this.splitFeature = splitFeature;
         this.splitScore = splitScore;
         this.trueChild = trueChild;
         this.falseChild = falseChild;
     }
+
+    /**
+     * Evaluate the tree over an instance.
+     */
+    public abstract LeafNode predict(Tuple x);
 
     @Override
     public int depth() {
@@ -64,5 +65,24 @@ public abstract class InternalNode extends Node {
 
         // use the larger one
         return Math.max(ld, rd) + 1;
+    }
+
+    @Override
+    public Node toLeaf() {
+        trueChild = trueChild.toLeaf();
+        falseChild = falseChild.toLeaf();
+
+        if (trueChild instanceof DecisionNode && falseChild instanceof DecisionNode) {
+            if (((DecisionNode) trueChild).output() == ((DecisionNode) falseChild).output()) {
+                return new DecisionNode(((DecisionNode) trueChild).output());
+            }
+
+        } else if (trueChild instanceof RegressionNode && falseChild instanceof RegressionNode) {
+            if (((RegressionNode) trueChild).output() == ((RegressionNode) falseChild).output()) {
+                return new RegressionNode(((RegressionNode) trueChild).output());
+            }
+        }
+
+        return this;
     }
 }

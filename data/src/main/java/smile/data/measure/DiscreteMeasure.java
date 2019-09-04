@@ -84,6 +84,11 @@ public abstract class DiscreteMeasure implements Measure {
         return levels;
     }
 
+    /** Returns the level string representation. */
+    public String level(int i) {
+        return levels[i];
+    }
+
     /** Returns the data type that is suitable for this measure scale. */
     public DataType type() {
         if (levels.length <= Byte.MAX_VALUE + 1) {

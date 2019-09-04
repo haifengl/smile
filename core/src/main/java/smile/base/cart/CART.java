@@ -24,6 +24,7 @@ import smile.math.MathEx;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.stream.IntStream;
+import java.util.AbstractMap.SimpleEntry;
 
 /** Classification and regression tree. */
 public abstract class CART {
@@ -91,29 +92,37 @@ public abstract class CART {
         StringBuilder builder = new StringBuilder();
         builder.append("digraph DecisionTree {\n node [shape=box, style=\"filled, rounded\", color=\"black\", fontname=helvetica];\n edge [fontname=helvetica];\n");
 
-        int n = 0; // number of nodes processed
-        Queue<Node> queue = new LinkedList<>();
-        queue.add(root);
+        String trueLabel  = " [labeldistance=2.5, labelangle=45, headlabel=\"True\"];\n";
+        String falseLabel = " [labeldistance=2.5, labelangle=-45, headlabel=\"False\"];\n";
+
+        Queue<SimpleEntry<Integer, Node>> queue = new LinkedList<>();
+        queue.add(new SimpleEntry(1, root));
 
         while (!queue.isEmpty()) {
             // Dequeue a vertex from queue and print it
-            Node node = queue.poll();
-            int id = node.id;
+            SimpleEntry<Integer, Node> entry = queue.poll();
+            int id = entry.getKey();
+            Node node = entry.getValue();
 
             // leaf node
-            builder.append(node.toDot());
+            builder.append(node.toDot(id));
 
             if (node instanceof InternalNode) {
+                int tid = 2 * id;
+                int fid = 2 * id + 1;
                 InternalNode inode = (InternalNode) node;
-                queue.add(inode.trueChild);
-                queue.add(inode.falseChild);
+                queue.add(new SimpleEntry(tid, inode.trueChild));
+                queue.add(new SimpleEntry(fid, inode.falseChild));
 
                 // add edge
+                builder.append(' ').append(id).append(" -> ").append(tid).append(trueLabel);
+                builder.append(' ').append(id).append(" -> ").append(fid).append(falseLabel);
+
                 // only draw edge label at top
-                builder.append(' ').append(id).append(" -> ").append(inode.trueChild.id);
-                builder.append(" [labeldistance=2.5, labelangle=45, headlabel=\"True\"];\n");
-                builder.append(' ').append(id).append(" -> ").append(inode.falseChild.id);
-                builder.append(" [labeldistance=2.5, labelangle=-45, headlabel=\"False\"];\n");
+                if (id == 1) {
+                    trueLabel = "\n";
+                    falseLabel = "\n";
+                }
             }
         }
 

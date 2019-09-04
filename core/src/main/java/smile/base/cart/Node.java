@@ -18,43 +18,34 @@
 package smile.base.cart;
 
 import java.io.Serializable;
+import smile.data.Tuple;
+import smile.data.type.StructType;
 
 /**
  * CART tree node.
  */
-public abstract class Node implements Serializable {
-    /** The id of node. */
-    int id;
-
+public interface Node extends Serializable {
     /**
-     * Predicted real value for this node.
+     * Evaluate the tree over an instance.
      */
-    double output = 0.0;
-
-    /**
-     * Constructor.
-     * @param output the predicted value for this node.
-     */
-    public Node(int id, double output) {
-        this.id = id;
-        this.output = output;
-    }
-
-    /**
-     * Evaluate the regression tree over an instance.
-     */
-    public abstract double predict(double[] x);
+    LeafNode predict(Tuple x);
 
     /**
      * Returns a dot representation for visualization.
      */
-    public abstract String toDot();
+    String toDot(StructType schema, int id);
 
     /**
      * Returns the maximum depth of the tree -- the number of
      * nodes along the longest path from this node
      * down to the farthest leaf node.
      */
-    public abstract int depth();
+    int depth();
+
+    /**
+     * Try to merge the children nodes and return a leaf node.
+     * If not able to merge, return this node itself.
+     */
+    Node toLeaf();
 }
 

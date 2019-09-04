@@ -282,7 +282,7 @@ public interface Tuple extends Serializable {
         if (o instanceof String) {
             return (String) o;
         } else {
-            Measure scale = schema().measure().get(schema().field(i).name);
+            Measure scale = schema().measure(schema().fieldName(i));
             return scale != null ? scale.toString(o) : schema().field(i).type.toString(o);
         }
     }
@@ -372,7 +372,7 @@ public interface Tuple extends Serializable {
      * @throws ClassCastException when the data is not nominal or ordinal.
      */
     default String getScale(int i) {
-        return ((DiscreteMeasure) schema().measure().get(schema().field(i).name)).toString(getInt(i));
+        return ((DiscreteMeasure) schema().measure(schema().fieldName(i))).toString(getInt(i));
     }
 
     /**
