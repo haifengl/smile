@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.Callable;
+import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 
 import smile.data.Attribute;
@@ -127,10 +128,18 @@ public class RegressionTree implements Regression<double[]> {
      */
     private int numFeatures;
     /**
-     * The index of training values in ascending order. Note that only numeric
-     * attributes will be sorted.
+     * An index of training values. Initially, order[i] is a set of indices that iterate through the
+     * training values for attribute i in ascending order. During training, the array is rearranged
+     * so that all values for each leaf node occupy a contiguous range, but within that range they
+     * maintain the original ordering. Note that only numeric attributes will be sorted; non-numeric
+     * attributes will have a null in the corresponding place in the array.
      */
     private transient int[][] order;
+    /**
+     * An index of training values that maps their current position in the {@link #order} arrays to
+     * their original locations.
+     */
+    private transient int[] originalOrder;
 
     /**
      * Trainer for regression tree.
@@ -287,14 +296,6 @@ public class RegressionTree implements Regression<double[]> {
          * Children node.
          */
         Node falseChild;
-        /**
-         * Predicted output for children node.
-         */
-        double trueChildOutput = 0.0;
-        /**
-         * Predicted output for children node.
-         */
-        double falseChildOutput = 0.0;
 
         /**
          * Constructor.
@@ -373,15 +374,25 @@ public class RegressionTree implements Regression<double[]> {
          * sampling with replacement.
          */
         int[] samples;
+        /**
+         * The lower bound (inclusive) in the order array of the samples belonging to this node.
+         */
+        int low;
+        /**
+         * The upper bound (exclusive) in the order array of the samples belonging to this node.
+         */
+        int high;
 
         /**
          * Constructor.
          */
-        public TrainNode(Node node, double[][] x, double[] y, int[] samples) {
+      public TrainNode(Node node, double[][] x, double[] y, int[] samples, int low, int high) {
             this.node = node;
             this.x = x;
             this.y = y;
             this.samples = samples;
+            this.low = low;
+            this.high = high;
         }
 
         @Override
@@ -396,7 +407,12 @@ public class RegressionTree implements Regression<double[]> {
          */
         public void calculateOutput(NodeOutput output) {
             if (node.trueChild == null && node.falseChild == null) {
-                node.output = output.calculate(samples);
+                // Reconstruct a samples array holding only this node's range.
+                int[] nodeSamples = new int[samples.length];
+                for (int i = low; i < high; i++) {
+                    nodeSamples[originalOrder[i]] = samples[originalOrder[i]];
+                }
+                node.output = output.calculate(nodeSamples);
             } else {
                 if (trueChild != null) {
                     trueChild.calculateOutput(output);
@@ -413,8 +429,8 @@ public class RegressionTree implements Regression<double[]> {
          */
         public boolean findBestSplit() {
             int n = 0;
-            for (int s : samples) {
-                n += s;
+            for (int i = low; i < high; i++) {
+                n += samples[originalOrder[i]];
             }
 
             if (n <= nodeSize) {
@@ -433,21 +449,19 @@ public class RegressionTree implements Regression<double[]> {
 
                 // Random forest already runs on parallel.
                 for (int j = 0; j < mtry; j++) {
-                    Node split = findBestSplit(n, sum, variables[j]);
+                    Node split = findBestSplit(n, low, high, sum, variables[j]);
                     if (split.splitScore > node.splitScore) {
                         node.splitFeature = split.splitFeature;
                         node.splitValue = split.splitValue;
                         node.splitScore = split.splitScore;
                         node.gain = split.gain;
-                        node.trueChildOutput = split.trueChildOutput;
-                        node.falseChildOutput = split.falseChildOutput;
                     }
                 }
             } else {
 
                 List<SplitTask> tasks = new ArrayList<>(mtry);
                 for (int j = 0; j < mtry; j++) {
-                    tasks.add(new SplitTask(n, sum, variables[j]));
+                    tasks.add(new SplitTask(n, low, high, sum, variables[j]));
                 }
 
                 try {
@@ -457,20 +471,16 @@ public class RegressionTree implements Regression<double[]> {
                             node.splitValue = split.splitValue;
                             node.splitScore = split.splitScore;
                             node.gain = split.gain;
-                            node.trueChildOutput = split.trueChildOutput;
-                            node.falseChildOutput = split.falseChildOutput;
                         }
                     }
                 } catch (Exception ex) {
                     for (int j = 0; j < mtry; j++) {
-                        Node split = findBestSplit(n, sum, variables[j]);
+                        Node split = findBestSplit(n, low, high, sum, variables[j]);
                         if (split.splitScore > node.splitScore) {
                             node.splitFeature = split.splitFeature;
                             node.splitValue = split.splitValue;
                             node.splitScore = split.splitScore;
                             node.gain = split.gain;
-                            node.trueChildOutput = split.trueChildOutput;
-                            node.falseChildOutput = split.falseChildOutput;
                         }
                     }
                 }
@@ -489,6 +499,14 @@ public class RegressionTree implements Regression<double[]> {
              */
             int n;
             /**
+             * The lower bound (inclusive) in the order array of the samples belonging to this node.
+             */
+            int low;
+            /**
+             * The upper bound (exclusive) in the order array of the samples belonging to this node.
+             */
+            int high;
+            /**
              * The sum of responses of this node.
              */
             double sum;
@@ -497,15 +515,17 @@ public class RegressionTree implements Regression<double[]> {
              */
             int j;
 
-            SplitTask(int n, double sum, int j) {
+            SplitTask(int n, int low, int high, double sum, int j) {
                 this.n = n;
+                this.low = low;
+                this.high = high;
                 this.sum = sum;
                 this.j = j;
             }
 
             @Override
             public Node call() {
-                return findBestSplit(n, sum, j);
+                return findBestSplit(n, low, high, sum, j);
             }
         }
 
@@ -513,26 +533,26 @@ public class RegressionTree implements Regression<double[]> {
          * Finds the best split cutoff for attribute j at the current node.
          *
          * @param n the number instances in this node.
+         * @param low the lower bound (inclusive) of the samples belonging to this node.
+         * @param high the upper bound (exclusive) of the samples belonging to this node.
          * @param j the attribute to split on.
          */
-        public Node findBestSplit(int n, double sum, int j) {
+        public Node findBestSplit(int n, int low, int high, double sum, int j) {
             Node split = new Node(0.0);
             if (attributes[j].getType() == Attribute.Type.NOMINAL) {
                 int m = ((NominalAttribute) attributes[j]).size();
                 double[] trueSum = new double[m];
                 int[] trueCount = new int[m];
 
-                for (int i = 0; i < x.length; i++) {
-                    if (samples[i] > 0) {
-                        double target = samples[i] * y[i];
+                for (int i = low; i < high; i++) {
+                    int o = originalOrder[i];
+                    double target = samples[o] * y[o];
 
-                        // For each true feature of this datum increment the
-                        // sufficient statistics for the "true" branch to evaluate
-                        // splitting on this feature.
-                        int index = (int) x[i][j];
-                        trueSum[index] += target;
-                        trueCount[index] += samples[i];
-                    }
+                    // For each true feature of this datum increment the sufficient statistics for
+                    // the "true" branch to evaluate splitting on this feature.
+                    int index = (int) x[o][j];
+                    trueSum[index] += target;
+                    trueCount[index] += samples[o];
                 }
 
                 for (int k = 0; k < m; k++) {
@@ -554,73 +574,68 @@ public class RegressionTree implements Regression<double[]> {
                         split.splitFeature = j;
                         split.splitValue = k;
                         split.splitScore = gain;
-                        split.trueChildOutput = trueMean;
-                        split.falseChildOutput = falseMean;
                     }
                 }
             } else if (attributes[j].getType() == Attribute.Type.NUMERIC) {
                 double trueSum = 0.0;
                 int trueCount = 0;
                 double prevx = Double.NaN;
+                int[] variableOrder = order[j];
 
-                for (int i : order[j]) {
-                    if (samples[i] > 0) {
-                        if (Double.isNaN(prevx) || x[i][j] == prevx) {
-                            prevx = x[i][j];
-                            trueSum += samples[i] * y[i];
-                            trueCount += samples[i];
-                            continue;
-                        }
-
-                        double falseCount = n - trueCount;
-
-                        // If either side is empty, skip this feature.
-                        if (trueCount < nodeSize || falseCount < nodeSize) {
-                            prevx = x[i][j];
-                            trueSum += samples[i] * y[i];
-                            trueCount += samples[i];
-                            continue;
-                        }
-
-                        // compute penalized means
-                        double trueMean = trueSum / trueCount;
-                        double falseMean = (sum - trueSum) / falseCount;
-
-                        // The gain is actually -(reduction in squared error) for
-                        // sorting in priority queue, which treats smaller number with
-                        // higher priority.
-                        double gain = (trueCount * trueMean * trueMean + falseCount * falseMean * falseMean) - n * split.output * split.output;
-
-                        double score = gain;
-                        double monoRegForFeature = monotonicRegression[j];
-
-                        // False child - larger values of feature
-                        if (monoRegForFeature > 0) {
-                            boolean isTargetDecreasing = trueMean > falseMean;
-                            if (isTargetDecreasing) {
-                                score *= 1 - Math.abs(monoRegForFeature);
-                            }
-                        } else if (monoRegForFeature < 0) {
-                            boolean isTargetDecreasing = trueMean < falseMean;
-                            if (isTargetDecreasing) {
-                                score *= 1 - Math.abs(monoRegForFeature);
-                            }
-                        } // monoRegForFeature == 0 - no monotonic regression
-
-                        if (score > split.splitScore) {
-                            // new best split
-                            split.gain = gain;
-                            split.splitFeature = j;
-                            split.splitValue = (x[i][j] + prevx) / 2;
-                            split.splitScore = score;
-                            split.trueChildOutput = trueMean;
-                            split.falseChildOutput = falseMean;
-                        }
-
-                        prevx = x[i][j];
-                        trueSum += samples[i] * y[i];
-                        trueCount += samples[i];
+                for (int i = low; i < high; i++) {
+                    int o = variableOrder[i];
+                    if (Double.isNaN(prevx) || x[o][j] == prevx) {
+                        prevx = x[o][j];
+                        trueSum += samples[o] * y[o];
+                        trueCount += samples[o];
+                        continue;
                     }
+
+                    double falseCount = n - trueCount;
+
+                    // If either side is empty, skip this feature.
+                    if (trueCount < nodeSize || falseCount < nodeSize) {
+                        prevx = x[o][j];
+                        trueSum += samples[o] * y[o];
+                        trueCount += samples[o];
+                        continue;
+                    }
+
+                    // compute penalized means
+                    double trueMean = trueSum / trueCount;
+                    double falseMean = (sum - trueSum) / falseCount;
+
+                    // The gain is actually -(reduction in squared error) for sorting in priority
+                    // queue, which treats smaller number with higher priority.
+                    double gain = (trueCount * trueMean * trueMean + falseCount * falseMean * falseMean) - n * split.output * split.output;
+
+                    double score = gain;
+                    double monoRegForFeature = monotonicRegression[j];
+
+                    // False child - larger values of feature
+                    if (monoRegForFeature > 0) {
+                        boolean isTargetDecreasing = trueMean > falseMean;
+                        if (isTargetDecreasing) {
+                            score *= 1 - Math.abs(monoRegForFeature);
+                        }
+                    } else if (monoRegForFeature < 0) {
+                        boolean isTargetDecreasing = trueMean < falseMean;
+                        if (isTargetDecreasing) {
+                            score *= 1 - Math.abs(monoRegForFeature);
+                        }
+                    } // monoRegForFeature == 0 - no monotonic regression
+
+                    if (score > split.splitScore) {
+                        // new best split
+                        split.gain = gain;
+                        split.splitFeature = j;
+                        split.splitValue = (x[o][j] + prevx) / 2;
+                        split.splitScore = score;
+                    }
+
+                    prevx = x[o][j];
+                    trueSum += samples[o] * y[o];
+                    trueCount += samples[o];
                 }
             } else {
                 throw new IllegalStateException("Unsupported attribute type: " + attributes[j].getType());
@@ -643,37 +658,34 @@ public class RegressionTree implements Regression<double[]> {
             int n = x.length;
             int tc = 0;
             int fc = 0;
-            int[] trueSamples = new int[n];
-            int[] falseSamples = new int[n];
-
+            double trueSum = 0.0;
+            double falseSum = 0.0;
+            int split = low;
+            IntPredicate goesLeft;
             if (attributes[node.splitFeature].getType() == Attribute.Type.NOMINAL) {
-                for (int i = 0; i < n; i++) {
-                    if (samples[i] > 0) {
-                        if (Math.equals(x[i][node.splitFeature], node.splitValue)) {
-                            trueSamples[i] = samples[i];
-                            tc += trueSamples[i];
-                            samples[i] = 0;
-                        } else {
-                            falseSamples[i] = samples[i];
-                            fc += samples[i];
-                        }
-                    }
-                }
+                goesLeft = new IntPredicate() {
+                    public boolean test(int o) { return Math.equals(x[o][node.splitFeature], node.splitValue); }
+                    };
             } else if (attributes[node.splitFeature].getType() == Attribute.Type.NUMERIC) {
-                for (int i = 0; i < n; i++) {
-                    if (samples[i] > 0) {
-                        if (x[i][node.splitFeature] <= node.splitValue) {
-                            trueSamples[i] = samples[i];
-                            tc += trueSamples[i];
-                            samples[i] = 0;
-                        } else {
-                            falseSamples[i] = samples[i];
-                            fc += samples[i];
-                        }
-                    }
-                }
+                goesLeft = new IntPredicate() {
+                    public boolean test(int o) { return x[o][node.splitFeature] <= node.splitValue; }
+                    };
             } else {
                 throw new IllegalStateException("Unsupported attribute type: " + attributes[node.splitFeature].getType());
+            }
+
+            for (int i = low; i < high; i++) {
+                int o = originalOrder[i];
+                double yi = y[o];
+                int s = samples[o];
+                if (goesLeft.test(o)) {
+                    trueSum += s * yi;
+                    tc += s;
+                    split++;
+                } else {
+                    falseSum += s * yi;
+                    fc += s;
+                }
             }
 
             if (tc < nodeSize || fc < nodeSize) {
@@ -684,15 +696,18 @@ public class RegressionTree implements Regression<double[]> {
                 return;
             }
 
-            node.trueChild = new Node(node.trueChildOutput);
-            node.falseChild = new Node(node.falseChildOutput);
+            node.trueChild = new Node(trueSum / tc);
+            node.falseChild = new Node(falseSum / fc);
 
-            trueChild = new TrainNode(node.trueChild, x, y, trueSamples);
+            int[] buffer = new int[high - split];
+            partitionOrder(low, split, high, goesLeft, buffer);
+
+            trueChild = new TrainNode(node.trueChild, x, y, samples, low, split);
             if (tc > nodeSize && trueChild.findBestSplit()) {
                 nextSplits.add(trueChild);
             }
 
-            falseChild = new TrainNode(node.falseChild, x, y, falseSamples);
+            falseChild = new TrainNode(node.falseChild, x, y, samples, split, high);
             if (fc > nodeSize && falseChild.findBestSplit()) {
                 nextSplits.add(falseChild);
             }
@@ -733,15 +748,25 @@ public class RegressionTree implements Regression<double[]> {
          * sampling with replacement.
          */
         int[] samples;
+        /**
+         * The lower bound (inclusive) in the order array of the samples belonging to this node.
+         */
+        int low;
+        /**
+         * The upper bound (exclusive) in the order array of the samples belonging to this node.
+         */
+        int high;
 
         /**
          * Constructor.
          */
-        public SparseBinaryTrainNode(Node node, int[][] x, double[] y, int[] samples) {
+        public SparseBinaryTrainNode(Node node, int[][] x, double[] y, int[] samples, int low, int high) {
             this.node = node;
             this.x = x;
             this.y = y;
             this.samples = samples;
+            this.low = low;
+            this.high = high;
         }
 
         @Override
@@ -763,23 +788,27 @@ public class RegressionTree implements Regression<double[]> {
             int[] trueCount = new int[p];
             int[] featureIndex = new int[p];
 
-            int n = Math.sum(samples);
+            int n = 0;
+            for (int i = low; i < high; i++) {
+                n += samples[originalOrder[i]];
+            }
             double sumX = 0.0;
-            for (int i = 0; i < x.length; i++) {
-                if (samples[i] == 0) {
+            for (int i = low; i < high; i++) {
+                int o = originalOrder[i];
+                if (samples[o] == 0) {
                     continue;
                 }
 
-                double target = samples[i] * y[i];
-                sumX += y[i];
+                double target = samples[o] * y[o];
+                sumX += y[o];
 
                 // For each true feature of this datum increment the
                 // sufficient statistics for the "true" branch to evaluate
                 // splitting on this feature.
-                for (int j = 0; j < x[i].length; ++j) {
-                    int index = x[i][j];
+                for (int j = 0; j < x[o].length; ++j) {
+                    int index = x[o][j];
                     trueSum[index] += target;
-                    trueCount[index] += samples[i];
+                    trueCount[index] += samples[o];
                     featureIndex[index] = j;
                 }
             }
@@ -811,8 +840,6 @@ public class RegressionTree implements Regression<double[]> {
                     node.splitFeature = featureIndex[i];
                     node.splitValue = i;
                     node.splitScore = gain;
-                    node.trueChildOutput = trueMean;
-                    node.falseChildOutput = falseMean;
                 }
             }
 
@@ -834,26 +861,31 @@ public class RegressionTree implements Regression<double[]> {
             int n = x.length;
             int tc = 0;
             int fc = 0;
-            int[] trueSamples = new int[n];
-            int[] falseSamples = new int[n];
-
-            for (int i = 0; i < n; i++) {
-                if (samples[i] > 0) {
-                    if (x[i][node.splitFeature] == (int) node.splitValue) {
-                        trueSamples[i] = samples[i];
-                        tc += trueSamples[i];
-                        samples[i] = 0;
-                    } else {
-                        falseSamples[i] = samples[i];
-                        fc += samples[i];
-                    }
+            double trueSum = 0.0;
+            double falseSum = 0.0;
+            int split = low;
+            IntPredicate goesLeft = new IntPredicate() {
+                public boolean test(int o) { return x[o][node.splitFeature] == (int) node.splitValue; }
+                };
+            for (int i = low; i < high; i++) {
+                int o = originalOrder[i];
+                if (goesLeft.test(o)) {
+                    tc += samples[o];
+                    trueSum += samples[o] * y[o];
+                    split++;
+                } else {
+                    fc += samples[o];
+                    falseSum += samples[o] * y[o];
                 }
             }
 
-            node.trueChild = new Node(node.trueChildOutput);
-            node.falseChild = new Node(node.falseChildOutput);
+            node.trueChild = new Node(trueSum / tc);
+            node.falseChild = new Node(falseSum / fc);
 
-            trueChild = new SparseBinaryTrainNode(node.trueChild, x, y, trueSamples);
+            int[] buffer = new int[high - split];
+            partitionOrder(low, split, high, goesLeft, buffer);
+
+            trueChild = new SparseBinaryTrainNode(node.trueChild, x, y, samples, low, split);
             if (tc > nodeSize && trueChild.findBestSplit()) {
                 if (nextSplits != null) {
                     nextSplits.add(trueChild);
@@ -862,7 +894,7 @@ public class RegressionTree implements Regression<double[]> {
                 }
             }
 
-            falseChild = new SparseBinaryTrainNode(node.falseChild, x, y, falseSamples);
+            falseChild = new SparseBinaryTrainNode(node.falseChild, x, y, samples, split, high);
             if (fc > nodeSize && falseChild.findBestSplit()) {
                 if (nextSplits != null) {
                     nextSplits.add(falseChild);
@@ -882,7 +914,12 @@ public class RegressionTree implements Regression<double[]> {
          */
         public void calculateOutput(NodeOutput output) {
             if (node.trueChild == null && node.falseChild == null) {
-                node.output = output.calculate(samples);
+                // Reconstruct a samples array holding only this node's range.
+                int[] nodeSamples = new int[samples.length];
+                for (int i = low; i < high; i++) {
+                    nodeSamples[originalOrder[i]] = samples[originalOrder[i]];
+                }
+                node.output = output.calculate(nodeSamples);
             } else {
                 if (trueChild != null) {
                     trueChild.calculateOutput(output);
@@ -1074,16 +1111,22 @@ public class RegressionTree implements Regression<double[]> {
                 samples[i] = 1;
                 sum += y[i];
             }
+            makeCompressedOrder(samples, order != null, true);
         } else {
+            boolean allPresent = true;
             for (int i = 0; i < y.length; i++) {
                 n += samples[i];
                 sum += samples[i] * y[i];
+                if (samples[i] == 0) {
+                    allPresent = false;
+                }
             }
+            makeCompressedOrder(samples, order != null, allPresent);
         }
 
         root = new Node(sum / n);
 
-        TrainNode trainRoot = new TrainNode(root, x, y, samples);
+        TrainNode trainRoot = new TrainNode(root, x, y, samples, 0, originalOrder.length);
         // Now add splits to the tree until max tree size is reached
         if (trainRoot.findBestSplit()) {
             // Priority queue for best-first tree growing.
@@ -1107,6 +1150,9 @@ public class RegressionTree implements Regression<double[]> {
         if (output != null) {
             trainRoot.calculateOutput(output);
         }
+
+        this.order = null;
+        this.originalOrder = null;
     }
 
     /**
@@ -1171,6 +1217,7 @@ public class RegressionTree implements Regression<double[]> {
 
         int n = 0;
         double sum = 0.0;
+        int presentCount = 0;
         if (samples == null) {
             n = y.length;
             samples = new int[n];
@@ -1178,16 +1225,27 @@ public class RegressionTree implements Regression<double[]> {
                 samples[i] = 1;
                 sum += y[i];
             }
+            presentCount = n;
         } else {
             for (int i = 0; i < y.length; i++) {
-                n += samples[i];
-                sum += samples[i] * y[i];
+                if (samples[i] != 0) {
+                    n += samples[i];
+                    sum += samples[i] * y[i];
+                    presentCount++;
+                }
+            }
+        }
+
+        originalOrder = new int[presentCount];
+        for (int i = 0, k = 0; i < y.length; i++) {
+            if (samples[i] != 0) {
+                originalOrder[k++] = i;
             }
         }
 
         root = new Node(sum / n);
 
-        SparseBinaryTrainNode trainRoot = new SparseBinaryTrainNode(root, x, y, samples);
+        SparseBinaryTrainNode trainRoot = new SparseBinaryTrainNode(root, x, y, samples, 0, originalOrder.length);
         // Now add splits to the tree until max tree size is reached
         if (trainRoot.findBestSplit()) {
             nextSplits.add(trainRoot);
@@ -1208,6 +1266,117 @@ public class RegressionTree implements Regression<double[]> {
         if (output != null) {
             trainRoot.calculateOutput(output);
         }
+
+        originalOrder = null;
+    }
+
+
+    /**
+     * Modifies {@link #order} so that it includes only elements where samples != 0. Populates
+     * {@link #originalOrder} to be an ascending index of elements where samples != 0.
+     * @param samples how many times each element occurs in the training set.
+     * @param mustCopyOrder whether {@link #order} variable must be copied, even if the copy
+     *        contains no changes.
+     * @param allPresent whether every element in samples is non-zero.
+     */
+    private void makeCompressedOrder(int[] samples, boolean mustCopyOrder, boolean allPresent) {
+        int p = order.length;
+        int n = samples.length;
+        if (allPresent && mustCopyOrder) {
+            int[][] orderCopy = new int[p][];
+            for (int i = 0; i < p; i++) {
+                if (order[i] != null) {
+                    orderCopy[i] = order[i].clone();
+                }
+            }
+            order = orderCopy;
+        }
+
+        if (!allPresent) {
+            int[][] compressedOrder;
+            if (mustCopyOrder) {
+                compressedOrder = new int[p][];
+            } else {
+                // Rewrite in place.
+                compressedOrder = order;
+            }
+            int presentCount = 0;
+            for (int i = 0; i < n; i++) {
+                if (samples[i] != 0) {
+                    presentCount++;
+                }
+            }
+            for (int i = 0; i < p; i++) {
+                if (order[i] != null) {
+                    int[] variableOrder = order[i];
+                    int[] compressedVariableOrder = new int[presentCount];
+                    int k = 0;
+                    for (int j = 0; j < n; j++) {
+                        if (samples[variableOrder[j]] != 0) {
+                            compressedVariableOrder[k++] = variableOrder[j];
+                        }
+                    }
+                    compressedOrder[i] = compressedVariableOrder;
+                }
+            }
+            order = compressedOrder;
+
+            originalOrder = new int[presentCount];
+            int k = 0;
+            for (int i = 0; i < n; i++) {
+                if (samples[i] != 0) {
+                    originalOrder[k++] = i;
+                }
+            }
+        } else {
+            originalOrder = new int[n];
+            for (int i = 0; i < n; i++) {
+                originalOrder[i] = i;
+            }
+        }
+    }
+
+    /**
+     * Modifies {@link #order} and {@link #originalOrder} by partitioning the range from low
+     * (inclusive) to high (exclusive) so that all elements i for which goesLeft(i) is true come
+     * before all elements for which it is false, but element ordering is otherwise preserved. The
+     * number of true values returned by goesLeft must equal split-low.
+     * @param low the low bound of the segment of the order arrays which will be partitioned.
+     * @param split where the partition's split point will end up.
+     * @param high the high bound of the segment of the order arrays which will be partitioned.
+     * @param goesLeft whether an element goes to the left side or the right side of the
+     *        partition.
+     * @param buffer scratch space large enough to hold all elements for which goesLeft is false.
+     */
+    private void partitionOrder(int low, int split, int high, IntPredicate goesLeft, int[] buffer) {
+        if (order != null) {
+            for (int[] variableOrder : order) {
+                if (variableOrder != null) {
+                    partitionArray(variableOrder, low, split, high, goesLeft, buffer);
+                }
+            }
+        }
+        partitionArray(originalOrder, low, split, high, goesLeft, buffer);
+    }
+
+    /**
+     * Modifies an array in-place by partitioning the range from low (inclusive) to high (exclusive)
+     * so that all elements i for which goesLeft(i) is true come before all elements for which it is
+     * false, but element ordering is otherwise preserved. The number of true values returned by
+     * goesLeft must equal split-low. buffer is scratch space large enough (i.e., at least
+     * high-split long) to hold all elements for which goesLeft is false.
+     */
+    private void partitionArray(int[] a, int low, int split, int high, IntPredicate goesLeft, int[] buffer) {
+        int j = low;
+        int k = 0;
+        for (int i = low; i < high; i++) {
+            if (goesLeft.test(a[i])) {
+                a[j++] = a[i];
+            } else {
+                buffer[k++] = a[i];
+            }
+        }
+        System.arraycopy(buffer, 0, a, split, k);
     }
 
     /**
