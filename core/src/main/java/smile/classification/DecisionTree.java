@@ -1368,6 +1368,14 @@ public class DecisionTree implements SoftClassifier<double[]> {
         line.append(node.output).append(" (");
         double[] posteriori = new double[k];
         computePosteriori(count, totalCount, posteriori);
+        if (!labelMap.isIdentity()) {
+            double[] sparsePosteriori = new double[labelMap.maxSparseLabel() + 1];
+            for (int i = 0; i < k; i++) {
+                sparsePosteriori[labelMap.denseLabelToSparseLabel(i)] = posteriori[i];
+            }
+            posteriori = sparsePosteriori;
+        }
+
         for (int i = 0; i < posteriori.length; i++) {
             if (i != 0) {
                     line.append(" ");
