@@ -386,7 +386,7 @@ public class RegressionTree implements Regression<double[]> {
         /**
          * Constructor.
          */
-      public TrainNode(Node node, double[][] x, double[] y, int[] samples, int low, int high) {
+        public TrainNode(Node node, double[][] x, double[] y, int[] samples, int low, int high) {
             this.node = node;
             this.x = x;
             this.y = y;
