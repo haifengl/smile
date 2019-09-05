@@ -46,20 +46,6 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
     Vector<LocalDate> toDate();
 
     /**
-     * Returns a vector of LocalDate. This method assumes that this is a string vector and
-     * uses the given date format pattern to parse strings.
-     */
-    default Vector<LocalDate> toDate(String pattern) {
-        return toDate(DateTimeFormatter.ofPattern(pattern));
-    }
-
-    /**
-     * Returns a vector of LocalDate. This method assumes that this is a string vector and
-     * uses the given date format pattern to parse strings.
-     */
-    Vector<LocalDate> toDate(DateTimeFormatter format);
-
-    /**
      * Returns a vector of LocalTime. If the vector is of strings, it uses the default
      * ISO time formatter that parses a time without an offset, such as '10:15' or '10:15:30'.
      * If the vector is of other time related objects such as Instant, java.util.Date,
@@ -68,54 +54,12 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
     Vector<LocalTime> toTime();
 
     /**
-     * Returns a vector of LocalTime. This method assumes that this is a string vector and
-     * uses the given time format pattern to parse strings.
-     */
-    default Vector<LocalTime> toTime(String pattern) {
-        return toTime(DateTimeFormatter.ofPattern(pattern));
-    }
-
-    /**
-     * Returns a vector of LocalDate. This method assumes that this is a string vector and
-     * uses the given time format pattern to parse strings.
-     */
-    Vector<LocalTime> toTime(DateTimeFormatter format);
-
-    /**
      * Returns a vector of LocalDateTime. If the vector is of strings, it uses the default
      * ISO date time formatter that parses a date without an offset, such as '2011-12-03T10:15:30'.
      * If the vector is of other time related objects such as Instant, java.util.Date,
      * java.sql.Timestamp, etc., do a proper conversion.
      */
     Vector<LocalDateTime> toDateTime();
-
-    /**
-     * Returns a vector of LocalDateTime. This method assumes that this is a string vector and
-     * uses the given date time format pattern to parse strings.
-     */
-    default Vector<LocalDateTime> toDateTime(String pattern) {
-        return toDateTime(DateTimeFormatter.ofPattern(pattern));
-    }
-
-    /**
-     * Returns a vector of LocalDateTime. This method assumes that this is a string vector and
-     * uses the given date time format pattern to parse strings.
-     */
-    Vector<LocalDateTime> toDateTime(DateTimeFormatter format);
-
-    /**
-     * Converts strings to nominal values. Depending on how many levels
-     * in the nominal scale, the type of returned vector may be byte, short
-     * or integer. The missing values/nulls will be converted to -1.
-     */
-    BaseVector toNominal(NominalScale scale);
-
-    /**
-     * Converts strings to ordinal values. Depending on how many levels
-     * in the nominal scale, the type of returned vector may be byte, short
-     * or integer. The missing values/nulls will be converted to -1.
-     */
-    BaseVector toOrdinal(OrdinalScale scale);
 
     /** Returns the distinct values. */
     default List<T> distinct() {

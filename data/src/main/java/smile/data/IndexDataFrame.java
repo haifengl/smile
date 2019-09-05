@@ -140,6 +140,11 @@ class IndexDataFrame implements DataFrame {
     }
 
     @Override
+    public StringVector stringVector(int i) {
+        return df.stringVector(i);
+    }
+
+    @Override
     public DataFrame select(int... cols) {
         return new IndexDataFrame(df.select(cols), index);
     }

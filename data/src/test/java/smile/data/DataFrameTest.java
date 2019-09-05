@@ -33,6 +33,7 @@ import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.vector.Vector;
+import smile.data.vector.StringVector;
 import smile.math.matrix.DenseMatrix;
 import static smile.data.formula.Terms.*;
 
@@ -187,7 +188,7 @@ public class DataFrameTest {
     @Test
     public void testMerge() {
         System.out.println("union");
-        Vector<String> edu = Vector.of("Education", String.class, smile.math.MathEx.c("MS", "BS", "Ph.D", "Middle School"));
+        StringVector edu = StringVector.of("Education","MS", "BS", "Ph.D", "Middle School");
         DataFrame two = df.merge(edu);
         assertEquals(df.nrows(), two.nrows());
         assertEquals(df.ncols()+1, two.ncols());
