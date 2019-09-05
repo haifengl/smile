@@ -236,7 +236,7 @@ public class Arff implements AutoCloseable {
         }
         
         schema = DataTypes.struct(fields);
-        schema.measure().putAll(measure);
+        schema.measures().putAll(measure);
         parser = schema.parser();
     }
 

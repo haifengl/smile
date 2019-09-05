@@ -965,7 +965,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         VarCharVector vector = (VarCharVector) fieldVector;
-        smile.data.vector.Vector<String> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.StringVector column = df.stringVector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             String x = column.get(j);
             if (x == null) {

@@ -98,7 +98,7 @@ public class Avro {
         try (DataFileReader<GenericRecord> dataFileReader = new DataFileReader<GenericRecord>(path.toFile(), datumReader)) {
             StructType struct = toSmileSchema(schema);
             DiscreteMeasure[] scale = new DiscreteMeasure[struct.length()];
-            for (Map.Entry<String, Measure> e : struct.measure().entrySet()) {
+            for (Map.Entry<String, Measure> e : struct.measures().entrySet()) {
                 scale[struct.fieldIndex(e.getKey())] = (DiscreteMeasure) e.getValue();
             }
 
@@ -136,7 +136,7 @@ public class Avro {
         for (Schema.Field field : schema.getFields()) {
             if (field.schema().getType() == Schema.Type.ENUM) {
                 NominalScale scale = new NominalScale(field.schema().getEnumSymbols());
-                struct.measure().put(field.name(), scale);
+                struct.measures().put(field.name(), scale);
             }
         }
         return struct;
