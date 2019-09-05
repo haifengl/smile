@@ -276,6 +276,11 @@ public class RandomForest implements Regression<double[]> {
          * Out-of-bag sample
          */
         int[] oob;
+        /**
+         * The RNG seed to use when running the task. Used to make sure that training is
+         * deterministic, even when multi-threading.
+         */
+        int rngSeed;
 
         /**
          * Constructor.
@@ -292,12 +297,14 @@ public class RandomForest implements Regression<double[]> {
             this.subsample = subsample;
             this.prediction = prediction;
             this.oob = oob;
+            this.rngSeed = Math.randomInt(Integer.MAX_VALUE);
         }
 
         @Override
         public RegressionTree call() {
             int n = x.length;
             int[] samples = new int[n];
+            Math.setSeed(rngSeed);
 
             if (subsample == 1.0) {
                 // Training samples draw with replacement.

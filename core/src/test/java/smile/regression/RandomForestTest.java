@@ -23,6 +23,7 @@ import smile.sort.QuickSort;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.Validation;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -239,4 +240,27 @@ public class RandomForestTest {
         System.out.format("Merged RMSE = %.4f%n", Validation.test(merged, testx, testy));
     }
 
+    /**
+     * Tests that RNG seeding consistently controls the trainig.
+     */
+    @Test
+    public void testSeeding() throws Exception {
+        System.out.println("Seeding");
+        ArffParser parser = new ArffParser();
+        parser.setResponseIndex(6);
+        AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
+        double[] datay = data.toArray(new double[data.size()]);
+        double[][] datax = data.toArray(new double[data.size()][]);
+
+        Math.setSeed(123);
+        RandomForest forest1 = new RandomForest(data.attributes(), datax, datay, 100);
+        Math.setSeed(123);
+        RandomForest forest2 = new RandomForest(data.attributes(), datax, datay, 100);
+
+        for (int i = 0; i < datax.length; i++) {
+            // Training should have proceeded identically, so exact floating-point equality is
+            // reasonable to expect.
+            assertEquals(forest1.predict(datax[i]), forest2.predict(datax[i]), 0.0);
+        }
+    }
 }

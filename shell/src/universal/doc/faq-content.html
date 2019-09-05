@@ -163,30 +163,11 @@
         This is a common question for stochastic algorithms like random forest.
         In general, this is discouraged because people often choose bad seed due to the lack
         of sufficient knowledge of random number generation. However, one may want the repeatable
-        result for testing purpose. In this case, the short answer is that set
-        <code>-Dsmile.threads=1</code> for JVM and call <code>smile.math.Math.setSeed</code> before
-        training the model. Again, if you just want repeatable result, the first step should be sufficient.
+        result for testing purpose. In this case, the short answer is
+        that you can call <code>smile.math.Math.setSeed</code> before
+        training the model. This works even when multithreaded
+        training is used.
     </p>
-
-    <p>
-        Note that we don't provide a method to set the seed for a particular algorithm.
-        Many algorithms are multithreaded and each thread has their own random number
-        generator. We choose this design because each random number generator maintains
-        an internal state so that it is not multithread-safe. If multithreads share a
-        random number generator, we have to use locks, which significant reduce the
-        performance.
-    </p>
-
-    <p>
-        A method <code>setSeed(double)</code> in the algorithm is also troublesome.
-        For algorithms like random forest, it is not right to initialize every thread
-        with the same seed. Otherwise, same decision trees will be created
-        and we lose the randomness of "random" forest. It is also complicated
-        to pass a sequence of random numbers because it is not clear
-        how many random number generators are needed for many algorithms. Even worse, it breaks
-        the encapsulation as the caller has to know the details of algorithms.
-    </p>
-
 </div>
 
 <script type="text/javascript">

@@ -318,6 +318,11 @@ public class RandomForest implements SoftClassifier<double[]> {
          * The out-of-bag predictions.
          */
         int[][] prediction;
+        /**
+         * The RNG seed to use when running the task. Used to make sure that training is
+         * deterministic, even when multi-threading.
+         */
+        int rngSeed;
 
         /**
          * Constructor.
@@ -334,6 +339,7 @@ public class RandomForest implements SoftClassifier<double[]> {
             this.classWeight = classWeight;
             this.order = order;
             this.prediction = prediction;
+            this.rngSeed = Math.randomInt(Integer.MAX_VALUE);
         }
 
         @Override
@@ -341,6 +347,7 @@ public class RandomForest implements SoftClassifier<double[]> {
             int n = x.length;
             int k = smile.math.Math.max(y) + 1;
             int[] samples = new int[n];
+            Math.setSeed(rngSeed);
 
             // Stratified sampling in case class is unbalanced.
             // That is, we sample each class separately.
