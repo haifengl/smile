@@ -381,6 +381,11 @@ class DataFrameImpl implements DataFrame {
     }
 
     @Override
+    public StringVector stringVector(int i) {
+        return (StringVector) columns.get(i);
+    }
+
+    @Override
     public DataFrame select(int... cols) {
         List<BaseVector> sub = new ArrayList<>();
         for (int i = 0; i < cols.length; i++) {
@@ -617,7 +622,7 @@ class DataFrameImpl implements DataFrame {
                 }
 
                 case String: {
-                    Vector<String> v = vector(j);
+                    StringVector v = stringVector(j);
                     for (int i = 0; i < nrows; i++) {
                         String s = v.get(i);
                         m.set(i, j, s == null ? Double.NaN : Double.valueOf(s));

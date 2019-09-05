@@ -596,6 +596,20 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         return doubleVector(columnIndex(e.toString()));
     }
 
+
+    /** Selects column based on the column index. */
+    StringVector stringVector(int i);
+
+    /** Selects column based on the column name. */
+    default StringVector stringVector(String colName) {
+        return stringVector(columnIndex(colName));
+    }
+
+    /** Selects column using an enum value. */
+    default StringVector stringVector(Enum<?> e) {
+        return stringVector(columnIndex(e.toString()));
+    }
+
     /** Selects a new DataFrame with given column indices. */
     DataFrame select(int... cols);
 

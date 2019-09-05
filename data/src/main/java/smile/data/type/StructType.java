@@ -17,12 +17,12 @@
 
 package smile.data.type;
 
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import smile.data.Tuple;
-import smile.data.measure.DiscreteMeasure;
-import smile.data.measure.Measure;
+import smile.data.measure.*;
 
 /**
  * Struct data type is determined by the fixed order of the fields
@@ -57,6 +57,29 @@ public class StructType implements DataType {
         for (int i = 0; i < fields.length; i++) {
             index.put(fields[i].name, i);
         }
+/*
+        // set default scale of measure based field type.
+        for (StructField field : fields) {
+            switch (field.type.id()) {
+                case Byte:
+                case Short:
+                case Integer:
+                case Long:
+                    measures.put(field.name, new IntervalScale(NumberFormat.getIntegerInstance()));
+                    break;
+
+                case Float:
+                case Double:
+                case Decimal:
+                    measures.put(field.name, new RatioScale(NumberFormat.getNumberInstance()));
+                    break;
+
+                case Boolean:
+                    measures.put(field.name, new NominalScale("false", "true"));
+                    break;
+            }
+        }
+ */
     }
 
     /** Returns the number of fields. */
@@ -94,7 +117,7 @@ public class StructType implements DataType {
         return measures;
     }
 
-    /** Returns the map of field name to its (optional) scale of measure. */
+    /** Returns the optional measure of a field. */
     public Measure measure(String field) {
         return measures.get(field);
     }
