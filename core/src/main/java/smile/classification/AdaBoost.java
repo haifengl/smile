@@ -88,6 +88,10 @@ public class AdaBoost implements SoftClassifier<double[]> {
      * importance measure.
      */
     private double[] importance;
+    /**
+     * A map from original class labels to the internal dense labels.
+     */
+    private final SparseClassMap labelMap;
 
     /**
      * Trainer for AdaBoost classifiers.
@@ -247,26 +251,15 @@ public class AdaBoost implements SoftClassifier<double[]> {
         if (maxNodes < 2) {
             throw new IllegalArgumentException("Invalid maximum leaves: " + maxNodes);
         }
-        
-        // class label set.
-        int[] labels = Math.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
-        }
-        
-        k = labels.length;
+
+        labelMap = new SparseClassMap(y);
+        int[] sparseY = y;
+        y = labelMap.sparseLabelsToDenseLabels(y);
+        k = labelMap.numberOfClasses();
         if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
+            throw new IllegalArgumentException("Only one class.");
         }
-        
+
         if (attributes == null) {
             int p = x[0].length;
             attributes = new Attribute[p];
@@ -304,10 +297,10 @@ public class AdaBoost implements SoftClassifier<double[]> {
                 samples[s]++;
             }
             
-            trees[t] = new DecisionTree(attributes, x, y, maxNodes, 1, x[0].length, DecisionTree.SplitRule.GINI, samples, order);
+            trees[t] = new DecisionTree(attributes, x, y, maxNodes, 1, x[0].length, DecisionTree.SplitRule.GINI, samples, order, labelMap);
             
             for (int i = 0; i < n; i++) {
-                err[i] = trees[t].predict(x[i]) != y[i];
+                err[i] = trees[t].predict(x[i]) != sparseY[i];
             }
             
             double e = 0.0; // weighted error
@@ -400,10 +393,10 @@ public class AdaBoost implements SoftClassifier<double[]> {
         double[] y = new double[k];
 
         for (int i = 0; i < trees.length; i++) {
-            y[trees[i].predict(x)] += alpha[i];
+            y[labelMap.sparseLabelToDenseLabel(trees[i].predict(x))] += alpha[i];
         }
             
-        return Math.whichMax(y);
+        return labelMap.denseLabelToSparseLabel(Math.whichMax(y));
     }
     
     /**
@@ -419,7 +412,7 @@ public class AdaBoost implements SoftClassifier<double[]> {
         }
 
         double sum = Math.sum(posteriori);
-        for (int i = 0; i < k; i++) {
+        for (int i = 0; i < posteriori.length; i++) {
             posteriori[i] /= sum;
         }
 
@@ -446,8 +439,8 @@ public class AdaBoost implements SoftClassifier<double[]> {
             double[] prediction = new double[n];
             for (int i = 0; i < T; i++) {
                 for (int j = 0; j < n; j++) {
-                    prediction[j] += alpha[i] * trees[i].predict(x[j]);
-                    label[j] = prediction[j] > 0 ? 1 : 0;
+                    prediction[j] += alpha[i] * labelMap.sparseLabelToDenseLabel(trees[i].predict(x[j]));
+                    label[j] = labelMap.denseLabelToSparseLabel(prediction[j] > 0 ? 1 : 0);
                 }
                 accuracy[i] = measure.measure(y, label);
             }
@@ -455,8 +448,8 @@ public class AdaBoost implements SoftClassifier<double[]> {
             double[][] prediction = new double[n][k];
             for (int i = 0; i < T; i++) {
                 for (int j = 0; j < n; j++) {
-                    prediction[j][trees[i].predict(x[j])] += alpha[i];
-                    label[j] = Math.whichMax(prediction[j]);
+                    prediction[j][labelMap.sparseLabelToDenseLabel(trees[i].predict(x[j]))] += alpha[i];
+                    label[j] = labelMap.denseLabelToSparseLabel(Math.whichMax(prediction[j]));
                 }
 
                 accuracy[i] = measure.measure(y, label);
@@ -486,8 +479,8 @@ public class AdaBoost implements SoftClassifier<double[]> {
             double[] prediction = new double[n];
             for (int i = 0; i < T; i++) {
                 for (int j = 0; j < n; j++) {
-                    prediction[j] += alpha[i] * trees[i].predict(x[j]);
-                    label[j] = prediction[j] > 0 ? 1 : 0;
+                    prediction[j] += alpha[i] * labelMap.sparseLabelToDenseLabel(trees[i].predict(x[j]));
+                    label[j] = labelMap.denseLabelToSparseLabel(prediction[j] > 0 ? 1 : 0);
                 }
 
                 for (int j = 0; j < m; j++) {
@@ -498,8 +491,8 @@ public class AdaBoost implements SoftClassifier<double[]> {
             double[][] prediction = new double[n][k];
             for (int i = 0; i < T; i++) {
                 for (int j = 0; j < n; j++) {
-                    prediction[j][trees[i].predict(x[j])] += alpha[i];
-                    label[j] = Math.whichMax(prediction[j]);
+                    prediction[j][labelMap.sparseLabelToDenseLabel(trees[i].predict(x[j]))] += alpha[i];
+                    label[j] = labelMap.denseLabelToSparseLabel(Math.whichMax(prediction[j]));
                 }
 
                 for (int j = 0; j < m; j++) {

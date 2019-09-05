@@ -118,6 +118,10 @@ public class RBFNetwork<T> implements Classifier<T> {
      * True to fit a normalized RBF network.
      */
     private boolean normalized;
+    /**
+     * A map from original class labels to the internal dense labels.
+     */
+    private final SparseClassMap labelMap;
 
     /**
      * Trainer for RBF networks.
@@ -196,7 +200,7 @@ public class RBFNetwork<T> implements Classifier<T> {
          * Learns a RBF network with given centers.
          * 
          * @param x training samples.
-         * @param y training labels in [0, k), where k is the number of classes.
+         * @param y training labels.
          * @param centers the centers of RBF functions.
          * @return a trained RBF network
          */
@@ -209,7 +213,7 @@ public class RBFNetwork<T> implements Classifier<T> {
      * Constructor. Learn a regular RBF network without normalization.
      * 
      * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * @param y training labels.
      * @param distance the distance metric functor.
      * @param rbf the radial basis function.
      * @param centers the centers of RBF functions.
@@ -222,7 +226,7 @@ public class RBFNetwork<T> implements Classifier<T> {
      * Constructor. Learn a regular RBF network without normalization.
      * 
      * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * @param y training labels.
      * @param distance the distance metric functor.
      * @param rbf the radial basis function.
      * @param centers the centers of RBF functions.
@@ -235,7 +239,7 @@ public class RBFNetwork<T> implements Classifier<T> {
      * Constructor. Learn a RBF network.
      * 
      * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * @param y training labels.
      * @param distance the distance metric functor.
      * @param rbf the radial basis functions.
      * @param centers the centers of RBF functions.
@@ -261,7 +265,7 @@ public class RBFNetwork<T> implements Classifier<T> {
      * Constructor. Learn a RBF network.
      * 
      * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * @param y training labels.
      * @param distance the distance metric functor.
      * @param rbf the radial basis functions.
      * @param centers the centers of RBF functions.
@@ -276,23 +280,11 @@ public class RBFNetwork<T> implements Classifier<T> {
             throw new IllegalArgumentException(String.format("The sizes of RBF functions and centers don't match: %d != %d", rbf.length, centers.length));
         }
 
-        // class label set.
-        int[] labels = Math.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
-        }
-
-        k = labels.length;
+        labelMap = new SparseClassMap(y);
+        y = labelMap.sparseLabelsToDenseLabels(y);
+        k = labelMap.numberOfClasses();
         if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
+            throw new IllegalArgumentException("Only one class.");
         }
 
         this.centers = centers;
@@ -357,15 +349,6 @@ public class RBFNetwork<T> implements Classifier<T> {
             }
         }
 
-        double max = Double.NEGATIVE_INFINITY;
-        int y = 0;
-        for (int j = 0; j < k; j++) {
-            if (max < sumw[j]) {
-                max = sumw[j];
-                y = j;
-            }
-        }
-
-        return y;
+        return labelMap.denseLabelToSparseLabel(Math.whichMax(sumw));
     }
 }

@@ -91,6 +91,10 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
      * Projected class mean vectors.
      */
     private final double[][] smu;
+    /**
+     * A map from original class labels to the internal dense labels.
+     */
+    private final SparseClassMap labelMap;
 
     /**
      * Trainer for Fisher's linear discriminant.
@@ -153,7 +157,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
     /**
      * Constructor. Learn Fisher's linear discriminant.
      * @param x training instances.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * @param y training labels.
      */
     public FLD(double[][] x, int[] y) {
         this(x, y, -1);
@@ -162,7 +166,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
     /**
      * Constructor. Learn Fisher's linear discriminant.
      * @param x training instances.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * @param y training labels.
      * @param L the dimensionality of mapped space.
      */
     public FLD(double[][] x, int[] y, int L) {
@@ -172,7 +176,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
     /**
      * Constructor. Learn Fisher's linear discriminant.
      * @param x training instances.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * @param y training labels.
      * @param L the dimensionality of mapped space.
      * @param tol a tolerance to decide if a covariance matrix is singular; it
      * will reject variables whose variance is less than tol<sup>2</sup>.
@@ -182,25 +186,13 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        // class label set.
-        int[] labels = Math.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
+        labelMap = new SparseClassMap(y);
+        y = labelMap.sparseLabelsToDenseLabels(y);
+        k = labelMap.numberOfClasses();
+        if (k < 2) {
+            throw new IllegalArgumentException("Only one class.");
         }
 
-        k = labels.length;
-        if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
-        }
-        
         if (tol < 0.0) {
             throw new IllegalArgumentException("Invalid tol: " + tol);
         }
@@ -333,7 +325,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             }
         }
 
-        return y;
+        return labelMap.denseLabelToSparseLabel(y);
     }
 
     @Override

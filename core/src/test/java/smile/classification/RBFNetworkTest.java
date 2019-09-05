@@ -165,4 +165,36 @@ public class RBFNetworkTest {
             System.err.println(ex);
         }
     }
+
+    /**
+     * Tests handling of non-dense class labels.
+     */
+    @Test
+    public void testSparseClasses() throws Exception {
+        System.out.println("Sparse");
+        ArffParser arffParser = new ArffParser();
+        arffParser.setResponseIndex(4);
+        AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
+        double[][] x = iris.toArray(new double[iris.size()][]);
+        int[] y = iris.toArray(new int[iris.size()]);
+
+        int[] sparseY = new int[y.length];
+        for (int i = 0; i < y.length; i++) {
+          sparseY[i] = y[i] * 3 + 2;
+        }
+
+        // Normally we check for exact equality between the dense and sparse versions, but that's
+        // not feasible here because training involves K-means clustering, which is random.
+        RBFNetwork<double[]> dense = new RBFNetwork.Trainer<double[]>(new EuclideanDistance()).train(x, y);
+        RBFNetwork<double[]> sparse = new RBFNetwork.Trainer<double[]>(new EuclideanDistance()).train(x, sparseY);
+
+        int error = 0;
+        for (int i = 0; i < x.length; i++) {
+            if (sparse.predict(x[i]) != dense.predict(x[i]) * 3 + 2) {
+                error++;
+            }
+        }
+        System.out.format("Sparse error rate = %.2f%%%n", 100.0 * error / x.length);
+        assertTrue(error <= 10);
+    }
 }

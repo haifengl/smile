@@ -213,4 +213,29 @@ public class DecisionTreeTest {
             System.err.println(ex);
         }
     }
+
+    /**
+     * Tests handling of non-dense class labels.
+     */
+    @Test
+    public void testSparseClasses() throws Exception {
+        System.out.println("Sparse");
+        DelimitedTextParser parser = new DelimitedTextParser();
+        parser.setResponseIndex(new NominalAttribute("class"), 0);
+        AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
+
+        double[][] x = train.toArray(new double[train.size()][]);
+        int[] y = train.toArray(new int[train.size()]);
+        int[] sparseY = new int[y.length];
+        for (int i = 0; i < y.length; i++) {
+            sparseY[i] = y[i] * 3 + 2;
+        }
+
+        DecisionTree dense = new DecisionTree(x, y, 350, DecisionTree.SplitRule.ENTROPY);
+        DecisionTree sparse = new DecisionTree(x, sparseY, 350, DecisionTree.SplitRule.ENTROPY);
+
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(sparse.predict(x[i]), dense.predict(x[i]) * 3 + 2);
+        }
+    }
 }

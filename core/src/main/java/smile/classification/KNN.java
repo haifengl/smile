@@ -86,6 +86,10 @@ public class KNN<T> implements SoftClassifier<T> {
      * The number of classes.
      */
     private int c;
+    /**
+     * A map from original class labels to the internal dense labels.
+     */
+    private final SparseClassMap labelMap;
 
     /**
      * Trainer for KNN classifier.
@@ -124,38 +128,25 @@ public class KNN<T> implements SoftClassifier<T> {
     /**
      * Constructor.
      * @param knn k-nearest neighbor search data structure of training instances.
-     * @param y training labels in [0, c), where c is the number of classes.
+     * @param y training labels.
      * @param k the number of neighbors for classification.
      */
     public KNN(KNNSearch<T, T> knn, int[] y, int k) {
         this.knn = knn;
         this.k = k;
-        this.y = y;
-        
-        // class label set.
-        int[] labels = Math.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
-        }
 
-        c = labels.length;
+        labelMap = new SparseClassMap(y);
+        this.y = labelMap.sparseLabelsToDenseLabels(y);
+        c = labelMap.numberOfClasses();
         if (c < 2) {
-            throw new IllegalArgumentException("Only one class.");            
+            throw new IllegalArgumentException("Only one class.");
         }
     }
 
     /**
      * Constructor. By default, this is a 1-NN classifier.
      * @param x training samples.
-     * @param y training labels in [0, c), where c is the number of classes.
+     * @param y training labels.
      * @param distance the distance measure for finding nearest neighbors.
      */
     public KNN(T[] x, int[] y, Distance<T> distance) {
@@ -167,7 +158,7 @@ public class KNN<T> implements SoftClassifier<T> {
      * distance definition.
      * @param k the number of neighbors for classification.
      * @param x training samples.
-     * @param y training labels in [0, c), where c is the number of classes.
+     * @param y training labels.
      * @param distance the distance measure for finding nearest neighbors.
      */
     public KNN(T[] x, int[] y, Distance<T> distance, int k) {
@@ -178,26 +169,14 @@ public class KNN<T> implements SoftClassifier<T> {
         if (k < 1) {
             throw new IllegalArgumentException("Illegal k = " + k);
         }
-        
-        // class label set.
-        int[] labels = Math.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + labels[i]+1);                 
-            }
+
+        labelMap = new SparseClassMap(y);
+        y = labelMap.sparseLabelsToDenseLabels(y);
+        c = labelMap.numberOfClasses();
+        if (c < 2) {
+            throw new IllegalArgumentException("Only one class.");
         }
 
-        c = labels.length;
-        if (c < 2) {
-            throw new IllegalArgumentException("Only one class.");            
-        }
-        
         this.y = y;
         this.k = k;
         if (distance instanceof Metric) {
@@ -248,13 +227,21 @@ public class KNN<T> implements SoftClassifier<T> {
 
     @Override
     public int predict(T x, double[] posteriori) {
-        if (posteriori != null && posteriori.length != c) {
-            throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, c));
+        if (posteriori != null) {
+            if (posteriori.length < labelMap.maxSparseLabel() + 1) {
+                throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected at least: %d", posteriori.length, labelMap.maxSparseLabel() + 1));
+            } else if (posteriori.length != c) {
+                Arrays.fill(posteriori, 0.0);
+            }
         }
 
         Neighbor<T,T>[] neighbors = knn.knn(x, k);
         if (k == 1) {
-            return y[neighbors[0].index];
+            int prediction = labelMap.denseLabelToSparseLabel(y[neighbors[0].index]);
+            if (posteriori != null) {
+                posteriori[prediction] = 1.0;
+            }
+            return prediction;
         }
 
         int[] count = new int[c];
@@ -264,19 +251,10 @@ public class KNN<T> implements SoftClassifier<T> {
 
         if (posteriori != null) {
             for (int i = 0; i < c; i++) {
-                posteriori[i] = (double) count[i] / k;
-            }
-        }
-        
-        int max = 0;
-        int idx = 0;
-        for (int i = 0; i < c; i++) {
-            if (count[i] > max) {
-                max = count[i];
-                idx = i;
+                posteriori[labelMap.denseLabelToSparseLabel(i)] = (double) count[i] / k;
             }
         }
 
-        return idx;
+        return labelMap.denseLabelToSparseLabel(Math.whichMax(count));
     }
 }

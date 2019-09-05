@@ -80,6 +80,11 @@ public class Maxent implements SoftClassifier<int[]> {
     private double[][] W;
 
     /**
+     * A map from original class labels to the internal dense labels.
+     */
+    private final SparseClassMap labelMap;
+
+    /**
      * Trainer for maximum entropy classifier.
      */
     public static class Trainer extends ClassifierTrainer<int[]> {
@@ -216,23 +221,11 @@ public class Maxent implements SoftClassifier<int[]> {
         
         this.p = p;
         
-        // class label set.
-        int[] labels = Math.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
-        }
-
-        k = labels.length;
+        labelMap = new SparseClassMap(y);
+        y = labelMap.sparseLabelsToDenseLabels(y);
+        k = labelMap.numberOfClasses();
         if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
+            throw new IllegalArgumentException("Only one class.");
         }
 
         if (k == 2) {
@@ -892,23 +885,23 @@ public class Maxent implements SoftClassifier<int[]> {
 
     @Override
     public int predict(int[] x, double[] posteriori) {
-        if (posteriori != null && posteriori.length != k) {
-            throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
+        if (posteriori != null) {
+            if (posteriori.length < labelMap.maxSparseLabel() + 1) {
+                throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected at least: %d", posteriori.length, labelMap.maxSparseLabel() + 1));
+            } else if (posteriori.length != k) {
+                Arrays.fill(posteriori, 0.0);
+            }
         }
 
         if (w != null) {
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
 
             if (posteriori != null) {
-                posteriori[0] = 1.0 - f;
-                posteriori[1] = f;
+                posteriori[labelMap.denseLabelToSparseLabel(0)] = 1.0 - f;
+                posteriori[labelMap.denseLabelToSparseLabel(1)] = f;
             }
 
-            if (f < 0.5) {
-                return 0;
-            } else {
-                return 1;
-            }
+            return labelMap.denseLabelToSparseLabel(f < 0.5 ? 0 : 1);
         } else {
             int label = -1;
             double max = Double.NEGATIVE_INFINITY;
@@ -920,13 +913,13 @@ public class Maxent implements SoftClassifier<int[]> {
                 }
 
                 if (posteriori != null) {
-                    posteriori[i] = prob;
+                    posteriori[labelMap.denseLabelToSparseLabel(i)] = prob;
                 }
             }
 
             if (posteriori != null) {
                 double Z = 0.0;
-                for (int i = 0; i < k; i++) {
+                for (int i = 0; i < posteriori.length; i++) {
                     posteriori[i] = Math.exp(posteriori[i] - max);
                     Z += posteriori[i];
                 }
@@ -936,7 +929,7 @@ public class Maxent implements SoftClassifier<int[]> {
                 }
             }
 
-            return label;
+            return labelMap.denseLabelToSparseLabel(label);
         }
     }
 }

@@ -115,6 +115,11 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
     private double eta = 5e-5;
 
     /**
+     * A map from original class labels to the internal dense labels.
+     */
+    private final SparseClassMap labelMap;
+
+    /**
      * Trainer for logistic regression.
      */
     public static class Trainer extends ClassifierTrainer<double[]> {
@@ -200,7 +205,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
      * Constructor. No regularization.
      * 
      * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * @param y training labels.
      */
     public LogisticRegression(double[][] x, int[] y) {
         this(x, y, 0.0);
@@ -222,7 +227,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
      * Constructor.
      * 
      * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * @param y training labels.
      * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
      * weights which often has superior generalization performance, especially
      * when the dimensionality is high.
@@ -249,7 +254,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
      * Constructor.
      * 
      * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * @param y training labels.
      * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
      * weights which often has superior generalization performance, especially
      * when the dimensionality is high.
@@ -274,23 +279,11 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);            
         }
         
-        // class label set.
-        int[] labels = Math.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
-        }
-
-        k = labels.length;
+        labelMap = new SparseClassMap(y);
+        y = labelMap.sparseLabelsToDenseLabels(y);
+        k = labelMap.numberOfClasses();
         if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
+            throw new IllegalArgumentException("Only one class.");
         }
 
         p = x[0].length;
@@ -1005,23 +998,23 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        if (posteriori != null && posteriori.length != k) {
-            throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
+        if (posteriori != null) {
+            if (posteriori.length < labelMap.maxSparseLabel() + 1) {
+                throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected at least: %d", posteriori.length, labelMap.maxSparseLabel() + 1));
+            } else if (posteriori.length != k) {
+                Arrays.fill(posteriori, 0.0);
+            }
         }
 
         if (k == 2) {
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
 
             if (posteriori != null) {
-                posteriori[0] = 1.0 - f;
-                posteriori[1] = f;
+                posteriori[labelMap.denseLabelToSparseLabel(0)] = 1.0 - f;
+                posteriori[labelMap.denseLabelToSparseLabel(1)] = f;
             }
 
-            if (f < 0.5) {
-                return 0;
-            } else {
-                return 1;
-            }
+            return labelMap.denseLabelToSparseLabel(f < 0.5 ? 0 : 1);
         } else {
             int label = -1;
             double max = Double.NEGATIVE_INFINITY;
@@ -1033,13 +1026,13 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
                 }
 
                 if (posteriori != null) {
-                    posteriori[i] = prob;
+                    posteriori[labelMap.denseLabelToSparseLabel(i)] = prob;
                 }
             }
 
             if (posteriori != null) {
                 double Z = 0.0;
-                for (int i = 0; i < k; i++) {
+                for (int i = 0; i < posteriori.length; i++) {
                     posteriori[i] = Math.exp(posteriori[i] - max);
                     Z += posteriori[i];
                 }
@@ -1049,7 +1042,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
                 }
             }
             
-            return label;
+            return labelMap.denseLabelToSparseLabel(label);
         }
     }
 }

@@ -148,4 +148,26 @@ public class MaxentTest {
         System.out.format("Hyphen error rate = %.2f%%%n", 100.0 * error / test.x.length);
         assertEquals(768, error);
     }
+
+    /**
+     * Tests handling of non-dense class labels.
+     */
+    @Test
+    public void testSparseClasses() throws Exception {
+        System.out.println("Sparse");
+        Dataset train = load("sequence/sparse.hyphen.6.train");
+
+        int[] y = train.y;
+        int[] sparseY = new int[y.length];
+        for (int i = 0; i < y.length; i++) {
+            sparseY[i] = y[i] * 3 + 2;
+        }
+
+        Maxent dense = new Maxent(train.p, train.x, y, 0.1, 1E-5, 500);
+        Maxent sparse = new Maxent(train.p, train.x, sparseY, 0.1, 1E-5, 500);
+
+        for (int i = 0; i < train.x.length; i++) {
+            assertEquals(sparse.predict(train.x[i]), dense.predict(train.x[i]) * 3 + 2);
+        }
+    }
 }

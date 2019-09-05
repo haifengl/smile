@@ -140,7 +140,11 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
      * The sampling rate for stochastic tree boosting.
      */
     private double subsample = 0.7;
-    
+    /**
+     * A map from original class labels to the internal dense labels.
+     */
+    private final SparseClassMap labelMap;
+
     /**
      * Trainer for GradientTreeBoost classifiers.
      */
@@ -359,12 +363,14 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
         this.maxNodes = maxNodes;
         this.shrinkage = shrinkage;
         this.subsample = subsample;
-        this.k = Math.max(y) + 1;
 
+        labelMap = new SparseClassMap(y);
+        y = labelMap.sparseLabelsToDenseLabels(y);
+        k = labelMap.numberOfClasses();
         if (k < 2) {
-            throw new IllegalArgumentException("Only one class or negative class labels.");
+            throw new IllegalArgumentException("Only one class.");
         }
-        
+
         importance = new double[attributes.length];
         if (k == 2) {
             train2(attributes, x, y);
@@ -675,7 +681,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
                 y += shrinkage * trees[i].predict(x);
             }
             
-            return y > 0 ? 1 : 0;
+            return labelMap.denseLabelToSparseLabel(y > 0 ? 1 : 0);
         } else {
             double max = Double.NEGATIVE_INFINITY;
             int y = -1;
@@ -691,14 +697,16 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
                 }
             }
 
-            return y;            
+            return labelMap.denseLabelToSparseLabel(y);
         }
     }
     
     @Override
     public int predict(double[] x, double[] posteriori) {
-        if (posteriori.length != k) {
-            throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
+        if (posteriori.length < labelMap.maxSparseLabel() + 1) {
+            throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected at least: %d", posteriori.length, labelMap.maxSparseLabel() + 1));
+        } else if (posteriori.length != k) {
+            Arrays.fill(posteriori, 0.0);
         }
 
         if (k == 2) {
@@ -707,41 +715,38 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
                 y += shrinkage * trees[i].predict(x);
             }
 
-            posteriori[0] = 1.0 / (1.0 + Math.exp(2*y));
-            posteriori[1] = 1.0 - posteriori[0];
+            double zeroPosteriori = 1.0 / (1.0 + Math.exp(2*y));
+            posteriori[labelMap.denseLabelToSparseLabel(0)] = zeroPosteriori;
+            posteriori[labelMap.denseLabelToSparseLabel(1)] = 1.0 - zeroPosteriori;
 
-            if (y > 0) {
-                return 1;
-            } else {
-                return 0;
-            }
+            return labelMap.denseLabelToSparseLabel(y > 0 ? 1 : 0);
         } else {
             double max = Double.NEGATIVE_INFINITY;
             int y = -1;
             for (int j = 0; j < k; j++) {
-                posteriori[j] = 0.0;
-                
+                int sparseJ = labelMap.denseLabelToSparseLabel(j);
                 for (int i = 0; i < ntrees; i++) {
-                    posteriori[j] += shrinkage * forest[j][i].predict(x);
+                    posteriori[sparseJ] += shrinkage * forest[j][i].predict(x);
                 }
-                
-                if (posteriori[j] > max) {
-                    max = posteriori[j];
-                    y = j;
+
+                if (posteriori[sparseJ] > max) {
+                    max = posteriori[sparseJ];
+                    y = sparseJ;
                 }
             }
 
             double Z = 0.0;
             for (int i = 0; i < k; i++) {
-                posteriori[i] = Math.exp(posteriori[i] - max);
-                Z += posteriori[i];
+                int sparseI = labelMap.denseLabelToSparseLabel(i);
+                posteriori[sparseI] = Math.exp(posteriori[sparseI] - max);
+                Z += posteriori[sparseI];
             }
 
-            for (int i = 0; i < k; i++) {
+            for (int i = 0; i < posteriori.length; i++) {
                 posteriori[i] /= Z;
             }
             
-            return y;            
+            return y;
         }
     }
     
@@ -766,7 +771,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
             for (int i = 0; i < ntrees; i++) {
                 for (int j = 0; j < n; j++) {
                     prediction[j] += shrinkage * trees[i].predict(x[j]);
-                    label[j] = prediction[j] > 0 ? 1 : 0;
+                    label[j] = labelMap.denseLabelToSparseLabel(prediction[j] > 0 ? 1 : 0);
                 }
                 accuracy[i] = measure.measure(y, label);
             }
@@ -777,7 +782,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
                     for (int l = 0; l < k; l++) {
                         prediction[j][l] += shrinkage * forest[l][i].predict(x[j]);
                     }
-                    label[j] = Math.whichMax(prediction[j]);
+                    label[j] = labelMap.denseLabelToSparseLabel(Math.whichMax(prediction[j]));
                 }
 
                 accuracy[i] = measure.measure(y, label);
@@ -808,7 +813,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
             for (int i = 0; i < ntrees; i++) {
                 for (int j = 0; j < n; j++) {
                     prediction[j] += shrinkage * trees[i].predict(x[j]);
-                    label[j] = prediction[j] > 0 ? 1 : 0;
+                    label[j] = labelMap.denseLabelToSparseLabel(prediction[j] > 0 ? 1 : 0);
                 }
 
                 for (int j = 0; j < m; j++) {
@@ -822,7 +827,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
                     for (int l = 0; l < k; l++) {
                         prediction[j][l] += shrinkage * forest[l][i].predict(x[j]);
                     }
-                    label[j] = Math.whichMax(prediction[j]);
+                    label[j] = labelMap.denseLabelToSparseLabel(Math.whichMax(prediction[j]));
                 }
 
                 for (int j = 0; j < m; j++) {
