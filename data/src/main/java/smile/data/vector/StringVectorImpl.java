@@ -81,7 +81,7 @@ class StringVectorImpl extends VectorImpl<String> implements StringVector {
     }
 
     @Override
-    public BaseVector toFactor(DiscreteMeasure scale) {
+    public BaseVector factorize(DiscreteMeasure scale) {
         int[] data = stream().mapToInt(s -> s == null ? -1 : (int) scale.valueOf(s)).toArray();
 
         switch (scale.type().id()) {

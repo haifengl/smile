@@ -17,6 +17,10 @@
 
 package smile.data.type;
 
+import smile.data.measure.ContinuousMeasure;
+import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.Measure;
+
 /**
  * A field in a Struct data type.
  *
@@ -27,14 +31,31 @@ public class StructField {
     public final String name;
     /** Field data type. */
     public final DataType type;
+    /** Optional levels of measurements. */
+    public final Measure measure;
 
     /**
-     * Constructor with the ISO date formatter that formats
-     * or parses a date without an offset, such as '2011-12-03'.
+     * Constructor.
      */
     public StructField(String name, DataType type) {
+        this(name, type, null);
+    }
+
+    /**
+     * Constructor.
+     */
+    public StructField(String name, DataType type, Measure measure) {
+        if (measure != null) {
+            if (measure instanceof ContinuousMeasure && !type.isFloating()) {
+                throw new IllegalArgumentException(String.format("%s values cannot be of measure %s", type, measure));
+            } else if (measure instanceof DiscreteMeasure && !type.isIntegral()) {
+                throw new IllegalArgumentException(String.format("%s values cannot be of measure %s", type, measure));
+            }
+        }
+
         this.name = name;
         this.type = type;
+        this.measure = measure;
     }
 
     @Override
@@ -44,7 +65,12 @@ public class StructField {
 
     /** Returns the string representation of the field with given value. */
     public String toString(Object o) {
-        return String.format("%s: %s", name, type.toString(o));
+        return o == null ? "null" : (measure == null ? type.toString(o) : measure.toString(o));
+    }
+
+    /** Returns the string representation of the field with given value. */
+    public Object valueOf(String s) {
+        return measure == null ? type.valueOf(s) : measure.valueOf(s);
     }
 
     @Override

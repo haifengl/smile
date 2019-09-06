@@ -138,6 +138,8 @@ public class ArffTest {
                 new StructField("LCSH", DataTypes.StringType));
         assertEquals(schema, string.schema());
 
+        System.out.println(string);
+        System.out.println(string.schema());
         assertEquals(5, string.nrows());
         assertEquals(2, string.ncols());
         assertEquals("AG5", string.get(0).get(0));

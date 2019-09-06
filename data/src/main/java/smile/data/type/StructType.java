@@ -17,12 +17,10 @@
 
 package smile.data.type;
 
-import java.text.NumberFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import smile.data.Tuple;
-import smile.data.measure.*;
 
 /**
  * Struct data type is determined by the fixed order of the fields
@@ -37,8 +35,6 @@ public class StructType implements DataType {
     private final StructField[] fields;
     /** Field name to index map. */
     private final Map<String, Integer> index;
-    /** Optional scale of measurement of fields. */
-    private final Map<String, Measure> measures;
 
     /**
      * Constructor.
@@ -53,33 +49,9 @@ public class StructType implements DataType {
     StructType(StructField... fields) {
         this.fields = fields;
         index = new HashMap<>(fields.length * 4 / 3);
-        measures = new HashMap<>(fields.length * 4 / 3);
         for (int i = 0; i < fields.length; i++) {
             index.put(fields[i].name, i);
         }
-/*
-        // set default scale of measure based field type.
-        for (StructField field : fields) {
-            switch (field.type.id()) {
-                case Byte:
-                case Short:
-                case Integer:
-                case Long:
-                    measures.put(field.name, new IntervalScale(NumberFormat.getIntegerInstance()));
-                    break;
-
-                case Float:
-                case Double:
-                case Decimal:
-                    measures.put(field.name, new RatioScale(NumberFormat.getNumberInstance()));
-                    break;
-
-                case Boolean:
-                    measures.put(field.name, new NominalScale("false", "true"));
-                    break;
-            }
-        }
- */
     }
 
     /** Returns the number of fields. */
@@ -112,28 +84,11 @@ public class StructType implements DataType {
         return fields[i].name;
     }
 
-    /** Returns the map of field name to its (optional) scale of measure. */
-    public Map<String, Measure> measures() {
-        return measures;
-    }
-
-    /** Returns the optional measure of a field. */
-    public Measure measure(String field) {
-        return measures.get(field);
-    }
-
     /** Returns the lambda functions that parse field values. */
     public List<Function<String, Object>> parser() {
         List<Function<String, Object>> parser = new ArrayList<>();
-        for (int i = 0; i < fields.length; i++) {
-            StructField field = fields[i];
-            Measure scale = measure(field.name);
-            if (scale != null) {
-                parser.add(s -> scale.valueOf(s));
-            } else {
-                final DataType type = field.type;
-                parser.add(s -> type.valueOf(s));
-            }
+        for (StructField field : fields) {
+            parser.add(field::valueOf);
         }
         return parser;
     }
@@ -180,8 +135,7 @@ public class StructType implements DataType {
         return Arrays.stream(fields)
                 .map(field -> {
                     Object v = t.get(field.name);
-                    Measure m = measure(field.name);
-                    String value = v == null ? "null" : ((m != null) ? m.toString(v) : field.type.toString(v));
+                    String value = v == null ? "null" : field.toString(v);
                     return String.format("  %s: %s", field.name, value);
                 })
                 .collect(Collectors.joining(",\n", "{\n", "\n}"));
@@ -195,13 +149,7 @@ public class StructType implements DataType {
         for (String element : elements) {
             String[] pair = element.split(":");
             int i = index.get(pair[0]);
-            StructField field = fields[i];
-            Measure scale = measure(field.name);
-            if (scale != null) {
-                row[i] = scale.valueOf(pair[1]);
-            } else {
-                row[i] = field.type.valueOf(pair[1]);
-            }
+            row[i] = fields[i].valueOf(pair[1]);
         }
 
         return Tuple.of(row, this);

@@ -20,6 +20,7 @@ package smile.data.vector;
 import java.io.Serializable;
 import java.util.stream.BaseStream;
 
+import smile.data.measure.Measure;
 import smile.data.type.DataType;
 
 /**
@@ -38,6 +39,11 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
 
     /** Returns the element type. */
     DataType type();
+
+    /** Returns the (optional) level of measurements. Only valid for number types. */
+    default Measure measure() {
+        return null;
+    }
 
     /** Number of elements in the vector. */
     int size();

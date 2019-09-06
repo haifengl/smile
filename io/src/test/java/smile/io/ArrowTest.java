@@ -120,7 +120,7 @@ public class ArrowTest {
                 new StructField("Customer First", DataTypes.StringType),
                 new StructField("Customer Last", DataTypes.StringType),
                 new StructField("Country", DataTypes.StringType),
-                new StructField("Total", DataTypes.DoubleObjectType)
+                new StructField("Total", DataTypes.DoubleType)
         );
         assertEquals(schema, df.schema());
     }
