@@ -69,8 +69,7 @@ class OneHot implements HyperTerm {
     public void bind(StructType schema) {
         index = schema.fieldIndex(name);
 
-        Measure measure = schema.measure(name);
-
+        Measure measure = schema.field(index).measure;
         if (measure == null || !(measure instanceof NominalScale)) {
             throw new UnsupportedOperationException(String.format("The variable %s is not of nominal", name));
         }

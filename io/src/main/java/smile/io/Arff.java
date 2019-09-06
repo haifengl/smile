@@ -93,8 +93,6 @@ public class Arff implements AutoCloseable {
     private String name;
     /** The schema of ARFF relation. */
     private StructType schema;
-    /** The map of field name to its scale of measure. */
-    private Map<String, NominalScale> measure;
     /** The lambda to parse fields. */
     private List<Function<String, Object>> parser;
     /** Attribute name path in case of sub-relations. */
@@ -118,7 +116,6 @@ public class Arff implements AutoCloseable {
         tokenizer.ordinaryChar('}');
         tokenizer.eolIsSignificant(true);
 
-        measure = new HashMap<>();
         readHeader();
     }
 
@@ -236,7 +233,6 @@ public class Arff implements AutoCloseable {
         }
         
         schema = DataTypes.struct(fields);
-        schema.measures().putAll(measure);
         parser = schema.parser();
     }
 
@@ -318,8 +314,7 @@ public class Arff implements AutoCloseable {
             }
 
             NominalScale scale = new NominalScale(attributeValues);
-            measure.put(name, scale);
-            attribute = new StructField(name, scale.type());
+            attribute = new StructField(name, scale.type(), scale);
         }
 
         getLastToken(false);

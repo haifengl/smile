@@ -107,6 +107,16 @@ public interface DataType extends Serializable {
         }
     }
 
+    /** Returns true if the type is float or double. */
+    default boolean isFloating() {
+        return isFloat() || isDouble();
+    }
+
+    /** Returns true if the type is int, long, short or byte. */
+    default boolean isIntegral() {
+        return isInt() || isLong() || isShort() || isByte();
+    }
+
     /** Returns true if the type is boolean or Boolean. */
     default boolean isBoolean() {
         return false;

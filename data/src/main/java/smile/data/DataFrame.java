@@ -60,6 +60,16 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
                 .toArray(new DataType[fields.length]);
     }
 
+
+    /** Returns the column measures. */
+    default Measure[] measures() {
+        StructField[] fields = schema().fields();
+        return Arrays.stream(fields)
+                .map(field -> field.measure)
+                .collect(Collectors.toList())
+                .toArray(new Measure[fields.length]);
+    }
+
     /**
      * Returns the number of rows.
      */
@@ -74,28 +84,13 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Returns the structure of data frame. */
     default DataFrame structure() {
-        if (schema().measures().isEmpty()) {
-            List<BaseVector> vectors = Arrays.asList(
-                    Vector.of("Column", String.class, names()),
-                    Vector.of("Type", DataType.class, types())
-            );
+        List<BaseVector> vectors = Arrays.asList(
+                Vector.of("Column", String.class, names()),
+                Vector.of("Type", DataType.class, types()),
+                Vector.of("Measure", Measure.class, measures())
+        );
 
-            return new DataFrameImpl(vectors);
-
-        } else {
-            Measure[] measures = new Measure[ncols()];
-            for (Map.Entry<String, Measure> e : schema().measures().entrySet()) {
-                measures[columnIndex(e.getKey())] = e.getValue();
-            }
-
-            List<BaseVector> vectors = Arrays.asList(
-                    Vector.of("Column", String.class, names()),
-                    Vector.of("Type", DataType.class, types()),
-                    Vector.of("Measure", Measure.class, measures)
-            );
-
-            return new DataFrameImpl(vectors);
-        }
+        return new DataFrameImpl(vectors);
     }
 
     /** Returns the cell at (i, j). */
@@ -308,12 +303,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         if (o instanceof String) {
             return (String) o;
         } else {
-            Measure measure = schema().measure(schema().fieldName(j));
-            if (measure != null) {
-                return measure.toString(o);
-            } else {
-                return schema().field(j).type.toString(o);
-            }
+            return schema().field(j).toString(o);
         }
     }
 
@@ -402,7 +392,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * @throws ClassCastException when the data is not nominal or ordinal.
      */
     default String getScale(int i, int j) {
-        return ((DiscreteMeasure) schema().measure(schema().fieldName(j))).toString(getInt(i, j));
+        return ((DiscreteMeasure) schema().field(j).measure).toString(getInt(i, j));
     }
 
     /**
@@ -662,6 +652,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         int ncols = ncols();
         String[] names = names();
         DataType[] types = types();
+        Measure[] measures = measures();
         String[] col = new String[ncols];
         double[] min = new double[ncols];
         double[] max = new double[ncols];
@@ -670,8 +661,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
         int k = 0;
         for (int j = 0; j < ncols; j++) {
-            Measure measure = schema().measure(names[j]);
-            if (measure != null && measure instanceof DiscreteMeasure) continue;
+            if (measures[j] != null && measures[j] instanceof DiscreteMeasure) continue;
 
             DataType type = types[j];
             if (type.isInt()) {

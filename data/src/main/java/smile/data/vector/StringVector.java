@@ -86,7 +86,7 @@ public interface StringVector extends Vector<String> {
      * in the nominal scale, the type of returned vector may be byte, short
      * or integer. The missing values/nulls will be converted to -1.
      */
-    BaseVector toFactor(DiscreteMeasure scale);
+    BaseVector factorize(DiscreteMeasure scale);
 
     /**
      * Returns the string representation of vector.

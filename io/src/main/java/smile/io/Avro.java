@@ -97,9 +97,9 @@ public class Avro {
         DatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>(schema);
         try (DataFileReader<GenericRecord> dataFileReader = new DataFileReader<GenericRecord>(path.toFile(), datumReader)) {
             StructType struct = toSmileSchema(schema);
-            DiscreteMeasure[] scale = new DiscreteMeasure[struct.length()];
-            for (Map.Entry<String, Measure> e : struct.measures().entrySet()) {
-                scale[struct.fieldIndex(e.getKey())] = (DiscreteMeasure) e.getValue();
+            Measure[] scale = new Measure[struct.length()];
+            for (int i = 0; i < struct.length(); i++) {
+                scale[i] = struct.field(i).measure;
             }
 
             List<Tuple> rows = new ArrayList<>();
@@ -129,17 +129,15 @@ public class Avro {
     private StructType toSmileSchema(Schema schema) {
         List<StructField> fields = new ArrayList<>();
         for (Schema.Field field : schema.getFields()) {
-            fields.add(new StructField(field.name(), typeOf(field.schema())));
+            NominalScale scale = null;
+            if (field.schema().getType() == Schema.Type.ENUM) {
+                scale = new NominalScale(field.schema().getEnumSymbols());
+            }
+
+            fields.add(new StructField(field.name(), typeOf(field.schema()), scale));
         }
 
-        StructType struct = DataTypes.struct(fields);
-        for (Schema.Field field : schema.getFields()) {
-            if (field.schema().getType() == Schema.Type.ENUM) {
-                NominalScale scale = new NominalScale(field.schema().getEnumSymbols());
-                struct.measures().put(field.name(), scale);
-            }
-        }
-        return struct;
+        return DataTypes.struct(fields);
     }
 
     /** Converts an avro type to smile type. */
