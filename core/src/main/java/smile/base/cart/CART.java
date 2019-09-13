@@ -35,9 +35,6 @@ import java.util.AbstractMap.SimpleEntry;
 public abstract class CART {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CART.class);
 
-    /** The formula specifies the dependent and independent variables. */
-    protected Formula formula;
-
     /** The schema of data. */
     protected StructType schema;
 
@@ -68,7 +65,7 @@ public abstract class CART {
     protected double[] importance;
 
     /** The training data. */
-    protected transient DataFrame data;
+    protected transient DataFrame x;
 
     /** The dependent variable. */
     protected transient BaseVector y;
@@ -100,12 +97,25 @@ public abstract class CART {
      */
     private transient int[] buffer;
 
-    public CART(Formula formula, DataFrame data, int nodeSize, int maxNodes, int mtry, int[] samples, int[][] order) {
-        this.formula = formula;
-        this.data = formula.frame(data);
-        this.schema = this.data.schema();
-        this.importance = new double[this.data.ncols()];
-        this.y = formula.response(data);
+    /**
+     * Constructor.
+     * @param x the data frame of the explanatory variable.
+     * @param y the response variables.
+     * @param nodeSize the minimum size of leaf nodes.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param mtry the number of input variables to pick to split on at each
+     *             node. It seems that sqrt(p) give generally good performance,
+     *             where p is the number of variables.
+     * @param samples the sample set of instances for stochastic learning.
+     *               samples[i] is the number of sampling for instance i.
+     * @param order the index of training values in ascending order. Note
+     *              that only numeric attributes need be sorted.
+     */
+    public CART(DataFrame x, BaseVector y, int nodeSize, int maxNodes, int mtry, int[] samples, int[][] order) {
+        this.x = x;
+        this.y = y;
+        this.schema = x.schema();
+        this.importance = new double[x.ncols()];
         this.nodeSize = nodeSize;
         this.maxNodes = maxNodes;
         this.mtry = mtry;
@@ -123,8 +133,8 @@ public abstract class CART {
             throw new IllegalArgumentException("Invalid minimum size of leaf nodes: " + nodeSize);
         }
 
-        int n = this.data.size();
-        int p = this.schema.length();
+        int n = x.size();
+        int p = x.ncols();
 
         IntStream idx;
         if (samples == null) {
@@ -146,7 +156,7 @@ public abstract class CART {
             for (int j = 0; j < p; j++) {
                 Measure measure = schema.field(j).measure;
                 if (measure == null || !(measure instanceof NominalScale)) {
-                    data.column(j).toDoubleArray(a);
+                    x.column(j).toDoubleArray(a);
                     this.order[j] = QuickSort.sort(a);
                 }
             }
@@ -163,11 +173,11 @@ public abstract class CART {
 
     /** Clear the workspace of building tree. */
     protected void clear() {
+        this.x = null;
+        this.y = null;
         this.order = null;
         this.index = null;
         this.samples = null;
-        this.data = null;
-        this.y = null;
         this.buffer = null;
     }
 

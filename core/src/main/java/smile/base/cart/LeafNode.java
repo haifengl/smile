@@ -34,7 +34,7 @@ public abstract class LeafNode implements Node {
         this.size = size;
     }
 
-    /** Returns the number of samples in the node. */
+    @Override
     public int size() {
         return size;
     }
