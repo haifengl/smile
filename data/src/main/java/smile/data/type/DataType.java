@@ -297,15 +297,6 @@ public interface DataType extends Serializable {
      * Returns the DataType of a JDBC type.
      * @param type a JDBCType
      * @param nullable true if the column value may be null
-     */
-    static DataType of(java.sql.JDBCType type, boolean nullable) {
-        return of(type, nullable, null);
-    }
-
-    /**
-     * Returns the DataType of a JDBC type.
-     * @param type a JDBCType
-     * @param nullable true if the column value may be null
      * @param dbms The database product name.
      */
     static DataType of(java.sql.JDBCType type, boolean nullable, String dbms) {
