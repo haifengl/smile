@@ -58,6 +58,11 @@ public abstract class InternalNode implements Node {
     public abstract LeafNode predict(Tuple x);
 
     @Override
+    public int size() {
+        return trueChild.size() + falseChild.size();
+    }
+
+    @Override
     public int depth() {
         // compute the depth of each subtree
         int ld = trueChild.depth();
@@ -74,12 +79,22 @@ public abstract class InternalNode implements Node {
 
         if (trueChild instanceof DecisionNode && falseChild instanceof DecisionNode) {
             if (((DecisionNode) trueChild).output() == ((DecisionNode) falseChild).output()) {
-                return new DecisionNode(((DecisionNode) trueChild).output());
+                int[] a = ((DecisionNode) trueChild).count();
+                int[] b = ((DecisionNode) falseChild).count();
+                int[] count = new int[a.length];
+                for (int i = 0; i < count.length; i++) {
+                    count[i] = a[i] + b[i];
+                }
+                return new DecisionNode(count);
             }
 
         } else if (trueChild instanceof RegressionNode && falseChild instanceof RegressionNode) {
             if (((RegressionNode) trueChild).output() == ((RegressionNode) falseChild).output()) {
-                return new RegressionNode(((RegressionNode) trueChild).output());
+                RegressionNode a = (RegressionNode) trueChild;
+                RegressionNode b = (RegressionNode) falseChild;
+
+                int size = a.size + b.size;
+                return new RegressionNode(size, a.output(), (a.impurity() * a.size + b.impurity() * b.size) / size);
             }
         }
 

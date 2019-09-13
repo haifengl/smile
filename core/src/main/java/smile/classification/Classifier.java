@@ -18,6 +18,13 @@
 package smile.classification;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import smile.data.DataFrame;
+import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
+import smile.data.vector.BaseVector;
+import smile.math.MathEx;
+import smile.sort.QuickSort;
 
 /**
  * A classifier assigns an input object into one of a given number of categories.
@@ -58,5 +65,50 @@ public interface Classifier<T> extends Serializable {
             y[i] = predict(x[i]);
         }
         return y;
+    }
+
+    /** Returns the unique classes of sample labels. */
+    static int[] classes(BaseVector y) {
+        return classes(y.toIntArray());
+    }
+
+    /** Returns the unique classes of sample labels. */
+    static int[] classes(int[] y) {
+        int[] labels = MathEx.unique(y);
+        Arrays.sort(labels);
+
+        if (labels.length < 2) {
+            throw new IllegalArgumentException("Only one class.");
+        }
+
+        for (int i = 0; i < labels.length; i++) {
+            if (labels[i] < 0) {
+                throw new IllegalArgumentException("Negative class label: " + labels[i]);
+            }
+
+            if (labels[i] != i) {
+                throw new IllegalArgumentException("Missing class: " + i);
+            }
+        }
+
+        return labels;
+    }
+
+    /** Returns an index of samples in ascending order in each column. */
+    static int[][] order(DataFrame data) {
+        int n = data.size();
+        int p = data.ncols();
+        double[] a = new double[n];
+        int[][] order = new int[p][];
+
+        for (int j = 0; j < p; j++) {
+            Measure measure = data.schema().field(j).measure;
+            if (measure == null || !(measure instanceof NominalScale)) {
+                data.column(j).toDoubleArray(a);
+                order[j] = QuickSort.sort(a);
+            }
+        }
+
+        return order;
     }
 }

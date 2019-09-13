@@ -85,7 +85,7 @@ public class RBF<T> implements Serializable {
         int k = centers.length;
         RBF<T>[] rbf = new RBF[k];
         for (int i = 0; i < k; i++) {
-            rbf[i] = new RBF(centers[i], basis, distance);
+            rbf[i] = new RBF<>(centers[i], basis, distance);
         }
         return rbf;
     }
@@ -95,7 +95,7 @@ public class RBF<T> implements Serializable {
         int k = centers.length;
         RBF<T>[] rbf = new RBF[k];
         for (int i = 0; i < k; i++) {
-            rbf[i] = new RBF(centers[i], basis[i], distance);
+            rbf[i] = new RBF<>(centers[i], basis[i], distance);
         }
         return rbf;
     }

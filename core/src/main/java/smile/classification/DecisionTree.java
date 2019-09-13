@@ -138,47 +138,26 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
 
     /**
      * Constructor. Learns a classification tree for AdaBoost and Random Forest.
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
+     * @param x the data frame of the explanatory variable.
+     * @param y the response variables.
+     * @param k the number of classes.
      * @param nodeSize the minimum size of leaf nodes.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param mtry the number of input variables to pick to split on at each
-     * node. It seems that sqrt(p) give generally good performance, where p
-     * is the number of variables.
+     *             node. It seems that sqrt(p) give generally good performance,
+     *             where p is the number of variables.
      * @param rule the splitting rule.
-     * @param order the index of training values in ascending order. Note
-     * that only numeric attributes need be sorted.
      * @param samples the sample set of instances for stochastic learning.
-     * samples[i] is the number of sampling for instance i.
+     *               samples[i] is the number of sampling for instance i.
+     * @param order the index of training values in ascending order. Note
+     *              that only numeric attributes need be sorted.
      */
-    public DecisionTree(Formula formula, DataFrame data, SplitRule rule, int nodeSize, int maxNodes, int mtry, int[] samples, int[][] order) {
-        super(formula, data, nodeSize, maxNodes, mtry, samples, order);
+    public DecisionTree(DataFrame x, BaseVector y, int k, SplitRule rule, int nodeSize, int maxNodes, int mtry, int[] samples, int[][] order) {
+        super(x, y, nodeSize, maxNodes, mtry, samples, order);
         this.rule = rule;
 
-        // class label set.
-        int[] y = this.y.toIntArray();
-        int[] labels = MathEx.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]);
-            }
-
-            if (labels[i] != i) {
-                throw new IllegalArgumentException("Missing class: " + i);
-            }
-        }
-
-        k = labels.length;
-        if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
-        }
-
-        int[] count = new int[k];
-        for (int i = 0; i < samples.length; i++) {
-            count[y[i]] += samples[i];
-        }
+        final int[] count = new int[k];
+        IntStream.range(0, samples.length).forEach(i -> count[y.getInt(i)] += samples[i]);
 
         LeafNode node = new DecisionNode(count);
         this.root = node;
@@ -227,7 +206,6 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
         SplitRule rule = SplitRule.valueOf(prop.getProperty("smile.cart.split.rule", "GINI"));
         int nodeSize = Integer.parseInt(prop.getProperty("smile.cart.node.size", "5"));
         int maxNodes = Integer.parseInt(prop.getProperty("smile.cart.max.nodes", "6"));
-        int mtry = Integer.parseInt(prop.getProperty("smile.cart.mtry", "-1"));
         return fit(formula, data, rule, nodeSize, maxNodes);
     }
 
@@ -240,7 +218,10 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
      * @param maxNodes the maximum number of leaf nodes in the tree.
      */
     public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int nodeSize, int maxNodes) {
-        return new DecisionTree(formula, data, rule, nodeSize, maxNodes, -1, null, null);
+        DataFrame x = formula.frame(data);
+        BaseVector y = formula.response(data);
+        int k = Classifier.classes(y).length;
+        return new DecisionTree(x, y, k, rule, nodeSize, maxNodes, -1, null, null);
     }
 
     @Override

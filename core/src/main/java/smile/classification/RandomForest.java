@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import smile.data.Attribute;
 import smile.data.AttributeDataset;
 import smile.data.NumericAttribute;
+import smile.data.Tuple;
 import smile.math.MathEx;
 import smile.util.MulticoreExecutor;
 import smile.util.SmileUtils;
@@ -71,7 +72,7 @@ import smile.validation.ClassificationMeasure;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements SoftClassifier<double[]> {
+public class RandomForest implements SoftClassifier<Tuple> {
     private static final long serialVersionUID = 1L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomForest.class);
 
@@ -88,6 +89,7 @@ public class RandomForest implements SoftClassifier<double[]> {
             this.weight = weight;
         }
     }
+
     /**
      * Forest of decision trees. The second value is the accuracy of
      * tree on the OOB samples, which can be used a weight when aggregating
@@ -114,161 +116,6 @@ public class RandomForest implements SoftClassifier<double[]> {
      */
     private double[] importance;
 
-    /**
-     * Trainer for random forest classifiers.
-     */
-    public static class Trainer extends ClassifierTrainer<double[]> {
-        /**
-         * The number of trees.
-         */
-        private int ntrees = 500;
-        /**
-         * The splitting rule.
-         */
-        private DecisionTree.SplitRule rule = DecisionTree.SplitRule.GINI;
-        /**
-         * The number of random selected features to be used to determine the decision
-         * at a node of the tree. floor(sqrt(dim)) seems to give generally good performance,
-         * where dim is the number of variables.        
-         */
-        private int mtry = -1;
-        /**
-         * The minimum size of leaf nodes.
-         */
-        private int nodeSize = 1;
-        /**
-         * The maximum number of leaf nodes.
-         */
-        private int maxNodes = 100;
-        /**
-         * The sampling rate.
-         */
-        private double subsample = 1.0;
-
-        /**
-         * Default constructor of 500 trees.
-         */
-        private Trainer() {
-
-        }
-
-        /**
-         * Constructor.
-         *
-         * @param mtry the number of random selected features to be used to determine
-         * @param ntrees the number of trees.
-         */
-        public Trainer(int mtry, int ntrees) {
-            if (mtry < 1) {
-                throw new IllegalArgumentException("Invalid number of random selected features for splitting: " + mtry);
-            }
-
-            this.mtry = mtry;
-            if (ntrees < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-            }
-
-            this.ntrees = ntrees;
-        }
-
-        /**
-         * Constructor.
-         *
-         * @param attributes the attributes of independent variable.
-         * @param ntrees the number of trees.
-         */
-        public Trainer(Attribute[] attributes, int ntrees) {
-            super(attributes);
-            this.mtry = (int) Math.floor(Math.sqrt(attributes.length));
-            if (ntrees < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-            }
-
-            this.ntrees = ntrees;
-        }
-
-        /**
-         * Sets the splitting rule.
-         * @param rule the splitting rule.
-         */
-        public Trainer setSplitRule(DecisionTree.SplitRule rule) {
-            this.rule = rule;
-            return this;
-        }
-
-        /**
-         * Sets the number of trees in the random forest.
-         * @param ntrees the number of trees.
-         */
-        public Trainer setNumTrees(int ntrees) {
-            if (ntrees < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-            }
-
-            this.ntrees = ntrees;
-            return this;
-        }
-
-        /**
-         * Sets the number of random selected features for splitting.
-         * @param mtry the number of random selected features to be used to determine
-         * the decision at a node of the tree. floor(sqrt(p)) seems to give
-         * generally good performance, where p is the number of variables.
-         */
-        public Trainer setNumRandomFeatures(int mtry) {
-            if (mtry < 1) {
-                throw new IllegalArgumentException("Invalid number of random selected features for splitting: " + mtry);
-            }
-
-            this.mtry = mtry;
-            return this;
-        }
-
-        /**
-         * Sets the maximum number of leaf nodes.
-         * @param maxNodes the maximum number of leaf nodes.
-         */
-        public Trainer setMaxNodes(int maxNodes) {
-            if (maxNodes < 2) {
-                throw new IllegalArgumentException("Invalid minimum size of leaf nodes: " + maxNodes);
-            }
-
-            this.maxNodes = maxNodes;
-            return this;
-        }
-
-        /**
-         * Sets the minimum size of leaf nodes.
-         * @param nodeSize the number of instances in a node below which the tree will not split.
-         */
-        public Trainer setNodeSize(int nodeSize) {
-            if (nodeSize < 1) {
-                throw new IllegalArgumentException("Invalid minimum size of leaf nodes: " + nodeSize);
-            }
-
-            this.nodeSize = nodeSize;
-            return this;
-        }
-
-        /**
-         * Sets the sampling rate.
-         * @param subsample the sampling rate.
-         */
-        public Trainer setSamplingRates(double subsample) {
-            if (subsample <= 0 || subsample > 1) {
-                throw new IllegalArgumentException("Invalid sampling rating: " + subsample);
-            }
-
-            this.subsample = subsample;
-            return this;
-        }
-
-        @Override
-        public RandomForest train(double[][] x, int[] y) {
-            return new RandomForest(attributes, x, y, ntrees, maxNodes, nodeSize, mtry, subsample, rule, null);
-        }
-    }
-    
     /**
      * Trains a regression tree.
      */

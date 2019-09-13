@@ -35,6 +35,9 @@ public interface Node extends Serializable {
      */
     String toDot(StructType schema, int id);
 
+    /** Returns the number of samples in the node. */
+    int size();
+
     /**
      * Returns the maximum depth of the tree -- the number of
      * nodes along the longest path from this node

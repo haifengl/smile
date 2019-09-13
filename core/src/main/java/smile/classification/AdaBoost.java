@@ -18,11 +18,12 @@
 package smile.classification;
 
 import java.util.Arrays;
-import smile.data.Attribute;
-import smile.data.AttributeDataset;
-import smile.data.NumericAttribute;
+import smile.base.cart.SplitRule;
+import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.formula.Formula;
+import smile.data.vector.BaseVector;
 import smile.math.MathEx;
-import smile.util.SmileUtils;
 import smile.validation.Accuracy;
 import smile.validation.ClassificationMeasure;
 
@@ -57,8 +58,8 @@ import smile.validation.ClassificationMeasure;
  * 
  * @author Haifeng Li
  */
-public class AdaBoost implements SoftClassifier<double[]> {
-    private static final long serialVersionUID = 1L;
+public class AdaBoost implements SoftClassifier<Tuple> {
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AdaBoost.class);
     private static final String INVALID_NUMBER_OF_TREES = "Invalid number of trees: ";
 
@@ -89,194 +90,24 @@ public class AdaBoost implements SoftClassifier<double[]> {
     private double[] importance;
 
     /**
-     * Trainer for AdaBoost classifiers.
-     */
-    public static class Trainer extends ClassifierTrainer<double[]> {
-        /**
-         * The number of trees.
-         */
-        private int ntrees = 500;
-        /**
-         * The maximum number of leaf nodes in the tree.
-         */
-        private int maxNodes = 2;
-
-        /**
-         * Default constructor of 500 trees and maximal 2 leaf nodes in the tree.
-         */
-        public Trainer() {
-
-        }
-
-        /**
-         * Constructor.
-         * 
-         * @param ntrees the number of trees.
-         */
-        public Trainer(int ntrees) {
-            if (ntrees < 1) {
-                throw new IllegalArgumentException(INVALID_NUMBER_OF_TREES + ntrees);
-            }
-
-            this.ntrees = ntrees;
-        }
-
-        /**
-         * Constructor.
-         * 
-         * @param attributes the attributes of independent variable.
-         * @param ntrees the number of trees.
-         */
-        public Trainer(Attribute[] attributes, int ntrees) {
-            super(attributes);
-
-            if (ntrees < 1) {
-                throw new IllegalArgumentException(INVALID_NUMBER_OF_TREES + ntrees);
-            }
-
-            this.ntrees = ntrees;
-        }
-        
-        /**
-         * Sets the number of trees in the random forest.
-         * @param ntrees the number of trees.
-         */
-        public Trainer setNumTrees(int ntrees) {
-            if (ntrees < 1) {
-                throw new IllegalArgumentException(INVALID_NUMBER_OF_TREES + ntrees);
-            }
-
-            this.ntrees = ntrees;
-            return this;
-        }
-        
-        /**
-         * Sets the maximum number of leaf nodes in the tree.
-         * @param maxNodes the maximum number of leaf nodes in the tree.
-         */
-        public Trainer setMaxNodes(int maxNodes) {
-            if (maxNodes < 2) {
-                throw new IllegalArgumentException("Invalid maximum number of leaf nodes: " + maxNodes);
-            }
-            
-            this.maxNodes = maxNodes;
-            return this;
-        }
-        
-        @Override
-        public AdaBoost train(double[][] x, int[] y) {
-            return new AdaBoost(attributes, x, y, ntrees, maxNodes);
-        }
-    }
-    
-    /**
-     * Constructor. Learns AdaBoost with decision stumps.
-     *
-     * @param x the training instances. 
-     * @param y the response variable.
-     * @param ntrees the number of trees.
-     */
-    public AdaBoost(double[][] x, int[] y, int ntrees) {
-        this(null, x, y, ntrees);
-    }
-
-    /**
-     * Constructor. Learns AdaBoost with decision trees.
-     *
-     * @param x the training instances. 
-     * @param y the response variable.
-     * @param ntrees the number of trees.
-     * @param maxNodes the maximum number of leaf nodes in the trees.
-     */
-    public AdaBoost(double[][] x, int[] y, int ntrees, int maxNodes) {
-        this(null, x, y, ntrees, maxNodes);
-    }
-
-    /**
-     * Constructor. Learns AdaBoost with decision stumps.
-     *
-     * @param attributes the attribute properties.
-     * @param x the training instances. 
-     * @param y the response variable.
-     * @param ntrees the number of trees.
-     */
-    public AdaBoost(Attribute[] attributes, double[][] x, int[] y, int ntrees) {
-        this(attributes, x, y, ntrees, 2);
-    }
-
-    /**
-     * Constructor. Learns AdaBoost with decision stumps.
-     *
-     * @param data the dataset
-     * @param ntrees the number of trees.
-     */
-    public AdaBoost(AttributeDataset data, int ntrees) {
-        this(data.attributes(), data.x(), data.labels(), ntrees);
-    }
-
-    /**
      * Constructor.
      *
-     * @param data the dataset
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
      * @param ntrees the number of trees.
      * @param maxNodes the maximum number of leaf nodes in the trees.
      */
-    public AdaBoost(AttributeDataset data, int ntrees, int maxNodes) {
-        this(data.attributes(), data.x(), data.labels(), ntrees, maxNodes);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param attributes the attribute properties.
-     * @param x the training instances. 
-     * @param y the response variable.
-     * @param ntrees the number of trees.
-     * @param maxNodes the maximum number of leaf nodes in the trees.
-     */
-    public AdaBoost(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
-        }
-
-        if (ntrees < 1) {
+    public AdaBoost(Formula formula, DataFrame data, int ntrees, int maxNodes) {
+        if (ntrees <= 1) {
             throw new IllegalArgumentException(INVALID_NUMBER_OF_TREES + ntrees);
         }
-        
-        if (maxNodes < 2) {
-            throw new IllegalArgumentException("Invalid maximum leaves: " + maxNodes);
-        }
-        
-        // class label set.
-        int[] labels = MathEx.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
-        }
-        
-        k = labels.length;
-        if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
-        }
-        
-        if (attributes == null) {
-            int p = x[0].length;
-            attributes = new Attribute[p];
-            for (int i = 0; i < p; i++) {
-                attributes[i] = new NumericAttribute("V" + (i + 1));
-            }
-        }
 
-        int[][] order = SmileUtils.sort(attributes, x);
+        DataFrame x = formula.frame(data);
+        BaseVector y = formula.response(data);
+        k = Classifier.classes(y).length;
+        int[][] order = Classifier.order(x);
         
-        int n = x.length;
+        int n = data.size();
         int[] samples = new int[n];
         double[] w = new double[n];
         boolean[] err = new boolean[n];
@@ -302,11 +133,11 @@ public class AdaBoost implements SoftClassifier<double[]> {
             for (int s : rand) {
                 samples[s]++;
             }
-            
-            trees[t] = new DecisionTree(attributes, x, y, maxNodes, 1, x[0].length, DecisionTree.SplitRule.GINI, samples, order);
+
+            trees[t] = new DecisionTree(x, y, k, SplitRule.GINI, 1, maxNodes, -1, samples, order);
             
             for (int i = 0; i < n; i++) {
-                err[i] = trees[t].predict(x[i]) != y[i];
+                err[i] = trees[t].predict(x.get(i)) != y.getInt(i);
             }
             
             double e = 0.0; // weighted error
@@ -339,7 +170,7 @@ public class AdaBoost implements SoftClassifier<double[]> {
             }
         }
         
-        importance = new double[attributes.length];
+        importance = new double[x.ncols()];
         for (DecisionTree tree : trees) {
             double[] imp = tree.importance();
             for (int i = 0; i < imp.length; i++) {
@@ -395,7 +226,7 @@ public class AdaBoost implements SoftClassifier<double[]> {
     }
     
     @Override
-    public int predict(double[] x) {
+    public int predict(Tuple x) {
         double[] y = new double[k];
 
         for (int i = 0; i < trees.length; i++) {
@@ -410,7 +241,7 @@ public class AdaBoost implements SoftClassifier<double[]> {
      * probabilities. Not supported.
      */
     @Override
-    public int predict(double[] x, double[] posteriori) {
+    public int predict(Tuple x, double[] posteriori) {
         Arrays.fill(posteriori, 0.0);
 
         for (int i = 0; i < trees.length; i++) {
@@ -432,11 +263,11 @@ public class AdaBoost implements SoftClassifier<double[]> {
      * @param y the test data response values.
      * @return accuracies with first 1, 2, ..., decision trees.
      */
-    public double[] test(double[][] x, int[] y) {
+    public double[] test(DataFrame x, int[] y) {
         int T = trees.length;
         double[] accuracy = new double[T];
 
-        int n = x.length;
+        int n = x.size();
         int[] label = new int[n];
 
         Accuracy measure = new Accuracy();
@@ -445,7 +276,7 @@ public class AdaBoost implements SoftClassifier<double[]> {
             double[] prediction = new double[n];
             for (int i = 0; i < T; i++) {
                 for (int j = 0; j < n; j++) {
-                    prediction[j] += alpha[i] * trees[i].predict(x[j]);
+                    prediction[j] += alpha[i] * trees[i].predict(x.get(j));
                     label[j] = prediction[j] > 0 ? 1 : 0;
                 }
                 accuracy[i] = measure.measure(y, label);
@@ -454,7 +285,7 @@ public class AdaBoost implements SoftClassifier<double[]> {
             double[][] prediction = new double[n][k];
             for (int i = 0; i < T; i++) {
                 for (int j = 0; j < n; j++) {
-                    prediction[j][trees[i].predict(x[j])] += alpha[i];
+                    prediction[j][trees[i].predict(x.get(j))] += alpha[i];
                     label[j] = MathEx.whichMax(prediction[j]);
                 }
 
@@ -473,19 +304,19 @@ public class AdaBoost implements SoftClassifier<double[]> {
      * @param measures the performance measures of classification.
      * @return performance measures with first 1, 2, ..., decision trees.
      */
-    public double[][] test(double[][] x, int[] y, ClassificationMeasure[] measures) {
+    public double[][] test(DataFrame x, int[] y, ClassificationMeasure[] measures) {
         int T = trees.length;
         int m = measures.length;
         double[][] results = new double[T][m];
 
-        int n = x.length;
+        int n = x.size();
         int[] label = new int[n];
 
         if (k == 2) {
             double[] prediction = new double[n];
             for (int i = 0; i < T; i++) {
                 for (int j = 0; j < n; j++) {
-                    prediction[j] += alpha[i] * trees[i].predict(x[j]);
+                    prediction[j] += alpha[i] * trees[i].predict(x.get(j));
                     label[j] = prediction[j] > 0 ? 1 : 0;
                 }
 
@@ -497,7 +328,7 @@ public class AdaBoost implements SoftClassifier<double[]> {
             double[][] prediction = new double[n][k];
             for (int i = 0; i < T; i++) {
                 for (int j = 0; j < n; j++) {
-                    prediction[j][trees[i].predict(x[j])] += alpha[i];
+                    prediction[j][trees[i].predict(x.get(j))] += alpha[i];
                     label[j] = MathEx.whichMax(prediction[j]);
                 }
 
