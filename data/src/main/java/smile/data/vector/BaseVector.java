@@ -59,6 +59,14 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
      * Returns a double array of this vector.
      */
     default double[] toDoubleArray() {
+        return toDoubleArray(new double[size()]);
+    }
+
+    /**
+     * Copies the vector value as double to the given array.
+     * @return the input array <code>a</code>.
+     */
+    default double[] toDoubleArray(double[] a) {
         throw new UnsupportedOperationException();
     }
 
@@ -66,6 +74,14 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
      * Returns an integer array of this vector.
      */
     default int[] toIntArray() {
+        return toIntArray(new int[size()]);
+    }
+
+    /**
+     * Copies the vector value as int to the given array.
+     * @return the input array <code>a</code>.
+     */
+    default int[] toIntArray(int[] a) {
         throw new UnsupportedOperationException();
     }
 
