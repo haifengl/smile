@@ -18,16 +18,28 @@
 package smile.base.cart;
 
 import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
 import smile.data.type.StructType;
+import smile.data.vector.BaseVector;
 import smile.math.MathEx;
+import smile.sort.QuickSort;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
+import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 import java.util.AbstractMap.SimpleEntry;
 
 /** Classification and regression tree. */
 public abstract class CART {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CART.class);
+
+    /** The formula specifies the dependent and independent variables. */
+    protected Formula formula;
+
+    /** The schema of data. */
+    protected StructType schema;
 
     /** The root of decision tree. */
     protected Node root;
@@ -46,43 +58,262 @@ public abstract class CART {
      */
     protected int mtry = -1;
 
-    public CART(int nodeSize, int maxNodes, int mtry) {
+    /**
+     * Variable importance. Every time a split of a node is made on variable
+     * the (GINI, information gain, etc.) impurity criterion for the two
+     * descendent nodes is less than the parent node. Adding up the decreases
+     * for each individual variable over the tree gives a simple measure of
+     * variable importance.
+     */
+    protected double[] importance;
+
+    /** The training data. */
+    protected transient DataFrame data;
+
+    /** The dependent variable. */
+    protected transient BaseVector y;
+
+    /**
+     * The samples for training this node. Note that samples[i] is the
+     * number of sampling of dataset[i]. 0 means that the datum is not
+     * included and values of greater than 1 are possible because of
+     * sampling with replacement.
+     */
+    protected transient int[] samples;
+
+    /**
+     * An index of samples to their original locations in training dataset.
+     */
+    protected transient int[] index;
+
+    /**
+     * An index of training values. Initially, order[i] is a set of indices that iterate through the
+     * training values for attribute i in ascending order. During training, the array is rearranged
+     * so that all values for each leaf node occupy a contiguous range, but within that range they
+     * maintain the original ordering. Note that only numeric attributes will be sorted; non-numeric
+     * attributes will have a null in the corresponding place in the array.
+     */
+    protected transient int[][] order;
+
+    /**
+     * The working buffer for reordering {@link #index} array.
+     */
+    private transient int[] buffer;
+
+    public CART(Formula formula, DataFrame data, int nodeSize, int maxNodes, int mtry, int[] samples, int[][] order) {
+        this.formula = formula;
+        this.data = formula.frame(data);
+        this.schema = this.data.schema();
+        this.importance = new double[this.data.ncols()];
+        this.y = formula.response(data);
         this.nodeSize = nodeSize;
         this.maxNodes = maxNodes;
         this.mtry = mtry;
-    }
 
-    /** Finds the best split. */
-    public Split findBestSplit(DataFrame df, int[] samples) {
-        int n = MathEx.sum(samples);
-
-        if (n <= nodeSize) {
-            throw new IllegalStateException("Split a node with samples less than " + nodeSize);
+        if (mtry < 1 || mtry > schema.length()) {
+            logger.warn("Invalid number of variables to split on at a node of the tree: . Use all features." + mtry);
+            this.mtry = schema.length();
         }
 
-        double sum = node.output * n;
+        if (maxNodes < 2) {
+            throw new IllegalArgumentException("Invalid maximum leaves: " + maxNodes);
+        }
 
-        StructType schema = df.schema();
+        if (nodeSize < 1) {
+            throw new IllegalArgumentException("Invalid minimum size of leaf nodes: " + nodeSize);
+        }
+
+        int n = this.data.size();
+        int p = this.schema.length();
+
+        IntStream idx;
+        if (samples == null) {
+            this.samples = Collections.nCopies(n, 1).parallelStream().mapToInt(i -> i).toArray();
+            idx = IntStream.range(0, n);
+            this.index = idx.toArray();
+        } else {
+            this.samples = samples;
+            idx = IntStream.range(0, samples.length).filter(i -> samples[i] > 0);
+            this.index = idx.toArray();
+        }
+
+        buffer  = new int[index.length];
+
+        if (order == null) {
+            double[] a = new double[n];
+            this.order = new int[p][];
+
+            for (int j = 0; j < p; j++) {
+                Measure measure = schema.field(j).measure;
+                if (measure == null || !(measure instanceof NominalScale)) {
+                    data.column(j).toDoubleArray(a);
+                    this.order[j] = QuickSort.sort(a);
+                }
+            }
+        } else {
+            this.order = new int[order.length][];
+            for (int i = 0; i < order.length; i++) {
+                if (order[i] != null) {
+                    final int[] o = order[i];
+                    this.order[i] = idx.map(j -> o[j]).toArray();
+                }
+            }
+        }
+    }
+
+    /** Clear the workspace of building tree. */
+    protected void clear() {
+        this.order = null;
+        this.index = null;
+        this.samples = null;
+        this.data = null;
+        this.y = null;
+        this.buffer = null;
+    }
+
+    /**
+     * Split a node into two children nodes.
+     * Returns a new InternalNode if split success.
+     * Otherwise, return the node.
+     */
+    protected boolean split(final Split split, PriorityQueue<Split> queue) {
+        if (split.feature < 0) {
+            throw new IllegalStateException("Split a node with invalid feature.");
+        }
+
+        LeafNode trueChild = newNode();
+        LeafNode falseChild = newNode();
+
+        int mid = split.lo;
+        for (int idx = split.lo; idx < split.hi; idx++) {
+            int i = index[idx];
+            if (split.predicate().test(i)) {
+                updateNode(trueChild, i);
+                mid++;
+            } else {
+                updateNode(falseChild, i);
+            }
+        }
+
+        calculateOutput(trueChild);
+        calculateOutput(falseChild);
+
+        if (trueChild.size < nodeSize || falseChild.size < nodeSize) {
+            // We should not reach here as findBestSplit filters this situation out.
+            logger.debug("Node size is too small after splitting");
+            return false;
+        }
+
+        InternalNode node = split.toNode(trueChild, falseChild);
+
+        reorder(split.lo, mid, split.hi, split.predicate());
+
+        Optional<Split> trueSplit = findBestSplit(trueChild, split.lo, mid, split.pure);
+        Optional<Split> falseSplit = findBestSplit(falseChild, mid, split.hi, split.pure);
+
+        // Prune the branch if both children are leaf nodes and of same output value.
+        if (trueChild.equals(falseChild) && !trueSplit.isPresent() && !falseSplit.isPresent()) {
+            return false;
+        }
+
+        if (split.parent == null) {
+            this.root = node;
+        } else if (split.parent.trueChild == split.leaf) {
+            split.parent.trueChild = node;
+        } else if (split.parent.falseChild == split.leaf) {
+            split.parent.falseChild = node;
+        } else {
+            throw new IllegalStateException("split.parent and leaf don't match");
+        }
+
+        importance[node.feature] += node.score;
+
+        if (queue == null) {
+            // deep first split
+            trueSplit.map(s -> split(s, null));
+            falseSplit.map(s -> split(s, null));
+        } else {
+            // best first split
+            trueSplit.map(s -> queue.add(s));
+            falseSplit.map(s -> queue.add(s));
+        }
+
+        return true;
+    }
+
+    /**
+     * Finds the best attribute to split on a set of samples. at the current node. Returns
+     * null if a split doesn't exists to reduce the impurity.
+     * @param node the leaf node to split.
+     * @param lo the inclusive lower bound of the data partition in the reordered sample index array.
+     * @param hi the exclusive upper bound of the data partition in the reordered sample index array.
+     * @param pure true if all the samples in the split have the same value in the column.
+     */
+    protected Optional<Split> findBestSplit(LeafNode node, int lo, int hi, boolean[] pure) {
+        if (node.size() < 2 * nodeSize) {
+            return Optional.empty(); // one child will has less than nodeSize samples.
+        }
+
+        final double impurity = impurity(node);
+        if (impurity == 0.0) {
+            return Optional.empty(); // all the samples in the node have the same response
+        }
+
         int p = schema.length();
-        int[] columns = IntStream.range(0, p).toArray();
+        int[] columns = IntStream.range(0, p).filter(i -> pure == null || !pure[i]).toArray();
 
         if (mtry < p) {
             MathEx.permutate(columns);
         }
 
-        Split best = findBestSplit(n, sum, columns[0]);
-        for (int j = 1; j < mtry; j++) {
-            Split split = findBestSplit(n, sum, columns[j]);
-            if (split.splitScore > best.splitScore) {
-                best = split;
-            }
-        }
-
-        return best;
+        return Arrays.stream(columns).limit(mtry)
+                .mapToObj(j -> findBestSplit(j, impurity, lo, hi)).filter(o -> o.isPresent())
+                .map(Optional::get)
+                .max(Split.comparator);
     }
 
+    /** Returns the impurity of node. */
+    protected abstract double impurity(LeafNode node);
+
+    /** Creates a new leaf node. */
+    protected abstract LeafNode newNode();
+
+    /**
+     * Updates the leaf node with a sample
+     *
+     * @param node the leaf node
+     * @param i the index of sample to add to the node
+     */
+    protected abstract void updateNode(LeafNode node, int i);
+
+    /**
+     * Calculates the output of leaf node.
+     */
+    protected abstract void calculateOutput(LeafNode node);
+
     /** Finds the best split for given column. */
-    public abstract Split findBestSplit(int column, DataFrame df, int[] samples);
+    protected abstract Optional<Split> findBestSplit(int column, double impurity, int lo, int hi);
+
+    /**
+     * Returns the variable importance. Every time a split of a node is made
+     * on variable the (GINI, information gain, etc.) impurity criterion for
+     * the two descendent nodes is less than the parent node. Adding up the
+     * decreases for each individual variable over the tree gives a simple
+     * measure of variable importance.
+     *
+     * @return the variable importance
+     */
+    public double[] importance() {
+        return importance;
+    }
+
+    /**
+     * Returs the root node.
+     * @return root node.
+     */
+    public Node root() {
+        return root;
+    }
 
     /**
      * Returns the graphic representation in Graphviz dot format.
@@ -96,7 +327,7 @@ public abstract class CART {
         String falseLabel = " [labeldistance=2.5, labelangle=-45, headlabel=\"False\"];\n";
 
         Queue<SimpleEntry<Integer, Node>> queue = new LinkedList<>();
-        queue.add(new SimpleEntry(1, root));
+        queue.add(new SimpleEntry<>(1, root));
 
         while (!queue.isEmpty()) {
             // Dequeue a vertex from queue and print it
@@ -105,14 +336,14 @@ public abstract class CART {
             Node node = entry.getValue();
 
             // leaf node
-            builder.append(node.toDot(id));
+            builder.append(node.toDot(schema, id));
 
             if (node instanceof InternalNode) {
                 int tid = 2 * id;
                 int fid = 2 * id + 1;
                 InternalNode inode = (InternalNode) node;
-                queue.add(new SimpleEntry(tid, inode.trueChild));
-                queue.add(new SimpleEntry(fid, inode.falseChild));
+                queue.add(new SimpleEntry<>(tid, inode.trueChild));
+                queue.add(new SimpleEntry<>(fid, inode.falseChild));
 
                 // add edge
                 builder.append(' ').append(id).append(" -> ").append(tid).append(trueLabel);
@@ -128,5 +359,40 @@ public abstract class CART {
 
         builder.append("}");
         return builder.toString();
+    }
+
+    /**
+     * Modifies {@link #index} and {@link #order} by partitioning the range from low
+     * (inclusive) to high (exclusive) so that all elements i for which predicate(i) is true come
+     * before all elements for which it is false, but element ordering is otherwise preserved. The
+     * number of true values returned by predicate must equal split-low.
+     * @param low the low bound of the segment of the order arrays which will be partitioned.
+     * @param split where the partition's split point will end up.
+     * @param high the high bound of the segment of the order arrays which will be partitioned.
+     * @param predicate whether an element goes to the left side or the right side of the
+     *        partition.
+     */
+    private void reorder(int low, int split, int high, IntPredicate predicate) {
+        Arrays.stream(order).filter(Objects::nonNull).forEach(o -> reorder(o, low, split, high, predicate));
+        reorder(index, low, split, high, predicate);
+    }
+
+    /**
+     * Modifies an array in-place by partitioning the range from low (inclusive) to high (exclusive)
+     * so that all elements i for which goesLeft(i) is true come before all elements for which it is
+     * false, but element ordering is otherwise preserved. The number of true values returned by
+     * goesLeft must equal split-low. buffer is scratch space large enough (i.e., at least
+     * high-split long) to hold all elements for which goesLeft is false.
+     */
+    private void reorder(int[] a, int low, int split, int high, IntPredicate predicate) {
+        int k = 0;
+        for (int i = low, j = low; i < high; i++) {
+            if (predicate.test(a[i])) {
+                a[j++] = a[i];
+            } else {
+                buffer[k++] = a[i];
+            }
+        }
+        System.arraycopy(buffer, 0, a, split, k);
     }
 }

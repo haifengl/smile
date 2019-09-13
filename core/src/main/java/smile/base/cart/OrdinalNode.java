@@ -20,6 +20,7 @@ package smile.base.cart;
 import smile.data.Tuple;
 import smile.data.measure.DiscreteMeasure;
 import smile.data.measure.Measure;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
@@ -31,27 +32,27 @@ public class OrdinalNode extends InternalNode {
     /**
      * The split value.
      */
-    double splitValue = Double.NaN;
+    double value = Double.NaN;
 
     /** Constructor. */
-    public OrdinalNode(int splitFeature, double splitValue, double splitScore, Node trueChild, Node falseChild) {
-        super(splitFeature, splitScore, trueChild, falseChild);
-        this.splitValue = splitValue;
+    public OrdinalNode(int feature, double value, double score, Node trueChild, Node falseChild) {
+        super(feature, score, trueChild, falseChild);
+        this.value = value;
     }
 
     @Override
     public LeafNode predict(Tuple x) {
-        return x.getDouble(splitFeature) <= splitValue ? trueChild.predict(x) : falseChild.predict(x);
+        return x.getDouble(feature) <= value ? trueChild.predict(x) : falseChild.predict(x);
     }
 
     @Override
     public String toDot(StructType schema, int id) {
-        String name = schema.fieldName(splitFeature);
-        Measure measure = schema.measure(name);
-        String value = (measure != null && measure instanceof DiscreteMeasure) ?
-                ((DiscreteMeasure) measure).level((int) splitValue) :
-                String.format("%.4f", splitValue);
+        StructField field = schema.field(feature);
+        Measure measure = field.measure;
+        String valueStr = (measure != null && measure instanceof DiscreteMeasure) ?
+                ((DiscreteMeasure) measure).level((int) value) :
+                String.format("%.4f", value);
 
-        return String.format(" %d [label=<%s &le; %s<br/>score = %.4f>, fillcolor=\"#00000000\"];\n", id, name, value, splitScore);
+        return String.format(" %d [label=<%s &le; %s<br/>score = %.4f>, fillcolor=\"#00000000\"];\n", id, field.name, valueStr, score);
     }
 }

@@ -18,23 +18,29 @@
 package smile.base.cart;
 
 import smile.data.type.StructType;
+import smile.math.MathEx;
 
 /**
  * A leaf node in decision tree.
  */
-public class DecisionNode implements LeafNode {
+public class DecisionNode extends LeafNode {
     private static final long serialVersionUID = 1L;
 
     /** The predicted output. */
     private int output;
 
+    /** The number of node samples in each class. */
+    private int[] count;
+
     /**
      * Constructor.
      *
-     * @param output the predicted value for this node.
+     * @param count the number of node samples in each class.
      */
-    public DecisionNode(int output) {
-        this.output = output;
+    public DecisionNode(int[] count) {
+        super(MathEx.sum(count));
+        this.output = MathEx.whichMax(count);
+        this.count = count;
     }
 
     /** Returns the predicted value. */
@@ -42,8 +48,73 @@ public class DecisionNode implements LeafNode {
         return output;
     }
 
+    /** Returns the number of node samples in each class. */
+    public int[] count() {
+        return count;
+    }
+
+    /**
+     * Adds some samples of class to the node.
+     * @param c the class
+     * @param s the number of samples.
+     */
+    public void add(int c, int s) {
+        count[c] += s;
+    }
+
+    /** Calculates the output. */
+    public void calculateOutput() {
+        output = MathEx.whichMax(count);
+        size = MathEx.sum(count);
+    }
+
     @Override
     public String toDot(StructType schema, int id) {
         return String.format(" %d [label=<class = %d>, fillcolor=\"#00000000\", shape=ellipse];\n", id, output);
+    }
+
+    /**
+     * Returns the impurity of node.
+     * @return  the impurity of node
+     */
+    public double impurity(SplitRule rule) {
+        double impurity = 0.0;
+
+        switch (rule) {
+            case GINI:
+                double squared_sum = 0;
+                for (int c : count) {
+                    if (c > 0) {
+                        squared_sum += (double) c * c;
+                    }
+                }
+                impurity = 1 - squared_sum / ((double) size * size);
+                break;
+
+            case ENTROPY:
+                for (int c : count) {
+                    if (c > 0) {
+                        double p = (double) c / size;
+                        impurity -= p * MathEx.log2(p);
+                    }
+                }
+                break;
+
+            case CLASSIFICATION_ERROR:
+                impurity = Math.abs(1 - MathEx.max(count) / (double) size);
+                break;
+        }
+
+        return impurity;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof DecisionNode) {
+            DecisionNode a = (DecisionNode) o;
+            return output == a.output;
+        }
+
+        return false;
     }
 }
