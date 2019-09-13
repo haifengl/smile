@@ -43,8 +43,7 @@ class LongVectorImpl implements LongVector {
     }
 
     @Override
-    public double[] toDoubleArray() {
-        double[] a = new double[vector.length];
+    public double[] toDoubleArray(double[] a) {
         for (int i = 0; i < a.length; i++) a[i] = vector[i];
         return a;
     }

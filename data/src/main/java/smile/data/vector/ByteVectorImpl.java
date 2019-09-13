@@ -42,15 +42,13 @@ class ByteVectorImpl implements ByteVector {
     }
 
     @Override
-    public int[] toIntArray() {
-        int[] a = new int[vector.length];
+    public int[] toIntArray(int[] a) {
         for (int i = 0; i < a.length; i++) a[i] = vector[i];
         return a;
     }
 
     @Override
-    public double[] toDoubleArray() {
-        double[] a = new double[vector.length];
+    public double[] toDoubleArray(double[] a) {
         for (int i = 0; i < a.length; i++) a[i] = vector[i];
         return a;
     }

@@ -48,6 +48,12 @@ class DoubleVectorImpl implements DoubleVector {
     }
 
     @Override
+    public double[] toDoubleArray(double[] a) {
+        System.arraycopy(vector, 0, a, 0, vector.length);
+        return a;
+    }
+
+    @Override
     public double getDouble(int i) {
         return vector[i];
     }
