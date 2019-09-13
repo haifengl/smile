@@ -22,24 +22,33 @@ import smile.data.Tuple;
 /**
  * A leaf node in decision tree.
  */
-public interface LeafNode extends Node {
+public abstract class LeafNode implements Node {
+    /** The number of samples in the node. */
+    protected int size;
+
     /**
-     * Splits this node. If success, return an internal
-     * node with children leaf nodes. If not, return
-     * this node itself.
+     * Constructor.
+     * @param size the number of samples in the node
      */
-    Node split();
+    public LeafNode(int size) {
+        this.size = size;
+    }
+
+    /** Returns the number of samples in the node. */
+    public int size() {
+        return size;
+    }
 
     @Override
-    default LeafNode predict(Tuple x) {
+    public LeafNode predict(Tuple x) {
         return this;
     }
 
     @Override
-    default int depth() {
+    public int depth() {
         return 1;
     }
 
     @Override
-    default Node toLeaf() { return this; }
+    public Node toLeaf() { return this; }
 }

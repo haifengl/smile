@@ -17,29 +17,63 @@
 
 package smile.base.cart;
 
-public class Split {
-    /**
-     * Children node.
-     */
-    Node trueChild;
+import java.util.Comparator;
+import java.util.function.IntPredicate;
 
-    /**
-     * Children node.
-     */
-    Node falseChild;
+/** The data about of a potential split for a leaf node. */
+public abstract class Split {
+    public static Comparator<Split> comparator = (x, y) -> Double.compare(x.score, y.score);
+
+    /** The node associated with this split. */
+    final LeafNode leaf;
+
+    /** The parent node of the leaf to be split. */
+    final InternalNode parent;
 
     /**
      * The split feature for this node.
      */
-    int splitFeature = -1;
-
-    /**
-     * The split value.
-     */
-    double splitValue = Double.NaN;
+    final int feature;
 
     /**
      * Reduction in splitting criterion.
      */
-    double splitScore = 0.0;
+    final double score;
+
+    /**
+     * The inclusive lower bound of the data partition in the reordered sample index array.
+     */
+    final int lo;
+
+    /**
+     * The exclusive upper bound of the data partition in the reordered sample index array.
+     */
+    final int hi;
+
+    /**
+     * True if all the samples in the split have the same value in the column.
+     */
+    final boolean[] pure;
+
+    /** Constructor. */
+    public Split(InternalNode parent, LeafNode leaf, int feature, double score, int lo, int hi, boolean[] pure) {
+        this.parent = parent;
+        this.leaf = leaf;
+        this.feature = feature;
+        this.score = score;
+        this.lo = lo;
+        this.hi = hi;
+        this.pure =  pure;
+    }
+
+    /**
+     * Returns an internal node with the feature, value, and score of this split.
+     * @param trueChild the child node of true branch.
+     * @param falseChild the child node of false branch.
+     * @return an internal node
+     */
+    public abstract InternalNode toNode(Node trueChild, Node falseChild);
+
+    /** Returns the lambda that tests on the split feature. */
+    public abstract IntPredicate predicate();
 }

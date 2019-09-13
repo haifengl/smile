@@ -18,23 +18,31 @@
 package smile.base.cart;
 
 import smile.data.type.StructType;
+import smile.math.MathEx;
 
 /**
  * A leaf node in regression tree.
  */
-public class RegressionNode implements LeafNode {
+public class RegressionNode extends LeafNode {
     private static final long serialVersionUID = 1L;
 
     /** The predicted output. */
     private double output;
 
+    /** The squared error. */
+    private double error;
+
     /**
      * Constructor.
      *
+     * @param size the number of samples in the node
      * @param output the predicted value for this node.
+     * @param error the squared error.
      */
-    public RegressionNode(double output) {
+    public RegressionNode(int size, double output, double error) {
+        super(size);
         this.output = output;
+        this.error = error;
     }
 
     /** Returns the predicted value. */
@@ -42,8 +50,25 @@ public class RegressionNode implements LeafNode {
         return output;
     }
 
+    /**
+     * Returns the squared error.
+     */
+    public double impurity() {
+        return error;
+    }
+
     @Override
     public String toDot(StructType schema, int id) {
         return String.format(" %d [label=<%.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, output);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof RegressionNode) {
+            RegressionNode a = (RegressionNode) o;
+            return MathEx.equals(output, a.output);
+        }
+
+        return false;
     }
 }

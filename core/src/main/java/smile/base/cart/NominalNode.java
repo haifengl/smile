@@ -19,6 +19,7 @@ package smile.base.cart;
 
 import smile.data.Tuple;
 import smile.data.measure.DiscreteMeasure;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.measure.Measure;
 
@@ -31,27 +32,27 @@ public class NominalNode extends InternalNode {
     /**
      * The split value.
      */
-    int splitValue = Integer.MIN_VALUE;
+    int value = Integer.MIN_VALUE;
 
     /** Constructor. */
-    public NominalNode(int splitFeature, int splitValue, double splitScore, Node trueChild, Node falseChild) {
-        super(splitFeature, splitScore, trueChild, falseChild);
-        this.splitValue = splitValue;
+    public NominalNode(int feature, int value, double splitScore, Node trueChild, Node falseChild) {
+        super(feature, splitScore, trueChild, falseChild);
+        this.value = value;
     }
 
     @Override
     public LeafNode predict(Tuple x) {
-        return x.getInt(splitFeature) == splitValue ? trueChild.predict(x) : falseChild.predict(x);
+        return x.getInt(feature) == value ? trueChild.predict(x) : falseChild.predict(x);
     }
 
     @Override
     public String toDot(StructType schema, int id) {
-        String name = schema.fieldName(splitFeature);
-        Measure measure = schema.measure(name);
-        String value = (measure != null && measure instanceof DiscreteMeasure) ?
-                ((DiscreteMeasure) measure).level(splitValue) :
-                Integer.toString(splitValue);
+        StructField field = schema.field(feature);
+        Measure measure = field.measure;
+        String valueStr = (measure != null && measure instanceof DiscreteMeasure) ?
+                ((DiscreteMeasure) measure).level(value) :
+                Integer.toString(value);
 
-        return String.format(" %d [label=<%s = %s<br/>nscore = %.4f>, fillcolor=\"#00000000\"];\n", id, name, value, splitScore);
+        return String.format(" %d [label=<%s = %s<br/>nscore = %.4f>, fillcolor=\"#00000000\"];\n", id, field.name, valueStr, score);
     }
 }

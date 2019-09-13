@@ -38,16 +38,16 @@ public abstract class InternalNode implements Node {
     /**
      * The split feature for this node.
      */
-    int splitFeature = -1;
+    int feature = -1;
 
     /**
      * Reduction in impurity compared to parent.
      */
-    double splitScore = 0.0;
+    double score = 0.0;
 
-    public InternalNode(int splitFeature, double splitScore, Node trueChild, Node falseChild) {
-        this.splitFeature = splitFeature;
-        this.splitScore = splitScore;
+    public InternalNode(int feature, double score, Node trueChild, Node falseChild) {
+        this.feature = feature;
+        this.score = score;
         this.trueChild = trueChild;
         this.falseChild = falseChild;
     }
