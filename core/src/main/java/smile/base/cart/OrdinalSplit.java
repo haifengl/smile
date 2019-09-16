@@ -34,12 +34,10 @@ public class OrdinalSplit extends Split {
     final IntPredicate predicate;
 
     /** Constructor. */
-    public OrdinalSplit(final DataFrame df, InternalNode parent, LeafNode leaf, int feature, double value, double score, int lo, int hi, boolean[] pure) {
-        super(parent, leaf, feature, score, lo, hi, pure);
+    public OrdinalSplit(LeafNode leaf, int feature, double value, double score, int lo, int hi, IntPredicate predicate) {
+        super(leaf, feature, score, lo, hi);
         this.value = value;
-
-        final BaseVector vector = df.vector(feature);
-        predicate = (int o) -> vector.getDouble(o) <= value;
+        this.predicate = predicate;
     }
 
     @Override

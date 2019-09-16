@@ -27,9 +27,6 @@ public abstract class Split {
     /** The node associated with this split. */
     final LeafNode leaf;
 
-    /** The parent node of the leaf to be split. */
-    final InternalNode parent;
-
     /**
      * The split feature for this node.
      */
@@ -50,14 +47,16 @@ public abstract class Split {
      */
     final int hi;
 
+    /** The parent node of the leaf to be split. */
+    InternalNode parent;
+
     /**
      * True if all the samples in the split have the same value in the column.
      */
-    final boolean[] pure;
+    boolean[] pure;
 
     /** Constructor. */
-    public Split(InternalNode parent, LeafNode leaf, int feature, double score, int lo, int hi, boolean[] pure) {
-        this.parent = parent;
+    public Split(LeafNode leaf, int feature, double score, int lo, int hi) {
         this.leaf = leaf;
         this.feature = feature;
         this.score = score;
