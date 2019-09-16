@@ -151,16 +151,7 @@ public abstract class CART {
         buffer  = new int[index.length];
 
         if (order == null) {
-            double[] a = new double[n];
-            this.order = new int[p][];
-
-            for (int j = 0; j < p; j++) {
-                Measure measure = schema.field(j).measure;
-                if (measure == null || !(measure instanceof NominalScale)) {
-                    x.column(j).toDoubleArray(a);
-                    this.order[j] = QuickSort.sort(a);
-                }
-            }
+            this.order = order(x);
         } else {
             this.order = new int[order.length][];
             for (int i = 0; i < order.length; i++) {
@@ -170,6 +161,26 @@ public abstract class CART {
                 }
             }
         }
+    }
+
+    /** Returns the index of ordered samples for each ordinal column. */
+    public static int[][] order(DataFrame x) {
+        int n = x.size();
+        int p = x.ncols();
+        StructType schema = x.schema();
+
+        double[] a = new double[n];
+        int[][] order = new int[p][];
+
+        for (int j = 0; j < p; j++) {
+            Measure measure = schema.field(j).measure;
+            if (measure == null || !(measure instanceof NominalScale)) {
+                x.column(j).toDoubleArray(a);
+                order[j] = QuickSort.sort(a);
+            }
+        }
+
+        return order;
     }
 
     /** Clear the workspace of building tree. */
