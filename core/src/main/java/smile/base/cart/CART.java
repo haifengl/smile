@@ -26,6 +26,7 @@ import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 
+import javax.swing.text.html.Option;
 import java.util.*;
 import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
@@ -216,10 +217,10 @@ public abstract class CART {
 
         InternalNode node = split.toNode(trueChild, falseChild);
 
-        reorder(split.lo, mid, split.hi, split.predicate());
+        shuffle(split.lo, mid, split.hi, split.predicate());
 
-        Optional<Split> trueSplit = findBestSplit(trueChild, split.lo, mid, split.pure);
-        Optional<Split> falseSplit = findBestSplit(falseChild, mid, split.hi, split.pure);
+        Optional<Split> trueSplit = findBestSplit(trueChild, split.lo, mid, split.pure.clone());
+        Optional<Split> falseSplit = findBestSplit(falseChild, mid, split.hi, split.pure); // reuse parent's pure array
 
         // Prune the branch if both children are leaf nodes and of same output value.
         if (trueChild.equals(falseChild) && !trueSplit.isPresent() && !falseSplit.isPresent()) {
@@ -237,6 +238,8 @@ public abstract class CART {
         }
 
         importance[node.feature] += node.score;
+        trueSplit.map(s -> s.parent = node);
+        falseSplit.map(s -> s.parent = node);
 
         if (queue == null) {
             // deep first split
@@ -269,17 +272,28 @@ public abstract class CART {
             return Optional.empty(); // all the samples in the node have the same response
         }
 
+        // skip the pure columns
         int p = schema.length();
         int[] columns = IntStream.range(0, p).filter(i -> pure == null || !pure[i]).toArray();
 
+        // random forest
         if (mtry < p) {
             MathEx.permutate(columns);
         }
 
-        return Arrays.stream(columns).limit(mtry)
-                .mapToObj(j -> findBestSplit(j, impurity, lo, hi)).filter(o -> o.isPresent())
+        IntStream stream = Arrays.stream(columns).limit(mtry);
+        Optional<Split> split = (mtry < p ? stream : stream.parallel()) // random forest is in parallel already
+                .mapToObj(j -> {
+                    Optional<Split> s = findBestSplit(node, j, impurity, lo, hi);
+                    if (!s.isPresent()) pure[j] = true;
+                    return s;
+                })
+                .filter(Optional::isPresent)
                 .map(Optional::get)
                 .max(Split.comparator);
+
+        split.map(s -> s.pure = pure);
+        return split;
     }
 
     /** Returns the impurity of node. */
@@ -302,7 +316,7 @@ public abstract class CART {
     protected abstract void calculateOutput(LeafNode node);
 
     /** Finds the best split for given column. */
-    protected abstract Optional<Split> findBestSplit(int column, double impurity, int lo, int hi);
+    protected abstract Optional<Split> findBestSplit(LeafNode node, int column, double impurity, int lo, int hi);
 
     /**
      * Returns the variable importance. Every time a split of a node is made
@@ -372,7 +386,7 @@ public abstract class CART {
     }
 
     /**
-     * Modifies {@link #index} and {@link #order} by partitioning the range from low
+     * Shuffles {@link #index} and {@link #order} by partitioning the range from low
      * (inclusive) to high (exclusive) so that all elements i for which predicate(i) is true come
      * before all elements for which it is false, but element ordering is otherwise preserved. The
      * number of true values returned by predicate must equal split-low.
@@ -382,19 +396,19 @@ public abstract class CART {
      * @param predicate whether an element goes to the left side or the right side of the
      *        partition.
      */
-    private void reorder(int low, int split, int high, IntPredicate predicate) {
-        Arrays.stream(order).filter(Objects::nonNull).forEach(o -> reorder(o, low, split, high, predicate));
-        reorder(index, low, split, high, predicate);
+    private void shuffle(int low, int split, int high, IntPredicate predicate) {
+        Arrays.stream(order).filter(Objects::nonNull).forEach(o -> shuffle(o, low, split, high, predicate));
+        shuffle(index, low, split, high, predicate);
     }
 
     /**
-     * Modifies an array in-place by partitioning the range from low (inclusive) to high (exclusive)
+     * Shuffles an array in-place by partitioning the range from low (inclusive) to high (exclusive)
      * so that all elements i for which goesLeft(i) is true come before all elements for which it is
      * false, but element ordering is otherwise preserved. The number of true values returned by
      * goesLeft must equal split-low. buffer is scratch space large enough (i.e., at least
      * high-split long) to hold all elements for which goesLeft is false.
      */
-    private void reorder(int[] a, int low, int split, int high, IntPredicate predicate) {
+    private void shuffle(int[] a, int low, int split, int high, IntPredicate predicate) {
         int k = 0;
         for (int i = low, j = low; i < high; i++) {
             if (predicate.test(a[i])) {
@@ -403,6 +417,8 @@ public abstract class CART {
                 buffer[k++] = a[i];
             }
         }
+
+        assert(split + k == high);
         System.arraycopy(buffer, 0, a, split, k);
     }
 }

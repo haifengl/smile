@@ -34,12 +34,10 @@ public class NominalSplit extends Split {
     final IntPredicate predicate;
 
     /** Constructor. */
-    public NominalSplit(final DataFrame df, InternalNode parent, LeafNode leaf, int feature, int value, double score, int lo, int hi, boolean[] pure) {
-        super(parent, leaf, feature, score, lo, hi, pure);
+    public NominalSplit(LeafNode leaf, int feature, int value, double score, int lo, int hi, IntPredicate predicate) {
+        super(leaf, feature, score, lo, hi);
         this.value = value;
-
-        final BaseVector vector = df.vector(feature);
-        predicate = (int o) -> vector.getInt(o) == value;
+        this.predicate = predicate;
     }
 
     @Override

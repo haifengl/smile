@@ -24,6 +24,8 @@ import smile.base.cart.*;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
+import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
@@ -132,8 +134,100 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
     }
 
     @Override
-    protected Optional<Split> findBestSplit(int column, double impurity, int lo, int hi) {
-        return Optional.empty();
+    protected Optional<Split> findBestSplit(LeafNode leaf, int j, double impurity, int lo, int hi) {
+        DecisionNode node = (DecisionNode) leaf;
+        BaseVector xj = x.column(j);
+        int[] falseCount = new int[k];
+
+        Split split = null;
+        double splitScore = 0.0;
+        Measure measure = schema.field(j).measure;
+        if (measure != null && measure instanceof NominalScale) {
+            int splitValue = -1;
+            NominalScale scale = (NominalScale) measure;
+            int m = scale.levels().length;
+            int[][] trueCount = new int[m][k];
+
+            for (int i = lo; i < hi; i++) {
+                int o = index[i];
+                trueCount[xj.getInt(o)][y.getInt(o)] += samples[o];
+            }
+
+            for (int l = 0; l < m; l++) {
+                int tc = MathEx.sum(trueCount[l]);
+                int fc = node.size() - tc;
+
+                // If either side is too small, skip this value.
+                if (tc < nodeSize || fc < nodeSize) {
+                    continue;
+                }
+
+                for (int q = 0; q < k; q++) {
+                    falseCount[q] = node.count()[q] - trueCount[l][q];
+                }
+
+                double gain = impurity - (double) tc / node.size() * DecisionNode.impurity(rule, tc, trueCount[l]) - (double) fc / node.size() * DecisionNode.impurity(rule, fc, falseCount);
+
+                // new best split
+                if (gain > splitScore) {
+                    splitValue = l;
+                    splitScore = gain;
+                }
+            }
+
+            if (splitScore > 0.0) {
+                final int value = splitValue;
+                split = new NominalSplit(leaf, j, splitValue, splitScore, lo, hi, (int o) -> xj.getInt(o) == value);
+            }
+        } else {
+            double splitValue = 0.0;
+            int[] trueCount = new int[k];
+            int[] orderj = order[j];
+
+            int first = orderj[lo];
+            double prevx = xj.getDouble(first);
+            int prevy = y.getInt(first);
+
+            for (int i = lo; i < hi; i++) {
+                int tc = 0;
+                int fc = 0;
+
+                int o = orderj[i];
+                int yi = y.getInt(o);
+                double xij = xj.getDouble(o);
+
+                if (yi != prevy && xij != prevx) {
+                    tc = MathEx.sum(trueCount);
+                    fc = node.size() - tc;
+                }
+
+                // If either side is empty, skip this value.
+                if (tc >= nodeSize && fc >= nodeSize) {
+                    for (int l = 0; l < k; l++) {
+                        falseCount[l] = node.count()[l] - trueCount[l];
+                    }
+
+                    double gain = impurity - (double) tc / node.size() * DecisionNode.impurity(rule, tc, trueCount) - (double) fc / node.size() * DecisionNode.impurity(rule, fc, falseCount);
+
+                    // new best split
+                    if (gain > splitScore) {
+                        splitValue = (xj.getDouble(o) + prevx) / 2;
+                        splitScore = gain;
+                    }
+                }
+
+                prevx = xij;
+                prevy = yi;
+                trueCount[prevy] += samples[o];
+            }
+
+            if (splitScore > 0.0) {
+                final double value = splitValue;
+                split = new OrdinalSplit(leaf, j, splitValue, splitScore, lo, hi, (int o) -> xj.getDouble(o) <= value);
+            }
+        }
+
+        return Optional.ofNullable(split);
     }
 
     /**
