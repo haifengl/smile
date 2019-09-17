@@ -169,7 +169,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
     /**
      * The sampling rate for stochastic tree boosting.
      */
-    private double f = 0.7;
+    private double subsample = 0.7;
 
     /**
      * Constructor. Learns a gradient tree boosting for regression.
@@ -181,28 +181,29 @@ public class GradientTreeBoost implements Regression<Tuple> {
      * @param ntrees the number of iterations (trees).
      * @param maxNodes the number of leaves in each tree.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
-     * @param f the sampling fraction for stochastic tree boosting.
+     * @param subsample the sampling fraction for stochastic tree boosting.
      */
-    public GradientTreeBoost(Formula formula, DataFrame data, Loss loss, int ntrees, int maxNodes, double shrinkage, double f) {
+    public GradientTreeBoost(Formula formula, DataFrame data, Loss loss, int ntrees, int maxNodes, double shrinkage, double subsample) {
         if (shrinkage <= 0 || shrinkage > 1) {
             throw new IllegalArgumentException("Invalid shrinkage: " + shrinkage);            
         }
 
-        if (f <= 0 || f > 1) {
-            throw new IllegalArgumentException("Invalid sampling fraction: " + f);            
+        if (subsample <= 0 || subsample > 1) {
+            throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
         }
-        
+
+        this.formula = formula;
         this.loss = loss;
         this.ntrees = ntrees;
         this.maxNodes = maxNodes;
         this.shrinkage = shrinkage;
-        this.f = f;
+        this.subsample = subsample;
 
         DataFrame x = formula.frame(data);
         double[] y = formula.response(data).toDoubleArray();
 
         final int n = x.nrows();
-        final int N = (int) Math.round(n * f);
+        final int N = (int) Math.round(n * subsample);
         final int[][] order = CART.order(x);
 
         int[] perm = IntStream.range(0, n).toArray();
@@ -285,7 +286,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
      * @return the sampling rate for stochastic gradient tree boosting.
      */
     public double getSamplingRate() {
-        return f;
+        return subsample;
     }
   
     /**

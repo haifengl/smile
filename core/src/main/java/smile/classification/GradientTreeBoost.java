@@ -19,10 +19,12 @@ package smile.classification;
 
 import java.util.Arrays;
 
+import smile.base.cart.*;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.vector.BaseVector;
+import smile.data.vector.DoubleVector;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
 import smile.util.SmileUtils;
@@ -106,6 +108,11 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
     private static final long serialVersionUID = 2L;
 
     /**
+     * Design matrix formula
+     */
+    private Formula formula;
+
+    /**
      * The number of classes.
      */
     private int k = 2;
@@ -148,9 +155,8 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
     /**
      * Constructor. Learns a gradient tree boosting for classification.
      *
-     * @param attributes the attribute properties.
-     * @param x the training instances. 
-     * @param y the class labels.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
      * @param ntrees the number of iterations (trees).
      * @param maxNodes the number of leaves in each tree.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
@@ -172,20 +178,22 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         if (subsample <= 0 || subsample > 1) {
             throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
         }
-        
+
+        this.formula = formula;
         this.ntrees = ntrees;
         this.maxNodes = maxNodes;
         this.shrinkage = shrinkage;
         this.subsample = subsample;
-        this.k = MathEx.max(y) + 1;
 
-        if (k < 2) {
-            throw new IllegalArgumentException("Only one class or negative class labels.");
-        }
-        
-        importance = new double[attributes.length];
+        DataFrame x = formula.frame(data);
+        BaseVector y = formula.response(data);
+
+        this.k = Classifier.classes(y).length;
+        final int[][] order = CART.order(x);
+
+        importance = new double[x.ncols()];
         if (k == 2) {
-            train2(attributes, x, y);
+            train2(x, y.toIntArray(), order);
             for (RegressionTree tree : trees) {
                 double[] imp = tree.importance();
                 for (int i = 0; i < imp.length; i++) {
@@ -193,7 +201,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
                 }
             }
         } else {
-            traink(attributes, x, y);
+            traink(x, y.toIntArray(), order);
             for (RegressionTree[] grove : forest) {
                 for (RegressionTree tree : grove) {
                     double[] imp = tree.importance();
@@ -221,8 +229,8 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
     /**
      * Train L2 tree boost.
      */
-    private void train2(DataFrame x, BaseVector y) {
-        int n = x.length;
+    private void train2(DataFrame x, int[] y, int[][] order) {
+        int n = x.nrows();
 
         int[] nc = new int[k];
         for (int i = 0; i < n; i++) {
@@ -248,8 +256,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
             h[i] = b;
         }
 
-        int[][] order = SmileUtils.sort(attributes, x);
-        RegressionTree.NodeOutput output = new L2NodeOutput(response);
+        RegressionNodeOutput output = new L2NodeOutput(response);
         trees = new RegressionTree[ntrees];
 
         int[] perm = new int[n];
@@ -277,10 +284,10 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
                 response[i] = 2.0 * y2[i] / (1 + Math.exp(2 * y2[i] * h[i]));
             }
 
-            trees[m] = new RegressionTree(attributes, x, response, maxNodes, 5, x[0].length, order, samples, output);
+            trees[m] = new RegressionTree(x, DoubleVector.of("residual", response), 5, maxNodes, x.ncols(), samples, order, output);
 
             for (int i = 0; i < n; i++) {
-                h[i] += shrinkage * trees[m].predict(x[i]);
+                h[i] += shrinkage * trees[m].predict(x.get(i));
             }
         }
     }
@@ -288,8 +295,8 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
     /**
      * Train L-k tree boost.
      */
-    private void traink(DataFrame x, BaseVector y) {
-        int n = x.length;
+    private void traink(DataFrame x, int[] y, int[][] order) {
+        int n = x.nrows();
 
         int[] nc = new int[k];
         for (int i = 0; i < n; i++) {
@@ -300,10 +307,9 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         double[][] p = new double[k][n]; // posteriori probabilities.
         double[][] response = new double[k][n]; // pseudo response.
         
-        int[][] order = SmileUtils.sort(attributes, x);        
         forest = new RegressionTree[k][ntrees];
 
-        RegressionTree.NodeOutput[] output = new LKNodeOutput[k];
+        RegressionNodeOutput[] output = new LKNodeOutput[k];
         for (int i = 0; i < k; i++) {
             output[i] = new LKNodeOutput(response[i]);
         }
@@ -358,10 +364,10 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
                     }
                 }
 
-                forest[j][m] = new RegressionTree(attributes, x, response[j], maxNodes, 5, x[0].length, order, samples, output[j]);
+                forest[j][m] = new RegressionTree(x, DoubleVector.of("residual", response[j]), 5, maxNodes, x.ncols(), samples, order, output[j]);
 
                 for (int i = 0; i < n; i++) {
-                    h[j][i] += shrinkage * forest[j][m].predict(x[i]);
+                    h[j][i] += shrinkage * forest[j][m].predict(x.get(i));
                 }
             }
         }
@@ -388,12 +394,10 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         public double calculate(int[] nodeSamples, int[] sampleCount) {
             double nu = 0.0;
             double de = 0.0;
-            for (int i = 0; i < samples.length; i++) {
-                if (samples[i] > 0) {
-                    double abs = Math.abs(y[i]);
-                    nu += y[i];
-                    de += abs * (2.0 - abs);
-                }
+            for (int i : nodeSamples) {
+                double abs = Math.abs(y[i]);
+                nu += y[i];
+                de += abs * (2.0 - abs);
             }
             
             return nu / de;
@@ -419,21 +423,17 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         }
         
         @Override
-        public double calculate(int[] samples) {
-            int n = 0;
+        public double calculate(int[] nodeSamples, int[] sampleCount) {
             double nu = 0.0;
             double de = 0.0;
-            for (int i = 0; i < samples.length; i++) {
-                if (samples[i] > 0) {
-                    n++;
-                    double abs = Math.abs(y[i]);
-                    nu += y[i];
-                    de += abs * (1.0 - abs);
-                }
+            for (int i : nodeSamples) {
+                double abs = Math.abs(y[i]);
+                nu += y[i];
+                de += abs * (1.0 - abs);
             }
             
             if (de < 1E-10) {
-                return nu / n;
+                return nu / nodeSamples.length;
             }
             
             return ((k-1.0) / k) * (nu / de);
@@ -486,7 +486,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
     }
     
     @Override
-    public int predict(double[] x) {
+    public int predict(Tuple x) {
         if (k == 2) {
             double y = b;
             for (int i = 0; i < ntrees; i++) {
@@ -514,7 +514,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
     }
     
     @Override
-    public int predict(double[] x, double[] posteriori) {
+    public int predict(Tuple x, double[] posteriori) {
         if (posteriori.length != k) {
             throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
         }
@@ -565,15 +565,16 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
     
     /**
      * Test the model on a validation dataset.
-     * 
-     * @param x the test data set.
-     * @param y the test data response values.
+     *
+     * @param data the test data set.
      * @return accuracies with first 1, 2, ..., decision trees.
      */
-    public double[] test(double[][] x, int[] y) {
+    public double[] test(DataFrame data) {
+        DataFrame x = formula.frame(data);
+        int[] y = formula.response(data).toIntArray();
         double[] accuracy = new double[ntrees];
 
-        int n = x.length;
+        int n = x.nrows();
         int[] label = new int[n];
 
         Accuracy measure = new Accuracy();
@@ -583,7 +584,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
             Arrays.fill(prediction, b);
             for (int i = 0; i < ntrees; i++) {
                 for (int j = 0; j < n; j++) {
-                    prediction[j] += shrinkage * trees[i].predict(x[j]);
+                    prediction[j] += shrinkage * trees[i].predict(x.get(j));
                     label[j] = prediction[j] > 0 ? 1 : 0;
                 }
                 accuracy[i] = measure.measure(y, label);
@@ -593,7 +594,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
             for (int i = 0; i < ntrees; i++) {
                 for (int j = 0; j < n; j++) {
                     for (int l = 0; l < k; l++) {
-                        prediction[j][l] += shrinkage * forest[l][i].predict(x[j]);
+                        prediction[j][l] += shrinkage * forest[l][i].predict(x.get(j));
                     }
                     label[j] = MathEx.whichMax(prediction[j]);
                 }
@@ -607,17 +608,18 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
     
     /**
      * Test the model on a validation dataset.
-     * 
-     * @param x the test data set.
-     * @param y the test data labels.
+     *
+     * @param data the test data set.
      * @param measures the performance measures of classification.
      * @return performance measures with first 1, 2, ..., decision trees.
      */
-    public double[][] test(double[][] x, int[] y, ClassificationMeasure[] measures) {
+    public double[][] test(DataFrame data, ClassificationMeasure[] measures) {
+        DataFrame x = formula.frame(data);
+        int[] y = formula.response(data).toIntArray();
         int m = measures.length;
         double[][] results = new double[ntrees][m];
 
-        int n = x.length;
+        int n = x.nrows();
         int[] label = new int[n];
 
         if (k == 2) {
@@ -625,7 +627,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
             Arrays.fill(prediction, b);
             for (int i = 0; i < ntrees; i++) {
                 for (int j = 0; j < n; j++) {
-                    prediction[j] += shrinkage * trees[i].predict(x[j]);
+                    prediction[j] += shrinkage * trees[i].predict(x.get(j));
                     label[j] = prediction[j] > 0 ? 1 : 0;
                 }
 
@@ -638,7 +640,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
             for (int i = 0; i < ntrees; i++) {
                 for (int j = 0; j < n; j++) {
                     for (int l = 0; l < k; l++) {
-                        prediction[j][l] += shrinkage * forest[l][i].predict(x[j]);
+                        prediction[j][l] += shrinkage * forest[l][i].predict(x.get(j));
                     }
                     label[j] = MathEx.whichMax(prediction[j]);
                 }
