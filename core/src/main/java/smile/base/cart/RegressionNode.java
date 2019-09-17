@@ -29,20 +29,20 @@ public class RegressionNode extends LeafNode {
     /** The predicted output. */
     private double output;
 
-    /** The squared error. */
-    private double error;
+    /** The residual sum of squares. */
+    private double rss;
 
     /**
      * Constructor.
      *
      * @param size the number of samples in the node
      * @param output the predicted value for this node.
-     * @param error the squared error.
+     * @param rss the residual sum of squares.
      */
-    public RegressionNode(int size, double output, double error) {
+    public RegressionNode(int size, double output, double rss) {
         super(size);
         this.output = output;
-        this.error = error;
+        this.rss = rss;
     }
 
     /** Returns the predicted value. */
@@ -51,10 +51,27 @@ public class RegressionNode extends LeafNode {
     }
 
     /**
-     * Returns the squared error.
+     * Adds some samples of class to the node.
+     * @param y the responsible value
+     * @param s the number of samples.
+     */
+    public void add(double y, int s) {
+        size += s;
+        output += y * s;
+        rss += y * y * s;
+    }
+
+    /** Calculates the output. */
+    public void calculateOutput() {
+        output /= size;
+        rss -= size * output * output;
+    }
+
+    /**
+     * Returns the residual sum of squares.
      */
     public double impurity() {
-        return error;
+        return rss;
     }
 
     @Override
