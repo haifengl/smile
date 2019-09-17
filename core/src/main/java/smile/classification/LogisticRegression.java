@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import smile.math.MathEx;
-import smile.data.AttributeDataset;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.math.BFGS;
 import smile.util.MulticoreExecutor;

@@ -231,11 +231,11 @@ public class RegressionTree extends CART implements Regression<Tuple> {
 
         if (maxNodes == Integer.MAX_VALUE) {
             // deep-first split
-            split.map(s -> split(s, null));
+            split.ifPresent(s -> split(s, null));
         } else {
             // best-first split
             PriorityQueue<Split> queue = new PriorityQueue<>(2 * maxNodes, Split.comparator.reversed());
-            split.map(s -> queue.add(s));
+            split.ifPresent(s -> queue.add(s));
 
             for (int leaves = 1; leaves < this.maxNodes && !queue.isEmpty(); ) {
                 if (split(queue.poll(), queue)) leaves++;
