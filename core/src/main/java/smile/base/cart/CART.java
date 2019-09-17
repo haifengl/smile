@@ -251,17 +251,17 @@ public abstract class CART {
         }
 
         importance[node.feature] += node.score;
-        trueSplit.map(s -> s.parent = node);
-        falseSplit.map(s -> s.parent = node);
+        trueSplit.ifPresent(s -> s.parent = node);
+        falseSplit.ifPresent(s -> s.parent = node);
 
         if (queue == null) {
             // deep first split
-            trueSplit.map(s -> split(s, null));
-            falseSplit.map(s -> split(s, null));
+            trueSplit.ifPresent(s -> split(s, null));
+            falseSplit.ifPresent(s -> split(s, null));
         } else {
             // best first split
-            trueSplit.map(s -> queue.add(s));
-            falseSplit.map(s -> queue.add(s));
+            trueSplit.ifPresent(s -> queue.add(s));
+            falseSplit.ifPresent(s -> queue.add(s));
         }
 
         return true;
@@ -305,7 +305,7 @@ public abstract class CART {
                 .map(Optional::get)
                 .max(Split.comparator);
 
-        split.map(s -> s.pure = pure);
+        split.ifPresent(s -> s.pure = pure);
         return split;
     }
 

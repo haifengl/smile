@@ -182,119 +182,6 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
     private double[][] condprob;
 
     /**
-     * Trainer for naive Bayes classifier for document classification.
-     */
-    public static class Trainer extends ClassifierTrainer<double[]> {
-
-        /**
-         * The generation model of naive Bayes.
-         */
-        private Model model;
-        /**
-         * The number of classes.
-         */
-        private int k;
-        /**
-         * The number of independent variables.
-         */
-        private int p;
-        /**
-         * A priori probabilities of each class.
-         */
-        private double[] priori;
-        /**
-         * Amount of add-k smoothing of evidence.
-         */
-        private double sigma = 1.0;
-
-        /**
-         * Constructor.
-         * 
-         * @param model the generation model of naive Bayes classifier.
-         * @param k the number of classes.
-         * @param p the dimensionality of input space.
-         */
-        public Trainer(Model model, int k, int p) {
-            if (k < 2) {
-                throw new IllegalArgumentException("Invalid number of classes: " + k);
-            }
-
-            if (p <= 0) {
-                throw new IllegalArgumentException("Invalid dimension: " + p);
-            }
-
-            this.model = model;
-            this.k = k;
-            this.p = p;
-        }
-        
-        /**
-         * Constructor.
-         * 
-         * @param model the generation model of naive Bayes classifier.
-         * @param priori a priori probabilities of each class.
-         * @param p the dimensionality of input space.
-         */
-        public Trainer(Model model, double[] priori, int p) {
-            if (p <= 0) {
-                throw new IllegalArgumentException("Invalid dimension: " + p);
-            }
-
-            if (priori.length < 2) {
-                throw new IllegalArgumentException("Invalid number of classes: " + priori.length);
-            }
-
-            double sum = 0.0;
-            for (double prob : priori) {
-                if (prob <= 0.0 || prob >= 1.0) {
-                    throw new IllegalArgumentException("Invalid priori probability: " + prob);
-                }
-                sum += prob;
-            }
-            
-            if (Math.abs(sum - 1.0) > 1E-10) {
-                throw new IllegalArgumentException("The sum of priori probabilities is not one: " + sum);                
-            }
-
-            this.model = model;
-            this.priori = priori;
-            this.k = priori.length;
-            this.p = p;
-        }
-        
-        /**
-         * Sets a priori probabilities of each class.
-         * 
-         * @param priori a priori probabilities of each class.
-         */
-        public Trainer setPriori(double[] priori) {
-            this.priori = priori;
-            return this;
-        }
-        
-        /**
-         * Sets add-k prior count of terms for smoothing.
-         * 
-         * @param sigma the prior count of add-k smoothing of evidence.
-         */
-        public Trainer setSmooth(double sigma) {
-            if (sigma < 0) {
-                throw new IllegalArgumentException("Invalid add-k smoothing parameter: " + sigma);
-            }
-
-            this.sigma = sigma;
-            return this;
-        }
-        
-        @Override
-        public NaiveBayes train(double[][] x, int[] y) {
-            NaiveBayes bayes = priori == null ? new NaiveBayes(model, k, p, sigma) : new NaiveBayes(model, priori, p, sigma);
-            bayes.learn(x, y);
-            return bayes;
-        }
-    }
-    
-    /**
      * Constructor of general naive Bayes classifier.
      * 
      * @param priori the priori probability of each class.
@@ -474,7 +361,7 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
      * @param y training label in [0, k), where k is the number of classes.
      */
     @Override
-    public void learn(double[] x, int y) {
+    public void update(double[] x, int y) {
         if (model == Model.GENERAL) {
             throw new UnsupportedOperationException("General-mode Naive Bayes classifier doesn't support online learning.");
         }
@@ -514,7 +401,7 @@ public class NaiveBayes implements OnlineClassifier<double[]>, SoftClassifier<do
      * @param x training instance in sparse format.
      * @param y training label in [0, k), where k is the number of classes.
      */
-    public void learn(SparseArray x, int y) {
+    public void update(SparseArray x, int y) {
         if (model == Model.GENERAL) {
             throw new UnsupportedOperationException("General-mode Naive Bayes classifier doesn't support online learning.");
         }
