@@ -21,10 +21,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import smile.data.Attribute;
-import smile.data.NominalAttribute;
-import smile.data.NumericAttribute;
-import smile.math.MathEx;
 import smile.regression.RegressionTree;
 import smile.sort.QuickSort;
 import smile.util.MulticoreExecutor;
@@ -32,11 +28,12 @@ import smile.util.MulticoreExecutor;
 /**
  * First-order linear conditional random field. A conditional random field is a
  * type of discriminative undirected probabilistic graphical model. It is most
- * often used for labeling or parsing of sequential data. <p> A CRF is a Markov
- * random field that was trained discriminatively. Therefore it is not necessary
- * to model the distribution over always observed variables, which makes it
- * possible to include arbitrarily complicated features of the observed
- * variables into the model.
+ * often used for labeling or parsing of sequential data.
+ *
+ * A CRF is a Markov random field that was trained discriminatively.
+ * Therefore it is not necessary to model the distribution over always
+ * observed variables, which makes it possible to include arbitrarily
+ * complicated features of the observed variables into the model.
  *
  * This class implements an algorithm that trains CRFs via gradient
  * tree boosting. In tree boosting, the CRF potential functions
@@ -126,7 +123,7 @@ public class CRF implements SequenceLabeler<double[]>, Serializable {
         public double f(double[] features) {
             double score = 0.0;
             for (RegressionTree tree : trees) {
-                score += eta * tree.predict(features);
+                //score += eta * tree.predict(features);
             }
             return score;
         }
@@ -137,7 +134,7 @@ public class CRF implements SequenceLabeler<double[]>, Serializable {
         public double f(int[] features) {
             double score = 0.0;
             for (RegressionTree tree : trees) {
-                score += eta * tree.predict(features);
+                //score += eta * tree.predict(features);
             }
             return score;
         }
@@ -489,10 +486,6 @@ public class CRF implements SequenceLabeler<double[]>, Serializable {
          */
         private int numFeatures = -1;
         /**
-         * The feature attributes.
-         */
-        private Attribute[] attributes;
-        /**
          * The maximum number of leaf nodes in the tree.
          */
         private int maxLeaves = 100;
@@ -504,27 +497,6 @@ public class CRF implements SequenceLabeler<double[]>, Serializable {
          * The number of iterations.
          */
         private int iters = 100;
-
-        /**
-         * Constructor.
-         *
-         * @param numClasses the maximum number of classes.
-         */
-        public Trainer(Attribute[] attributes, int numClasses) {
-            if (numClasses < 2) {
-                throw new IllegalArgumentException("Invalid number of classes: " + numClasses);
-            }
-
-            this.numClasses = numClasses;
-            this.attributes = new Attribute[attributes.length + 1];
-            System.arraycopy(attributes, 0, this.attributes, 0, attributes.length);
-            
-            String[] values = new String[numClasses + 1];
-            for (int i = 0; i <= numClasses; i++) {
-                values[i] = Integer.toString(i);
-            }
-            this.attributes[attributes.length] = new NominalAttribute("Previous Position Label", values);
-        }
 
         /**
          * Constructor.
@@ -675,7 +647,7 @@ public class CRF implements SequenceLabeler<double[]>, Serializable {
             int i; // training task for class i
             TreePotentialFunction potential;
             TrellisNode[][][] trellis;
-            RegressionTree.Trainer trainer;
+            //RegressionTree.Trainer trainer;
             int[][] sparseX;
             double[][] x;
             double[] y;
@@ -687,9 +659,9 @@ public class CRF implements SequenceLabeler<double[]>, Serializable {
                 this.trellis = trellis;
                 this.i = i;
                 if (numFeatures <= 0) {
-                    trainer = new RegressionTree.Trainer(attributes, maxLeaves);
+                    //trainer = new RegressionTree.Trainer(attributes, maxLeaves);
                 } else {
-                    trainer = new RegressionTree.Trainer(numFeatures + numClasses + 1, maxLeaves);
+                    //trainer = new RegressionTree.Trainer(numFeatures + numClasses + 1, maxLeaves);
                 }
             
                 // Create training datasets for each potential function.
@@ -721,12 +693,12 @@ public class CRF implements SequenceLabeler<double[]>, Serializable {
                     order = new int[p][];
 
                     for (int j = 0; j < p; j++) {
-                        if (attributes[j] instanceof NumericAttribute) {
+                        //if (attributes[j] instanceof NumericAttribute) {
                             for (int l = 0; l < n; l++) {
                                 a[l] = x[l][j];
                             }
                             order[j] = QuickSort.sort(a);
-                        }
+                        //}
                     }
                 } else {
                     sparseX = new int[n][];
@@ -773,10 +745,10 @@ public class CRF implements SequenceLabeler<double[]>, Serializable {
                 
                 // Perform training.
                 if (x != null) {
-                    RegressionTree tree = new RegressionTree(attributes, x, y, maxLeaves, 5, attributes.length, order, samples, null);
+                    RegressionTree tree = null;//new RegressionTree(attributes, x, y, maxLeaves, 5, attributes.length, order, samples, null);
                     potential.add(tree);
                 } else {
-                    RegressionTree tree = new RegressionTree(numFeatures + numClasses + 1, sparseX, y, maxLeaves, 5, samples, null);
+                    RegressionTree tree = null;//new RegressionTree(numFeatures + numClasses + 1, sparseX, y, maxLeaves, 5, samples, null);
                     potential.add(tree);
                 }
                 
@@ -797,11 +769,11 @@ public class CRF implements SequenceLabeler<double[]>, Serializable {
             TreePotentialFunction pi = potentials[i];
             if (numFeatures <= 0) {
                 for (int k = t0i.age; k < pi.trees.size(); k++) {
-                    t0i.scores[0] += pi.eta * pi.trees.get(k).predict(t0i.samples[0]);
+                    //t0i.scores[0] += pi.eta * pi.trees.get(k).predict(t0i.samples[0]);
                 }
             } else {
                 for (int k = t0i.age; k < pi.trees.size(); k++) {
-                    t0i.scores[0] += pi.eta * pi.trees.get(k).predict(t0i.sparseSamples[0]);
+                    //t0i.scores[0] += pi.eta * pi.trees.get(k).predict(t0i.sparseSamples[0]);
                 }                
             }
 
@@ -829,11 +801,11 @@ public class CRF implements SequenceLabeler<double[]>, Serializable {
                 for (int j = 0; j < numClasses; j++) {
                     if (numFeatures <= 0) {
                         for (int k = tti.age; k < pi.trees.size(); k++) {
-                            tti.scores[j] += pi.eta * pi.trees.get(k).predict(tti.samples[j]);
+                            //tti.scores[j] += pi.eta * pi.trees.get(k).predict(tti.samples[j]);
                         }
                     } else {
                         for (int k = tti.age; k < pi.trees.size(); k++) {
-                            tti.scores[j] += pi.eta * pi.trees.get(k).predict(tti.sparseSamples[j]);
+                            //tti.scores[j] += pi.eta * pi.trees.get(k).predict(tti.sparseSamples[j]);
                         }
                     }
 
