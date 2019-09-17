@@ -17,13 +17,12 @@
 
 package smile.classification;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.stream.IntStream;
+
+import smile.math.BFGS;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
-import smile.util.MulticoreExecutor;
 
 /**
  * Maximum Entropy Classifier. Maximum entropy is a technique for learning
@@ -160,6 +159,7 @@ public class Maxent implements SoftClassifier<int[]> {
             throw new IllegalArgumentException("Only one class.");            
         }
 
+        BFGS bfgs = new BFGS(tol, maxIter);
         if (k == 2) {
             BinaryObjectiveFunction func = new BinaryObjectiveFunction(x, y, lambda);
 
@@ -167,7 +167,7 @@ public class Maxent implements SoftClassifier<int[]> {
 
             L = 0.0;
             try {
-                L = -MathEx.min(func, 5, w, tol, maxIter);
+                L = -bfgs.minimize(func, 5, w);
             } catch (Exception ex) {
                 logger.error("Failed to minimize binary objective function of Maximum Entropy Classifier", ex);
             }
@@ -178,7 +178,7 @@ public class Maxent implements SoftClassifier<int[]> {
 
             L = 0.0;
             try {
-                L = -MathEx.min(func, 5, w, tol, maxIter);
+                L = -bfgs.minimize(func, 5, w);
             } catch (Exception ex) {
                 logger.error("Failed to minimize multi-class objective function of Maximum Entropy Classifier", ex);
             }
@@ -242,83 +242,19 @@ public class Maxent implements SoftClassifier<int[]> {
             this.y = y;
             this.lambda = lambda;
         }
-
-        /**
-         * Task to calculate the objective function.
-         */
-        class FTask implements Callable<Double> {
-
-            /**
-             * The parameter vector.
-             */
-            double[] w;
-            /**
-             * The start index of data portion for this task.
-             */
-            int start;
-            /**
-             * The end index of data portion for this task.
-             */
-            int end;
-
-            FTask(double[] w, int start, int end) {
-                this.w = w;
-                this.start = start;
-                this.end = end;
-            }
-
-            @Override
-            public Double call() {
-                double f = 0.0;
-                for (int i = start; i < end; i++) {
-                    double wx = dot(x[i], w);
-                    f += log1pe(wx) - y[i] * wx;
-                }
-                return f;
-            }
-        }
         
         @Override
         public double f(double[] w) {
-            double f = 0.0;
-            int p = w.length - 1;
-
             int n = x.length;
-            int m = MulticoreExecutor.getThreadPoolSize();
-            if (n < 1000 || m < 2) {
-                for (int i = 0; i < n; i++) {
-                    double wx = dot(x[i], w);
-                    f += log1pe(wx) - y[i] * wx;
-                }
-            } else {
-                List<FTask> tasks = new ArrayList<>(m + 1);
-                int step = n / m;
-                if (step < 100) step = 100;
-                
-                int start = 0;
-                int end = step;
-                for (int i = 0; i < m - 1 && start < n; i++) {
-                    if (end > n) end = n;
-                    tasks.add(new FTask(w, start, end));
-                    start += step;
-                    end += step;
-                }
-                if (start < n) tasks.add(new FTask(w, start, n));
-                
-                try {
-                    for (double fi : MulticoreExecutor.run(tasks)) {
-                        f += fi;
-                    }
-                } catch (Exception ex) {
-                    for (int i = 0; i < n; i++) {
-                        double wx = dot(x[i], w);
-                        f += log1pe(wx) - y[i] * wx;
-                    }
-                }
-            }
+            double f = IntStream.range(0, n).parallel().mapToDouble(i -> {
+                double wx = dot(x[i], w);
+                return log1pe(wx) - y[i] * wx;
+            }).sum();
 
             if (lambda != 0.0) {
+                int p = w.length - 1;
                 double wnorm = 0.0;
+
                 for (int i = 0; i < p; i++) {
                     wnorm += w[i] * w[i];
                 }
@@ -328,107 +264,22 @@ public class Maxent implements SoftClassifier<int[]> {
 
             return f;
         }
-
-        /**
-         * Task to calculate the objective function and gradient.
-         */
-        class GTask implements Callable<double[]> {
-
-            /**
-             * The parameter vector.
-             */
-            double[] w;
-            /**
-             * The start index of data portion for this task.
-             */
-            int start;
-            /**
-             * The end index of data portion for this task.
-             */
-            int end;
-
-            GTask(double[] w, int start, int end) {
-                this.w = w;
-                this.start = start;
-                this.end = end;
-            }
-
-            @Override
-            public double[] call() {
-                double f = 0.0;
-                int p = w.length - 1;
-                double[] g = new double[w.length + 1];
-                
-                for (int i = start; i < end; i++) {
-                    double wx = dot(x[i], w);
-                    f += log1pe(wx) - y[i] * wx;
-
-                    double yi = y[i] - MathEx.logistic(wx);
-                    for (int j : x[i]) {
-                        g[j] -= yi * j;
-                    }
-                    g[p] -= yi;
-                }
-                
-                g[w.length] = f;
-                return g;
-            }
-        }
         
         @Override
-        public double f(double[] w, double[] g) {
-            double f = 0.0;
-            int p = w.length - 1;
+        public double g(double[] w, double[] g) {
+            final int p = w.length - 1;
             Arrays.fill(g, 0.0);
+            double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
+                double wx = dot(x[i], w);
 
-            int n = x.length;
-            int m = MulticoreExecutor.getThreadPoolSize();
-            if (n < 1000 || m < 2) {
-                for (int i = 0; i < n; i++) {
-                    double wx = dot(x[i], w);
-                    f += log1pe(wx) - y[i] * wx;
-
-                    double yi = y[i] - MathEx.logistic(wx);
-                    for (int j : x[i]) {
-                        g[j] -= yi * j;
-                    }
-                    g[p] -= yi;
+                double yi = y[i] - MathEx.logistic(wx);
+                for (int j : x[i]) {
+                    g[j] -= yi * j;
                 }
-            } else {
-                List<GTask> tasks = new ArrayList<>(m + 1);
-                int step = n / m;
-                if (step < 100) step = 100;
-                
-                int start = 0;
-                int end = step;
-                for (int i = 0; i < m - 1 && start < n; i++) {
-                    if (end > n) end = n;
-                    tasks.add(new GTask(w, start, end));
-                    start += step;
-                    end += step;
-                }
-                if (start < n) tasks.add(new GTask(w, start, n));
+                g[p] -= yi;
 
-                try {
-                    for (double[] gi : MulticoreExecutor.run(tasks)) {
-                        f += gi[w.length];
-                        for (int i = 0; i < w.length; i++) {
-                            g[i] += gi[i];
-                        }
-                    }
-                } catch (Exception ex) {
-                    for (int i = 0; i < n; i++) {
-                        double wx = dot(x[i], w);
-                        f += log1pe(wx) - y[i] * wx;
-
-                        double yi = y[i] - MathEx.logistic(wx);
-                        for (int j : x[i]) {
-                            g[j] -= yi * j;
-                        }
-                        g[p] -= yi;
-                    }
-                }
-            }
+                return log1pe(wx) - y[i] * wx;
+            }).sum();
 
             if (lambda != 0.0) {
                 double wnorm = 0.0;
@@ -496,97 +347,20 @@ public class Maxent implements SoftClassifier<int[]> {
             this.p = p;
             this.lambda = lambda;
         }
-
-        /**
-         * Task to calculate the objective function.
-         */
-        class FTask implements Callable<Double> {
-
-            /**
-             * The parameter vector.
-             */
-            double[] w;
-            /**
-             * The start index of data portion for this task.
-             */
-            int start;
-            /**
-             * The end index of data portion for this task.
-             */
-            int end;
-
-            FTask(double[] w, int start, int end) {
-                this.w = w;
-                this.start = start;
-                this.end = end;
-            }
-
-            @Override
-            public Double call() {
-                double f = 0.0;
-                double[] prob = new double[k];
-
-                for (int i = start; i < end; i++) {
-                    for (int j = 0; j < k; j++) {
-                        prob[j] = dot(x[i], w, j, p);
-                    }
-
-                    softmax(prob);
-
-                    f -= log(prob[y[i]]);
-                }
-                return f;
-            }
-        }
         
         @Override
         public double f(double[] w) {
-            double f = 0.0;
             double[] prob = new double[k];
 
-            int n = x.length;
-            int m = MulticoreExecutor.getThreadPoolSize();
-            if (n < 1000 || m < 2) {
-                for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < k; j++) {
-                        prob[j] = dot(x[i], w, j, p);
-                    }
-
-                    softmax(prob);
-
-                    f -= log(prob[y[i]]);
+            double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
+                for (int j = 0; j < k; j++) {
+                    prob[j] = dot(x[i], w, j, p);
                 }
-            } else {
-                List<FTask> tasks = new ArrayList<>(m + 1);
-                int step = n / m;
-                if (step < 100) step = 100;
 
-                int start = 0;
-                int end = step;
-                for (int i = 0; i < m - 1 && start < n; i++) {
-                    if (end > n) end = n;
-                    tasks.add(new FTask(w, start, end));
-                    start += step;
-                    end += step;
-                }
-                if (start < n) tasks.add(new FTask(w, start, n));
-                
-                try {
-                    for (double fi : MulticoreExecutor.run(tasks)) {
-                        f += fi;
-                    }
-                } catch (Exception ex) {
-                    for (int i = 0; i < n; i++) {
-                        for (int j = 0; j < k; j++) {
-                            prob[j] = dot(x[i], w, j, p);
-                        }
+                softmax(prob);
 
-                        softmax(prob);
-
-                        f -= log(prob[y[i]]);
-                    }
-                }
-            }
+                return -log(prob[y[i]]);
+            }).sum();
 
             if (lambda != 0.0) {
                 double wnorm = 0.0;
@@ -602,139 +376,31 @@ public class Maxent implements SoftClassifier<int[]> {
             return f;
         }
 
-        /**
-         * Task to calculate the objective function and gradient.
-         */
-        class GTask implements Callable<double[]> {
-
-            /**
-             * The parameter vector.
-             */
-            double[] w;
-            /**
-             * The start index of data portion for this task.
-             */
-            int start;
-            /**
-             * The end index of data portion for this task.
-             */
-            int end;
-
-            GTask(double[] w, int start, int end) {
-                this.w = w;
-                this.start = start;
-                this.end = end;
-            }
-
-            @Override
-            public double[] call() {
-                double f = 0.0;
-                double[] prob = new double[k];
-                double[] g = new double[w.length+1];
-
-                for (int i = start; i < end; i++) {
-                    for (int j = 0; j < k; j++) {
-                        prob[j] = dot(x[i], w, j, p);
-                    }
-
-                    softmax(prob);
-
-                    f -= log(prob[y[i]]);
-
-                    double yi = 0.0;
-                    for (int j = 0; j < k; j++) {
-                        yi = (y[i] == j ? 1.0 : 0.0) - prob[j];
-
-                        int pos = j * (p + 1);
-                        for (int l : x[i]) {
-                            g[pos + l] -= yi;
-                        }
-                        g[pos + p] -= yi;
-                    }
-                }
-                
-                g[w.length] = f;
-                return g;
-            }
-        }
-        
         @Override
-        public double f(double[] w, double[] g) {
-            double f = 0.0;
+        public double g(double[] w, double[] g) {
             double[] prob = new double[k];
             Arrays.fill(g, 0.0);
 
-            int n = x.length;
-            int m = MulticoreExecutor.getThreadPoolSize();
-            if (n < 1000 || m < 2) {
-                for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < k; j++) {
-                        prob[j] = dot(x[i], w, j, p);
-                    }
-
-                    softmax(prob);
-
-                    f -= log(prob[y[i]]);
-
-                    double yi = 0.0;
-                    for (int j = 0; j < k; j++) {
-                        yi = (y[i] == j ? 1.0 : 0.0) - prob[j];
-
-                        int pos = j * (p + 1);
-                        for (int l : x[i]) {
-                            g[pos + l] -= yi;
-                        }
-                        g[pos + p] -= yi;
-                    }
+            double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
+                for (int j = 0; j < k; j++) {
+                    prob[j] = dot(x[i], w, j, p);
                 }
-            } else {
-                List<GTask> tasks = new ArrayList<>(m + 1);
-                int step = n / m;
-                if (step < 100) {
-                    step = 100;
-                }
-                
-                int start = 0;
-                int end = step;
-                for (int i = 0; i < m - 1 && start < n; i++) {
-                    if (end > n) end = n;
-                    tasks.add(new GTask(w, start, end));
-                    start += step;
-                    end += step;
-                }
-                if (start < n) tasks.add(new GTask(w, start, n));
 
-                try {
-                    for (double[] gi : MulticoreExecutor.run(tasks)) {
-                        f += gi[w.length];
-                        for (int i = 0; i < w.length; i++) {
-                            g[i] += gi[i];
-                        }
+                softmax(prob);
+
+                double yi = 0.0;
+                for (int j = 0; j < k; j++) {
+                    yi = (y[i] == j ? 1.0 : 0.0) - prob[j];
+
+                    int pos = j * (p + 1);
+                    for (int l : x[i]) {
+                        g[pos + l] -= yi;
                     }
-                } catch (Exception ex) {
-                    for (int i = 0; i < n; i++) {
-                        for (int j = 0; j < k; j++) {
-                            prob[j] = dot(x[i], w, j, p);
-                        }
-
-                        softmax(prob);
-
-                        f -= log(prob[y[i]]);
-
-                        double yi = 0.0;
-                        for (int j = 0; j < k; j++) {
-                            yi = (y[i] == j ? 1.0 : 0.0) - prob[j];
-
-                            int pos = j * (p + 1);
-                            for (int l : x[i]) {
-                                g[pos + l] -= yi;
-                            }
-                            g[pos + p] -= yi;
-                        }
-                    }
+                    g[pos + p] -= yi;
                 }
-            }
 
+                return -log(prob[y[i]]);
+            }).sum();
 
             if (lambda != 0.0) {
                 double wnorm = 0.0;
