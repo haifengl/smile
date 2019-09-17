@@ -105,17 +105,20 @@ public class RBFNetwork<T> implements Classifier<T> {
     /**
      * The radial basis function.
      */
-    private RBF[] rbf;
+    private RBF<T>[] rbf;
     /**
      * True to fit a normalized RBF network.
      */
     private boolean normalized;
 
     /**
-     * Private constructor.
+     * Constructor.
      */
-    private RBFNetwork() {
-
+    public RBFNetwork(int k, RBF<T>[] rbf, DenseMatrix w, boolean normalized) {
+        this.k = k;
+        this.rbf = rbf;
+        this.w = w;
+        this.normalized = normalized;
     }
 
     /**
@@ -125,7 +128,7 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param y training labels in [0, k), where k is the number of classes.
      * @param rbf the radial basis functions.
      */
-    public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF[] rbf) {
+    public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF<T>[] rbf) {
         return fit(x, y, rbf, false);
     }
 
@@ -137,30 +140,12 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param rbf the radial basis functions.
      * @param normalized true for the normalized RBF network.
      */
-    public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF[] rbf, boolean normalized) {
+    public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF<T>[] rbf, boolean normalized) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        // class label set.
-        int[] labels = MathEx.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
-        }
-
-        int k = labels.length;
-        if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
-        }
-
+        int k = Classifier.classes(y).length;
         int n = x.length;
         int m = rbf.length;
 
@@ -186,15 +171,7 @@ public class RBFNetwork<T> implements Classifier<T> {
         QR qr = G.qr();
         qr.solve(b);
 
-        RBFNetwork model = new RBFNetwork();
-        model.k = k;
-        model.rbf = rbf;
-        model.normalized = normalized;
-
-        model.w = Matrix.zeros(m+1, k);
-        b.submat(0, 0, m, k-1);
-
-        return model;
+        return new RBFNetwork<>(k, rbf, b.submat(0, 0, m, k-1), normalized);
     }
 
     @Override

@@ -17,9 +17,7 @@
 
 package smile.regression;
 
-import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.stream.IntStream;
 
 import smile.base.cart.*;
@@ -29,7 +27,6 @@ import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
-import smile.sort.QuickSort;
 
 /**
  * Decision tree for regression. A decision tree can be learned by
@@ -80,26 +77,25 @@ import smile.sort.QuickSort;
 public class RegressionTree extends CART implements Regression<Tuple> {
     private static final long serialVersionUID = 2L;
 
+    private transient RegressionNodeOutput output;
+
     @Override
     protected double impurity(LeafNode node) {
         return ((RegressionNode) node).impurity();
     }
 
     @Override
-    protected LeafNode newNode() {
-        return new RegressionNode(0, 0.0, 0.0);
-    }
+    protected LeafNode newNode(int[] nodeSamples) {
+        double out = output.calculate(nodeSamples, samples);
 
-    @Override
-    protected void updateNode(LeafNode leaf, int i) {
-        RegressionNode node = (RegressionNode) leaf;
-        node.add(y.getDouble(i), samples[i]);
-    }
+        int n = 0;
+        double rss = 0.0;
+        for (int i : nodeSamples) {
+            n += samples[i];
+            rss += samples[i] * MathEx.sqr(y.getDouble(i) - out);
+        }
 
-    @Override
-    protected void calculateOutput(LeafNode leaf) {
-        RegressionNode node = (RegressionNode) leaf;
-        node.calculateOutput();
+        return new RegressionNode(n, out, rss);
     }
 
     @Override
@@ -107,11 +103,14 @@ public class RegressionTree extends CART implements Regression<Tuple> {
         RegressionNode node = (RegressionNode) leaf;
         BaseVector xj = x.column(j);
 
-        double sum = node.size() * node.impurity();
+        double sum = IntStream.range(lo, hi).map(i -> index[i]).mapToDouble(i -> y.getDouble(i) * samples[i]).sum();
         double nodeOutputSquared = node.size() * node.output() * node.output();
 
         Split split = null;
         double splitScore = 0.0;
+        int splitTrueCount = 0;
+        int splitFalseCount = 0;
+
         Measure measure = schema.field(j).measure;
         if (measure != null && measure instanceof NominalScale) {
             int splitValue = -1;
@@ -145,13 +144,15 @@ public class RegressionTree extends CART implements Regression<Tuple> {
                 // new best split
                 if (gain > splitScore) {
                     splitValue = l;
+                    splitTrueCount = tc;
+                    splitFalseCount = fc;
                     splitScore = gain;
                 }
             }
 
             if (splitScore > 0.0) {
                 final int value = splitValue;
-                split = new NominalSplit(leaf, j, splitValue, splitScore, lo, hi, (int o) -> xj.getInt(o) == value);
+                split = new NominalSplit(leaf, j, splitValue, splitScore, lo, hi, splitTrueCount, splitFalseCount, (int o) -> xj.getInt(o) == value);
             }
         } else {
             double splitValue = 0.0;
@@ -182,6 +183,8 @@ public class RegressionTree extends CART implements Regression<Tuple> {
                     // new best split
                     if (gain > splitScore) {
                         splitValue = (xij + prevx) / 2;
+                        splitTrueCount = tc;
+                        splitFalseCount = fc;
                         splitScore = gain;
                     }
                 }
@@ -193,7 +196,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
 
             if (splitScore > 0.0) {
                 final double value = splitValue;
-                split = new OrdinalSplit(leaf, j, splitValue, splitScore, lo, hi, (int o) -> xj.getDouble(o) <= value);
+                split = new OrdinalSplit(leaf, j, splitValue, splitScore, lo, hi, splitTrueCount, splitFalseCount, (int o) -> xj.getDouble(o) <= value);
             }
         }
 
@@ -214,8 +217,10 @@ public class RegressionTree extends CART implements Regression<Tuple> {
      * @param order the index of training values in ascending order. Note
      *              that only numeric attributes need be sorted.
      */
-    public RegressionTree(DataFrame x, BaseVector y, int nodeSize, int maxNodes, int mtry, int[] samples, int[][] order) {
+    public RegressionTree(DataFrame x, BaseVector y, int nodeSize, int maxNodes, int mtry, int[] samples, int[][] order, RegressionNodeOutput output) {
         super(x, y, nodeSize, maxNodes, mtry, samples, order);
+
+        this.output = output;
 
         double mean = MathEx.mean(y.toDoubleArray());
         double rss = 0;

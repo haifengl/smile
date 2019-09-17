@@ -17,36 +17,33 @@
 
 package smile.base.cart;
 
-import java.util.function.IntPredicate;
-import smile.data.DataFrame;
-import smile.data.vector.BaseVector;
-
-/** The data about of a potential split for a leaf node. */
-public class OrdinalSplit extends Split {
-    /**
-     * The split value.
-     */
-    final double value;
+/**
+ * Calculates the node output for least squares regression.
+ */
+public class LeastSquaresNodeOutput implements RegressionNodeOutput {
 
     /**
-     * The lambda returns true if the sample passes the test on the split feature.
+     * Responses to fit.
      */
-    final IntPredicate predicate;
+    private double[] response;
 
-    /** Constructor. */
-    public OrdinalSplit(LeafNode leaf, int feature, double value, double score, int lo, int hi, int trueCount, int falseCount, IntPredicate predicate) {
-        super(leaf, feature, score, lo, hi, trueCount, falseCount);
-        this.value = value;
-        this.predicate = predicate;
+    /**
+     * Constructor.
+     * @param response the responses to fit.
+     */
+    public LeastSquaresNodeOutput(double[] response) {
+        this.response = response;
     }
 
     @Override
-    public OrdinalNode toNode(Node trueChild, Node falseChild) {
-        return new OrdinalNode(feature, value, score, trueChild, falseChild);
-    }
+    public double calculate(int[] nodeSamples, int[] sampleCount) {
+        int n = 0;
+        double output = 0.0;
+        for (int i : nodeSamples) {
+            n += sampleCount[i];
+            output += response[i] * sampleCount[i];
+        }
 
-    @Override
-    public IntPredicate predicate() {
-        return predicate;
+        return output / n;
     }
 }

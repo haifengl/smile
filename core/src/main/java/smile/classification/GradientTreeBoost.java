@@ -370,7 +370,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
     /**
      * Class to calculate node output for two-class logistic regression.
      */
-    class L2NodeOutput implements RegressionTree.NodeOutput {
+    class L2NodeOutput implements RegressionNodeOutput {
 
         /**
          * Pseudo response to fit.
@@ -385,7 +385,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         }
         
         @Override
-        public double calculate(int[] samples) {
+        public double calculate(int[] nodeSamples, int[] sampleCount) {
             double nu = 0.0;
             double de = 0.0;
             for (int i = 0; i < samples.length; i++) {
@@ -404,7 +404,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
     /**
      * Class to calculate node output for multi-class logistic regression.
      */
-    class LKNodeOutput implements RegressionTree.NodeOutput {
+    class LKNodeOutput implements RegressionNodeOutput {
 
         /**
          * Responses to fit.

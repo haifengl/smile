@@ -52,7 +52,7 @@ import smile.math.special.Beta;
  * @author Haifeng Li
  */
 public class LinearModel implements Regression<double[]>, OnlineRegression<double[]> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LinearModel.class);
 
     /**

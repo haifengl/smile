@@ -75,7 +75,7 @@ import smile.math.rbf.RadialBasisFunction;
  * @author Haifeng Li
  */
 public class RBFNetwork<T> implements Regression<T> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The linear weights.
@@ -84,17 +84,19 @@ public class RBFNetwork<T> implements Regression<T> {
     /**
      * The radial basis functions.
      */
-    private RBF[] rbf;
+    private RBF<T>[] rbf;
     /**
      * True to fit a normalized RBF network.
      */
     private boolean normalized;
 
     /**
-     * Private constructor.
+     * Constructor.
      */
-    private RBFNetwork() {
-
+    public RBFNetwork(RBF<T>[] rbf, double[] w, boolean normalized) {
+        this.rbf = rbf;
+        this.w = w;
+        this.normalized = normalized;
     }
 
     /**
@@ -103,7 +105,7 @@ public class RBFNetwork<T> implements Regression<T> {
      * @param y the response variable.
      * @param rbf the radial basis functions.
      */
-    public static <T> RBFNetwork<T> fit(T[] x, double[] y, RBF[] rbf) {
+    public static <T> RBFNetwork<T> fit(T[] x, double[] y, RBF<T>[] rbf) {
         return fit(x, y, rbf);
     }
 
@@ -114,7 +116,7 @@ public class RBFNetwork<T> implements Regression<T> {
      * @param rbf the radial basis functions.
      * @param normalized true for the normalized RBF network.
      */
-    public static <T> RBFNetwork<T> fit(T[] x, double[] y, RBF[] rbf, boolean normalized) {
+    public static <T> RBFNetwork<T> fit(T[] x, double[] y, RBF<T>[] rbf, boolean normalized) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -139,15 +141,11 @@ public class RBFNetwork<T> implements Regression<T> {
             }
         }
 
-        RBFNetwork model = new RBFNetwork();
-        model.rbf = rbf;
-        model.normalized = normalized;
-
-        model.w = new double[m];
+        double[] w = new double[m];
         QR qr = G.qr();
-        qr.solve(b, model.w);
+        qr.solve(b, w);
 
-        return model;
+        return new RBFNetwork<>(rbf, w, normalized);
     }
 
     @Override

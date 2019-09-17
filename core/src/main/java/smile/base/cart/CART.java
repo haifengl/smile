@@ -203,29 +203,31 @@ public abstract class CART {
             throw new IllegalStateException("Split a node with invalid feature.");
         }
 
-        LeafNode trueChild = newNode();
-        LeafNode falseChild = newNode();
-
-        int mid = split.lo;
-        for (int idx = split.lo; idx < split.hi; idx++) {
-            int i = index[idx];
-            if (split.predicate().test(i)) {
-                updateNode(trueChild, i);
-                mid++;
-            } else {
-                updateNode(falseChild, i);
-            }
-        }
-
-        calculateOutput(trueChild);
-        calculateOutput(falseChild);
-
-        if (trueChild.size < nodeSize || falseChild.size < nodeSize) {
+        if (split.trueCount < nodeSize || split.falseCount < nodeSize) {
             // We should not reach here as findBestSplit filters this situation out.
             logger.debug("Node size is too small after splitting");
             return false;
         }
 
+        int[] trueSamples = new int[split.trueCount];
+        int[] falseSamples = new int[split.falseCount];
+        int mid = split.lo;
+        int p = 0, q = 0;
+        for (int idx = split.lo; idx < split.hi; idx++) {
+            int i = index[idx];
+            if (split.predicate().test(i)) {
+                trueSamples[p++] = i;
+                mid++;
+            } else {
+                falseSamples[q++] = i;
+            }
+        }
+
+        assert(p == trueSamples.length);
+        assert(q == falseSamples.length);
+
+        LeafNode trueChild = newNode(trueSamples);
+        LeafNode falseChild = newNode(falseSamples);
         InternalNode node = split.toNode(trueChild, falseChild);
 
         shuffle(split.lo, mid, split.hi, split.predicate());
@@ -311,20 +313,7 @@ public abstract class CART {
     protected abstract double impurity(LeafNode node);
 
     /** Creates a new leaf node. */
-    protected abstract LeafNode newNode();
-
-    /**
-     * Updates the leaf node with a sample
-     *
-     * @param node the leaf node
-     * @param i the index of sample to add to the node
-     */
-    protected abstract void updateNode(LeafNode node, int i);
-
-    /**
-     * Calculates the output of leaf node.
-     */
-    protected abstract void calculateOutput(LeafNode node);
+    protected abstract LeafNode newNode(int[] nodeSamples);
 
     /** Finds the best split for given column. */
     protected abstract Optional<Split> findBestSplit(LeafNode node, int column, double impurity, int lo, int hi);

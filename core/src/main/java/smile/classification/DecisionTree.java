@@ -116,20 +116,12 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
     }
 
     @Override
-    protected LeafNode newNode() {
-        return new DecisionNode(new int[k]);
-    }
-
-    @Override
-    protected void updateNode(LeafNode leaf, int i) {
-        DecisionNode node = (DecisionNode) leaf;
-        node.add(y.getInt(i), samples[i]);
-    }
-
-    @Override
-    protected void calculateOutput(LeafNode leaf) {
-        DecisionNode node = (DecisionNode) leaf;
-        node.calculateOutput();
+    protected LeafNode newNode(int[] nodeSamples) {
+        int[] count = new int[k];
+        for (int i : nodeSamples) {
+            count[y.getInt(i)] += samples[i];
+        }
+        return new DecisionNode(count);
     }
 
     @Override
@@ -140,9 +132,13 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
 
         Split split = null;
         double splitScore = 0.0;
+        int splitTrueCount = 0;
+        int splitFalseCount = 0;
+
         Measure measure = schema.field(j).measure;
         if (measure != null && measure instanceof NominalScale) {
             int splitValue = -1;
+
             NominalScale scale = (NominalScale) measure;
             int m = scale.levels().length;
             int[][] trueCount = new int[m][k];
@@ -170,13 +166,15 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
                 // new best split
                 if (gain > splitScore) {
                     splitValue = l;
+                    splitTrueCount = tc;
+                    splitFalseCount = fc;
                     splitScore = gain;
                 }
             }
 
             if (splitScore > 0.0) {
                 final int value = splitValue;
-                split = new NominalSplit(leaf, j, splitValue, splitScore, lo, hi, (int o) -> xj.getInt(o) == value);
+                split = new NominalSplit(leaf, j, splitValue, splitScore, lo, hi, splitTrueCount, splitFalseCount, (int o) -> xj.getInt(o) == value);
             }
         } else {
             double splitValue = 0.0;
@@ -211,6 +209,8 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
                     // new best split
                     if (gain > splitScore) {
                         splitValue = (xij + prevx) / 2;
+                        splitTrueCount = tc;
+                        splitFalseCount = fc;
                         splitScore = gain;
                     }
                 }
@@ -222,7 +222,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
 
             if (splitScore > 0.0) {
                 final double value = splitValue;
-                split = new OrdinalSplit(leaf, j, splitValue, splitScore, lo, hi, (int o) -> xj.getDouble(o) <= value);
+                split = new OrdinalSplit(leaf, j, splitValue, splitScore, lo, hi, splitTrueCount, splitFalseCount, (int o) -> xj.getDouble(o) <= value);
             }
         }
 
