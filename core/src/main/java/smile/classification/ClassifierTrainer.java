@@ -17,8 +17,6 @@
 
 package smile.classification;
 
-import smile.data.Attribute;
-
 /**
  * Abstract classifier trainer.
  * 
@@ -27,35 +25,12 @@ import smile.data.Attribute;
  * @author Haifeng Li
  */
 public abstract class ClassifierTrainer <T> {
-    /**
-     * The feature attributes. This is optional since most classifiers can only
-     * work on real-valued attributes.
-     */
-    Attribute[] attributes;
-    
+
     /**
      * Constructor.
      */
     public ClassifierTrainer() {
         
-    }
-    
-    /**
-     * Constructor.
-     * @param attributes the attributes of independent variable.
-     */
-    public ClassifierTrainer(Attribute[] attributes) {
-        this.attributes = attributes;
-    }
-    
-    /**
-     * Sets feature attributes. This is optional since most classifiers can only
-     * work on real-valued attributes.
-     * 
-     * @param attributes the feature attributes.
-     */
-    public void setAttributes(Attribute[] attributes) {
-        this.attributes = attributes;
     }
     
     /**

@@ -27,11 +27,6 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.io.Arff;
 import smile.util.Paths;
-/*
-import smile.math.MathEx;
-import smile.validation.CrossValidation;
-import smile.validation.LOOCV;
-*/
 
 /**
  *
@@ -63,23 +58,6 @@ public class OLSTest {
         104.6, 108.4, 110.8, 112.6, 114.2, 115.7, 116.9
     };
 
-    double[][] w = {
-        {   0.26353,    0.10815,   2.437,   0.0376},
-        {   0.03648,    0.03024,   1.206,   0.2585},
-        {   0.01116,    0.01545,   0.722,   0.4885},
-        {  -1.73703,    0.67382,  -2.578,   0.0298},
-        {  -1.41880,    2.94460,  -0.482,   0.6414},
-        {   0.23129,    1.30394,   0.177,   0.8631},
-        {2946.85636, 5647.97658,   0.522,   0.6144}
-    };
-
-    double[] residuals = {
-        -0.6008156,  1.5502732,  0.1032287, -1.2306486, -0.3355139,  0.2693345,  0.8776759,
-         0.1222429, -2.0086121, -0.4859826,  1.0663129,  1.2274906, -0.3835821,  0.2710215,
-         0.1978569, -0.6402823
-    };
-
-
     public OLSTest() {
     }
 
@@ -105,9 +83,10 @@ public class OLSTest {
     @Test(expected = Test.None.class)
     public void testLongley() throws Exception {
         System.out.println("longley");
+
         Arff arff = new Arff(Paths.getTestData("weka/regression/longley.arff"));
         DataFrame longley = arff.read();
-        OLS model = OLS.fit(Formula.lhs("employed"), longley);
+        LinearModel model = OLS.fit(Formula.lhs("employed"), longley);
         System.out.println(model);
 
         assertEquals(12.8440, model.RSS(), 1E-4);
@@ -117,68 +96,44 @@ public class OLSTest {
         assertEquals(0.9877, model.adjustedRSquared(), 1E-4);
         assertEquals(202.5094, model.ftest(), 1E-4);
         assertEquals(4.42579E-9, model.pvalue(), 1E-14);
+        
+        double[][] w = {
+                {   0.26353,    0.10815,   2.437,   0.0376},
+                {   0.03648,    0.03024,   1.206,   0.2585},
+                {   0.01116,    0.01545,   0.722,   0.4885},
+                {  -1.73703,    0.67382,  -2.578,   0.0298},
+                {  -1.41880,    2.94460,  -0.482,   0.6414},
+                {   0.23129,    1.30394,   0.177,   0.8631},
+                {2946.85636, 5647.97658,   0.522,   0.6144}
+        };
+
+        double[] residuals = {
+                -0.6008156,  1.5502732,  0.1032287, -1.2306486, -0.3355139,  0.2693345,  0.8776759,
+                0.1222429, -2.0086121, -0.4859826,  1.0663129,  1.2274906, -0.3835821,  0.2710215,
+                0.1978569, -0.6402823
+        };
+
         for (int i = 0; i < w.length; i++) {
             for (int j = 0; j < 4; j++) {
                 assertEquals(w[i][j], model.ttest()[i][j], 1E-3);
             }
         }
-/*
-        int n = longley.length;
-        LOOCV loocv = new LOOCV(n);
-        double rss = 0.0;
-        for (int i = 0; i < n; i++) {
-            double[][] trainx = MathEx.slice(longley, loocv.train[i]);
-            double[] trainy = MathEx.slice(y, loocv.train[i]);
-            OLS linear = new OLS(trainx, trainy);
 
-            double r = y[loocv.test[i]] - linear.predict(longley[loocv.test[i]]);
-            rss += r * r;
+        for (int i = 0; i < residuals.length; i++) {
+            assertEquals(residuals[i], model.residuals()[i], 1E-4);
         }
-
-        System.out.println("MSE = " + rss/n);
-        assertEquals(2.2148948268123756, rss/n, 1E-4);
-        */
     }
 
     /**
      * Test of learn method, of class LinearRegression.
      */
-    /*
-    @Test
-    public void testCPU() {
+    @Test(expected = Test.None.class)
+    public void testCPU() throws Exception {
         System.out.println("CPU");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(6);
-        try {
-            Arff arff = new Arff(Paths.getTestData("weka/cpu.arff"));
-            DataFrame data = arff.read();
 
-            double[][] datax = data.toArray(new double[data.size()][]);
-            double[] datay = data.toArray(new double[data.size()]);
-
-            int n = datax.length;
-            int k = 10;
-
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
-
-                OLS linear = new OLS(trainx, trainy);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - linear.predict(testx[j]);
-                    rss += r * r;
-                }
-            }
-
-            System.out.println("MSE = " + rss / n);
-        } catch (Exception ex) {
-             System.err.println(ex);
-        }
+        Arff arff = new Arff(Paths.getTestData("weka/cpu.arff"));
+        DataFrame cpu = arff.read();
+        LinearModel model = OLS.fit(Formula.lhs("class"), cpu);
+        System.out.println(model);
     }
-    */
 }

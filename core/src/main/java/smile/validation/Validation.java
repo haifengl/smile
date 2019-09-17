@@ -17,11 +17,10 @@
 
 package smile.validation;
 
+import java.util.function.BiFunction;
 import smile.math.MathEx;
 import smile.classification.Classifier;
-import smile.classification.ClassifierTrainer;
 import smile.regression.Regression;
-import smile.regression.RegressionTrainer;
 
 /**
  * A utility class for validating predictive models on test data.
@@ -168,7 +167,7 @@ public interface Validation {
      * @param y the test data labels.
      * @return the accuracy on test dataset
      */
-    static <T> double loocv(ClassifierTrainer<T> trainer, T[] x, int[] y) {
+    static <T> double loocv(BiFunction<T[], int[], Classifier<T>> trainer, T[] x, int[] y) {
         int m = 0;
         int n = x.length;
         
@@ -177,7 +176,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, loocv.train[i]);
             int[] trainy = MathEx.slice(y, loocv.train[i]);
             
-            Classifier<T> classifier = trainer.train(trainx, trainy);
+            Classifier<T> classifier = trainer.apply(trainx, trainy);
 
             if (classifier.predict(x[loocv.test[i]]) == y[loocv.test[i]]) {
                 m++;
@@ -196,7 +195,7 @@ public interface Validation {
      * @param y the test data response values.
      * @return root mean squared error
      */
-    static <T> double loocv(RegressionTrainer<T> trainer, T[] x, double[] y) {
+    static <T> double loocv(BiFunction<T[], double[], Regression<T>> trainer, T[] x, double[] y) {
         double rmse = 0.0;
         int n = x.length;        
         LOOCV loocv = new LOOCV(n);
@@ -204,7 +203,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, loocv.train[i]);
             double[] trainy = MathEx.slice(y, loocv.train[i]);
             
-            Regression<T> model = trainer.train(trainx, trainy);
+            Regression<T> model = trainer.apply(trainx, trainy);
 
             rmse += MathEx.sqr(model.predict(x[loocv.test[i]]) - y[loocv.test[i]]);
         }
@@ -222,7 +221,7 @@ public interface Validation {
      * @param measure the performance measure of classification.
      * @return the test results with the same size of order of measures
      */
-    static <T> double loocv(ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure measure) {
+    static <T> double loocv(BiFunction<T[], int[], Classifier<T>> trainer, T[] x, int[] y, ClassificationMeasure measure) {
         int n = x.length;
         int[] predictions = new int[n];
         
@@ -231,7 +230,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, loocv.train[i]);
             int[] trainy = MathEx.slice(y, loocv.train[i]);
             
-            Classifier<T> classifier = trainer.train(trainx, trainy);
+            Classifier<T> classifier = trainer.apply(trainx, trainy);
 
             predictions[loocv.test[i]] = classifier.predict(x[loocv.test[i]]);
         }
@@ -249,7 +248,7 @@ public interface Validation {
      * @param measures the performance measures of classification.
      * @return the test results with the same size of order of measures
      */
-    static <T> double[] loocv(ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure[] measures) {
+    static <T> double[] loocv(BiFunction<T[], int[], Classifier<T>> trainer, T[] x, int[] y, ClassificationMeasure[] measures) {
         int n = x.length;
         int[] predictions = new int[n];
         
@@ -258,7 +257,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, loocv.train[i]);
             int[] trainy = MathEx.slice(y, loocv.train[i]);
             
-            Classifier<T> classifier = trainer.train(trainx, trainy);
+            Classifier<T> classifier = trainer.apply(trainx, trainy);
 
             predictions[loocv.test[i]] = classifier.predict(x[loocv.test[i]]);
         }
@@ -282,7 +281,7 @@ public interface Validation {
      * @param measure the performance measure of regression.
      * @return the test results with the same size of order of measures
      */
-    static <T> double loocv(RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure measure) {
+    static <T> double loocv(BiFunction<T[], double[], Regression<T>> trainer, T[] x, double[] y, RegressionMeasure measure) {
         int n = x.length;
         double[] predictions = new double[n];
         
@@ -291,7 +290,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, loocv.train[i]);
             double[] trainy = MathEx.slice(y, loocv.train[i]);
             
-            Regression<T> model = trainer.train(trainx, trainy);
+            Regression<T> model = trainer.apply(trainx, trainy);
 
             predictions[loocv.test[i]] = model.predict(x[loocv.test[i]]);
         }
@@ -309,7 +308,7 @@ public interface Validation {
      * @param measures the performance measures of regression.
      * @return the test results with the same size of order of measures
      */
-    static <T> double[] loocv(RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure[] measures) {
+    static <T> double[] loocv(BiFunction<T[], double[], Regression<T>> trainer, T[] x, double[] y, RegressionMeasure[] measures) {
         int n = x.length;
         double[] predictions = new double[n];
         
@@ -318,7 +317,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, loocv.train[i]);
             double[] trainy = MathEx.slice(y, loocv.train[i]);
             
-            Regression<T> model = trainer.train(trainx, trainy);
+            Regression<T> model = trainer.apply(trainx, trainy);
 
             predictions[loocv.test[i]] = model.predict(x[loocv.test[i]]);
         }
@@ -342,7 +341,7 @@ public interface Validation {
      * @param y the test data labels.
      * @return the accuracy on test dataset
      */
-    static <T> double cv(int k, ClassifierTrainer<T> trainer, T[] x, int[] y) {
+    static <T> double cv(int k, BiFunction<T[], int[], Classifier<T>> trainer, T[] x, int[] y) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold cross validation: " + k);
         }
@@ -355,7 +354,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, cv.train[i]);
             int[] trainy = MathEx.slice(y, cv.train[i]);
             
-            Classifier<T> classifier = trainer.train(trainx, trainy);
+            Classifier<T> classifier = trainer.apply(trainx, trainy);
 
             for (int j : cv.test[i]) {
                 predictions[j] = classifier.predict(x[j]);
@@ -375,7 +374,7 @@ public interface Validation {
      * @param y the test data response values.
      * @return root mean squared error
      */
-    static <T> double cv(int k, RegressionTrainer<T> trainer, T[] x, double[] y) {
+    static <T> double cv(int k, BiFunction<T[], double[], Regression<T>> trainer, T[] x, double[] y) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold cross validation: " + k);
         }
@@ -388,7 +387,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, cv.train[i]);
             double[] trainy = MathEx.slice(y, cv.train[i]);
             
-            Regression<T> model = trainer.train(trainx, trainy);
+            Regression<T> model = trainer.apply(trainx, trainy);
 
             for (int j : cv.test[i]) {
                 predictions[j] = model.predict(x[j]);
@@ -409,7 +408,7 @@ public interface Validation {
      * @param measure the performance measure of classification.
      * @return the test results with the same size of order of measures
      */
-    static <T> double cv(int k, ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure measure) {
+    static <T> double cv(int k, BiFunction<T[], int[], Classifier<T>> trainer, T[] x, int[] y, ClassificationMeasure measure) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold cross validation: " + k);
         }
@@ -422,7 +421,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, cv.train[i]);
             int[] trainy = MathEx.slice(y, cv.train[i]);
             
-            Classifier<T> classifier = trainer.train(trainx, trainy);
+            Classifier<T> classifier = trainer.apply(trainx, trainy);
 
             for (int j : cv.test[i]) {
                 predictions[j] = classifier.predict(x[j]);
@@ -443,7 +442,7 @@ public interface Validation {
      * @param measures the performance measures of classification.
      * @return the test results with the same size of order of measures
      */
-    static <T> double[] cv(int k, ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure[] measures) {
+    static <T> double[] cv(int k, BiFunction<T[], int[], Classifier<T>> trainer, T[] x, int[] y, ClassificationMeasure[] measures) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold cross validation: " + k);
         }
@@ -456,7 +455,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, cv.train[i]);
             int[] trainy = MathEx.slice(y, cv.train[i]);
             
-            Classifier<T> classifier = trainer.train(trainx, trainy);
+            Classifier<T> classifier = trainer.apply(trainx, trainy);
 
             for (int j : cv.test[i]) {
                 predictions[j] = classifier.predict(x[j]);
@@ -483,7 +482,7 @@ public interface Validation {
      * @param measure the performance measure of regression.
      * @return the test results with the same size of order of measures
      */
-    static <T> double cv(int k, RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure measure) {
+    static <T> double cv(int k, BiFunction<T[], double[], Regression<T>> trainer, T[] x, double[] y, RegressionMeasure measure) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold cross validation: " + k);
         }
@@ -496,7 +495,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, cv.train[i]);
             double[] trainy = MathEx.slice(y, cv.train[i]);
             
-            Regression<T> model = trainer.train(trainx, trainy);
+            Regression<T> model = trainer.apply(trainx, trainy);
 
             for (int j : cv.test[i]) {
                 predictions[j] = model.predict(x[j]);
@@ -517,7 +516,7 @@ public interface Validation {
      * @param measures the performance measures of regression.
      * @return the test results with the same size of order of measures
      */
-    static <T> double[] cv(int k, RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure[] measures) {
+    static <T> double[] cv(int k, BiFunction<T[], double[], Regression<T>> trainer, T[] x, double[] y, RegressionMeasure[] measures) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold cross validation: " + k);
         }
@@ -530,7 +529,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, cv.train[i]);
             double[] trainy = MathEx.slice(y, cv.train[i]);
             
-            Regression<T> model = trainer.train(trainx, trainy);
+            Regression<T> model = trainer.apply(trainx, trainy);
 
             for (int j : cv.test[i]) {
                 predictions[j] = model.predict(x[j]);
@@ -556,7 +555,7 @@ public interface Validation {
      * @param y the test data labels.
      * @return the k-round accuracies
      */
-    static <T> double[] bootstrap(int k, ClassifierTrainer<T> trainer, T[] x, int[] y) {
+    static <T> double[] bootstrap(int k, BiFunction<T[], int[], Classifier<T>> trainer, T[] x, int[] y) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold bootstrap: " + k);
         }
@@ -570,7 +569,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, bootstrap.train[i]);
             int[] trainy = MathEx.slice(y, bootstrap.train[i]);
             
-            Classifier<T> classifier = trainer.train(trainx, trainy);
+            Classifier<T> classifier = trainer.apply(trainx, trainy);
 
             int nt = bootstrap.test[i].length;
             int[] truth = new int[nt];
@@ -597,7 +596,7 @@ public interface Validation {
      * @param y the test data response values.
      * @return the k-round root mean squared errors
      */
-    static <T> double[] bootstrap(int k, RegressionTrainer<T> trainer, T[] x, double[] y) {
+    static <T> double[] bootstrap(int k, BiFunction<T[], double[], Regression<T>> trainer, T[] x, double[] y) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold bootstrap: " + k);
         }
@@ -611,7 +610,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, bootstrap.train[i]);
             double[] trainy = MathEx.slice(y, bootstrap.train[i]);
             
-            Regression<T> model = trainer.train(trainx, trainy);
+            Regression<T> model = trainer.apply(trainx, trainy);
 
             int nt = bootstrap.test[i].length;
             double[] truth = new double[nt];
@@ -640,7 +639,7 @@ public interface Validation {
      * @return k-by-m test result matrix, where k is the number of
      * bootstrap samples and m is the number of performance measures.
      */
-    static <T> double[] bootstrap(int k, ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure measure) {
+    static <T> double[] bootstrap(int k, BiFunction<T[], int[], Classifier<T>>trainer, T[] x, int[] y, ClassificationMeasure measure) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold bootstrap: " + k);
         }
@@ -653,7 +652,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, bootstrap.train[i]);
             int[] trainy = MathEx.slice(y, bootstrap.train[i]);
             
-            Classifier<T> classifier = trainer.train(trainx, trainy);
+            Classifier<T> classifier = trainer.apply(trainx, trainy);
 
             int nt = bootstrap.test[i].length;
             int[] truth = new int[nt];
@@ -682,7 +681,7 @@ public interface Validation {
      * @return k-by-m test result matrix, where k is the number of
      * bootstrap samples and m is the number of performance measures.
      */
-    static <T> double[][] bootstrap(int k, ClassifierTrainer<T> trainer, T[] x, int[] y, ClassificationMeasure[] measures) {
+    static <T> double[][] bootstrap(int k, BiFunction<T[], int[], Classifier<T>> trainer, T[] x, int[] y, ClassificationMeasure[] measures) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold bootstrap: " + k);
         }
@@ -696,7 +695,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, bootstrap.train[i]);
             int[] trainy = MathEx.slice(y, bootstrap.train[i]);
             
-            Classifier<T> classifier = trainer.train(trainx, trainy);
+            Classifier<T> classifier = trainer.apply(trainx, trainy);
 
             int nt = bootstrap.test[i].length;
             int[] truth = new int[nt];
@@ -727,7 +726,7 @@ public interface Validation {
      * @return k-by-m test result matrix, where k is the number of 
      * bootstrap samples and m is the number of performance measures.
      */
-    static <T> double[] bootstrap(int k, RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure measure) {
+    static <T> double[] bootstrap(int k, BiFunction<T[], double[], Regression<T>> trainer, T[] x, double[] y, RegressionMeasure measure) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold bootstrap: " + k);
         }
@@ -740,7 +739,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, bootstrap.train[i]);
             double[] trainy = MathEx.slice(y, bootstrap.train[i]);
             
-            Regression<T> model = trainer.train(trainx, trainy);
+            Regression<T> model = trainer.apply(trainx, trainy);
 
             int nt = bootstrap.test[i].length;
             double[] truth = new double[nt];
@@ -769,7 +768,7 @@ public interface Validation {
      * @return k-by-m test result matrix, where k is the number of 
      * bootstrap samples and m is the number of performance measures.
      */
-    static <T> double[][] bootstrap(int k, RegressionTrainer<T> trainer, T[] x, double[] y, RegressionMeasure[] measures) {
+    static <T> double[][] bootstrap(int k, BiFunction<T[], double[], Regression<T>> trainer, T[] x, double[] y, RegressionMeasure[] measures) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k for k-fold bootstrap: " + k);
         }
@@ -783,7 +782,7 @@ public interface Validation {
             T[] trainx = MathEx.slice(x, bootstrap.train[i]);
             double[] trainy = MathEx.slice(y, bootstrap.train[i]);
             
-            Regression<T> model = trainer.train(trainx, trainy);
+            Regression<T> model = trainer.apply(trainx, trainy);
 
             int nt = bootstrap.test[i].length;
             double[] truth = new double[nt];
