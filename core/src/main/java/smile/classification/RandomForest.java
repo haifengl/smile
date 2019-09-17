@@ -104,16 +104,19 @@ public class RandomForest implements SoftClassifier<Tuple> {
      * tree votes.
      */
     private List<Tree> trees;
+
     /**
      * The number of classes.
      */
     private int k = 2;
+
     /**
      * Out-of-bag estimation of error rate, which is quite accurate given that
      * enough trees have been grown (otherwise the OOB estimate can
      * bias upward).
      */
     private double error;
+
     /**
      * Variable importance. Every time a split of a node is made on variable
      * the (GINI, information gain, etc.) impurity criterion for the two
@@ -156,7 +159,7 @@ public class RandomForest implements SoftClassifier<Tuple> {
      *                    (assuming label 0 is of negative, label 1 is of
      *                    positive).
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int maxNodes, int nodeSize, int mtry, double subsample, SplitRule rule, int[] classWeight) {
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int nodeSize, int maxNodes, double subsample, int[] classWeight) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }
