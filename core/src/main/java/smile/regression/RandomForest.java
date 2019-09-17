@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import smile.base.cart.CART;
+import smile.base.cart.LeastSquaresNodeOutput;
+import smile.base.cart.RegressionNodeOutput;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -151,6 +153,7 @@ public class RandomForest implements Regression<Tuple> {
         double[] prediction = new double[n];
         int[] oob = new int[n];
 
+        final RegressionNodeOutput output = new LeastSquaresNodeOutput(y.toDoubleArray());
         final int[][] order = CART.order(x);
 
         List<RegressionTree> trees = IntStream.range(0, ntrees).parallel().mapToObj(t -> {
@@ -167,7 +170,7 @@ public class RandomForest implements Regression<Tuple> {
                 IntStream.range(0, (int) Math.round(n * subsample)).forEach(i -> samples[perm[i]]++);
             }
 
-            RegressionTree tree = new RegressionTree(x, y, nodeSize, maxNodes, mtry, samples, order);
+            RegressionTree tree = new RegressionTree(x, y, nodeSize, maxNodes, mtry, samples, order, output);
 
             IntStream.range(0, n).filter(i -> samples[i] == 0).forEach(i -> {
                 double pred = tree.predict(x.get(i));

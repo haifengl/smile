@@ -114,64 +114,6 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
     private double eta = 5e-5;
     
     /**
-     * Constructor. No regularization.
-     * 
-     * @param data labels in [0, k) where k is the number of classes and training samples.
-     */
-    public LogisticRegression(AttributeDataset data) {
-        this(data.x(), data.labels());
-    }
-
-    /**
-     * Constructor. No regularization.
-     * 
-     * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
-     */
-    public LogisticRegression(double[][] x, int[] y) {
-        this(x, y, 0.0);
-    }
-
-    /**
-     * Constructor. No regularization.
-     * 
-     * @param data labels in [0, k) where k is the number of classes and training samples.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
-     */
-    public LogisticRegression(AttributeDataset data,  double lambda) {
-        this(data.x(), data.labels(), lambda);
-    }
-
-    /**
-     * Constructor.
-     * 
-     * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
-     */
-    public LogisticRegression(double[][] x, int[] y, double lambda) {
-        this(x, y, lambda, 1E-5, 500);
-    }
-
-    /**
-     * Constructor. No regularization.
-     * 
-     * @param data labels in [0, k) where k is the number of classes and training samples.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
-     * @param tol the tolerance for stopping iterations.
-     * @param maxIter the maximum number of iterations.
-     */
-    public LogisticRegression(AttributeDataset data,  double lambda, double tol, int maxIter) {
-        this(data.x(), data.labels(), lambda, tol, maxIter);
-    }
-
-    /**
      * Constructor.
      * 
      * @param x training samples.
@@ -454,7 +396,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         }
         
         @Override
-        public double f(double[] w, double[] g) {
+        public double g(double[] w, double[] g) {
             double f = Double.NaN;
             int p = w.length - 1;
             Arrays.fill(g, 0.0);
@@ -740,7 +682,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         }
         
         @Override
-        public double f(double[] w, double[] g) {
+        public double g(double[] w, double[] g) {
             double f = Double.NaN;
             int p = x[0].length;
             double[] prob = new double[k];            
@@ -807,7 +749,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
     }
 
     @Override
-    public void learn(double[] x, int y) {
+    public void update(double[] x, int y) {
         if (y < 0 || y >= k) {
             throw new IllegalArgumentException("Invalid label");
         }

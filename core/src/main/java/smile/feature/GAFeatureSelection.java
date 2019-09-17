@@ -17,13 +17,12 @@
 
 package smile.feature;
 
+import java.util.function.BiFunction;
 import smile.classification.Classifier;
-import smile.classification.ClassifierTrainer;
 import smile.gap.BitString;
 import smile.gap.FitnessMeasure;
 import smile.gap.GeneticAlgorithm;
 import smile.regression.Regression;
-import smile.regression.RegressionTrainer;
 import smile.validation.ClassificationMeasure;
 import smile.validation.RegressionMeasure;
 import smile.validation.Validation;
@@ -105,7 +104,7 @@ public class GAFeatureSelection {
      * @param k k-fold cross validation for the evaluation.
      * @return bit strings of last generation.
      */
-    public BitString[] learn(int size, int generation, ClassifierTrainer<double[]> trainer, ClassificationMeasure measure, double[][] x, int[] y, int k) {
+    public BitString[] learn(int size, int generation, BiFunction<double[][], int[], Classifier<double[]>> trainer, ClassificationMeasure measure, double[][] x, int[] y, int k) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid population size: " + size);
         }
@@ -144,7 +143,7 @@ public class GAFeatureSelection {
      * @param testy testing instance labels.
      * @return bit strings of last generation.
      */
-    public BitString[] learn(int size, int generation, ClassifierTrainer<double[]> trainer, ClassificationMeasure measure, double[][] x, int[] y, double[][] testx, int[] testy) {
+    public BitString[] learn(int size, int generation, BiFunction<double[][], int[], Classifier<double[]>> trainer, ClassificationMeasure measure, double[][] x, int[] y, double[][] testx, int[] testy) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid population size: " + size);
         }
@@ -183,7 +182,7 @@ public class GAFeatureSelection {
         /**
          * Classifier trainer
          */
-        ClassifierTrainer<double[]> trainer;
+        BiFunction<double[][], int[], Classifier<double[]>> trainer;
         /**
          * Classification measure
          */
@@ -212,7 +211,7 @@ public class GAFeatureSelection {
         /**
          * Constructor.
          */
-        ClassificationFitness(ClassifierTrainer<double[]> trainer, ClassificationMeasure measure, double[][] x, int[] y, int k) {
+        ClassificationFitness(BiFunction<double[][], int[], Classifier<double[]>> trainer, ClassificationMeasure measure, double[][] x, int[] y, int k) {
             this.trainer = trainer;
             this.measure = measure;
             this.x = x;
@@ -223,7 +222,7 @@ public class GAFeatureSelection {
         /**
          * Constructor.
          */
-        ClassificationFitness(ClassifierTrainer<double[]> trainer, ClassificationMeasure measure, double[][] x, int[] y, double[][] testx, int[] testy) {
+        ClassificationFitness(BiFunction<double[][], int[], Classifier<double[]>> trainer, ClassificationMeasure measure, double[][] x, int[] y, double[][] testx, int[] testy) {
             this.trainer = trainer;
             this.measure = measure;
             this.x = x;
@@ -259,7 +258,7 @@ public class GAFeatureSelection {
             if (k != -1) {
                 return Validation.cv(k, trainer, xx, y);
             } else {
-                Classifier<double[]> classifier = trainer.train(xx, y);
+                Classifier<double[]> classifier = trainer.apply(xx, y);
                 
                 int testn = testx.length;
                 double[][] testxx = new double[testn][p];
@@ -292,7 +291,7 @@ public class GAFeatureSelection {
      * @param k k-fold cross validation for the evaluation.
      * @return bit strings of last generation.
      */
-    public BitString[] learn(int size, int generation, RegressionTrainer<double[]> trainer, RegressionMeasure measure, double[][] x, double[] y, int k) {
+    public BitString[] learn(int size, int generation, BiFunction<double[][], double[], Regression<double[]>> trainer, RegressionMeasure measure, double[][] x, double[] y, int k) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid population size: " + size);
         }
@@ -331,7 +330,7 @@ public class GAFeatureSelection {
      * @param testy testing instance labels.
      * @return bit strings of last generation.
      */
-    public BitString[] learn(int size, int generation, RegressionTrainer<double[]> trainer, RegressionMeasure measure, double[][] x, double[] y, double[][] testx, double[] testy) {
+    public BitString[] learn(int size, int generation, BiFunction<double[][], double[], Regression<double[]>> trainer, RegressionMeasure measure, double[][] x, double[] y, double[][] testx, double[] testy) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid population size: " + size);
         }
@@ -370,7 +369,7 @@ public class GAFeatureSelection {
         /**
          * Classifier trainer
          */
-        RegressionTrainer<double[]> trainer;
+        BiFunction<double[][], double[], Regression<double[]>> trainer;
         /**
          * Classification measure
          */
@@ -399,7 +398,7 @@ public class GAFeatureSelection {
         /**
          * Constructor.
          */
-        RegressionFitness(RegressionTrainer<double[]> trainer, RegressionMeasure measure, double[][] x, double[] y, int k) {
+        RegressionFitness(BiFunction<double[][], double[], Regression<double[]>> trainer, RegressionMeasure measure, double[][] x, double[] y, int k) {
             this.trainer = trainer;
             this.measure = measure;
             this.x = x;
@@ -410,7 +409,7 @@ public class GAFeatureSelection {
         /**
          * Constructor.
          */
-        RegressionFitness(RegressionTrainer<double[]> trainer, RegressionMeasure measure, double[][] x, double[] y, double[][] testx, double[] testy) {
+        RegressionFitness(BiFunction<double[][], double[], Regression<double[]>> trainer, RegressionMeasure measure, double[][] x, double[] y, double[][] testx, double[] testy) {
             this.trainer = trainer;
             this.measure = measure;
             this.x = x;
@@ -446,7 +445,7 @@ public class GAFeatureSelection {
             if (k != -1) {
                 return -Validation.cv(k, trainer, xx, y);
             } else {
-                Regression<double[]> regression = trainer.train(xx, y);
+                Regression<double[]> regression = trainer.apply(xx, y);
                 
                 int testn = testx.length;
                 double[][] testxx = new double[testn][p];
