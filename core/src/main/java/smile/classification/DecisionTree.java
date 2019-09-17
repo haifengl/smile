@@ -28,7 +28,6 @@ import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
-import smile.sort.QuickSort;
 
 /**
  * Decision tree for classification. A decision tree can be learned by
@@ -211,7 +210,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
 
                     // new best split
                     if (gain > splitScore) {
-                        splitValue = (xj.getDouble(o) + prevx) / 2;
+                        splitValue = (xij + prevx) / 2;
                         splitScore = gain;
                     }
                 }

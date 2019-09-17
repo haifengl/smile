@@ -18,9 +18,11 @@
 package smile.classification;
 
 import java.util.Arrays;
-import smile.data.Attribute;
-import smile.data.AttributeDataset;
-import smile.data.NumericAttribute;
+
+import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.formula.Formula;
+import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
 import smile.util.SmileUtils;
@@ -100,8 +102,8 @@ import smile.validation.ClassificationMeasure;
  * 
  * @author Haifeng Li
  */
-public class GradientTreeBoost implements SoftClassifier<double[]> {
-    private static final long serialVersionUID = 1L;
+public class GradientTreeBoost implements SoftClassifier<Tuple> {
+    private static final long serialVersionUID = 2L;
 
     /**
      * The number of classes.
@@ -142,180 +144,6 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
      * The sampling rate for stochastic tree boosting.
      */
     private double subsample = 0.7;
-    
-    /**
-     * Trainer for GradientTreeBoost classifiers.
-     */
-    public static class Trainer extends ClassifierTrainer<double[]> {
-        /**
-         * The number of trees.
-         */
-        private int ntrees = 500;
-        /**
-         * The shrinkage parameter in (0, 1] controls the learning rate of procedure.
-         */
-        private double shrinkage = 0.005;
-        /**
-         * The number of leaves in each tree.
-         */
-        private int maxNodes = 6;
-        /**
-         * The sampling rate for stochastic tree boosting.
-         */
-        private double subsample = 0.7;
-
-        /**
-         * Default constructor of 500 trees.
-         */
-        public Trainer() {
-
-        }
-
-        /**
-         * Constructor.
-         * 
-         * @param ntrees the number of trees.
-         */
-        public Trainer(int ntrees) {
-            if (ntrees < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-            }
-
-            this.ntrees = ntrees;
-        }
-
-        /**
-         * Constructor.
-         * 
-         * @param attributes the attributes of independent variable.
-         * @param ntrees the number of trees.
-         */
-        public Trainer(Attribute[] attributes, int ntrees) {
-            super(attributes);
-
-            if (ntrees < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-            }
-
-            this.ntrees = ntrees;
-        }
-        
-        /**
-         * Sets the number of trees in the random forest.
-         * @param ntrees the number of trees.
-         */
-        public Trainer setNumTrees(int ntrees) {
-            if (ntrees < 1) {
-                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-            }
-
-            this.ntrees = ntrees;
-            return this;
-        }
-        
-        /**
-         * Sets the maximum number of leaf nodes in the tree.
-         * @param maxNodes the maximum number of leaf nodes in the tree.
-         */
-        public Trainer setMaxNodes(int maxNodes) {
-            if (maxNodes < 2) {
-                throw new IllegalArgumentException("Invalid maximum number of leaf nodes: " + maxNodes);
-            }
-            
-            this.maxNodes = maxNodes;
-            return this;
-        }
-        
-        /**
-         * Sets the shrinkage parameter in (0, 1] controls the learning rate of procedure.
-         * @param shrinkage the learning rate.
-         */
-        public Trainer setShrinkage(double shrinkage) {
-            if (shrinkage <= 0 || shrinkage > 1) {
-                throw new IllegalArgumentException("Invalid shrinkage: " + shrinkage);
-            }
-
-            this.shrinkage = shrinkage;
-            return this;
-        }
-
-        /**
-         * Sets the sampling rate for stochastic tree boosting.
-         * @param subsample the sampling rate for stochastic tree boosting.
-         */
-        public Trainer setSamplingRates(double subsample) {
-            if (subsample <= 0 || subsample > 1) {
-                throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
-            }
-
-            this.subsample = subsample;
-            return this;
-        }
-        
-        @Override
-        public GradientTreeBoost train(double[][] x, int[] y) {
-            return new GradientTreeBoost(attributes, x, y, ntrees, maxNodes, shrinkage, subsample);
-        }
-    }
-    
-    /**
-     * Constructor. Learns a gradient tree boosting for classification.
-     * @param x the training instances. 
-     * @param y the class labels.
-     * @param ntrees the number of iterations (trees).
-     */
-    public GradientTreeBoost(double[][] x, int[] y, int ntrees) {
-        this(null, x, y, ntrees);
-    }
-    
-    /**
-     * Constructor. Learns a gradient tree boosting for classification.
-     *
-     * @param x the training instances. 
-     * @param y the class labels.
-     * @param ntrees the number of iterations (trees).
-     * @param maxNodes the number of leaves in each tree.
-     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
-     * @param f the sampling rate for stochastic tree boosting.
-     */
-    public GradientTreeBoost(double[][] x, int[] y, int ntrees, int maxNodes, double shrinkage, double f) {
-        this(null, x, y, ntrees, maxNodes, shrinkage, f);
-    }
-
-    /**
-     * Constructor. Learns a gradient tree boosting for classification.
-     *
-     * @param data the dataset.
-     * @param ntrees the number of iterations (trees).
-     */
-    public GradientTreeBoost(AttributeDataset data, int ntrees) {
-        this(data.attributes(), data.x(), data.labels(), ntrees);
-    }
-
-    /**
-     * Constructor. Learns a gradient tree boosting for classification.
-     * 
-     * @param attributes the attribute properties.
-     * @param x the training instances. 
-     * @param y the class labels.
-     * @param ntrees the number of iterations (trees).
-     */
-    public GradientTreeBoost(Attribute[] attributes, double[][] x, int[] y, int ntrees) {
-        this(attributes, x, y, ntrees, 6, x.length < 2000 ? 0.005 : 0.05, 0.7);
-    }
-
-    /**
-     * Constructor. Learns a gradient tree boosting for classification.
-     *
-     * @param data the dataset.
-     * @param ntrees the number of iterations (trees).
-     * @param maxNodes the number of leaves in each tree.
-     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
-     * @param subsample the sampling fraction for stochastic tree boosting.
-     */
-    public GradientTreeBoost(AttributeDataset data, int ntrees, int maxNodes, double shrinkage, double subsample) {
-        this(data.attributes(), data.x(), data.labels(), ntrees, maxNodes, shrinkage, subsample);
-    }
 
     /**
      * Constructor. Learns a gradient tree boosting for classification.
@@ -328,11 +156,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
      */
-    public GradientTreeBoost(Attribute[] attributes, double[][] x, int[] y, int ntrees, int maxNodes, double shrinkage, double subsample) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
-        }
-
+    public GradientTreeBoost(Formula formula, DataFrame data, int ntrees, int maxNodes, double shrinkage, double subsample) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }
@@ -347,14 +171,6 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
 
         if (subsample <= 0 || subsample > 1) {
             throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
-        }
-        
-        if (attributes == null) {
-            int p = x[0].length;
-            attributes = new Attribute[p];
-            for (int i = 0; i < p; i++) {
-                attributes[i] = new NumericAttribute("V" + (i + 1));
-            }
         }
         
         this.ntrees = ntrees;
@@ -405,7 +221,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
     /**
      * Train L2 tree boost.
      */
-    private void train2(Attribute[] attributes, double[][] x, int[] y) {        
+    private void train2(DataFrame x, BaseVector y) {
         int n = x.length;
 
         int[] nc = new int[k];
@@ -472,7 +288,7 @@ public class GradientTreeBoost implements SoftClassifier<double[]> {
     /**
      * Train L-k tree boost.
      */
-    private void traink(Attribute[] attributes, double[][] x, int[] y) {        
+    private void traink(DataFrame x, BaseVector y) {
         int n = x.length;
 
         int[] nc = new int[k];
