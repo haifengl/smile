@@ -18,11 +18,6 @@
 package smile.regression;
 
 import smile.math.kernel.MercerKernel;
-import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.Cholesky;
-import smile.math.matrix.LU;
-import smile.math.matrix.EVD;
 
 /**
  * The learning methods building on kernels. Kernel methods owe their name to
@@ -40,7 +35,7 @@ import smile.math.matrix.EVD;
  * @author Haifeng Li
  */
 public class KernelMachine<T> implements Regression<T> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The kernel function.

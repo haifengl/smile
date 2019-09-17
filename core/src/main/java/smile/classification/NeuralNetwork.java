@@ -108,7 +108,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class NeuralNetwork extends AbstractNeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NeuralNetwork.class);
 
     /**

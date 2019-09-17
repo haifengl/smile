@@ -92,64 +92,6 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
      * Projected class mean vectors.
      */
     private final double[][] smu;
-
-    /**
-     * Trainer for Fisher's linear discriminant.
-     */
-    public static class Trainer extends ClassifierTrainer<double[]> {
-        /**
-         * The dimensionality of mapped space.
-         */
-        private int L = -1;
-        /**
-         * A tolerance to decide if a covariance matrix is singular. The trainer
-         * will reject variables whose variance is less than tol<sup>2</sup>.
-         */
-        private double tol = 1E-4;
-
-        /**
-         * Constructor. The dimensionality of mapped space will be k - 1,
-         * where k is the number of classes of data. The default tolerance
-         * to covariance matrix singularity is 1E-4.
-         */
-        public Trainer() {
-
-        }
-        
-        /**
-         * Sets the dimensionality of mapped space.
-         * 
-         * @param L the dimensionality of mapped space.
-         */
-        public Trainer setDimension(int L) {
-            if (L < 1) {
-                throw new IllegalArgumentException("Invalid mapping space dimension: " + L);
-            }
-
-            this.L = L;
-            return this;
-        }
-        
-        /**
-         * Sets covariance matrix singular tolerance.
-         * 
-         * @param tol a tolerance to decide if a covariance matrix is singular.
-         * The trainer will reject variables whose variance is less than tol<sup>2</sup>.
-         */
-        public Trainer setTolerance(double tol) {
-            if (tol < 0.0) {
-                throw new IllegalArgumentException("Invalid tol: " + tol);
-            }
-
-            this.tol = tol;
-            return this;
-        }
-        
-        @Override
-        public FLD train(double[][] x, int[] y) {
-            return new FLD(x, y, L, tol);
-        }
-    }
     
     /**
      * Constructor. Learn Fisher's linear discriminant.

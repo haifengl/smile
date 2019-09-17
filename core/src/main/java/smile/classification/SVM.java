@@ -86,7 +86,7 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SVM.class);
 
     /**
@@ -1140,7 +1140,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
     }
 
     @Override
-    public void learn(T x, int y) {
+    public void update(T x, int y) {
         learn(x, y, 1.0);
     }
 

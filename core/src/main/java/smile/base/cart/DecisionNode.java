@@ -53,21 +53,6 @@ public class DecisionNode extends LeafNode {
         return count;
     }
 
-    /**
-     * Adds some samples of class to the node.
-     * @param c the class
-     * @param s the number of samples.
-     */
-    public void add(int c, int s) {
-        count[c] += s;
-    }
-
-    /** Calculates the output. */
-    public void calculateOutput() {
-        output = MathEx.whichMax(count);
-        size = MathEx.sum(count);
-    }
-
     @Override
     public String toDot(StructType schema, int id) {
         return String.format(" %d [label=<class = %d>, fillcolor=\"#00000000\", shape=ellipse];\n", id, output);

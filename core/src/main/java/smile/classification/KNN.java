@@ -87,40 +87,6 @@ public class KNN<T> implements SoftClassifier<T> {
      * The number of classes.
      */
     private int c;
-
-    /**
-     * Trainer for KNN classifier.
-     */
-    public static class Trainer<T> extends ClassifierTrainer<T> {
-        /**
-         * The number of neighbors.
-         */
-        private int k;
-        /**
-         * The distance functor.
-         */
-        private Distance<T> distance;
-
-        /**
-         * Constructor.
-         * 
-         * @param distance the distance metric functor.
-         * @param k the number of neighbors.
-         */
-        public Trainer(Distance<T> distance, int k) {
-            if (k < 1) {
-                throw new IllegalArgumentException("Invalid k of k-NN: " + k);
-            }
-            
-            this.distance = distance;
-            this.k = k;
-        }
-        
-        @Override
-        public KNN<T> train(T[] x, int[] y) {
-            return new KNN<>(x, y, distance, k);
-        }
-    }
     
     /**
      * Constructor.

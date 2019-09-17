@@ -47,6 +47,12 @@ public abstract class Split {
      */
     final int hi;
 
+    /** The number of samples in true branch. */
+    final int trueCount;
+
+    /** The number of samples in false branch. */
+    final int falseCount;
+
     /** The parent node of the leaf to be split. */
     InternalNode parent;
 
@@ -56,13 +62,14 @@ public abstract class Split {
     boolean[] pure;
 
     /** Constructor. */
-    public Split(LeafNode leaf, int feature, double score, int lo, int hi) {
+    public Split(LeafNode leaf, int feature, double score, int lo, int hi, int trueCount, int falseCount) {
         this.leaf = leaf;
         this.feature = feature;
         this.score = score;
         this.lo = lo;
         this.hi = hi;
-        this.pure =  pure;
+        this.trueCount = trueCount;
+        this.falseCount = falseCount;
     }
 
     /**

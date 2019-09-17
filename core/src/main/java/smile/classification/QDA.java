@@ -78,58 +78,6 @@ public class QDA implements SoftClassifier<double[]> {
      * Eigen values of each covariance matrix.
      */
     private final double[][] ev;
-
-    /**
-     * Trainer for quadratic discriminant analysis.
-     */
-    public static class Trainer extends ClassifierTrainer<double[]> {
-        /**
-         * A priori probabilities of each class.
-         */
-        private double[] priori;
-        /**
-         * A tolerance to decide if a covariance matrix is singular. The trainer
-         * will reject variables whose variance is less than tol<sup>2</sup>.
-         */
-        private double tol = 1E-4;
-
-        /**
-         * Constructor. The default tolerance to covariance matrix singularity
-         * is 1E-4.
-         */
-        public Trainer() {
-
-        }
-        
-        /**
-         * Sets a priori probabilities of each class.
-         * @param priori a priori probabilities of each class.
-         */
-        public Trainer setPriori(double[] priori) {
-            this.priori = priori;
-            return this;
-        }
-        
-        /**
-         * Sets covariance matrix singularity tolerance.
-         * 
-         * @param tol a tolerance to decide if a covariance matrix is singular.
-         * The trainer will reject variables whose variance is less than tol<sup>2</sup>.
-         */
-        public Trainer setTolerance(double tol) {
-            if (tol < 0.0) {
-                throw new IllegalArgumentException("Invalid tol: " + tol);
-            }
-
-            this.tol = tol;
-            return this;
-        }
-        
-        @Override
-        public QDA train(double[][] x, int[] y) {
-            return new QDA(x, y, priori, tol);
-        }
-    }
     
     /**
      * Learn quadratic discriminant analysis.

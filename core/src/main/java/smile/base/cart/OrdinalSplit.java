@@ -34,8 +34,8 @@ public class OrdinalSplit extends Split {
     final IntPredicate predicate;
 
     /** Constructor. */
-    public OrdinalSplit(LeafNode leaf, int feature, double value, double score, int lo, int hi, IntPredicate predicate) {
-        super(leaf, feature, score, lo, hi);
+    public OrdinalSplit(LeafNode leaf, int feature, double value, double score, int lo, int hi, int trueCount, int falseCount, IntPredicate predicate) {
+        super(leaf, feature, score, lo, hi, trueCount, falseCount);
         this.value = value;
         this.predicate = predicate;
     }

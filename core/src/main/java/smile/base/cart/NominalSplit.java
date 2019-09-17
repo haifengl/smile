@@ -34,8 +34,8 @@ public class NominalSplit extends Split {
     final IntPredicate predicate;
 
     /** Constructor. */
-    public NominalSplit(LeafNode leaf, int feature, int value, double score, int lo, int hi, IntPredicate predicate) {
-        super(leaf, feature, score, lo, hi);
+    public NominalSplit(LeafNode leaf, int feature, int value, double score, int lo, int hi, int trueCount, int falseCount, IntPredicate predicate) {
+        super(leaf, feature, score, lo, hi, trueCount, falseCount);
         this.value = value;
         this.predicate = predicate;
     }
