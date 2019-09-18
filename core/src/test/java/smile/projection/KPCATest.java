@@ -17,17 +17,19 @@
 
 package smile.projection;
 
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.io.Arff;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
+import smile.util.Paths;
+
 import static org.junit.Assert.*;
 
 /**
@@ -219,20 +221,19 @@ public class KPCATest {
     /**
      * Test of learn method, of class PCA.
      */
-    @Test
-    public void testKPCAThreshold() {
+    @Test(expected = Test.None.class)
+    public void testKPCAThreshold() throws Exception {
         System.out.println("learn threshold");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.util.Paths.getTestData("weka/iris.arff"));
+        Arff arff = new Arff(Paths.getTestData("weka/cpu.arff"));
+        DataFrame cpu = arff.read();
+        Formula formula = Formula.lhs("class");
+        double[][] x = formula.frame(cpu).toArray();
 
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(Math.sqrt(2.5)), 1E-4);
-            assertTrue(MathEx.equals(latent, kpca.getVariances(), 1E-3));
-            double[][] points = kpca.project(x);
-            points[0] = kpca.project(x[0]);
-            assertTrue(MathEx.equals(points, kpca.getCoordinates(), 1E-7));
+        KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(Math.sqrt(2.5)), 1E-4);
+        assertTrue(MathEx.equals(latent, kpca.getVariances(), 1E-3));
+        double[][] points = kpca.project(x);
+        points[0] = kpca.project(x[0]);
+        assertTrue(MathEx.equals(points, kpca.getCoordinates(), 1E-7));
 /*
             for (int j = 0; j < points[0].length; j++) {
                 double sign = Math.signum(points[0][j] / scores[0][j]);
@@ -243,28 +244,25 @@ public class KPCATest {
 
             assertTrue(Math.equals(scores, points, 1E-1));
  */
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
     }
 
     /**
      * Test of learn method, of class PCA.
      */
-    @Test
-    public void testKPCAK() {
+    @Test(expected = Test.None.class)
+    public void testKPCAK() throws Exception {
         System.out.println("learn k");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.util.Paths.getTestData("weka/iris.arff"));
 
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(Math.sqrt(2.5)), 29);
-            assertTrue(MathEx.equals(latent, kpca.getVariances(), 1E-3));
-            double[][] points = kpca.project(x);
-            points[0] = kpca.project(x[0]);
-            assertTrue(MathEx.equals(points, kpca.getCoordinates(), 1E-7));
+        Arff arff = new Arff(Paths.getTestData("weka/cpu.arff"));
+        DataFrame cpu = arff.read();
+        Formula formula = Formula.lhs("class");
+        double[][] x = formula.frame(cpu).toArray();
+
+        KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(Math.sqrt(2.5)), 29);
+        assertTrue(MathEx.equals(latent, kpca.getVariances(), 1E-3));
+        double[][] points = kpca.project(x);
+        points[0] = kpca.project(x[0]);
+        assertTrue(MathEx.equals(points, kpca.getCoordinates(), 1E-7));
 /*
             for (int j = 0; j < points[0].length; j++) {
                 double sign = Math.signum(points[0][j] / scores[0][j]);
@@ -275,8 +273,5 @@ public class KPCATest {
 
             assertTrue(Math.equals(scores, points, 1E-1));
  */
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
     }
 }

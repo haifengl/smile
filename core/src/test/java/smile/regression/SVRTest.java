@@ -17,9 +17,10 @@
 
 package smile.regression;
 
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.io.Arff;
 import smile.math.kernel.PolynomialKernel;
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -27,6 +28,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.math.MathEx;
+import smile.util.Paths;
 import smile.validation.CrossValidation;
 
 /**
@@ -57,39 +59,22 @@ public class SVRTest {
     /**
      * Test of learn method, of class SVR.
      */
-    @Test
-    public void testCPU() {
+    @Test(expected = Test.None.class)
+    public void testCPU() throws Exception {
         System.out.println("CPU");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(6);
-        try {
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/cpu.arff"));
-            double[] datay = data.toArray(new double[data.size()]);
-            double[][] datax = data.toArray(new double[data.size()][]);
-            MathEx.standardize(datax);
 
-            int n = datax.length;
-            int k = 10;
+        Arff arff = new Arff(Paths.getTestData("weka/cpu.arff"));
+        DataFrame cpu = arff.read();
+        Formula formula = Formula.lhs("class");
 
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
+        double[][] x = formula.frame(cpu).toArray();
+        double[] y = formula.response(cpu).toDoubleArray();
+        MathEx.standardize(x);
 
-                SVR<double[]> svr = new SVR<>(trainx, trainy, new PolynomialKernel(3, 1.0, 1.0), 0.1, 1.0);
+        SVR<double[]> svr = new SVR<>(new PolynomialKernel(3, 1.0, 1.0), 0.1, 1.0, 1E-3);
+        CrossValidation cv = new CrossValidation(x.length, 10);
+        double rss = cv.test(x, y, (xi, yi) -> svr.fit(xi, yi));
 
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - svr.predict(testx[j]);
-                    rss += r * r;
-                }
-            }
-
-            System.out.println("10-CV RMSE = " + Math.sqrt(rss / n));
-         } catch (Exception ex) {
-             System.err.println(ex);
-         }
+        System.out.println("10-CV RMSE = " + rss);
     }
 }

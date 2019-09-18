@@ -17,17 +17,25 @@
 
 package smile.neighbor;
 
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
+
+import org.apache.commons.csv.CSVFormat;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
+import smile.io.CSV;
 import smile.math.distance.EuclideanDistance;
+import smile.util.Paths;
 
 /**
  *
@@ -38,19 +46,22 @@ public class CoverTreeSpeedTest {
     double[][] testx = null;
     CoverTree<double[]> coverTree = null;
 
-    public CoverTreeSpeedTest() {
+    public CoverTreeSpeedTest() throws IOException {
         long start = System.currentTimeMillis();
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.util.Paths.getTestData("usps/zip.test"));
+        ArrayList<StructField> fields = new ArrayList<>();
+        fields.add(new StructField("class", DataTypes.ByteType));
+        IntStream.range(0, 256).forEach(i -> fields.add(new StructField("V"+i, DataTypes.ByteType)));
+        StructType schema = DataTypes.struct(fields);
 
-            x = train.toArray(new double[train.size()][]);
-            testx = test.toArray(new double[test.size()][]);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
+        csv.schema(schema);
+
+        DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
+        DataFrame test = csv.read(Paths.getTestData("usps/zip.test"));
+        Formula formula = Formula.lhs("class");
+
+        x = formula.frame(train).toArray();
+        testx = formula.frame(test).toArray();
 
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Loading data: %.2fs%n", time);

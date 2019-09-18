@@ -70,6 +70,6 @@ public class RandomProjectionTest {
             System.out.println();
         }
 
-        assertTrue(MathEx.equals(Matrix.eye(40).array(), t.array(), 1E-10));
+        assertTrue(MathEx.equals(Matrix.eye(40).data(), t.data(), 1E-10));
     }
 }

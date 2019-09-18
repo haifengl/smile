@@ -168,7 +168,7 @@ public class GHATest {
 
         double[][] lt = MathEx.transpose(loadings);
         double[] evdot = new double[k];
-        double[][] pa = p.array();
+        double[][] pa = p.toArray();
         System.out.println("Dot products of learned eigenvectors to true eigenvectors:");
         for (int i = 0; i < k; i++) {
             evdot[i] = MathEx.dot(lt[i], pa[i]);

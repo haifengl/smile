@@ -139,7 +139,7 @@ public class FPGrowthTest {
         List<int[]> dataList = new ArrayList<>(1000);
 
         try {
-            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("transaction/pima.D38.N768.C2");
+            BufferedReader input = smile.util.Paths.getTestData("transaction/pima.D38.N768.C2");
 
             String line;
             for (int nrow = 0; (line = input.readLine()) != null; nrow++) {

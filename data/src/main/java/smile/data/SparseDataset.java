@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+
 import smile.math.MathEx;
 import smile.math.SparseArray;
 import smile.math.matrix.SparseMatrix;
@@ -166,6 +168,11 @@ public interface SparseDataset extends Dataset<SparseArray> {
      */
     static SparseDataset of(Collection<SparseArray> data, int ncols) {
         return new SparseDatasetImpl(data, ncols);
+    }
+
+    /** Strips the response variable and returns a SparseDataset. */
+    static SparseDataset of(Dataset<Instance<SparseArray>> data) {
+        return of(data.stream().map(i -> i.x()).collect(Collectors.toList()));
     }
 
     /**
