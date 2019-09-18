@@ -74,21 +74,18 @@ public class LASSO {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param lambda the shrinkage/regularization parameter.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
-        Properties prop = new Properties();
-        prop.setProperty("lambda", Double.toString(lambda));
-        return fit(formula, data, prop);
+    public static LinearModel fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Properties());
     }
 
     /**
      * Fits a L1-regularized least squares model. The hyper-parameters in <code>prop</code> include
      * <ul>
-     * <li><code>lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
+     * <li><code>smile.lasso.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
      *               Choosing an appropriate value of lambda is important, and also difficult.
-     * <li><code>tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
-     * <li><code>max.iterations</code> is the maximum number of IPM (Newton) iterations.
+     * <li><code>smile.lasso.tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
+     * <li><code>smile.lasso.max.iterations</code> is the maximum number of IPM (Newton) iterations.
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -96,6 +93,33 @@ public class LASSO {
      * @param prop Training algorithm hyper-parameters and properties.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
+        double lambda = Double.valueOf(prop.getProperty("smile.lasso.lambda", "1"));
+        double tol = Double.valueOf(prop.getProperty("smile.lasso.tolerance", "1E-4"));
+        int maxIter = Integer.valueOf(prop.getProperty("smile.lasso.max.iterations", "1000"));
+        return fit(formula, data, lambda, tol, maxIter);
+    }
+
+    /**
+     * Fits a L1-regularized least squares model.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
+     * @param lambda the shrinkage/regularization parameter.
+     */
+    public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
+        return fit(formula, data, lambda, 1E-4, 1000);
+    }
+
+    /**
+     * Fits a L1-regularized least squares model.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
+     * @param lambda the shrinkage/regularization parameter.
+     * @param tol the tolerance for stopping iterations (relative target duality gap).
+     * @param maxIter the maximum number of IPM (Newton) iterations.
+     */
+    public static LinearModel fit(Formula formula, DataFrame data, double lambda, double tol, int maxIter) {
         DenseMatrix X = formula.matrix(data, false);
         double[] y = formula.response(data).toDoubleArray();
 
@@ -110,7 +134,7 @@ public class LASSO {
 
         DenseMatrix scaledX = X.scale(center, scale);
 
-        LinearModel model = train(scaledX, y, prop);
+        LinearModel model = train(scaledX, y, lambda, tol, maxIter);
         model.names = formula.predictors();
         model.formula = formula;
 
@@ -129,11 +153,7 @@ public class LASSO {
         return model;
     }
 
-    static LinearModel train(Matrix x, double[] y, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("lambda"));
-        double tol = Double.valueOf(prop.getProperty("tolerance", "1E-4"));
-        int maxIter = Integer.valueOf(prop.getProperty("max.iterations", "1000"));
-
+    static LinearModel train(Matrix x, double[] y, double lambda, double tol, int maxIter) {
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);
         }

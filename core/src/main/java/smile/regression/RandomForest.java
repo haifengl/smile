@@ -19,6 +19,7 @@ package smile.regression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import smile.base.cart.CART;
@@ -115,10 +116,35 @@ public class RandomForest implements Regression<Tuple> {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     */
+    public static RandomForest fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Properties());
+    }
+
+    /**
+     * Constructor. Learns a random forest for regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static RandomForest fit(Formula formula, DataFrame data, Properties prop) {
+        int ntrees = Integer.valueOf(prop.getProperty("smile.random.forest.trees", "500"));
+        int mtry = Integer.valueOf(prop.getProperty("smile.random.forest.mtry", "-1"));
+        int nodeSize = Integer.valueOf(prop.getProperty("smile.random.forest.node.size", "5"));
+        int maxNodes = Integer.valueOf(prop.getProperty("smile.random.forest.max.nodes", "100"));
+        double subsample = Double.valueOf(prop.getProperty("smile.random.forest.sample.rate", "1.0"));
+        return fit(formula, data, ntrees, mtry, nodeSize, maxNodes, subsample);
+    }
+
+    /**
+     * Constructor. Learns a random forest for regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
      * @param ntrees the number of trees.
      * @param mtry the number of input variables to be used to determine the decision
      * at a node of the tree. p/3 seems to give generally good performance,
-     * where dim is the number of variables.
+     * where p is the number of variables.
      * @param nodeSize the number of instances in a node below which the tree will
      * not split, setting nodeSize = 5 generally gives good results.
      * @param maxNodes the maximum number of leaf nodes in the tree.
@@ -145,9 +171,11 @@ public class RandomForest implements Regression<Tuple> {
         DataFrame x = formula.frame(data);
         BaseVector y = formula.response(data);
 
-        if (mtry < 1 || mtry > x.ncols()) {
+        if (mtry > x.ncols()) {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
         }
+
+        final int mtry2 = mtry > 0 ? mtry : Math.max(x.ncols()/3, 1);
 
         final int n = x.nrows();
         double[] prediction = new double[n];
@@ -170,7 +198,7 @@ public class RandomForest implements Regression<Tuple> {
                 IntStream.range(0, (int) Math.round(n * subsample)).forEach(i -> samples[perm[i]]++);
             }
 
-            RegressionTree tree = new RegressionTree(x, y, nodeSize, maxNodes, mtry, samples, order, output);
+            RegressionTree tree = new RegressionTree(x, y, nodeSize, maxNodes, mtry2, samples, order, output);
 
             IntStream.range(0, n).filter(i -> samples[i] == 0).forEach(i -> {
                 double pred = tree.predict(x.get(i));

@@ -60,11 +60,7 @@ public interface Classifier<T> extends Serializable {
      * @return the predicted class labels.
      */
     default int[] predict(T[] x) {
-        int[] y = new int[x.length];
-        for (int i = 0; i < y.length; i++) {
-            y[i] = predict(x[i]);
-        }
-        return y;
+        return Arrays.stream(x).mapToInt(xi -> predict(xi)).toArray();
     }
 
     /** Returns the unique classes of sample labels. */

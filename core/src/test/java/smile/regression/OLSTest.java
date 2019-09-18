@@ -96,7 +96,7 @@ public class OLSTest {
         assertEquals(0.9877, model.adjustedRSquared(), 1E-4);
         assertEquals(202.5094, model.ftest(), 1E-4);
         assertEquals(4.42579E-9, model.pvalue(), 1E-14);
-        
+
         double[][] w = {
                 {   0.26353,    0.10815,   2.437,   0.0376},
                 {   0.03648,    0.03024,   1.206,   0.2585},

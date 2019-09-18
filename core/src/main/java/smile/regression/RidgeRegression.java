@@ -72,21 +72,17 @@ public class RidgeRegression {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param lambda the shrinkage/regularization parameter. Large lambda means more shrinkage.
-     *               Choosing an appropriate value of lambda is important, and also difficult.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
-        Properties prop = new Properties();
-        prop.setProperty("lambda", Double.toString(lambda));
-        return fit(formula, data, prop);
+    public static LinearModel fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Properties());
     }
 
     /**
      * Fits a ridge regression model. The hyper-parameters in <code>prop</code> include
      * <ul>
-     * <li><code>lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
+     * <li><code>smile.ridge.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
      *               Choosing an appropriate value of lambda is important, and also difficult.
-     * <li><code>standard.error</code> is a boolean. If true, compute the estimated standard
+     * <li><code>smile.ridge.standard.error</code> is a boolean. If true, compute the estimated standard
      *     errors of the estimate of parameters
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
@@ -95,7 +91,33 @@ public class RidgeRegression {
      * @param prop Training algorithm hyper-parameters and properties.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("lambda"));
+        double lambda = Double.valueOf(prop.getProperty("lambda", "1"));
+        boolean stderr = Boolean.valueOf(prop.getProperty("smile.ols.standard.error", "true"));
+        return fit(formula, data, lambda, stderr);
+    }
+
+    /**
+     * Fits a ridge regression model.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
+     * @param lambda the shrinkage/regularization parameter. Large lambda means more shrinkage.
+     *               Choosing an appropriate value of lambda is important, and also difficult.
+     */
+    public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
+        return fit(formula, data, lambda, true);
+    }
+
+    /**
+     * Fits a ridge regression model.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
+     * @param lambda the shrinkage/regularization parameter. Large lambda means more shrinkage.
+     *               Choosing an appropriate value of lambda is important, and also difficult.
+     * @param stderr if true, compute the estimated standard errors of the estimate of parameters.
+     */
+    public static LinearModel fit(Formula formula, DataFrame data, double lambda, boolean stderr) {
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);
         }
@@ -150,7 +172,7 @@ public class RidgeRegression {
 
         DenseMatrix inv = cholesky.inverse();
 
-        if (prop.getProperty("standard.error", "true").equalsIgnoreCase("true")) {
+        if (stderr) {
             model.ttest = new double[p][4];
             for (int i = 0; i < p; i++) {
                 model.ttest[i][0] = model.w[i];
