@@ -27,7 +27,6 @@ import smile.data.vector.BaseVector;
 import smile.data.vector.DoubleVector;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
-import smile.util.SmileUtils;
 import smile.validation.Accuracy;
 import smile.validation.ClassificationMeasure;
 
@@ -448,7 +447,14 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
     public int size() {
         return trees.length;
     }
-    
+
+    /**
+     * Returns the regression trees.
+     */
+    public RegressionTree[] trees() {
+        return trees;
+    }
+
     /**
      * Trims the tree model set to a smaller size in case of over-fitting.
      * Or if extra decision trees in the model don't improve the performance,
@@ -653,12 +659,5 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         }
         
         return results;
-    }
-
-    /**
-     * Returns the regression trees.
-     */
-    public RegressionTree[] getTrees() {
-        return trees;
     }
 }

@@ -18,6 +18,7 @@
 package smile.regression;
 
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.base.cart.*;
 import smile.data.DataFrame;
@@ -139,10 +140,12 @@ public class GradientTreeBoost implements Regression<Tuple> {
      * Forest of regression trees.
      */
     private RegressionTree[] trees;
+
     /**
      * The intercept.
      */
     private double b = 0.0;
+
     /**
      * Variable importance. Every time a split of a node is made on variable
      * the impurity criterion for the two descendent nodes is less than the
@@ -150,29 +153,55 @@ public class GradientTreeBoost implements Regression<Tuple> {
      * all trees in the forest gives a simple variable importance.
      */
     private double[] importance;
-    /**
-     * Loss function.
-     */
-    private Loss loss = Loss.LeastAbsoluteDeviation;
+
     /**
      * The shrinkage parameter in (0, 1] controls the learning rate of procedure.
      */
     private double shrinkage = 0.005;
-    /**
-     * The number of leaves in each tree.
-     */
-    private int maxNodes = 6;
-    /**
-     * The number of trees.
-     */
-    private int ntrees = 500;
-    /**
-     * The sampling rate for stochastic tree boosting.
-     */
-    private double subsample = 0.7;
 
     /**
      * Constructor. Learns a gradient tree boosting for regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param trees forest of regression trees.
+     * @param b the intercept
+     * @param importance variable importance
+     */
+    public GradientTreeBoost(Formula formula, RegressionTree[] trees, double b, double shrinkage, double[] importance) {
+        this.formula = formula;
+        this.trees = trees;
+        this.b = b;
+        this.shrinkage = shrinkage;
+        this.importance = importance;
+    }
+
+    /**
+     * Learns a gradient tree boosting for regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static GradientTreeBoost fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Properties());
+    }
+
+    /**
+     * Learns a gradient tree boosting for regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static GradientTreeBoost fit(Formula formula, DataFrame data, Properties prop) {
+        int ntrees = Integer.valueOf(prop.getProperty("smile.gbt.trees", "500"));
+        Loss loss = Loss.valueOf(prop.getProperty("smile.gbt.loss", "LeastAbsoluteDeviation"));
+        int maxNodes = Integer.valueOf(prop.getProperty("smile.gbt.max.nodes", "6"));
+        double shrinkage = Double.valueOf(prop.getProperty("smile.gbt.shrinkage", "0.005"));
+        double subsample = Double.valueOf(prop.getProperty("smile.gbt.sample.rate", "0.7"));
+        return fit(formula, data, loss, ntrees, maxNodes, shrinkage, subsample);
+    }
+
+    /**
+     * Learns a gradient tree boosting for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -183,7 +212,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
      */
-    public GradientTreeBoost(Formula formula, DataFrame data, Loss loss, int ntrees, int maxNodes, double shrinkage, double subsample) {
+    public static GradientTreeBoost fit(Formula formula, DataFrame data, Loss loss, int ntrees, int maxNodes, double shrinkage, double subsample) {
         if (shrinkage <= 0 || shrinkage > 1) {
             throw new IllegalArgumentException("Invalid shrinkage: " + shrinkage);            
         }
@@ -191,13 +220,6 @@ public class GradientTreeBoost implements Regression<Tuple> {
         if (subsample <= 0 || subsample > 1) {
             throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
         }
-
-        this.formula = formula;
-        this.loss = loss;
-        this.ntrees = ntrees;
-        this.maxNodes = maxNodes;
-        this.shrinkage = shrinkage;
-        this.subsample = subsample;
 
         DataFrame x = formula.frame(data);
         double[] y = formula.response(data).toDoubleArray();
@@ -213,6 +235,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
         double[] response = null; // response variable for regression tree.
         
         RegressionNodeOutput output = null;
+        double b = 0.0;
         if (loss == Loss.LeastSquares) {
             output = new LeastSquaresNodeOutput(residual);
             response = residual;
@@ -237,8 +260,8 @@ public class GradientTreeBoost implements Regression<Tuple> {
                 residual[i] = y[i] - b;
             }
         }
-        
-        trees = new RegressionTree[ntrees];
+
+        RegressionTree[] trees = new RegressionTree[ntrees];
 
         for (int m = 0; m < ntrees; m++) {
             Arrays.fill(samples, 0);
@@ -259,13 +282,15 @@ public class GradientTreeBoost implements Regression<Tuple> {
             }
         }
         
-        importance = new double[x.ncols()];
+        double[] importance = new double[x.ncols()];
         for (RegressionTree tree : trees) {
             double[] imp = tree.importance();
             for (int i = 0; i < imp.length; i++) {
                 importance[i] += imp[i];
             }
         }
+
+        return new GradientTreeBoost(formula, trees, b, shrinkage, importance);
     }
 
     /**
@@ -279,30 +304,6 @@ public class GradientTreeBoost implements Regression<Tuple> {
      */
     public double[] importance() {
         return importance;
-    }
-    
-    /**
-     * Returns the sampling rate for stochastic gradient tree boosting.
-     * @return the sampling rate for stochastic gradient tree boosting.
-     */
-    public double getSamplingRate() {
-        return subsample;
-    }
-  
-    /**
-     * Returns the maximum number of leaves in decision tree.
-     * @return the maximum number of leaves in decision tree.
-     */
-    public int getmaxNodes() {
-        return maxNodes;
-    }
-    
-    /**
-     * Returns the loss function.
-     * @return the loss function.
-     */
-    public Loss getLossFunction() {
-        return loss;
     }
     
     /**
@@ -331,17 +332,14 @@ public class GradientTreeBoost implements Regression<Tuple> {
             throw new IllegalArgumentException("Invalid new model size: " + ntrees);
         }
         
-        if (ntrees < trees.length) {
-            trees = Arrays.copyOf(trees, ntrees);
-            this.ntrees = ntrees;
-        }
+        trees = Arrays.copyOf(trees, ntrees);
     }
     
     @Override
     public double predict(Tuple x) {
         double y = b;
-        for (int i = 0; i < ntrees; i++) {
-            y += shrinkage * trees[i].predict(x);
+        for (RegressionTree tree : trees) {
+            y += shrinkage * tree.predict(x);
         }
         
         return y;
@@ -357,6 +355,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
         DataFrame x = formula.frame(data);
         double[] y = formula.response(data).toDoubleArray();
 
+        int ntrees = trees.length;
         double[] rmse = new double[ntrees];
 
         int n = x.nrows();
@@ -387,6 +386,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
         DataFrame x = formula.frame(data);
         double[] y = formula.response(data).toDoubleArray();
 
+        int ntrees = trees.length;
         int m = measures.length;
         double[][] results = new double[ntrees][m];
 
@@ -409,7 +409,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
     /**
      * Returns the regression trees.
      */
-    public RegressionTree[] getTrees() {
+    public RegressionTree[] trees() {
         return trees;
     }
 }

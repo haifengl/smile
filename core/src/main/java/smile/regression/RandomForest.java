@@ -83,7 +83,7 @@ public class RandomForest implements Regression<Tuple> {
     /**
      * Forest of regression trees.
      */
-    private List<RegressionTree> trees;
+    private RegressionTree[] trees;
 
     /**
      * Out-of-bag estimation of RMSE, which is quite accurate given that
@@ -103,8 +103,12 @@ public class RandomForest implements Regression<Tuple> {
 
     /**
      * Constructor.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param trees forest of regression trees.
+     * @param error out-of-bag estimation of RMSE
+     * @param importance variable importance
      */
-    public RandomForest(Formula formula, List<RegressionTree> trees, double error, double[] importance) {
+    public RandomForest(Formula formula, RegressionTree[] trees, double error, double[] importance) {
         this.formula = formula;
         this.trees = trees;
         this.error = error;
@@ -112,7 +116,7 @@ public class RandomForest implements Regression<Tuple> {
     }
 
     /**
-     * Constructor. Learns a random forest for regression.
+     * Learns a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -122,7 +126,7 @@ public class RandomForest implements Regression<Tuple> {
     }
 
     /**
-     * Constructor. Learns a random forest for regression.
+     * Learns a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -137,7 +141,7 @@ public class RandomForest implements Regression<Tuple> {
     }
 
     /**
-     * Constructor. Learns a random forest for regression.
+     * Learns a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -184,7 +188,7 @@ public class RandomForest implements Regression<Tuple> {
         final RegressionNodeOutput output = new LeastSquaresNodeOutput(y.toDoubleArray());
         final int[][] order = CART.order(x);
 
-        List<RegressionTree> trees = IntStream.range(0, ntrees).parallel().mapToObj(t -> {
+        RegressionTree[] trees = IntStream.range(0, ntrees).parallel().mapToObj(t -> {
             final int[] samples = new int[n];
 
             if (subsample == 1.0) {
@@ -207,7 +211,7 @@ public class RandomForest implements Regression<Tuple> {
             });
 
             return tree;
-        }).collect(Collectors.toList());
+        }).toArray(RegressionTree[]::new);
 
         int m = 0;
         double error = 0.0;
@@ -235,18 +239,22 @@ public class RandomForest implements Regression<Tuple> {
             throw new IllegalArgumentException("RandomForest have different sizes of feature vectors");
         }
 
-        ArrayList<RegressionTree> mergedTrees = new ArrayList<>();
-        mergedTrees.addAll(this.trees);
-        mergedTrees.addAll(other.trees);
+        RegressionTree[] forest = new RegressionTree[trees.length + other.trees.length];
+        System.arraycopy(trees, 0, forest, 0, trees.length);
+        System.arraycopy(other.trees, 0, forest, trees.length, other.trees.length);
 
-        double weightedMergedError = ((this.error * this.trees.size()) + (other.error * other.trees.size())) / (this.trees.size() + other.trees.size());
-        double[] mergedImportance = calculateImportance(mergedTrees);
+        double mergedError = (this.error * other.error) / 2; // rough estimation
+        double[] mergedImportance = importance.clone();
+        for (int i = 0; i < importance.length; i++) {
+            mergedImportance[i] += other.importance[i];
+        }
 
-        return new RandomForest(formula, mergedTrees, weightedMergedError, mergedImportance);
+        return new RandomForest(formula, forest, mergedError, mergedImportance);
     }
 
-    private static double[] calculateImportance(List<RegressionTree> trees) {
-        double[] importance = new double[trees.get(0).importance().length];
+    /** Returns the sum of importance of all trees. */
+    private static double[] calculateImportance(RegressionTree[] trees) {
+        double[] importance = new double[trees[0].importance().length];
         for (RegressionTree tree : trees) {
             double[] imp = tree.importance();
             for (int i = 0; i < imp.length; i++) {
@@ -287,9 +295,16 @@ public class RandomForest implements Regression<Tuple> {
      * @return the number of trees in the model 
      */
     public int size() {
-        return trees.size();
+        return trees.length;
     }
-    
+
+    /**
+     * Returns the regression trees.
+     */
+    public RegressionTree[] trees() {
+        return trees;
+    }
+
     /**
      * Trims the tree model set to a smaller size in case of over-fitting.
      * Or if extra decision trees in the model don't improve the performance,
@@ -299,7 +314,7 @@ public class RandomForest implements Regression<Tuple> {
      * @param ntrees the new (smaller) size of tree model set.
      */
     public void trim(int ntrees) {
-        if (ntrees > trees.size()) {
+        if (ntrees > trees.length) {
             throw new IllegalArgumentException("The new model size is larger than the current size.");
         }
         
@@ -307,11 +322,8 @@ public class RandomForest implements Regression<Tuple> {
             throw new IllegalArgumentException("Invalid new model size: " + ntrees);
         }
         
-        List<RegressionTree> model = new ArrayList<>(ntrees);
-        for (int i = 0; i < ntrees; i++) {
-            model.add(trees.get(i));
-        }
-        
+        RegressionTree[] model = new RegressionTree[ntrees];
+        System.arraycopy(trees, 0, model, 0, ntrees);
         trees = model;
     }
     
@@ -322,7 +334,7 @@ public class RandomForest implements Regression<Tuple> {
             y += tree.predict(x);
         }
         
-        return y / trees.size();
+        return y / trees.length;
     }
     
     /**
@@ -335,8 +347,7 @@ public class RandomForest implements Regression<Tuple> {
         DataFrame x = formula.frame(data);
         double[] y = formula.response(data).toDoubleArray();
 
-        int T = trees.size();
-        double[] rmse = new double[T];
+        double[] rmse = new double[trees.length];
 
         int n = x.nrows();
         double[] sum = new double[n];
@@ -344,9 +355,9 @@ public class RandomForest implements Regression<Tuple> {
 
         RMSE measure = new RMSE();
         
-        for (int i = 0, nt = 1; i < T; i++, nt++) {
+        for (int i = 0, nt = 1; i < trees.length; i++, nt++) {
             for (int j = 0; j < n; j++) {
-                sum[j] += trees.get(i).predict(x.get(j));
+                sum[j] += trees[i].predict(x.get(j));
                 prediction[j] = sum[j] / nt;
             }
 
@@ -367,17 +378,16 @@ public class RandomForest implements Regression<Tuple> {
         DataFrame x = formula.frame(data);
         double[] y = formula.response(data).toDoubleArray();
 
-        int T = trees.size();
         int m = measures.length;
-        double[][] results = new double[T][m];
+        double[][] results = new double[trees.length][m];
 
         int n = x.nrows();
         double[] sum = new double[n];
         double[] prediction = new double[n];
 
-        for (int i = 0, nt = 1; i < T; i++, nt++) {
+        for (int i = 0, nt = 1; i < trees.length; i++, nt++) {
             for (int j = 0; j < n; j++) {
-                sum[j] += trees.get(i).predict(x.get(j));
+                sum[j] += trees[i].predict(x.get(j));
                 prediction[j] = sum[j] / nt;
             }
 
@@ -386,12 +396,5 @@ public class RandomForest implements Regression<Tuple> {
             }
         }
         return results;
-    }
-
-    /**
-     * Returns the regression trees.
-     */
-    public RegressionTree[] getTrees() {
-        return trees.toArray(new RegressionTree[trees.size()]);
     }
 }
