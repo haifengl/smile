@@ -39,14 +39,14 @@ public class StructType implements DataType {
     /**
      * Constructor.
      */
-    StructType(List<StructField> fields) {
+    public StructType(List<StructField> fields) {
         this(fields.toArray(new StructField[fields.size()]));
     }
 
     /**
      * Constructor.
      */
-    StructType(StructField... fields) {
+    public StructType(StructField... fields) {
         this.fields = fields;
         index = new HashMap<>(fields.length * 4 / 3);
         for (int i = 0; i < fields.length; i++) {

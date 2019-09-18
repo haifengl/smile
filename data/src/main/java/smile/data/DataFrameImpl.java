@@ -653,6 +653,101 @@ class DataFrameImpl implements DataFrame {
         return m;
     }
 
+    @Override
+    public double[][] toArray() {
+        int nrows = nrows();
+        int ncols = ncols();
+        DataType[] types = types();
+
+        double[][] m = new double[nrows][ncols];
+        for (int j = 0; j < ncols; j++) {
+            DataType type = types[j];
+            switch (type.id()) {
+                case Double: {
+                    DoubleVector v = doubleVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getDouble(i);
+                    break;
+                }
+
+                case Integer: {
+                    IntVector v = intVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getInt(i);
+                    break;
+                }
+
+                case Float: {
+                    FloatVector v = floatVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getFloat(i);
+                    break;
+                }
+
+                case Long: {
+                    LongVector v = longVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getLong(i);
+                    break;
+                }
+
+                case Boolean: {
+                    BooleanVector v = booleanVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getDouble(i);
+                    break;
+                }
+
+                case Byte: {
+                    ByteVector v = byteVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getByte(i);
+                    break;
+                }
+
+                case Short: {
+                    ShortVector v = shortVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getShort(i);
+                    break;
+                }
+
+                case Char: {
+                    CharVector v = charVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getChar(i);
+                    break;
+                }
+
+                case String: {
+                    StringVector v = stringVector(j);
+                    for (int i = 0; i < nrows; i++) {
+                        String s = v.get(i);
+                        m[i][j] = s == null ? Double.NaN : Double.valueOf(s);
+                    }
+                    break;
+                }
+
+                case Object: {
+                    Class clazz = ((ObjectType) type).getObjectClass();
+                    if (clazz == Boolean.class) {
+                        Vector<Boolean> v = vector(j);
+                        for (int i = 0; i < nrows; i++) {
+                            Boolean b = v.get(i);
+                            if (b != null)
+                                m[i][j] = b.booleanValue() ? 1 : 0;
+                            else
+                                m[i][j] = Double.NaN;
+                        }
+                    } else if (Number.class.isAssignableFrom(clazz)) {
+                        Vector<?> v = vector(j);
+                        for (int i = 0; i < nrows; i++) m[i][j] = v.getDouble(i);
+                    } else {
+                        throw new UnsupportedOperationException(String.format("DataFrame.toMatrix() doesn't support type %s", type));
+                    }
+                    break;
+                }
+
+                default:
+                    throw new UnsupportedOperationException(String.format("DataFrame.toMatrix() doesn't support type %s", type));
+            }
+        }
+
+        return m;
+    }
+
     class DataFrameRow implements Tuple {
         /** Row index. */
         private int i;
