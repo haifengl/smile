@@ -198,6 +198,12 @@ class IndexDataFrame implements DataFrame {
     }
 
     @Override
+    public double[][] toArray() {
+        // Although clean, this is not optimal in term of performance.
+        return rebase().toArray();
+    }
+
+    @Override
     public DenseMatrix toMatrix() {
         // Although clean, this is not optimal in term of performance.
         return rebase().toMatrix();

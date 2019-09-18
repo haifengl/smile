@@ -639,7 +639,16 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     }
 
     /**
-     * Return the matrix obtained by converting all the variables
+     * Return an array obtained by converting all the variables
+     * in a data frame to numeric mode and then binding them together
+     * as the columns of a matrix. Nominal and ordinal variables are
+     * replaced by their internal codes. Missing values/nulls will be
+     * encoded as Double.NaN.
+     */
+    double[][] toArray();
+
+    /**
+     * Return a matrix obtained by converting all the variables
      * in a data frame to numeric mode and then binding them together
      * as the columns of a matrix. Nominal and ordinal variables are
      * replaced by their internal codes. Missing values/nulls will be
