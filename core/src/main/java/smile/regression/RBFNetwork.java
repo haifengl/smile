@@ -106,7 +106,7 @@ public class RBFNetwork<T> implements Regression<T> {
      * @param rbf the radial basis functions.
      */
     public static <T> RBFNetwork<T> fit(T[] x, double[] y, RBF<T>[] rbf) {
-        return fit(x, y, rbf);
+        return fit(x, y, rbf, false);
     }
 
     /**

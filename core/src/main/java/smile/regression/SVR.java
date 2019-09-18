@@ -130,35 +130,23 @@ public class SVR<T> {
      * Constructor.
      * @param kernel the kernel function.
      */
-    public SVR(MercerKernel<T> kernel) {
+    public SVR(MercerKernel<T> kernel, double eps, double C, double tol) {
+        if (eps <= 0) {
+            throw new IllegalArgumentException("Invalid error threshold: " + eps);
+        }
+
+        if (C < 0) {
+            throw new IllegalArgumentException("Invalid soft margin penalty: " + C);
+        }
+
+        if (tol <= 0.0) {
+            throw new IllegalArgumentException("Invalid tolerance of convergence test:" + tol);
+        }
+
         this.kernel = kernel;
-    }
-
-    /**
-     * Constructor.
-     * @param eps the loss function error threshold.
-     */
-    public SVR<T> withEpsilon(double eps) {
         this.eps = eps;
-        return this;
-    }
-
-    /**
-     * Constructor.
-     * @param C the soft margin penalty parameter.
-     */
-    public SVR<T> withC(double C) {
         this.C = C;
-        return this;
-    }
-
-    /**
-     * Constructor.
-     * @param tol the tolerance of convergence test.
-     */
-    public SVR<T> withTolerance(double tol) {
         this.tol = tol;
-        return this;
     }
 
     /**
@@ -186,19 +174,8 @@ public class SVR<T> {
             throw new IllegalArgumentException(String.format("The sizes of X and instance weight don't match: %d != %d", x.length, weight.length));
         }
 
-        if (eps <= 0) {
-            throw new IllegalArgumentException("Invalid error threshold: " + eps);
-        }
-        
-        if (C < 0) {
-            throw new IllegalArgumentException("Invalid soft margin penalty: " + C);
-        }
-        
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance of convergence test:" + tol);
-        }
-        
         int n = x.length;
+
         // Initialize support vectors.
         for (int i = 0; i < n; i++) {
             double w = 1.0;

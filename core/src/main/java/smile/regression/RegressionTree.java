@@ -21,8 +21,11 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 import smile.base.cart.*;
+import smile.classification.Classifier;
+import smile.classification.DecisionTree;
 import smile.data.DataFrame;
 import smile.data.Tuple;
+import smile.data.formula.Formula;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.vector.BaseVector;
@@ -243,6 +246,46 @@ public class RegressionTree extends CART implements Regression<Tuple> {
         }
 
         clear();
+    }
+
+    /**
+     * Learns a regression tree.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static RegressionTree fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Properties());
+    }
+
+    /**
+     * Learns a regression tree.
+     * The hyper-parameters in <code>prop</code> include
+     * <ul>
+     * <li><code>smile.cart.node.size</code>
+     * <li><code>smile.cart.max.nodes</code>
+     * </ul>
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     * @param prop Training algorithm hyper-parameters and properties.
+     */
+    public static RegressionTree fit(Formula formula, DataFrame data, Properties prop) {
+        int nodeSize = Integer.parseInt(prop.getProperty("smile.cart.node.size", "5"));
+        int maxNodes = Integer.parseInt(prop.getProperty("smile.cart.max.nodes", "6"));
+        return fit(formula, data, nodeSize, maxNodes);
+    }
+
+    /**
+     * Learns a regression tree.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     * @param nodeSize the minimum size of leaf nodes.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     */
+    public static RegressionTree fit(Formula formula, DataFrame data, int nodeSize, int maxNodes) {
+        DataFrame x = formula.frame(data);
+        BaseVector y = formula.response(data);
+        RegressionNodeOutput output = new LeastSquaresNodeOutput(y.toDoubleArray());
+        return new RegressionTree(x, y, nodeSize, maxNodes, -1, null, null, output);
     }
 
     /**

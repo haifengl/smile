@@ -274,7 +274,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
     }
 
     /**
-     * Learns a classification tree for AdaBoost and Random Forest.
+     * Learns a classification tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      */
@@ -283,13 +283,12 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
     }
 
     /**
-     * Learns a classification tree for AdaBoost and Random Forest.
+     * Learns a classification tree.
      * The hyper-parameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.cart.split.rule</code>
      * <li><code>smile.cart.node.size</code>
      * <li><code>smile.cart.max.nodes</code>
-     * <li><code>smile.cart.mtry</code>
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -303,7 +302,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
     }
 
     /**
-     * Learns a classification tree for AdaBoost and Random Forest.
+     * Learns a classification tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param rule the splitting rule.

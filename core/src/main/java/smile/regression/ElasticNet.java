@@ -51,14 +51,14 @@ public class ElasticNet {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param lambda1 the shrinkage/regularization parameter for L1
-     * @param lambda2 the shrinkage/regularization parameter for L2
+     * @param prop Training algorithm hyper-parameters and properties.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2) {
-        Properties prop = new Properties();
-        prop.setProperty("lambda1", Double.toString(lambda1));
-        prop.setProperty("lambda2", Double.toString(lambda2));
-        return fit(formula, data, prop);
+    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
+        double lambda1 = Double.valueOf(prop.getProperty("smile.elastic.net.lambda1"));
+        double lambda2 = Double.valueOf(prop.getProperty("smile.elastic.net.lambda2"));
+        double tol = Double.valueOf(prop.getProperty("smile.elastic.net.tolerance", "1E-4"));
+        int maxIter = Integer.valueOf(prop.getProperty("smile.elastic.net.max.iterations", "1000"));
+        return fit(formula, data, lambda1, lambda2, tol, maxIter);
     }
 
     /**
@@ -73,12 +73,31 @@ public class ElasticNet {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param lambda1 the shrinkage/regularization parameter for L1
+     * @param lambda2 the shrinkage/regularization parameter for L2
      */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda1 = Double.valueOf(prop.getProperty("lambda1"));
-        double lambda2 = Double.valueOf(prop.getProperty("lambda2"));
+    public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2) {
+        return fit(formula, data, lambda1, lambda2, 1E-4, 1000);
+    }
 
+    /**
+     * Fit an Elastic Net model. The hyper-parameters in <code>prop</code> include
+     * <ul>
+     * <li><code>lambda1</code> is the shrinkage/regularization parameter for L1
+     * <li><code>lambda2</code> is the shrinkage/regularization parameter for L2
+     * <li><code>tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
+     * <li><code>max.iterations</code> is the maximum number of IPM (Newton) iterations.
+     * </ul>
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
+     * @param lambda1 the shrinkage/regularization parameter for L1
+     * @param lambda2 the shrinkage/regularization parameter for L2
+     * @param tol the tolerance for stopping iterations (relative target duality gap).
+     * @param maxIter the maximum number of IPM (Newton) iterations.
+     */
+    public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2, double tol, int maxIter) {
         if (lambda1 <= 0) {
             throw new IllegalArgumentException("Please use Ridge instead, wrong L1 portion setting: " + lambda1);
         }
@@ -111,8 +130,7 @@ public class ElasticNet {
             X2.set(j + n, j, padding);
         }
 
-        prop.setProperty("lambda", Double.toString(lambda1 * c));
-        LinearModel model = LASSO.train(X2, y2, prop);
+        LinearModel model = LASSO.train(X2, y2,lambda1 * c, tol, maxIter);
         model.names = formula.predictors();
         model.formula = formula;
 

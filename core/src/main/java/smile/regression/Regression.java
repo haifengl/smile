@@ -18,6 +18,7 @@
 package smile.regression;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * Regression analysis includes any techniques for modeling and analyzing
@@ -44,10 +45,6 @@ public interface Regression<T> extends Serializable {
      * @return the predicted values.
      */
     default double[] predict(T[] x) {
-        double[] y = new double[x.length];
-        for (int i = 0; i < y.length; i++) {
-            y[i] = predict(x[i]);
-        }
-        return y;
+        return Arrays.stream(x).mapToDouble(xi -> predict(xi)).toArray();
     }
 }
