@@ -17,7 +17,10 @@
 
 package smile.validation;
 
+import java.util.function.Function;
+import java.util.function.BiFunction;
 import smile.math.MathEx;
+import smile.regression.Regression;
 
 /**
  * Cross-validation is a technique for assessing how the results of a
@@ -103,5 +106,37 @@ public class CrossValidation {
                 }
             }
         }
+    }
+
+    public <T> double test(Function<int[], Regression<T>> trainer, Function<int[], double[]> tester) {
+        double rss = 0.0;
+        for (int i = 0; i < k; i++) {
+            Regression<T> model = trainer.apply(train[i]);
+            double[] error = tester.apply(test[i]);
+            for (double e : error) {
+                rss += e * e;
+            }
+        }
+
+        return rss;
+    }
+
+    public double test(double[][] x, double[] y, BiFunction<double[][], double[], Regression<double[]>> trainer) {
+        double rss = 0.0;
+
+        for (int i = 0; i < k; i++) {
+            double[][] trainx = MathEx.slice(x, train[i]);
+            double[] trainy = MathEx.slice(y, train[i]);
+            double[][] testx = MathEx.slice(x, test[i]);
+            double[] testy = MathEx.slice(y, test[i]);
+
+            Regression<double[]> model = trainer.apply(trainx, trainy);
+            for (int j = 0; j < testx.length; j++) {
+                double r = testy[j] - model.predict(testx[j]);
+                rss += r * r;
+            }
+        }
+
+        return Math.sqrt(rss / x.length);
     }
 }

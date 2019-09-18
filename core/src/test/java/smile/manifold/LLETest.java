@@ -17,14 +17,22 @@
 
 package smile.manifold;
 
-import smile.data.parser.DelimitedTextParser;
-import smile.data.AttributeDataset;
+import org.apache.commons.csv.CSVFormat;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.MathEx;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
+import smile.io.CSV;
+import smile.util.Paths;
+
+import java.util.ArrayList;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 
@@ -34,17 +42,7 @@ import static org.junit.Assert.*;
  */
 public class LLETest {
 
-    AttributeDataset swissroll;
-
     public LLETest() {
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setDelimiter("\t");
-
-        try {
-            swissroll = parser.parse("Swissroll", smile.util.Paths.getTestData("manifold/swissroll.txt"));
-        } catch (Exception e) {
-            System.err.println(e);
-        }
     }
 
     @BeforeClass
@@ -66,8 +64,8 @@ public class LLETest {
     /**
      * Test of learn method, of class LLE.
      */
-    @Test
-    public void testLearn() {
+    @Test(expected = Test.None.class)
+    public void testLearn() throws Exception {
         System.out.println("learn");
 
         double[][] points = {
@@ -1073,7 +1071,10 @@ public class LLETest {
                 {-0.0504,  0.0330}
         };
 
-        double[][] dat = swissroll.toArray(new double[swissroll.size()][]);
+        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter('\t'));
+        DataFrame swissroll = csv.read(Paths.getTestData("manifold/swissroll.txt"));
+
+        double[][] dat = swissroll.toArray();
         double[][] data = new double[1000][];
         System.arraycopy(dat, 0, data, 0, data.length);
         

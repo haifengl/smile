@@ -17,14 +17,15 @@
 
 package smile.manifold;
 
-import smile.data.parser.DelimitedTextParser;
-import smile.data.AttributeDataset;
+import org.apache.commons.csv.CSVFormat;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.MathEx;
+import smile.data.DataFrame;
+import smile.io.CSV;
+import smile.util.Paths;
 
 import static org.junit.Assert.*;
 
@@ -34,17 +35,7 @@ import static org.junit.Assert.*;
  */
 public class LaplacianEigenmapTest {
 
-    AttributeDataset swissroll;
-
     public LaplacianEigenmapTest() {
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setDelimiter("\t");
-
-        try {
-            swissroll = parser.parse("Swissroll", smile.util.Paths.getTestData("manifold/swissroll.txt"));
-        } catch (Exception e) {
-            System.err.println(e);
-        }
     }
 
     @BeforeClass
@@ -66,8 +57,8 @@ public class LaplacianEigenmapTest {
     /**
      * Test of learn method, of class LaplacianEigenmap.
      */
-    @Test
-    public void testLearn() {
+    @Test(expected = Test.None.class)
+    public void testLearn() throws Exception {
         System.out.println("learn");
 
         double[][] points = {
@@ -1073,7 +1064,10 @@ public class LaplacianEigenmapTest {
                 {-0.0432, -0.0103}
         };
 
-        double[][] dat = swissroll.toArray(new double[swissroll.size()][]);
+        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter('\t'));
+        DataFrame swissroll = csv.read(Paths.getTestData("manifold/swissroll.txt"));
+
+        double[][] dat = swissroll.toArray();
         double[][] data = new double[1000][];
         System.arraycopy(dat, 0, data, 0, data.length);
 

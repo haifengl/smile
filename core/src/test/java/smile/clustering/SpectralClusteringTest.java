@@ -17,9 +17,14 @@
 
 package smile.clustering;
 
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
+import org.apache.commons.csv.CSVFormat;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
+import smile.io.CSV;
+import smile.util.Paths;
 import smile.validation.RandIndex;
 import smile.validation.AdjustedRandIndex;
 import org.junit.After;
@@ -27,6 +32,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.stream.IntStream;
+
 import static org.junit.Assert.*;
 
 /**
@@ -57,56 +66,63 @@ public class SpectralClusteringTest {
     /**
      * Test of learn method, of class SpectralClustering.
      */
-    @Test
-    public void testUSPS() {
+    @Test(expected = Test.None.class)
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
+        ArrayList<StructField> fields = new ArrayList<>();
+        fields.add(new StructField("class", DataTypes.ByteType));
+        IntStream.range(0, 256).forEach(i -> fields.add(new StructField("V"+i, DataTypes.ByteType)));
+        StructType schema = DataTypes.struct(fields);
+
+        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
+        csv.schema(schema);
+
+        DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
+        Formula formula = Formula.lhs("class");
+
+        double[][] x = formula.frame(train).toArray();
+        int[] y = formula.response(train).toIntArray();
+
+        SpectralClustering spectral = new SpectralClustering(x, 10, 8.0);
             
-            SpectralClustering spectral = new SpectralClustering(x, 10, 8.0);
-            
-            AdjustedRandIndex ari = new AdjustedRandIndex();
-            RandIndex rand = new RandIndex();
-            double r = rand.measure(y, spectral.getClusterLabel());
-            double r2 = ari.measure(y, spectral.getClusterLabel());
-            System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-            assertTrue(r > 0.85);
-            assertTrue(r2 > 0.45);            
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        AdjustedRandIndex ari = new AdjustedRandIndex();
+        RandIndex rand = new RandIndex();
+        double r = rand.measure(y, spectral.getClusterLabel());
+        double r2 = ari.measure(y, spectral.getClusterLabel());
+        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertTrue(r > 0.85);
+        assertTrue(r2 > 0.45);
     }
 
     /**
      * Test of learn method, of class SpectralClustering.
      */
-    @Test
-    public void testUSPSNystrom() {
+    @Test(expected = Test.None.class)
+    public void testUSPSNystrom() throws Exception {
         System.out.println("USPS Nystrom approximation");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
+        ArrayList<StructField> fields = new ArrayList<>();
+        fields.add(new StructField("class", DataTypes.ByteType));
+        IntStream.range(0, 256).forEach(i -> fields.add(new StructField("V"+i, DataTypes.ByteType)));
+        StructType schema = DataTypes.struct(fields);
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
+        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
+        csv.schema(schema);
+
+        DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
+        Formula formula = Formula.lhs("class");
+
+        double[][] x = formula.frame(train).toArray();
+        int[] y = formula.response(train).toIntArray();
+
+        SpectralClustering spectral = new SpectralClustering(x, 10, 100, 8.0);
             
-            SpectralClustering spectral = new SpectralClustering(x, 10, 100, 8.0);
-            
-            AdjustedRandIndex ari = new AdjustedRandIndex();
-            RandIndex rand = new RandIndex();
-            double r = rand.measure(y, spectral.getClusterLabel());
-            double r2 = ari.measure(y, spectral.getClusterLabel());
-            System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-            assertTrue(r > 0.8);
-            assertTrue(r2 > 0.35);            
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        AdjustedRandIndex ari = new AdjustedRandIndex();
+        RandIndex rand = new RandIndex();
+        double r = rand.measure(y, spectral.getClusterLabel());
+        double r2 = ari.measure(y, spectral.getClusterLabel());
+        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertTrue(r > 0.8);
+        assertTrue(r2 > 0.35);
     }
 }
