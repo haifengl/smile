@@ -311,7 +311,14 @@ public class RandomForest implements SoftClassifier<Tuple> {
     public int size() {
         return trees.size();
     }
-    
+
+    /**
+     * Returns the decision trees.
+     */
+    public DecisionTree[] trees() {
+        return trees.stream().map(t -> t.tree).toArray(DecisionTree[]::new);
+    }
+
     /**
      * Trims the tree model set to a smaller size in case of over-fitting.
      * Or if extra decision trees in the model don't improve the performance,
@@ -430,12 +437,5 @@ public class RandomForest implements SoftClassifier<Tuple> {
             }
         }
         return results;
-    }
-
-    /**
-     * Returns the decision trees.
-     */
-    public DecisionTree[] getTrees() {
-        return trees.stream().map(t -> t.tree).toArray(DecisionTree[]::new);
     }
 }

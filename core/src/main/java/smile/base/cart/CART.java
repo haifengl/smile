@@ -18,7 +18,6 @@
 package smile.base.cart;
 
 import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructType;
@@ -26,7 +25,6 @@ import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 
-import javax.swing.text.html.Option;
 import java.util.*;
 import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
