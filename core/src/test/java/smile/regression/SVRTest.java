@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import smile.data.CPU;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.io.Arff;
@@ -59,21 +60,16 @@ public class SVRTest {
     /**
      * Test of learn method, of class SVR.
      */
-    @Test(expected = Test.None.class)
-    public void testCPU() throws Exception {
+    @Test
+    public void testCPU() {
         System.out.println("CPU");
 
-        Arff arff = new Arff(Paths.getTestData("weka/cpu.arff"));
-        DataFrame cpu = arff.read();
-        Formula formula = Formula.lhs("class");
-
-        double[][] x = formula.frame(cpu).toArray();
-        double[] y = formula.response(cpu).toDoubleArray();
+        double[][] x = MathEx.clone(CPU.x);
         MathEx.standardize(x);
 
         SVR<double[]> svr = new SVR<>(new PolynomialKernel(3, 1.0, 1.0), 0.1, 1.0, 1E-3);
         CrossValidation cv = new CrossValidation(x.length, 10, false);
-        double rss = cv.test(x, y, (xi, yi) -> svr.fit(xi, yi));
+        double rss = cv.test(x, CPU.y, (xi, yi) -> svr.fit(xi, yi));
 
         System.out.println("10-CV RMSE = " + rss);
     }

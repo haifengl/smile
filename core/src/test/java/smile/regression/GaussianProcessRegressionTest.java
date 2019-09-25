@@ -25,8 +25,6 @@ import org.junit.Test;
 import smile.clustering.KMeans;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 

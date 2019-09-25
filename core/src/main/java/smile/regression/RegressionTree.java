@@ -17,12 +17,11 @@
 
 package smile.regression;
 
+import java.text.Normalizer;
 import java.util.*;
 import java.util.stream.IntStream;
 
 import smile.base.cart.*;
-import smile.classification.Classifier;
-import smile.classification.DecisionTree;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -77,9 +76,16 @@ import smile.math.MathEx;
  * @see GradientTreeBoost
  * @see RandomForest
  */
-public class RegressionTree extends CART implements Regression<Tuple>, DataFrameRegression {
+public class RegressionTree extends CART implements Regression<Tuple> {
     private static final long serialVersionUID = 2L;
 
+    /**
+     * Design matrix formula
+     */
+    private Optional<Formula> formula;
+    /**
+     * The trait to calculate the leaf node output.
+     */
     private transient RegressionNodeOutput output;
 
     @Override
@@ -285,7 +291,9 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         DataFrame x = formula.frame(data);
         BaseVector y = formula.response(data);
         RegressionNodeOutput output = new LeastSquaresNodeOutput(y.toDoubleArray());
-        return new RegressionTree(x, y, nodeSize, maxNodes, -1, null, null, output);
+        RegressionTree tree = new RegressionTree(x, y, nodeSize, maxNodes, -1, null, null, output);
+        tree.formula = Optional.of(formula);
+        return tree;
     }
 
     /**
@@ -301,8 +309,13 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     }
 
     @Override
+    public Optional<Formula> formula() {
+        return formula;
+    }
+
+    @Override
     public double predict(Tuple x) {
-        RegressionNode leaf = (RegressionNode) root.predict(x);
+        RegressionNode leaf = (RegressionNode) root.predict(formula.map(f -> f.apply(x)).orElse(x));
         return leaf.output();
     }
 
@@ -310,7 +323,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      * Returs the root node.
      * @return root node.
      */
-    public Node getRoot() {
+    public Node root() {
         return root;
     }
 }

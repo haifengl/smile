@@ -15,37 +15,36 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.regression;
+package smile.data;
 
-import java.io.Serializable;
-import smile.data.DataFrame;
-import smile.data.Tuple;
+import org.apache.commons.csv.CSVFormat;
 import smile.data.formula.Formula;
+import smile.io.CSV;
+import smile.util.Paths;
 
 /**
- * Regression on data frame trait.
  *
- * @author Haifeng Li
+ * @author Haifeng
  */
-public interface DataFrameRegression extends Serializable {
-    /** Returns the formula associated with the model. */
-    Formula formula();
+public class Diabetes {
 
-    /**
-     * Predicts the dependent variables of a tuple.
-     *
-     * @param x the data sample.
-     * @return the predicted values.
-     */
-    double predict(Tuple x);
+    public static DataFrame data;
+    public static Formula formula = Formula.lhs("y");
 
-    /**
-     * Predicts the dependent variables of a data frame.
-     *
-     * @param data the data frame.
-     * @return the predicted values.
-     */
-    default double[] predict(DataFrame data) {
-        return data.stream().mapToDouble(x -> predict(x)).toArray();
+    public static double[][] x;
+    public static double[] y;
+
+    static {
+        CSV csv = new CSV(CSVFormat.DEFAULT.withFirstRecordAsHeader());
+
+        try {
+            data = csv.read(Paths.getTestData("regression/diabetes.csv"));
+
+            x = formula.frame(data).toArray();
+            y = formula.response(data).toDoubleArray();
+        } catch (Exception ex) {
+            System.err.println("Failed to load 'diabetes': " + ex);
+            System.exit(-1);
+        }
     }
 }

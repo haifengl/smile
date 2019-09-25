@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import smile.data.CPU;
 import smile.data.DataFrame;
+import smile.data.Longley;
 import smile.data.formula.Formula;
 import smile.io.Arff;
 import smile.util.Paths;
@@ -83,13 +84,11 @@ public class OLSTest {
     /**
      * Test of learn method, of class LinearRegression.
      */
-    @Test(expected = Test.None.class)
-    public void testLongley() throws Exception {
+    @Test
+    public void testLongley() {
         System.out.println("longley");
 
-        Arff arff = new Arff(Paths.getTestData("weka/regression/longley.arff"));
-        DataFrame longley = arff.read();
-        LinearModel model = OLS.fit(Formula.lhs("employed"), longley);
+        LinearModel model = OLS.fit(Longley.formula, Longley.data);
         System.out.println(model);
 
         assertEquals(12.8440, model.RSS(), 1E-4);
@@ -130,15 +129,14 @@ public class OLSTest {
     /**
      * Test of learn method, of class LinearRegression.
      */
-    @Test(expected = Test.None.class)
-    public void testCPU() throws Exception {
+    @Test
+    public void testCPU() {
         System.out.println("CPU");
 
         LinearModel model = OLS.fit(CPU.formula, CPU.data);
         System.out.println(model);
 
-        CrossValidation cv = new CrossValidation(CPU.x.length, 10, false);
-        double rss = cv.test(CPU.data, (x) -> OLS.fit(CPU.formula, x));
-
+        double rss = CrossValidation.test(10, CPU.data, (x) -> OLS.fit(CPU.formula, x));
+        System.out.println("CPU 10-CV RMSE = " + rss);
     }
 }

@@ -17,13 +17,13 @@
 
 package smile.validation;
 
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.BiFunction;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.Regression;
-import smile.regression.DataFrameRegression;
 
 /**
  * Cross-validation is a technique for assessing how the results of a
@@ -125,14 +125,15 @@ public class CrossValidation {
     }
 
     /** Runs cross validation tests. */
-    public double test(double[][] x, double[] y, BiFunction<double[][], double[], Regression<double[]>> trainer) {
+    public static double test(int k, double[][] x, double[] y, BiFunction<double[][], double[], Regression<double[]>> trainer) {
+        CrossValidation cv = new CrossValidation(x.length, k);
         double rss = 0.0;
 
         for (int i = 0; i < k; i++) {
-            double[][] trainx = MathEx.slice(x, train[i]);
-            double[] trainy = MathEx.slice(y, train[i]);
-            double[][] testx = MathEx.slice(x, test[i]);
-            double[] testy = MathEx.slice(y, test[i]);
+            double[][] trainx = MathEx.slice(x, cv.train[i]);
+            double[] trainy = MathEx.slice(y, cv.train[i]);
+            double[][] testx = MathEx.slice(x, cv.test[i]);
+            double[] testy = MathEx.slice(y, cv.test[i]);
 
             Regression<double[]> model = trainer.apply(trainx, trainy);
             for (int j = 0; j < testx.length; j++) {
@@ -145,15 +146,16 @@ public class CrossValidation {
     }
 
     /** Runs cross validation tests. */
-    public double test(DataFrame data, Function<DataFrame, DataFrameRegression> trainer) {
+    public static double test(int k, DataFrame data, Function<DataFrame, Regression> trainer) {
+        CrossValidation cv = new CrossValidation(data.size(), k);
         double rss = 0.0;
 
         for (int i = 0; i < k; i++) {
-            DataFrameRegression model = trainer.apply(data.of(train[i]));
-            Formula formula = model.formula();
-            DataFrame oob = data.of(test[i]);
+            Regression model = trainer.apply(data.of(cv.train[i]));
+            Optional<Formula> formula = model.formula();
+            DataFrame oob = data.of(cv.test[i]);
             double[] prediction = model.predict(oob);
-            double[] y = formula.response(oob).toDoubleArray();
+            double[] y = formula.get().response(oob).toDoubleArray();
 
             for (int j = 0; j < y.length; j++) {
                 double r = y[j] - prediction[j];

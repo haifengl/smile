@@ -23,8 +23,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import smile.data.Abalone;
+import smile.data.CPU;
+import smile.data.Diabetes;
+import smile.data.Prostate;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
+import smile.validation.Validation;
 
 /**
  *
@@ -56,36 +61,11 @@ public class ElasticNetTest {
     @Test
     public void testCPU() {
         System.out.println("CPU");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(6);
-        try {
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/cpu.arff"));
-            double[][] datax = data.toArray(new double[data.size()][]);
-            double[] datay = data.toArray(new double[data.size()]);
+        LinearModel model = ElasticNet.fit(CPU.formula, CPU.data, 0.8, 0.2);
+        System.out.println(model);
 
-            int n = datax.length;
-            int k = 10;
-
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
-
-                ElasticNet elasticnet = new ElasticNet(trainx, trainy, 0.8, 0.2);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - elasticnet.predict(testx[j]);
-                    rss += r * r;
-                }
-            }
-
-            System.out.println("CPU 10-CV RMSE = " + Math.sqrt(rss / n));
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        double rss = CrossValidation.test(10, CPU.data, (x) -> ElasticNet.fit(CPU.formula, x, 0.8, 0.2));
+        System.out.println("CPU 10-CV RMSE = " + rss);
     }
 
     /**
@@ -93,34 +73,12 @@ public class ElasticNetTest {
      */
     @Test
     public void tesProstate() {
-        System.out.println("---ProStateCancer---");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NumericAttribute("lpsa"), 8);
-        parser.setColumnNames(true);
-        try {
-            AttributeDataset train = parser.parse("prostate Train",
-                    smile.util.Paths.getTestData("regression/prostate-train.csv"));
-            AttributeDataset test = parser.parse("prostate Test",
-                    smile.util.Paths.getTestData("regression/prostate-test.csv"));
+        System.out.println("---Prostate---");
+        LinearModel model = ElasticNet.fit(Prostate.formula, Prostate.train, 0.8, 0.2);
+        System.out.println(model);
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            double[] y = train.toArray(new double[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            double[] testy = test.toArray(new double[test.size()]);
-
-            ElasticNet elasticnet = new ElasticNet(x, y, 0.8, 0.2);
-
-            double testrss = 0;
-            int n = testx.length;
-            for (int j = 0; j < testx.length; j++) {
-                double r = testy[j] - elasticnet.predict(testx[j]);
-                testrss += r * r;
-            }
-
-            System.out.println("Prostate Test MSE = " + testrss / n);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        double rss = Validation.test(model, Prostate.test);
+        System.out.println("Test RMSE = " + rss);
     }
 
     /**
@@ -129,35 +87,11 @@ public class ElasticNetTest {
     @Test
     public void tesAbalone() {
         System.out.println("---Abalone---");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NumericAttribute("ring"), 8);
-        parser.setColumnNames(false);
-        parser.setDelimiter(",");
-        parser.addIgnoredColumn(0);
-        try {
-            AttributeDataset train = parser.parse("abalone Train",
-                    smile.util.Paths.getTestData("regression/abalone-train.data"));
-            AttributeDataset test = parser.parse("abalone Test",
-                    smile.util.Paths.getTestData("regression/abalone-test.data"));
+        LinearModel model = ElasticNet.fit(Abalone.formula, Abalone.train, 0.8, 0.2);
+        System.out.println(model);
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            double[] y = train.toArray(new double[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            double[] testy = test.toArray(new double[test.size()]);
-
-            ElasticNet elasticnet = new ElasticNet(x, y, 0.8, 0.2);
-
-            double testrss = 0;
-            int n = testx.length;
-            for (int j = 0; j < testx.length; j++) {
-                double r = testy[j] - elasticnet.predict(testx[j]);
-                testrss += r * r;
-            }
-
-            System.out.println("Abalone Test MSE = " + testrss / n);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        double rss = Validation.test(model, Abalone.test);
+        System.out.println("Test RMSE = " + rss);
     }
 
     /**
@@ -166,38 +100,10 @@ public class ElasticNetTest {
     @Test
     public void tesDiabetes() {
         System.out.println("---Diabetes---");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NumericAttribute("y"), 0);
-        parser.setColumnNames(true);
-        parser.setDelimiter(",");
-        try {
-            AttributeDataset data = parser.parse("diabetes",
-                    smile.util.Paths.getTestData("regression/diabetes.csv"));
-            double[][] datax = data.toArray(new double[data.size()][]);
-            double[] datay = data.toArray(new double[data.size()]);
+        LinearModel model = ElasticNet.fit(Diabetes.formula, Diabetes.data, 0.8, 0.2);
+        System.out.println(model);
 
-            int n = datax.length;
-            int k = 40;
-
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
-
-                ElasticNet elasticnet = new ElasticNet(trainx, trainy, 0.8, 0.2);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - elasticnet.predict(testx[j]);
-                    rss += r * r;
-                }
-            }
-
-            System.out.println("Diabetes 40-CV RMSE = " + Math.sqrt(rss / n));
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        double rss = CrossValidation.test(10, Diabetes.data, (x) -> ElasticNet.fit(Diabetes.formula, x, 0.8, 0.2));
+        System.out.println("Diabetes 10-CV RMSE = " + rss);
     }
 }

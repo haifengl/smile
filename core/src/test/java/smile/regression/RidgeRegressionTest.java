@@ -22,6 +22,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.Longley;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
@@ -87,7 +88,7 @@ public class RidgeRegressionTest {
     @Test
     public void testLearn() {
         System.out.println("learn");
-        RidgeRegression model = RidgeRegression.fit(longley, y, 0.0);
+        LinearModel model = RidgeRegression.fit(Longley.formula, Longley.data,0.0);
 
         double rss = 0.0;
         int n = longley.length;
@@ -98,7 +99,7 @@ public class RidgeRegressionTest {
         }
         System.out.println("Training MSE = " + rss/n);
 
-        model = new RidgeRegression(longley, y, 0.1);
+        model = RidgeRegression.fit(Longley.formula, Longley.data, 0.1);
 
         assertEquals(-1.354007e+03, model.intercept(), 1E-3);
         assertEquals(5.457700e-02, model.coefficients()[0], 1E-7);

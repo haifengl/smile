@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import smile.data.Tuple;
 import smile.math.kernel.MercerKernel;
 
 /**
@@ -55,6 +56,11 @@ public class KernelMachine<T> implements Regression<T> {
     private double b = 0.0;
 
     /**
+     * True if the instances are double[].
+     */
+    private boolean isInstanceDoubleArray = false;
+
+    /**
      * Constructor.
      * @param kernel Kernel function.
      * @param instances The instances in the kernel machine, e.g. support vectors.
@@ -76,6 +82,7 @@ public class KernelMachine<T> implements Regression<T> {
         this.instances = instances;
         this.w = weight;
         this.b = b;
+        isInstanceDoubleArray = instances.getClass().getComponentType().equals(double[].class);
     }
 
     /**
@@ -115,5 +122,15 @@ public class KernelMachine<T> implements Regression<T> {
         }
 
         return f;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public double predict(Tuple x) {
+        if (isInstanceDoubleArray) {
+            return predict((T) x.toArray());
+        }
+
+        throw new UnsupportedOperationException();
     }
 }

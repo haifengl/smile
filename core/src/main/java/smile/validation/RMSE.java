@@ -25,6 +25,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class RMSE implements RegressionMeasure {
+    public final static RMSE instance = new RMSE();
 
     @Override
     public double measure(double[] truth, double[] prediction) {
