@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.base.cart.CART;
@@ -69,7 +70,7 @@ import smile.validation.RegressionMeasure;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements Regression<Tuple>, DataFrameRegression {
+public class RandomForest implements Regression<Tuple> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -262,8 +263,8 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
     }
 
     @Override
-    public Formula formula() {
-        return formula;
+    public Optional<Formula> formula() {
+        return Optional.of(formula);
     }
 
     /**
@@ -331,18 +332,13 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
     
     @Override
     public double predict(Tuple x) {
+        Tuple xt = formula.apply(x);
         double y = 0;
         for (RegressionTree tree : trees) {
-            y += tree.predict(x);
+            y += tree.predict(xt);
         }
         
         return y / trees.length;
-    }
-
-    @Override
-    public double[] predict(DataFrame data) {
-        DataFrame x = formula.frame(data);
-        return x.stream().mapToDouble(xi -> predict(xi)).toArray();
     }
 
     /**

@@ -18,6 +18,7 @@
 package smile.regression;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.base.cart.*;
@@ -103,7 +104,7 @@ import smile.validation.RegressionMeasure;
  * 
  * @author Haifeng Li
  */
-public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression {
+public class GradientTreeBoost implements Regression<Tuple> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -294,8 +295,8 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
     }
 
     @Override
-    public Formula formula() {
-        return formula;
+    public Optional<Formula> formula() {
+        return Optional.of(formula);
     }
 
     /**
@@ -349,18 +350,13 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
     
     @Override
     public double predict(Tuple x) {
+        Tuple xt = formula.apply(x);
         double y = b;
         for (RegressionTree tree : trees) {
-            y += shrinkage * tree.predict(x);
+            y += shrinkage * tree.predict(xt);
         }
         
         return y;
-    }
-
-    @Override
-    public double[] predict(DataFrame data) {
-        DataFrame x = formula.frame(data);
-        return x.stream().mapToDouble(xi -> predict(xi)).toArray();
     }
 
     /**

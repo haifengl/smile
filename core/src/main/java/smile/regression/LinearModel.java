@@ -18,6 +18,8 @@
 package smile.regression;
 
 import java.util.Arrays;
+import java.util.Optional;
+
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -52,7 +54,7 @@ import smile.math.special.Beta;
  *
  * @author Haifeng Li
  */
-public class LinearModel implements Regression<double[]>, OnlineRegression<double[]>, DataFrameRegression {
+public class LinearModel implements OnlineRegression<double[]> {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LinearModel.class);
 
@@ -142,8 +144,8 @@ public class LinearModel implements Regression<double[]>, OnlineRegression<doubl
     }
 
     @Override
-    public Formula formula() {
-        return formula;
+    public Optional<Formula> formula() {
+        return Optional.of(formula);
     }
 
     /**
@@ -304,6 +306,11 @@ public class LinearModel implements Regression<double[]>, OnlineRegression<doubl
         Arrays.fill(y, b);
         X.axpy(w, y);
         return y;
+    }
+
+    /** Online update the regression model with a new training instance. */
+    public void update(Tuple data) {
+        update(formula.apply(data).toArray(), formula.response(data));
     }
 
     @Override

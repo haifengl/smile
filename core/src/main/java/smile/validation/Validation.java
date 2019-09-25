@@ -21,6 +21,7 @@ import java.util.function.BiFunction;
 import smile.math.MathEx;
 import smile.classification.Classifier;
 import smile.regression.Regression;
+import smile.data.DataFrame;
 
 /**
  * A utility class for validating predictive models on test data.
@@ -65,7 +66,21 @@ public interface Validation {
         
         return new RMSE().measure(y, predictions);
     }
-    
+
+    /**
+     * Tests a regression model on a validation set.
+     *
+     * @param <T> the data type of input objects.
+     * @param model a trained regression model to be tested.
+     * @param data the test data set.
+     * @return root mean squared error
+     */
+    static <T> double test(Regression<T> model, DataFrame data) {
+        double[] prediction = model.predict(data);
+        double[] y = model.formula().get().response(data).toDoubleArray();
+        return RMSE.instance.measure(y, prediction);
+    }
+
     /**
      * Tests a classifier on a validation set.
      * 

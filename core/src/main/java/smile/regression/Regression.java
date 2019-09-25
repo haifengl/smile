@@ -19,6 +19,10 @@ package smile.regression;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Optional;
+import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.formula.Formula;
 
 /**
  * Regression analysis includes any techniques for modeling and analyzing
@@ -33,7 +37,7 @@ import java.util.Arrays;
 public interface Regression<T> extends Serializable {
     /**
      * Predicts the dependent variable of an instance.
-     * @param x the instance.
+     * @param x an instance.
      * @return the predicted value of dependent variable.
      */
     double predict(T x);
@@ -46,5 +50,29 @@ public interface Regression<T> extends Serializable {
      */
     default double[] predict(T[] x) {
         return Arrays.stream(x).mapToDouble(xi -> predict(xi)).toArray();
+    }
+
+    /** Returns the formula associated with the model. */
+    default Optional<Formula> formula() {
+        return Optional.empty();
+    }
+
+    /**
+     * Predicts the dependent variable of a tuple instance.
+     * @param x a tuple instance.
+     * @return the predicted value of dependent variable.
+     */
+    default double predict(Tuple x) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Predicts the dependent variables of a data frame.
+     *
+     * @param data the data frame.
+     * @return the predicted values.
+     */
+    default double[] predict(DataFrame data) {
+        return data.stream().mapToDouble(x -> predict(x)).toArray();
     }
 }

@@ -348,6 +348,28 @@ public class Formula implements Serializable {
     }
 
     /**
+     * Returns the real-valued response value.
+     */
+    public double response(Tuple t) {
+        if (response == null) {
+            throw new UnsupportedOperationException("Formula doesn't have a response variable");
+        }
+
+        return response.applyAsDouble(t);
+    }
+
+    /**
+     * Returns the class label.
+     */
+    public int label(Tuple t) {
+        if (response == null) {
+            throw new UnsupportedOperationException("Formula doesn't have a response variable");
+        }
+
+        return response.applyAsInt(t);
+    }
+
+    /**
      * Returns the names of response variable.
      */
     public String response() {
