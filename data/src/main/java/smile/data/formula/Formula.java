@@ -88,6 +88,13 @@ public class Formula implements Serializable {
         this.predictors = predictors;
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s ~ %",
+                response == null ? "" : response.toString(),
+                Arrays.stream(predictors).map(Objects::toString).collect(Collectors.joining(" + ")));
+    }
+
     /**
      * Factory method.
      * @param lhs the left-hand side of formula, i.e. dependent variable.

@@ -81,7 +81,6 @@ public class DataFrameTest {
         persons.add(new Person("Amy", Gender.Female, LocalDate.of(2005, 12, 10), 13, null));
 
         df = DataFrame.of(persons, Person.class);
-        //df.schema().measure().put("gender", new NominalScale("M", "F"));
     }
 
     @BeforeClass
@@ -167,19 +166,19 @@ public class DataFrameTest {
         assertEquals(2*df.nrows(), two.nrows());
         assertEquals(df.ncols(), two.ncols());
 
-        assertEquals(38, two.get(0).getInt(0));
-        assertEquals("Alex", two.get(0).getString(3));
+        assertEquals(38, two.getInt(0,0));
+        assertEquals("Alex", two.getString(0, 3));
         assertEquals(10000., two.get(0).get(4));
         assertEquals(13, two.get(3).getInt(0));
         assertEquals("Amy", two.get(3).getString(3));
         assertEquals(null, two.get(3).get(4));
 
-        assertEquals(38, two.get(4).getInt(0));
-        assertEquals("Alex", two.get(4).getString(3));
-        assertEquals(10000., two.get(4).get(4));
-        assertEquals(13, two.get(7).getInt(0));
-        assertEquals("Amy", two.get(7).getString(3));
-        assertEquals(null, two.get(7).get(4));
+        assertEquals(38, two.getInt(4, 0));
+        assertEquals("Alex", two.getString(4, 3));
+        assertEquals(10000., two.get(4, 4));
+        assertEquals(13, two.getInt(7, 0));
+        assertEquals("Amy", two.getString(7, 3));
+        assertEquals(null, two.get(7, 4));
     }
 
     /**
@@ -193,14 +192,14 @@ public class DataFrameTest {
         assertEquals(df.nrows(), two.nrows());
         assertEquals(df.ncols()+1, two.ncols());
 
-        assertEquals(38, two.get(0).getInt(0));
-        assertEquals("Alex", two.get(0).getString(3));
-        assertEquals(10000., two.get(0).get(4));
-        assertEquals("MS", two.get(0).get(5));
-        assertEquals(13, two.get(3).getInt(0));
-        assertEquals("Amy", two.get(3).getString(3));
-        assertEquals(null, two.get(3).get(4));
-        assertEquals("Middle School", two.get(3).get(5));
+        assertEquals(38, two.getInt(0, 0));
+        assertEquals("Alex", two.getString(0, 3));
+        assertEquals(10000., two.get(0, 4));
+        assertEquals("MS", two.get(0, 5));
+        assertEquals(13, two.getInt(3, 0));
+        assertEquals("Amy", two.getString(3, 3));
+        assertEquals(null, two.get(3, 4));
+        assertEquals("Middle School", two.get(3, 5));
     }
 
     /**
@@ -705,5 +704,24 @@ public class DataFrameTest {
         assertTrue(Double.isNaN(output.get(1, 1)));
         assertEquals(230000., output.get(2, 1), 1E-10);
         assertTrue(Double.isNaN(output.get(3, 1)));
+    }
+
+    /**
+     * Test of toMatrix method, of class DataFrame.
+     */
+    @Test
+    public void testDataFrameToArray() {
+        System.out.println("toArray");
+        double[][] output = df.select("age", "salary").toArray();
+        assertEquals(4, output.length);
+        assertEquals(2, output[0].length);
+        assertEquals(38, output[0][0], 1E-10);
+        assertEquals(23., output[1][0], 1E-10);
+        assertEquals(48., output[2][0], 1E-10);
+        assertEquals(13., output[3][0], 1E-10);
+        assertEquals(10000., output[0][1], 1E-10);
+        assertTrue(Double.isNaN(output[1][1]));
+        assertEquals(230000., output[2][1], 1E-10);
+        assertTrue(Double.isNaN(output[3][1]));
     }
 }

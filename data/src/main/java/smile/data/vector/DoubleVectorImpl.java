@@ -64,6 +64,13 @@ class DoubleVectorImpl implements DoubleVector {
     }
 
     @Override
+    public DoubleVector get(int... index) {
+        double[] v = new double[index.length];
+        for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
+        return new DoubleVectorImpl(name, v);
+    }
+
+    @Override
     public String name() {
         return name;
     }

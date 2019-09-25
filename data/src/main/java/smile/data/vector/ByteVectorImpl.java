@@ -64,6 +64,13 @@ class ByteVectorImpl implements ByteVector {
     }
 
     @Override
+    public ByteVector get(int... index) {
+        byte[] v = new byte[index.length];
+        for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
+        return new ByteVectorImpl(name, v);
+    }
+
+    @Override
     public String name() {
         return name;
     }

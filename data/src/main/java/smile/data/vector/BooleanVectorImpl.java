@@ -64,6 +64,13 @@ class BooleanVectorImpl implements BooleanVector {
     }
 
     @Override
+    public BooleanVector get(int... index) {
+        boolean[] v = new boolean[index.length];
+        for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
+        return new BooleanVectorImpl(name, v);
+    }
+
+    @Override
     public String name() {
         return name;
     }

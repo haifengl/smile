@@ -103,6 +103,17 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         return get(i).get(field);
     }
 
+    /** Returns a new data frame with row indexing. */
+    default DataFrame of(int... index) {
+        return new IndexDataFrame(this, index);
+    }
+
+    /** Returns a new data frame with boolean indexing. */
+    default DataFrame of(boolean... index) {
+        int[] idx = IntStream.range(0, index.length).filter(i -> index[i]).toArray();
+        return new IndexDataFrame(this, idx);
+    }
+
     /** Checks whether the value at position (i, j) is null. */
     default boolean isNullAt(int i, int j) {
         return get(i).isNullAt(j);

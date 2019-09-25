@@ -91,6 +91,12 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
     T get(int i);
 
     /**
+     * Returns a new vector with selected entries.
+     * @param index the index of selected entries.
+     */
+    BaseVector<T, TS, S> get(int... index);
+
+    /**
      * Returns the byte value at position i.
      */
     byte getByte(int i);
@@ -125,6 +131,14 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
      */
     default T apply(int i) {
         return get(i);
+    }
+
+    /**
+     * Returns a new vector with selected entries.
+     * @param index the index of selected entries.
+     */
+    default BaseVector<T, TS, S> apply(int... index) {
+        return get(index);
     }
 
     /**
