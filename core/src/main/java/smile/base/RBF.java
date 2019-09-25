@@ -83,6 +83,7 @@ public class RBF<T> implements Serializable {
     /** Makes a set of RBF neurons. */
     private static <T> RBF<T>[] neurons(T[] centers, RadialBasisFunction basis, Metric<T> distance) {
         int k = centers.length;
+        @SuppressWarnings("unchecked")
         RBF<T>[] rbf = new RBF[k];
         for (int i = 0; i < k; i++) {
             rbf[i] = new RBF<>(centers[i], basis, distance);
@@ -93,6 +94,7 @@ public class RBF<T> implements Serializable {
     /** Makes a set of RBF neurons. */
     private static <T> RBF<T>[] neurons(T[] centers, RadialBasisFunction[] basis, Metric<T> distance) {
         int k = centers.length;
+        @SuppressWarnings("unchecked")
         RBF<T>[] rbf = new RBF[k];
         for (int i = 0; i < k; i++) {
             rbf[i] = new RBF<>(centers[i], basis[i], distance);

@@ -26,7 +26,7 @@ package smile.regression;
  * 
  * @author Haifeng Li
  */
-public interface OnlineRegression <T> extends Regression <T> {
+public interface OnlineRegression <T> extends Regression<T> {
     /**
      * Updates the model with a (micro-)batch of new samples.
      * @param x the training instances.

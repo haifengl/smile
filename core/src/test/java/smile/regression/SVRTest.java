@@ -72,7 +72,7 @@ public class SVRTest {
         MathEx.standardize(x);
 
         SVR<double[]> svr = new SVR<>(new PolynomialKernel(3, 1.0, 1.0), 0.1, 1.0, 1E-3);
-        CrossValidation cv = new CrossValidation(x.length, 10);
+        CrossValidation cv = new CrossValidation(x.length, 10, false);
         double rss = cv.test(x, y, (xi, yi) -> svr.fit(xi, yi));
 
         System.out.println("10-CV RMSE = " + rss);

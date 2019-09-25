@@ -18,17 +18,29 @@
 package smile.neighbor;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
+
+import org.apache.commons.csv.CSVFormat;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
+import smile.io.CSV;
 import smile.math.MathEx;
 import smile.math.distance.EditDistance;
 import smile.math.distance.EuclideanDistance;
 import smile.stat.distribution.MultivariateGaussianDistribution;
+import smile.util.Paths;
 
 /**
  *
@@ -66,7 +78,8 @@ public class LinearSearchSpeedTest {
         List<String> words = new ArrayList<>();
         long start = System.currentTimeMillis();
         try {
-            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("neighbor/index.noun");
+            InputStreamReader reader = new FileReader(smile.util.Paths.getTestData("neighbor/index.noun").toFile());
+            BufferedReader input = new BufferedReader(reader);
             String line = input.readLine();
             while (line != null) {
                 if (!line.startsWith(" ")) {
@@ -166,24 +179,25 @@ public class LinearSearchSpeedTest {
     /**
      * Test of nearest method, of class LinearSearch.
      */
-    @Test
-    public void testUSPS() {
+    @Test(expected = Test.None.class)
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
-        double[][] x = null;
-        double[][] testx = null;
 
         long start = System.currentTimeMillis();
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.util.Paths.getTestData("usps/zip.test"));
+        ArrayList<StructField> fields = new ArrayList<>();
+        fields.add(new StructField("class", DataTypes.ByteType));
+        IntStream.range(0, 256).forEach(i -> fields.add(new StructField("V"+i, DataTypes.ByteType)));
+        StructType schema = DataTypes.struct(fields);
 
-            x = train.toArray(new double[train.size()][]);
-            testx = test.toArray(new double[test.size()][]);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
+        csv.schema(schema);
+
+        DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
+        DataFrame test = csv.read(Paths.getTestData("usps/zip.test"));
+        Formula formula = Formula.lhs("class");
+
+        double[][] x = formula.frame(train).toArray();
+        double[][] testx = formula.frame(test).toArray();
 
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Loading USPS: %.2fs%n", time);

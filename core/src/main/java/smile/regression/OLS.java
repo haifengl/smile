@@ -109,16 +109,9 @@ public class OLS {
         boolean recursive = Boolean.valueOf(prop.getProperty("smile.ols.recursive", "true"));
         return fit(formula, data, method, stderr, eps, recursive);
     }
-
+    
     /**
-     * Fits an ordinary least squares model. The hyper-parameters in <code>prop</code> include
-     * <ul>
-     * <li><code>method</code> is a string (svd or qr) for the fitting method
-     * <li><code>standard.error</code> is a boolean. If true, compute the estimated standard
-     *     errors of the estimate of parameters
-     * <li><code><eps/code> (default 1E-7) is the tolerance in SVD to detect if a singular value is zero
-     * <li><code>recursive</code> is a boolean. If true, the return model supports recursive least squares
-     * </ul>
+     * Fits an ordinary least squares model.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.

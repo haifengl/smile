@@ -23,10 +23,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+
+import smile.data.CPU;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.io.Arff;
 import smile.util.Paths;
+import smile.validation.CrossValidation;
 
 /**
  *
@@ -131,9 +134,11 @@ public class OLSTest {
     public void testCPU() throws Exception {
         System.out.println("CPU");
 
-        Arff arff = new Arff(Paths.getTestData("weka/cpu.arff"));
-        DataFrame cpu = arff.read();
-        LinearModel model = OLS.fit(Formula.lhs("class"), cpu);
+        LinearModel model = OLS.fit(CPU.formula, CPU.data);
         System.out.println(model);
+
+        CrossValidation cv = new CrossValidation(CPU.x.length, 10, false);
+        double rss = cv.test(CPU.data, (x) -> OLS.fit(CPU.formula, x));
+
     }
 }

@@ -77,7 +77,7 @@ import smile.math.MathEx;
  * @see GradientTreeBoost
  * @see RandomForest
  */
-public class RegressionTree extends CART implements Regression<Tuple> {
+public class RegressionTree extends CART implements Regression<Tuple>, DataFrameRegression {
     private static final long serialVersionUID = 2L;
 
     private transient RegressionNodeOutput output;

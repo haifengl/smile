@@ -17,10 +17,7 @@
 
 package smile.regression;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import smile.base.cart.CART;
 import smile.base.cart.LeastSquaresNodeOutput;
@@ -72,7 +69,7 @@ import smile.validation.RegressionMeasure;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements Regression<Tuple> {
+public class RandomForest implements Regression<Tuple>, DataFrameRegression {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -264,6 +261,11 @@ public class RandomForest implements Regression<Tuple> {
         return importance;
     }
 
+    @Override
+    public Formula formula() {
+        return formula;
+    }
+
     /**
      * Returns the out-of-bag estimation of RMSE. The OOB estimate is
      * quite accurate given that enough trees have been grown. Otherwise the
@@ -336,7 +338,13 @@ public class RandomForest implements Regression<Tuple> {
         
         return y / trees.length;
     }
-    
+
+    @Override
+    public double[] predict(DataFrame data) {
+        DataFrame x = formula.frame(data);
+        return x.stream().mapToDouble(xi -> predict(xi)).toArray();
+    }
+
     /**
      * Test the model on a validation dataset.
      *

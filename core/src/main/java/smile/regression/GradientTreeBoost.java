@@ -103,7 +103,7 @@ import smile.validation.RegressionMeasure;
  * 
  * @author Haifeng Li
  */
-public class GradientTreeBoost implements Regression<Tuple> {
+public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -293,6 +293,11 @@ public class GradientTreeBoost implements Regression<Tuple> {
         return new GradientTreeBoost(formula, trees, b, shrinkage, importance);
     }
 
+    @Override
+    public Formula formula() {
+        return formula;
+    }
+
     /**
      * Returns the variable importance. Every time a split of a node is made
      * on variable the impurity criterion for the two descendant nodes is less
@@ -314,7 +319,14 @@ public class GradientTreeBoost implements Regression<Tuple> {
     public int size() {
         return trees.length;
     }
-    
+
+    /**
+     * Returns the regression trees.
+     */
+    public RegressionTree[] trees() {
+        return trees;
+    }
+
     /**
      * Trims the tree model set to a smaller size in case of over-fitting.
      * Or if extra decision trees in the model don't improve the performance,
@@ -343,8 +355,14 @@ public class GradientTreeBoost implements Regression<Tuple> {
         }
         
         return y;
-    }    
-    
+    }
+
+    @Override
+    public double[] predict(DataFrame data) {
+        DataFrame x = formula.frame(data);
+        return x.stream().mapToDouble(xi -> predict(xi)).toArray();
+    }
+
     /**
      * Test the model on a validation dataset.
      *
@@ -404,12 +422,5 @@ public class GradientTreeBoost implements Regression<Tuple> {
             }
         }
         return results;
-    }
-
-    /**
-     * Returns the regression trees.
-     */
-    public RegressionTree[] trees() {
-        return trees;
     }
 }

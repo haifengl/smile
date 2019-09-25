@@ -18,6 +18,8 @@
 package smile.neighbor;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
@@ -39,7 +41,8 @@ public class CoverTreeStringSpeedTest {
     public CoverTreeStringSpeedTest() {
         long start = System.currentTimeMillis();
         try {
-            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("neighbor/index.noun");
+            InputStreamReader reader = new FileReader(smile.util.Paths.getTestData("neighbor/index.noun").toFile());
+            BufferedReader input = new BufferedReader(reader);
             String line = input.readLine();
             while (line != null) {
                 if (!line.startsWith(" ")) {
