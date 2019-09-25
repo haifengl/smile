@@ -23,10 +23,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.data.AttributeDataset;
-import smile.data.NumericAttribute;
-import smile.data.parser.ArffParser;
-import smile.data.parser.DelimitedTextParser;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
 

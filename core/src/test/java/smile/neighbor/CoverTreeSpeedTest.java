@@ -42,34 +42,8 @@ import smile.util.Paths;
  * @author Haifeng Li
  */
 public class CoverTreeSpeedTest {
-    double[][] x = null;
-    double[][] testx = null;
-    CoverTree<double[]> coverTree = null;
 
     public CoverTreeSpeedTest() throws IOException {
-        long start = System.currentTimeMillis();
-        ArrayList<StructField> fields = new ArrayList<>();
-        fields.add(new StructField("class", DataTypes.ByteType));
-        IntStream.range(0, 256).forEach(i -> fields.add(new StructField("V"+i, DataTypes.ByteType)));
-        StructType schema = DataTypes.struct(fields);
-
-        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
-        csv.schema(schema);
-
-        DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
-        DataFrame test = csv.read(Paths.getTestData("usps/zip.test"));
-        Formula formula = Formula.lhs("class");
-
-        x = formula.frame(train).toArray();
-        testx = formula.frame(test).toArray();
-
-        double time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Loading data: %.2fs%n", time);
-
-        start = System.currentTimeMillis();
-        coverTree = new CoverTree<>(x, new EuclideanDistance());
-        time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Building cover tree: %.2fs%n", time);
     }
 
     @BeforeClass
@@ -91,13 +65,37 @@ public class CoverTreeSpeedTest {
     /**
      * Test of nearest method, of class CoverTree.
      */
-    @Test
-    public void testCoverTree() {
+    @Test(expected = Test.None.class)
+    public void testCoverTree() throws Exception {
         long start = System.currentTimeMillis();
+        ArrayList<StructField> fields = new ArrayList<>();
+        fields.add(new StructField("class", DataTypes.ByteType));
+        IntStream.range(0, 256).forEach(i -> fields.add(new StructField("V"+i, DataTypes.ByteType)));
+        StructType schema = DataTypes.struct(fields);
+
+        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
+        csv.schema(schema);
+
+        DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
+        DataFrame test = csv.read(Paths.getTestData("usps/zip.test"));
+        Formula formula = Formula.lhs("class");
+
+        double[][] x = formula.frame(train).toArray();
+        double[][] testx = formula.frame(test).toArray();
+
+        double time = (System.currentTimeMillis() - start) / 1000.0;
+        System.out.format("Loading data: %.2fs%n", time);
+
+        start = System.currentTimeMillis();
+        CoverTree<double[]> coverTree = new CoverTree<>(x, new EuclideanDistance());
+        time = (System.currentTimeMillis() - start) / 1000.0;
+        System.out.format("Building cover tree: %.2fs%n", time);
+
+        start = System.currentTimeMillis();
         for (int i = 0; i < testx.length; i++) {
             coverTree.nearest(testx[i]);
         }
-        double time = (System.currentTimeMillis() - start) / 1000.0;
+        time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();

@@ -19,6 +19,7 @@ package smile.regression;
 
 import java.util.Arrays;
 import smile.data.DataFrame;
+import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
@@ -51,7 +52,7 @@ import smile.math.special.Beta;
  *
  * @author Haifeng Li
  */
-public class LinearModel implements Regression<double[]>, OnlineRegression<double[]> {
+public class LinearModel implements Regression<double[]>, OnlineRegression<double[]>, DataFrameRegression {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LinearModel.class);
 
@@ -138,6 +139,11 @@ public class LinearModel implements Regression<double[]>, OnlineRegression<doubl
     /** Package-wise constructor. */
     LinearModel() {
 
+    }
+
+    @Override
+    public Formula formula() {
+        return formula;
     }
 
     /**
@@ -286,7 +292,12 @@ public class LinearModel implements Regression<double[]>, OnlineRegression<doubl
         return b + MathEx.dot(x, w);
     }
 
-    /** Predicts the dependent variables of instances in a data frame. */
+    @Override
+    public double predict(Tuple x) {
+        return predict(formula.apply(x).toArray());
+    }
+
+    @Override
     public double[] predict(DataFrame df) {
         DenseMatrix X = formula.matrix(df, false);
         double[] y = new double[X.nrows()];

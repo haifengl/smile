@@ -217,6 +217,7 @@ public class SVR<T> {
         int nsv = sv.size();
         int nbsv = 0;
         double[] w = new double[nsv];
+        @SuppressWarnings("unchecked")
         T[] vectors = (T[]) new Object[nsv];
         for (int i = 0; i < sv.size(); i++) {
             SupportVector v = sv.get(i);
