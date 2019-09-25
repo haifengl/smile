@@ -64,6 +64,13 @@ class CharVectorImpl implements CharVector {
     }
 
     @Override
+    public CharVector get(int... index) {
+        char[] v = new char[index.length];
+        for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
+        return new CharVectorImpl(name, v);
+    }
+
+    @Override
     public String name() {
         return name;
     }

@@ -25,13 +25,14 @@ import java.util.stream.Stream;
 import smile.data.type.*;
 import smile.data.vector.*;
 import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 
 /**
  * A data frame with a new index instead of the default [0, n) row index.
  *
  * @author Haifeng Li
  */
-class IndexDataFrame implements DataFrame {
+public class IndexDataFrame implements DataFrame {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IndexDataFrame.class);
 
     /** The underlying data frame. */
@@ -71,7 +72,7 @@ class IndexDataFrame implements DataFrame {
 
     @Override
     public int size() {
-        return df.size();
+        return index.length;
     }
 
     @Override
@@ -199,13 +200,191 @@ class IndexDataFrame implements DataFrame {
 
     @Override
     public double[][] toArray() {
-        // Although clean, this is not optimal in term of performance.
-        return rebase().toArray();
+        int nrows = nrows();
+        int ncols = ncols();
+        DataType[] types = types();
+
+        double[][] m = new double[nrows][ncols];
+        for (int j = 0; j < ncols; j++) {
+            DataType type = types[j];
+            switch (type.id()) {
+                case Double: {
+                    DoubleVector v = doubleVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getDouble(index[i]);
+                    break;
+                }
+
+                case Integer: {
+                    IntVector v = intVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getInt(index[i]);
+                    break;
+                }
+
+                case Float: {
+                    FloatVector v = floatVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getFloat(index[i]);
+                    break;
+                }
+
+                case Long: {
+                    LongVector v = longVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getLong(index[i]);
+                    break;
+                }
+
+                case Boolean: {
+                    BooleanVector v = booleanVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getDouble(index[i]);
+                    break;
+                }
+
+                case Byte: {
+                    ByteVector v = byteVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getByte(index[i]);
+                    break;
+                }
+
+                case Short: {
+                    ShortVector v = shortVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getShort(index[i]);
+                    break;
+                }
+
+                case Char: {
+                    CharVector v = charVector(j);
+                    for (int i = 0; i < nrows; i++) m[i][j] = v.getChar(index[i]);
+                    break;
+                }
+
+                case String: {
+                    StringVector v = stringVector(j);
+                    for (int i = 0; i < nrows; i++) {
+                        String s = v.get(index[i]);
+                        m[i][j] = s == null ? Double.NaN : Double.valueOf(s);
+                    }
+                    break;
+                }
+
+                case Object: {
+                    Class clazz = ((ObjectType) type).getObjectClass();
+                    if (clazz == Boolean.class) {
+                        Vector<Boolean> v = vector(j);
+                        for (int i = 0; i < nrows; i++) {
+                            Boolean b = v.get(index[i]);
+                            if (b != null)
+                                m[i][j] = b.booleanValue() ? 1 : 0;
+                            else
+                                m[i][j] = Double.NaN;
+                        }
+                    } else if (Number.class.isAssignableFrom(clazz)) {
+                        Vector<?> v = vector(j);
+                        for (int i = 0; i < nrows; i++) m[i][j] = v.getDouble(index[i]);
+                    } else {
+                        throw new UnsupportedOperationException(String.format("DataFrame.toMatrix() doesn't support type %s", type));
+                    }
+                    break;
+                }
+
+                default:
+                    throw new UnsupportedOperationException(String.format("DataFrame.toMatrix() doesn't support type %s", type));
+            }
+        }
+
+        return m;
     }
 
     @Override
     public DenseMatrix toMatrix() {
-        // Although clean, this is not optimal in term of performance.
-        return rebase().toMatrix();
+        int nrows = nrows();
+        int ncols = ncols();
+        DataType[] types = types();
+
+        DenseMatrix m = Matrix.of(nrows, ncols, 0);
+        for (int j = 0; j < ncols; j++) {
+            DataType type = types[j];
+            switch (type.id()) {
+                case Double: {
+                    DoubleVector v = doubleVector(j);
+                    for (int i = 0; i < nrows; i++) m.set(i, j, v.getDouble(index[i]));
+                    break;
+                }
+
+                case Integer: {
+                    IntVector v = intVector(j);
+                    for (int i = 0; i < nrows; i++) m.set(i, j, v.getInt(index[i]));
+                    break;
+                }
+
+                case Float: {
+                    FloatVector v = floatVector(j);
+                    for (int i = 0; i < nrows; i++) m.set(i, j, v.getFloat(index[i]));
+                    break;
+                }
+
+                case Long: {
+                    LongVector v = longVector(j);
+                    for (int i = 0; i < nrows; i++) m.set(i, j, v.getLong(index[i]));
+                    break;
+                }
+
+                case Boolean: {
+                    BooleanVector v = booleanVector(j);
+                    for (int i = 0; i < nrows; i++) m.set(i, j, v.getDouble(index[i]));
+                    break;
+                }
+
+                case Byte: {
+                    ByteVector v = byteVector(j);
+                    for (int i = 0; i < nrows; i++) m.set(i, j, v.getByte(index[i]));
+                    break;
+                }
+
+                case Short: {
+                    ShortVector v = shortVector(j);
+                    for (int i = 0; i < nrows; i++) m.set(i, j, v.getShort(index[i]));
+                    break;
+                }
+
+                case Char: {
+                    CharVector v = charVector(j);
+                    for (int i = 0; i < nrows; i++) m.set(i, j, v.getChar(index[i]));
+                    break;
+                }
+
+                case String: {
+                    StringVector v = stringVector(j);
+                    for (int i = 0; i < nrows; i++) {
+                        String s = v.get(index[i]);
+                        m.set(i, j, s == null ? Double.NaN : Double.valueOf(s));
+                    }
+                    break;
+                }
+
+                case Object: {
+                    Class clazz = ((ObjectType) type).getObjectClass();
+                    if (clazz == Boolean.class) {
+                        Vector<Boolean> v = vector(j);
+                        for (int i = 0; i < nrows; i++) {
+                            Boolean b = v.get(index[i]);
+                            if (b != null)
+                                m.set(i, j, b.booleanValue() ? 1 : 0);
+                            else
+                                m.set(i, j, Double.NaN);
+                        }
+                    } else if (Number.class.isAssignableFrom(clazz)) {
+                        Vector<?> v = vector(j);
+                        for (int i = 0; i < nrows; i++) m.set(i, j, v.getDouble(index[i]));
+                    } else {
+                        throw new UnsupportedOperationException(String.format("DataFrame.toMatrix() doesn't support type %s", type));
+                    }
+                    break;
+                }
+
+                default:
+                    throw new UnsupportedOperationException(String.format("DataFrame.toMatrix() doesn't support type %s", type));
+            }
+        }
+
+        return m;
     }
 }

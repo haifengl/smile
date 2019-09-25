@@ -64,6 +64,13 @@ class ShortVectorImpl implements ShortVector {
     }
 
     @Override
+    public ShortVector get(int... index) {
+        short[] v = new short[index.length];
+        for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
+        return new ShortVectorImpl(name, v);
+    }
+
+    @Override
     public String name() {
         return name;
     }

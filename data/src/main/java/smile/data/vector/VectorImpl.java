@@ -72,6 +72,14 @@ class VectorImpl<T> implements Vector<T> {
     }
 
     @Override
+    public Vector<T> get(int... index) {
+        @SuppressWarnings("unchecked")
+        T[] v = (T[]) new Object[index.length];
+        for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
+        return new VectorImpl<>(name, type, v);
+    }
+
+    @Override
     public String name() {
         return name;
     }
