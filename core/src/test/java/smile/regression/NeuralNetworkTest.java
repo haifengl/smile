@@ -22,8 +22,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
 import smile.validation.CrossValidation;
 import smile.math.MathEx;
 

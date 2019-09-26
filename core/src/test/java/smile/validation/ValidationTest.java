@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import smile.classification.ClassifierTrainer;
 import smile.classification.DecisionTree;
 import smile.classification.LDA;
+import smile.data.USPS;
 import smile.regression.RBFNetwork;
 import smile.util.SmileUtils;
 import smile.data.AttributeDataset;
@@ -68,24 +69,10 @@ public class ValidationTest {
     @Test
     public void testTest_3args_1() {
         System.out.println("test");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.util.Paths.getTestData("usps/zip.test"));
-
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-
-            LDA lda = new LDA(x, y);
-            double accuracy = Validation.test(lda, testx, testy);
-            System.out.println("accuracy = " + accuracy);
-            assertEquals(0.8724, accuracy, 1E-4);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        LDA lda = LDA.fit(USPS.formula, USPS.train);
+        double accuracy = Validation.test(lda, USPS.test);
+        System.out.println("accuracy = " + accuracy);
+        assertEquals(0.8724, accuracy, 1E-4);
     }
 
     /**

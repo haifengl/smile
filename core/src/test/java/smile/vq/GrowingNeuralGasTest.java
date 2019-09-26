@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.DataFrame;
+import smile.data.USPS;
 import smile.data.formula.Formula;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
@@ -68,25 +69,13 @@ public class GrowingNeuralGasTest {
      * Test of learn method, of class GrowingNeuralGas.
      */
     @Test(expected = Test.None.class)
-    public void testUSPS() throws Exception {
+    public void testUSPS() {
         System.out.println("USPS");
 
-        ArrayList<StructField> fields = new ArrayList<>();
-        fields.add(new StructField("class", DataTypes.ByteType));
-        IntStream.range(0, 256).forEach(i -> fields.add(new StructField("V"+i, DataTypes.ByteType)));
-        StructType schema = DataTypes.struct(fields);
-
-        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
-        csv.schema(schema);
-
-        DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
-        DataFrame test = csv.read(Paths.getTestData("usps/zip.test"));
-        Formula formula = Formula.lhs("class");
-
-        double[][] x = formula.frame(train).toArray();
-        int[] y = formula.response(train).toIntArray();
-        double[][] testx = formula.frame(test).toArray();
-        int[] testy = formula.response(test).toIntArray();
+        double[][] x = USPS.x;
+        int[] y = USPS.y;
+        double[][] testx = USPS.testx;
+        int[] testy = USPS.testy;
 
         GrowingNeuralGas gng = new GrowingNeuralGas(x[0].length);
         for (int i = 0; i < 10; i++) {

@@ -20,8 +20,6 @@ package smile.regression;
 import smile.sort.QuickSort;
 import smile.validation.Validation;
 import smile.validation.CrossValidation;
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
 import smile.math.MathEx;
 import org.junit.After;
 import org.junit.AfterClass;

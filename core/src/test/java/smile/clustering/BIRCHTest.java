@@ -17,15 +17,8 @@
 
 package smile.clustering;
 
-import org.apache.commons.csv.CSVFormat;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
-import smile.io.CSV;
+import smile.data.USPS;
 import smile.math.MathEx;
-import smile.util.Paths;
 import smile.validation.RandIndex;
 import smile.validation.AdjustedRandIndex;
 import org.junit.After;
@@ -33,10 +26,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.stream.IntStream;
-
 import static org.junit.Assert.*;
 
 /**
@@ -71,22 +60,10 @@ public class BIRCHTest {
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 
-        ArrayList<StructField> fields = new ArrayList<>();
-        fields.add(new StructField("class", DataTypes.ByteType));
-        IntStream.range(0, 256).forEach(i -> fields.add(new StructField("V"+i, DataTypes.ByteType)));
-        StructType schema = DataTypes.struct(fields);
-
-        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
-        csv.schema(schema);
-
-        DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
-        DataFrame test = csv.read(Paths.getTestData("usps/zip.test"));
-        Formula formula = Formula.lhs("class");
-
-        double[][] x = formula.frame(train).toArray();
-        int[] y = formula.response(train).toIntArray();
-        double[][] testx = formula.frame(test).toArray();
-        int[] testy = formula.response(test).toIntArray();
+        double[][] x = USPS.x;
+        int[] y = USPS.y;
+        double[][] testx = USPS.testx;
+        int[] testy = USPS.testy;
             
         BIRCH birch = new BIRCH(x[0].length, 5, 16.0);
         for (int i = 0; i < 20; i++) {

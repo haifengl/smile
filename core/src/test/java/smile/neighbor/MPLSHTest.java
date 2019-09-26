@@ -25,9 +25,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
+import smile.data.USPS;
 import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 
@@ -37,25 +35,12 @@ import smile.math.distance.EuclideanDistance;
  */
 @SuppressWarnings("rawtypes")
 public class MPLSHTest {
-    double[][] x = null;
-    double[][] testx = null;
-    MPLSH<double[]> lsh = null;
-    LinearSearch<double[]> naive = null;
+    double[][] x = USPS.x;
+    double[][] testx = USPS.testx;
+    MPLSH<double[]> lsh = new MPLSH<>(256, 100, 3, 4.0);
+    LinearSearch<double[]> naive = new LinearSearch<>(x, new EuclideanDistance());
 
     public MPLSHTest() {
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.util.Paths.getTestData("usps/zip.test"));
-
-            x = train.toArray(new double[train.size()][]);
-            testx = test.toArray(new double[test.size()][]);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
-
-        naive = new LinearSearch<>(x, new EuclideanDistance());
         lsh = new MPLSH<>(256, 100, 3, 4.0);
         for (double[] xi : x) {
             lsh.put(xi, xi);

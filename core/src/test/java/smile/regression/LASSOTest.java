@@ -23,7 +23,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.CPU;
-import smile.math.MathEx;
+import smile.data.DataFrame;
+import smile.data.Longley;
+import smile.data.formula.Formula;
+import smile.data.vector.DoubleVector;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.validation.CrossValidation;
@@ -94,15 +97,20 @@ public class LASSOTest {
             {0, 0.1, 1, 0.2}
         };
         
+        double[] y = {6, 5.2, 6.2, 5, 6};
+        /*
         double[] x0 = {1, 0, 1, 0};    // original signal
-        double[] y = new double[A.length];
         DenseMatrix a = Matrix.of(A);
         a.ax(x0, y);          // measurements with no noise
         for (int i = 0; i < y.length; i++) {
             y[i] += 5;
         }
+         */
+
+        DataFrame df = DataFrame.of(A, "V1", "V2", "V3", "V4");
+        df = df.merge(DoubleVector.of("y", y));
         
-        LASSO lasso = new LASSO.fit(A, y, 0.1, 0.001, 500);
+        LinearModel lasso = LASSO.fit(Formula.lhs("y"), df, 0.1, 0.001, 500);
 
         double rss = 0.0;
         int n = A.length;
@@ -126,20 +134,12 @@ public class LASSOTest {
     public void testLongley() {
         System.out.println("longley");
 
-      double rss = 0.0;
-        int n = longley.length;
-        LOOCV loocv = new LOOCV(n);
-        for (int i = 0; i < n; i++) {
-            double[][] trainx = MathEx.slice(longley, loocv.train[i]);
-            double[] trainy = MathEx.slice(y, loocv.train[i]);
-            LASSO lasso = new LASSO(trainx, trainy, 0.1);
+        LinearModel model = LASSO.fit(Longley.formula, Longley.data, 0.1);
+        System.out.println(model);
 
-            double r = y[loocv.test[i]] - lasso.predict(longley[loocv.test[i]]);
-            rss += r * r;
-        }
-
-        System.out.println("LOOCV MSE = " + rss / n);
-        assertEquals(2.0012529348358212, rss/n, 1E-4);
+        double rss = LOOCV.test(Longley.data, (x) -> LASSO.fit(CPU.formula, x, 0.1));
+        System.out.println("LOOCV RMSE = " + rss);
+        assertEquals(2.0012529348358212, rss, 1E-4);
     }
 
     /**

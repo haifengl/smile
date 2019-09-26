@@ -39,7 +39,7 @@ public class BKTreeSpeedTest {
     public BKTreeSpeedTest() {
         long start = System.currentTimeMillis();
         try {
-            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("neighbor/index.noun");
+            BufferedReader input = smile.util.Paths.getTestDataReader("neighbor/index.noun");
             String line = input.readLine();
             while (line != null) {
                 if (!line.startsWith(" ")) {

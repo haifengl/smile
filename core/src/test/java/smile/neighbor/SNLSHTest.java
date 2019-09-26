@@ -24,11 +24,13 @@ import smile.sort.HeapSelect;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.stream.Stream;
 import static smile.neighbor.SNLSH.simhash64;
 
 /**
@@ -95,12 +97,12 @@ public class SNLSHTest {
 
     private List<Sentence> loadData(String path) throws IOException {
         List<Sentence> data = new ArrayList<>();
-        List<String> lines = IOUtils.readLines(IOUtils.getTestDataReader(path));
-        for (String line : lines) {
+        Stream<String> lines = Files.lines(smile.util.Paths.getTestData(path));
+        lines.forEach(line -> {
             List<String> s = tokenize(line, "\t");
             data.add(new Sentence(s.get(s.size() - 1)));
             data.add(new Sentence(s.get(s.size() - 2)));
-        }
+        });
         return data.subList(2, data.size());
     }
 
