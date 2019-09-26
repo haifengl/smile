@@ -22,11 +22,17 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.DataFrame;
+import smile.data.formula.DateFeature;
+import smile.data.formula.Formula;
+import smile.data.measure.NominalScale;
+import smile.data.type.DataTypes;
+import smile.data.type.StructType;
+import smile.io.Arff;
+import smile.util.Paths;
+
 import static org.junit.Assert.*;
-import smile.data.Attribute;
-import smile.data.AttributeDataset;
-import smile.data.DateAttribute;
-import smile.data.parser.ArffParser;
+import static smile.data.formula.Terms.date;
 
 /**
  *
@@ -60,19 +66,20 @@ public class DateFeatureTest {
     public void testAttributes() {
         System.out.println("attributes");
         try {
-            ArffParser parser = new ArffParser();
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/date.arff"));
-            
-            DateFeature.Type[] features = {DateFeature.Type.YEAR, DateFeature.Type.MONTH, DateFeature.Type.DAY_OF_MONTH, DateFeature.Type.DAY_OF_WEEK, DateFeature.Type.HOURS, DateFeature.Type.MINUTES, DateFeature.Type.SECONDS};
-            DateFeature df = new DateFeature(features);
-            Attribute[] attributes = df.attributes();
-            assertEquals(features.length, attributes.length);
-            for (int i = 0; i < attributes.length; i++) {
-                System.out.println(attributes[i]);
+            Arff arff = new Arff(Paths.getTestData("weka/date.arff"));
+            DataFrame data = arff.read();
+
+            Formula formula = Formula.rhs(date("timestamp", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH, DateFeature.DAY_OF_WEEK, DateFeature.HOURS, DateFeature.MINUTES, DateFeature.SECONDS));
+            DataFrame output = formula.frame(data);
+            assertEquals(output.ncols(), 7);
+            StructType schema = output.schema();
+            System.out.println(schema);
+            for (int i = 0; i < output.ncols(); i++) {
                 if (i == 1 || i == 3) {
-                    assertEquals(Attribute.Type.NOMINAL, attributes[i].getType());
+                    assertEquals(DataTypes.IntegerType, schema.field(i).type);
+                    assertTrue(schema.field(i).measure instanceof NominalScale);
                 } else {
-                    assertEquals(Attribute.Type.NUMERIC, attributes[i].getType());
+                    assertEquals(DataTypes.DoubleType, schema.field(i).type);
                 }
             }
         } catch (Exception ex) {
@@ -92,18 +99,15 @@ public class DateFeatureTest {
         };
 
         try {
-            ArffParser parser = new ArffParser();
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/date.arff"));
-            double[][] x = data.toArray(new double[data.size()][]);
-            
-            DateFeature.Type[] features = {DateFeature.Type.YEAR, DateFeature.Type.MONTH, DateFeature.Type.DAY_OF_MONTH, DateFeature.Type.DAY_OF_WEEK, DateFeature.Type.HOURS, DateFeature.Type.MINUTES, DateFeature.Type.SECONDS};
-            DateFeature df = new DateFeature(features);
-            Attribute[] attributes = df.attributes();
-            assertEquals(features.length, attributes.length);
-            for (int i = 0; i < x.length; i++) {
-                double[] y = df.feature(((DateAttribute)data.attributes()[0]).toDate(x[i][0]));
-                for (int j = 0; j < y.length; j++) {
-                    assertEquals(result[i][j], y[j], 1E-7);
+            Arff arff = new Arff(Paths.getTestData("weka/date.arff"));
+            DataFrame data = arff.read();
+
+            Formula formula = Formula.rhs(date("timestamp", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH, DateFeature.DAY_OF_WEEK, DateFeature.HOURS, DateFeature.MINUTES, DateFeature.SECONDS));
+            DataFrame output = formula.frame(data);
+
+            for (int i = 0; i < output.nrows(); i++) {
+                for (int j = 0; j < output.ncols(); j++) {
+                    assertEquals(result[i][j], output.getDouble(i, j), 1E-7);
                 }
             }
         } catch (Exception ex) {
