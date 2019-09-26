@@ -125,17 +125,16 @@ public class CrossValidation {
     }
 
     /** Runs cross validation tests. */
-    public static double test(int k, double[][] x, double[] y, BiFunction<double[][], double[], Regression<double[]>> trainer) {
-        CrossValidation cv = new CrossValidation(x.length, k);
+    public <T> double test(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
         double rss = 0.0;
 
         for (int i = 0; i < k; i++) {
-            double[][] trainx = MathEx.slice(x, cv.train[i]);
-            double[] trainy = MathEx.slice(y, cv.train[i]);
-            double[][] testx = MathEx.slice(x, cv.test[i]);
-            double[] testy = MathEx.slice(y, cv.test[i]);
+            T[] trainx = MathEx.slice(x, train[i]);
+            double[] trainy = MathEx.slice(y, train[i]);
+            T[] testx = MathEx.slice(x, test[i]);
+            double[] testy = MathEx.slice(y, test[i]);
 
-            Regression<double[]> model = trainer.apply(trainx, trainy);
+            Regression<T> model = trainer.apply(trainx, trainy);
             for (int j = 0; j < testx.length; j++) {
                 double r = testy[j] - model.predict(testx[j]);
                 rss += r * r;
@@ -146,16 +145,14 @@ public class CrossValidation {
     }
 
     /** Runs cross validation tests. */
-    public static double test(int k, DataFrame data, Function<DataFrame, Regression> trainer) {
-        CrossValidation cv = new CrossValidation(data.size(), k);
+    public <T> double test(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
         double rss = 0.0;
 
         for (int i = 0; i < k; i++) {
-            Regression model = trainer.apply(data.of(cv.train[i]));
-            Optional<Formula> formula = model.formula();
-            DataFrame oob = data.of(cv.test[i]);
+            Regression<T> model = trainer.apply(data.of(train[i]));
+            DataFrame oob = data.of(test[i]);
             double[] prediction = model.predict(oob);
-            double[] y = formula.get().response(oob).toDoubleArray();
+            double[] y = model.formula().get().response(oob).toDoubleArray();
 
             for (int j = 0; j < y.length; j++) {
                 double r = y[j] - prediction[j];
@@ -164,5 +161,17 @@ public class CrossValidation {
         }
 
         return Math.sqrt(rss / data.size());
+    }
+
+    /** Runs cross validation tests. */
+    public static <T> double test(int k, T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+        CrossValidation cv = new CrossValidation(x.length, k);
+        return cv.test(x, y, trainer);
+    }
+
+    /** Runs cross validation tests. */
+    public static <T> double test(int k, DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+        CrossValidation cv = new CrossValidation(data.size(), k);
+        return cv.test(data, trainer);
     }
 }

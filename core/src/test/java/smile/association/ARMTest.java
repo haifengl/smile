@@ -109,39 +109,11 @@ public class ARMTest {
     /**
      * Test of learn method, of class ARM.
      */
-    @Test
-    public void testLearnPima() {
+    @Test(expected = Test.None.class)
+    public void testLearnPima() throws IOException {
         System.out.println("pima");
 
-        List<int[]> dataList = new ArrayList<>(1000);
-
-        try {
-            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("transaction/pima.D38.N768.C2");
-
-            String line;
-            for (int nrow = 0; (line = input.readLine()) != null; nrow++) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-
-                String[] s = line.split(" ");
-
-                int[] point = new int[s.length];
-                for (int i = 0; i < s.length; i++) {
-                    point[i] = Integer.parseInt(s[i]);
-                }
-
-                dataList.add(point);
-            }
-        } catch (IOException ex) {
-            System.err.println(ex);
-        }
-
-        int[][] data = dataList.toArray(new int[dataList.size()][]);
-
-        int n = MathEx.max(data);
-        System.out.format("%d transactions, %d items%n", data.length, n);
-        
+        int[][] data = ItemSetTestData.read("transaction/pima.D38.N768.C2");
         ARM instance = new ARM(data, 20);
         long numRules = instance.learn(0.9, System.out);
         System.out.format("%d association rules discovered%n", numRules);
@@ -152,45 +124,11 @@ public class ARMTest {
     /**
      * Test of learn method, of class ARM.
      */
-    @Test
-    public void testLearnKosarak() {
+    @Test(expected = Test.None.class)
+    public void testLearnKosarak() throws IOException {
         System.out.println("kosarak");
 
-        List<int[]> dataList = new ArrayList<>(1000);
-
-        try {
-            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("transaction/kosarak.dat");
-
-            String line;
-            for (int nrow = 0; (line = input.readLine()) != null; nrow++) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-
-                String[] s = line.split(" ");
-
-                Set<Integer> items = new HashSet<>();
-                for (int i = 0; i < s.length; i++) {
-                    items.add(Integer.parseInt(s[i]));
-                }
-
-                int j = 0;
-                int[] point = new int[items.size()];
-                for (int i : items) {
-                    point[j++] = i;
-                }
-
-                dataList.add(point);
-            }
-        } catch (IOException ex) {
-            System.err.println(ex);
-        }
-
-        int[][] data = dataList.toArray(new int[dataList.size()][]);
-
-        int n = MathEx.max(data);
-        System.out.format("%d transactions, %d items%n", data.length, n);
-        
+        int[][] data = ItemSetTestData.read("transaction/kosarak.dat");
         ARM instance = new ARM(data, 0.003);
         long numRules = instance.learn(0.5, System.out);
         System.out.format("%d association rules discovered%n", numRules);

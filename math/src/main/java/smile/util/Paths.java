@@ -17,6 +17,10 @@
 
 package smile.util;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 
 /**
@@ -31,5 +35,11 @@ public interface Paths {
     /** Get the file path of a test sample dataset. */
     static Path getTestData(String... path) {
         return java.nio.file.Paths.get(home + "/data", path);
+    }
+
+    /** Returns a reader of test data. */
+    static BufferedReader getTestDataReader(String... path) throws FileNotFoundException {
+        FileInputStream stream = new FileInputStream(getTestData(path).toFile());
+        return new BufferedReader(new InputStreamReader(stream));
     }
 }

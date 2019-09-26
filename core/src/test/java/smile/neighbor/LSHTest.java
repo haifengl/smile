@@ -19,22 +19,13 @@ package smile.neighbor;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.stream.IntStream;
-
-import org.apache.commons.csv.CSVFormat;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
-import smile.io.CSV;
+import smile.data.USPS;
 import smile.math.distance.EuclideanDistance;
-import smile.util.Paths;
 
 /**
  *
@@ -42,36 +33,12 @@ import smile.util.Paths;
  */
 @SuppressWarnings("rawtypes")
 public class LSHTest {
-    double[][] x = null;
-    double[][] testx = null;
-    LSH<double[]> lsh = null;
-    LinearSearch<double[]> naive = null;
+    double[][] x = USPS.x;
+    double[][] testx = USPS.testx;
+    LSH<double[]> lsh = new LSH<>(x, x);
+    LinearSearch<double[]> naive = new LinearSearch<>(x, new EuclideanDistance());
 
     public LSHTest() throws IOException {
-        ArrayList<StructField> fields = new ArrayList<>();
-        fields.add(new StructField("class", DataTypes.ByteType));
-        IntStream.range(0, 256).forEach(i -> fields.add(new StructField("V"+i, DataTypes.ByteType)));
-        StructType schema = DataTypes.struct(fields);
-
-        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
-        csv.schema(schema);
-
-        DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
-        DataFrame test = csv.read(Paths.getTestData("usps/zip.test"));
-        Formula formula = Formula.lhs("class");
-
-        x = formula.frame(train).toArray();
-        testx = formula.frame(test).toArray();
-
-        naive = new LinearSearch<>(x, new EuclideanDistance());
-        lsh = new LSH<>(x, x);
-        /*
-        lsh = new LSH<double[]>(256, 100, 3, 4.0);
-        for (double[] xi : x) {
-            lsh.put(xi, xi);
-        }
-         * 
-         */
     }
 
     @BeforeClass

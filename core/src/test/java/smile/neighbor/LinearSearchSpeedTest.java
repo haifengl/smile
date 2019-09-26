@@ -31,6 +31,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.DataFrame;
+import smile.data.USPS;
 import smile.data.formula.Formula;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
@@ -78,8 +79,7 @@ public class LinearSearchSpeedTest {
         List<String> words = new ArrayList<>();
         long start = System.currentTimeMillis();
         try {
-            InputStreamReader reader = new FileReader(smile.util.Paths.getTestData("neighbor/index.noun").toFile());
-            BufferedReader input = new BufferedReader(reader);
+            BufferedReader input = smile.util.Paths.getTestDataReader("neighbor/index.noun");
             String line = input.readLine();
             while (line != null) {
                 if (!line.startsWith(" ")) {
@@ -183,32 +183,16 @@ public class LinearSearchSpeedTest {
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 
-        long start = System.currentTimeMillis();
-        ArrayList<StructField> fields = new ArrayList<>();
-        fields.add(new StructField("class", DataTypes.ByteType));
-        IntStream.range(0, 256).forEach(i -> fields.add(new StructField("V"+i, DataTypes.ByteType)));
-        StructType schema = DataTypes.struct(fields);
-
-        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
-        csv.schema(schema);
-
-        DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
-        DataFrame test = csv.read(Paths.getTestData("usps/zip.test"));
-        Formula formula = Formula.lhs("class");
-
-        double[][] x = formula.frame(train).toArray();
-        double[][] testx = formula.frame(test).toArray();
-
-        double time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Loading USPS: %.2fs%n", time);
+        double[][] x = USPS.x;
+        double[][] testx = USPS.testx;
 
         LinearSearch<double[]> naive = new LinearSearch<>(x, new EuclideanDistance());
 
-        start = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
         for (int i = 0; i < testx.length; i++) {
             naive.nearest(testx[i]);
         }
-        time = (System.currentTimeMillis() - start) / 1000.0;
+        double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();

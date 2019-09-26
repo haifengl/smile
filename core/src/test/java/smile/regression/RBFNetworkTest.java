@@ -19,8 +19,6 @@ package smile.regression;
 
 import smile.math.distance.EuclideanDistance;
 import smile.math.rbf.RadialBasisFunction;
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
 
 import org.junit.After;
 import org.junit.AfterClass;

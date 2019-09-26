@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import smile.data.CPU;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.io.Arff;
@@ -222,17 +223,13 @@ public class KPCATest {
      * Test of learn method, of class PCA.
      */
     @Test(expected = Test.None.class)
-    public void testKPCAThreshold() throws Exception {
+    public void testKPCAThreshold() {
         System.out.println("learn threshold");
-        Arff arff = new Arff(Paths.getTestData("weka/cpu.arff"));
-        DataFrame cpu = arff.read();
-        Formula formula = Formula.lhs("class");
-        double[][] x = formula.frame(cpu).toArray();
 
-        KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(Math.sqrt(2.5)), 1E-4);
+        KPCA<double[]> kpca = new KPCA(CPU.x, new GaussianKernel(Math.sqrt(2.5)), 1E-4);
         assertTrue(MathEx.equals(latent, kpca.getVariances(), 1E-3));
-        double[][] points = kpca.project(x);
-        points[0] = kpca.project(x[0]);
+        double[][] points = kpca.project(CPU.x);
+        points[0] = kpca.project(CPU.x[0]);
         assertTrue(MathEx.equals(points, kpca.getCoordinates(), 1E-7));
 /*
             for (int j = 0; j < points[0].length; j++) {
@@ -250,18 +247,13 @@ public class KPCATest {
      * Test of learn method, of class PCA.
      */
     @Test(expected = Test.None.class)
-    public void testKPCAK() throws Exception {
+    public void testKPCAK() {
         System.out.println("learn k");
 
-        Arff arff = new Arff(Paths.getTestData("weka/cpu.arff"));
-        DataFrame cpu = arff.read();
-        Formula formula = Formula.lhs("class");
-        double[][] x = formula.frame(cpu).toArray();
-
-        KPCA<double[]> kpca = new KPCA(x, new GaussianKernel(Math.sqrt(2.5)), 29);
+        KPCA<double[]> kpca = new KPCA(CPU.x, new GaussianKernel(Math.sqrt(2.5)), 29);
         assertTrue(MathEx.equals(latent, kpca.getVariances(), 1E-3));
-        double[][] points = kpca.project(x);
-        points[0] = kpca.project(x[0]);
+        double[][] points = kpca.project(CPU.x);
+        points[0] = kpca.project(CPU.x[0]);
         assertTrue(MathEx.equals(points, kpca.getCoordinates(), 1E-7));
 /*
             for (int j = 0; j < points[0].length; j++) {

@@ -17,6 +17,16 @@
 
 package smile.validation;
 
+import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.formula.Formula;
+import smile.math.MathEx;
+import smile.regression.Regression;
+
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
 /**
  * Leave-one-out cross validation. LOOCV uses a single observation
  * from the original sample as the validation data, and the remaining
@@ -59,5 +69,39 @@ public class LOOCV {
                 }
             }
         }
+    }
+
+    /** Runs leave-one-out cross validation tests. */
+    public static <T> double test(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+        int n = x.length;
+        LOOCV cv = new LOOCV(n);
+        double rss = 0.0;
+
+        for (int i = 0; i < n; i++) {
+            T[] trainx = MathEx.slice(x, cv.train[i]);
+            double[] trainy = MathEx.slice(y, cv.train[i]);
+
+            Regression<T> model = trainer.apply(trainx, trainy);
+            double r = y[cv.test[i]] - model.predict(x[cv.test[i]]);
+            rss += r * r;
+        }
+
+        return Math.sqrt(rss / n);
+    }
+
+    /** Runs leave-one-out cross validation tests. */
+    public static <T> double test(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+        int n = data.size();
+        LOOCV cv = new LOOCV(n);
+        double rss = 0.0;
+
+        for (int i = 0; i < n; i++) {
+            Regression<T> model = trainer.apply(data.of(cv.train[i]));
+            Tuple xi = data.get(cv.test[i]);
+            double r = model.formula().get().response(xi) - model.predict(xi);
+            rss += r * r;
+        }
+
+        return Math.sqrt(rss / n);
     }
 }

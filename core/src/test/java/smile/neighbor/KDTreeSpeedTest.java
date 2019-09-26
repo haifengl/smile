@@ -19,23 +19,14 @@ package smile.neighbor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
-
-import org.apache.commons.csv.CSVFormat;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
-import smile.io.CSV;
+import smile.data.USPS;
 import smile.math.MathEx;
 import smile.stat.distribution.MultivariateGaussianDistribution;
-import smile.util.Paths;
 
 /**
  *
@@ -140,28 +131,12 @@ public class KDTreeSpeedTest {
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 
+        double[][] x = USPS.x;
+        double[][] testx = USPS.testx;
+
         long start = System.currentTimeMillis();
-        ArrayList<StructField> fields = new ArrayList<>();
-        fields.add(new StructField("class", DataTypes.ByteType));
-        IntStream.range(0, 256).forEach(i -> fields.add(new StructField("V"+i, DataTypes.ByteType)));
-        StructType schema = DataTypes.struct(fields);
-
-        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
-        csv.schema(schema);
-
-        DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
-        DataFrame test = csv.read(Paths.getTestData("usps/zip.test"));
-        Formula formula = Formula.lhs("class");
-
-        double[][] x = formula.frame(train).toArray();
-        double[][] testx = formula.frame(test).toArray();
-
-        double time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Loading USPS: %.2fs%n", time);
-
-        start = System.currentTimeMillis();
         KDTree<double[]> kdtree = new KDTree<>(x, x);
-        time = (System.currentTimeMillis() - start) / 1000.0;
+        double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Building KD-tree: %.2fs%n", time);
 
         start = System.currentTimeMillis();
