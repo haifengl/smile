@@ -18,10 +18,10 @@
 package smile.feature;
 
 import java.io.IOException;
-import java.io.BufferedReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
-
+import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -69,28 +69,20 @@ public class BagTest {
         mergedFeatureLists.addAll(Arrays.asList(featuresForBirdStories));
         mergedFeatureLists.addAll(Arrays.asList(featuresForBuildingStories));
 
-        Bag<String> bag = new Bag<>(mergedFeatureLists.toArray(new String[featuresForBirdStories.length + featuresForBuildingStories.length]));
+        Bag bag = new Bag(mergedFeatureLists.toArray(new String[featuresForBirdStories.length + featuresForBuildingStories.length]));
 
-        double[] result = bag.feature(testMessage.split(" "));
+        double[] result = bag.apply(testMessage.split(" "));
         assertEquals(9, result.length);
     }
 
     /**
      * Test of feature method, of class Bag.
      */
-    @Test
-    public void testFeature() {
+    @Test(expected = Test.None.class)
+    public void testFeature() throws IOException {
         System.out.println("feature");
-        String[][] text = new String[2000][];
-
-        try(BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("text/movie.txt")) {
-            for (int i = 0; i < text.length; i++) {
-                String[] words = input.readLine().trim().split("\\s+");
-                text[i] = words;
-            }
-        } catch (IOException ex) {
-            System.err.println(ex);
-        }
+        Stream<String> lines = Files.lines(smile.util.Paths.getTestData("text/movie.txt"));
+        String[][] text = lines.map(line -> line.trim().split("\\s+")).toArray(String[][]::new);
 
         String[] feature = {
             "outstanding", "wonderfully", "wasted", "lame", "awful", "poorly",
@@ -100,11 +92,11 @@ public class BagTest {
             "perfectly", "masterpiece", "realistic", "flaws"
         };
         
-        Bag<String> bag = new Bag<>(feature);
+        Bag bag = new Bag(feature);
         
         double[][] x = new double[text.length][];
         for (int i = 0; i < text.length; i++) {
-            x[i] = bag.feature(text[i]);
+            x[i] = bag.apply(text[i]);
             assertEquals(feature.length, x[i].length);
         }
         

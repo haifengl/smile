@@ -22,9 +22,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
-import smile.data.parser.DelimitedTextParser;
+import smile.data.Movement;
+import smile.data.Segment;
+import smile.data.SyntheticControl;
 import smile.math.MathEx;
 
 /**
@@ -32,14 +32,6 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class MissingValueImputationTest {
-
-    ArffParser arffParser = new ArffParser();
-    DelimitedTextParser csvParser = new DelimitedTextParser();
-    AttributeDataset movement;
-    AttributeDataset control;
-    AttributeDataset segment;
-    AttributeDataset iris;
-    AttributeDataset soybean;
 
     public MissingValueImputationTest() {
     }
@@ -54,34 +46,15 @@ public class MissingValueImputationTest {
 
     @Before
     public void setUp() {
-        try {
-            arffParser.setResponseIndex(4);
-            iris = arffParser.parse(smile.util.Paths.getTestData("weka/iris.arff"));
-
-            arffParser.setResponseIndex(35);
-            soybean = arffParser.parse(smile.util.Paths.getTestData("weka/soybean.arff"));
-
-            arffParser.setResponseIndex(19);
-            segment = arffParser.parse(smile.util.Paths.getTestData("weka/segment-challenge.arff"));
-
-            csvParser.setDelimiter(",");
-            movement = csvParser.parse("Movement", smile.util.Paths.getTestData("uci/movement_libras.data"));
-
-            csvParser.setDelimiter(" +");
-            control = csvParser.parse("Control", smile.util.Paths.getTestData("uci/synthetic_control.data"));
-        } catch (Exception e) {
-            System.err.println(e);
-        }
     }
 
     @After
     public void tearDown() {
     }
 
-    private double impute(AttributeDataset dataset, MissingValueImputation imputation, double rate) throws Exception {
+    private double impute(double[][] data, MissingValueImputation imputation, double rate) throws Exception {
 
         int n = 0;
-        double[][] data = dataset.toArray(new double[dataset.size()][]);
         double[][] dat = new double[data.length][data[0].length];
         for (int i = 0; i < dat.length; i++) {
             for (int j = 0; j < dat[i].length; j++) {
@@ -108,10 +81,10 @@ public class MissingValueImputationTest {
         return rmse;
     }
 
-    void impute(AttributeDataset data) throws Exception {
-        int p = data.attributes().length;        
-        System.out.println("----------- " + data.getName() + " ----------------");
-        System.out.println("----------- " + data.size() + " x " + p + " ----------------");
+    void impute(String name, double[][] data) throws Exception {
+        int p = data[0].length;
+        System.out.println("----------- " + name + " ----------------");
+        System.out.println("----------- " + data.length + " x " + p + " ----------------");
         System.out.println("MeanImputation");
         MissingValueImputation instance = new AverageImputation();
         System.out.println("RMSE of 1% missing values = " + impute(data, instance, 0.01));
@@ -168,8 +141,8 @@ public class MissingValueImputationTest {
      */
     @Test
     public void testImpute() throws Exception {
-        impute(segment);
-        impute(movement);
-        impute(control);
+        impute("Segment", Segment.x);
+        impute("Movement", Movement.x);
+        impute("Synthetic Control", SyntheticControl.x);
     }
 }

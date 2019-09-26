@@ -17,13 +17,14 @@
 
 package smile.feature;
 
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.Weather;
+import smile.data.WeatherNominal;
+
 import static org.junit.Assert.*;
 
 /**
@@ -74,22 +75,13 @@ public class SparseOneHotEncoderTest {
             {2, 4, 6, 8}
         };
         
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset weather = arffParser.parse(smile.util.Paths.getTestData("weka/weather.nominal.arff"));
-            double[][] x = weather.toArray(new double[weather.size()][]);
-
-            SparseOneHotEncoder n2sb = new SparseOneHotEncoder(weather.attributes());
-            for (int i = 0; i < x.length; i++) {
-                int[] y = n2sb.feature(x[i]);
-                assertEquals(result[i].length, y.length);
-                for (int j = 0; j < y.length; j++) {
-                    assertEquals(result[i][j], y[j]);
-                }
+        SparseOneHotEncoder n2sb = new SparseOneHotEncoder(Weather.data.schema());
+        for (int i = 0; i < Weather.data.size(); i++) {
+            int[] y = n2sb.apply(Weather.data.get(i));
+            assertEquals(result[i].length, y.length);
+            for (int j = 0; j < y.length; j++) {
+                assertEquals(result[i][j], y[j]);
             }
-        } catch (Exception ex) {
-            System.err.println(ex);
         }
     }
 }
