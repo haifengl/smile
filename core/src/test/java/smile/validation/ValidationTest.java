@@ -30,10 +30,6 @@ import smile.classification.LDA;
 import smile.data.USPS;
 import smile.regression.RBFNetwork;
 import smile.util.SmileUtils;
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.parser.ArffParser;
-import smile.data.parser.DelimitedTextParser;
 import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 import smile.math.rbf.RadialBasisFunction;
@@ -63,9 +59,7 @@ public class ValidationTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of test method, of class Validation.
-     */
+/*
     @Test
     public void testTest_3args_1() {
         System.out.println("test");
@@ -75,9 +69,6 @@ public class ValidationTest {
         assertEquals(0.8724, accuracy, 1E-4);
     }
 
-    /**
-     * Test of test method, of class Validation.
-     */
     @Test
     public void testTest_3args_2() {
         System.out.println("test");
@@ -116,9 +107,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of test method, of class Validation.
-     */
     @Test
     public void testTest_4args_1() {
         System.out.println("test");
@@ -143,9 +131,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of test method, of class Validation.
-     */
     @Test
     public void testTest_4args_2() {
         System.out.println("test");
@@ -187,9 +172,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of loocv method, of class Validation.
-     */
     @Test
     public void testLoocv_3args_1() {
         System.out.println("loocv");
@@ -210,9 +192,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of loocv method, of class Validation.
-     */
     @Test
     public void testLoocv_3args_2() {
         System.out.println("loocv");
@@ -233,9 +212,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of loocv method, of class Validation.
-     */
     @Test
     public void testLoocv_4args_1() {
         System.out.println("loocv");
@@ -259,9 +235,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of loocv method, of class Validation.
-     */
     @Test
     public void testLoocv_4args_2() {
         System.out.println("loocv");
@@ -284,9 +257,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of cv method, of class Validation.
-     */
     @Test
     public void testCv_4args_1() {
         System.out.println("cv");
@@ -306,9 +276,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of cv method, of class Validation.
-     */
     @Test
     public void testCv_4args_2() {
         System.out.println("cv");
@@ -329,9 +296,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of cv method, of class Validation.
-     */
     @Test
     public void testCv_5args_1() {
         System.out.println("cv");
@@ -353,9 +317,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of cv method, of class Validation.
-     */
     @Test
     public void testCv_5args_2() {
         System.out.println("cv");
@@ -378,9 +339,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of bootstrap method, of class Validation.
-     */
     @Test
     public void testBootstrap_4args_1() {
         System.out.println("bootstrap");
@@ -401,9 +359,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of bootstrap method, of class Validation.
-     */
     @Test
     public void testBootstrap_4args_2() {
         System.out.println("bootstrap");
@@ -425,9 +380,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of bootstrap method, of class Validation.
-     */
     @Test
     public void testBootstrap_5args_1() {
         System.out.println("bootstrap");
@@ -459,9 +411,6 @@ public class ValidationTest {
         }
     }
 
-    /**
-     * Test of bootstrap method, of class Validation.
-     */
     @Test
     public void testBootstrap_5args_2() {
         System.out.println("bootstrap");
@@ -485,4 +434,5 @@ public class ValidationTest {
             System.err.println(ex);
         }
     }
+ */
 }

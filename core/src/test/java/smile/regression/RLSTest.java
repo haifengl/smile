@@ -22,8 +22,16 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.Abalone;
+import smile.data.CPU;
+import smile.data.DataFrame;
+import smile.data.Planes;
+import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
+
+import javax.sound.sampled.Line;
+import java.util.stream.IntStream;
 
 /**
  *
@@ -55,58 +63,25 @@ public class RLSTest {
     /**
      * Test of online learn method of class OLS.
      */
-    public void testOnlineLearn(String name, String fileName, int responseIndex){
-        System.out.println(name+"\t Online Learn");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(responseIndex);
-        try {
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData(fileName));
+    public void testOnlineLearn(String name, Formula formula, DataFrame data){
+        System.out.println(name);
 
-            double[][] datax = data.toArray(new double[data.size()][]);
-            double[] datay = data.toArray(new double[data.size()]);
-
-            int n = datax.length;
-            int k = 10;
-
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
-
-                int l = trainx.length / 2;
-                double[][] batchx = new double[l][];
-                double[]   batchy = new double[l];
-                double[][] onlinex = new double[l][];
-                double[]   onliney = new double[l];
-                for (int j = 0; j < l; j++) {
-                    batchx[j] = trainx[j];
-                    batchy[j] = trainy[j];
-                    onlinex[j] = trainx[l+j];
-                    onliney[j] = trainy[l+j];
-                }
-                RLS rls = new RLS(batchx, batchy, 1);
-                rls.learn(onlinex, onliney);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - rls.predict(testx[j]);
-                    rss += r * r;
-                }
-                
-            }
-            System.out.println("MSE = " + rss / n);
-        } catch (Exception ex) {
-             System.err.println(ex);
-        }
+        double rss = CrossValidation.test(10, data, x -> {
+            int n = x.size();
+            DataFrame batch = x.of(IntStream.range(0, n/2).toArray());
+            DataFrame online = x.of(IntStream.range(n/2, n).toArray());
+            LinearModel model = OLS.fit(formula, batch);
+            online.stream().forEach(t -> model.update(t));
+            return model;
+        });
+        System.out.format("10-CV RMSE = %.4f%n", rss);
     }
     
     @Test
     public void testOnlineLearn() {
-        testOnlineLearn("CPU", "weka/cpu.arff", 6);
-        testOnlineLearn("2dplanes", "weka/regression/2dplanes.arff", 10);
-        testOnlineLearn("abalone", "weka/regression/abalone.arff", 8);
+        testOnlineLearn("CPU", CPU.formula, CPU.data);
+        testOnlineLearn("2dplanes", Planes.formula, Planes.data);
+        testOnlineLearn("abalone", Abalone.formula, Abalone.train);
         //testOnlineLearn(true, "bank32nh", "weka/regression/bank32nh.arff", 32);
         //testOnlineLearn(true, "cal_housing", "weka/regression/cal_housing.arff", 8);
         //testOnlineLearn(true, "puma8nh", "weka/regression/puma8nh.arff", 8);

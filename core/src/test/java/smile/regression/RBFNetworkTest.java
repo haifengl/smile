@@ -17,17 +17,17 @@
 
 package smile.regression;
 
-import smile.math.distance.EuclideanDistance;
-import smile.math.rbf.RadialBasisFunction;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
+import smile.base.RBF;
+import smile.data.CPU;
+import smile.data.Planes;
+import smile.data.Bank32nh;
+import smile.data.Ailerons;
 import smile.math.MathEx;
-import smile.util.SmileUtils;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 
@@ -87,22 +87,8 @@ public class RBFNetworkTest {
         System.out.println("learn");
 
         MathEx.standardize(longley);
-
-        int n = longley.length;
-        LOOCV loocv = new LOOCV(n);
-        double rss = 0.0;
-        for (int i = 0; i < n; i++) {
-            double[][] trainx = MathEx.slice(longley, loocv.train[i]);
-            double[] trainy = MathEx.slice(y, loocv.train[i]);
-            double[][] centers = new double[10][];
-            RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
-            RBFNetwork<double[]> rbf = new RBFNetwork<>(trainx, trainy, new EuclideanDistance(), basis, centers);
-
-            double r = y[loocv.test[i]] - rbf.predict(longley[loocv.test[i]]);
-            rss += r * r;
-        }
-
-        System.out.println("MSE = " + rss/n);
+        double rss = LOOCV.test(longley, y, (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 10, 5.0)));
+        System.out.println("MSE = " + rss);
     }
 
     /**
@@ -111,39 +97,8 @@ public class RBFNetworkTest {
     @Test
     public void testCPU() {
         System.out.println("CPU");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(6);
-        try {
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/cpu.arff"));
-            double[] datay = data.toArray(new double[data.size()]);
-            double[][] datax = data.toArray(new double[data.size()][]);
-            MathEx.standardize(datax);
-
-            int n = datax.length;
-            int k = 10;
-
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
-
-                double[][] centers = new double[20][];
-                RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
-                RBFNetwork<double[]> rbf = new RBFNetwork<>(trainx, trainy, new EuclideanDistance(), basis, centers);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - rbf.predict(testx[j]);
-                    rss += r * r;
-                }
-            }
-
-            System.out.println("10-CV MSE = " + rss / n);
-         } catch (Exception ex) {
-             System.err.println(ex);
-         }
+        double rss = CrossValidation.test(10, CPU.x, CPU.y, (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
+        System.out.println("MSE = " + rss);
     }
 
     /**
@@ -152,39 +107,8 @@ public class RBFNetworkTest {
     @Test
     public void test2DPlanes() {
         System.out.println("2dplanes");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(10);
-        try {
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/regression/2dplanes.arff"));
-            double[] datay = data.toArray(new double[data.size()]);
-            double[][] datax = data.toArray(new double[data.size()][]);
-            //Math.normalize(datax);
-
-            int n = datax.length;
-            int k = 10;
-
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
-
-                double[][] centers = new double[20][];
-                RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
-                RBFNetwork<double[]> rbf = new RBFNetwork<>(trainx, trainy, new EuclideanDistance(), basis, centers);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - rbf.predict(testx[j]);
-                    rss += r * r;
-                }
-            }
-
-            System.out.println("10-CV MSE = " + rss / n);
-         } catch (Exception ex) {
-             System.err.println(ex);
-         }
+        double rss = CrossValidation.test(10, Planes.x, Planes.y, (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
+        System.out.println("MSE = " + rss);
     }
 
     /**
@@ -193,43 +117,8 @@ public class RBFNetworkTest {
     @Test
     public void testAilerons() {
         System.out.println("ailerons");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(40);
-        try {
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/regression/ailerons.arff"));
-            double[][] datax = data.toArray(new double[data.size()][]);
-            MathEx.standardize(datax);
-
-            double[] datay = data.toArray(new double[data.size()]);
-            for (int i = 0; i < datay.length; i++) {
-                datay[i] *= 10000;
-            }
-
-            int n = datax.length;
-            int k = 10;
-
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
-
-                double[][] centers = new double[20][];
-                RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
-                RBFNetwork<double[]> rbf = new RBFNetwork<>(trainx, trainy, new EuclideanDistance(), basis, centers);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - rbf.predict(testx[j]);
-                    rss += r * r;
-                }
-            }
-
-            System.out.println("10-CV MSE = " + rss / n);
-         } catch (Exception ex) {
-             System.err.println(ex);
-         }
+        double rss = CrossValidation.test(10, Ailerons.x, Ailerons.y, (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
+        System.out.println("MSE = " + rss);
     }
 
     /**
@@ -238,38 +127,7 @@ public class RBFNetworkTest {
     @Test
     public void testBank32nh() {
         System.out.println("bank32nh");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(31);
-        try {
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/regression/bank32nh.arff"));
-            double[] datay = data.toArray(new double[data.size()]);
-            double[][] datax = data.toArray(new double[data.size()][]);
-            MathEx.standardize(datax);
-
-            int n = datax.length;
-            int k = 10;
-
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
-
-                double[][] centers = new double[20][];
-                RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
-                RBFNetwork<double[]> rbf = new RBFNetwork<>(trainx, trainy, new EuclideanDistance(), basis, centers);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - rbf.predict(testx[j]);
-                    rss += r * r;
-                }
-            }
-
-            System.out.println("10-CV MSE = " + rss / n);
-         } catch (Exception ex) {
-             System.err.println(ex);
-         }
+        double rss = CrossValidation.test(10, Bank32nh.x, Bank32nh.y, (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
+        System.out.println("MSE = " + rss);
     }
 }
