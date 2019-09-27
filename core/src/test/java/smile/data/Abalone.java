@@ -37,9 +37,9 @@ public class Abalone {
     public static Formula formula = Formula.lhs("rings");
 
     public static double[][] x;
-    public static int[] y;
+    public static double[] y;
     public static double[][] testx;
-    public static int[] testy;
+    public static double[] testy;
 
     static {
         StructType schema = DataTypes.struct(
@@ -62,9 +62,9 @@ public class Abalone {
             test = csv.read(Paths.getTestData("regression/abalone-test.csv"));
 
             x = formula.frame(train).toArray();
-            y = formula.response(train).toIntArray();
+            y = formula.response(train).toDoubleArray();
             testx = formula.frame(test).toArray();
-            testy = formula.response(test).toIntArray();
+            testy = formula.response(test).toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'abalone': " + ex);
             System.exit(-1);

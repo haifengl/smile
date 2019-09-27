@@ -23,10 +23,17 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.clustering.KMeans;
+import smile.data.CPU;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.io.Arff;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
+import smile.util.Paths;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
+
+import java.io.IOException;
 
 /**
  *
@@ -85,19 +92,8 @@ public class GaussianProcessRegressionTest {
 
         MathEx.standardize(longley);
 
-        int n = longley.length;
-        LOOCV loocv = new LOOCV(n);
-        double rss = 0.0;
-        for (int i = 0; i < n; i++) {
-            double[][] trainx = MathEx.slice(longley, loocv.train[i]);
-            double[] trainy = MathEx.slice(y, loocv.train[i]);
-            GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(8.0), 0.2);
-
-            double r = y[loocv.test[i]] - rkhs.predict(longley[loocv.test[i]]);
-            rss += r * r;
-        }
-
-        System.out.println("MSE = " + rss/n);
+        double rss = LOOCV.test(longley, y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(8.0), 0.2));
+        System.out.println("MSE = " + rss);
     }
 
     /**
@@ -106,380 +102,333 @@ public class GaussianProcessRegressionTest {
     @Test
     public void testCPU() {
         System.out.println("CPU");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(6);
-        try {
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/cpu.arff"));
-            double[] datay = data.toArray(new double[data.size()]);
-            double[][] datax = data.toArray(new double[data.size()][]);
-            MathEx.standardize(datax);
-            
-            int n = datax.length;
-            int k = 10;
+        double[][] x = CPU.x;
+        MathEx.standardize(x);
+        CrossValidation cv = new CrossValidation(x.length, 10);
 
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            double sparseRSS30 = 0.0;
-            double nystromRSS30 = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
+        double rss = cv.test(x, CPU.y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(47.02), 0.1));
 
-                GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(47.02), 0.1);
-
-                KMeans kmeans = new KMeans(trainx, 30, 10);
-                double[][] centers = kmeans.centroids();
-                double r0 = 0.0;
-                for (int l = 0; l < centers.length; l++) {
-                    for (int j = 0; j < l; j++) {
-                        r0 += MathEx.distance(centers[l], centers[j]);
-                    }
-                }
-                r0 /= (2 * centers.length);
-                System.out.println("Kernel width = " + r0);
-                GaussianProcessRegression<double[]> sparse30 = new GaussianProcessRegression<>(trainx, trainy, centers, new GaussianKernel(r0), 0.1);
-                GaussianProcessRegression<double[]> nystrom30 = new GaussianProcessRegression<>(trainx, trainy, centers, new GaussianKernel(r0), 0.1, true);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - rkhs.predict(testx[j]);
-                    rss += r * r;
-                    
-                    r = testy[j] - sparse30.predict(testx[j]);
-                    sparseRSS30 += r * r;
-
-                    r = testy[j] - nystrom30.predict(testx[j]);
-                    nystromRSS30 += r * r;
+        double sparseRSS30 = cv.test(10, x, CPU.y, (xi, yi) -> {
+            KMeans kmeans = new KMeans(xi, 30, 10);
+            double[][] centers = kmeans.centroids();
+            double r0 = 0.0;
+            for (int l = 0; l < centers.length; l++) {
+                for (int j = 0; j < l; j++) {
+                    r0 += MathEx.distance(centers[l], centers[j]);
                 }
             }
+            r0 /= (2 * centers.length);
+            System.out.println("Kernel width = " + r0);
+            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
+        });
 
-            System.out.println("Regular 10-CV MSE = " + rss / n);
-            System.out.println("Sparse (30) 10-CV MSE = " + sparseRSS30 / n);
-            System.out.println("Nystrom (30) 10-CV MSE = " + nystromRSS30 / n);
-         } catch (Exception ex) {
-            ex.printStackTrace();
-         }
+        double nystromRSS30 = cv.test(x, CPU.y, (xi, yi) -> {
+            KMeans kmeans = new KMeans(xi, 30, 10);
+            double[][] centers = kmeans.centroids();
+            double r0 = 0.0;
+            for (int l = 0; l < centers.length; l++) {
+                for (int j = 0; j < l; j++) {
+                    r0 += MathEx.distance(centers[l], centers[j]);
+                }
+            }
+            r0 /= (2 * centers.length);
+            System.out.println("Kernel width = " + r0);
+            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
+        });
+
+        System.out.println("Regular 10-CV MSE = " + rss);
+        System.out.println("Sparse (30) 10-CV MSE = " + sparseRSS30);
+        System.out.println("Nystrom (30) 10-CV MSE = " + nystromRSS30);
     }
     
     /**
      * Test of learn method, of class GaussianProcessRegression.
      */
-    @Test
-    public void test2DPlanes() {
+    @Test(expected = Test.None.class)
+    public void test2DPlanes() throws Exception {
         System.out.println("2dplanes");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(10);
-        try {
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/regression/2dplanes.arff"));
-            double[][] x = data.toArray(new double[data.size()][]);
-            double[] y = data.toArray(new double[data.size()]);
+        Arff arff = new Arff(Paths.getTestData("weka/regression/2dplanes.arff"));
+        DataFrame data = arff.read();
+        Formula formula = Formula.lhs("y");
+        double[][] x = formula.frame(data).toArray();
+        double[] y = formula.response(data).toDoubleArray();
 
-            int[] perm = MathEx.permutate(x.length);
-            double[][] datax = new double[4000][];
-            double[] datay = new double[datax.length];
-            for (int i = 0; i < datax.length; i++) {
-                datax[i] = x[perm[i]];
-                datay[i] = y[perm[i]];
-            }
+        int[] perm = MathEx.permutate(x.length);
+        double[][] datax = new double[4000][];
+        double[] datay = new double[datax.length];
+        for (int i = 0; i < datax.length; i++) {
+            datax[i] = x[perm[i]];
+            datay[i] = y[perm[i]];
+        }
 
-            int n = datax.length;
-            int k = 10;
+        CrossValidation cv = new CrossValidation(datax.length, 10);
 
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            double sparseRSS30 = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
+        double rss = cv.test(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(34.866), 0.1));
 
-                GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(34.866), 0.1);
-
-                KMeans kmeans = new KMeans(trainx, 30, 10);
-                double[][] centers = kmeans.centroids();
-                double r0 = 0.0;
-                for (int l = 0; l < centers.length; l++) {
-                    for (int j = 0; j < l; j++) {
-                        r0 += MathEx.distance(centers[l], centers[j]);
-                    }
-                }
-                r0 /= (2 * centers.length);
-                System.out.println("Kernel width = " + r0);
-                GaussianProcessRegression<double[]> sparse30 = new GaussianProcessRegression<>(trainx, trainy, centers, new GaussianKernel(r0), 0.1);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - rkhs.predict(testx[j]);
-                    rss += r * r;
-                    
-                    r = testy[j] - sparse30.predict(testx[j]);
-                    sparseRSS30 += r * r;
+        double sparseRSS30 = cv.test(10, x, CPU.y, (xi, yi) -> {
+            KMeans kmeans = new KMeans(xi, 30, 10);
+            double[][] centers = kmeans.centroids();
+            double r0 = 0.0;
+            for (int l = 0; l < centers.length; l++) {
+                for (int j = 0; j < l; j++) {
+                    r0 += MathEx.distance(centers[l], centers[j]);
                 }
             }
+            r0 /= (2 * centers.length);
+            System.out.println("Kernel width = " + r0);
+            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
+        });
 
-            System.out.println("Regular 10-CV MSE = " + rss / n);
-            System.out.println("Sparse (30) 10-CV MSE = " + sparseRSS30 / n);
-         } catch (Exception ex) {
-             System.err.println(ex);
-         }
+        double nystromRSS30 = cv.test(x, CPU.y, (xi, yi) -> {
+            KMeans kmeans = new KMeans(xi, 30, 10);
+            double[][] centers = kmeans.centroids();
+            double r0 = 0.0;
+            for (int l = 0; l < centers.length; l++) {
+                for (int j = 0; j < l; j++) {
+                    r0 += MathEx.distance(centers[l], centers[j]);
+                }
+            }
+            r0 /= (2 * centers.length);
+            System.out.println("Kernel width = " + r0);
+            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
+        });
+
+        System.out.println("Regular 10-CV MSE = " + rss);
+        System.out.println("Sparse (30) 10-CV MSE = " + sparseRSS30);
+        System.out.println("Nystrom (30) 10-CV MSE = " + nystromRSS30);
     }
 
     /**
      * Test of learn method, of class GaussianProcessRegression.
      */
-    @Test
-    public void testAilerons() {
+    @Test(expected = Test.None.class)
+    public void testAilerons() throws Exception {
         System.out.println("ailerons");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(40);
-        try {
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/regression/ailerons.arff"));
-            double[][] x = data.toArray(new double[data.size()][]);
-            MathEx.standardize(x);
+        Arff arff = new Arff(Paths.getTestData("weka/regression/ailerons.arff"));
+        DataFrame data = arff.read();
+        Formula formula = Formula.lhs("goal");
+        double[][] x = formula.frame(data).toArray();
+        double[] y = formula.response(data).toDoubleArray();
 
-            double[] y = data.toArray(new double[data.size()]);
-            for (int i = 0; i < y.length; i++) {
-                y[i] *= 10000;
-            }
+        MathEx.standardize(x);
+        for (int i = 0; i < y.length; i++) {
+            y[i] *= 10000;
+        }
 
-            int[] perm = MathEx.permutate(x.length);
-            double[][] datax = new double[4000][];
-            double[] datay = new double[datax.length];
-            for (int i = 0; i < datax.length; i++) {
-                datax[i] = x[perm[i]];
-                datay[i] = y[perm[i]];
-            }
+        int[] perm = MathEx.permutate(x.length);
+        double[][] datax = new double[4000][];
+        double[] datay = new double[datax.length];
+        for (int i = 0; i < datax.length; i++) {
+            datax[i] = x[perm[i]];
+            datay[i] = y[perm[i]];
+        }
 
-            int n = datax.length;
-            int k = 10;
+        CrossValidation cv = new CrossValidation(datax.length, 10);
 
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            double sparseRSS30 = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
+        double rss = cv.test(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(183.96), 0.1));
 
-                GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(183.96), 0.1);
-
-                KMeans kmeans = new KMeans(trainx, 30, 10);
-                double[][] centers = kmeans.centroids();
-                double r0 = 0.0;
-                for (int l = 0; l < centers.length; l++) {
-                    for (int j = 0; j < l; j++) {
-                        r0 += MathEx.distance(centers[l], centers[j]);
-                    }
-                }
-                r0 /= (2 * centers.length);
-                System.out.println("Kernel width = " + r0);
-                GaussianProcessRegression<double[]> sparse30 = new GaussianProcessRegression<>(trainx, trainy, centers, new GaussianKernel(r0), 0.1);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - rkhs.predict(testx[j]);
-                    rss += r * r;
-                    
-                    r = testy[j] - sparse30.predict(testx[j]);
-                    sparseRSS30 += r * r;
+        double sparseRSS30 = cv.test(10, x, CPU.y, (xi, yi) -> {
+            KMeans kmeans = new KMeans(xi, 30, 10);
+            double[][] centers = kmeans.centroids();
+            double r0 = 0.0;
+            for (int l = 0; l < centers.length; l++) {
+                for (int j = 0; j < l; j++) {
+                    r0 += MathEx.distance(centers[l], centers[j]);
                 }
             }
+            r0 /= (2 * centers.length);
+            System.out.println("Kernel width = " + r0);
+            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
+        });
 
-            System.out.println("Regular 10-CV MSE = " + rss / n);
-            System.out.println("Sparse (30) 10-CV MSE = " + sparseRSS30 / n);
-         } catch (Exception ex) {
-             System.err.println(ex);
-         }
+        double nystromRSS30 = cv.test(x, CPU.y, (xi, yi) -> {
+            KMeans kmeans = new KMeans(xi, 30, 10);
+            double[][] centers = kmeans.centroids();
+            double r0 = 0.0;
+            for (int l = 0; l < centers.length; l++) {
+                for (int j = 0; j < l; j++) {
+                    r0 += MathEx.distance(centers[l], centers[j]);
+                }
+            }
+            r0 /= (2 * centers.length);
+            System.out.println("Kernel width = " + r0);
+            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
+        });
+
+        System.out.println("Regular 10-CV MSE = " + rss);
+        System.out.println("Sparse (30) 10-CV MSE = " + sparseRSS30);
+        System.out.println("Nystrom (30) 10-CV MSE = " + nystromRSS30);
     }
 
     /**
      * Test of learn method, of class GaussianProcessRegression.
      */
-    @Test
-    public void testBank32nh() {
+    @Test(expected = Test.None.class)
+    public void testBank32nh() throws Exception {
         System.out.println("bank32nh");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(32);
-        try {
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/regression/bank32nh.arff"));
-            double[] y = data.toArray(new double[data.size()]);
-            double[][] x = data.toArray(new double[data.size()][]);
-            MathEx.standardize(x);
+        Arff arff = new Arff(Paths.getTestData("weka/regression/bank32nh.arff"));
+        DataFrame data = arff.read();
+        Formula formula = Formula.lhs("rej");
+        double[][] x = formula.frame(data).toArray();
+        double[] y = formula.response(data).toDoubleArray();
 
-            int[] perm = MathEx.permutate(x.length);
-            double[][] datax = new double[4000][];
-            double[] datay = new double[datax.length];
-            for (int i = 0; i < datax.length; i++) {
-                datax[i] = x[perm[i]];
-                datay[i] = y[perm[i]];
-            }
+        MathEx.standardize(x);
+        int[] perm = MathEx.permutate(x.length);
+        double[][] datax = new double[4000][];
+        double[] datay = new double[datax.length];
+        for (int i = 0; i < datax.length; i++) {
+            datax[i] = x[perm[i]];
+            datay[i] = y[perm[i]];
+        }
 
-            int n = datax.length;
-            int k = 10;
+        CrossValidation cv = new CrossValidation(datax.length, 10);
 
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            double sparseRSS30 = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
+        double rss = cv.test(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(55.3), 0.1));
 
-                GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(55.3), 0.1);
-
-                KMeans kmeans = new KMeans(trainx, 30, 10);
-                double[][] centers = kmeans.centroids();
-                double r0 = 0.0;
-                for (int l = 0; l < centers.length; l++) {
-                    for (int j = 0; j < l; j++) {
-                        r0 += MathEx.distance(centers[l], centers[j]);
-                    }
-                }
-                r0 /= (2 * centers.length);
-                System.out.println("Kernel width = " + r0);
-                GaussianProcessRegression<double[]> sparse30 = new GaussianProcessRegression<>(trainx, trainy, centers, new GaussianKernel(r0), 0.1);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - rkhs.predict(testx[j]);
-                    rss += r * r;
-                    
-                    r = testy[j] - sparse30.predict(testx[j]);
-                    sparseRSS30 += r * r;
+        double sparseRSS30 = cv.test(10, x, CPU.y, (xi, yi) -> {
+            KMeans kmeans = new KMeans(xi, 30, 10);
+            double[][] centers = kmeans.centroids();
+            double r0 = 0.0;
+            for (int l = 0; l < centers.length; l++) {
+                for (int j = 0; j < l; j++) {
+                    r0 += MathEx.distance(centers[l], centers[j]);
                 }
             }
+            r0 /= (2 * centers.length);
+            System.out.println("Kernel width = " + r0);
+            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
+        });
 
-            System.out.println("Regular 10-CV MSE = " + rss / n);
-            System.out.println("Sparse (30) 10-CV MSE = " + sparseRSS30 / n);
-         } catch (Exception ex) {
-             System.err.println(ex);
-         }
+        double nystromRSS30 = cv.test(x, CPU.y, (xi, yi) -> {
+            KMeans kmeans = new KMeans(xi, 30, 10);
+            double[][] centers = kmeans.centroids();
+            double r0 = 0.0;
+            for (int l = 0; l < centers.length; l++) {
+                for (int j = 0; j < l; j++) {
+                    r0 += MathEx.distance(centers[l], centers[j]);
+                }
+            }
+            r0 /= (2 * centers.length);
+            System.out.println("Kernel width = " + r0);
+            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
+        });
+
+        System.out.println("Regular 10-CV MSE = " + rss);
+        System.out.println("Sparse (30) 10-CV MSE = " + sparseRSS30);
+        System.out.println("Nystrom (30) 10-CV MSE = " + nystromRSS30);
     }
 
     /**
      * Test of learn method, of class GaussianProcessRegression.
      */
-    @Test
-    public void testPuma8nh() {
+    @Test(expected = Test.None.class)
+    public void testPuma8nh() throws Exception {
         System.out.println("puma8nh");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(8);
-        try {
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/regression/puma8nh.arff"));
-            double[] y = data.toArray(new double[data.size()]);
-            double[][] x = data.toArray(new double[data.size()][]);
+        Arff arff = new Arff(Paths.getTestData("weka/regression/puma8nh.arff"));
+        DataFrame data = arff.read();
+        Formula formula = Formula.lhs("thetadd3");
+        double[][] x = formula.frame(data).toArray();
+        double[] y = formula.response(data).toDoubleArray();
 
-            int[] perm = MathEx.permutate(x.length);
-            double[][] datax = new double[4000][];
-            double[] datay = new double[datax.length];
-            for (int i = 0; i < datax.length; i++) {
-                datax[i] = x[perm[i]];
-                datay[i] = y[perm[i]];
-            }
+        int[] perm = MathEx.permutate(x.length);
+        double[][] datax = new double[4000][];
+        double[] datay = new double[datax.length];
+        for (int i = 0; i < datax.length; i++) {
+            datax[i] = x[perm[i]];
+            datay[i] = y[perm[i]];
+        }
 
-            int n = datax.length;
-            int k = 10;
+        CrossValidation cv = new CrossValidation(datax.length, 10);
 
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            double sparseRSS30 = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
+        double rss = cv.test(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(38.63), 0.1));
 
-                GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(38.63), 0.1);
-
-                KMeans kmeans = new KMeans(trainx, 30, 10);
-                double[][] centers = kmeans.centroids();
-                double r0 = 0.0;
-                for (int l = 0; l < centers.length; l++) {
-                    for (int j = 0; j < l; j++) {
-                        r0 += MathEx.distance(centers[l], centers[j]);
-                    }
-                }
-                r0 /= (2 * centers.length);
-                System.out.println("Kernel width = " + r0);
-                GaussianProcessRegression<double[]> sparse30 = new GaussianProcessRegression<>(trainx, trainy, centers, new GaussianKernel(r0), 0.1);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - rkhs.predict(testx[j]);
-                    rss += r * r;
-                    
-                    r = testy[j] - sparse30.predict(testx[j]);
-                    sparseRSS30 += r * r;
+        double sparseRSS30 = cv.test(10, x, CPU.y, (xi, yi) -> {
+            KMeans kmeans = new KMeans(xi, 30, 10);
+            double[][] centers = kmeans.centroids();
+            double r0 = 0.0;
+            for (int l = 0; l < centers.length; l++) {
+                for (int j = 0; j < l; j++) {
+                    r0 += MathEx.distance(centers[l], centers[j]);
                 }
             }
+            r0 /= (2 * centers.length);
+            System.out.println("Kernel width = " + r0);
+            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
+        });
 
-            System.out.println("Regular 10-CV MSE = " + rss / n);
-            System.out.println("Sparse (30) 10-CV MSE = " + sparseRSS30 / n);
-         } catch (Exception ex) {
-             System.err.println(ex);
-         }
+        double nystromRSS30 = cv.test(x, CPU.y, (xi, yi) -> {
+            KMeans kmeans = new KMeans(xi, 30, 10);
+            double[][] centers = kmeans.centroids();
+            double r0 = 0.0;
+            for (int l = 0; l < centers.length; l++) {
+                for (int j = 0; j < l; j++) {
+                    r0 += MathEx.distance(centers[l], centers[j]);
+                }
+            }
+            r0 /= (2 * centers.length);
+            System.out.println("Kernel width = " + r0);
+            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
+        });
+
+        System.out.println("Regular 10-CV MSE = " + rss);
+        System.out.println("Sparse (30) 10-CV MSE = " + sparseRSS30);
+        System.out.println("Nystrom (30) 10-CV MSE = " + nystromRSS30);
     }
 
     /**
      * Test of learn method, of class GaussianProcessRegression.
      */
-    @Test
-    public void testKin8nm() {
+    @Test(expected = Test.None.class)
+    public void testKin8nm() throws Exception {
         System.out.println("kin8nm");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(8);
-        try {
-            AttributeDataset data = parser.parse(smile.util.Paths.getTestData("weka/regression/kin8nm.arff"));
-            double[] y = data.toArray(new double[data.size()]);
-            double[][] x = data.toArray(new double[data.size()][]);
+        Arff arff = new Arff(Paths.getTestData("weka/regression/kin8nm.arff"));
+        DataFrame data = arff.read();
+        Formula formula = Formula.lhs("y");
+        double[][] x = formula.frame(data).toArray();
+        double[] y = formula.response(data).toDoubleArray();
 
-            int[] perm = MathEx.permutate(x.length);
-            double[][] datax = new double[4000][];
-            double[] datay = new double[datax.length];
-            for (int i = 0; i < datax.length; i++) {
-                datax[i] = x[perm[i]];
-                datay[i] = y[perm[i]];
-            }
+        int[] perm = MathEx.permutate(x.length);
+        double[][] datax = new double[4000][];
+        double[] datay = new double[datax.length];
+        for (int i = 0; i < datax.length; i++) {
+            datax[i] = x[perm[i]];
+            datay[i] = y[perm[i]];
+        }
 
-            int n = datax.length;
-            int k = 10;
+        CrossValidation cv = new CrossValidation(datax.length, 10);
 
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            double sparseRSS30 = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = MathEx.slice(datax, cv.train[i]);
-                double[] trainy = MathEx.slice(datay, cv.train[i]);
-                double[][] testx = MathEx.slice(datax, cv.test[i]);
-                double[] testy = MathEx.slice(datay, cv.test[i]);
+        double rss = cv.test(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(34.97), 0.1));
 
-                GaussianProcessRegression<double[]> rkhs = new GaussianProcessRegression<>(trainx, trainy, new GaussianKernel(34.97), 0.1);
-
-                KMeans kmeans = new KMeans(trainx, 30, 10);
-                double[][] centers = kmeans.centroids();
-                double r0 = 0.0;
-                for (int l = 0; l < centers.length; l++) {
-                    for (int j = 0; j < l; j++) {
-                        r0 += MathEx.distance(centers[l], centers[j]);
-                    }
-                }
-                r0 /= (2 * centers.length);
-                System.out.println("Kernel width = " + r0);
-                GaussianProcessRegression<double[]> sparse30 = new GaussianProcessRegression<>(trainx, trainy, centers, new GaussianKernel(r0), 0.1);
-
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - rkhs.predict(testx[j]);
-                    rss += r * r;
-                    
-                    r = testy[j] - sparse30.predict(testx[j]);
-                    sparseRSS30 += r * r;
+        double sparseRSS30 = cv.test(10, x, CPU.y, (xi, yi) -> {
+            KMeans kmeans = new KMeans(xi, 30, 10);
+            double[][] centers = kmeans.centroids();
+            double r0 = 0.0;
+            for (int l = 0; l < centers.length; l++) {
+                for (int j = 0; j < l; j++) {
+                    r0 += MathEx.distance(centers[l], centers[j]);
                 }
             }
+            r0 /= (2 * centers.length);
+            System.out.println("Kernel width = " + r0);
+            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
+        });
 
-            System.out.println("Regular 10-CV MSE = " + rss / n);
-            System.out.println("Sparse (30) 10-CV MSE = " + sparseRSS30 / n);
-         } catch (Exception ex) {
-             System.err.println(ex);
-         }
+        double nystromRSS30 = cv.test(x, CPU.y, (xi, yi) -> {
+            KMeans kmeans = new KMeans(xi, 30, 10);
+            double[][] centers = kmeans.centroids();
+            double r0 = 0.0;
+            for (int l = 0; l < centers.length; l++) {
+                for (int j = 0; j < l; j++) {
+                    r0 += MathEx.distance(centers[l], centers[j]);
+                }
+            }
+            r0 /= (2 * centers.length);
+            System.out.println("Kernel width = " + r0);
+            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
+        });
+
+        System.out.println("Regular 10-CV MSE = " + rss);
+        System.out.println("Sparse (30) 10-CV MSE = " + sparseRSS30);
+        System.out.println("Nystrom (30) 10-CV MSE = " + nystromRSS30);
     }
 }
