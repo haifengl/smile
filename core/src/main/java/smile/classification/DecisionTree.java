@@ -559,7 +559,7 @@ public class DecisionTree implements SoftClassifier<double[]> {
             } else {
 
                 final int[] constFeatures_;
-                synchronized (constFeatures) {
+                synchronized (this.constFeatures) {// enforce to read up-to-date constFeature
                     constFeatures_ = this.constFeatures; // this.constFeatures may be replaced in findBestSplit but it's accepted
                 }
                 List<SplitTask> tasks = new ArrayList<>(mtry);
@@ -719,9 +719,9 @@ public class DecisionTree implements SoftClassifier<double[]> {
             }
 
             if(replaceCount + (countNaN > 0 ? 1: 0) <= 1) {
-                synchronized (constFeatures) {
-                    this.constFeatures = SmileUtils.sortedArraySet(constFeatures, j);
-                }
+                synchronized (this.constFeatures) { // enforce to read up-to-date constFeatures
+                    this.constFeatures = SmileUtils.sortedArraySet(this.constFeatures, j);
+                } // this.constFeatures in CPU cache is flushed
             }
 
             return splitNode;
