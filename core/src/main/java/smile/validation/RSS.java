@@ -25,9 +25,15 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class RSS implements RegressionMeasure {
+    public final static RSS instance = new RSS();
 
     @Override
     public double measure(double[] truth, double[] prediction) {
+        return apply(truth, prediction);
+    }
+
+    /** Calculates the residual sum of squares. */
+    public static double apply(double[] truth, double[] prediction) {
         if (truth.length != prediction.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
         }

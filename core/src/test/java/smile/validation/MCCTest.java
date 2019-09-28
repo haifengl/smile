@@ -62,7 +62,7 @@ public class MCCTest {
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         };
-        MCCMeasure instance = new MCCMeasure();
+        MCC instance = new MCC();
         double expResult = 0.83068;
         double result = instance.measure(truth, prediction);
         assertEquals(expResult, result, 1E-5);
@@ -80,12 +80,10 @@ public class MCCTest {
         int[] prediction = {
                 0, 1, 0, 1,
                 0, 1, 0, 1,  };
-        MCCMeasure instance = new MCCMeasure();
+        MCC instance = new MCC();
         double expResult = 0;
         double result = instance.measure(truth, prediction);
         assertEquals(expResult, result, 1E-5);
-
-
     }
 
 }

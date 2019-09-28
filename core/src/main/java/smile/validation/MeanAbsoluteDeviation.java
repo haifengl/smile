@@ -23,9 +23,15 @@ package smile.validation;
  * @author Haifeng Li
  */
 public class MeanAbsoluteDeviation implements RegressionMeasure {
+    public final static MeanAbsoluteDeviation instance = new MeanAbsoluteDeviation();
 
     @Override
     public double measure(double[] truth, double[] prediction) {
+        return apply(truth, prediction);
+    }
+
+    /** Calculates the mean absolute deviation error. */
+    public static double apply(double[] truth, double[] prediction) {
         if (truth.length != prediction.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
         }

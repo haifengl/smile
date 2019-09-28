@@ -34,6 +34,15 @@ package smile.validation;
  * @author Haifeng Li
  */
 public class FMeasure implements ClassificationMeasure {
+    public final static FMeasure instance = new FMeasure();
+
+    @Override
+    public double measure(int[] truth, int[] prediction) {
+        double p = new Precision().measure(truth, prediction);
+        double r = new Recall().measure(truth, prediction);
+        return (1 + beta2) * (p * r) / (beta2 * p + r);
+    }
+
     /**
      * A positive value such that F-score measures the effectiveness of
      * retrieval with respect to a user who attaches &beta; times
@@ -59,10 +68,8 @@ public class FMeasure implements ClassificationMeasure {
         this.beta2 = beta * beta;
     }
 
-    @Override
-    public double measure(int[] truth, int[] prediction) {
-        double p = new Precision().measure(truth, prediction);
-        double r = new Recall().measure(truth, prediction);
-        return (1 + beta2) * (p * r) / (beta2 * p + r);
+    /** Calculates the F1 score. */
+    public static double apply(int[] truth, int[] prediction) {
+        return instance.measure(truth, prediction);
     }
 }

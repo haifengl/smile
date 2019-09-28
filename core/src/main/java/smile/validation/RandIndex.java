@@ -36,9 +36,15 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class RandIndex implements ClusterMeasure {
+    public final static RandIndex instance = new RandIndex();
 
     @Override
-    public double measure(int[] y1, int[] y2) {
+    public double measure(int[] truth, int[] prediction) {
+        return apply(truth, prediction);
+    }
+
+    /** Calculates the rand index. */
+    public static double apply(int[] y1, int[] y2) {
         if (y1.length != y2.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", y1.length, y2.length));
         }
