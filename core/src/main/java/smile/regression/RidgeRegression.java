@@ -140,7 +140,7 @@ public class RidgeRegression {
         double[] scale = X.colSds();
 
         for (int j = 0; j < scale.length; j++) {
-            if (!MathEx.isZero(scale[j])) {
+            if (MathEx.isZero(scale[j])) {
                 throw new IllegalArgumentException(String.format("The column '%s' is constant", formula.predictors()[j]));
             }
         }

@@ -38,8 +38,8 @@ public class Bank32nh {
             Arff arff = new Arff(Paths.getTestData("weka/regression/bank32nh.arff"));
             data = arff.read();
 
-            x = formula.frame(data).toArray();
-            y = formula.response(data).toDoubleArray();
+            x = data.drop("rej").toArray();
+            y = data.column("rej").toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'kin8nm': " + ex);
             System.exit(-1);

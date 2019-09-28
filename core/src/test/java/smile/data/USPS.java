@@ -56,10 +56,10 @@ public class USPS {
             train = csv.read(Paths.getTestData("usps/zip.train"));
             test = csv.read(Paths.getTestData("usps/zip.test"));
 
-            x = formula.frame(train).toArray();
-            y = formula.response(train).toIntArray();
-            testx = formula.frame(test).toArray();
-            testy = formula.response(test).toIntArray();
+            x = train.drop("class").toArray();
+            y = train.column("class").toIntArray();
+            testx = test.drop("class").toArray();
+            testy = test.column("class").toIntArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'USPS': " + ex);
             System.exit(-1);

@@ -41,14 +41,13 @@ public class Segment {
             Arff arff = new Arff(Paths.getTestData("weka/segment-challenge.arff"));
             train = arff.read();
 
-            x = formula.frame(train).toArray();
-            y = formula.response(train).toIntArray();
-
             arff = new Arff(Paths.getTestData("weka/segment-test.arff"));
             test = arff.read();
 
-            testx = formula.frame(test).toArray();
-            testy = formula.response(test).toIntArray();
+            x = train.drop("class").toArray();
+            y = train.column("class").toIntArray();
+            testx = test.drop("class").toArray();
+            testy = test.column("class").toIntArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'segment': " + ex);
             System.exit(-1);

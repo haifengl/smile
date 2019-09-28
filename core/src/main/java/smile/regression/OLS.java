@@ -94,7 +94,6 @@ public class OLS {
      * <li><code>smile.ols.method</code> (default "svd") is a string (svd or qr) for the fitting method
      * <li><code>smile.ols.standard.error</code> (default true) is a boolean. If true, compute the estimated standard
      *     errors of the estimate of parameters
-     * <li><code>smile.ols.eps</code> (default 1E-7) is the tolerance in SVD to detect if a singular value is zero
      * <li><code>smile.ols.recursive</code>  (default true) is a boolean. If true, the return model supports recursive least squares
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
@@ -105,7 +104,6 @@ public class OLS {
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
         String method = prop.getProperty("smile.ols.method", "qr");
         boolean stderr = Boolean.valueOf(prop.getProperty("smile.ols.standard.error", "true"));
-        double eps = Double.valueOf(prop.getProperty("smile.ols.eps", "1E-7"));
         boolean recursive = Boolean.valueOf(prop.getProperty("smile.ols.recursive", "true"));
         return fit(formula, data, method, stderr, recursive);
     }

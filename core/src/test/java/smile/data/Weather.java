@@ -38,8 +38,8 @@ public class Weather {
             Arff arff = new Arff(Paths.getTestData("weka/weather.arff"));
             data = arff.read();
 
-            x = formula.frame(data).toArray();
-            y = formula.response(data).toIntArray();
+            x = data.drop("play").toArray();
+            y = data.column("play").toIntArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'weather': " + ex);
             System.exit(-1);

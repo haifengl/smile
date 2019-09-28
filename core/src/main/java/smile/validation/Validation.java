@@ -78,7 +78,7 @@ public interface Validation {
     static <T> double test(Regression<T> model, DataFrame data) {
         double[] prediction = model.predict(data);
         double[] y = model.formula().get().response(data).toDoubleArray();
-        return RMSE.instance.measure(y, prediction);
+        return RMSE.apply(y, prediction);
     }
 
     /**

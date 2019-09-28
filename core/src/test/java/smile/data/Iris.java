@@ -38,8 +38,8 @@ public class Iris {
             Arff arff = new Arff(Paths.getTestData("weka/iris.arff"));
             data = arff.read();
 
-            x = formula.frame(data).toArray();
-            y = formula.response(data).toIntArray();
+            x = data.drop("class").toArray();
+            y = data.column("class").toIntArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'iris': " + ex);
             System.exit(-1);

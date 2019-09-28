@@ -38,8 +38,8 @@ public class Ailerons {
             Arff arff = new Arff(Paths.getTestData("weka/regression/ailerons.arff"));
             data = arff.read();
 
-            x = formula.frame(data).toArray();
-            y = formula.response(data).toDoubleArray();
+            x = data.drop("goal").toArray();
+            y = data.column("goal").toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'kin8nm': " + ex);
             System.exit(-1);
