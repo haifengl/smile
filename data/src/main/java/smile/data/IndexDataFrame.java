@@ -92,7 +92,7 @@ public class IndexDataFrame implements DataFrame {
 
     @Override
     public BaseVector column(int i) {
-        return df.column(i);
+        return df.column(i).get(index);
     }
 
     @Override

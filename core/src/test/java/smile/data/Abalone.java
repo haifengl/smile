@@ -58,8 +58,8 @@ public class Abalone {
         csv.schema(schema);
 
         try {
-            train = csv.read(Paths.getTestData("regression/abalone-train.csv"));
-            test = csv.read(Paths.getTestData("regression/abalone-test.csv"));
+            train = csv.read(Paths.getTestData("regression/abalone-train.data"));
+            test = csv.read(Paths.getTestData("regression/abalone-test.data"));
 
             x = formula.frame(train).toArray();
             y = formula.response(train).toDoubleArray();

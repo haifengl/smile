@@ -412,10 +412,10 @@ public class LinearModel implements OnlineRegression<double[]> {
 
         builder.append("\nCoefficients:\n");
         if (ttest != null) {
-            builder.append("            Estimate        Std. Error        t value        Pr(>|t|)\n");
-            builder.append(String.format("Intercept%11.4f%18.4f%15.4f%16.4f %s%n", ttest[p][0], ttest[p][1], ttest[p][2], ttest[p][3], significance(ttest[p][3])));
+            builder.append("                  Estimate Std. Error    t value   Pr(>|t|)\n");
+            builder.append(String.format("Intercept       %10.4f %10.4f %10.4f %10.4f %s%n", ttest[p][0], ttest[p][1], ttest[p][2], ttest[p][3], significance(ttest[p][3])));
             for (int i = 0; i < p; i++) {
-                builder.append(String.format("%s\t %11.4f%18.4f%15.4f%16.4f %s%n", names[i], ttest[i][0], ttest[i][1], ttest[i][2], ttest[i][3], significance(ttest[i][3])));
+                builder.append(String.format("%-15s %10.4f %10.4f %10.4f %10.4f %s%n", names[i], ttest[i][0], ttest[i][1], ttest[i][2], ttest[i][3], significance(ttest[i][3])));
             }
 
             builder.append("---------------------------------------------------------------------\n");
