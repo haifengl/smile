@@ -32,7 +32,6 @@ import smile.data.formula.Formula;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
-import smile.data.vector.Vector;
 import smile.data.vector.StringVector;
 import smile.math.matrix.DenseMatrix;
 import static smile.data.formula.Terms.*;
@@ -223,6 +222,23 @@ public class DataFrameTest {
         assertEquals(13, df.get(3,0));
         assertEquals("Amy", df.get(3,3));
         assertEquals(null, df.get(3,4));
+    }
+
+    /**
+     * Test of one-hot encoding.
+     */
+    @Test
+    public void testFormula() {
+        System.out.println("formula");
+        Formula formula = Formula.of("salary", $("age"));
+        DataFrame output = formula.frame(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(2, output.ncols());
+
+        DenseMatrix matrix = formula.matrix(df);
+        assertEquals(df.size(), matrix.nrows());
+        assertEquals(1, matrix.ncols());
     }
 
     /**
@@ -488,6 +504,8 @@ public class DataFrameTest {
 
         DenseMatrix matrix = formula.matrix(df);
         System.out.println(matrix);
+        System.out.println(matrix.nrows());
+        System.out.println(matrix.ncols());
         assertEquals(df.size(), matrix.nrows());
         assertEquals(1, matrix.ncols());
         assertEquals(Math.round(10000.), matrix.get(0,0), 1E-10);

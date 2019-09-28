@@ -120,7 +120,7 @@ public abstract class CART {
         this.mtry = mtry;
 
         if (mtry < 1 || mtry > schema.length()) {
-            logger.warn("Invalid number of variables to split on at a node of the tree: . Use all features." + mtry);
+            logger.debug("Invalid mtry. Use all features.");
             this.mtry = schema.length();
         }
 

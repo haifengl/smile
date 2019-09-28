@@ -103,11 +103,11 @@ public class OLS {
      * @param prop Training algorithm hyper-parameters and properties.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        String method = prop.getProperty("smile.ols.method", "svd");
+        String method = prop.getProperty("smile.ols.method", "qr");
         boolean stderr = Boolean.valueOf(prop.getProperty("smile.ols.standard.error", "true"));
         double eps = Double.valueOf(prop.getProperty("smile.ols.eps", "1E-7"));
         boolean recursive = Boolean.valueOf(prop.getProperty("smile.ols.recursive", "true"));
-        return fit(formula, data, method, stderr, eps, recursive);
+        return fit(formula, data, method, stderr, recursive);
     }
     
     /**
@@ -117,10 +117,9 @@ public class OLS {
      *             NO NEED to include a constant column of 1s for bias.
      * @param method the fitting method ("svd" or "qr")
      * @param stderr if true, compute the estimated standard errors of the estimate of parameters
-     * @param eps the tolerance in SVD to detect if a singular value is zero
      * @param recursive if true, the return model supports recursive least squares
      */
-    public static LinearModel fit(Formula formula, DataFrame data, String method, boolean stderr, double eps, boolean recursive) {
+    public static LinearModel fit(Formula formula, DataFrame data, String method, boolean stderr, boolean recursive) {
         DenseMatrix X = formula.matrix(data, true);
         double[] y = formula.response(data).toDoubleArray();
 
@@ -133,7 +132,6 @@ public class OLS {
 
         // weights and intercept
         double[] w1 = new double[p+1];
-
 
         QR qr = null;
         SVD svd = null;
@@ -163,57 +161,29 @@ public class OLS {
         System.arraycopy(w1, 0, model.w, 0, p);
 
         double[] fittedValues = new double[n];
-        X.ax(w1, model.fittedValues);
+        X.ax(w1, fittedValues);
         model.fitness(fittedValues, y, MathEx.mean(y));
 
         DenseMatrix inv = null;
 
+        if (stderr || recursive) {
+            Cholesky cholesky = method.equalsIgnoreCase("svd") ? X.ata().cholesky() : qr.CholeskyOfAtA();
+            inv = cholesky.inverse();
+            model.V = inv;
+        }
+
         if (stderr) {
             double[][] ttest = new double[p + 1][4];
             model.ttest = ttest;
-            if (method.equalsIgnoreCase("svd")) {
-                for (int i = 0; i <= p; i++) {
-                    ttest[i][0] = w1[i];
-                    double s = svd.getSingularValues()[i];
-                    if (!MathEx.isZero(s, eps)) {
-                        double se = model.error / s;
-                        ttest[i][1] = se;
-                        double t = w1[i] / se;
-                        ttest[i][2] = t;
-                        ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * model.df, 0.5, model.df / (model.df + t * t));
-                    } else {
-                        ttest[i][1] = Double.NaN;
-                        ttest[i][2] = 0.0;
-                        ttest[i][3] = 1.0;
-                    }
-                }
-            } else {
-                Cholesky cholesky = qr.CholeskyOfAtA();
-                inv = cholesky.inverse();
 
-                for (int i = 0; i <= p; i++) {
-                    ttest[i][0] = w1[i];
-                    double se = model.error * Math.sqrt(inv.get(i, i));
-                    ttest[i][1] = se;
-                    double t = w1[i] / se;
-                    ttest[i][2] = t;
-                    ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * model.df, 0.5, model.df / (model.df + t * t));
-                }
+            for (int i = 0; i <= p; i++) {
+                ttest[i][0] = w1[i];
+                double se = model.error * Math.sqrt(inv.get(i, i));
+                ttest[i][1] = se;
+                double t = w1[i] / se;
+                ttest[i][2] = t;
+                ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * model.df, 0.5, model.df / (model.df + t * t));
             }
-        }
-
-        if (recursive) {
-            if (inv == null) {
-                if (method.equalsIgnoreCase("svd")) {
-                    Cholesky cholesky = svd.CholeskyOfAtA();
-                    inv = cholesky.inverse();
-                } else {
-                    Cholesky cholesky = qr.CholeskyOfAtA();
-                    inv = cholesky.inverse();
-                }
-            }
-
-            model.V = inv;
         }
 
         return model;

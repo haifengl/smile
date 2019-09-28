@@ -239,20 +239,6 @@ public class SVD {
     }
 
     /**
-     * Returns the Cholesky decomposition of A'A.
-     */
-    public Cholesky CholeskyOfAtA() {
-        DenseMatrix VD = Matrix.zeros(V.nrows(), V.ncols());
-        for (int i = 0; i < V.nrows(); i++) {
-            for (int j = 0; j < V.ncols(); j++) {
-                VD.set(i, j, V.get(i, j) * s[j]);
-            }
-        }
-
-        return new Cholesky(VD.aat());
-    }
-
-    /**
      * Solve the least squares A*x = b.
      * @param b   right hand side of linear system.
      * @param x   the output solution vector that minimizes the L2 norm of A*x - b.

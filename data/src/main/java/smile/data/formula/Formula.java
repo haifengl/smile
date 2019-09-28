@@ -36,7 +36,7 @@ import smile.math.matrix.Matrix;
  */
 public class Formula implements Serializable {
     /** The left-hand side of formula. */
-    private Term response;
+    private Optional<Term> response = Optional.empty();
     /** The right-hand side of formula. */
     private HyperTerm[] predictors;
     /** The terms after binding to a schema and expanding the hyper-terms. */
@@ -57,7 +57,7 @@ public class Formula implements Serializable {
      * @param response the response formula, i.e. dependent variable.
      */
     public Formula(Term response) {
-        this.response = response;
+        this.response = Optional.of(response);
         this.predictors = new HyperTerm[] { new All() };
     }
 
@@ -84,14 +84,14 @@ public class Formula implements Serializable {
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
     public Formula(Term response, HyperTerm[] predictors) {
-        this.response = response;
+        this.response = Optional.of(response);
         this.predictors = predictors;
     }
 
     @Override
     public String toString() {
         return String.format("%s ~ %",
-                response == null ? "" : response.toString(),
+                response.map(Objects::toString).orElse(""),
                 Arrays.stream(predictors).map(Objects::toString).collect(Collectors.joining(" + ")));
     }
 
@@ -197,10 +197,10 @@ public class Formula implements Serializable {
                 .flatMap(term -> term.terms().stream())
                 .collect(Collectors.toList());
 
-        if (response != null) {
-            response.bind(inputSchema);
-            factors.add(response);
-        }
+        response.ifPresent(r -> {
+            r.bind(inputSchema);
+            factors.add(r);
+        });
 
         List<Term> removes = Arrays.stream(predictors)
                 .filter(term -> term instanceof Delete)
@@ -217,15 +217,16 @@ public class Formula implements Serializable {
                 .findAny();
 
         List<Term> result = new ArrayList<>();
-        if (hasAll.isPresent()) {
-            All all = hasAll.get();
+        hasAll.ifPresent(all -> {
             java.util.stream.Stream<Variable> stream = all.terms().stream();
             if (all.rest()) {
                 stream = stream.filter(term -> !variables.contains(term.name()));
+                if (response.isPresent())
+                    stream = stream.filter(term -> !term.equals(response.get()));
             }
 
             result.addAll(stream.collect(Collectors.toList()));
-        }
+        });
 
         result.addAll(factors);
         result.removeAll(removes);
@@ -245,12 +246,7 @@ public class Formula implements Serializable {
      */
     public DataFrame frame(DataFrame df) {
         bind(df.schema());
-        Term[] terms = terms();
-        BaseVector[] vectors = new BaseVector[terms.length];
-        for (int i = 0; i < terms.length; i++) {
-            vectors[i] = terms[i].apply(df);
-        }
-
+        BaseVector[] vectors = Arrays.stream(terms()).map(term -> term.apply(df)).toArray(BaseVector[]::new);
         return DataFrame.of(vectors);
     }
 
@@ -273,18 +269,18 @@ public class Formula implements Serializable {
 
         int nrows = df.nrows();
         int ncols = terms.length;
-        int j0 = 0;
 
-        if (response != null) {
+        if (response.isPresent()) {
             ncols -= 1;
-            j0 = 1;
         }
 
         ncols += bias ? 1 : 0;
         DenseMatrix m = Matrix.of(nrows, ncols, 0.0);
         if (bias) for (int i = 0; i < nrows; i++) m.set(i, ncols-1, 1.0);
 
-        for (int j = 0, jj = j0; jj < terms.length; j++, jj++) {
+        for (int j = 0, jj = 0; jj < terms.length; j++, jj++) {
+            if (response.isPresent() && terms[jj] == response.get()) continue;
+
             BaseVector v = terms[jj].apply(df);
             DataType type = terms[jj].type();
             switch (type.id()) {
@@ -339,47 +335,37 @@ public class Formula implements Serializable {
      * @param df The input DataFrame.
      */
     public BaseVector response(DataFrame df) {
-        if (response == null) {
-            throw new UnsupportedOperationException("Formula doesn't have a response variable");
-        }
-
-        response.bind(df.schema());
-        return response.apply(df);
+        return response.map(r -> {
+            r.bind(df.schema());
+            return r.apply(df);
+        }).orElse(null);
     }
 
     /**
      * Returns the real-valued response value.
      */
     public double response(Tuple t) {
-        if (response == null) {
-            throw new UnsupportedOperationException("Formula doesn't have a response variable");
-        }
-
-        return response.applyAsDouble(t);
+        return response.map(r -> r.applyAsDouble(t)).orElse(0.0);
     }
 
     /**
      * Returns the class label.
      */
     public int label(Tuple t) {
-        if (response == null) {
-            throw new UnsupportedOperationException("Formula doesn't have a response variable");
-        }
-
-        return response.applyAsInt(t);
+        return response.map(r -> r.applyAsInt(t)).orElse(-1);
     }
 
     /**
      * Returns the names of response variable.
      */
-    public String response() {
-        return response.toString();
+    public Optional<String> response() {
+        return response.map(Objects::toString);
     }
 
     /**
      * Returns the names of predictors.
      */
     public String[] predictors() {
-        return Arrays.stream(terms).skip(1).map(Object::toString).toArray(String[]::new);
+        return Arrays.stream(terms).filter(term -> term != response.orElse(null)).map(Object::toString).toArray(String[]::new);
     }
 }
