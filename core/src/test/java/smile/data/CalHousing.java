@@ -35,11 +35,11 @@ public class CalHousing {
 
     static {
         try {
-            Arff arff = new Arff(Paths.getTestData("weka/cal_housing.arff"));
+            Arff arff = new Arff(Paths.getTestData("weka/regression/cal_housing.arff"));
             data = arff.read();
 
-            x = formula.frame(data).toArray();
-            y = formula.response(data).toDoubleArray();
+            x = data.drop("medianHouseValue").toArray();
+            y = data.column("medianHouseValue").toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'cal_housing': " + ex);
             System.exit(-1);

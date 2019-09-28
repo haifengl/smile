@@ -33,9 +33,9 @@ public class Prostate {
     public static Formula formula = Formula.lhs("lpsa");
 
     public static double[][] x;
-    public static int[] y;
+    public static double[] y;
     public static double[][] testx;
-    public static int[] testy;
+    public static double[] testy;
 
     static {
         CSV csv = new CSV(CSVFormat.DEFAULT.withFirstRecordAsHeader().withDelimiter('\t'));
@@ -44,10 +44,10 @@ public class Prostate {
             train = csv.read(Paths.getTestData("regression/prostate-train.csv"));
             test = csv.read(Paths.getTestData("regression/prostate-test.csv"));
 
-            x = formula.frame(train).toArray();
-            y = formula.response(train).toIntArray();
-            testx = formula.frame(test).toArray();
-            testy = formula.response(test).toIntArray();
+            x = train.drop("lpsa").toArray();
+            y = train.column("lpsa").toDoubleArray();
+            testx = test.drop("lpsa").toArray();
+            testy = test.column("lpsa").toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'prostate': " + ex);
             System.exit(-1);

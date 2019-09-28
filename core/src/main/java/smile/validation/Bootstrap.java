@@ -17,7 +17,12 @@
 
 package smile.validation;
 
+import smile.data.DataFrame;
 import smile.math.MathEx;
+import smile.regression.Regression;
+
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * The bootstrap is a general tool for assessing statistical accuracy. The basic
@@ -81,5 +86,68 @@ public class Bootstrap {
                 }
             }
         }
+    }
+
+    /**
+     * Runs bootstrap tests.
+     * @return root mean squared error.
+     */
+    public <T> double test(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+        double rmse = 0.0;
+
+        for (int i = 0; i < k; i++) {
+            T[] trainx = MathEx.slice(x, train[i]);
+            double[] trainy = MathEx.slice(y, train[i]);
+            T[] testx = MathEx.slice(x, test[i]);
+            double[] testy = MathEx.slice(y, test[i]);
+
+            Regression<T> model = trainer.apply(trainx, trainy);
+            for (int j = 0; j < testx.length; j++) {
+                double r = testy[j] - model.predict(testx[j]);
+                rmse += r * r;
+            }
+        }
+
+        return Math.sqrt(rmse / x.length);
+    }
+
+    /**
+     * Runs bootstrap tests.
+     * @return root mean squared error.
+     */
+    public <T> double test(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+        double rmse = 0.0;
+
+        for (int i = 0; i < k; i++) {
+            Regression<T> model = trainer.apply(data.of(train[i]));
+            DataFrame oob = data.of(test[i]);
+            double[] prediction = model.predict(oob);
+            double[] y = model.formula().get().response(oob).toDoubleArray();
+
+            for (int j = 0; j < y.length; j++) {
+                double r = y[j] - prediction[j];
+                rmse += r * r;
+            }
+        }
+
+        return Math.sqrt(rmse / data.size());
+    }
+
+    /**
+     * Runs bootstrap tests.
+     * @return root mean squared error.
+     */
+    public static <T> double test(int k, T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+        Bootstrap cv = new Bootstrap(x.length, k);
+        return cv.test(x, y, trainer);
+    }
+
+    /**
+     * Runs bootstrap tests.
+     * @return root mean squared error.
+     */
+    public static <T> double test(int k, DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+        Bootstrap cv = new Bootstrap(data.size(), k);
+        return cv.test(data, trainer);
     }
 }

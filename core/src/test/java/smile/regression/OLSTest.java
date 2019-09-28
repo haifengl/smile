@@ -25,12 +25,10 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import smile.data.CPU;
-import smile.data.DataFrame;
 import smile.data.Longley;
-import smile.data.formula.Formula;
-import smile.io.Arff;
-import smile.util.Paths;
+import smile.data.Prostate;
 import smile.validation.CrossValidation;
+import smile.validation.Validation;
 
 /**
  *
@@ -112,8 +110,23 @@ public class OLSTest {
         LinearModel model = OLS.fit(CPU.formula, CPU.data);
         System.out.println(model);
 
-        double rss = CrossValidation.test(10, CPU.data, (x) -> OLS.fit(CPU.formula, x));
-        System.out.println("CPU 10-CV RMSE = " + rss);
-        assertEquals(55.272997, rss, 1E-4);
+        double rmse = CrossValidation.test(10, CPU.data, (x) -> OLS.fit(CPU.formula, x));
+        System.out.println("CPU 10-CV RMSE = " + rmse);
+        assertEquals(55.272997, rmse, 1E-4);
+    }
+
+    /**
+     * Test of learn method, of class LinearRegression.
+     */
+    @Test
+    public void testProstate() {
+        System.out.println("Prostate");
+
+        LinearModel model = OLS.fit(Prostate.formula, Prostate.train);
+        System.out.println(model);
+
+        double rmse = Validation.test(model, Prostate.test);
+        System.out.println("RMSE on test data = " + rmse);
+        assertEquals(0.721993, rmse, 1E-4);
     }
 }

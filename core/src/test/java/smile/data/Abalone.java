@@ -43,7 +43,7 @@ public class Abalone {
 
     static {
         StructType schema = DataTypes.struct(
-                new StructField("sex", DataTypes.ByteType, new NominalScale("F", "M")),
+                new StructField("sex", DataTypes.ByteType, new NominalScale("F", "M", "I")),
                 new StructField("length", DataTypes.DoubleType),
                 new StructField("diameter", DataTypes.DoubleType),
                 new StructField("height", DataTypes.DoubleType),
@@ -61,12 +61,13 @@ public class Abalone {
             train = csv.read(Paths.getTestData("regression/abalone-train.data"));
             test = csv.read(Paths.getTestData("regression/abalone-test.data"));
 
-            x = formula.frame(train).toArray();
-            y = formula.response(train).toDoubleArray();
-            testx = formula.frame(test).toArray();
-            testy = formula.response(test).toDoubleArray();
+            x = train.drop("rings").toArray();
+            y = train.column("rings").toDoubleArray();
+            testx = test.drop("rings").toArray();
+            testy = test.column("rings").toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'abalone': " + ex);
+            ex.printStackTrace();
             System.exit(-1);
         }
     }

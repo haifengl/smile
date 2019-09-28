@@ -39,8 +39,10 @@ public class Formula implements Serializable {
     private Optional<Term> response = Optional.empty();
     /** The right-hand side of formula. */
     private HyperTerm[] predictors;
-    /** The terms after binding to a schema and expanding the hyper-terms. */
+    /** The terms (both predictors and response) after binding to a schema and expanding the hyper-terms. */
     private Term[] terms;
+    /** The terms (only predictors) after binding to a schema and expanding the hyper-terms. */
+    private Term[] rhs;
     /** The formula output schema. */
     private StructType schema;
 
@@ -231,6 +233,11 @@ public class Formula implements Serializable {
         result.addAll(factors);
         result.removeAll(removes);
         this.terms = result.toArray(new Term[result.size()]);
+        if (response.isPresent()) {
+            this.rhs = Arrays.stream(this.terms).filter(term -> term != response.get()).toArray(Term[]::new);
+        } else {
+            this.rhs = terms;
+        }
 
         List<StructField> fields = result.stream()
                 .map(factor -> new StructField(factor.toString(), factor.type()))
@@ -363,9 +370,16 @@ public class Formula implements Serializable {
     }
 
     /**
+     * Returns the real values of predictors.
+     */
+    public double[] predictors(Tuple t) {
+        return Arrays.stream(rhs).mapToDouble(term -> term.applyAsDouble(t)).toArray();
+    }
+
+    /**
      * Returns the names of predictors.
      */
     public String[] predictors() {
-        return Arrays.stream(terms).filter(term -> term != response.orElse(null)).map(Object::toString).toArray(String[]::new);
+        return Arrays.stream(rhs).map(Object::toString).toArray(String[]::new);
     }
 }

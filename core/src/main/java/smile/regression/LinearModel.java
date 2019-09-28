@@ -310,7 +310,18 @@ public class LinearModel implements OnlineRegression<double[]> {
 
     /** Online update the regression model with a new training instance. */
     public void update(Tuple data) {
-        update(formula.apply(data).toArray(), formula.response(data));
+        update(formula.predictors(data), formula.response(data));
+    }
+
+    /** Online update the regression model with a new data frame. */
+    public void update(DataFrame data) {
+        // Don't use data.stream, which may run in parallel.
+        // However, update is not multi-thread safe
+        //data.stream().forEach(this::update);
+        int n = data.size();
+        for (int i = 0; i < n; i++) {
+            update(data.get(i));
+        }
     }
 
     @Override

@@ -33,33 +33,33 @@ trait Operators {
   /** The accuracy is the proportion of true results (both true positives and
     * true negatives) in the population.
     */
-  def accuracy(truth: Array[Int], prediction: Array[Int]): Double = new Accuracy().measure(truth, prediction)
+  def accuracy(truth: Array[Int], prediction: Array[Int]): Double = Accuracy.apply(truth, prediction)
   /** In information retrieval area, sensitivity is called recall. */
-  def recall(truth: Array[Int], prediction: Array[Int]): Double = new Recall().measure(truth, prediction)
+  def recall(truth: Array[Int], prediction: Array[Int]): Double = Recall.apply(truth, prediction)
   /** The precision or positive predictive value (PPV) is ratio of true positives
     * to combined true and false positives, which is different from sensitivity.
     */
-  def precision(truth: Array[Int], prediction: Array[Int]): Double = new Precision().measure(truth, prediction)
+  def precision(truth: Array[Int], prediction: Array[Int]): Double = Precision.apply(truth, prediction)
   /** Sensitivity or true positive rate (TPR) (also called hit rate, recall) is a
     * statistical measures of the performance of a binary classification test.
     * Sensitivity is the proportion of actual positives which are correctly
     * identified as such.
     */
-  def sensitivity(truth: Array[Int], prediction: Array[Int]): Double = new Sensitivity().measure(truth, prediction)
+  def sensitivity(truth: Array[Int], prediction: Array[Int]): Double = Sensitivity.apply(truth, prediction)
   /** Specificity or True Negative Rate is a statistical measures of the
     * performance of a binary classification test. Specificity measures the
     * proportion of negatives which are correctly identified.
     */
-  def specificity(truth: Array[Int], prediction: Array[Int]): Double = new Specificity().measure(truth, prediction)
+  def specificity(truth: Array[Int], prediction: Array[Int]): Double = Specificity.apply(truth, prediction)
   /** Fall-out, false alarm rate, or false positive rate (FPR).
     * Fall-out is actually Type I error and closely related to specificity
     * (1 - specificity).
     */
-  def fallout(truth: Array[Int], prediction: Array[Int]): Double = new Fallout().measure(truth, prediction)
+  def fallout(truth: Array[Int], prediction: Array[Int]): Double = Fallout.apply(truth, prediction)
   /** The false discovery rate (FDR) is ratio of false positives
     * to combined true and false positives, which is actually 1 - precision.
     */
-  def fdr(truth: Array[Int], prediction: Array[Int]): Double = new FDR().measure(truth, prediction)
+  def fdr(truth: Array[Int], prediction: Array[Int]): Double = FDR.apply(truth, prediction)
   /** The F-score (or F-measure) considers both the precision and the recall of the test
     * to compute the score. The precision p is the number of correct positive results
     * divided by the number of all positive results, and the recall r is the number of
@@ -69,14 +69,14 @@ trait Operators {
     * The traditional or balanced F-score (F1 score) is the harmonic mean of
     * precision and recall, where an F1 score reaches its best value at 1 and worst at 0.
     */
-  def f1(truth: Array[Int], prediction: Array[Int]): Double = new FMeasure().measure(truth, prediction)
+  def f1(truth: Array[Int], prediction: Array[Int]): Double = FMeasure.apply(truth, prediction)
 
   /** The area under the curve (AUC). When using normalized units, the area under
     * the curve is equal to the probability that a classifier will rank a
     * randomly chosen positive instance higher than a randomly chosen negative
     * one (assuming 'positive' ranks higher than 'negative').
     */
-  def auc(truth: Array[Int], probability: Array[Double]): Double = AUC.measure(truth, probability)
+  def auc(truth: Array[Int], probability: Array[Double]): Double = AUC.apply(truth, probability)
   /**
     * MCC is a correlation coefficient between prediction and actual values.
     * It is considered as a balanced measure for binary classification, even in unbalanced data sets.
@@ -85,16 +85,16 @@ trait Operators {
     * MCC of 0 means the model is not better then random.
     *
     */
-  def mcc(truth: Array[Int], prediction: Array[Int]): Double = new MCCMeasure().measure(truth, prediction)
+  def mcc(truth: Array[Int], prediction: Array[Int]): Double = MCC.apply(truth, prediction)
 
   /** Mean squared error. */
-  def mse(truth: Array[Double], prediction: Array[Double]): Double = new MSE().measure(truth, prediction)
+  def mse(truth: Array[Double], prediction: Array[Double]): Double = MSE.apply(truth, prediction)
   /** Root mean squared error. */
-  def rmse(truth: Array[Double], prediction: Array[Double]): Double = new RMSE().measure(truth, prediction)
+  def rmse(truth: Array[Double], prediction: Array[Double]): Double = RMSE.apply(truth, prediction)
   /** Residual sum of squares. */
-  def rss(truth: Array[Double], prediction: Array[Double]): Double = new RSS().measure(truth, prediction)
+  def rss(truth: Array[Double], prediction: Array[Double]): Double = RSS.apply(truth, prediction)
   /** Mean absolute deviation error. */
-  def mad(truth: Array[Double], prediction: Array[Double]): Double = new MeanAbsoluteDeviation().measure(truth, prediction)
+  def mad(truth: Array[Double], prediction: Array[Double]): Double = MeanAbsoluteDeviation.apply(truth, prediction)
 
   /** Rand index is defined as the number of pairs of objects
     * that are either in the same group or in different groups in both partitions
@@ -104,7 +104,7 @@ trait Operators {
     * the Rand index between two random partitions is not a constant. This problem
     * is corrected by the adjusted Rand index.
     */
-  def randIndex(truth: Array[Int], prediction: Array[Int]): Double = new RandIndex().measure(truth, prediction)
+  def randIndex(truth: Array[Int], prediction: Array[Int]): Double = RandIndex.apply(truth, prediction)
   /** Adjusted Rand Index. Adjusted Rand Index assumes the generalized
     * hyper-geometric distribution as the model of randomness. The adjusted Rand
     * index has the maximum value 1, and its expected value is 0 in the case
@@ -112,9 +112,9 @@ trait Operators {
     * between two partitions. The adjusted Rand index is recommended for measuring
     * agreement even when the partitions compared have different numbers of clusters.
     */
-  def adjustedRandIndex(truth: Array[Int], prediction: Array[Int]): Double = new AdjustedRandIndex().measure(truth, prediction)
+  def adjustedRandIndex(truth: Array[Int], prediction: Array[Int]): Double = AdjustedRandIndex.apply(truth, prediction)
   /** Normalized mutual information score between two clusterings. */
-  def mutualInformationScore(truth: Array[Int], prediction: Array[Int]): Double = new MutualInformationScore().measure(truth, prediction)
+  //def mutualInformationScore(truth: Array[Int], prediction: Array[Int]): Double = MutualInformationScore.apply(truth, prediction)
 
   /** Test a generic classifier.
     * The accuracy will be measured and printed out on standard output.
@@ -228,14 +228,14 @@ trait Operators {
     val prediction = pred.toArray
     val probability = prob.toArray
 
-    println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, prediction)))
-    println("Sensitivity/Recall = %.2f%%" format (100.0 * new Sensitivity().measure(testy, prediction)))
-    println("Specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, prediction)))
-    println("Precision = %.2f%%" format (100.0 * new Precision().measure(testy, prediction)))
-    println("F1-Score = %.2f%%" format (100.0 * new FMeasure().measure(testy, prediction)))
+    println("Accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, prediction)))
+    println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.apply(testy, prediction)))
+    println("Specificity = %.2f%%" format (100.0 * Specificity.apply(testy, prediction)))
+    println("Precision = %.2f%%" format (100.0 * Precision.apply(testy, prediction)))
+    println("F1-Score = %.2f%%" format (100.0 * FMeasure.apply(testy, prediction)))
     println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, prediction)))
     println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, prediction)))
-    println("AUC = %.2f%%" format (100.0 * AUC.measure(testy, probability)))
+    println("AUC = %.2f%%" format (100.0 * AUC.apply(testy, probability)))
     println("Confusion Matrix: " + new ConfusionMatrix(testy, prediction))
 
     classifier
@@ -388,7 +388,6 @@ trait Operators {
     *
     * @param x data samples.
     * @param y response variable.
-    * @param k k-fold cross validation.
     * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
     * @param trainer a code block to return a regression model trained on the given data.
     * @return measure results.

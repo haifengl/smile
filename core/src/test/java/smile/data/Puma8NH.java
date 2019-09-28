@@ -35,11 +35,11 @@ public class Puma8NH {
 
     static {
         try {
-            Arff arff = new Arff(Paths.getTestData("weka/puma8nh.arff"));
+            Arff arff = new Arff(Paths.getTestData("weka/regression/puma8nh.arff"));
             data = arff.read();
 
-            x = formula.frame(data).toArray();
-            y = formula.response(data).toDoubleArray();
+            x = data.drop("thetadd3").toArray();
+            y = data.column("thetadd3").toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'puma8NH': " + ex);
             System.exit(-1);

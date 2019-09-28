@@ -71,7 +71,10 @@ public class LOOCV {
         }
     }
 
-    /** Runs leave-one-out cross validation tests. */
+    /**
+     * Runs leave-one-out cross validation tests.
+     * @return root mean squared error.
+     */
     public static <T> double test(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
         int n = x.length;
         LOOCV cv = new LOOCV(n);
@@ -89,7 +92,10 @@ public class LOOCV {
         return Math.sqrt(rss / n);
     }
 
-    /** Runs leave-one-out cross validation tests. */
+    /**
+     * Runs leave-one-out cross validation tests.
+     * @return root mean squared error.
+     */
     public static <T> double test(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
         int n = data.size();
         LOOCV cv = new LOOCV(n);

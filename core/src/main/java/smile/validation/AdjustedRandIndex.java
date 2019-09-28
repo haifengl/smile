@@ -46,7 +46,7 @@ public class AdjustedRandIndex implements ClusterMeasure {
     }
 
     /** Calculates the adjusted rand index. */
-    public double apply(int[] y1, int[] y2) {
+    public static double apply(int[] y1, int[] y2) {
         if (y1.length != y2.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", y1.length, y2.length));
         }

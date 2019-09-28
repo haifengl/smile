@@ -111,22 +111,12 @@ public class CrossValidation {
         }
     }
 
-    public <T> double test(Function<int[], Regression<T>> trainer, Function<int[], double[]> tester) {
-        double rss = 0.0;
-        for (int i = 0; i < k; i++) {
-            Regression<T> model = trainer.apply(train[i]);
-            double[] error = tester.apply(test[i]);
-            for (double e : error) {
-                rss += e * e;
-            }
-        }
-
-        return rss;
-    }
-
-    /** Runs cross validation tests. */
+    /**
+     * Runs cross validation tests.
+     * @return root mean squared error.
+     */
     public <T> double test(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
-        double rss = 0.0;
+        double rmse = 0.0;
 
         for (int i = 0; i < k; i++) {
             T[] trainx = MathEx.slice(x, train[i]);
@@ -137,16 +127,19 @@ public class CrossValidation {
             Regression<T> model = trainer.apply(trainx, trainy);
             for (int j = 0; j < testx.length; j++) {
                 double r = testy[j] - model.predict(testx[j]);
-                rss += r * r;
+                rmse += r * r;
             }
         }
 
-        return Math.sqrt(rss / x.length);
+        return Math.sqrt(rmse / x.length);
     }
 
-    /** Runs cross validation tests. */
+    /**
+     * Runs cross validation tests.
+     * @return root mean squared error.
+     */
     public <T> double test(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
-        double rss = 0.0;
+        double rmse = 0.0;
 
         for (int i = 0; i < k; i++) {
             Regression<T> model = trainer.apply(data.of(train[i]));
@@ -156,20 +149,26 @@ public class CrossValidation {
 
             for (int j = 0; j < y.length; j++) {
                 double r = y[j] - prediction[j];
-                rss += r * r;
+                rmse += r * r;
             }
         }
 
-        return Math.sqrt(rss / data.size());
+        return Math.sqrt(rmse / data.size());
     }
 
-    /** Runs cross validation tests. */
+    /**
+     * Runs cross validation tests.
+     * @return root mean squared error.
+     */
     public static <T> double test(int k, T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
         CrossValidation cv = new CrossValidation(x.length, k);
         return cv.test(x, y, trainer);
     }
 
-    /** Runs cross validation tests. */
+    /**
+     * Runs cross validation tests.
+     * @return root mean squared error.
+     */
     public static <T> double test(int k, DataFrame data, Function<DataFrame, Regression<T>> trainer) {
         CrossValidation cv = new CrossValidation(data.size(), k);
         return cv.test(data, trainer);

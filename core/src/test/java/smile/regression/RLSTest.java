@@ -22,16 +22,14 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.Abalone;
-import smile.data.CPU;
-import smile.data.DataFrame;
-import smile.data.Planes;
+import smile.data.*;
 import smile.data.formula.Formula;
-import smile.math.MathEx;
 import smile.validation.CrossValidation;
+import smile.validation.Validation;
 
-import javax.sound.sampled.Line;
 import java.util.stream.IntStream;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -60,13 +58,51 @@ public class RLSTest {
         
     }
 
+    @Test
+    public void testLongley(){
+        System.out.println("longley");
+
+        int n = Longley.data.size();
+        DataFrame batch = Longley.data.of(IntStream.range(0, n/2).toArray());
+        DataFrame online = Longley.data.of(IntStream.range(n/2, n).toArray());
+        LinearModel model = OLS.fit(Longley.formula, batch);
+        double rmse = Validation.test(model, online);
+        System.out.println("Batch RMSE = " + rmse);
+        assertEquals(6.229663, rmse, 1E-4);
+
+        model.update(online);
+        rmse = Validation.test(model, online);
+        System.out.println("Online RMSE = " + rmse);
+        assertEquals(0.973663, rmse, 1E-4);
+    }
+
+    /**
+     * Test of learn method, of class LinearRegression.
+     */
+    @Test
+    public void testProstate() {
+        System.out.println("Prostate");
+
+        LinearModel model = OLS.fit(Prostate.formula, Prostate.train);
+        System.out.println(model);
+
+        double rmse = Validation.test(model, Prostate.test);
+        System.out.println("RMSE on test data = " + rmse);
+        assertEquals(0.721993, rmse, 1E-4);
+
+        model.update(Prostate.test);
+        rmse = Validation.test(model, Prostate.test);
+        System.out.println("RMSE after online = " + rmse);
+        assertEquals(0.643182, rmse, 1E-4);
+    }
+
     /**
      * Test of online learn method of class OLS.
      */
     public void testOnlineLearn(String name, Formula formula, DataFrame data){
         System.out.println(name);
 
-        double rss = CrossValidation.test(10, data, x -> {
+        double rmse = CrossValidation.test(10, data, x -> {
             int n = x.size();
             DataFrame batch = x.of(IntStream.range(0, n/2).toArray());
             DataFrame online = x.of(IntStream.range(n/2, n).toArray());
@@ -74,7 +110,7 @@ public class RLSTest {
             online.stream().forEach(t -> model.update(t));
             return model;
         });
-        System.out.format("10-CV RMSE = %.4f%n", rss);
+        System.out.format("10-CV RMSE = %.4f%n", rmse);
     }
     
     @Test
@@ -82,9 +118,9 @@ public class RLSTest {
         testOnlineLearn("CPU", CPU.formula, CPU.data);
         testOnlineLearn("2dplanes", Planes.formula, Planes.data);
         testOnlineLearn("abalone", Abalone.formula, Abalone.train);
-        //testOnlineLearn(true, "bank32nh", "weka/regression/bank32nh.arff", 32);
-        //testOnlineLearn(true, "cal_housing", "weka/regression/cal_housing.arff", 8);
-        //testOnlineLearn(true, "puma8nh", "weka/regression/puma8nh.arff", 8);
-        //testOnlineLearn(true, "kin8nm", "weka/regression/kin8nm.arff", 8);
+        testOnlineLearn("bank32nh", Bank32nh.formula, Bank32nh.data);
+        testOnlineLearn("cal_housing", CalHousing.formula, CalHousing.data);
+        testOnlineLearn("puma8nh", Puma8NH.formula, Puma8NH.data);
+        testOnlineLearn("kin8nm", Kin8nm.formula, Kin8nm.data);
     }
 }
