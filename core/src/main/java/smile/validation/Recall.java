@@ -25,9 +25,15 @@ package smile.validation;
  * @author Haifeng Li
  */
 public class Recall implements ClassificationMeasure {
+    public final static Recall instance = new Recall();
 
     @Override
     public double measure(int[] truth, int[] prediction) {
+        return apply(truth, prediction);
+    }
+
+    /** Calculates the recall/sensitivity. */
+    public static double apply(int[] truth, int[] prediction) {
         if (truth.length != prediction.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
         }

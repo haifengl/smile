@@ -26,8 +26,16 @@ package smile.validation;
  *
  * @author digital-thinking
  */
-public class MCCMeasure implements ClassificationMeasure {
+public class MCC implements ClassificationMeasure {
+    public final static MCC instance = new MCC();
+
+    @Override
     public double measure(int[] truth, int[] prediction) {
+        return apply(truth, prediction);
+    }
+
+    /** Calculates Matthews correlation coefficient. */
+    public static double apply(int[] truth, int[] prediction) {
         if (truth.length != prediction.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
         }
@@ -55,6 +63,10 @@ public class MCCMeasure implements ClassificationMeasure {
         }
 
         return numerator / denominator;
+    }
 
+    @Override
+    public String toString() {
+        return "MCC";
     }
 }

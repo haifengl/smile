@@ -34,9 +34,15 @@ package smile.validation;
  * @author Haifeng Li
  */
 public class Specificity implements ClassificationMeasure {
+    public final static Specificity instance = new Specificity();
 
     @Override
     public double measure(int[] truth, int[] prediction) {
+        return apply(truth, prediction);
+    }
+
+    /** Calculates the specificity. */
+    public static double apply(int[] truth, int[] prediction) {
         if (truth.length != prediction.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
         }

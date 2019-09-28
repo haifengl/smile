@@ -40,17 +40,13 @@ import smile.sort.QuickSort;
  * @author Haifeng Li
  */
 public class AUC {
-
-    public AUC() {
-    }
-
     /**
      * Caulculate AUC for binary classifier.
      * @param truth The sample labels
      * @param probability The posterior probability of positive class.
      * @return AUC
      */
-    public static double measure(int[] truth, double[] probability) {
+    public static double apply(int[] truth, double[] probability) {
         if (truth.length != probability.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, probability.length));
         }
