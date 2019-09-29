@@ -23,13 +23,15 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.data.Abalone;
-import smile.data.CPU;
-import smile.data.Diabetes;
-import smile.data.Prostate;
+import smile.data.*;
+import smile.data.formula.Formula;
+import smile.data.vector.DoubleVector;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
+import smile.validation.LOOCV;
 import smile.validation.Validation;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -54,6 +56,45 @@ public class ElasticNetTest {
     @After
     public void tearDown() {
     }
+    @Test
+    public void testToy() {
+        double[][] A = {
+                {1, 0, 0, 0.5},
+                {0, 1, 0.2, 0.3},
+                {1, 0.5, 0.2, 0.3},
+                {0, 0.1, 0, 0.2},
+                {0, 0.1, 1, 0.2}
+        };
+
+        double[] y = {6, 5.2, 6.2, 5, 6};
+
+        DataFrame df = DataFrame.of(A).merge(DoubleVector.of("y", y));
+
+        LinearModel model = ElasticNet.fit(Formula.lhs("y"), df, 0.8, 0.2);
+        System.out.println(model);
+
+        double rmse = Validation.test(model, df);
+        System.out.println("RMSE = " + rmse);
+
+        assertEquals(5.0259443688265355, model.intercept(), 1E-7);
+        double[] w = {0.9659945126777854, -3.7147706312985876E-4, 0.9553629503697613, 9.416740009376934E-4};
+        for (int i = 0; i < w.length; i++) {
+            assertEquals(w[i], model.coefficients()[i], 1E-5);
+        }
+    }
+
+    @Test
+    public void testLongley() {
+        System.out.println("longley");
+
+        LinearModel model = ElasticNet.fit(Longley.formula, Longley.data, 0.8, 0.2);
+        System.out.println(model);
+
+        double rmse = LOOCV.test(Longley.data, (x) -> ElasticNet.fit(Longley.formula, x, 0.8, 0.2));
+        System.out.println("LOOCV RMSE = " + rmse);
+        assertEquals(1.4146564289679233, rmse, 1E-4);
+    }
+
 
     /**
      * Test of learn method, of class LinearRegression.
@@ -64,8 +105,9 @@ public class ElasticNetTest {
         LinearModel model = ElasticNet.fit(CPU.formula, CPU.data, 0.8, 0.2);
         System.out.println(model);
 
-        double rss = CrossValidation.test(10, CPU.data, (x) -> ElasticNet.fit(CPU.formula, x, 0.8, 0.2));
-        System.out.println("CPU 10-CV RMSE = " + rss);
+        double rmse = CrossValidation.test(10, CPU.data, (x) -> ElasticNet.fit(CPU.formula, x, 0.8, 0.2));
+        System.out.println("10-CV RMSE = " + rmse);
+        assertEquals(1.4146564289679233, rmse, 1E-4);
     }
 
     /**
@@ -73,12 +115,13 @@ public class ElasticNetTest {
      */
     @Test
     public void tesProstate() {
-        System.out.println("---Prostate---");
+        System.out.println("Prostate");
         LinearModel model = ElasticNet.fit(Prostate.formula, Prostate.train, 0.8, 0.2);
         System.out.println(model);
 
-        double rss = Validation.test(model, Prostate.test);
-        System.out.println("Test RMSE = " + rss);
+        double rmse = Validation.test(model, Prostate.test);
+        System.out.println("Test RMSE = " + rmse);
+        assertEquals(1.4146564289679233, rmse, 1E-4);
     }
 
     /**
@@ -86,12 +129,13 @@ public class ElasticNetTest {
      */
     @Test
     public void tesAbalone() {
-        System.out.println("---Abalone---");
+        System.out.println("Abalone");
         LinearModel model = ElasticNet.fit(Abalone.formula, Abalone.train, 0.8, 0.2);
         System.out.println(model);
 
-        double rss = Validation.test(model, Abalone.test);
-        System.out.println("Test RMSE = " + rss);
+        double rmse = Validation.test(model, Abalone.test);
+        System.out.println("Test RMSE = " + rmse);
+        assertEquals(1.4146564289679233, rmse, 1E-4);
     }
 
     /**
@@ -99,11 +143,12 @@ public class ElasticNetTest {
      */
     @Test
     public void tesDiabetes() {
-        System.out.println("---Diabetes---");
+        System.out.println("Diabetes");
         LinearModel model = ElasticNet.fit(Diabetes.formula, Diabetes.data, 0.8, 0.2);
         System.out.println(model);
 
-        double rss = CrossValidation.test(10, Diabetes.data, (x) -> ElasticNet.fit(Diabetes.formula, x, 0.8, 0.2));
-        System.out.println("Diabetes 10-CV RMSE = " + rss);
+        double rmse = CrossValidation.test(10, Diabetes.data, (x) -> ElasticNet.fit(Diabetes.formula, x, 0.8, 0.2));
+        System.out.println("Diabetes 10-CV RMSE = " + rmse);
+        assertEquals(1.4146564289679233, rmse, 1E-4);
     }
 }

@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.util.Arrays;
 import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
@@ -48,7 +49,7 @@ import smile.math.special.Beta;
  * In this setting the belief that weight should be small is coded into a prior
  * distribution.
  * <p>
- * The penalty term is unfair to the predictor variables that are not on the
+ * The penalty term is unfair if the predictor variables are not on the
  * same scale. Therefore, if we know that the variables are not measured
  * in the same units, we typically scale the columns of X (to have sample
  * variance 1), and then we perform ridge regression.
@@ -60,9 +61,10 @@ import smile.math.special.Beta;
  * ends up just being the mean of <code>y</code>.
  * <p>
  * Ridge regression doesn’t set coefficients exactly to zero unless
- * <code>&lambda; = &infin;</code>, in which case they’re all zero. Hence ridge regression cannot
- * perform variable selection, and even though it performs well in terms
- * of prediction accuracy, it does poorly in terms of offering a clear interpretation.
+ * <code>&lambda; = &infin;</code>, in which case they’re all zero.
+ * Hence ridge regression cannot perform variable selection, and
+ * even though it performs well in terms of prediction accuracy,
+ * it does poorly in terms of offering a clear interpretation.
  *
  * @author Haifeng Li
  */
@@ -91,9 +93,8 @@ public class RidgeRegression {
      * @param prop Training algorithm hyper-parameters and properties.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("lambda", "1"));
-        boolean stderr = Boolean.valueOf(prop.getProperty("smile.ols.standard.error", "true"));
-        return fit(formula, data, lambda, stderr);
+        double lambda = Double.valueOf(prop.getProperty("smile.ridge.lambda", "1"));
+        return fit(formula, data, lambda);
     }
 
     /**
@@ -105,19 +106,6 @@ public class RidgeRegression {
      *               Choosing an appropriate value of lambda is important, and also difficult.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
-        return fit(formula, data, lambda, true);
-    }
-
-    /**
-     * Fits a ridge regression model.
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     *             NO NEED to include a constant column of 1s for bias.
-     * @param lambda the shrinkage/regularization parameter. Large lambda means more shrinkage.
-     *               Choosing an appropriate value of lambda is important, and also difficult.
-     * @param stderr if true, compute the estimated standard errors of the estimate of parameters.
-     */
-    public static LinearModel fit(Formula formula, DataFrame data, double lambda, boolean stderr) {
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);
         }
@@ -162,27 +150,13 @@ public class RidgeRegression {
             model.w[j] /= scale[j];
         }
 
-        double ybar = MathEx.mean(y);
-        model.b = ybar - MathEx.dot(model.w, center);
+        double ym = MathEx.mean(y);
+        model.b = ym - MathEx.dot(model.w, center);
 
         double[] fittedValues = new double[n];
-        X.axpy(model.w, fittedValues, model.b);
-
-        model.fitness(fittedValues, y, ybar);
-
-        DenseMatrix inv = cholesky.inverse();
-
-        if (stderr) {
-            model.ttest = new double[p][4];
-            for (int i = 0; i < p; i++) {
-                model.ttest[i][0] = model.w[i];
-                double se = model.error * Math.sqrt(inv.get(i, i));
-                model.ttest[i][1] = se;
-                double t = model.w[i] / se;
-                model.ttest[i][2] = t;
-                model.ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * model.df, 0.5, model.df / (model.df + t * t));
-            }
-        }
+        Arrays.fill(fittedValues, model.b);
+        X.axpy(model.w, fittedValues);
+        model.fitness(fittedValues, y, ym);
 
         return model;
     }

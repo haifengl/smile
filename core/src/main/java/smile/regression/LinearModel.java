@@ -250,11 +250,11 @@ public class LinearModel implements OnlineRegression<double[]> {
 
     /**
      * Calculate the fitness of model.
-     * @param fittedValues The fitted value of training data.
-     * @param y The response of training data.
-     * @param ybar the mean of y
+     * @param fittedValues the fitted value of training data.
+     * @param y the response of training data.
+     * @param ym the mean of y
      */
-    void fitness(double[] fittedValues, double[] y, double ybar) {
+    void fitness(double[] fittedValues, double[] y, double ym) {
         int n = fittedValues.length;
         this.fittedValues = fittedValues;
         this.residuals = new double[n];
@@ -264,7 +264,7 @@ public class LinearModel implements OnlineRegression<double[]> {
         for (int i = 0; i < n; i++) {
             residuals[i] = y[i] - fittedValues[i];
             RSS += MathEx.sqr(residuals[i]);
-            TSS += MathEx.sqr(y[i] - ybar);
+            TSS += MathEx.sqr(y[i] - ym);
         }
 
         error = Math.sqrt(RSS / (n - p - 1));
@@ -280,7 +280,7 @@ public class LinearModel implements OnlineRegression<double[]> {
         if (df2 > 0) {
             pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
         } else {
-            logger.warn("Unable to calculate to p-value: the linear system is underdetermined.");
+            logger.warn("Skip calculating p-value: the linear system is under-determined.");
             pvalue = Double.NaN;
         }
     }
@@ -296,7 +296,7 @@ public class LinearModel implements OnlineRegression<double[]> {
 
     @Override
     public double predict(Tuple x) {
-        return predict(formula.apply(x).toArray());
+        return predict(formula.predictors(x));
     }
 
     @Override
@@ -424,7 +424,12 @@ public class LinearModel implements OnlineRegression<double[]> {
         builder.append("\nCoefficients:\n");
         if (ttest != null) {
             builder.append("                  Estimate Std. Error    t value   Pr(>|t|)\n");
-            builder.append(String.format("Intercept       %10.4f %10.4f %10.4f %10.4f %s%n", ttest[p][0], ttest[p][1], ttest[p][2], ttest[p][3], significance(ttest[p][3])));
+            if (ttest.length > p) {
+                builder.append(String.format("Intercept       %10.4f %10.4f %10.4f %10.4f %s%n", ttest[p][0], ttest[p][1], ttest[p][2], ttest[p][3], significance(ttest[p][3])));
+            } else {
+                builder.append(String.format("Intercept       %10.4f%n", b));
+            }
+
             for (int i = 0; i < p; i++) {
                 builder.append(String.format("%-15s %10.4f %10.4f %10.4f %10.4f %s%n", names[i], ttest[i][0], ttest[i][1], ttest[i][2], ttest[i][3], significance(ttest[i][3])));
             }
@@ -432,9 +437,9 @@ public class LinearModel implements OnlineRegression<double[]> {
             builder.append("---------------------------------------------------------------------\n");
             builder.append("Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
         } else {
-            builder.append(String.format("Intercept%11.4f%n", b));
+            builder.append(String.format("Intercept       %10.4f%n", b));
             for (int i = 0; i < p; i++) {
-                builder.append(String.format("%s\t %11.4f%n", names[i], w[i]));
+                builder.append(String.format("%-15s %10.4f%n", names[i], w[i]));
             }
         }
 

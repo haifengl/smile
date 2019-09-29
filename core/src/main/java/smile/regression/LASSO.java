@@ -142,13 +142,13 @@ public class LASSO {
             model.w[j] /= scale[j];
         }
 
-        double ybar = MathEx.mean(y);
-        model.b = ybar - MathEx.dot(model.w, center);
+        double ym = MathEx.mean(y);
+        model.b = ym - MathEx.dot(model.w, center);
 
         double[] fittedValues = new double[y.length];
-        X.axpy(model.w, fittedValues, model.b);
-
-        model.fitness(fittedValues, y, ybar);
+        Arrays.fill(fittedValues, model.b);
+        X.axpy(model.w, fittedValues);
+        model.fitness(fittedValues, y, ym);
 
         return model;
     }
