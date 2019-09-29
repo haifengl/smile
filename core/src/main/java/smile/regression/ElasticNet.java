@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.util.Arrays;
 import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
@@ -139,13 +140,13 @@ public class ElasticNet {
             model.w[i] = c * model.w[i] / scale[i];
         }
 
-        double ybar = MathEx.mean(y);
-        model.b = ybar - MathEx.dot(model.w, center);
+        double ym = MathEx.mean(y);
+        model.b = ym - MathEx.dot(model.w, center);
 
         double[] fittedValues = new double[y.length];
-        X.axpy(model.w, fittedValues, model.b);
-
-        model.fitness(fittedValues, y, ybar);
+        Arrays.fill(fittedValues, model.b);
+        X.axpy(model.w, fittedValues);
+        model.fitness(fittedValues, y, ym);
 
         return model;
     }

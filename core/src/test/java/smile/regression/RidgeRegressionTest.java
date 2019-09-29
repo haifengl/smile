@@ -27,6 +27,8 @@ import smile.data.Longley;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
+import smile.validation.Validation;
+
 import static org.junit.Assert.*;
 
 /**
@@ -59,24 +61,11 @@ public class RidgeRegressionTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class RidgeRegression.
-     */
     @Test
-    public void testLearn() {
-        System.out.println("learn");
-        LinearModel model = RidgeRegression.fit(Longley.formula, Longley.data,0.0);
-
-        double rss = 0.0;
-        int n = Longley.data.size();
-        for (int i = 0; i < n; i++) {
-            double r =  Longley.y[i] - model.predict(Longley.x[i]);
-            assertEquals(residuals[i], r, 1E-7);
-            rss += r * r;
-        }
-        System.out.println("Training MSE = " + rss/n);
-
-        model = RidgeRegression.fit(Longley.formula, Longley.data, 0.1);
+    public void testLongley() {
+        System.out.println("longley");
+        LinearModel model = RidgeRegression.fit(Longley.formula, Longley.data, 0.1);
+        System.out.println(model);
 
         assertEquals(-1.354007e+03, model.intercept(), 1E-3);
         assertEquals(5.457700e-02, model.coefficients()[0], 1E-7);
@@ -86,34 +75,19 @@ public class RidgeRegressionTest {
         assertEquals(7.218054e-01, model.coefficients()[4], 1E-7);
         assertEquals(5.884884e-01, model.coefficients()[5], 1E-7);
 
-        rss = LOOCV.test(Longley.data, (x) -> RidgeRegression.fit(Longley.formula, x, 0.1));
-        System.out.println("LOOCV MSE = " + rss/n);
+        double rmse = LOOCV.test(Longley.data, (x) -> RidgeRegression.fit(Longley.formula, x, 0.1));
+        System.out.println("LOOCV RMSE = " + rmse);
+        assertEquals(1.7288188, rmse, 1E-7);
     }
 
-    /**
-     * Test of predict method, of class RidgeRegression.
-     */
-    @Test
-    public void testPredict() {
-        System.out.println("predict");
-
-        for (int step = 0; step <= 20; step+=2) {
-            final double lambda = 0.01 * step;
-            double rss = LOOCV.test(Longley.data, (x) -> RidgeRegression.fit(Longley.formula, x, 0.01 * lambda));
-            System.out.format("LOOCV MSE with lambda %.2f = %.3f%n", lambda, rss);
-        }
-    }
-
-    /**
-     * Test of learn method, of class LinearRegression.
-     */
     @Test
     public void testCPU() {
         System.out.println("CPU");
-        LinearModel model = RidgeRegression.fit(CPU.formula, CPU.data, 10.0);
+        LinearModel model = RidgeRegression.fit(CPU.formula, CPU.data, 0.1);
         System.out.println(model);
 
-        double rss = CrossValidation.test(10, CPU.data, (x) -> RidgeRegression.fit(CPU.formula, x, 10.0));
-        System.out.println("CPU 10-CV RMSE = " + rss);
+        double rmse = CrossValidation.test(10, CPU.data, (x) -> RidgeRegression.fit(CPU.formula, x, 0.1));
+        System.out.println("10-CV RMSE = " + rmse);
+        assertEquals(55.268333864, rmse, 1E-7);
     }
 }
