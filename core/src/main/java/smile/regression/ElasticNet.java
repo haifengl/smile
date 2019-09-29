@@ -135,10 +135,11 @@ public class ElasticNet {
         model.names = formula.predictors();
         model.formula = formula;
 
-        model.w = new double[p];
+        double[] w = new double[p];
         for (int i = 0; i < p; i++) {
-            model.w[i] = c * model.w[i] / scale[i];
+            w[i] = c * model.w[i] / scale[i];
         }
+        model.w = w;
 
         double ym = MathEx.mean(y);
         model.b = ym - MathEx.dot(model.w, center);
