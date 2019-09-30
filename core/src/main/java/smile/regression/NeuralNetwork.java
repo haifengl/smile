@@ -52,8 +52,8 @@ import smile.base.neuralnetwork.ObjectiveFunction;
         super(ObjectiveFunction.LEAST_MEAN_SQUARES, net);
 
         Layer outputLayer = net[net.length - 1];
-        if (outputLayer.getOutput().length != 1) {
-            throw new IllegalArgumentException("The output layer must have only one output value: " + outputLayer.getOutput().length);
+        if (outputLayer.getOutputUnits() != 1) {
+            throw new IllegalArgumentException("The output layer must have only one output value: " + outputLayer.getOutputUnits());
         }
 
         p = net[0].getInputUnits();
