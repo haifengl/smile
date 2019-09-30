@@ -128,8 +128,8 @@ public class GaussianProcessRegression{
         int m = t.length;
 
         DenseMatrix G = Matrix.zeros(n, m);
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
+        for (int j = 0; j < m; j++) {
+            for (int i = 0; i < n; i++) {
                 G.set(i, j, kernel.k(x[i], t[j]));
             }
         }
@@ -173,8 +173,8 @@ public class GaussianProcessRegression{
         int m = t.length;
 
         DenseMatrix E = Matrix.zeros(n, m);
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
+        for (int j = 0; j < m; j++) {
+            for (int i = 0; i < n; i++) {
                 E.set(i, j, kernel.k(x[i], t[j]));
             }
         }
@@ -216,6 +216,6 @@ public class GaussianProcessRegression{
             w[i] = (y[i] - w[i]) / lambda;
         }
 
-        return new KernelMachine<>(kernel, t, w);
+        return new KernelMachine<>(kernel, x, w);
     }
 }

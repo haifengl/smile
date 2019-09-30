@@ -19,8 +19,11 @@ package smile.regression;
 
 import smile.data.CPU;
 import smile.data.DataFrame;
+import smile.data.Longley;
 import smile.data.formula.Formula;
 import smile.io.Arff;
+import smile.math.kernel.GaussianKernel;
+import smile.math.kernel.LinearKernel;
 import smile.math.kernel.PolynomialKernel;
 
 import org.junit.After;
@@ -31,6 +34,10 @@ import org.junit.Test;
 import smile.math.MathEx;
 import smile.util.Paths;
 import smile.validation.CrossValidation;
+import smile.validation.LOOCV;
+import smile.validation.Validation;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -57,9 +64,19 @@ public class SVRTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class SVR.
-     */
+    @Test
+    public void testLongley() {
+        System.out.println("longley");
+
+        SVR<double[]> svr = new SVR<>(new LinearKernel(), 0.5, 10.0, 1E-3);
+        KernelMachine<double[]> model = svr.fit(Longley.x, Longley.y);
+        System.out.println(model);
+
+        double rmse = Validation.test(model, Longley.x, Longley.y);
+        System.out.println("RMSE = " + rmse);
+        assertEquals(0.9233178794283378, rmse, 1E-4);
+    }
+
     @Test
     public void testCPU() {
         System.out.println("CPU");
@@ -67,10 +84,12 @@ public class SVRTest {
         double[][] x = MathEx.clone(CPU.x);
         MathEx.standardize(x);
 
-        SVR<double[]> svr = new SVR<>(new PolynomialKernel(3, 1.0, 1.0), 0.1, 1.0, 1E-3);
-        CrossValidation cv = new CrossValidation(x.length, 10, false);
-        double rss = cv.test(x, CPU.y, (xi, yi) -> svr.fit(xi, yi));
+        SVR<double[]> svr = new SVR<>(new LinearKernel(), 5.0, 1.0, 1E-3);
+        KernelMachine<double[]> model = svr.fit(x, CPU.y);
+        System.out.println(model);
 
-        System.out.println("10-CV RMSE = " + rss);
+        double rmse = CrossValidation.test(10, x, CPU.y, (xi, yi) -> svr.fit(xi, yi));
+        System.out.println("10-CV RMSE = " + rmse);
+        assertEquals(162.84821957220652, rmse, 1E-4);
     }
 }
