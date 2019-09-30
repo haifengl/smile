@@ -18,6 +18,7 @@
 package smile.regression;
 
 import smile.data.Tuple;
+import smile.math.MathEx;
 import smile.math.kernel.MercerKernel;
 
 /**
@@ -132,5 +133,10 @@ public class KernelMachine<T> implements Regression<T> {
         }
 
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Kernel Machine (%s): %d vectors, intercept = %.4f", kernel, instances.length, b);
     }
 }
