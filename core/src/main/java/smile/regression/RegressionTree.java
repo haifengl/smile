@@ -230,7 +230,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
 
         this.output = output;
 
-        LeafNode node = newNode(IntStream.range(0, x.size()).toArray());
+        LeafNode node = newNode(IntStream.range(0, x.size()).filter(i -> this.samples[i] > 0).toArray());
         this.root = node;
 
         Optional<Split> split = findBestSplit(node, 0, index.length, new boolean[x.ncols()]);
