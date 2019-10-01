@@ -92,7 +92,7 @@ public class Formula implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("%s ~ %",
+        return String.format("%s ~ %s",
                 response.map(Objects::toString).orElse(""),
                 Arrays.stream(predictors).map(Objects::toString).collect(Collectors.joining(" + ")));
     }

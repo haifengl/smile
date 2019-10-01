@@ -17,7 +17,6 @@
 
 package smile.regression;
 
-import java.text.Normalizer;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -231,12 +230,10 @@ public class RegressionTree extends CART implements Regression<Tuple> {
 
         this.output = output;
 
-        double mean = MathEx.mean(y.toDoubleArray());
-        double rss = 0;
-        LeafNode node = new RegressionNode(x.nrows(), mean, rss);
+        LeafNode node = newNode(IntStream.range(0, x.size()).toArray());
         this.root = node;
 
-        Optional<Split> split = findBestSplit(node, 0, index.length, null);
+        Optional<Split> split = findBestSplit(node, 0, index.length, new boolean[x.ncols()]);
 
         if (maxNodes == Integer.MAX_VALUE) {
             // deep-first split
@@ -288,7 +285,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
      * @param maxNodes the maximum number of leaf nodes in the tree.
      */
     public static RegressionTree fit(Formula formula, DataFrame data, int nodeSize, int maxNodes) {
-        DataFrame x = formula.frame(data);
+        DataFrame x = formula.frame(data).drop(formula.response().get().toString());
         BaseVector y = formula.response(data);
         RegressionNodeOutput output = new LeastSquaresNodeOutput(y.toDoubleArray());
         RegressionTree tree = new RegressionTree(x, y, nodeSize, maxNodes, -1, null, null, output);

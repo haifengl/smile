@@ -54,7 +54,7 @@ public class DecisionNode extends LeafNode {
     }
 
     @Override
-    public String toDot(StructType schema, int id) {
+    public String dot(StructType schema, int id) {
         return String.format(" %d [label=<class = %d>, fillcolor=\"#00000000\", shape=ellipse];\n", id, output);
     }
 

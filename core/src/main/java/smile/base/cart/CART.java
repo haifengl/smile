@@ -337,6 +337,11 @@ public abstract class CART {
         return root;
     }
 
+    @Override
+    public String toString() {
+        return dot();
+    }
+
     /**
      * Returns the graphic representation in Graphviz dot format.
      * Try http://viz-js.com/ to visualize the returned string.
@@ -358,7 +363,7 @@ public abstract class CART {
             Node node = entry.getValue();
 
             // leaf node
-            builder.append(node.toDot(schema, id));
+            builder.append(node.dot(schema, id));
 
             if (node instanceof InternalNode) {
                 int tid = 2 * id;

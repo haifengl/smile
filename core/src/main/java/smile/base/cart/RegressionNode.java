@@ -75,7 +75,7 @@ public class RegressionNode extends LeafNode {
     }
 
     @Override
-    public String toDot(StructType schema, int id) {
+    public String dot(StructType schema, int id) {
         return String.format(" %d [label=<%.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, output);
     }
 
