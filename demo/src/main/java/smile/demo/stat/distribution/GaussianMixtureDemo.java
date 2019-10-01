@@ -120,6 +120,7 @@ public class GaussianMixtureDemo extends JPanel {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Gaussian Mixture");
+        frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().add(new GaussianMixtureDemo());

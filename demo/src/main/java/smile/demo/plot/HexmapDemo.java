@@ -167,6 +167,7 @@ public class HexmapDemo extends JPanel {
             }
             
             JFrame frame = new JFrame("Hexmap");
+            frame.setSize(1000, 1000);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setLocationRelativeTo(null);
             frame.add(Hexmap.plot(labels, umatrix));

@@ -157,6 +157,7 @@ public class TDistributionDemo extends JPanel implements ChangeListener {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Student's T-Distribution");
+        frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().add(new TDistributionDemo());

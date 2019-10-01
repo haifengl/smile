@@ -136,6 +136,7 @@ public class ExponentialFamilyMixtureDemo extends JPanel {
         System.out.println(mixture);
 
         JFrame frame = new JFrame("Mixture of Exponential Family Distributions");
+        frame.setSize(1000, 1000);
         PlotCanvas canvas = Histogram.plot(data, 50);
         frame.add(canvas);
 

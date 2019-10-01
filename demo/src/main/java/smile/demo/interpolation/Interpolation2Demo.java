@@ -89,6 +89,7 @@ public class Interpolation2Demo extends JPanel {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Interpolation 2D");
+        frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().add(new Interpolation2Demo());

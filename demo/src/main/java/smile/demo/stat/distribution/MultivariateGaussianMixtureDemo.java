@@ -176,6 +176,7 @@ public class MultivariateGaussianMixtureDemo extends JPanel {
         System.out.println(MathEx.sd(data100));
 
         JFrame frame = new JFrame("Norm of Samples of Gaussian Mixture of Dimension 100");
+        frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().add(Histogram.plot(data100, 100));
