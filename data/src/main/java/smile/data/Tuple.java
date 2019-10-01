@@ -23,6 +23,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import smile.data.measure.DiscreteMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructType;
@@ -90,6 +93,11 @@ public interface Tuple extends Serializable {
     /** Checks whether the field value is null. */
     default boolean isNullAt(String field) {
         return get(field) == null;
+    }
+
+    /** Returns true if the tuple has null/missing values. */
+    default boolean hasNull() {
+        return IntStream.range(0, length()).anyMatch(i -> isNullAt(i));
     }
 
     /**
@@ -463,7 +471,7 @@ public interface Tuple extends Serializable {
 
     /** Returns an object array based tuple. */
     static Tuple of(Object[] row, StructType schema) {
-        return new Tuple() {
+        return new AbstractTuple() {
             @Override
             public Object get(int i) {
                 return row[i];

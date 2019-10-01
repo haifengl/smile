@@ -374,8 +374,8 @@ public class Arff implements AutoCloseable {
             rows.add(Tuple.of(row, schema));
         }
 
-        schema.boxed(rows);
-        return DataFrame.of(rows);
+        schema = schema.boxed(rows);
+        return DataFrame.of(rows, schema);
     }
 
     /**

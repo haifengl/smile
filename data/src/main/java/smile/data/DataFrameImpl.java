@@ -204,15 +204,38 @@ class DataFrameImpl implements DataFrame {
 
     /**
      * Constructor.
+     * @param data The data stream.
+     */
+    public DataFrameImpl(Stream<Tuple> data) {
+        this(data.collect(Collectors.toList()));
+    }
+
+    /**
+     * Constructor.
+     * @param data The data stream.
+     */
+    public DataFrameImpl(Stream<Tuple> data, StructType schema) {
+        this(data.collect(Collectors.toList()), schema);
+    }
+    /**
+     * Constructor.
      * @param data The data collection.
      */
     public DataFrameImpl(List<Tuple> data) {
+        this(data, data.get(0).schema());
+    }
+
+    /**
+     * Constructor.
+     * @param data The data collection.
+     */
+    public DataFrameImpl(List<Tuple> data, StructType schema) {
         if (data.isEmpty()) {
             throw new IllegalArgumentException("Empty tuple collections");
         }
 
         this.size = data.size();
-        this.schema = data.get(0).schema();
+        this.schema = schema;
         StructField[] fields = schema.fields();
         this.columns = new ArrayList<>(fields.length);
 

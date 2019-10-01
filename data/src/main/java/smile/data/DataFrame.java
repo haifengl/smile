@@ -23,7 +23,7 @@ import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
+import java.util.stream.Stream;
 import smile.data.measure.DiscreteMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.*;
@@ -91,6 +91,11 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         );
 
         return new DataFrameImpl(vectors);
+    }
+
+    /** Returns a new data frame without rows that have null/missing values. */
+    default DataFrame omitNullRows() {
+        return DataFrame.of(stream().filter(r -> !r.hasNull()), schema().unboxed());
     }
 
     /** Returns the cell at (i, j). */
@@ -919,6 +924,22 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     }
 
     /**
+     * Creates a DataFrame from a stream of tuples.
+     * @param data The data stream.
+     */
+    static DataFrame of(Stream<Tuple> data) {
+        return new DataFrameImpl(data);
+    }
+
+    /**
+     * Creates a DataFrame from a stream of tuples.
+     * @param data The data stream.
+     */
+    static DataFrame of(Stream<Tuple> data, StructType schema) {
+        return new DataFrameImpl(data, schema);
+    }
+
+    /**
      * Creates a DataFrame from a set of tuples.
      * @param data The data collection.
      */
@@ -927,19 +948,26 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     }
 
     /**
+     * Creates a DataFrame from a set of tuples.
+     * @param data The data collection.
+     */
+    static DataFrame of(List<Tuple> data, StructType schema) {
+        return new DataFrameImpl(data, schema);
+    }
+
+    /**
      * Creates a DataFrame from a set of Maps.
      * @param data The data collection.
      */
-    static <T> DataFrame of(List<Map<String, T>> data, StructType schema) {
-        List<Tuple> rows = new ArrayList<>(data.size());
-        for (Map<String, T> map : data) {
+    static <T> DataFrame of(Collection<Map<String, T>> data, StructType schema) {
+        List<Tuple> rows = data.stream().map(map -> {
             Object[] row = new Object[schema.length()];
             for (int i = 0; i < row.length; i++) {
                 row[i] = map.get(schema.fieldName(i));
             }
-            rows.add(Tuple.of(row, schema));
-        }
-        return of(rows);
+            return Tuple.of(row, schema);
+        }).collect(Collectors.toList());
+        return of(rows, schema);
     }
 
     /**
