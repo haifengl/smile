@@ -135,6 +135,7 @@ public class ScatterPlotDemo extends JPanel {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Staircase Plot");
+        frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().add(new ScatterPlotDemo());

@@ -104,6 +104,7 @@ public class HeatmapDemo extends JPanel {
             }
 
             JFrame frame = new JFrame("Heatmap");
+            frame.setSize(1000, 1000);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setLocationRelativeTo(null);
             frame.getContentPane().add(Heatmap.plot(genes, arrays, x, Palette.jet(256)));

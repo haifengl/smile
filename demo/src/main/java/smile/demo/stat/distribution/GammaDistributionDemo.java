@@ -176,6 +176,7 @@ public class GammaDistributionDemo extends JPanel implements ChangeListener {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Gamma Distributions");
+        frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().add(new GammaDistributionDemo());
