@@ -36,7 +36,7 @@ public class AutoMPG {
     static {
         try {
             Arff arff = new Arff(Paths.getTestData("weka/regression/autoMpg.arff"));
-            data = arff.read();
+            data = arff.read().omitNullRows();
 
             x = data.drop("class").toArray();
             y = data.column("class").toDoubleArray();
