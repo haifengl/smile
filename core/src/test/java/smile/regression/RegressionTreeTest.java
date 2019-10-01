@@ -17,7 +17,6 @@
 
 package smile.regression;
 
-import org.apache.http.auth.AuthOption;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -64,11 +63,14 @@ public class RegressionTreeTest {
     @Test
     public void testLongley() {
         System.out.println("longley");
-        
-        double rss = LOOCV.test(Longley.data, (x) -> RegressionTree.fit(Longley.formula, Longley.data, 3, 500));
 
-        System.out.println("MSE = " + rss);
-        assertEquals(41.933087445771115, rss, 1E-4);
+        RegressionTree model = RegressionTree.fit(Longley.formula, Longley.data, 2, 100);
+        System.out.println(model.dot());
+
+        double rmse = LOOCV.test(Longley.data, (x) -> RegressionTree.fit(Longley.formula, Longley.data, 2, 100));
+
+        System.out.println("MSE = " + rmse);
+        assertEquals(1.5771480061596428, rmse, 1E-4);
     }
 
     public void test(String name, Formula formula, DataFrame data) {
@@ -100,6 +102,10 @@ public class RegressionTreeTest {
     @Test
     public void testCPU() {
         System.out.println("CPU");
+        RegressionTree model = RegressionTree.fit(CPU.formula, CPU.data, 3, 100);
+        System.out.println(model);
+        System.out.println(model.dot());
+
         int n = CPU.data.size();
         int m = 3 * n / 4;
         int[] index = MathEx.permutate(n);

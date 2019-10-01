@@ -46,7 +46,7 @@ public class OrdinalNode extends InternalNode {
     }
 
     @Override
-    public String toDot(StructType schema, int id) {
+    public String dot(StructType schema, int id) {
         StructField field = schema.field(feature);
         Measure measure = field.measure;
         String valueStr = (measure != null && measure instanceof DiscreteMeasure) ?

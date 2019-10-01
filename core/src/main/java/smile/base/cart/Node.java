@@ -32,8 +32,10 @@ public interface Node extends Serializable {
 
     /**
      * Returns a dot representation for visualization.
+     * @param schema data schema
+     * @param id node id
      */
-    String toDot(StructType schema, int id);
+    String dot(StructType schema, int id);
 
     /** Returns the number of samples in the node. */
     int size();
