@@ -67,7 +67,7 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
      * @return the input array <code>a</code>.
      */
     default double[] toDoubleArray(double[] a) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(name() + ":" + type());
     }
 
     /**

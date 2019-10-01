@@ -180,6 +180,25 @@ public interface DataType extends Serializable {
         }
     }
 
+    /**
+     * Returns the unboxed data type if this is a boxed primitive type.
+     * Otherwise, return this type.
+     */
+    default DataType unboxed() {
+        if (isObject()) {
+            if (isBoolean()) return DataTypes.BooleanType;
+            if (isChar()) return DataTypes.CharType;
+            if (isByte()) return DataTypes.ByteType;
+            if (isShort()) return DataTypes.ShortType;
+            if (isInt()) return DataTypes.IntegerType;
+            if (isLong()) return DataTypes.LongType;
+            if (isFloat()) return DataTypes.FloatType;
+            if (isDouble()) return DataTypes.DoubleType;
+        }
+
+        return this;
+    }
+
     /** Infers the type of a string. */
     static DataType infer(String s) {
         if (Strings.isNullOrEmpty(s)) return null;

@@ -20,6 +20,8 @@ package smile.data.type;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import smile.data.Tuple;
 
 /**
@@ -99,17 +101,31 @@ public class StructType implements DataType {
      *
      * @param rows a set of tuples.
      */
-    public void boxed(Collection<Tuple> rows) {
-        for (int i = 0; i < fields.length; i++) {
+    public StructType boxed(Collection<Tuple> rows) {
+        return new StructType(IntStream.range(0, length()).mapToObj(i -> {
             StructField field = fields[i];
             if (field.type.isPrimitive()) {
                 final int idx = i;
                 boolean missing = rows.stream().filter(t -> t.isNullAt(idx)).findAny().isPresent();
                 if (missing) {
-                    fields[i] = new StructField(field.name, field.type.boxed());
+                    field = new StructField(field.name, field.type.boxed(), field.measure);
                 }
             }
-        }
+            return field;
+        }).toArray(StructField[]::new));
+    }
+
+    /**
+     * Updates the field type to the primitive one.
+     */
+    public StructType unboxed() {
+        return new StructType(IntStream.range(0, length()).mapToObj(i -> {
+            StructField field = fields[i];
+            if (field.type.isObject()) {
+                field = new StructField(field.name, field.type.unboxed(), field.measure);
+            }
+            return field;
+        }).toArray(StructField[]::new));
     }
 
     @Override

@@ -114,7 +114,7 @@ public class Scaler implements FeatureTransform {
             throw new IllegalArgumentException(String.format("Invalid schema %s, expected %s", x.schema(), schema));
         }
 
-        return new Tuple() {
+        return new smile.data.AbstractTuple() {
             @Override
             public Object get(int i) {
                 if (DataType.isDouble(schema.field(i).type)) {

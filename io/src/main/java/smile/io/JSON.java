@@ -131,8 +131,8 @@ public class JSON {
             });
         }
 
-        schema.boxed(rows);
-        return DataFrame.of(rows);
+        schema = schema.boxed(rows);
+        return DataFrame.of(rows, schema);
     }
 
     /** Converts a map to tuple. */

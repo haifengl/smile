@@ -124,8 +124,8 @@ public class CSV {
                 if (rows.size() >= limit) break;
             }
 
-            schema.boxed(rows);
-            return DataFrame.of(rows);
+            schema = schema.boxed(rows);
+            return DataFrame.of(rows, schema);
         }
     }
 

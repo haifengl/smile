@@ -148,7 +148,7 @@ public class Formula implements Serializable {
      * Apply the formula on a tuple to generate the model data.
      */
     public Tuple apply(Tuple t) {
-        return new Tuple() {
+        return new smile.data.AbstractTuple() {
             @Override
             public StructType schema() {
                 return schema;
