@@ -225,9 +225,10 @@ public class RegressionTree extends CART implements Regression<Tuple> {
      * @param order the index of training values in ascending order. Note
      *              that only numeric attributes need be sorted.
      */
-    public RegressionTree(DataFrame x, BaseVector y, int nodeSize, int maxNodes, int mtry, int[] samples, int[][] order, RegressionNodeOutput output) {
+    public RegressionTree(Formula formula, DataFrame x, BaseVector y, int nodeSize, int maxNodes, int mtry, int[] samples, int[][] order, RegressionNodeOutput output) {
         super(x, y, nodeSize, maxNodes, mtry, samples, order);
 
+        this.formula = Optional.of(formula);
         this.output = output;
 
         LeafNode node = newNode(IntStream.range(0, x.size()).filter(i -> this.samples[i] > 0).toArray());
@@ -285,10 +286,10 @@ public class RegressionTree extends CART implements Regression<Tuple> {
      * @param maxNodes the maximum number of leaf nodes in the tree.
      */
     public static RegressionTree fit(Formula formula, DataFrame data, int nodeSize, int maxNodes) {
-        DataFrame x = formula.frame(data).drop(formula.response().get().toString());
+        DataFrame x = formula.frame(data).drop(formula.response().get());
         BaseVector y = formula.response(data);
         RegressionNodeOutput output = new LeastSquaresNodeOutput(y.toDoubleArray());
-        RegressionTree tree = new RegressionTree(x, y, nodeSize, maxNodes, -1, null, null, output);
+        RegressionTree tree = new RegressionTree(formula, x, y, nodeSize, maxNodes, -1, null, null, output);
         tree.formula = Optional.of(formula);
         return tree;
     }
