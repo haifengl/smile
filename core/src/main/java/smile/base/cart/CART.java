@@ -119,7 +119,10 @@ public abstract class CART {
         this.maxNodes = maxNodes;
         this.mtry = mtry;
 
-        if (mtry < 1 || mtry > schema.length()) {
+        int n = x.size();
+        int p = x.ncols();
+
+        if (mtry < 1 || mtry > p) {
             logger.debug("Invalid mtry. Use all features.");
             this.mtry = schema.length();
         }
@@ -132,19 +135,15 @@ public abstract class CART {
             throw new IllegalArgumentException("Invalid minimum size of leaf nodes: " + nodeSize);
         }
 
-        int n = x.size();
-        int p = x.ncols();
-
         IntStream idx;
         if (samples == null) {
             this.samples = Collections.nCopies(n, 1).parallelStream().mapToInt(i -> i).toArray();
             idx = IntStream.range(0, n);
-            this.index = idx.toArray();
         } else {
             this.samples = samples;
             idx = IntStream.range(0, samples.length).filter(i -> samples[i] > 0);
-            this.index = idx.toArray();
         }
+        this.index = idx.toArray();
 
         buffer  = new int[index.length];
 
@@ -154,8 +153,7 @@ public abstract class CART {
             this.order = new int[order.length][];
             for (int i = 0; i < order.length; i++) {
                 if (order[i] != null) {
-                    final int[] o = order[i];
-                    this.order[i] = idx.map(j -> o[j]).toArray();
+                    this.order[i] = Arrays.stream(order[i]).filter(o -> this.samples[o] > 0).toArray();
                 }
             }
         }
@@ -207,28 +205,20 @@ public abstract class CART {
             return false;
         }
 
-        int[] trueSamples = new int[split.trueCount];
-        int[] falseSamples = new int[split.falseCount];
-        int mid = split.lo;
-        int p = 0, q = 0;
-        for (int idx = split.lo; idx < split.hi; idx++) {
-            int i = index[idx];
-            if (split.predicate().test(i)) {
-                trueSamples[p++] = i;
-                mid++;
-            } else {
-                falseSamples[q++] = i;
-            }
-        }
+        int[] trueSamples = IntStream.range(split.lo, split.hi).map(i -> index[i]).filter(i -> split.predicate().test(i)).toArray();
 
-        assert(p == trueSamples.length);
-        assert(q == falseSamples.length);
+        // cache the results of predicate.test()
+        boolean[] trues = new boolean[samples.length];
+        for (int i : trueSamples) trues[i] = true;
+
+        int[] falseSamples = IntStream.range(split.lo, split.hi).map(i -> index[i]).filter(i -> !trues[i]).toArray();
+        int mid = split.lo + trueSamples.length;
 
         LeafNode trueChild = newNode(trueSamples);
         LeafNode falseChild = newNode(falseSamples);
         InternalNode node = split.toNode(trueChild, falseChild);
 
-        shuffle(split.lo, mid, split.hi, split.predicate());
+        shuffle(split.lo, mid, split.hi, trues);
 
         Optional<Split> trueSplit = findBestSplit(trueChild, split.lo, mid, split.pure.clone());
         Optional<Split> falseSplit = findBestSplit(falseChild, mid, split.hi, split.pure); // reuse parent's pure array
@@ -399,7 +389,7 @@ public abstract class CART {
      * @param predicate whether an element goes to the left side or the right side of the
      *        partition.
      */
-    private void shuffle(int low, int split, int high, IntPredicate predicate) {
+    private void shuffle(int low, int split, int high, boolean[] predicate) {
         Arrays.stream(order).filter(Objects::nonNull).forEach(o -> shuffle(o, low, split, high, predicate));
         shuffle(index, low, split, high, predicate);
     }
@@ -411,10 +401,10 @@ public abstract class CART {
      * goesLeft must equal split-low. buffer is scratch space large enough (i.e., at least
      * high-split long) to hold all elements for which goesLeft is false.
      */
-    private void shuffle(int[] a, int low, int split, int high, IntPredicate predicate) {
+    private void shuffle(int[] a, int low, int split, int high, boolean[] predicate) {
         int k = 0;
         for (int i = low, j = low; i < high; i++) {
-            if (predicate.test(a[i])) {
+            if (predicate[a[i]]) {
                 a[j++] = a[i];
             } else {
                 buffer[k++] = a[i];

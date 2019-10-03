@@ -65,19 +65,37 @@ public class RegressionTreeTest {
         System.out.println("longley");
 
         RegressionTree model = RegressionTree.fit(Longley.formula, Longley.data, 2, 100);
+        System.out.println("----- dot -----");
         System.out.println(model.dot());
+
+        double[] importance = model.importance();
+        System.out.println("----- importance -----");
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", Longley.data.schema().fieldName(i), importance[i]);
+        }
 
         double rmse = LOOCV.test(Longley.data, (x) -> RegressionTree.fit(Longley.formula, Longley.data, 2, 100));
 
-        System.out.println("MSE = " + rmse);
+        System.out.println("LOOCV MSE = " + rmse);
         assertEquals(1.5771480061596428, rmse, 1E-4);
     }
 
-    public void test(String name, Formula formula, DataFrame data) {
+    public void test(String name, Formula formula, DataFrame data, double expected) {
         System.out.println(name);
 
-        double rss = CrossValidation.test(10, data, x -> RegressionTree.fit(formula, x));
-        System.out.format("10-CV RMSE = %.4f%n", rss);
+        RegressionTree model = RegressionTree.fit(formula, data);
+        System.out.println("----- dot -----");
+        System.out.println(model);
+
+        double[] importance = model.importance();
+        System.out.println("----- importance -----");
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", data.schema().fieldName(i), importance[i]);
+        }
+
+        double rmse = CrossValidation.test(10, data, x -> RegressionTree.fit(formula, x));
+        System.out.format("10-CV RMSE = %.4f%n", rmse);
+        assertEquals(expected, rmse, 1E-4);
     }
 
     /**
@@ -85,46 +103,14 @@ public class RegressionTreeTest {
      */
     @Test
     public void testAll() {
-        test("CPU", CPU.formula, CPU.data);
-        //test("2dplanes", "weka/regression/2dplanes.arff", 6);
-        //test("abalone", "weka/regression/abalone.arff", 8);
-        //test("ailerons", "weka/regression/ailerons.arff", 40);
-        //test("bank32nh", "weka/regression/bank32nh.arff", 32);
-        test("autoMPG", AutoMPG.formula, AutoMPG.data);
-        test("cal_housing", CalHousing.formula, CalHousing.data);
-        test("puma8nh", Puma8NH.formula, Puma8NH.data);
-        test("kin8nm", Kin8nm.formula, Kin8nm.data);
-    }
-    
-    /**
-     * Test of learn method, of class RegressionTree.
-     */
-    @Test
-    public void testCPU() {
-        System.out.println("CPU");
-        RegressionTree model = RegressionTree.fit(CPU.formula, CPU.data, 3, 100);
-        System.out.println(model);
-        System.out.println(model.dot());
-
-        int n = CPU.data.size();
-        int m = 3 * n / 4;
-        int[] index = MathEx.permutate(n);
-
-        int[] train = new int[m];
-        int[] test = new int[n-m];
-        System.arraycopy(index, 0, train, 0, train.length);
-        System.arraycopy(index, train.length, test, 0, test.length);
-
-        DataFrame trainData = CPU.data.of(train);
-        DataFrame testData = CPU.data.of(test);
-
-        RegressionTree tree = RegressionTree.fit(CPU.formula, trainData);
-        System.out.format("RMSE = %.4f%n", Validation.test(tree, testData));
-
-        double[] importance = tree.importance();
-        QuickSort.sort(importance);
-        for (int i = importance.length; i-- > 0; ) {
-            System.out.format("%s importance is %.4f%n", CPU.data.schema().fieldName(i), importance[i]);
-        }
+        test("CPU", CPU.formula, CPU.data, 88.6985);
+        test("2dplanes", Planes.formula, Planes.data, 2.0978);
+        test("abalone", Abalone.formula, Abalone.train, 2.5626);
+        test("ailerons", Ailerons.formula, Ailerons.data, 0.0003);
+        test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.0983);
+        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.8180);
+        test("cal_housing", CalHousing.formula, CalHousing.data, 83802.5084);
+        test("puma8nh", Puma8NH.formula, Puma8NH.data, 4.0458);
+        test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.2189);
     }
 }

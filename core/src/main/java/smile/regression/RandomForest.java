@@ -170,7 +170,7 @@ public class RandomForest implements Regression<Tuple> {
             throw new IllegalArgumentException("Invalid sampling rate: " + subsample);
         }
 
-        DataFrame x = formula.frame(data);
+        DataFrame x = formula.frame(data).drop(formula.response().get());
         BaseVector y = formula.response(data);
 
         if (mtry > x.ncols()) {
@@ -200,7 +200,7 @@ public class RandomForest implements Regression<Tuple> {
                 IntStream.range(0, (int) Math.round(n * subsample)).forEach(i -> samples[perm[i]]++);
             }
 
-            RegressionTree tree = new RegressionTree(x, y, nodeSize, maxNodes, mtry2, samples, order, output);
+            RegressionTree tree = new RegressionTree(formula, x, y, nodeSize, maxNodes, mtry2, samples, order, output);
 
             IntStream.range(0, n).filter(i -> samples[i] == 0).forEach(i -> {
                 double pred = tree.predict(x.get(i));
@@ -217,7 +217,7 @@ public class RandomForest implements Regression<Tuple> {
             if (oob[i] > 0) {
                 m++;
                 double pred = prediction[i] / oob[i];
-                error += MathEx.sqr(pred - y.getInt(i));
+                error += MathEx.sqr(pred - y.getDouble(i));
             }
         }
 

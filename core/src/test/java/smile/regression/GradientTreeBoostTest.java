@@ -17,12 +17,10 @@
 
 package smile.regression;
 
-import smile.data.AutoMPG;
-import smile.data.CPU;
-import smile.data.CalHousing;
-import smile.data.DataFrame;
+import smile.data.*;
 import smile.data.formula.Formula;
 import smile.sort.QuickSort;
+import smile.validation.LOOCV;
 import smile.validation.Validation;
 import smile.validation.CrossValidation;
 import smile.math.MathEx;
@@ -31,6 +29,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -57,92 +57,79 @@ public class GradientTreeBoostTest {
     public void tearDown() {
     }
 
-    public void test(GradientTreeBoost.Loss loss, String name, Formula formula, DataFrame data) {
+    @Test
+    public void testLongley() {
+        System.out.println("longley");
+
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
+        GradientTreeBoost model = GradientTreeBoost.fit(Longley.formula, Longley.data);
+
+        double[] importance = model.importance();
+        System.out.println("----- importance -----");
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", Longley.data.schema().fieldName(i), importance[i]);
+        }
+
+        double rmse = LOOCV.test(Longley.data, (x) -> GradientTreeBoost.fit(Longley.formula, Longley.data));
+        System.out.println("LOOCV RMSE = " + rmse);
+        assertEquals(5.014767163039264, rmse, 1E-4);
+    }
+
+    public void test(GradientTreeBoost.Loss loss, String name, Formula formula, DataFrame data, double expected) {
         System.out.println(name + "\t" + loss);
 
-        double rss = CrossValidation.test(10, data, x -> GradientTreeBoost.fit(formula, x, loss, 100, 6, 0.05, 0.7));
-        System.out.format("10-CV RMSE = %.4f%n", rss);
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
+        GradientTreeBoost model = GradientTreeBoost.fit(formula, data);
+
+        double[] importance = model.importance();
+        System.out.println("----- importance -----");
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", data.schema().fieldName(i), importance[i]);
+        }
+
+        double rmse = CrossValidation.test(10, data, x -> GradientTreeBoost.fit(formula, x, loss, 100, 6, 0.05, 0.7));
+        System.out.format("10-CV RMSE = %.4f%n", rmse);
+        assertEquals(expected, rmse, 1E-4);
     }
-    
-    /**
-     * Test of learn method, of class RegressionTree.
-     */
+
     @Test
     public void testLS() {
-        test(GradientTreeBoost.Loss.LeastSquares, "CPU", CPU.formula, CPU.data);
-        //test(GradientTreeBoost.Loss.LeastSquares, "2dplanes", "weka/regression/2dplanes.arff", 6);
-        //test(GradientTreeBoost.Loss.LeastSquares, "abalone", "weka/regression/abalone.arff", 8);
-        //test(GradientTreeBoost.Loss.LeastSquares, "ailerons", "weka/regression/ailerons.arff", 40);
-        //test(GradientTreeBoost.Loss.LeastSquares, "bank32nh", "weka/regression/bank32nh.arff", 32);
-        test(GradientTreeBoost.Loss.LeastSquares, "autoMPG", AutoMPG.formula, AutoMPG.data);
-        test(GradientTreeBoost.Loss.LeastSquares, "cal_housing", CalHousing.formula, CalHousing.data);
-        //test(GradientTreeBoost.Loss.LeastSquares, "puma8nh", "weka/regression/puma8nh.arff", 8);
-        //test(GradientTreeBoost.Loss.LeastSquares, "kin8nm", "weka/regression/kin8nm.arff", 8);
+        test(GradientTreeBoost.Loss.LeastSquares, "CPU", CPU.formula, CPU.data, 71.9149);
+        test(GradientTreeBoost.Loss.LeastSquares, "2dplanes", Planes.formula, Planes.data, 1.1016);
+        test(GradientTreeBoost.Loss.LeastSquares, "abalone", Abalone.formula, Abalone.train, 2.2199);
+        test(GradientTreeBoost.Loss.LeastSquares, "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+        test(GradientTreeBoost.Loss.LeastSquares, "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0847);
+        test(GradientTreeBoost.Loss.LeastSquares, "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8148);
+        test(GradientTreeBoost.Loss.LeastSquares, "cal_housing", CalHousing.formula, CalHousing.data, 60604.6920);
+        test(GradientTreeBoost.Loss.LeastSquares, "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2487);
+        test(GradientTreeBoost.Loss.LeastSquares, "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1802);
     }
-    
-    /**
-     * Test of learn method, of class RegressionTree.
-     */
+
     @Test
     public void testLAD() {
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "CPU", CPU.formula, CPU.data);
-        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "2dplanes", "weka/regression/2dplanes.arff", 6);
-        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "abalone", "weka/regression/abalone.arff", 8);
-        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "ailerons", "weka/regression/ailerons.arff", 40);
-        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "bank32nh", "weka/regression/bank32nh.arff", 32);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "autoMPG", AutoMPG.formula, AutoMPG.data);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "cal_housing", CalHousing.formula, CalHousing.data);
-        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "puma8nh", "weka/regression/puma8nh.arff", 8);
-        //test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "kin8nm", "weka/regression/kin8nm.arff", 8);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "CPU", CPU.formula, CPU.data, 144.5555);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "2dplanes", Planes.formula, Planes.data, 2.6505);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "abalone", Abalone.formula, Abalone.train, 2.3665);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0969);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1272);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "cal_housing", CalHousing.formula, CalHousing.data, 118361.1368);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "puma8nh", Puma8NH.formula, Puma8NH.data, 4.2626);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1893);
     }
-    
-    /**
-     * Test of learn method, of class RegressionTree.
-     */
+
     @Test
     public void testHuber() {
-        test(GradientTreeBoost.Loss.Huber, "CPU", CPU.formula, CPU.data);
-        //test(GradientTreeBoost.Loss.Huber, "2dplanes", "weka/regression/2dplanes.arff", 6);
-        //test(GradientTreeBoost.Loss.Huber, "abalone", "weka/regression/abalone.arff", 8);
-        //test(GradientTreeBoost.Loss.Huber, "ailerons", "weka/regression/ailerons.arff", 40);
-        //test(GradientTreeBoost.Loss.Huber, "bank32nh", "weka/regression/bank32nh.arff", 32);
-        test(GradientTreeBoost.Loss.Huber, "autoMPG", AutoMPG.formula, AutoMPG.data);
-        test(GradientTreeBoost.Loss.Huber, "cal_housing", CalHousing.formula, CalHousing.data);
-        //test(GradientTreeBoost.Loss.Huber, "puma8nh", "weka/regression/puma8nh.arff", 8);
-        //test(GradientTreeBoost.Loss.Huber, "kin8nm", "weka/regression/kin8nm.arff", 8);
-    }
-    
-    /**
-     * Test of learn method, of class GradientTreeBoost.
-     */
-    @Test
-    public void testCPU() {
-        System.out.println("CPU");
-
-        int n = CPU.data.size();
-        int m = 3 * n / 4;
-        int[] index = MathEx.permutate(n);
-
-        int[] train = new int[m];
-        int[] test = new int[n-m];
-        System.arraycopy(index, 0, train, 0, train.length);
-        System.arraycopy(index, train.length, test, 0, test.length);
-
-        DataFrame trainData = CPU.data.of(train);
-        DataFrame testData = CPU.data.of(test);
-
-        GradientTreeBoost boost = GradientTreeBoost.fit(CPU.formula, trainData, GradientTreeBoost.Loss.LeastAbsoluteDeviation, 100, 6, 0.005, 0.7);
-        System.out.format("RMSE = %.4f%n", Validation.test(boost, testData));
-            
-        double[] rmse = boost.test(testData);
-        for (int i = 1; i <= rmse.length; i++) {
-            System.out.format("%d trees RMSE = %.4f%n", i, rmse[i-1]);
-        }
-
-        double[] importance = boost.importance();
-        QuickSort.sort(importance);
-        for (int i = importance.length; i-- > 0; ) {
-            System.out.format("%s importance is %.4f%n", CPU.data.schema().fieldName(i), importance[i]);
-        }
+        test(GradientTreeBoost.Loss.Huber, "CPU", CPU.formula, CPU.data, 89.9275);
+        test(GradientTreeBoost.Loss.Huber, "2dplanes", Planes.formula, Planes.data, 1.1122);
+        test(GradientTreeBoost.Loss.Huber, "abalone", Abalone.formula, Abalone.train, 2.2244);
+        test(GradientTreeBoost.Loss.Huber, "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+        test(GradientTreeBoost.Loss.Huber, "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0857);
+        test(GradientTreeBoost.Loss.Huber, "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8347);
+        test(GradientTreeBoost.Loss.Huber, "cal_housing", CalHousing.formula, CalHousing.data, 62077.1824);
+        test(GradientTreeBoost.Loss.Huber, "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2767);
+        test(GradientTreeBoost.Loss.Huber, "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1827);
     }
 }

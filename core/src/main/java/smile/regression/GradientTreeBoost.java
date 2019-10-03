@@ -222,7 +222,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
             throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
         }
 
-        DataFrame x = formula.frame(data);
+        DataFrame x = formula.frame(data).drop(formula.response().get());
         double[] y = formula.response(data).toDoubleArray();
 
         final int n = x.nrows();
@@ -273,7 +273,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
                 output = new HuberNodeOutput(residual, response, 0.9);
             }
             
-            trees[m] = new RegressionTree(x, DoubleVector.of("residual", response), 5, maxNodes, x.ncols(), samples, order, output);
+            trees[m] = new RegressionTree(formula, x, DoubleVector.of("residual", response), 5, maxNodes, x.ncols(), samples, order, output);
 
             for (int i = 0; i < n; i++) {
                 residual[i] -= shrinkage * trees[m].predict(x.get(i));

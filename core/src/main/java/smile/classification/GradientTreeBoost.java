@@ -283,7 +283,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
                 response[i] = 2.0 * y2[i] / (1 + Math.exp(2 * y2[i] * h[i]));
             }
 
-            trees[m] = new RegressionTree(x, DoubleVector.of("residual", response), 5, maxNodes, x.ncols(), samples, order, output);
+            trees[m] = new RegressionTree(formula, x, DoubleVector.of("residual", response), 5, maxNodes, x.ncols(), samples, order, output);
 
             for (int i = 0; i < n; i++) {
                 h[i] += shrinkage * trees[m].predict(x.get(i));
@@ -363,7 +363,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
                     }
                 }
 
-                forest[j][m] = new RegressionTree(x, DoubleVector.of("residual", response[j]), 5, maxNodes, x.ncols(), samples, order, output[j]);
+                forest[j][m] = new RegressionTree(formula, x, DoubleVector.of("residual", response[j]), 5, maxNodes, x.ncols(), samples, order, output[j]);
 
                 for (int i = 0; i < n; i++) {
                     h[j][i] += shrinkage * forest[j][m].predict(x.get(i));
