@@ -17,6 +17,7 @@
 
 package smile.math;
 
+import java.util.stream.IntStream;
 import smile.math.random.UniversalGenerator;
 import smile.math.random.MersenneTwister;
 
@@ -45,6 +46,14 @@ public class Random {
     public Random(long seed) {
         real = new UniversalGenerator(seed);
         twister = new MersenneTwister(seed);
+    }
+
+    /**
+     * Initialize the random generator with a seed.
+     */
+    public void setSeed(long seed) {
+        real.setSeed(seed);
+        twister.setSeed(seed);
     }
 
     /**
@@ -90,14 +99,6 @@ public class Random {
     }
 
     /**
-     * Initialize the random generator with a seed.
-     */
-    public void setSeed(long seed) {
-        real.setSeed(seed);
-        twister.setSeed(seed);
-    }
-
-    /**
      * Returns a random integer.
      */
     public int nextInt() {
@@ -111,6 +112,9 @@ public class Random {
         return twister.nextInt(n);
     }
 
+    /**
+     * Returns a random long integer.
+     */
     public long nextLong() {
         return twister.nextLong();
     }
@@ -120,13 +124,8 @@ public class Random {
      * sampling without replacement.
      */
     public int[] permutate(int n) {
-        int[] x = new int[n];
-        for (int i = 0; i < n; i++) {
-            x[i] = i;
-        }
-
+        int[] x = IntStream.range(0, n).toArray();
         permutate(x);
-
         return x;
     }
 
