@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinPool;
 import smile.sort.QuickSelect;
@@ -96,37 +97,40 @@ public class MathEx {
      * for unconstrained nonlinear optimization problems.
      */
     public static final BFGS BFGS = new BFGS();
+
     /**
-     * True when we create the first random number generator.
+     * This RNG is to generate the seeds for multi-threads.
+     * Each thread will use different seed and unlikely generates
+     * the correlated sequences with other threads.
      */
-    private static boolean firstRNG = true;
+    private static Random seedRNG = new Random();
+
+    /**
+     * Used seeds.
+     */
+    private static HashSet<Long> seeds = new HashSet<>();
+
     /**
      * High quality random number generator.
      */
-    private static ThreadLocal<smile.math.Random> random = new ThreadLocal<smile.math.Random>() {
-        protected synchronized smile.math.Random initialValue() {
-            if (firstRNG) {
-                // For the first RNG, we use the default seed so that we can
-                // get repeatable results for random algorithms.
-                // Note that this may or may not be the main thread.
-                firstRNG = false;
-                return new smile.math.Random();
+    private static ThreadLocal<Random> random = new ThreadLocal<smile.math.Random>() {
+        protected synchronized Random initialValue() {
+            // For the first RNG, we use the default seed so that we can
+            // get repeatable results for random algorithms.
+            // Note that this may or may not be the main thread.
+            long seed = 19650218L;
 
-            } else {
-                // Make sure other threads not to use the same seed.
-                // This is very important for some algorithms such as random forest.
-                // Otherwise, all trees of random forest are same except the main thread one.
-
-                java.security.SecureRandom sr = new java.security.SecureRandom();
-                byte[] bytes = sr.generateSeed(Long.BYTES);
-                long seed = 0;
-                for (int i = 0; i < Long.BYTES; i++) {
-                    seed <<= 8;
-                    seed |= (bytes[i] & 0xFF);
-                }
-
-                return new smile.math.Random(seed);
+            // Make sure other threads not to use the same seed.
+            // This is very important for some algorithms such as random forest.
+            // Otherwise, all trees of random forest are same except the main thread one.
+            if (!seeds.isEmpty()) {
+                seed = randomPrime(83471243L, 160414417L, seedRNG);
             }
+
+            logger.info(String.format("Set RNG seed %d for thread %s", seed, Thread.currentThread().getName()));
+            System.out.println(Long.toBinaryString(seed));
+            seeds.add(seed);
+            return new Random(seed);
         }
     };
 
@@ -288,6 +292,75 @@ public class MathEx {
     }
 
     /**
+     * Returns true if n is probably prime, false if it's definitely composite.
+     * This implements Miller-Rabin primality test.
+     * @param n an odd integer to be tested for primality
+     * @param k a parameter that determines the accuracy of the test
+     */
+    public static boolean isProbablePrime(long n, int k) {
+        return isProbablePrime(n, k, random.get());
+    }
+
+    /**
+     * Returns true if n is probably prime, false if it's definitely composite.
+     * This implements Miller-Rabin primality test.
+     * @param n an odd integer to be tested for primality
+     * @param k a parameter that determines the accuracy of the test
+     * @param rng random number generator
+     */
+    private static boolean isProbablePrime(long n, int k, Random rng) {
+        if (n <= 1 || n == 4)
+            return false;
+        if (n <= 3)
+            return true;
+
+        // Find r such that n = 2^d * r + 1 for some r >= 1
+        int s = 0;
+        long d = n - 1;
+        while (d % 2 == 0) {
+            s++;
+            d = d / 2;
+        }
+
+        for (int i = 0; i < k; i++) {
+            long a = 2 + rng.nextLong() % (n-4);
+            long x = power(a, d, n);
+            if (x == 1 || x == n -1)
+                continue;
+
+            int r = 0;
+            for (; r < s; r++) {
+                x = (x * x) % n;
+                if (x == 1) return false;
+                if (x == n - 1) break;
+            }
+
+            // None of the steps made x equal n-1.
+            if (r == s) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Modular exponentiation (x^y) % p
+     */
+    private static long power(long x, long y, long p)
+    {
+        long res = 1;      // Initialize result
+        x = x % p;  // Update x if it is more than or
+        // equal to p
+        while (y > 0) {
+            // If y is odd, multiply x with result
+            if ((y & 1) == 1) res = (res*x) % p;
+
+            // y must be even now
+            y = y>>1; // y = y/2
+            x = (x*x) % p;
+        }
+        return res;
+    }
+
+    /**
      * Round a double vale to given digits such as 10^n, where n is a positive
      * or negative integer.
      */
@@ -364,7 +437,49 @@ public class MathEx {
      * Initialize the random generator with a seed.
      */
     public static void setSeed(long seed) {
-        random.get().setSeed(seed);
+        if (seeds.isEmpty()) {
+            seedRNG.setSeed(seed);
+            random.get().setSeed(seed);
+            seeds.clear();
+            seeds.add(seed);
+        } else {
+            random.get().setSeed(seed);
+            seeds.add(seed);
+        }
+    }
+
+    /**
+     * Initialize the random generator with a random seed from a
+     * cryptographically strong random number generator.
+     */
+    public static void setSeed() {
+        java.security.SecureRandom sr = new java.security.SecureRandom();
+        byte[] bytes = sr.generateSeed(Long.BYTES);
+        long seed = 0;
+        for (int i = 0; i < Long.BYTES; i++) {
+            seed <<= 8;
+            seed |= (bytes[i] & 0xFF);
+        }
+
+        setSeed(seed);
+    }
+
+    /** Returns a probably prime number. */
+    public static long randomPrime(long lo, long hi) {
+        return randomPrime(lo, hi, random.get());
+    }
+
+    /** Returns a probably prime number. */
+    private static long randomPrime(long lo, long hi, Random rng) {
+        long w = hi - lo;
+
+        long seed = lo + rng.nextLong() % w;
+        for (int i = 0; i < 1024; i++) {
+            if (!seeds.contains(seed) && isProbablePrime(seed, 256, rng)) break;
+            seed = lo + rng.nextLong() % w;
+        }
+
+        return seed;
     }
 
     /**
@@ -481,6 +596,13 @@ public class MathEx {
         double[] x = new double[n];
         random.get().nextDoubles(x, lo, hi);
         return x;
+    }
+
+    /**
+     * Returns a random long integer.
+     */
+    public static long randomLong() {
+        return random.get().nextLong();
     }
 
     /**
