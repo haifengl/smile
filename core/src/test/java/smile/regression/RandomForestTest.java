@@ -59,13 +59,22 @@ public class RandomForestTest {
     public void testLongley() {
         System.out.println("longley");
 
-        RandomForest model = RandomForest.fit(Longley.formula, Longley.data);
+        // to get repeatable results.
+        MathEx.setSeed(19650218L);
+        RandomForest model = RandomForest.fit(Longley.formula, Longley.data, 100, 3, 3, 10, 1.0, () -> MathEx.probablePrime(19650218L, 256));
 
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", Longley.data.schema().fieldName(i), importance[i]);
         }
+
+        assertEquals(39293.8193, importance[0], 1E-4);
+        assertEquals(6595.3241,  importance[1], 1E-4);
+        assertEquals(10242.6828, importance[2], 1E-4);
+        assertEquals(34755.6754, importance[3], 1E-4);
+        assertEquals(31075.0867, importance[4], 1E-4);
+        assertEquals(31644.9317, importance[5], 1E-4);
 
         double rmse = LOOCV.test(Longley.data, (x) -> RandomForest.fit(Longley.formula, Longley.data));
         System.out.println("LOOCV RMSE = " + rmse);
@@ -82,8 +91,8 @@ public class RandomForestTest {
             System.out.format("%-15s %.4f%n", data.schema().fieldName(i), importance[i]);
         }
 
-        //double rmse = CrossValidation.test(5, data, x -> RandomForest.fit(formula, x));
-        //System.out.format("5-CV RMSE = %.4f%n", rmse);
+        //double rmse = CrossValidation.test(10, data, x -> RandomForest.fit(formula, x));
+        //System.out.format("10-CV RMSE = %.4f%n", rmse);
     }
 
     @Test

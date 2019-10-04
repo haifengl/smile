@@ -229,7 +229,14 @@ public class RandomForest implements Regression<Tuple> {
         final RegressionNodeOutput output = new LeastSquaresNodeOutput(y.toDoubleArray());
         final int[][] order = CART.order(x);
 
-        RegressionTree[] trees = seeds.orElse(LongStream.range(-ntrees, 0)).distinct().limit(ntrees).parallel().mapToObj(seed -> {
+        // generate seeds with sequential stream
+        long[] seedArray = seeds.orElse(LongStream.range(-ntrees, 0)).sequential().distinct().limit(ntrees).toArray();
+        if (seedArray.length != ntrees) {
+            throw new IllegalArgumentException(String.format("seed stream has only %d distinct values, expected %d", seedArray.length, ntrees));
+        }
+
+        // train trees with parallel stream
+        RegressionTree[] trees = Arrays.stream(seedArray).parallel().mapToObj(seed -> {
             // set RNG seed for the tree
             //System.out.print(seed+" ");
             if (seed > 1) MathEx.setSeed(seed);
