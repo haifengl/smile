@@ -78,12 +78,7 @@ public class Bagging {
             }
         } else {
             // Training samples draw without replacement.
-            int[] perm = new int[n];
-            for (int i = 0; i < n; i++) {
-                perm[i] = i;
-            }
-
-            MathEx.permutate(perm);
+            int[] perm = MathEx.permutate(n);
 
             int[] nc = new int[k];
             for (int i = 0; i < n; i++) {
