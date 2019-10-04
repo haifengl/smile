@@ -26,6 +26,10 @@ import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.Validation;
 
+import java.util.stream.LongStream;
+
+import static org.junit.Assert.assertEquals;
+
 /**
  *
  * @author Haifeng Li
@@ -56,14 +60,21 @@ public class RandomForestTest {
         System.out.println("longley");
 
         // to get repeatable results.
-        MathEx.setSeed(19650218);
-        RandomForest model = RandomForest.fit(Longley.formula, Longley.data);
+        MathEx.setSeed(19650218L);
+        RandomForest model = RandomForest.fit(Longley.formula, Longley.data, 100, 3, 3, 10, 1.0, () -> MathEx.probablePrime(19650218L, 256));
 
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", Longley.data.schema().fieldName(i), importance[i]);
         }
+
+        assertEquals(33984.4548, importance[0], 1E-4);
+        assertEquals(4322.2416,  importance[1], 1E-4);
+        assertEquals(7349.4025,  importance[2], 1E-4);
+        assertEquals(43412.0968, importance[3], 1E-4);
+        assertEquals(37371.1583, importance[4], 1E-4);
+        assertEquals(28508.9097, importance[5], 1E-4);
 
         double rmse = LOOCV.test(Longley.data, (x) -> RandomForest.fit(Longley.formula, Longley.data));
         System.out.println("LOOCV RMSE = " + rmse);
