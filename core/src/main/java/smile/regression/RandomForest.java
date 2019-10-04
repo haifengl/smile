@@ -20,7 +20,6 @@ package smile.regression;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.function.LongSupplier;
@@ -231,8 +230,8 @@ public class RandomForest implements Regression<Tuple> {
         final int[][] order = CART.order(x);
 
         RegressionTree[] trees = seeds.orElse(LongStream.range(-ntrees, 0)).distinct().limit(ntrees).parallel().mapToObj(seed -> {
-            //System.out.println(seed);
             // set RNG seed for the tree
+            //System.out.print(seed+" ");
             if (seed > 1) MathEx.setSeed(seed);
 
             final int[] samples = new int[n];
@@ -256,6 +255,7 @@ public class RandomForest implements Regression<Tuple> {
             return tree;
         }).toArray(RegressionTree[]::new);
 
+       // System.out.println();
         int m = 0;
         double error = 0.0;
         for (int i = 0; i < n; i++) {

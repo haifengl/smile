@@ -124,11 +124,12 @@ public class MathEx {
             // This is very important for some algorithms such as random forest.
             // Otherwise, all trees of random forest are same except the main thread one.
             if (!seeds.isEmpty()) {
-                seed = randomPrime(83471243L, 160414417L, seedRNG);
+                do {
+                    seed = probablePrime(19650218L, 256, seedRNG);
+                } while (seeds.contains(seed));
             }
 
             logger.info(String.format("Set RNG seed %d for thread %s", seed, Thread.currentThread().getName()));
-            System.out.println(Long.toBinaryString(seed));
             seeds.add(seed);
             return new Random(seed);
         }
@@ -464,19 +465,21 @@ public class MathEx {
         setSeed(seed);
     }
 
-    /** Returns a probably prime number. */
-    public static long randomPrime(long lo, long hi) {
-        return randomPrime(lo, hi, random.get());
+    /**
+     * Returns a probably prime number greater than n.
+     * @param n the returned value should be greater than n.
+     * @param k a parameter that determines the accuracy of the primality test
+     */
+    public static long probablePrime(long n, int k) {
+        return probablePrime(n, k, random.get());
     }
 
     /** Returns a probably prime number. */
-    private static long randomPrime(long lo, long hi, Random rng) {
-        long w = hi - lo;
-
-        long seed = lo + rng.nextLong() % w;
-        for (int i = 0; i < 1024; i++) {
-            if (!seeds.contains(seed) && isProbablePrime(seed, 256, rng)) break;
-            seed = lo + rng.nextLong() % w;
+    private static long probablePrime(long n, int k, Random rng) {
+        long seed = n + rng.nextInt(899999963); // The largest prime less than 9*10^8
+        for (int i = 0; i < 4096; i++) {
+            if (isProbablePrime(seed, k, rng)) break;
+            seed = n + rng.nextInt(899999963);
         }
 
         return seed;
