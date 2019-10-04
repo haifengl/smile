@@ -290,7 +290,6 @@ public class RegressionTree extends CART implements Regression<Tuple> {
         BaseVector y = formula.response(data);
         RegressionNodeOutput output = new LeastSquaresNodeOutput(y.toDoubleArray());
         RegressionTree tree = new RegressionTree(formula, x, y, nodeSize, maxNodes, -1, null, null, output);
-        tree.formula = Optional.of(formula);
         return tree;
     }
 

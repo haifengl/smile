@@ -17,9 +17,13 @@
 
 package smile.regression;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+import java.util.function.LongSupplier;
 import smile.base.cart.CART;
 import smile.base.cart.LeastSquaresNodeOutput;
 import smile.base.cart.RegressionNodeOutput;
@@ -154,6 +158,46 @@ public class RandomForest implements Regression<Tuple> {
      *                  sampling without replacement.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int nodeSize, int maxNodes, double subsample) {
+        return fit(formula, data, ntrees, mtry, nodeSize, maxNodes, subsample, Optional.empty());
+    }
+
+    /**
+     * Learns a random forest for regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     * @param ntrees the number of trees.
+     * @param mtry the number of input variables to be used to determine the decision
+     * at a node of the tree. p/3 seems to give generally good performance,
+     * where p is the number of variables.
+     * @param nodeSize the number of instances in a node below which the tree will
+     * not split, setting nodeSize = 5 generally gives good results.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+     *                  sampling without replacement.
+     * @param seedGenerator RNG seed generator.
+     */
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int nodeSize, int maxNodes, double subsample, LongSupplier seedGenerator) {
+        return fit(formula, data, ntrees, mtry, nodeSize, maxNodes, subsample, Optional.of(LongStream.generate(seedGenerator)));
+    }
+
+    /**
+     * Learns a random forest for regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     * @param ntrees the number of trees.
+     * @param mtry the number of input variables to be used to determine the decision
+     * at a node of the tree. p/3 seems to give generally good performance,
+     * where p is the number of variables.
+     * @param nodeSize the number of instances in a node below which the tree will
+     * not split, setting nodeSize = 5 generally gives good results.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+     *                  sampling without replacement.
+     * @param seeds optional RNG seeds for each regression tree.
+     */
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int nodeSize, int maxNodes, double subsample, Optional<LongStream> seeds) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }
@@ -186,18 +230,19 @@ public class RandomForest implements Regression<Tuple> {
         final RegressionNodeOutput output = new LeastSquaresNodeOutput(y.toDoubleArray());
         final int[][] order = CART.order(x);
 
-        RegressionTree[] trees = IntStream.range(0, ntrees).parallel().mapToObj(t -> {
-            final int[] samples = new int[n];
+        RegressionTree[] trees = seeds.orElse(LongStream.range(-ntrees, 0)).distinct().limit(ntrees).parallel().mapToObj(seed -> {
+            //System.out.println(seed);
+            // set RNG seed for the tree
+            if (seed > 1) MathEx.setSeed(seed);
 
+            final int[] samples = new int[n];
             if (subsample == 1.0) {
                 // Training samples draw with replacement.
-                IntStream.range(0, n).forEach(i -> samples[MathEx.randomInt(n)]++);
+                IntStream.generate(() -> MathEx.randomInt(n)).limit(n).forEach(i -> samples[i]++);
             } else {
                 // Training samples draw without replacement.
-                int[] perm = IntStream.range(0, n).toArray();
-                MathEx.permutate(perm);
-
-                IntStream.range(0, (int) Math.round(n * subsample)).forEach(i -> samples[perm[i]]++);
+                int[] perm = MathEx.permutate(n);
+                Arrays.stream(perm).limit((int) Math.round(n * subsample)).forEach(i -> samples[i]++);
             }
 
             RegressionTree tree = new RegressionTree(formula, x, y, nodeSize, maxNodes, mtry2, samples, order, output);

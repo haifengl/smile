@@ -217,8 +217,7 @@ public class RandomForest implements SoftClassifier<Tuple> {
                     // We used to do up sampling.
                     // But we switch to down sampling, which seems has better performance.
                     int size = (int) Math.round(subsample * cl.length / weight[l]);
-                    int[] perm = IntStream.range(0, cl.length).toArray();
-                    MathEx.permutate(perm);
+                    int[] perm = MathEx.permutate(cl.length);
                     for (int i = 0; i < size; i++) {
                         samples[cl[perm[i]]] += 1; //classWeight[l];
                     }
