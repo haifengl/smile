@@ -23,10 +23,7 @@ import java.io.StreamTokenizer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -314,7 +311,7 @@ public class Arff implements AutoCloseable {
             }
 
             NominalScale scale = new NominalScale(attributeValues);
-            attribute = new StructField(name, scale.type(), scale);
+            attribute = new StructField(name, scale.type(), Optional.of(scale));
         }
 
         getLastToken(false);

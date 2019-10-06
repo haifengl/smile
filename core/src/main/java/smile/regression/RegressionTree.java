@@ -119,10 +119,10 @@ public class RegressionTree extends CART implements Regression<Tuple> {
         int splitTrueCount = 0;
         int splitFalseCount = 0;
 
-        Measure measure = schema.field(j).measure;
-        if (measure != null && measure instanceof NominalScale) {
+        Optional<Measure> measure = schema.field(j).measure;
+        if (measure.isPresent() && measure.get() instanceof NominalScale) {
             int splitValue = -1;
-            NominalScale scale = (NominalScale) measure;
+            NominalScale scale = (NominalScale) measure.get();
             int m = scale.levels().length;
             int[] trueCount = new int[m];
             double[] trueSum = new double[m];

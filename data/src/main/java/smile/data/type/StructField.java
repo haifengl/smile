@@ -21,6 +21,8 @@ import smile.data.measure.ContinuousMeasure;
 import smile.data.measure.DiscreteMeasure;
 import smile.data.measure.Measure;
 
+import java.util.Optional;
+
 /**
  * A field in a Struct data type.
  *
@@ -32,25 +34,32 @@ public class StructField {
     /** Field data type. */
     public final DataType type;
     /** Optional levels of measurements. */
-    public final Measure measure;
+    public final Optional<Measure> measure;
 
     /**
      * Constructor.
      */
     public StructField(String name, DataType type) {
-        this(name, type, null);
+        this(name, type, Optional.empty());
     }
 
     /**
      * Constructor.
      */
     public StructField(String name, DataType type, Measure measure) {
-        if (measure != null) {
-            if (measure instanceof ContinuousMeasure && !type.isFloating()) {
-                throw new IllegalArgumentException(String.format("%s values cannot be of measure %s", type, measure));
-            } else if (measure instanceof DiscreteMeasure && !type.isIntegral()) {
-                throw new IllegalArgumentException(String.format("%s values cannot be of measure %s", type, measure));
-            }
+        this(name, type, Optional.ofNullable(measure));
+    }
+
+    /**
+     * Constructor.
+     */
+    public StructField(String name, DataType type, Optional<Measure> measure) {
+        if (measure.isPresent() && measure.get() instanceof ContinuousMeasure && !type.isFloating()) {
+            throw new IllegalArgumentException(String.format("%s values cannot be of measure %s", type, measure));
+        }
+
+        if (measure.isPresent() && measure.get() instanceof DiscreteMeasure && !type.isIntegral()) {
+            throw new IllegalArgumentException(String.format("%s values cannot be of measure %s", type, measure));
         }
 
         this.name = name;
@@ -65,12 +74,12 @@ public class StructField {
 
     /** Returns the string representation of the field with given value. */
     public String toString(Object o) {
-        return o == null ? "null" : (measure == null ? type.toString(o) : measure.toString(o));
+        return o == null ? "null" : measure.map(m -> m.toString(o)).orElseGet(() -> type.toString(o));
     }
 
     /** Returns the string representation of the field with given value. */
     public Object valueOf(String s) {
-        return measure == null ? type.valueOf(s) : measure.valueOf(s);
+        return measure.map(m -> (Object) m.valueOf(s)).orElseGet(() -> type.valueOf(s));
     }
 
     @Override

@@ -17,6 +17,7 @@
 
 package smile.base.cart;
 
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 
@@ -54,8 +55,8 @@ public class DecisionNode extends LeafNode {
     }
 
     @Override
-    public String dot(StructType schema, int id) {
-        return String.format(" %d [label=<class = %d>, fillcolor=\"#00000000\", shape=ellipse];\n", id, output);
+    public String dot(StructType schema, StructField yfield, int id) {
+        return String.format(" %d [label=<%s = %s<br/>size = %d<br/>impurity = %.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, yfield.name, yfield.toString(output), size, impurity(SplitRule.GINI));
     }
 
     /**

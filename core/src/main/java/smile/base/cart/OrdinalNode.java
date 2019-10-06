@@ -46,13 +46,8 @@ public class OrdinalNode extends InternalNode {
     }
 
     @Override
-    public String dot(StructType schema, int id) {
+    public String dot(StructType schema, StructField yfield, int id) {
         StructField field = schema.field(feature);
-        Measure measure = field.measure;
-        String valueStr = (measure != null && measure instanceof DiscreteMeasure) ?
-                ((DiscreteMeasure) measure).level((int) value) :
-                String.format("%.4f", value);
-
-        return String.format(" %d [label=<%s &le; %s<br/>score = %.4f>, fillcolor=\"#00000000\"];\n", id, field.name, valueStr, score);
+        return String.format(" %d [label=<%s &le; %s<br/>size = %d<br/>impurity reduction = %.4f>, fillcolor=\"#00000000\"];\n", id, field.name, field.toString(value), size(), score);
     }
 }

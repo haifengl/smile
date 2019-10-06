@@ -17,10 +17,14 @@
 
 package smile.data.vector;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import smile.data.measure.Measure;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 
 /**
  * An immutable boolean vector.
@@ -31,6 +35,11 @@ public interface BooleanVector extends BaseVector<Boolean, Integer, IntStream> {
     @Override
     default DataType type() {
         return DataTypes.BooleanType;
+    }
+
+    @Override
+    default Optional<Measure> measure() {
+        return Optional.empty();
     }
 
     @Override
@@ -77,7 +86,7 @@ public interface BooleanVector extends BaseVector<Boolean, Integer, IntStream> {
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
+        return stream().limit(n).mapToObj(i -> measure().map(m -> m.toString(i)).orElseGet(() -> String.valueOf(i))).collect(Collectors.joining(", ", "[", suffix));
     }
 
     /** Creates a named boolean vector.
@@ -87,5 +96,14 @@ public interface BooleanVector extends BaseVector<Boolean, Integer, IntStream> {
      */
     static BooleanVector of(String name, boolean[] vector) {
         return new BooleanVectorImpl(name, vector);
+    }
+
+    /** Creates a named boolean vector.
+     *
+     * @param field the struct field of vector.
+     * @param vector the data of vector.
+     */
+    static BooleanVector of(StructField field, boolean[] vector) {
+        return new BooleanVectorImpl(field, vector);
     }
 }

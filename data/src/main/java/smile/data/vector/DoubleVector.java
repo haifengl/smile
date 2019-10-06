@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 
 /**
  * An immutable double vector.
@@ -67,7 +68,7 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
+        return stream().limit(n).mapToObj(i -> measure().map(m -> m.toString(i)).orElseGet(() -> String.valueOf(i))).collect(Collectors.joining(", ", "[", suffix));
     }
 
     /** Creates a named double vector.
@@ -86,5 +87,14 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
      */
     static DoubleVector of(String name, DoubleStream stream) {
         return new DoubleVectorImpl(name, stream.toArray());
+    }
+
+    /** Creates a named double vector.
+     *
+     * @param field the struct field of vector.
+     * @param vector the data of vector.
+     */
+    static DoubleVector of(StructField field, double[] vector) {
+        return new DoubleVectorImpl(field, vector);
     }
 }

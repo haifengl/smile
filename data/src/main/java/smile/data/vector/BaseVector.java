@@ -18,10 +18,12 @@
 package smile.data.vector;
 
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.stream.BaseStream;
 
 import smile.data.measure.Measure;
 import smile.data.type.DataType;
+import smile.data.type.StructField;
 
 /**
  * Base interface for immutable named vectors, which are sequences of elements supporting
@@ -41,8 +43,11 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
     DataType type();
 
     /** Returns the (optional) level of measurements. Only valid for number types. */
-    default Measure measure() {
-        return null;
+    Optional<Measure> measure();
+
+    /** Returns a struct field corresponding to this vector. */
+    default StructField field() {
+        return new StructField(name(), type(), measure());
     }
 
     /** Number of elements in the vector. */

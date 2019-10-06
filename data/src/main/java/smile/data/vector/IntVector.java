@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 
 /**
  * An immutable integer vector.
@@ -67,7 +68,7 @@ public interface IntVector extends BaseVector<Integer, Integer, IntStream> {
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
+        return stream().limit(n).mapToObj(i -> measure().map(m -> m.toString(i)).orElseGet(() -> String.valueOf(i))).collect(Collectors.joining(", ", "[", suffix));
     }
 
     /** Creates a named integer vector.
@@ -86,5 +87,14 @@ public interface IntVector extends BaseVector<Integer, Integer, IntStream> {
      */
     static IntVector of(String name, IntStream stream) {
         return new IntVectorImpl(name, stream.toArray());
+    }
+
+    /** Creates a named integer vector.
+     *
+     * @param field the struct field of vector.
+     * @param vector the data of vector.
+     */
+    static IntVector of(StructField field, int[] vector) {
+        return new IntVectorImpl(field, vector);
     }
 }

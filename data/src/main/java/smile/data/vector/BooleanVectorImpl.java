@@ -17,6 +17,13 @@
 
 package smile.data.vector;
 
+import java.util.Optional;
+
+import smile.data.measure.ContinuousMeasure;
+import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.Measure;
+import smile.data.type.StructField;
+
 import java.util.stream.IntStream;
 
 /**
@@ -34,6 +41,21 @@ class BooleanVectorImpl implements BooleanVector {
     public BooleanVectorImpl(String name, boolean[] vector) {
         this.name = name;
         this.vector = vector;
+    }
+
+    /** Constructor. */
+    public BooleanVectorImpl(StructField field, boolean[] vector) {
+        if (field.measure.isPresent()) {
+            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure.get(), type()));
+        }
+
+        this.name = field.name;
+        this.vector = vector;
+    }
+
+    @Override
+    public String name() {
+        return name;
     }
 
     @Override
@@ -68,11 +90,6 @@ class BooleanVectorImpl implements BooleanVector {
         boolean[] v = new boolean[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
         return new BooleanVectorImpl(name, v);
-    }
-
-    @Override
-    public String name() {
-        return name;
     }
 
     @Override

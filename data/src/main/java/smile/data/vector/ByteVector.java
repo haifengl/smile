@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 
 /**
  * An immutable byte vector.
@@ -67,7 +68,7 @@ public interface ByteVector extends BaseVector<Byte, Integer, IntStream> {
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
+        return stream().limit(n).mapToObj(i -> measure().map(m -> m.toString(i)).orElseGet(() -> String.valueOf(i))).collect(Collectors.joining(", ", "[", suffix));
     }
 
     /** Creates a named byte vector.
@@ -77,5 +78,14 @@ public interface ByteVector extends BaseVector<Byte, Integer, IntStream> {
      */
     static ByteVector of(String name, byte[] vector) {
         return new ByteVectorImpl(name, vector);
+    }
+
+    /** Creates a named byte vector.
+     *
+     * @param field the struct field of vector.
+     * @param vector the data of vector.
+     */
+    static ByteVector of(StructField field, byte[] vector) {
+        return new ByteVectorImpl(field, vector);
     }
 }

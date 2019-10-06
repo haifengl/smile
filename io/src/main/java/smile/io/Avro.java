@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
@@ -97,10 +98,6 @@ public class Avro {
         DatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>(schema);
         try (DataFileReader<GenericRecord> dataFileReader = new DataFileReader<GenericRecord>(path.toFile(), datumReader)) {
             StructType struct = toSmileSchema(schema);
-            Measure[] scale = new Measure[struct.length()];
-            for (int i = 0; i < struct.length(); i++) {
-                scale[i] = struct.field(i).measure;
-            }
 
             List<Tuple> rows = new ArrayList<>();
             GenericRecord record = null;
@@ -112,11 +109,7 @@ public class Avro {
                     row[i] = record.get(struct.field(i).name);
                     if (row[i] instanceof Utf8) {
                         String str = row[i].toString();
-                        if (scale[i] != null) {
-                            row[i] = scale[i].valueOf(str);
-                        } else {
-                            row[i] = str;
-                        }
+                        row[i] = struct.field(i).measure.map(m -> (Object) m.valueOf(str)).orElse(str);
                     }
                 }
                 rows.add(Tuple.of(row, struct));
@@ -134,7 +127,7 @@ public class Avro {
                 scale = new NominalScale(field.schema().getEnumSymbols());
             }
 
-            fields.add(new StructField(field.name(), typeOf(field.schema()), scale));
+            fields.add(new StructField(field.name(), typeOf(field.schema()), Optional.ofNullable(scale)));
         }
 
         return DataTypes.struct(fields);
