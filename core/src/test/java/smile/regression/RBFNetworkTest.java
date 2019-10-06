@@ -59,34 +59,49 @@ public class RBFNetworkTest {
     public void testLongley() {
         System.out.println("longley");
 
+        // to get repeatable results as RBF.fit calls k-means
+        MathEx.setSeed(19650218);
+
         double[][] x = MathEx.clone(Longley.x);
         MathEx.standardize(x);
         double rmse = LOOCV.test(x, Longley.y, (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 10, 5.0)));
         System.out.println("RMSE = " + rmse);
-        assertEquals(3.690870261996264, rmse, 1E-4);
+        assertEquals(4.922188709128203, rmse, 1E-4);
     }
 
     @Test
     public void testCPU() {
         System.out.println("CPU");
+
+        // to get repeatable results as RBF.fit calls k-means
+        MathEx.setSeed(19650218);
+
         double[][] x = MathEx.clone(CPU.x);
         MathEx.standardize(x);
         double rmse = CrossValidation.test(10, x, CPU.y, (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
         System.out.println("RMSE = " + rmse);
-        assertEquals(14.168654451291467, rmse, 1E-4);
+        assertEquals(24.967181232853843, rmse, 1E-4);
     }
 
     @Test
     public void test2DPlanes() {
         System.out.println("2dplanes");
+
+        // to get repeatable results as RBF.fit calls k-means
+        MathEx.setSeed(19650218);
+
         double rmse = CrossValidation.test(10, Planes.x, Planes.y, (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
         System.out.println("RMSE = " + rmse);
-        assertEquals(1.6807682500184575, rmse, 1E-4);
+        assertEquals(1.7161562336830596, rmse, 1E-4);
     }
 
     @Test
     public void testAilerons() {
         System.out.println("ailerons");
+
+        // to get repeatable results as RBF.fit calls k-means
+        MathEx.setSeed(19650218);
+
         double[][] x = MathEx.clone(Ailerons.x);
         MathEx.standardize(x);
         double rmse = CrossValidation.test(10, x, Ailerons.y, (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
@@ -97,10 +112,14 @@ public class RBFNetworkTest {
     @Test
     public void testBank32nh() {
         System.out.println("bank32nh");
+
+        // to get repeatable results as RBF.fit calls k-means
+        MathEx.setSeed(19650218);
+
         double[][] x = MathEx.clone(Bank32nh.x);
         MathEx.standardize(x);
         double rmse = CrossValidation.test(10, x, Bank32nh.y, (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
         System.out.println("RMSE = " + rmse);
-        assertEquals(0.08739766054766657, rmse, 1E-4);
+        assertEquals(0.08711993434501915, rmse, 1E-4);
     }
 }

@@ -83,6 +83,9 @@ public class RegressionTreeTest {
     public void test(String name, Formula formula, DataFrame data, double expected) {
         System.out.println(name);
 
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
+
         RegressionTree model = RegressionTree.fit(formula, data);
         System.out.println("----- dot -----");
         System.out.println(model);
@@ -104,13 +107,13 @@ public class RegressionTreeTest {
     @Test
     public void testAll() {
         test("CPU", CPU.formula, CPU.data, 88.6985);
-        test("2dplanes", Planes.formula, Planes.data, 2.0978);
-        test("abalone", Abalone.formula, Abalone.train, 2.5626);
+        test("2dplanes", Planes.formula, Planes.data, 2.0976630570457164);
+        test("abalone", Abalone.formula, Abalone.train, 2.5596429888189594);
         test("ailerons", Ailerons.formula, Ailerons.data, 0.0003);
-        test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.0983);
-        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.8180);
-        test("cal_housing", CalHousing.formula, CalHousing.data, 83802.5084);
-        test("puma8nh", Puma8NH.formula, Puma8NH.data, 4.0458);
+        test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.09799630724747005);
+        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.6601134209470363);
+        test("cal_housing", CalHousing.formula, CalHousing.data, 83789.70080922866);
+        test("puma8nh", Puma8NH.formula, Puma8NH.data, 4.046871978193681);
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.2189);
     }
 }

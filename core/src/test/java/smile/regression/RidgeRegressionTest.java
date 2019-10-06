@@ -36,12 +36,6 @@ import static org.junit.Assert.*;
  * @author Haifeng Li
  */
 public class RidgeRegressionTest {
-    double[] residuals = {
-        -0.6008156,  1.5502732,  0.1032287, -1.2306486, -0.3355139,  0.2693345,  0.8776759,
-         0.1222429, -2.0086121, -0.4859826,  1.0663129,  1.2274906, -0.3835821,  0.2710215,
-         0.1978569, -0.6402823
-    };
-
     public RidgeRegressionTest() {
     }
 
@@ -83,6 +77,10 @@ public class RidgeRegressionTest {
     @Test
     public void testCPU() {
         System.out.println("CPU");
+
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
+
         LinearModel model = RidgeRegression.fit(CPU.formula, CPU.data, 0.1);
         System.out.println(model);
 

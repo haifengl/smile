@@ -27,6 +27,7 @@ import smile.data.DataFrame;
 import smile.data.Longley;
 import smile.data.formula.Formula;
 import smile.data.vector.DoubleVector;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.validation.CrossValidation;
@@ -102,6 +103,10 @@ public class LASSOTest {
     @Test
     public void testCPU() {
         System.out.println("CPU");
+
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
+
         LinearModel model = LASSO.fit(CPU.formula, CPU.data, 0.1);
         System.out.println(model);
 
