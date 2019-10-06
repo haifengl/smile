@@ -24,10 +24,16 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Optional;
 import java.util.stream.Stream;
+
+import smile.data.measure.ContinuousMeasure;
+import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.Measure;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.ObjectType;
+import smile.data.type.StructField;
 
 /**
  * An immutable vector.
@@ -39,6 +45,8 @@ class VectorImpl<T> implements Vector<T> {
     private String name;
     /** The data type of vector. */
     private DataType type;
+    /** Optional measure. */
+    private Optional<Measure> measure;
     /** The vector data. */
     private T[] vector;
 
@@ -46,6 +54,7 @@ class VectorImpl<T> implements Vector<T> {
     public VectorImpl(String name, Class clazz, T[] vector) {
         this.name = name;
         this.type = DataTypes.object(clazz);
+        this.measure = Optional.empty();
         this.vector = vector;
     }
 
@@ -53,12 +62,39 @@ class VectorImpl<T> implements Vector<T> {
     public VectorImpl(String name, DataType type, T[] vector) {
         this.name = name;
         this.type = type;
+        this.measure = Optional.empty();
         this.vector = vector;
+    }
+
+    /** Constructor. */
+    public VectorImpl(StructField field, T[] vector) {
+        if (field.measure.isPresent()) {
+             if ((field.type.isIntegral() && field.measure.get() instanceof ContinuousMeasure) ||
+                 (field.type.isFloating() && field.measure.get() instanceof DiscreteMeasure) ||
+                 (!field.type.isIntegral() && !field.type.isFloating())) {
+                throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure.get(), type()));
+            }
+        }
+
+        this.name = field.name;
+        this.type = field.type;
+        this.measure = field.measure;
+        this.vector = vector;
+    }
+
+    @Override
+    public String name() {
+        return name;
     }
 
     @Override
     public DataType type() {
         return type;
+    }
+
+    @Override
+    public Optional<Measure> measure() {
+        return measure;
     }
 
     @Override
@@ -77,11 +113,6 @@ class VectorImpl<T> implements Vector<T> {
         T[] v = (T[]) new Object[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
         return new VectorImpl<>(name, type, v);
-    }
-
-    @Override
-    public String name() {
-        return name;
     }
 
     @Override

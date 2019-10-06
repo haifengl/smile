@@ -65,9 +65,8 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     default Measure[] measures() {
         StructField[] fields = schema().fields();
         return Arrays.stream(fields)
-                .map(field -> field.measure)
-                .collect(Collectors.toList())
-                .toArray(new Measure[fields.length]);
+                .map(field -> field.measure.orElse(null))
+                .toArray(Measure[]::new);
     }
 
     /**
@@ -408,7 +407,8 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * @throws ClassCastException when the data is not nominal or ordinal.
      */
     default String getScale(int i, int j) {
-        return ((DiscreteMeasure) schema().field(j).measure).toString(getInt(i, j));
+        int x = getInt(i, j);
+        return schema().field(j).measure.map(m -> ((DiscreteMeasure) m).toString(x)).orElseGet(() -> String.valueOf(x));
     }
 
     /**

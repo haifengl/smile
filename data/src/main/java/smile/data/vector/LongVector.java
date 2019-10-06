@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 
 /**
  * An immutable long vector.
@@ -67,7 +68,7 @@ public interface LongVector extends BaseVector<Long, Long, LongStream> {
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
+        return stream().limit(n).mapToObj(i -> measure().map(m -> m.toString(i)).orElseGet(() -> String.valueOf(i))).collect(Collectors.joining(", ", "[", suffix));
     }
 
     /** Creates a named long vector.
@@ -79,12 +80,21 @@ public interface LongVector extends BaseVector<Long, Long, LongStream> {
         return new LongVectorImpl(name, vector);
     }
 
-    /** Creates a named long vector.
+    /** Creates a named long integer vector.
      *
      * @param name the name of vector.
      * @param stream the data stream of vector.
      */
     static LongVector of(String name, LongStream stream) {
         return new LongVectorImpl(name, stream.toArray());
+    }
+
+    /** Creates a named long integer vector.
+     *
+     * @param field the struct field of vector.
+     * @param vector the data of vector.
+     */
+    static LongVector of(StructField field, long[] vector) {
+        return new LongVectorImpl(field, vector);
     }
 }

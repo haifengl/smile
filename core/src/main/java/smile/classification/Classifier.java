@@ -89,22 +89,4 @@ public interface Classifier<T> extends Serializable {
 
         return labels;
     }
-
-    /** Returns an index of samples in ascending order in each column. */
-    static int[][] order(DataFrame data) {
-        int n = data.size();
-        int p = data.ncols();
-        double[] a = new double[n];
-        int[][] order = new int[p][];
-
-        for (int j = 0; j < p; j++) {
-            Measure measure = data.schema().field(j).measure;
-            if (measure == null || !(measure instanceof NominalScale)) {
-                data.column(j).toDoubleArray(a);
-                order[j] = QuickSort.sort(a);
-            }
-        }
-
-        return order;
-    }
 }

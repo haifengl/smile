@@ -23,6 +23,8 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.measure.Measure;
 
+import java.util.Optional;
+
 /**
  * A node with a nominal split variable.
  */
@@ -46,13 +48,8 @@ public class NominalNode extends InternalNode {
     }
 
     @Override
-    public String dot(StructType schema, int id) {
+    public String dot(StructType schema, StructField yfield, int id) {
         StructField field = schema.field(feature);
-        Measure measure = field.measure;
-        String valueStr = (measure != null && measure instanceof DiscreteMeasure) ?
-                ((DiscreteMeasure) measure).level(value) :
-                Integer.toString(value);
-
-        return String.format(" %d [label=<%s = %s<br/>nscore = %.4f>, fillcolor=\"#00000000\"];\n", id, field.name, valueStr, score);
+        return String.format(" %d [label=<%s = %s<br/>size = %d<br/>impurity reduction = %.4f>, fillcolor=\"#00000000\"];\n", id, field.name, field.toString(value), size(), score);
     }
 }

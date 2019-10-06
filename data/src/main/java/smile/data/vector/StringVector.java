@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import smile.data.measure.DiscreteMeasure;
 import smile.data.measure.NominalScale;
+import smile.data.type.StructField;
 
 /**
  * An immutable string vector.
@@ -98,12 +99,21 @@ public interface StringVector extends Vector<String> {
     }
 
     /**
-     * Creates a named vector.
+     * Creates a named string vector.
      *
      * @param name the name of vector.
      * @param vector the data of vector.
      */
     static StringVector of(String name, String... vector) {
         return new StringVectorImpl(name, vector);
+    }
+
+    /** Creates a named string vector.
+     *
+     * @param field the struct field of vector.
+     * @param vector the data of vector.
+     */
+    static StringVector of(StructField field, String... vector) {
+        return new StringVectorImpl(field, vector);
     }
 }

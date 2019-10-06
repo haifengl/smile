@@ -23,12 +23,15 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.measure.OrdinalScale;
 import smile.data.type.DataType;
+import smile.data.type.StructField;
 
 /**
  * An immutable generic vector.
@@ -36,7 +39,6 @@ import smile.data.type.DataType;
  * @author Haifeng Li
  */
 public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
-
     /**
      * Returns a vector of LocalDate. If the vector is of strings, it uses the default
      * ISO date formatter that parses a date without an offset, such as '2011-12-03'.
@@ -114,7 +116,7 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).map(Object::toString).collect(Collectors.joining(", ", "[", suffix));
+        return stream().limit(n).map(i -> measure().map(m -> m.toString(i)).orElseGet(() -> i.toString())).collect(Collectors.joining(", ", "[", suffix));
     }
 
     /**
@@ -137,5 +139,14 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
      */
     static <T> Vector<T> of(String name, DataType type, T[] vector) {
         return new VectorImpl<>(name, type, vector);
+    }
+
+    /** Creates a named vector.
+     *
+     * @param field the struct field of vector.
+     * @param vector the data of vector.
+     */
+    static <T> Vector of(StructField field, T[] vector) {
+        return new VectorImpl<>(field, vector);
     }
 }

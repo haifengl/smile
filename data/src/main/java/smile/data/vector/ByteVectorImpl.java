@@ -17,6 +17,11 @@
 
 package smile.data.vector;
 
+import smile.data.measure.ContinuousMeasure;
+import smile.data.measure.Measure;
+import smile.data.type.StructField;
+
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 /**
@@ -27,13 +32,37 @@ import java.util.stream.IntStream;
 class ByteVectorImpl implements ByteVector {
     /** The name of vector. */
     private String name;
+    /** Optional measure. */
+    private Optional<Measure> measure;
     /** The vector data. */
     private byte[] vector;
 
     /** Constructor. */
     public ByteVectorImpl(String name, byte[] vector) {
         this.name = name;
+        this.measure = Optional.empty();
         this.vector = vector;
+    }
+
+    /** Constructor. */
+    public ByteVectorImpl(StructField field, byte[] vector) {
+        if (field.measure.isPresent() && field.measure.get() instanceof ContinuousMeasure) {
+            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure.get(), type()));
+        }
+
+        this.name = field.name;
+        this.measure = field.measure;
+        this.vector = vector;
+    }
+
+    @Override
+    public String name() {
+        return name;
+    }
+
+    @Override
+    public Optional<Measure> measure() {
+        return measure;
     }
 
     @Override
@@ -68,11 +97,6 @@ class ByteVectorImpl implements ByteVector {
         byte[] v = new byte[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
         return new ByteVectorImpl(name, v);
-    }
-
-    @Override
-    public String name() {
-        return name;
     }
 
     @Override

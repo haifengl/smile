@@ -20,6 +20,7 @@ package smile.base.cart;
 import smile.data.DataFrame;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
@@ -36,6 +37,9 @@ public abstract class CART {
 
     /** The schema of data. */
     protected StructType schema;
+
+    /** The schema of response variable. */
+    protected StructField yfield;
 
     /** The root of decision tree. */
     protected Node root;
@@ -114,6 +118,7 @@ public abstract class CART {
         this.x = x;
         this.y = y;
         this.schema = x.schema();
+        this.yfield = y.field();
         this.importance = new double[x.ncols()];
         this.nodeSize = nodeSize;
         this.maxNodes = maxNodes;
@@ -169,8 +174,8 @@ public abstract class CART {
         int[][] order = new int[p][];
 
         for (int j = 0; j < p; j++) {
-            Measure measure = schema.field(j).measure;
-            if (measure == null || !(measure instanceof NominalScale)) {
+            Optional<Measure> measure = schema.field(j).measure;
+            if (!measure.isPresent() || !(measure.get() instanceof NominalScale)) {
                 x.column(j).toDoubleArray(a);
                 order[j] = QuickSort.sort(a);
             }
@@ -338,7 +343,7 @@ public abstract class CART {
      */
     public String dot() {
         StringBuilder builder = new StringBuilder();
-        builder.append("digraph DecisionTree {\n node [shape=box, style=\"filled, rounded\", color=\"black\", fontname=helvetica];\n edge [fontname=helvetica];\n");
+        builder.append("digraph CART {\n node [shape=box, style=\"filled, rounded\", color=\"black\", fontname=helvetica];\n edge [fontname=helvetica];\n");
 
         String trueLabel  = " [labeldistance=2.5, labelangle=45, headlabel=\"True\"];\n";
         String falseLabel = " [labeldistance=2.5, labelangle=-45, headlabel=\"False\"];\n";
@@ -353,7 +358,7 @@ public abstract class CART {
             Node node = entry.getValue();
 
             // leaf node
-            builder.append(node.dot(schema, id));
+            builder.append(node.dot(schema, yfield, id));
 
             if (node instanceof InternalNode) {
                 int tid = 2 * id;

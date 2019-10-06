@@ -375,11 +375,9 @@ public interface Tuple extends Serializable {
 
     /**
      * Returns the value at position i of NominalScale or OrdinalScale.
-     *
-     * @throws ClassCastException when the data is not nominal or ordinal.
      */
     default String getScale(int i) {
-        return ((DiscreteMeasure) schema().field(i).measure).toString(getInt(i));
+        return schema().field(i).measure.map(m -> ((DiscreteMeasure) m).toString(getInt(i))).orElseGet(() -> String.valueOf(getInt(i)));
     }
 
     /**

@@ -17,6 +17,7 @@
 
 package smile.base.cart;
 
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 
@@ -75,8 +76,8 @@ public class RegressionNode extends LeafNode {
     }
 
     @Override
-    public String dot(StructType schema, int id) {
-        return String.format(" %d [label=<%.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, output);
+    public String dot(StructType schema, StructField yfield, int id) {
+        return String.format(" %d [label=<%s = %.4f<br/>size = %d<br/>RMSE = %.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, yfield.name, output, size, Math.sqrt(rss/size));
     }
 
     @Override

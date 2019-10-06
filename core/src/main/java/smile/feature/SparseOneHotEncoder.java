@@ -60,12 +60,12 @@ public class SparseOneHotEncoder {
         base = new int[schema.length()];
         for (int i = 0; i < base.length; i++) {
             StructField field = schema.field(i);
-            if (!(field.measure instanceof NominalScale)) {
+            if (!field.measure.isPresent() || !(field.measure.get() instanceof NominalScale)) {
                 throw new IllegalArgumentException("Non-nominal attribute: " + field);
             }
 
             if (i < base.length-1) {
-                base[i+1] = base[i] + ((NominalScale) field.measure).size();
+                base[i+1] = base[i] + ((NominalScale) field.measure.get()).size();
             }
         }
     }

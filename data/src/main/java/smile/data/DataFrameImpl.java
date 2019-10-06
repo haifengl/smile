@@ -24,8 +24,6 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.*;
 import smile.data.vector.*;
@@ -60,9 +58,8 @@ class DataFrameImpl implements DataFrame {
         this.columns = new ArrayList<>(columns);
 
         StructField[] fields = columns.stream()
-                .map(v -> new StructField(v.name(), v.type(), v.measure()))
-                .collect(Collectors.toList())
-                .toArray(new StructField[columns.size()]);
+                .map(column -> column.field())
+                .toArray(StructField[]::new);
         this.schema = DataTypes.struct(fields);
 
         Set<String> set = new HashSet<>();
@@ -95,10 +92,10 @@ class DataFrameImpl implements DataFrame {
         try {
             BeanInfo info = Introspector.getBeanInfo(clazz);
             PropertyDescriptor[] props = info.getPropertyDescriptors();
-            List<StructField> fields = Arrays.stream(props)
+            StructField[] fields = Arrays.stream(props)
                     .filter(prop -> !prop.getName().equals("class"))
                     .map(this::field)
-                    .collect(Collectors.toList());
+                    .toArray(StructField[]::new);
 
             this.schema = DataTypes.struct(fields);
             for (PropertyDescriptor prop : props) {

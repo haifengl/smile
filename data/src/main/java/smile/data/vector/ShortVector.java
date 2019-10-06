@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 
 /**
  * An immutable short vector.
@@ -67,15 +68,24 @@ public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
+        return stream().limit(n).mapToObj(i -> measure().map(m -> m.toString(i)).orElseGet(() -> String.valueOf(i))).collect(Collectors.joining(", ", "[", suffix));
     }
 
-    /** Creates a named short vector.
+    /** Creates a named short integer vector.
      *
      * @param name the name of vector.
      * @param vector the data of vector.
      */
     static ShortVector of(String name, short[] vector) {
         return new ShortVectorImpl(name, vector);
+    }
+
+    /** Creates a named short integer vector.
+     *
+     * @param field the struct field of vector.
+     * @param vector the data of vector.
+     */
+    static ShortVector of(StructField field, short[] vector) {
+        return new ShortVectorImpl(field, vector);
     }
 }

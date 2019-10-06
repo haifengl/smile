@@ -17,7 +17,12 @@
 
 package smile.data.vector;
 
+import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.Measure;
+import smile.data.type.StructField;
+
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.stream.DoubleStream;
 
 /**
@@ -28,13 +33,37 @@ import java.util.stream.DoubleStream;
 class DoubleVectorImpl implements DoubleVector {
     /** The name of vector. */
     private String name;
+    /** Optional measure. */
+    private Optional<Measure> measure;
     /** The vector data. */
     private double[] vector;
 
     /** Constructor. */
     public DoubleVectorImpl(String name, double[] vector) {
         this.name = name;
+        this.measure = Optional.empty();
         this.vector = vector;
+    }
+
+    /** Constructor. */
+    public DoubleVectorImpl(StructField field, double[] vector) {
+        if (field.measure.isPresent() && field.measure.get() instanceof DiscreteMeasure) {
+            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure.get(), type()));
+        }
+
+        this.name = field.name;
+        this.measure = field.measure;
+        this.vector = vector;
+    }
+
+    @Override
+    public String name() {
+        return name;
+    }
+
+    @Override
+    public Optional<Measure> measure() {
+        return measure;
     }
 
     @Override
@@ -68,11 +97,6 @@ class DoubleVectorImpl implements DoubleVector {
         double[] v = new double[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
         return new DoubleVectorImpl(name, v);
-    }
-
-    @Override
-    public String name() {
-        return name;
     }
 
     @Override

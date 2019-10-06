@@ -17,6 +17,11 @@
 
 package smile.data.vector;
 
+import smile.data.measure.ContinuousMeasure;
+import smile.data.measure.Measure;
+import smile.data.type.StructField;
+
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 /**
@@ -27,13 +32,37 @@ import java.util.stream.IntStream;
 class ShortVectorImpl implements ShortVector {
     /** The name of vector. */
     private String name;
+    /** Optional measure. */
+    private Optional<Measure> measure;
     /** The vector data. */
     private short[] vector;
 
     /** Constructor. */
     public ShortVectorImpl(String name, short[] vector) {
         this.name = name;
+        this.measure = Optional.empty();
         this.vector = vector;
+    }
+
+    /** Constructor. */
+    public ShortVectorImpl(StructField field, short[] vector) {
+        if (field.measure.isPresent() && field.measure.get() instanceof ContinuousMeasure) {
+            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure.get(), type()));
+        }
+
+        this.name = field.name;
+        this.measure = field.measure;
+        this.vector = vector;
+    }
+
+    @Override
+    public String name() {
+        return name;
+    }
+
+    @Override
+    public Optional<Measure> measure() {
+        return measure;
     }
 
     @Override
@@ -68,11 +97,6 @@ class ShortVectorImpl implements ShortVector {
         short[] v = new short[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
         return new ShortVectorImpl(name, v);
-    }
-
-    @Override
-    public String name() {
-        return name;
     }
 
     @Override

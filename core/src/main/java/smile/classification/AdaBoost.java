@@ -18,6 +18,7 @@
 package smile.classification;
 
 import java.util.Arrays;
+import smile.base.cart.CART;
 import smile.base.cart.SplitRule;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -105,7 +106,7 @@ public class AdaBoost implements SoftClassifier<Tuple> {
         DataFrame x = formula.frame(data);
         BaseVector y = formula.response(data);
         k = Classifier.classes(y).length;
-        int[][] order = Classifier.order(x);
+        int[][] order = CART.order(x);
         
         int n = data.size();
         int[] samples = new int[n];
