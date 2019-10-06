@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import smile.data.CPU;
 import smile.data.Longley;
 import smile.data.Prostate;
+import smile.math.MathEx;
 import smile.validation.CrossValidation;
 import smile.validation.Validation;
 
@@ -106,6 +107,9 @@ public class OLSTest {
     @Test
     public void testCPU() {
         System.out.println("CPU");
+
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
 
         LinearModel model = OLS.fit(CPU.formula, CPU.data);
         System.out.println(model);

@@ -81,6 +81,9 @@ public class SVRTest {
     public void testCPU() {
         System.out.println("CPU");
 
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
+
         double[][] x = MathEx.clone(CPU.x);
         MathEx.standardize(x);
 

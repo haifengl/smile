@@ -65,6 +65,9 @@ public class GaussianProcessRegressionTest {
     public void testLongley() {
         System.out.println("longley");
 
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
+
         double[][] longley = MathEx.clone(Longley.x);
         MathEx.standardize(longley);
 
@@ -79,6 +82,10 @@ public class GaussianProcessRegressionTest {
     @Test
     public void testCPU() {
         System.out.println("CPU");
+
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
+
         double[][] x = MathEx.clone(CPU.x);
         MathEx.standardize(x);
         CrossValidation cv = new CrossValidation(x.length, 10);
@@ -117,8 +124,8 @@ public class GaussianProcessRegressionTest {
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
         assertEquals(76.32510156134408, rmse, 1E-4);
-        assertEquals(68.52769561339196, sparseRMSE, 1E-4);
-        assertEquals(66.46355797673111, nystromRMSE, 1E-4);
+        assertEquals(68.68104843938221, sparseRMSE, 1E-4);
+        assertEquals(65.9687213249394, nystromRMSE, 1E-4);
     }
     
     /**
@@ -127,6 +134,10 @@ public class GaussianProcessRegressionTest {
     @Test(expected = Test.None.class)
     public void test2DPlanes() throws Exception {
         System.out.println("2dplanes");
+
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
+
         double[][] x = MathEx.clone(Planes.x);
         double[] y = Planes.y;
 
@@ -173,9 +184,9 @@ public class GaussianProcessRegressionTest {
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
-        assertEquals(2.361543507488592, rmse, 1E-4);
-        assertEquals(2.1529905507263307, sparseRMSE, 1E-4);
-        assertEquals(2.083613559356661, nystromRMSE, 1E-4);
+        assertEquals(2.3985559673428205, rmse, 1E-4);
+        assertEquals(2.1732938822317425, sparseRMSE, 1E-4);
+        assertEquals(2.1007790802910025, nystromRMSE, 1E-4);
     }
 
     /**
@@ -184,6 +195,9 @@ public class GaussianProcessRegressionTest {
     @Test(expected = Test.None.class)
     public void testAilerons() throws Exception {
         System.out.println("ailerons");
+
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
 
         double[][] x = MathEx.clone(Ailerons.x);
         MathEx.standardize(x);
@@ -235,9 +249,9 @@ public class GaussianProcessRegressionTest {
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
-        assertEquals(2.1926818067613465, rmse, 1E-4);
-        assertEquals(2.0282273419630994, sparseRMSE, 1E-4);
-        assertEquals(2.027589516331201, nystromRMSE, 1E-4);
+        assertEquals(2.1630417680910705, rmse, 1E-4);
+        assertEquals(2.284741162884998, sparseRMSE, 1E-4);
+        assertEquals(2.211486804681902, nystromRMSE, 1E-4);
     }
 
     /**
@@ -246,6 +260,9 @@ public class GaussianProcessRegressionTest {
     @Test(expected = Test.None.class)
     public void testBank32nh() throws Exception {
         System.out.println("bank32nh");
+
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
 
         double[][] x = MathEx.clone(Bank32nh.x);
         double[] y = Bank32nh.y;
@@ -296,7 +313,7 @@ public class GaussianProcessRegressionTest {
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
         assertEquals(0.08434491755621974, rmse, 1E-4);
         assertEquals(0.08494071211767774, sparseRMSE, 1E-4);
-        assertEquals(0.36466585082480063, nystromRMSE, 1E-4);
+        assertEquals(0.3040638473541609, nystromRMSE, 1E-4);
     }
 
     /**
@@ -305,6 +322,9 @@ public class GaussianProcessRegressionTest {
     @Test(expected = Test.None.class)
     public void testPuma8nh() throws Exception {
         System.out.println("puma8nh");
+
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
 
         double[][] x = Puma8NH.x;
         double[] y = Puma8NH.y;
@@ -352,9 +372,9 @@ public class GaussianProcessRegressionTest {
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
-        assertEquals(4.492015225824324, rmse, 1E-4);
-        assertEquals(4.474761909879316, sparseRMSE, 1E-4);
-        assertEquals(4.461259439948675, nystromRMSE, 1E-4);
+        assertEquals(4.441587058240469, rmse, 1E-4);
+        assertEquals(4.4196278530280395, sparseRMSE, 1E-4);
+        assertEquals(4.415740245175906, nystromRMSE, 1E-4);
     }
 
     /**
@@ -363,6 +383,9 @@ public class GaussianProcessRegressionTest {
     @Test(expected = Test.None.class)
     public void testKin8nm() throws Exception {
         System.out.println("kin8nm");
+
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
 
         double[][] x = MathEx.clone(Kin8nm.x);
         double[] y = Kin8nm.y;
@@ -409,8 +432,8 @@ public class GaussianProcessRegressionTest {
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
-        assertEquals(0.20109897488709863, rmse, 1E-4);
-        assertEquals(0.1976066462636432, sparseRMSE, 1E-4);
-        assertEquals(0.19481956376952855, nystromRMSE, 1E-4);
+        assertEquals(0.20205594684848896, rmse, 1E-4);
+        assertEquals(0.19798437197387753, sparseRMSE, 1E-4);
+        assertEquals(0.19547732694330078, nystromRMSE, 1E-4);
     }
 }
