@@ -132,8 +132,8 @@ public class ElasticNet {
         }
 
         LinearModel model = LASSO.train(X2, y2,lambda1 * c, tol, maxIter);
-        model.names = formula.predictors();
         model.formula = formula;
+        model.schema = formula.predictorSchema();
 
         double[] w = new double[p];
         for (int i = 0; i < p; i++) {

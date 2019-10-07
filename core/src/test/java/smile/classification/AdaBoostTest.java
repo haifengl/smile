@@ -17,19 +17,17 @@
 
 package smile.classification;
 
-import smile.data.Attribute;
-import smile.math.MathEx;
+import smile.data.Iris;
+import smile.data.USPS;
+import smile.data.WeatherNominal;
 import smile.validation.LOOCV;
-import smile.data.parser.ArffParser;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
-import smile.data.AttributeDataset;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.sort.QuickSort;
+import smile.validation.Validation;
+
 import static org.junit.Assert.*;
 
 /**
@@ -57,221 +55,51 @@ public class AdaBoostTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class AdaBoost.
-     */
     @Test
     public void testWeather() {
         System.out.println("Weather");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset weather = arffParser.parse(smile.util.Paths.getTestData("weka/weather.nominal.arff"));
-            double[][] x = weather.toArray(new double[weather.size()][]);
-            int[] y = weather.toArray(new int[weather.size()]);
 
-            int n = x.length;
-            LOOCV loocv = new LOOCV(n);
-            int error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = MathEx.slice(x, loocv.train[i]);
-                int[] trainy = MathEx.slice(y, loocv.train[i]);
-                
-                AdaBoost forest = new AdaBoost(weather.attributes(), trainx, trainy, 200, 4);
-                if (y[loocv.test[i]] != forest.predict(x[loocv.test[i]]))
-                    error++;
-            }
+        AdaBoost model = AdaBoost.fit(WeatherNominal.formula, WeatherNominal.data, 200, 4, 1);
 
-            System.out.println("AdaBoost error = " + error);
-            assertEquals(3, error);
-        } catch (Exception ex) {
-            System.err.println(ex);
+        double[] importance = model.importance();
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
+
+        int error = LOOCV.classification(WeatherNominal.data, x -> AdaBoost.fit(WeatherNominal.formula, x, 200, 4, 1));
+        System.out.println("Error = " + error);
+        assertEquals(4, error);
     }
 
-    /**
-     * Test of learn method, of class AdaBoost.
-     */
     @Test
     public void testIris() {
         System.out.println("Iris");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.util.Paths.getTestData("weka/iris.arff"));
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            int[] y = iris.toArray(new int[iris.size()]);
-            for (int i = 0; i < y.length; i++) {
-                if (y[i] != 0) y[i] = 1;
-            }
 
-            int n = x.length;
-            LOOCV loocv = new LOOCV(n);
-            int error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = MathEx.slice(x, loocv.train[i]);
-                int[] trainy = MathEx.slice(y, loocv.train[i]);
-                
-                AdaBoost forest = new AdaBoost(iris.attributes(), trainx, trainy, 200);
-                if (y[loocv.test[i]] != forest.predict(x[loocv.test[i]]))
-                    error++;
-            }
+        AdaBoost model = AdaBoost.fit(Iris.formula, Iris.data, 200, 4, 5);
 
-            System.out.println("AdaBoost error = " + error);
-            assertEquals(0, error);
-        } catch (Exception ex) {
-            System.err.println(ex);
+        double[] importance = model.importance();
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
+
+        int error = LOOCV.classification(Iris.data, x -> AdaBoost.fit(Iris.formula, x, 200, 4, 1));
+        System.out.println("Error = " + error);
+        assertEquals(7, error);
     }
 
-    /**
-     * Test of learn method, of class AdaBoost.
-     */
     @Test
     public void testUSPS() {
         System.out.println("USPS");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.util.Paths.getTestData("usps/zip.test"));
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
+        AdaBoost model = AdaBoost.fit(USPS.formula, USPS.train, 200, 64, 1);
 
-            for (int i = 0; i < y.length; i++) {
-                if (y[i] != 0) y[i] = 1;
-            }
-            for (int i = 0; i < testy.length; i++) {
-                if (testy[i] != 0) testy[i] = 1;
-            }
-            
-            AdaBoost forest = new AdaBoost(x, y, 100, 6);
-            
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (forest.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
-
-            System.out.println("AdaBoost error = " + error);
-            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
-            assertTrue(error <= 25);
-        } catch (Exception ex) {
-            System.err.println(ex);
+        double[] importance = model.importance();
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
-    }
 
-    /**
-     * Test of learn method, of class AdaBoost.
-     */
-    @Test
-    public void testUSPSNominal() {
-        System.out.println("USPS nominal");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.util.Paths.getTestData("usps/zip.test"));
-
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-
-            for (double[] xi : x) {
-                for (int i = 0; i < xi.length; i++) {
-                    xi[i] = Math.round(255*(xi[i]+1)/2);
-                }
-            }
-            
-            for (double[] xi : testx) {
-                for (int i = 0; i < xi.length; i++) {
-                    xi[i] = Math.round(255*(xi[i]+1)/2);
-                }
-            }
-            
-            Attribute[] attributes = new Attribute[256];
-            String[] values = new String[attributes.length];
-            for (int i = 0; i < attributes.length; i++) {
-                values[i] = String.valueOf(i);
-            }
-            
-            for (int i = 0; i < attributes.length; i++) {
-                attributes[i] = new NominalAttribute("V"+i, values);
-            }
-            
-            for (int i = 0; i < y.length; i++) {
-                if (y[i] != 0) y[i] = 1;
-            }
-            
-            for (int i = 0; i < testy.length; i++) {
-                if (testy[i] != 0) testy[i] = 1;
-            }
-            
-            AdaBoost forest = new AdaBoost(attributes, x, y, 100, 6);
-            
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (forest.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
-
-            System.out.println("AdaBoost error = " + error);
-            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
-            assertTrue(error <= 25);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
-    }
-    
-    /**
-     * Test of learn method, of class AdaBoost.
-     */
-    @Test
-    public void testUSPS10() {
-        System.out.println("USPS 10 classes");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.util.Paths.getTestData("usps/zip.test"));
-
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-
-            AdaBoost forest = new AdaBoost(x, y, 100, 64);
-            
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (forest.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
-
-            System.out.println("AdaBoost error = " + error);
-            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
-
-            double[] accuracy = forest.test(testx, testy);
-            for (int i = 1; i <= accuracy.length; i++) {
-                System.out.format("%d trees accuracy = %.2f%%%n", i, 100.0 * accuracy[i-1]);
-            }
-            
-            double[] importance = forest.importance();
-            int[] index = QuickSort.sort(importance);
-            for (int i = importance.length; i-- > 0; ) {
-                System.out.format("%s importance is %.4f%n", train.attributes()[index[i]], importance[i]);
-            }
-
-            assertTrue(error <= 170);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        double accuracy = Validation.test(model, USPS.test);
+        System.out.format("Accuracy = %.4f%n", accuracy);
+        assertEquals(0.8236, accuracy, 1E-3);
     }
 }

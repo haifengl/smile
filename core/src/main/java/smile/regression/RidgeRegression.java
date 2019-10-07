@@ -121,8 +121,8 @@ public class RidgeRegression {
         }
 
         LinearModel model = new LinearModel();
-        model.names = formula.predictors();
         model.formula = formula;
+        model.schema = formula.predictorSchema();
         model.p = p;
         double[] center = X.colMeans();
         double[] scale = X.colSds();

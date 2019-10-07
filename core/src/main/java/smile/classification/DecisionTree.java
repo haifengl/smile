@@ -26,6 +26,7 @@ import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
+import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 
@@ -349,5 +350,10 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
     @Override
     public Optional<Formula> formula() {
         return formula;
+    }
+
+    @Override
+    public Optional<StructType> schema() {
+        return Optional.of(schema);
     }
 }

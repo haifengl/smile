@@ -17,14 +17,11 @@
 
 package smile.classification;
 
-import smile.base.cart.DecisionNode;
 import smile.base.cart.SplitRule;
 import smile.data.Iris;
 import smile.data.USPS;
 import smile.data.WeatherNominal;
-import smile.sort.QuickSort;
 import smile.validation.LOOCV;
-import smile.math.MathEx;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -66,8 +63,13 @@ public class DecisionTreeTest {
         DecisionTree model = DecisionTree.fit(WeatherNominal.formula, WeatherNominal.data);
         System.out.println(model);
 
+        double[] importance = model.importance();
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+        }
+
         int error = LOOCV.classification(WeatherNominal.data, x -> DecisionTree.fit(WeatherNominal.formula, x));
-        System.out.println("Decision Tree error = " + error);
+        System.out.println("Error = " + error);
         assertEquals(5, error);
     }
 
@@ -78,8 +80,13 @@ public class DecisionTreeTest {
         DecisionTree model = DecisionTree.fit(Iris.formula, Iris.data);
         System.out.println(model);
 
+        double[] importance = model.importance();
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+        }
+
         int error = LOOCV.classification(Iris.data, x -> DecisionTree.fit(Iris.formula, x));
-        System.out.println("Decision Tree error = " + error);
+        System.out.println("Error = " + error);
         assertEquals(9, error);
     }
 
@@ -92,7 +99,7 @@ public class DecisionTreeTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", USPS.train.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
         double accuracy = Validation.test(model, USPS.test);

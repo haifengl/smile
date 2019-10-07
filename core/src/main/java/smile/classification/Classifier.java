@@ -26,6 +26,7 @@ import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
+import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
@@ -86,11 +87,6 @@ public interface Classifier<T> extends Serializable {
         return data.stream().mapToInt(x -> predict(x)).toArray();
     }
 
-    /** Returns the formula associated with the model. */
-    default Optional<Formula> formula() {
-        return Optional.empty();
-    }
-
     /** Returns the unique classes of sample labels. */
     static int[] classes(BaseVector y) {
         return classes(y.toIntArray());
@@ -116,5 +112,15 @@ public interface Classifier<T> extends Serializable {
         }
 
         return labels;
+    }
+
+    /** Returns the formula associated with the model. */
+    default Optional<Formula> formula() {
+        return Optional.empty();
+    }
+
+    /** Returns the design matrix schema. */
+    default Optional<StructType> schema() {
+        return Optional.empty();
     }
 }

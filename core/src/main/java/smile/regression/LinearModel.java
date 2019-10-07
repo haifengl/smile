@@ -23,6 +23,7 @@ import java.util.Optional;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
+import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.special.Beta;
@@ -63,9 +64,9 @@ public class LinearModel implements OnlineRegression<double[]> {
      */
     Formula formula;
     /**
-     * The variable names.
+     * The schema of design matrix.
      */
-    String[] names;
+    StructType schema;
     /**
      * The dimensionality.
      */
@@ -146,6 +147,11 @@ public class LinearModel implements OnlineRegression<double[]> {
     @Override
     public Optional<Formula> formula() {
         return Optional.of(formula);
+    }
+
+    @Override
+    public Optional<StructType> schema() {
+        return Optional.of(schema);
     }
 
     /**
@@ -431,7 +437,7 @@ public class LinearModel implements OnlineRegression<double[]> {
             }
 
             for (int i = 0; i < p; i++) {
-                builder.append(String.format("%-15s %10.4f %10.4f %10.4f %10.4f %s%n", names[i], ttest[i][0], ttest[i][1], ttest[i][2], ttest[i][3], significance(ttest[i][3])));
+                builder.append(String.format("%-15s %10.4f %10.4f %10.4f %10.4f %s%n", schema.fieldName(i), ttest[i][0], ttest[i][1], ttest[i][2], ttest[i][3], significance(ttest[i][3])));
             }
 
             builder.append("---------------------------------------------------------------------\n");
@@ -439,7 +445,7 @@ public class LinearModel implements OnlineRegression<double[]> {
         } else {
             builder.append(String.format("Intercept       %10.4f%n", b));
             for (int i = 0; i < p; i++) {
-                builder.append(String.format("%-15s %10.4f%n", names[i], w[i]));
+                builder.append(String.format("%-15s %10.4f%n", schema.fieldName(i), w[i]));
             }
         }
 

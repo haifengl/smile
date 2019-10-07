@@ -25,6 +25,7 @@ import smile.base.cart.*;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
+import smile.data.type.StructType;
 import smile.data.vector.DoubleVector;
 import smile.math.MathEx;
 import smile.sort.QuickSelect;
@@ -196,7 +197,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
         int ntrees = Integer.valueOf(prop.getProperty("smile.gbt.trees", "500"));
         Loss loss = Loss.valueOf(prop.getProperty("smile.gbt.loss", "LeastAbsoluteDeviation"));
         int maxNodes = Integer.valueOf(prop.getProperty("smile.gbt.max.nodes", "6"));
-        int nodeSize = Integer.valueOf(prop.getProperty("smile.random.forest.node.size", "5"));
+        int nodeSize = Integer.valueOf(prop.getProperty("smile.gbt.node.size", "5"));
         double shrinkage = Double.valueOf(prop.getProperty("smile.gbt.shrinkage", "0.005"));
         double subsample = Double.valueOf(prop.getProperty("smile.gbt.sample.rate", "0.7"));
         return fit(formula, data, loss, ntrees, maxNodes, nodeSize, shrinkage, subsample);
@@ -212,7 +213,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
      * @param ntrees the number of iterations (trees).
      * @param maxNodes the number of leaves in each tree.
      * @param nodeSize the number of instances in a node below which the tree will
-     * not split, setting nodeSize = 5 generally gives good results.
+     *                 not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
      */
@@ -312,6 +313,11 @@ public class GradientTreeBoost implements Regression<Tuple> {
     @Override
     public Optional<Formula> formula() {
         return Optional.of(formula);
+    }
+
+    @Override
+    public Optional<StructType> schema() {
+        return trees[0].schema();
     }
 
     /**

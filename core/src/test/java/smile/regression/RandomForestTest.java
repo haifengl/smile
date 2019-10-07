@@ -66,7 +66,7 @@ public class RandomForestTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", Longley.data.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
         assertEquals(39293.8193, importance[0], 1E-4);
@@ -88,7 +88,7 @@ public class RandomForestTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", data.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
         //double rmse = CrossValidation.test(10, data, x -> RandomForest.fit(formula, x));
