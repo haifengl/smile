@@ -59,7 +59,7 @@ public class OrdinalScale extends DiscreteMeasure {
      *
      * @param clazz an Enum class.
      */
-    public OrdinalScale(Class<Enum<?>> clazz) {
+    public OrdinalScale(Class<? extends Enum> clazz) {
         super(Arrays.stream(clazz.getEnumConstants())
                 .map(Object::toString)
                 .toArray(String[]::new)

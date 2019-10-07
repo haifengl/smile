@@ -57,7 +57,7 @@ public class NominalScale extends DiscreteMeasure {
      *
      * @param clazz an Enum class.
      */
-    public NominalScale(Class<Enum<?>> clazz) {
+    public NominalScale(Class<? extends Enum> clazz) {
         super(Arrays.stream(clazz.getEnumConstants())
                 .map(Object::toString)
                 .toArray(String[]::new)

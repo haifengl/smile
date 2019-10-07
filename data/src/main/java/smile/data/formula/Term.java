@@ -18,11 +18,13 @@
 package smile.data.formula;
 
 import smile.data.Tuple;
+import smile.data.measure.Measure;
 import smile.data.type.DataType;
 import smile.data.vector.*;
 import smile.data.DataFrame;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A term is recursively constructed from constant symbols,
@@ -39,6 +41,11 @@ public interface Term extends HyperTerm {
 
     /** Returns the data type of output values. */
     DataType type();
+
+    /** Returns the optional level of measurements of output values. */
+    default Optional<Measure> measure() {
+        return Optional.empty();
+    }
 
     /** Applies the term on a data object. */
     Object apply(Tuple o);
