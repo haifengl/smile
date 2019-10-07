@@ -24,6 +24,7 @@ import smile.gap.FitnessMeasure;
 import smile.gap.GeneticAlgorithm;
 import smile.regression.Regression;
 import smile.validation.ClassificationMeasure;
+import smile.validation.CrossValidation;
 import smile.validation.RegressionMeasure;
 import smile.validation.Validation;
 
@@ -256,7 +257,7 @@ public class GAFeatureSelection {
             }
 
             if (k != -1) {
-                return Validation.cv(k, trainer, xx, y);
+                return CrossValidation.classification(k, xx, y, trainer);
             } else {
                 Classifier<double[]> classifier = trainer.apply(xx, y);
                 
@@ -443,7 +444,7 @@ public class GAFeatureSelection {
             }
 
             if (k != -1) {
-                return -Validation.cv(k, trainer, xx, y);
+                return -CrossValidation.regression(k, xx, y, trainer);
             } else {
                 Regression<double[]> regression = trainer.apply(xx, y);
                 

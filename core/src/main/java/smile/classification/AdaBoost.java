@@ -62,7 +62,6 @@ import smile.validation.ClassificationMeasure;
 public class AdaBoost implements SoftClassifier<Tuple> {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AdaBoost.class);
-    private static final String INVALID_NUMBER_OF_TREES = "Invalid number of trees: ";
 
     /**
      * The number of classes.
@@ -98,9 +97,17 @@ public class AdaBoost implements SoftClassifier<Tuple> {
      * @param ntrees the number of trees.
      * @param maxNodes the maximum number of leaf nodes in the trees.
      */
-    public AdaBoost(Formula formula, DataFrame data, int ntrees, int maxNodes) {
-        if (ntrees <= 1) {
-            throw new IllegalArgumentException(INVALID_NUMBER_OF_TREES + ntrees);
+    public AdaBoost(Formula formula, DataFrame data, int ntrees, int maxNodes, int nodeSize) {
+        if (ntrees < 1) {
+            throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
+        }
+
+        if (maxNodes < 2) {
+            throw new IllegalArgumentException("Invalid maximum number of leaves: " + maxNodes);
+        }
+
+        if (nodeSize < 1) {
+            throw new IllegalArgumentException("Invalid minimum size of leaves: " + nodeSize);
         }
 
         DataFrame x = formula.frame(data);
@@ -135,7 +142,7 @@ public class AdaBoost implements SoftClassifier<Tuple> {
                 samples[s]++;
             }
 
-            trees[t] = new DecisionTree(x, y, k, SplitRule.GINI, 1, maxNodes, -1, samples, order);
+            trees[t] = new DecisionTree(x, y, k, SplitRule.GINI, maxNodes, nodeSize, -1, samples, order);
             
             for (int i = 0; i < n; i++) {
                 err[i] = trees[t].predict(x.get(i)) != y.getInt(i);

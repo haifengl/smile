@@ -18,6 +18,7 @@
 package smile.base.cart;
 
 import smile.data.DataFrame;
+import smile.data.formula.Formula;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
@@ -27,7 +28,6 @@ import smile.math.MathEx;
 import smile.sort.QuickSort;
 
 import java.util.*;
-import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 import java.util.AbstractMap.SimpleEntry;
 
@@ -40,6 +40,9 @@ public abstract class CART {
 
     /** The schema of response variable. */
     protected StructField yfield;
+
+    /** Design matrix formula */
+    protected Optional<Formula> formula = Optional.empty();
 
     /** The root of decision tree. */
     protected Node root;
@@ -114,7 +117,7 @@ public abstract class CART {
      * @param order the index of training values in ascending order. Note
      *              that only numeric attributes need be sorted.
      */
-    public CART(DataFrame x, BaseVector y, int nodeSize, int maxNodes, int mtry, int[] samples, int[][] order) {
+    public CART(DataFrame x, BaseVector y, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
         this.x = x;
         this.y = y;
         this.schema = x.schema();

@@ -164,12 +164,12 @@ public class RandomForest implements SoftClassifier<Tuple> {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }
 
-        if (nodeSize < 1) {
-            throw new IllegalArgumentException("Invalid minimum size of leaves: " + nodeSize);
-        }
-
         if (maxNodes < 2) {
             throw new IllegalArgumentException("Invalid maximum number of leaves: " + maxNodes);
+        }
+
+        if (nodeSize < 1) {
+            throw new IllegalArgumentException("Invalid minimum size of leaves: " + nodeSize);
         }
 
         if (subsample <= 0 || subsample > 1) {
@@ -224,7 +224,7 @@ public class RandomForest implements SoftClassifier<Tuple> {
                 });
             }
 
-            DecisionTree tree = new DecisionTree(x, y, k, rule, nodeSize, maxNodes, mtry, samples, order);
+            DecisionTree tree = new DecisionTree(x, y, k, rule, maxNodes, nodeSize, mtry, samples, order);
 
             // estimate OOB error
             int oob = 0;

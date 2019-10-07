@@ -103,74 +103,75 @@ class DataFrameImpl implements DataFrame {
                     String name = prop.getName();
                     Class<?> type = prop.getPropertyType();
                     Method read = prop.getReadMethod();
+                    StructField field = Arrays.stream(fields).filter(f -> f.name.equals(name)).findFirst().get();
 
                     if (type == int.class) {
                         int[] values = new int[size];
                         for (int i = 0; i < size; i++) values[i] = (int) read.invoke(data.get(i));
-                        IntVector vector = IntVector.of(name, values);
+                        IntVector vector = IntVector.of(field, values);
                         columns.add(vector);
                     } else if (type == double.class) {
                         double[] values = new double[size];
                         for (int i = 0; i < size; i++) values[i] = (double) read.invoke(data.get(i));
-                        DoubleVector vector = DoubleVector.of(name, values);
+                        DoubleVector vector = DoubleVector.of(field, values);
                         columns.add(vector);
                     } else if (type == boolean.class) {
                         boolean[] values = new boolean[size];
                         for (int i = 0; i < size; i++) values[i] = (boolean) read.invoke(data.get(i));
-                        BooleanVector vector = BooleanVector.of(name, values);
+                        BooleanVector vector = BooleanVector.of(field, values);
                         columns.add(vector);
                     } else if (type == short.class) {
                         short[] values = new short[size];
                         for (int i = 0; i < size; i++) values[i] = (short) read.invoke(data.get(i));
-                        ShortVector vector = ShortVector.of(name, values);
+                        ShortVector vector = ShortVector.of(field, values);
                         columns.add(vector);
                     } else if (type == long.class) {
                         long[] values = new long[size];
                         for (int i = 0; i < size; i++) values[i] = (long) read.invoke(data.get(i));
-                        LongVector vector = LongVector.of(name, values);
+                        LongVector vector = LongVector.of(field, values);
                         columns.add(vector);
                     } else if (type == float.class) {
                         float[] values = new float[size];
                         for (int i = 0; i < size; i++) values[i] = (float) read.invoke(data.get(i));
-                        FloatVector vector = FloatVector.of(name, values);
+                        FloatVector vector = FloatVector.of(field, values);
                         columns.add(vector);
                     } else if (type == byte.class) {
                         byte[] values = new byte[size];
                         for (int i = 0; i < size; i++) values[i] = (byte) read.invoke(data.get(i));
-                        ByteVector vector = ByteVector.of(name, values);
+                        ByteVector vector = ByteVector.of(field, values);
                         columns.add(vector);
                     } else if (type == char.class) {
                         char[] values = new char[size];
                         for (int i = 0; i < size; i++) values[i] = (char) read.invoke(data.get(i));
-                        CharVector vector = CharVector.of(name, values);
+                        CharVector vector = CharVector.of(field, values);
                         columns.add(vector);
                     } else if (type == String.class) {
                         String[] values = new String[size];
                         for (int i = 0; i < size; i++) values[i] = (String) read.invoke(data.get(i));
-                        StringVector vector = StringVector.of(name, values);
+                        StringVector vector = StringVector.of(field, values);
                         columns.add(vector);
                     } else if (type.isEnum()) {
                         Object[] levels = type.getEnumConstants();
                         if (levels.length < Byte.MAX_VALUE + 1) {
                             byte[] values = new byte[size];
                             for (int i = 0; i < size; i++) values[i] = (byte) ((Enum) read.invoke(data.get(i))).ordinal();
-                            ByteVector vector = ByteVector.of(name, values);
+                            ByteVector vector = ByteVector.of(field, values);
                             columns.add(vector);
                         } else if (levels.length < Short.MAX_VALUE + 1) {
                             short[] values = new short[size];
                             for (int i = 0; i < size; i++) values[i] = (short) ((Enum) read.invoke(data.get(i))).ordinal();
-                            ShortVector vector = ShortVector.of(name, values);
+                            ShortVector vector = ShortVector.of(field, values);
                             columns.add(vector);
                         } else {
                             int[] values = new int[size];
                             for (int i = 0; i < size; i++) values[i] = ((Enum) read.invoke(data.get(i))).ordinal();
-                            IntVector vector = IntVector.of(name, values);
+                            IntVector vector = IntVector.of(field, values);
                             columns.add(vector);
                         }
                     } else {
                         Object[] values = new Object[size];
                         for (int i = 0; i < size; i++) values[i] = read.invoke(data.get(i));
-                        Vector<?> vector = Vector.of(name, type, values);
+                        Vector<?> vector = Vector.of(field, values);
                         columns.add(vector);
                     }
                 }
@@ -242,7 +243,7 @@ class DataFrameImpl implements DataFrame {
                 case Integer: {
                     int[] values = new int[size];
                     for (int i = 0; i < size; i++) values[i] = data.get(i).getInt(j);
-                    IntVector vector = IntVector.of(field.name, values);
+                    IntVector vector = IntVector.of(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -250,7 +251,7 @@ class DataFrameImpl implements DataFrame {
                 case Long: {
                     long[] values = new long[size];
                     for (int i = 0; i < size; i++) values[i] = data.get(i).getLong(j);
-                    LongVector vector = LongVector.of(field.name, values);
+                    LongVector vector = LongVector.of(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -258,7 +259,7 @@ class DataFrameImpl implements DataFrame {
                 case Double: {
                     double[] values = new double[size];
                     for (int i = 0; i < size; i++) values[i] = data.get(i).getDouble(j);
-                    DoubleVector vector = DoubleVector.of(field.name, values);
+                    DoubleVector vector = DoubleVector.of(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -266,7 +267,7 @@ class DataFrameImpl implements DataFrame {
                 case Float: {
                     float[] values = new float[size];
                     for (int i = 0; i < size; i++) values[i] = data.get(i).getFloat(j);
-                    FloatVector vector = FloatVector.of(field.name, values);
+                    FloatVector vector = FloatVector.of(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -274,7 +275,7 @@ class DataFrameImpl implements DataFrame {
                 case Boolean: {
                     boolean[] values = new boolean[size];
                     for (int i = 0; i < size; i++) values[i] = data.get(i).getBoolean(j);
-                    BooleanVector vector = BooleanVector.of(field.name, values);
+                    BooleanVector vector = BooleanVector.of(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -282,7 +283,7 @@ class DataFrameImpl implements DataFrame {
                 case Byte: {
                     byte[] values = new byte[size];
                     for (int i = 0; i < size; i++) values[i] = data.get(i).getByte(j);
-                    ByteVector vector = ByteVector.of(field.name, values);
+                    ByteVector vector = ByteVector.of(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -290,7 +291,7 @@ class DataFrameImpl implements DataFrame {
                 case Short: {
                     short[] values = new short[size];
                     for (int i = 0; i < size; i++) values[i] = data.get(i).getShort(j);
-                    ShortVector vector = ShortVector.of(field.name, values);
+                    ShortVector vector = ShortVector.of(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -298,7 +299,7 @@ class DataFrameImpl implements DataFrame {
                 case Char: {
                     char[] values = new char[size];
                     for (int i = 0; i < size; i++) values[i] = data.get(i).getChar(j);
-                    CharVector vector = CharVector.of(field.name, values);
+                    CharVector vector = CharVector.of(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -306,7 +307,7 @@ class DataFrameImpl implements DataFrame {
                 case String: {
                     String[] values = new String[size];
                     for (int i = 0; i < size; i++) values[i] = data.get(i).getString(j);
-                    StringVector vector = StringVector.of(field.name, values);
+                    StringVector vector = StringVector.of(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -314,7 +315,7 @@ class DataFrameImpl implements DataFrame {
                 default: {
                     Object[] values = new Object[size];
                     for (int i = 0; i < size; i++) values[i] = data.get(i).get(j);
-                    Vector vector = Vector.of(field.name, field.type, values);
+                    Vector vector = Vector.of(field, values);
                     columns.add(vector);
                 }
             }

@@ -135,10 +135,10 @@ public class RandomForest implements Regression<Tuple> {
     public static RandomForest fit(Formula formula, DataFrame data, Properties prop) {
         int ntrees = Integer.valueOf(prop.getProperty("smile.random.forest.trees", "500"));
         int mtry = Integer.valueOf(prop.getProperty("smile.random.forest.mtry", "-1"));
-        int nodeSize = Integer.valueOf(prop.getProperty("smile.random.forest.node.size", "5"));
         int maxNodes = Integer.valueOf(prop.getProperty("smile.random.forest.max.nodes", "100"));
+        int nodeSize = Integer.valueOf(prop.getProperty("smile.random.forest.node.size", "5"));
         double subsample = Double.valueOf(prop.getProperty("smile.random.forest.sample.rate", "1.0"));
-        return fit(formula, data, ntrees, mtry, nodeSize, maxNodes, subsample);
+        return fit(formula, data, ntrees, mtry, maxNodes, nodeSize, subsample);
     }
 
     /**
@@ -156,8 +156,8 @@ public class RandomForest implements Regression<Tuple> {
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
      *                  sampling without replacement.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int nodeSize, int maxNodes, double subsample) {
-        return fit(formula, data, ntrees, mtry, nodeSize, maxNodes, subsample, Optional.empty());
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxNodes, int nodeSize, double subsample) {
+        return fit(formula, data, ntrees, mtry, maxNodes, nodeSize, subsample, Optional.empty());
     }
 
     /**
@@ -176,8 +176,8 @@ public class RandomForest implements Regression<Tuple> {
      *                  sampling without replacement.
      * @param seedGenerator RNG seed generator.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int nodeSize, int maxNodes, double subsample, LongSupplier seedGenerator) {
-        return fit(formula, data, ntrees, mtry, nodeSize, maxNodes, subsample, Optional.of(LongStream.generate(seedGenerator)));
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxNodes, int nodeSize, double subsample, LongSupplier seedGenerator) {
+        return fit(formula, data, ntrees, mtry, maxNodes, nodeSize, subsample, Optional.of(LongStream.generate(seedGenerator)));
     }
 
     /**
@@ -196,7 +196,7 @@ public class RandomForest implements Regression<Tuple> {
      *                  sampling without replacement.
      * @param seeds optional RNG seeds for each regression tree.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int nodeSize, int maxNodes, double subsample, Optional<LongStream> seeds) {
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxNodes, int nodeSize, double subsample, Optional<LongStream> seeds) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }
@@ -220,7 +220,7 @@ public class RandomForest implements Regression<Tuple> {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
         }
 
-        final int mtry2 = mtry > 0 ? mtry : Math.max(x.ncols()/3, 1);
+        final int mtryFinal = mtry > 0 ? mtry : Math.max(x.ncols()/3, 1);
 
         final int n = x.nrows();
         double[] prediction = new double[n];
@@ -251,7 +251,7 @@ public class RandomForest implements Regression<Tuple> {
                 Arrays.stream(perm).limit((int) Math.round(n * subsample)).forEach(i -> samples[i]++);
             }
 
-            RegressionTree tree = new RegressionTree(formula, x, y, nodeSize, maxNodes, mtry2, samples, order, output);
+            RegressionTree tree = new RegressionTree(x, y, maxNodes, nodeSize, mtryFinal, samples, order, output);
 
             IntStream.range(0, n).filter(i -> samples[i] == 0).forEach(i -> {
                 double pred = tree.predict(x.get(i));

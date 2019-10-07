@@ -61,7 +61,7 @@ public class RandomForestTest {
 
         // to get repeatable results.
         MathEx.setSeed(19650218L);
-        RandomForest model = RandomForest.fit(Longley.formula, Longley.data, 100, 3, 3, 10, 1.0, () -> MathEx.probablePrime(19650218L, 256));
+        RandomForest model = RandomForest.fit(Longley.formula, Longley.data, 100, 3, 10, 3, 1.0, () -> MathEx.probablePrime(19650218L, 256));
 
         double[] importance = model.importance();
         System.out.println("----- importance -----");
@@ -76,7 +76,7 @@ public class RandomForestTest {
         assertEquals(31075.0867, importance[4], 1E-4);
         assertEquals(31644.9317, importance[5], 1E-4);
 
-        double rmse = LOOCV.test(Longley.data, (x) -> RandomForest.fit(Longley.formula, Longley.data));
+        double rmse = LOOCV.regression(Longley.data, x -> RandomForest.fit(Longley.formula, x));
         System.out.println("LOOCV RMSE = " + rmse);
     }
 

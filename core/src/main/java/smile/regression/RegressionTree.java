@@ -79,10 +79,6 @@ public class RegressionTree extends CART implements Regression<Tuple> {
     private static final long serialVersionUID = 2L;
 
     /**
-     * Design matrix formula
-     */
-    private Optional<Formula> formula;
-    /**
      * The trait to calculate the leaf node output.
      */
     private transient RegressionNodeOutput output;
@@ -225,10 +221,9 @@ public class RegressionTree extends CART implements Regression<Tuple> {
      * @param order the index of training values in ascending order. Note
      *              that only numeric attributes need be sorted.
      */
-    public RegressionTree(Formula formula, DataFrame x, BaseVector y, int nodeSize, int maxNodes, int mtry, int[] samples, int[][] order, RegressionNodeOutput output) {
-        super(x, y, nodeSize, maxNodes, mtry, samples, order);
+    public RegressionTree(DataFrame x, BaseVector y, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order, RegressionNodeOutput output) {
+        super(x, y, maxNodes, nodeSize, mtry, samples, order);
 
-        this.formula = Optional.of(formula);
         this.output = output;
 
         LeafNode node = newNode(IntStream.range(0, x.size()).filter(i -> this.samples[i] > 0).toArray());
@@ -248,6 +243,9 @@ public class RegressionTree extends CART implements Regression<Tuple> {
                 if (split(queue.poll(), queue)) leaves++;
             }
         }
+
+        // merge the sister leaves that produce the same output.
+        this.root = this.root.toLeaf();
 
         clear();
     }
@@ -275,7 +273,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
     public static RegressionTree fit(Formula formula, DataFrame data, Properties prop) {
         int nodeSize = Integer.parseInt(prop.getProperty("smile.cart.node.size", "5"));
         int maxNodes = Integer.parseInt(prop.getProperty("smile.cart.max.nodes", "6"));
-        return fit(formula, data, nodeSize, maxNodes);
+        return fit(formula, data, maxNodes, nodeSize);
     }
 
     /**
@@ -285,29 +283,13 @@ public class RegressionTree extends CART implements Regression<Tuple> {
      * @param nodeSize the minimum size of leaf nodes.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      */
-    public static RegressionTree fit(Formula formula, DataFrame data, int nodeSize, int maxNodes) {
+    public static RegressionTree fit(Formula formula, DataFrame data, int maxNodes, int nodeSize) {
         DataFrame x = formula.frame(data).drop(formula.response().get());
         BaseVector y = formula.response(data);
         RegressionNodeOutput output = new LeastSquaresNodeOutput(y.toDoubleArray());
-        RegressionTree tree = new RegressionTree(formula, x, y, nodeSize, maxNodes, -1, null, null, output);
+        RegressionTree tree = new RegressionTree(x, y, maxNodes, nodeSize, -1, null, null, output);
+        tree.formula = Optional.of(formula);
         return tree;
-    }
-
-    /**
-     * Returns the variable importance. Every time a split of a node is made
-     * on variable the impurity criterion for the two descendent nodes is less
-     * than the parent node. Adding up the decreases for each individual
-     * variable over the tree gives a simple measure of variable importance.
-     *
-     * @return the variable importance
-     */
-    public double[] importance() {
-        return importance;
-    }
-
-    @Override
-    public Optional<Formula> formula() {
-        return formula;
     }
 
     @Override
@@ -316,11 +298,8 @@ public class RegressionTree extends CART implements Regression<Tuple> {
         return leaf.output();
     }
 
-    /**
-     * Returs the root node.
-     * @return root node.
-     */
-    public Node root() {
-        return root;
+    @Override
+    public Optional<Formula> formula() {
+        return formula;
     }
 }

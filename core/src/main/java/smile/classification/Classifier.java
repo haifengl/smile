@@ -19,7 +19,11 @@ package smile.classification;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Optional;
+
 import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.formula.Formula;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.vector.BaseVector;
@@ -61,6 +65,30 @@ public interface Classifier<T> extends Serializable {
      */
     default int[] predict(T[] x) {
         return Arrays.stream(x).mapToInt(xi -> predict(xi)).toArray();
+    }
+
+    /**
+     * Predicts the dependent variable of a tuple instance.
+     * @param x a tuple instance.
+     * @return the predicted value of dependent variable.
+     */
+    default int predict(Tuple x) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Predicts the dependent variables of a data frame.
+     *
+     * @param data the data frame.
+     * @return the predicted values.
+     */
+    default int[] predict(DataFrame data) {
+        return data.stream().mapToInt(x -> predict(x)).toArray();
+    }
+
+    /** Returns the formula associated with the model. */
+    default Optional<Formula> formula() {
+        return Optional.empty();
     }
 
     /** Returns the unique classes of sample labels. */
