@@ -91,10 +91,10 @@ public class Bootstrap {
 
     /**
      * Runs cross validation tests.
-     * @return the number of errors.
+     * @return the error rates of each round.
      */
-    public <T> int classification(T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
-        int error = 0;
+    public <T> double[] classification(T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
+        double[] error = new double[k];
 
         for (int i = 0; i < k; i++) {
             T[] trainx = MathEx.slice(x, train[i]);
@@ -103,9 +103,8 @@ public class Bootstrap {
             int[] testy = MathEx.slice(y, test[i]);
 
             Classifier<T> model = trainer.apply(trainx, trainy);
-            for (int j = 0; j < testx.length; j++) {
-                if (testy[j] != model.predict(testx[j])) error++;
-            }
+            int[] prediction = model.predict(testx);
+            error[i] = 1 - Accuracy.apply(testy, prediction);
         }
 
         return error;
@@ -113,20 +112,19 @@ public class Bootstrap {
 
     /**
      * Runs cross validation tests.
-     * @return root mean squared errors.
+     * @return the error rates of each round.
      */
-    public <T> int classification(DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
-        int error = 0;
+    public <T> double[] classification(DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
+        double[] error = new double[k];
 
         for (int i = 0; i < k; i++) {
             Classifier<T> model = trainer.apply(data.of(train[i]));
+
             DataFrame oob = data.of(test[i]);
             int[] prediction = model.predict(oob);
-            int[] y = model.formula().get().response(oob).toIntArray();
+            int[] testy = model.formula().get().response(oob).toIntArray();
 
-            for (int j = 0; j < y.length; j++) {
-                if (y[j] != prediction[j]) error++;
-            }
+            error[i] = 1 - Accuracy.apply(testy, prediction);
         }
 
         return error;
@@ -134,10 +132,10 @@ public class Bootstrap {
 
     /**
      * Runs bootstrap tests.
-     * @return root mean squared error.
+     * @return the root mean squared error of each round.
      */
-    public <T> double regression(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
-        double rmse = 0.0;
+    public <T> double[] regression(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+        double[] rmse = new double[k];
 
         for (int i = 0; i < k; i++) {
             T[] trainx = MathEx.slice(x, train[i]);
@@ -146,69 +144,64 @@ public class Bootstrap {
             double[] testy = MathEx.slice(y, test[i]);
 
             Regression<T> model = trainer.apply(trainx, trainy);
-            for (int j = 0; j < testx.length; j++) {
-                double r = testy[j] - model.predict(testx[j]);
-                rmse += r * r;
-            }
+            double[] prediction = model.predict(testx);
+            rmse[i] = RMSE.apply(testy, prediction);
         }
 
-        return Math.sqrt(rmse / x.length);
+        return rmse;
     }
 
     /**
      * Runs bootstrap tests.
-     * @return root mean squared error.
+     * @return the root mean squared error of each round.
      */
-    public <T> double regression(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
-        double rmse = 0.0;
+    public <T> double[] regression(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+        double[] rmse = new double[k];
 
         for (int i = 0; i < k; i++) {
             Regression<T> model = trainer.apply(data.of(train[i]));
             DataFrame oob = data.of(test[i]);
             double[] prediction = model.predict(oob);
-            double[] y = model.formula().get().response(oob).toDoubleArray();
+            double[] testy = model.formula().get().response(oob).toDoubleArray();
 
-            for (int j = 0; j < y.length; j++) {
-                double r = y[j] - prediction[j];
-                rmse += r * r;
-            }
+            rmse[i] = RMSE.apply(testy, prediction);
         }
 
-        return Math.sqrt(rmse / data.size());
+        return rmse;
     }
 
     /**
      * Runs cross validation tests.
-     * @return the number of errors.
+     * @return the error rates of each round.
      */
-    public static <T> int classification(int k, T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
+    public static <T> double[] classification(int k, T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
         Bootstrap cv = new Bootstrap(x.length, k);
         return cv.classification(x, y, trainer);
     }
 
     /**
      * Runs cross validation tests.
-     * @return the number of errors.
+     * @return the error rates of each round.
      */
-    public static <T> int classification(int k, DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
+    public static <T> double[] classification(int k, DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
         Bootstrap cv = new Bootstrap(data.size(), k);
         return cv.classification(data, trainer);
     }
 
     /**
      * Runs bootstrap tests.
-     * @return root mean squared error.
+     * @return the root mean squared error of each round.
      */
-    public static <T> double regression(int k, T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+    public static <T> double[] regression(int k, T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
         Bootstrap cv = new Bootstrap(x.length, k);
         return cv.regression(x, y, trainer);
     }
 
     /**
      * Runs bootstrap tests.
-     * @return root mean squared error.
+     * @return the root mean squared error of each round.
      */
-    public static <T> double regression(int k, DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+    public static <T> double[] regression(int k, DataFrame data, Function<DataFrame, Regression<T>> trainer) {
         Bootstrap cv = new Bootstrap(data.size(), k);
         return cv.regression(data, trainer);
     }

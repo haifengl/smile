@@ -74,79 +74,75 @@ public class LOOCV {
 
     /**
      * Runs leave-one-out cross validation tests.
-     * @return the number of errors.
+     * @return the predictions.
      */
-    public static <T> int classification(T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
+    public static <T> int[] classification(T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
         int n = x.length;
         LOOCV cv = new LOOCV(n);
-        int error = 0;
+        int[] prediction = new int[n];
 
         for (int i = 0; i < n; i++) {
             T[] trainx = MathEx.slice(x, cv.train[i]);
             int[] trainy = MathEx.slice(y, cv.train[i]);
 
             Classifier<T> model = trainer.apply(trainx, trainy);
-            if (y[cv.test[i]] != model.predict(x[cv.test[i]])) error++;
+            prediction[cv.test[i]] = model.predict(x[cv.test[i]]);
         }
 
-        return error;
+        return prediction;
     }
 
     /**
      * Runs leave-one-out cross validation tests.
-     * @return the number of errors.
+     * @return the predictions.
      */
-    public static <T> int classification(DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
+    public static <T> int[] classification(DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
         int n = data.size();
         LOOCV cv = new LOOCV(n);
-        int error = 0;
+        int[] prediction = new int[n];
 
         for (int i = 0; i < n; i++) {
             Classifier<T> model = trainer.apply(data.of(cv.train[i]));
-            Tuple xi = data.get(cv.test[i]);
-            if (model.formula().get().label(xi) != model.predict(xi)) error++;
+            prediction[cv.test[i]] = model.predict(data.get(cv.test[i]));
         }
 
-        return error;
+        return prediction;
     }
 
     /**
      * Runs leave-one-out cross validation tests.
-     * @return root mean squared error.
+     * @return the predictions.
      */
-    public static <T> double regression(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+    public static <T> double[] regression(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
         int n = x.length;
         LOOCV cv = new LOOCV(n);
-        double rss = 0.0;
+        double[] prediction = new double[n];
 
         for (int i = 0; i < n; i++) {
             T[] trainx = MathEx.slice(x, cv.train[i]);
             double[] trainy = MathEx.slice(y, cv.train[i]);
 
             Regression<T> model = trainer.apply(trainx, trainy);
-            double r = y[cv.test[i]] - model.predict(x[cv.test[i]]);
-            rss += r * r;
+            prediction[cv.test[i]] = model.predict(x[cv.test[i]]);
         }
 
-        return Math.sqrt(rss / n);
+        return prediction;
     }
 
     /**
      * Runs leave-one-out cross validation tests.
-     * @return root mean squared error.
+     * @return the predictions.
      */
-    public static <T> double regression(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+    public static <T> double[] regression(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
         int n = data.size();
         LOOCV cv = new LOOCV(n);
-        double rss = 0.0;
+        double[] prediction = new double[n];
 
         for (int i = 0; i < n; i++) {
             Regression<T> model = trainer.apply(data.of(cv.train[i]));
-            Tuple xi = data.get(cv.test[i]);
-            double r = model.formula().get().response(xi) - model.predict(xi);
-            rss += r * r;
+            prediction[cv.test[i]] = model.predict(data.get(cv.test[i]));
         }
 
-        return Math.sqrt(rss / n);
+        return prediction;
     }
 }

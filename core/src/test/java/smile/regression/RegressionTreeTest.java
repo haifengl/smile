@@ -28,6 +28,7 @@ import smile.math.MathEx;
 import smile.sort.QuickSort;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
+import smile.validation.RMSE;
 import smile.validation.Validation;
 
 import static org.junit.Assert.assertEquals;
@@ -74,7 +75,8 @@ public class RegressionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
-        double rmse = LOOCV.regression(Longley.data, x -> RegressionTree.fit(Longley.formula, x, 100, 2));
+        double[] prediction = LOOCV.regression(Longley.data, x -> RegressionTree.fit(Longley.formula, x, 100, 2));
+        double rmse = RMSE.apply(Longley.y, prediction);
 
         System.out.println("LOOCV MSE = " + rmse);
         assertEquals(3.0848729264302333, rmse, 1E-4);
@@ -96,7 +98,8 @@ public class RegressionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
-        double rmse = CrossValidation.regression(10, data, x -> RegressionTree.fit(formula, x));
+        double[] prediction = CrossValidation.regression(10, data, x -> RegressionTree.fit(formula, x));
+        double rmse = RMSE.apply(formula.response(data).toDoubleArray(), prediction);
         System.out.format("10-CV RMSE = %.4f%n", rmse);
         assertEquals(expected, rmse, 1E-4);
     }

@@ -115,124 +115,113 @@ public class CrossValidation {
 
     /**
      * Runs cross validation tests.
-     * @return the number of errors.
+     * @return the predictions.
      */
-    public <T> int classification(T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
-        int error = 0;
+    public <T> int[] classification(T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
+        int[] prediction = new int[x.length];
 
         for (int i = 0; i < k; i++) {
             T[] trainx = MathEx.slice(x, train[i]);
             int[] trainy = MathEx.slice(y, train[i]);
-            T[] testx = MathEx.slice(x, test[i]);
-            int[] testy = MathEx.slice(y, test[i]);
 
             Classifier<T> model = trainer.apply(trainx, trainy);
-            for (int j = 0; j < testx.length; j++) {
-                if (testy[j] != model.predict(testx[j])) error++;
+
+            for (int j : test[i]) {
+                prediction[j] = model.predict(x[j]);
             }
         }
 
-        return error;
+        return prediction;
     }
 
     /**
      * Runs cross validation tests.
-     * @return root mean squared errors.
+     * @return the predictions.
      */
-    public <T> int classification(DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
-        int error = 0;
+    public <T> int[] classification(DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
+        int[] prediction = new int[data.size()];
 
         for (int i = 0; i < k; i++) {
             Classifier<T> model = trainer.apply(data.of(train[i]));
-            DataFrame oob = data.of(test[i]);
-            int[] prediction = model.predict(oob);
-            int[] y = model.formula().get().response(oob).toIntArray();
-
-            for (int j = 0; j < y.length; j++) {
-                if (y[j] != prediction[j]) error++;
+            for (int j : test[i]) {
+                prediction[j] = model.predict(data.get(j));
             }
         }
 
-        return error;
+        return prediction;
     }
 
     /**
      * Runs cross validation tests.
-     * @return root mean squared error.
+     * @return the predictions.
      */
-    public <T> double regression(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
-        double rmse = 0.0;
+    public <T> double[] regression(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+        double[] prediction = new double[x.length];
 
         for (int i = 0; i < k; i++) {
             T[] trainx = MathEx.slice(x, train[i]);
             double[] trainy = MathEx.slice(y, train[i]);
-            T[] testx = MathEx.slice(x, test[i]);
-            double[] testy = MathEx.slice(y, test[i]);
 
             Regression<T> model = trainer.apply(trainx, trainy);
-            for (int j = 0; j < testx.length; j++) {
-                double r = testy[j] - model.predict(testx[j]);
-                rmse += r * r;
+
+            for (int j : test[i]) {
+                prediction[j] = model.predict(x[j]);
             }
         }
 
-        return Math.sqrt(rmse / x.length);
+        return prediction;
     }
 
     /**
      * Runs cross validation tests.
-     * @return root mean squared error.
+     * @return the predictions.
      */
-    public <T> double regression(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
-        double rmse = 0.0;
+    public <T> double[] regression(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+        double[] prediction = new double[data.size()];
 
         for (int i = 0; i < k; i++) {
             Regression<T> model = trainer.apply(data.of(train[i]));
-            DataFrame oob = data.of(test[i]);
-            double[] prediction = model.predict(oob);
-            double[] y = model.formula().get().response(oob).toDoubleArray();
 
-            for (int j = 0; j < y.length; j++) {
-                double r = y[j] - prediction[j];
-                rmse += r * r;
+            for (int j : test[i]) {
+                prediction[j] = model.predict(data.get(j));
             }
         }
 
-        return Math.sqrt(rmse / data.size());
+        return prediction;
     }
 
     /**
      * Runs cross validation tests.
-     * @return the number of errors.
+     * @return the predictions.
      */
-    public static <T> int classification(int k, T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
+    public static <T> int[] classification(int k, T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
         CrossValidation cv = new CrossValidation(x.length, k);
         return cv.classification(x, y, trainer);
     }
 
     /**
      * Runs cross validation tests.
-     * @return the number of errors.
+     * @return the predictions.
      */
-    public static <T> int classification(int k, DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
+    public static <T> int[] classification(int k, DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
         CrossValidation cv = new CrossValidation(data.size(), k);
         return cv.classification(data, trainer);
     }
 
     /**
      * Runs cross validation tests.
-     * @return root mean squared error.
+     * @return the predictions.
      */
-    public static <T> double regression(int k, T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+    public static <T> double[] regression(int k, T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
         CrossValidation cv = new CrossValidation(x.length, k);
         return cv.regression(x, y, trainer);
     }
 
     /**
      * Runs cross validation tests.
-     * @return root mean squared error.
+     * @return the predictions.
      */
-    public static <T> double regression(int k, DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+    public static <T> double[] regression(int k, DataFrame data, Function<DataFrame, Regression<T>> trainer) {
         CrossValidation cv = new CrossValidation(data.size(), k);
         return cv.regression(data, trainer);
     }

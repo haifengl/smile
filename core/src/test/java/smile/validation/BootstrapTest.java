@@ -23,7 +23,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+
+import smile.classification.DecisionTree;
+import smile.data.CPU;
+import smile.data.Iris;
 import smile.math.MathEx;
+import smile.regression.RegressionTree;
 
 /**
  *
@@ -115,4 +120,23 @@ public class BootstrapTest {
         }
     }
 
+    @Test
+    public void testIris() {
+        System.out.println("Iris");
+
+        double[] error = Bootstrap.classification(100, Iris.data, x -> DecisionTree.fit(Iris.formula, x));
+
+        System.out.println("100-fold bootstrap error rate average = " + MathEx.mean(error));
+        System.out.println("100-fold bootstrap error rate std.dev = " + MathEx.sd(error));
+    }
+
+    @Test
+    public void testCPU() {
+        System.out.println("CPU");
+
+        double[] rmse = Bootstrap.regression(100, CPU.data, x -> RegressionTree.fit(CPU.formula, x));
+
+        System.out.println("100-fold bootstrap RMSE average = " + MathEx.mean(rmse));
+        System.out.println("100-fold bootstrap RMSE std.dev = " + MathEx.sd(rmse));
+    }
 }

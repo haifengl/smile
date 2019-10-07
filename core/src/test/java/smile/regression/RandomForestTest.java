@@ -24,6 +24,7 @@ import smile.math.MathEx;
 import smile.sort.QuickSort;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
+import smile.validation.RMSE;
 import smile.validation.Validation;
 
 import java.util.stream.LongStream;
@@ -76,7 +77,9 @@ public class RandomForestTest {
         assertEquals(31075.0867, importance[4], 1E-4);
         assertEquals(31644.9317, importance[5], 1E-4);
 
-        double rmse = LOOCV.regression(Longley.data, x -> RandomForest.fit(Longley.formula, x));
+        double[] prediction = LOOCV.regression(Longley.data, x -> RandomForest.fit(Longley.formula, x));
+        double rmse = RMSE.apply(Longley.y, prediction);
+
         System.out.println("LOOCV RMSE = " + rmse);
     }
 
@@ -115,8 +118,8 @@ public class RandomForestTest {
         RandomForest forest1 = RandomForest.fit(Abalone.formula, Abalone.train);
         RandomForest forest2 = RandomForest.fit(Abalone.formula, Abalone.train);
         RandomForest forest = forest1.merge(forest2);
-        System.out.format("Forest 1 RMSE = %.4f%n", Validation.test(forest1, Abalone.test));
-        System.out.format("Forest 2 RMSE = %.4f%n", Validation.test(forest2, Abalone.test));
-        System.out.format("Merged   RMSE = %.4f%n", Validation.test(forest, Abalone.test));
+        System.out.format("Forest 1 RMSE = %.4f%n", RMSE.apply(Abalone.testy, Validation.test(forest1, Abalone.test)));
+        System.out.format("Forest 2 RMSE = %.4f%n", RMSE.apply(Abalone.testy, Validation.test(forest2, Abalone.test)));
+        System.out.format("Merged   RMSE = %.4f%n", RMSE.apply(Abalone.testy, Validation.test(forest, Abalone.test)));
     }
 }

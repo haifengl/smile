@@ -27,6 +27,7 @@ import smile.data.*;
 import smile.validation.CrossValidation;
 import smile.math.MathEx;
 import smile.base.neuralnetwork.ActivationFunction;
+import smile.validation.RMSE;
 
 import static org.junit.Assert.assertEquals;
 
@@ -73,13 +74,14 @@ public class NeuralNetworkTest {
             }
         }
             
-        double rmse = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
+        double[] prediction = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             NeuralNetwork neuralNetwork = new NeuralNetwork(
                     new Layer(activation, 10, p),
                     new Layer(ActivationFunction.LINEAR, 1, 10));
             neuralNetwork.update(xi, yi);
             return neuralNetwork;
         });
+        double rmse = RMSE.apply(datay, prediction);
 
         System.out.format("10-CV RMSE = %.4f%n", rmse);
         assertEquals(expected, rmse, 1E-4);

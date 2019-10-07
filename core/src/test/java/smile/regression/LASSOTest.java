@@ -28,8 +28,6 @@ import smile.data.Longley;
 import smile.data.formula.Formula;
 import smile.data.vector.DoubleVector;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RMSE;
@@ -74,11 +72,12 @@ public class LASSOTest {
         double[] y = {6, 5.2, 6.2, 5, 6};
 
         DataFrame df = DataFrame.of(A).merge(DoubleVector.of("y", y));
-        
-        LinearModel model = LASSO.fit(Formula.lhs("y"), df, 0.1, 0.001, 500);
+        Formula formula = Formula.lhs("y");
+        LinearModel model = LASSO.fit(formula, df, 0.1, 0.001, 500);
         System.out.println(model);
 
-        double rmse = Validation.test(model, df);
+        double[] prediction = Validation.test(model, df);
+        double rmse = RMSE.apply(y, prediction);
         System.out.println("RMSE = " + rmse);
         
         assertEquals(5.0259443688265355, model.intercept(), 1E-7);
@@ -95,7 +94,8 @@ public class LASSOTest {
         LinearModel model = LASSO.fit(Longley.formula, Longley.data, 0.1);
         System.out.println(model);
 
-        double rmse = LOOCV.regression(Longley.data, (x) -> LASSO.fit(Longley.formula, x, 0.1));
+        double[] prediction = LOOCV.regression(Longley.data, (x) -> LASSO.fit(Longley.formula, x, 0.1));
+        double rmse = RMSE.apply(Longley.y, prediction);
         System.out.println("LOOCV RMSE = " + rmse);
         assertEquals(1.4146564289679233, rmse, 1E-4);
     }
@@ -110,7 +110,8 @@ public class LASSOTest {
         LinearModel model = LASSO.fit(CPU.formula, CPU.data, 0.1);
         System.out.println(model);
 
-        double rmse = CrossValidation.regression(10, CPU.data, (x) -> LASSO.fit(CPU.formula, x, 0.1));
+        double[] prediction = CrossValidation.regression(10, CPU.data, (x) -> LASSO.fit(CPU.formula, x, 0.1));
+        double rmse = RMSE.apply(CPU.y, prediction);
         System.out.println("10-CV RMSE = " + rmse);
         assertEquals(55.27298388642968, rmse, 1E-4);
     }

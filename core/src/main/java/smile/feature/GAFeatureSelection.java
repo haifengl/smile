@@ -23,10 +23,7 @@ import smile.gap.BitString;
 import smile.gap.FitnessMeasure;
 import smile.gap.GeneticAlgorithm;
 import smile.regression.Regression;
-import smile.validation.ClassificationMeasure;
-import smile.validation.CrossValidation;
-import smile.validation.RegressionMeasure;
-import smile.validation.Validation;
+import smile.validation.*;
 
 /**
  * Genetic algorithm based feature selection. This method finds many (random)
@@ -257,7 +254,8 @@ public class GAFeatureSelection {
             }
 
             if (k != -1) {
-                return CrossValidation.classification(k, xx, y, trainer);
+                int[] prediction = CrossValidation.classification(k, xx, y, trainer);
+                return measure.measure(y, prediction);
             } else {
                 Classifier<double[]> classifier = trainer.apply(xx, y);
                 
@@ -444,7 +442,9 @@ public class GAFeatureSelection {
             }
 
             if (k != -1) {
-                return -CrossValidation.regression(k, xx, y, trainer);
+                double[] prediction = CrossValidation.regression(k, xx, y, trainer);
+                return -measure.measure(y, prediction);
+
             } else {
                 Regression<double[]> regression = trainer.apply(xx, y);
                 
