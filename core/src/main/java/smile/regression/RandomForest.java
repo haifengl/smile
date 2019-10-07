@@ -29,6 +29,7 @@ import smile.base.cart.RegressionNodeOutput;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
+import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.validation.RMSE;
@@ -317,6 +318,11 @@ public class RandomForest implements Regression<Tuple> {
     @Override
     public Optional<Formula> formula() {
         return Optional.of(formula);
+    }
+
+    @Override
+    public Optional<StructType> schema() {
+        return trees[0].schema();
     }
 
     /**

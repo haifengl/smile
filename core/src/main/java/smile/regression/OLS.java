@@ -151,8 +151,8 @@ public class OLS {
         }
 
         LinearModel model = new LinearModel();
-        model.names = formula.predictors();
         model.formula = formula;
+        model.schema = formula.predictorSchema();
         model.p = p;
         model.b = w1[p];
         model.w = new double[p];

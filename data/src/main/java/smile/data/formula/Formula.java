@@ -382,4 +382,24 @@ public class Formula implements Serializable {
     public String[] predictors() {
         return Arrays.stream(rhs).map(Object::toString).toArray(String[]::new);
     }
+
+    /**
+     * Returns the schema of output data frame.
+     */
+    public StructType schema() {
+        return schema;
+    }
+
+    /**
+     * Returns the schema of design matrix.
+     */
+    public StructType predictorSchema() {
+        Optional<String> y = response();
+        if (y.isPresent()) {
+            StructField[] fields = Arrays.stream(schema.fields()).filter(field -> !field.name.equals(y.get())).toArray(StructField[]::new);
+            return DataTypes.struct(fields);
+        } else {
+            return schema;
+        }
+    }
 }

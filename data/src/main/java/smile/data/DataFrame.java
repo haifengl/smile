@@ -871,10 +871,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     static DataFrame of(double[][] data, String... names) {
         int p = data[0].length;
         if (names == null || names.length == 0) {
-            names = new String[p];
-            for (int i = 0; i < p; i++) {
-                names[i] = "V" + (i+1);
-            }
+            names = IntStream.range(1, p+1).mapToObj(i -> "V"+i).toArray(String[]::new);
         }
 
         DoubleVector[] vectors = new DoubleVector[p];
@@ -896,10 +893,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     static DataFrame of(int[][] data, String... names) {
         int p = data[0].length;
         if (names == null || names.length == 0) {
-            names = new String[p];
-            for (int i = 0; i < p; i++) {
-                names[i] = "V" + (i+1);
-            }
+            names = IntStream.range(1, p+1).mapToObj(i -> "V"+i).toArray(String[]::new);
         }
 
         IntVector[] vectors = new IntVector[p];

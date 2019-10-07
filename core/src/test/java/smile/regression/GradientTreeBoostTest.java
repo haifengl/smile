@@ -68,7 +68,7 @@ public class GradientTreeBoostTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", Longley.data.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
         double rmse = LOOCV.regression(Longley.data, x -> GradientTreeBoost.fit(Longley.formula, x));
@@ -86,7 +86,7 @@ public class GradientTreeBoostTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", data.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
         double rmse = CrossValidation.regression(10, data, x -> GradientTreeBoost.fit(formula, x, loss, 100, 6, 5, 0.05, 0.7));

@@ -135,8 +135,8 @@ public class LASSO {
         DenseMatrix scaledX = X.scale(center, scale);
 
         LinearModel model = train(scaledX, y, lambda, tol, maxIter);
-        model.names = formula.predictors();
         model.formula = formula;
+        model.schema = formula.predictorSchema();
 
         for (int j = 0; j < model.p; j++) {
             model.w[j] /= scale[j];

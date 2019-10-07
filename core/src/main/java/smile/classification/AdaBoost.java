@@ -18,11 +18,15 @@
 package smile.classification;
 
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.Properties;
+
 import smile.base.cart.CART;
 import smile.base.cart.SplitRule;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
+import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.validation.Accuracy;
@@ -64,6 +68,10 @@ public class AdaBoost implements SoftClassifier<Tuple> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AdaBoost.class);
 
     /**
+     * Design matrix formula
+     */
+    private Formula formula;
+    /**
      * The number of classes.
      */
     private int k;
@@ -93,11 +101,56 @@ public class AdaBoost implements SoftClassifier<Tuple> {
      * Constructor.
      *
      * @param formula a symbolic description of the model to be fitted.
+     * @param k the number of classes.
+     * @param trees forest of decision trees.
+     * @param alpha the weight of each decision tree.
+     * @param error the weighted error of each decision tree during training.
+     * @param importance variable importance
+     */
+    public AdaBoost(Formula formula, int k, DecisionTree[] trees, double[] alpha, double[] error, double[] importance) {
+        this.formula = formula;
+        this.k = k;
+        this.trees = trees;
+        this.alpha = alpha;
+        this.error = error;
+        this.importance = importance;
+    }
+
+    /**
+     * Learns a gradient tree boosting for regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static AdaBoost fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Properties());
+    }
+
+    /**
+     * Learns a gradient tree boosting for regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static AdaBoost fit(Formula formula, DataFrame data, Properties prop) {
+        int ntrees = Integer.valueOf(prop.getProperty("smile.adaboost.trees", "500"));
+        int maxNodes = Integer.valueOf(prop.getProperty("smile.adaboost.max.nodes", "6"));
+        int nodeSize = Integer.valueOf(prop.getProperty("smile.adaboost.node.size", "1"));
+        return fit(formula, data, ntrees, maxNodes, nodeSize);
+    }
+
+
+    /**
+     * Constructor.
+     *
+     * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param ntrees the number of trees.
      * @param maxNodes the maximum number of leaf nodes in the trees.
+     * @param nodeSize the number of instances in a node below which the tree will
+     *                 not split, setting nodeSize = 5 generally gives good results.
      */
-    public AdaBoost(Formula formula, DataFrame data, int ntrees, int maxNodes, int nodeSize) {
+    public static AdaBoost fit(Formula formula, DataFrame data, int ntrees, int maxNodes, int nodeSize) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }
@@ -110,9 +163,9 @@ public class AdaBoost implements SoftClassifier<Tuple> {
             throw new IllegalArgumentException("Invalid minimum size of leaves: " + nodeSize);
         }
 
-        DataFrame x = formula.frame(data);
+        DataFrame x = formula.frame(data).drop(formula.response().get());
         BaseVector y = formula.response(data);
-        k = Classifier.classes(y).length;
+        int k = Classifier.classes(y).length;
         int[][] order = CART.order(x);
         
         int n = data.size();
@@ -126,10 +179,10 @@ public class AdaBoost implements SoftClassifier<Tuple> {
         double guess = 1.0 / k; // accuracy of random guess.
         double b = Math.log(k - 1); // the bias to tree weight in case of multi-class.
         int failures = 0; // the number of weak classifiers less accurate than guess.
-        
-        trees = new DecisionTree[ntrees];
-        alpha = new double[ntrees];
-        error = new double[ntrees];
+
+        DecisionTree[] trees = new DecisionTree[ntrees];
+        double[] alpha = new double[ntrees];
+        double[] error = new double[ntrees];
         for (int t = 0; t < ntrees; t++) {
             double W = MathEx.sum(w);
             for (int i = 0; i < n; i++) {
@@ -178,13 +231,25 @@ public class AdaBoost implements SoftClassifier<Tuple> {
             }
         }
         
-        importance = new double[x.ncols()];
+        double[] importance = new double[x.ncols()];
         for (DecisionTree tree : trees) {
             double[] imp = tree.importance();
             for (int i = 0; i < imp.length; i++) {
                 importance[i] += imp[i];
             }
         }
+
+        return new AdaBoost(formula, k, trees, alpha, error, importance);
+    }
+
+    @Override
+    public Optional<Formula> formula() {
+        return Optional.of(formula);
+    }
+
+    @Override
+    public Optional<StructType> schema() {
+        return trees[0].schema();
     }
 
     /**
@@ -353,7 +418,7 @@ public class AdaBoost implements SoftClassifier<Tuple> {
     /**
      * Returns the decision trees.
      */
-    public DecisionTree[] getTrees() {
+    public DecisionTree[] trees() {
         return trees;
     }
 }

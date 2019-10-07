@@ -159,7 +159,7 @@ public class RandomForest implements SoftClassifier<Tuple> {
      *                    (assuming label 0 is of negative, label 1 is of
      *                    positive).
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int nodeSize, int maxNodes, double subsample, int[] classWeight) {
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxNodes, int nodeSize, double subsample, int[] classWeight) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }

@@ -23,6 +23,7 @@ import java.util.Optional;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
+import smile.data.type.StructType;
 
 /**
  * Regression analysis includes any techniques for modeling and analyzing
@@ -73,6 +74,11 @@ public interface Regression<T> extends Serializable {
 
     /** Returns the formula associated with the model. */
     default Optional<Formula> formula() {
+        return Optional.empty();
+    }
+
+    /** Returns the design matrix schema. */
+    default Optional<StructType> schema() {
         return Optional.empty();
     }
 }

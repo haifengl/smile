@@ -163,6 +163,8 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
      * @param data the data frame of the explanatory and response variables.
      * @param ntrees the number of iterations (trees).
      * @param maxNodes the number of leaves in each tree.
+     * @param nodeSize the number of instances in a node below which the tree will
+     *                 not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
      */
