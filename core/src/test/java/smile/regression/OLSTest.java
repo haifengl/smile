@@ -29,6 +29,7 @@ import smile.data.Longley;
 import smile.data.Prostate;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
+import smile.validation.RMSE;
 import smile.validation.Validation;
 
 /**
@@ -114,7 +115,8 @@ public class OLSTest {
         LinearModel model = OLS.fit(CPU.formula, CPU.data);
         System.out.println(model);
 
-        double rmse = CrossValidation.regression(10, CPU.data, (x) -> OLS.fit(CPU.formula, x));
+        double[] prediction = CrossValidation.regression(10, CPU.data, (x) -> OLS.fit(CPU.formula, x));
+        double rmse = RMSE.apply(CPU.y, prediction);
         System.out.println("CPU 10-CV RMSE = " + rmse);
         assertEquals(55.272997, rmse, 1E-4);
     }
@@ -129,7 +131,8 @@ public class OLSTest {
         LinearModel model = OLS.fit(Prostate.formula, Prostate.train);
         System.out.println(model);
 
-        double rmse = Validation.test(model, Prostate.test);
+        double[] prediction = Validation.test(model, Prostate.test);
+        double rmse = RMSE.apply(Prostate.testy, prediction);
         System.out.println("RMSE on test data = " + rmse);
         assertEquals(0.721993, rmse, 1E-4);
     }

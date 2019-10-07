@@ -35,6 +35,7 @@ import smile.math.MathEx;
 import smile.util.Paths;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
+import smile.validation.RMSE;
 import smile.validation.Validation;
 
 import static org.junit.Assert.assertEquals;
@@ -72,7 +73,9 @@ public class SVRTest {
         KernelMachine<double[]> model = svr.fit(Longley.x, Longley.y);
         System.out.println(model);
 
-        double rmse = Validation.test(model, Longley.x, Longley.y);
+        double[] prediction = Validation.test(model, Longley.x);
+        double rmse = RMSE.apply(Longley.y, prediction);
+
         System.out.println("RMSE = " + rmse);
         assertEquals(0.9233178794283378, rmse, 1E-4);
     }
@@ -91,7 +94,9 @@ public class SVRTest {
         KernelMachine<double[]> model = svr.fit(x, CPU.y);
         System.out.println(model);
 
-        double rmse = CrossValidation.regression(10, x, CPU.y, (xi, yi) -> svr.fit(xi, yi));
+        double[] prediction = CrossValidation.regression(10, x, CPU.y, (xi, yi) -> svr.fit(xi, yi));
+        double rmse = RMSE.apply(CPU.y, prediction);
+
         System.out.println("10-CV RMSE = " + rmse);
         assertEquals(162.84821957220652, rmse, 1E-4);
     }

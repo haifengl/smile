@@ -300,10 +300,11 @@ public class AdaBoost implements SoftClassifier<Tuple> {
     
     @Override
     public int predict(Tuple x) {
+        Tuple xt = formula.apply(x);
         double[] y = new double[k];
 
         for (int i = 0; i < trees.length; i++) {
-            y[trees[i].predict(x)] += alpha[i];
+            y[trees[i].predict(xt)] += alpha[i];
         }
             
         return MathEx.whichMax(y);

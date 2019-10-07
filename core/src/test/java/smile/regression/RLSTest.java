@@ -25,6 +25,7 @@ import org.junit.Test;
 import smile.data.*;
 import smile.data.formula.Formula;
 import smile.validation.CrossValidation;
+import smile.validation.RMSE;
 import smile.validation.Validation;
 
 import java.util.stream.IntStream;
@@ -66,12 +67,14 @@ public class RLSTest {
         DataFrame batch = Longley.data.of(IntStream.range(0, n/2).toArray());
         DataFrame online = Longley.data.of(IntStream.range(n/2, n).toArray());
         LinearModel model = OLS.fit(Longley.formula, batch);
-        double rmse = Validation.test(model, online);
+        double[] prediction = Validation.test(model, online);
+        double rmse = RMSE.apply(Longley.formula.response(online).toDoubleArray(), prediction);
         System.out.println("Batch RMSE = " + rmse);
         assertEquals(6.229663, rmse, 1E-4);
 
         model.update(online);
-        rmse = Validation.test(model, online);
+        prediction = Validation.test(model, online);
+        rmse = RMSE.apply(Longley.formula.response(online).toDoubleArray(), prediction);
         System.out.println("Online RMSE = " + rmse);
         assertEquals(0.973663, rmse, 1E-4);
     }
@@ -86,12 +89,14 @@ public class RLSTest {
         LinearModel model = OLS.fit(Prostate.formula, Prostate.train);
         System.out.println(model);
 
-        double rmse = Validation.test(model, Prostate.test);
+        double[] prediction = Validation.test(model, Prostate.test);
+        double rmse = RMSE.apply(Prostate.testy, prediction);
         System.out.println("RMSE on test data = " + rmse);
         assertEquals(0.721993, rmse, 1E-4);
 
         model.update(Prostate.test);
-        rmse = Validation.test(model, Prostate.test);
+        prediction = Validation.test(model, Prostate.test);
+        rmse = RMSE.apply(Prostate.testy, prediction);
         System.out.println("RMSE after online = " + rmse);
         assertEquals(0.643182, rmse, 1E-4);
     }
@@ -102,7 +107,7 @@ public class RLSTest {
     public void testOnlineLearn(String name, Formula formula, DataFrame data){
         System.out.println(name);
 
-        double rmse = CrossValidation.regression(10, data, x -> {
+        double[] prediction = CrossValidation.regression(10, data, x -> {
             int n = x.size();
             DataFrame batch = x.of(IntStream.range(0, n/2).toArray());
             DataFrame online = x.of(IntStream.range(n/2, n).toArray());
@@ -110,6 +115,7 @@ public class RLSTest {
             online.stream().forEach(t -> model.update(t));
             return model;
         });
+        double rmse = RMSE.apply(formula.response(data).toDoubleArray(), prediction);
         System.out.format("10-CV RMSE = %.4f%n", rmse);
     }
     
