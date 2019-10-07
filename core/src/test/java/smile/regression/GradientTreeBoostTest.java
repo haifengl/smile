@@ -71,9 +71,9 @@ public class GradientTreeBoostTest {
             System.out.format("%-15s %.4f%n", Longley.data.schema().fieldName(i), importance[i]);
         }
 
-        double rmse = LOOCV.test(Longley.data, (x) -> GradientTreeBoost.fit(Longley.formula, Longley.data));
+        double rmse = LOOCV.regression(Longley.data, x -> GradientTreeBoost.fit(Longley.formula, x));
         System.out.println("LOOCV RMSE = " + rmse);
-        assertEquals(5.014767163039264, rmse, 1E-4);
+        assertEquals(6.497666978811788, rmse, 1E-4);
     }
 
     public void test(GradientTreeBoost.Loss loss, String name, Formula formula, DataFrame data, double expected) {
@@ -89,7 +89,7 @@ public class GradientTreeBoostTest {
             System.out.format("%-15s %.4f%n", data.schema().fieldName(i), importance[i]);
         }
 
-        double rmse = CrossValidation.test(10, data, x -> GradientTreeBoost.fit(formula, x, loss, 100, 6, 0.05, 0.7));
+        double rmse = CrossValidation.regression(10, data, x -> GradientTreeBoost.fit(formula, x, loss, 100, 6, 5, 0.05, 0.7));
         System.out.format("10-CV RMSE = %.4f%n", rmse);
         assertEquals(expected, rmse, 1E-4);
     }

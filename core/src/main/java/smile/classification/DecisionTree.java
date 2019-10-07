@@ -245,17 +245,18 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
      * @param order the index of training values in ascending order. Note
      *              that only numeric attributes need be sorted.
      */
-    public DecisionTree(DataFrame x, BaseVector y, int k, SplitRule rule, int nodeSize, int maxNodes, int mtry, int[] samples, int[][] order) {
-        super(x, y, nodeSize, maxNodes, mtry, samples, order);
+    public DecisionTree(DataFrame x, BaseVector y, int k, SplitRule rule, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
+        super(x, y, maxNodes, nodeSize, mtry, samples, order);
+        this.k = k;
         this.rule = rule;
 
         final int[] count = new int[k];
-        IntStream.range(0, samples.length).forEach(i -> count[y.getInt(i)] += samples[i]);
+        IntStream.range(0, x.size()).forEach(i -> count[y.getInt(i)] += this.samples[i]);
 
         LeafNode node = new DecisionNode(count);
         this.root = node;
 
-        Optional<Split> split = findBestSplit(node, 0, index.length, null);
+        Optional<Split> split = findBestSplit(node, 0, index.length, new boolean[x.ncols()]);
 
         if (maxNodes == Integer.MAX_VALUE) {
             // deep-first split
@@ -269,6 +270,9 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
                 if (split(queue.poll(), queue)) leaves++;
             }
         }
+
+        // merge the sister leaves that produce the same output.
+        this.root = this.root.toLeaf();
 
         clear();
     }
@@ -298,7 +302,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
         SplitRule rule = SplitRule.valueOf(prop.getProperty("smile.cart.split.rule", "GINI"));
         int nodeSize = Integer.parseInt(prop.getProperty("smile.cart.node.size", "5"));
         int maxNodes = Integer.parseInt(prop.getProperty("smile.cart.max.nodes", "6"));
-        return fit(formula, data, rule, nodeSize, maxNodes);
+        return fit(formula, data, rule, maxNodes, nodeSize);
     }
 
     /**
@@ -309,16 +313,18 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
      * @param nodeSize the minimum size of leaf nodes.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      */
-    public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int nodeSize, int maxNodes) {
-        DataFrame x = formula.frame(data);
+    public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxNodes, int nodeSize) {
+        DataFrame x = formula.frame(data).drop(formula.response().get());
         BaseVector y = formula.response(data);
         int k = Classifier.classes(y).length;
-        return new DecisionTree(x, y, k, rule, nodeSize, maxNodes, -1, null, null);
+        DecisionTree tree = new DecisionTree(x, y, k, rule, maxNodes, nodeSize, -1, null, null);
+        tree.formula = Optional.of(formula);
+        return tree;
     }
 
     @Override
     public int predict(Tuple x) {
-        DecisionNode leaf = (DecisionNode) root.predict(x);
+        DecisionNode leaf = (DecisionNode) root.predict(formula.map(f -> f.apply(x)).orElse(x));
         return leaf.output();
     }
 
@@ -330,7 +336,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
      */
     @Override
     public int predict(Tuple x, double[] posteriori) {
-        DecisionNode leaf = (DecisionNode) root.predict(x);
+        DecisionNode leaf = (DecisionNode) root.predict(formula.map(f -> f.apply(x)).orElse(x));
         // add-k smoothing
         double n = leaf.size() + k;
         int[] count = leaf.count();
@@ -338,5 +344,10 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
             posteriori[i] = (count[i] + 1) / n;
         }
         return leaf.output();
+    }
+
+    @Override
+    public Optional<Formula> formula() {
+        return formula;
     }
 }

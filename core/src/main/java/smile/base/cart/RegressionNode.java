@@ -52,23 +52,6 @@ public class RegressionNode extends LeafNode {
     }
 
     /**
-     * Adds some samples of class to the node.
-     * @param y the responsible value
-     * @param s the number of samples.
-     */
-    public void add(double y, int s) {
-        size += s;
-        output += y * s;
-        rss += y * y * s;
-    }
-
-    /** Calculates the output. */
-    public void calculateOutput() {
-        output /= size;
-        rss -= size * output * output;
-    }
-
-    /**
      * Returns the residual sum of squares.
      */
     public double impurity() {

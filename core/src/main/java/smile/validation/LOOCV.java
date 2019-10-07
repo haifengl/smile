@@ -17,6 +17,7 @@
 
 package smile.validation;
 
+import smile.classification.Classifier;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -73,9 +74,47 @@ public class LOOCV {
 
     /**
      * Runs leave-one-out cross validation tests.
+     * @return the number of errors.
+     */
+    public static <T> int classification(T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
+        int n = x.length;
+        LOOCV cv = new LOOCV(n);
+        int error = 0;
+
+        for (int i = 0; i < n; i++) {
+            T[] trainx = MathEx.slice(x, cv.train[i]);
+            int[] trainy = MathEx.slice(y, cv.train[i]);
+
+            Classifier<T> model = trainer.apply(trainx, trainy);
+            if (y[cv.test[i]] != model.predict(x[cv.test[i]])) error++;
+        }
+
+        return error;
+    }
+
+    /**
+     * Runs leave-one-out cross validation tests.
+     * @return the number of errors.
+     */
+    public static <T> int classification(DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
+        int n = data.size();
+        LOOCV cv = new LOOCV(n);
+        int error = 0;
+
+        for (int i = 0; i < n; i++) {
+            Classifier<T> model = trainer.apply(data.of(cv.train[i]));
+            Tuple xi = data.get(cv.test[i]);
+            if (model.formula().get().label(xi) != model.predict(xi)) error++;
+        }
+
+        return error;
+    }
+
+    /**
+     * Runs leave-one-out cross validation tests.
      * @return root mean squared error.
      */
-    public static <T> double test(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+    public static <T> double regression(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
         int n = x.length;
         LOOCV cv = new LOOCV(n);
         double rss = 0.0;
@@ -96,7 +135,7 @@ public class LOOCV {
      * Runs leave-one-out cross validation tests.
      * @return root mean squared error.
      */
-    public static <T> double test(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+    public static <T> double regression(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
         int n = data.size();
         LOOCV cv = new LOOCV(n);
         double rss = 0.0;

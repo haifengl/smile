@@ -102,7 +102,7 @@ public class RLSTest {
     public void testOnlineLearn(String name, Formula formula, DataFrame data){
         System.out.println(name);
 
-        double rmse = CrossValidation.test(10, data, x -> {
+        double rmse = CrossValidation.regression(10, data, x -> {
             int n = x.size();
             DataFrame batch = x.of(IntStream.range(0, n/2).toArray());
             DataFrame online = x.of(IntStream.range(n/2, n).toArray());

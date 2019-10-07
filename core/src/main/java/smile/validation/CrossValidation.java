@@ -20,6 +20,8 @@ package smile.validation;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.BiFunction;
+
+import smile.classification.Classifier;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
@@ -113,9 +115,52 @@ public class CrossValidation {
 
     /**
      * Runs cross validation tests.
+     * @return the number of errors.
+     */
+    public <T> int classification(T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
+        int error = 0;
+
+        for (int i = 0; i < k; i++) {
+            T[] trainx = MathEx.slice(x, train[i]);
+            int[] trainy = MathEx.slice(y, train[i]);
+            T[] testx = MathEx.slice(x, test[i]);
+            int[] testy = MathEx.slice(y, test[i]);
+
+            Classifier<T> model = trainer.apply(trainx, trainy);
+            for (int j = 0; j < testx.length; j++) {
+                if (testy[j] != model.predict(testx[j])) error++;
+            }
+        }
+
+        return error;
+    }
+
+    /**
+     * Runs cross validation tests.
+     * @return root mean squared errors.
+     */
+    public <T> int classification(DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
+        int error = 0;
+
+        for (int i = 0; i < k; i++) {
+            Classifier<T> model = trainer.apply(data.of(train[i]));
+            DataFrame oob = data.of(test[i]);
+            int[] prediction = model.predict(oob);
+            int[] y = model.formula().get().response(oob).toIntArray();
+
+            for (int j = 0; j < y.length; j++) {
+                if (y[j] != prediction[j]) error++;
+            }
+        }
+
+        return error;
+    }
+
+    /**
+     * Runs cross validation tests.
      * @return root mean squared error.
      */
-    public <T> double test(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+    public <T> double regression(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
         double rmse = 0.0;
 
         for (int i = 0; i < k; i++) {
@@ -138,7 +183,7 @@ public class CrossValidation {
      * Runs cross validation tests.
      * @return root mean squared error.
      */
-    public <T> double test(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+    public <T> double regression(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
         double rmse = 0.0;
 
         for (int i = 0; i < k; i++) {
@@ -158,19 +203,37 @@ public class CrossValidation {
 
     /**
      * Runs cross validation tests.
-     * @return root mean squared error.
+     * @return the number of errors.
      */
-    public static <T> double test(int k, T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+    public static <T> int classification(int k, T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
         CrossValidation cv = new CrossValidation(x.length, k);
-        return cv.test(x, y, trainer);
+        return cv.classification(x, y, trainer);
+    }
+
+    /**
+     * Runs cross validation tests.
+     * @return the number of errors.
+     */
+    public static <T> int classification(int k, DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
+        CrossValidation cv = new CrossValidation(data.size(), k);
+        return cv.classification(data, trainer);
     }
 
     /**
      * Runs cross validation tests.
      * @return root mean squared error.
      */
-    public static <T> double test(int k, DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+    public static <T> double regression(int k, T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+        CrossValidation cv = new CrossValidation(x.length, k);
+        return cv.regression(x, y, trainer);
+    }
+
+    /**
+     * Runs cross validation tests.
+     * @return root mean squared error.
+     */
+    public static <T> double regression(int k, DataFrame data, Function<DataFrame, Regression<T>> trainer) {
         CrossValidation cv = new CrossValidation(data.size(), k);
-        return cv.test(data, trainer);
+        return cv.regression(data, trainer);
     }
 }

@@ -46,7 +46,7 @@ public class USPS {
     static {
         ArrayList<StructField> fields = new ArrayList<>();
         fields.add(new StructField("class", DataTypes.ByteType));
-        IntStream.range(0, 256).forEach(i -> fields.add(new StructField("V"+i, DataTypes.ByteType)));
+        IntStream.range(0, 256).forEach(i -> fields.add(new StructField("V"+i, DataTypes.DoubleType)));
         StructType schema = DataTypes.struct(fields);
 
         CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));

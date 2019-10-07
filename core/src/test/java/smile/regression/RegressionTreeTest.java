@@ -64,7 +64,7 @@ public class RegressionTreeTest {
     public void testLongley() {
         System.out.println("longley");
 
-        RegressionTree model = RegressionTree.fit(Longley.formula, Longley.data, 2, 100);
+        RegressionTree model = RegressionTree.fit(Longley.formula, Longley.data, 100, 2);
         System.out.println("----- dot -----");
         System.out.println(model.dot());
 
@@ -74,10 +74,10 @@ public class RegressionTreeTest {
             System.out.format("%-15s %.4f%n", Longley.data.schema().fieldName(i), importance[i]);
         }
 
-        double rmse = LOOCV.test(Longley.data, (x) -> RegressionTree.fit(Longley.formula, Longley.data, 2, 100));
+        double rmse = LOOCV.regression(Longley.data, x -> RegressionTree.fit(Longley.formula, x, 100, 2));
 
         System.out.println("LOOCV MSE = " + rmse);
-        assertEquals(1.5771480061596428, rmse, 1E-4);
+        assertEquals(3.0848729264302333, rmse, 1E-4);
     }
 
     public void test(String name, Formula formula, DataFrame data, double expected) {
@@ -96,7 +96,7 @@ public class RegressionTreeTest {
             System.out.format("%-15s %.4f%n", data.schema().fieldName(i), importance[i]);
         }
 
-        double rmse = CrossValidation.test(10, data, x -> RegressionTree.fit(formula, x));
+        double rmse = CrossValidation.regression(10, data, x -> RegressionTree.fit(formula, x));
         System.out.format("10-CV RMSE = %.4f%n", rmse);
         assertEquals(expected, rmse, 1E-4);
     }

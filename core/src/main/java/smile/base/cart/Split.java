@@ -17,8 +17,10 @@
 
 package smile.base.cart;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.function.IntPredicate;
+import java.util.stream.Collectors;
 
 /** The data about of a potential split for a leaf node. */
 public abstract class Split {
@@ -82,4 +84,18 @@ public abstract class Split {
 
     /** Returns the lambda that tests on the split feature. */
     public abstract IntPredicate predicate();
+
+    @Override
+    public String toString() {
+        String[] fields = {
+                "feature: " + feature,
+                "score: " + score,
+                "lo: " + lo,
+                "hi: " + hi,
+                "true: " + trueCount,
+                "false: " + falseCount
+        };
+
+        return Arrays.stream(fields).collect(Collectors.joining(",\n", "{\n", "\n}"));
+    }
 }

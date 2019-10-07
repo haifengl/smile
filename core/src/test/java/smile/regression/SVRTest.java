@@ -91,7 +91,7 @@ public class SVRTest {
         KernelMachine<double[]> model = svr.fit(x, CPU.y);
         System.out.println(model);
 
-        double rmse = CrossValidation.test(10, x, CPU.y, (xi, yi) -> svr.fit(xi, yi));
+        double rmse = CrossValidation.regression(10, x, CPU.y, (xi, yi) -> svr.fit(xi, yi));
         System.out.println("10-CV RMSE = " + rmse);
         assertEquals(162.84821957220652, rmse, 1E-4);
     }

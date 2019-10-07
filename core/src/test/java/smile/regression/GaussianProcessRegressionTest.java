@@ -74,7 +74,7 @@ public class GaussianProcessRegressionTest {
         KernelMachine<double[]> model = GaussianProcessRegression.fit(longley, Longley.y, new GaussianKernel(8.0), 0.2);
         System.out.println(model);
 
-        double rmse = LOOCV.test(longley, Longley.y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(8.0), 0.2));
+        double rmse = LOOCV.regression(longley, Longley.y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(8.0), 0.2));
         System.out.println("RMSE = " + rmse);
         assertEquals(3.978109808216234, rmse, 1E-4);
     }
@@ -90,9 +90,9 @@ public class GaussianProcessRegressionTest {
         MathEx.standardize(x);
         CrossValidation cv = new CrossValidation(x.length, 10);
 
-        double rmse = cv.test(x, CPU.y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(47.02), 0.1));
+        double rmse = cv.regression(x, CPU.y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(47.02), 0.1));
 
-        double sparseRMSE = cv.test(10, x, CPU.y, (xi, yi) -> {
+        double sparseRMSE = cv.regression(10, x, CPU.y, (xi, yi) -> {
             KMeans kmeans = new KMeans(xi, 30, 10);
             double[][] centers = kmeans.centroids();
             double r0 = 0.0;
@@ -106,7 +106,7 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        double nystromRMSE = cv.test(x, CPU.y, (xi, yi) -> {
+        double nystromRMSE = cv.regression(x, CPU.y, (xi, yi) -> {
             KMeans kmeans = new KMeans(xi, 30, 10);
             double[][] centers = kmeans.centroids();
             double r0 = 0.0;
@@ -151,9 +151,9 @@ public class GaussianProcessRegressionTest {
 
         CrossValidation cv = new CrossValidation(datax.length, 10);
 
-        double rmse = cv.test(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(34.866), 0.1));
+        double rmse = cv.regression(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(34.866), 0.1));
 
-        double sparseRMSE = cv.test(10, datax, datay, (xi, yi) -> {
+        double sparseRMSE = cv.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = new KMeans(xi, 30, 10);
             double[][] centers = kmeans.centroids();
             double r0 = 0.0;
@@ -167,7 +167,7 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        double nystromRMSE = cv.test(datax, datay, (xi, yi) -> {
+        double nystromRMSE = cv.regression(datax, datay, (xi, yi) -> {
             KMeans kmeans = new KMeans(xi, 30, 10);
             double[][] centers = kmeans.centroids();
             double r0 = 0.0;
@@ -216,9 +216,9 @@ public class GaussianProcessRegressionTest {
 
         CrossValidation cv = new CrossValidation(datax.length, 10);
 
-        double rmse = cv.test(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(183.96), 0.1));
+        double rmse = cv.regression(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(183.96), 0.1));
 
-        double sparseRMSE = cv.test(10, datax, datay, (xi, yi) -> {
+        double sparseRMSE = cv.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = new KMeans(xi, 30, 10);
             double[][] centers = kmeans.centroids();
             double r0 = 0.0;
@@ -232,7 +232,7 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        double nystromRMSE = cv.test(datax, datay, (xi, yi) -> {
+        double nystromRMSE = cv.regression(datax, datay, (xi, yi) -> {
             KMeans kmeans = new KMeans(xi, 30, 10);
             double[][] centers = kmeans.centroids();
             double r0 = 0.0;
@@ -278,9 +278,9 @@ public class GaussianProcessRegressionTest {
 
         CrossValidation cv = new CrossValidation(datax.length, 10);
 
-        double rmse = cv.test(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(55.3), 0.1));
+        double rmse = cv.regression(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(55.3), 0.1));
 
-        double sparseRMSE = cv.test(10, datax, datay, (xi, yi) -> {
+        double sparseRMSE = cv.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = new KMeans(xi, 30, 10);
             double[][] centers = kmeans.centroids();
             double r0 = 0.0;
@@ -294,7 +294,7 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        double nystromRMSE = cv.test(datax, datay, (xi, yi) -> {
+        double nystromRMSE = cv.regression(datax, datay, (xi, yi) -> {
             KMeans kmeans = new KMeans(xi, 30, 10);
             double[][] centers = kmeans.centroids();
             double r0 = 0.0;
@@ -339,9 +339,9 @@ public class GaussianProcessRegressionTest {
 
         CrossValidation cv = new CrossValidation(datax.length, 10);
 
-        double rmse = cv.test(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(38.63), 0.1));
+        double rmse = cv.regression(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(38.63), 0.1));
 
-        double sparseRMSE = cv.test(10, datax, datay, (xi, yi) -> {
+        double sparseRMSE = cv.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = new KMeans(xi, 30, 10);
             double[][] centers = kmeans.centroids();
             double r0 = 0.0;
@@ -355,7 +355,7 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        double nystromRMSE = cv.test(datax, datay, (xi, yi) -> {
+        double nystromRMSE = cv.regression(datax, datay, (xi, yi) -> {
             KMeans kmeans = new KMeans(xi, 30, 10);
             double[][] centers = kmeans.centroids();
             double r0 = 0.0;
@@ -399,9 +399,9 @@ public class GaussianProcessRegressionTest {
 
         CrossValidation cv = new CrossValidation(datax.length, 10);
 
-        double rmse = cv.test(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(34.97), 0.1));
+        double rmse = cv.regression(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(34.97), 0.1));
 
-        double sparseRMSE = cv.test(10, datax, datay, (xi, yi) -> {
+        double sparseRMSE = cv.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = new KMeans(xi, 30, 10);
             double[][] centers = kmeans.centroids();
             double r0 = 0.0;
@@ -415,7 +415,7 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        double nystromRMSE = cv.test(datax, datay, (xi, yi) -> {
+        double nystromRMSE = cv.regression(datax, datay, (xi, yi) -> {
             KMeans kmeans = new KMeans(xi, 30, 10);
             double[][] centers = kmeans.centroids();
             double r0 = 0.0;

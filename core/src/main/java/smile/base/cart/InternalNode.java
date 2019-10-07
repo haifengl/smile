@@ -94,7 +94,7 @@ public abstract class InternalNode implements Node {
                 RegressionNode b = (RegressionNode) falseChild;
 
                 int size = a.size + b.size;
-                return new RegressionNode(size, a.output(), (a.impurity() * a.size + b.impurity() * b.size) / size);
+                return new RegressionNode(size, a.output(), a.impurity() + b.impurity());
             }
         }
 

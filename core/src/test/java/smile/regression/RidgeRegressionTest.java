@@ -69,7 +69,7 @@ public class RidgeRegressionTest {
         assertEquals(7.218054e-01, model.coefficients()[4], 1E-7);
         assertEquals(5.884884e-01, model.coefficients()[5], 1E-7);
 
-        double rmse = LOOCV.test(Longley.data, (x) -> RidgeRegression.fit(Longley.formula, x, 0.1));
+        double rmse = LOOCV.regression(Longley.data, (x) -> RidgeRegression.fit(Longley.formula, x, 0.1));
         System.out.println("LOOCV RMSE = " + rmse);
         assertEquals(1.7288188, rmse, 1E-7);
     }
@@ -84,7 +84,7 @@ public class RidgeRegressionTest {
         LinearModel model = RidgeRegression.fit(CPU.formula, CPU.data, 0.1);
         System.out.println(model);
 
-        double rmse = CrossValidation.test(10, CPU.data, (x) -> RidgeRegression.fit(CPU.formula, x, 0.1));
+        double rmse = CrossValidation.regression(10, CPU.data, (x) -> RidgeRegression.fit(CPU.formula, x, 0.1));
         System.out.println("10-CV RMSE = " + rmse);
         assertEquals(55.268333864, rmse, 1E-7);
     }

@@ -52,11 +52,6 @@ public interface Regression<T> extends Serializable {
         return Arrays.stream(x).mapToDouble(xi -> predict(xi)).toArray();
     }
 
-    /** Returns the formula associated with the model. */
-    default Optional<Formula> formula() {
-        return Optional.empty();
-    }
-
     /**
      * Predicts the dependent variable of a tuple instance.
      * @param x a tuple instance.
@@ -74,5 +69,10 @@ public interface Regression<T> extends Serializable {
      */
     default double[] predict(DataFrame data) {
         return data.stream().mapToDouble(x -> predict(x)).toArray();
+    }
+
+    /** Returns the formula associated with the model. */
+    default Optional<Formula> formula() {
+        return Optional.empty();
     }
 }

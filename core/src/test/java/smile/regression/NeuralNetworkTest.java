@@ -73,7 +73,7 @@ public class NeuralNetworkTest {
             }
         }
             
-        double rmse = CrossValidation.test(10, datax, datay, (xi, yi) -> {
+        double rmse = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             NeuralNetwork neuralNetwork = new NeuralNetwork(
                     new Layer(activation, 10, p),
                     new Layer(ActivationFunction.LINEAR, 1, 10));
