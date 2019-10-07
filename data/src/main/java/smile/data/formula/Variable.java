@@ -18,10 +18,13 @@
 package smile.data.formula;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 
 import smile.data.Tuple;
+import smile.data.measure.Measure;
 import smile.data.type.DataType;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
@@ -36,6 +39,8 @@ final class Variable implements Term {
     private final String name;
     /** Data type of variable. Only available after calling bind(). */
     private DataType type;
+    /** The level of measurements. */
+    private Optional<Measure> measure;
     /** Column index after binding to a schema. */
     private int index = -1;
 
@@ -115,8 +120,15 @@ final class Variable implements Term {
     }
 
     @Override
+    public Optional<Measure> measure() {
+        return measure;
+    }
+
+    @Override
     public void bind(StructType schema) {
         index = schema.fieldIndex(name);
-        type = schema.field(index).type;
+        StructField field = schema.field(index);
+        type = field.type;
+        measure = field.measure;
     }
 }

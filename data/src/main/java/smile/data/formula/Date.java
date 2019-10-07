@@ -17,15 +17,16 @@
 
 package smile.data.formula;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.time.Month;
+import java.util.*;
 import java.util.stream.Collectors;
 import smile.data.Tuple;
+import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructType;
@@ -123,14 +124,26 @@ class Date implements HyperTerm {
 
     /** The date/time feature extractor. */
     class FeatureExtractor extends AbstractTerm implements Term {
-        /** The level of nominal scale. */
+        /** The feature to be extracted. */
         DateFeature feature;
+        /** The level of nominal scale. */
+        Optional<Measure> measure;
 
         /**
          * Constructor.
          */
         public FeatureExtractor(DateFeature feature) {
             this.feature = feature;
+            switch (feature) {
+                case MONTH:
+                    measure = Optional.of(new NominalScale(DayOfWeek.class));
+                    break;
+                case DAY_OF_WEEK:
+                    measure = Optional.of(new NominalScale(Month.class));
+                    break;
+                default:
+                    measure = Optional.empty();
+            }
         }
 
         @Override
@@ -197,6 +210,11 @@ class Date implements HyperTerm {
         @Override
         public DataType type() {
             return DataTypes.IntegerType;
+        }
+
+        @Override
+        public Optional<Measure> measure() {
+            return measure;
         }
 
         @Override

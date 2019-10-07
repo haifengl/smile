@@ -20,6 +20,8 @@ package smile.classification;
 import smile.data.Iris;
 import smile.data.USPS;
 import smile.data.WeatherNominal;
+import smile.math.MathEx;
+import smile.validation.Error;
 import smile.validation.LOOCV;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -59,6 +61,8 @@ public class AdaBoostTest {
     public void testWeather() {
         System.out.println("Weather");
 
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
         AdaBoost model = AdaBoost.fit(WeatherNominal.formula, WeatherNominal.data, 200, 4, 1);
 
         double[] importance = model.importance();
@@ -66,15 +70,19 @@ public class AdaBoostTest {
             System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
-        int error = LOOCV.classification(WeatherNominal.data, x -> AdaBoost.fit(WeatherNominal.formula, x, 200, 4, 1));
+        int[] prediction = LOOCV.classification(WeatherNominal.data, x -> AdaBoost.fit(WeatherNominal.formula, x, 200, 4, 1));
+        int error = Error.apply(WeatherNominal.y, prediction);
+
         System.out.println("Error = " + error);
-        assertEquals(4, error);
+        assertEquals(6, error);
     }
 
     @Test
     public void testIris() {
         System.out.println("Iris");
 
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
         AdaBoost model = AdaBoost.fit(Iris.formula, Iris.data, 200, 4, 5);
 
         double[] importance = model.importance();
@@ -82,7 +90,8 @@ public class AdaBoostTest {
             System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
-        int error = LOOCV.classification(Iris.data, x -> AdaBoost.fit(Iris.formula, x, 200, 4, 1));
+        int[] prediction = LOOCV.classification(Iris.data, x -> AdaBoost.fit(Iris.formula, x, 200, 4, 1));
+        int error = Error.apply(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(7, error);
     }
@@ -91,6 +100,8 @@ public class AdaBoostTest {
     public void testUSPS() {
         System.out.println("USPS");
 
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
         AdaBoost model = AdaBoost.fit(USPS.formula, USPS.train, 200, 64, 1);
 
         double[] importance = model.importance();
@@ -98,8 +109,10 @@ public class AdaBoostTest {
             System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
-        double accuracy = Validation.test(model, USPS.test);
-        System.out.format("Accuracy = %.4f%n", accuracy);
-        assertEquals(0.8236, accuracy, 1E-3);
+        int[] prediction = Validation.test(model, USPS.test);
+        int error = Error.apply(USPS.testy, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(152, error);
     }
 }

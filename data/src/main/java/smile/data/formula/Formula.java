@@ -240,7 +240,7 @@ public class Formula implements Serializable {
         }
 
         List<StructField> fields = result.stream()
-                .map(factor -> new StructField(factor.toString(), factor.type()))
+                .map(factor -> new StructField(factor.toString(), factor.type(), factor.measure()))
                 .collect(Collectors.toList());
 
         schema = DataTypes.struct(fields);

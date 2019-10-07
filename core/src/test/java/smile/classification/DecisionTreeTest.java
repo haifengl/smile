@@ -21,6 +21,7 @@ import smile.base.cart.SplitRule;
 import smile.data.Iris;
 import smile.data.USPS;
 import smile.data.WeatherNominal;
+import smile.validation.Error;
 import smile.validation.LOOCV;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -68,7 +69,8 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
-        int error = LOOCV.classification(WeatherNominal.data, x -> DecisionTree.fit(WeatherNominal.formula, x));
+        int[] prediction = LOOCV.classification(WeatherNominal.data, x -> DecisionTree.fit(WeatherNominal.formula, x));
+        int error = Error.apply(WeatherNominal.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(5, error);
     }
@@ -85,7 +87,8 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
-        int error = LOOCV.classification(Iris.data, x -> DecisionTree.fit(Iris.formula, x));
+        int[] prediction = LOOCV.classification(Iris.data, x -> DecisionTree.fit(Iris.formula, x));
+        int error = Error.apply(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(9, error);
     }
@@ -102,8 +105,10 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
-        double accuracy = Validation.test(model, USPS.test);
-        System.out.format("Accuracy = %.4f%n", accuracy);
-        assertEquals(0.8351, accuracy, 1E-3);
+        int[] prediction = Validation.test(model, USPS.test);
+        int error = Error.apply(USPS.testy, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(331, error);
     }
 }
