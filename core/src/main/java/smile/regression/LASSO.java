@@ -121,14 +121,14 @@ public class LASSO {
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda, double tol, int maxIter) {
         DenseMatrix X = formula.matrix(data, false);
-        double[] y = formula.response(data).toDoubleArray();
+        double[] y = formula.y(data).toDoubleArray();
 
         double[] center = X.colMeans();
         double[] scale = X.colSds();
 
         for (int j = 0; j < scale.length; j++) {
             if (MathEx.isZero(scale[j])) {
-                throw new IllegalArgumentException(String.format("The column '%s' is constant", formula.predictors()[j]));
+                throw new IllegalArgumentException(String.format("The column '%s' is constant", formula.xschema().fieldName(j)));
             }
         }
 
@@ -136,7 +136,7 @@ public class LASSO {
 
         LinearModel model = train(scaledX, y, lambda, tol, maxIter);
         model.formula = formula;
-        model.schema = formula.predictorSchema();
+        model.schema = formula.xschema();
 
         for (int j = 0; j < model.p; j++) {
             model.w[j] /= scale[j];

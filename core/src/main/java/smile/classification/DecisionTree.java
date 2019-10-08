@@ -315,8 +315,8 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
      * @param maxNodes the maximum number of leaf nodes in the tree.
      */
     public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxNodes, int nodeSize) {
-        DataFrame x = formula.frame(data).drop(formula.response().get());
-        BaseVector y = formula.response(data);
+        DataFrame x = formula.x(data);
+        BaseVector y = formula.y(data);
         int k = Classifier.classes(y).length;
         DecisionTree tree = new DecisionTree(x, y, k, rule, maxNodes, nodeSize, -1, null, null);
         tree.formula = Optional.of(formula);
@@ -325,7 +325,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
 
     @Override
     public int predict(Tuple x) {
-        DecisionNode leaf = (DecisionNode) root.predict(formula.map(f -> f.apply(x)).orElse(x));
+        DecisionNode leaf = (DecisionNode) root.predict(formula.map(f -> f.x(x)).orElse(x));
         return leaf.output();
     }
 
@@ -337,7 +337,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
      */
     @Override
     public int predict(Tuple x, double[] posteriori) {
-        DecisionNode leaf = (DecisionNode) root.predict(formula.map(f -> f.apply(x)).orElse(x));
+        DecisionNode leaf = (DecisionNode) root.predict(formula.map(f -> f.x(x)).orElse(x));
         // add-k smoothing
         double n = leaf.size() + k;
         int[] count = leaf.count();

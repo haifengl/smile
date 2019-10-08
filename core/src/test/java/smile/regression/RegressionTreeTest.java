@@ -99,7 +99,7 @@ public class RegressionTreeTest {
         }
 
         double[] prediction = CrossValidation.regression(10, data, x -> RegressionTree.fit(formula, x));
-        double rmse = RMSE.apply(formula.response(data).toDoubleArray(), prediction);
+        double rmse = RMSE.apply(formula.y(data).toDoubleArray(), prediction);
         System.out.format("10-CV RMSE = %.4f%n", rmse);
         assertEquals(expected, rmse, 1E-4);
     }
