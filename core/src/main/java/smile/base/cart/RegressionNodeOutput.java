@@ -27,8 +27,6 @@ public interface RegressionNodeOutput {
     /**
      * Calculate the node output.
      *
-     * @param lo the inclusive lower bound of the data partition in the reordered sample index array.
-     * @param hi the exclusive upper bound of the data partition in the reordered sample index array.
      * @param nodeSamples the index of node samples to their original locations in training dataset.
      * @param sampleCount samples[i] is the number of sampling of dataset[i]. 0 means that the
      *               datum is not included and values of greater than 1 are

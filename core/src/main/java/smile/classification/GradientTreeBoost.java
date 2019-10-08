@@ -195,7 +195,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         int ntrees = Integer.valueOf(prop.getProperty("smile.gbt.trees", "500"));
         int maxNodes = Integer.valueOf(prop.getProperty("smile.gbt.max.nodes", "6"));
         int nodeSize = Integer.valueOf(prop.getProperty("smile.gbt.node.size", "5"));
-        double shrinkage = Double.valueOf(prop.getProperty("smile.gbt.shrinkage", "0.005"));
+        double shrinkage = Double.valueOf(prop.getProperty("smile.gbt.shrinkage", "0.05"));
         double subsample = Double.valueOf(prop.getProperty("smile.gbt.sample.rate", "0.7"));
         return fit(formula, data, ntrees, maxNodes, nodeSize, shrinkage, subsample);
     }
@@ -280,9 +280,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         int k = 2;
 
         int[] nc = new int[k];
-        for (int i = 0; i < n; i++) {
-            nc[y[i]]++;
-        }
+        Arrays.stream(y).forEach(yi -> nc[yi]++);
 
         int[] y2 = Arrays.stream(y).map(i -> 2*i - 1).toArray();
         
@@ -292,29 +290,16 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         double mu = MathEx.mean(y2);
         double b = 0.5 * Math.log((1 + mu) / (1 - mu));
 
-        for (int i = 0; i < n; i++) {
-            h[i] = b;
-        }
+        Arrays.fill(h, b);
 
-        RegressionNodeOutput output = new L2NodeOutput(response);
+        RegressionNodeOutput output = new BinaryLogisticRegressionNodeOutput(response);
         RegressionTree[] trees = new RegressionTree[ntrees];
 
-        int[] perm = IntStream.range(0, n).toArray();
+        int[] permutation = IntStream.range(0, n).toArray();
         int[] samples = new int[n];
 
         for (int m = 0; m < ntrees; m++) {
-            Arrays.fill(samples, 0);
-            MathEx.permutate(perm);
-            for (int l = 0; l < k; l++) {
-                int subj = (int) Math.round(nc[l] * subsample);
-                for (int i = 0, count = 0; i < n && count < subj; i++) {
-                    int xi = perm[i];
-                    if (y[xi] == l) {
-                        samples[xi] = 1;
-                        count++;
-                    }
-                }
-            }
+            sampling(samples, permutation, nc, y, subsample);
 
             for (int i = 0; i < n; i++) {
                 response[i] = 2.0 * y2[i] / (1 + Math.exp(2 * y2[i] * h[i]));
@@ -345,9 +330,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         int n = x.nrows();
 
         int[] nc = new int[k];
-        for (int i = 0; i < n; i++) {
-            nc[y[i]]++;
-        }
+        Arrays.stream(y).forEach(yi -> nc[yi]++);
 
         double[][] h = new double[k][n]; // boost tree output.
         double[][] p = new double[k][n]; // posteriori probabilities.
@@ -355,12 +338,12 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         
         RegressionTree[][] forest = new RegressionTree[k][ntrees];
 
-        RegressionNodeOutput[] output = new LKNodeOutput[k];
+        RegressionNodeOutput[] output = new RegressionNodeOutput[k];
         for (int i = 0; i < k; i++) {
-            output[i] = new LKNodeOutput(k, response[i]);
+            output[i] = new MultiClassLogisticRegressionNodeOutput(k, response[i]);
         }
 
-        int[] perm = IntStream.range(0, n).toArray();
+        int[] permutation = IntStream.range(0, n).toArray();
         int[] samples = new int[n];
 
         for (int m = 0; m < ntrees; m++) {
@@ -385,26 +368,10 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
             
             for (int j = 0; j < k; j++) {
                 for (int i = 0; i < n; i++) {
-                    if (y[i] == j) {
-                        response[j][i] = 1.0;
-                    } else {
-                        response[j][i] = 0.0;
-                    }
-                    response[j][i] -= p[j][i];
+                    response[j][i] = (y[i] == j ? 1.0 : 0.0) - p[j][i];
                 }
 
-                Arrays.fill(samples, 0);
-                MathEx.permutate(perm);
-                for (int l = 0; l < k; l++) {
-                    int subj = (int) Math.round(nc[l] * subsample);
-                    for (int i = 0, count = 0; i < n && count < subj; i++) {
-                        int xi = perm[i];
-                        if (y[xi] == l) {
-                            samples[xi] = 1;
-                            count++;
-                        }
-                    }
-                }
+                sampling(samples, permutation, nc, y, subsample);
 
                 forest[j][m] = new RegressionTree(x, DoubleVector.of("residual", response[j]), maxNodes, nodeSize, x.ncols(), samples, order, output[j]);
 
@@ -427,76 +394,25 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         return new GradientTreeBoost(formula, forest, shrinkage, importance);
     }
 
-    /**
-     * Class to calculate node output for two-class logistic regression.
-     */
-    static class L2NodeOutput implements RegressionNodeOutput {
+    /** Stratified sampling. */
+    private static void sampling(int[] samples, int[] permutation, int[] nc, int[] y, double subsample) {
+        int n = samples.length;
+        int k = nc.length;
+        Arrays.fill(samples, 0);
+        MathEx.permutate(permutation);
 
-        /**
-         * Pseudo response to fit.
-         */
-        double[] y;
-        /**
-         * Constructor.
-         * @param y pseudo response to fit.
-         */
-        public L2NodeOutput(double[] y) {
-            this.y = y;
+        for (int j = 0; j < k; j++) {
+            int subj = (int) Math.round(nc[j] * subsample);
+            for (int i = 0, nj = 0; i < n && nj < subj; i++) {
+                int xi = permutation[i];
+                if (y[xi] == j) {
+                    samples[xi] = 1;
+                    nj++;
+                }
+            }
         }
-        
-        @Override
-        public double calculate(int[] nodeSamples, int[] sampleCount) {
-            double nu = 0.0;
-            double de = 0.0;
-            for (int i : nodeSamples) {
-                double abs = Math.abs(y[i]);
-                nu += y[i];
-                de += abs * (2.0 - abs);
-            }
-            
-            return nu / de;
-        }        
     }
-    
-    
-    /**
-     * Class to calculate node output for multi-class logistic regression.
-     */
-    static class LKNodeOutput implements RegressionNodeOutput {
-        /** The number of classes. */
-        int k;
 
-        /** The responses to fit. */
-        double[] y;
-
-        /**
-         * Constructor.
-         * @param k the number of classes.
-         * @param response response to fit.
-         */
-        public LKNodeOutput(int k, double[] response) {
-            this.k = k;
-            this.y = response;
-        }
-        
-        @Override
-        public double calculate(int[] nodeSamples, int[] sampleCount) {
-            double nu = 0.0;
-            double de = 0.0;
-            for (int i : nodeSamples) {
-                double abs = Math.abs(y[i]);
-                nu += y[i];
-                de += abs * (1.0 - abs);
-            }
-            
-            if (de < 1E-10) {
-                return nu / nodeSamples.length;
-            }
-            
-            return ((k-1.0) / k) * (nu / de);
-        }        
-    }
-    
     /**
      * Returns the number of trees in the model.
      * 

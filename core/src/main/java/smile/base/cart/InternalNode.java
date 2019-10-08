@@ -73,9 +73,9 @@ public abstract class InternalNode implements Node {
     }
 
     @Override
-    public Node toLeaf() {
-        trueChild = trueChild.toLeaf();
-        falseChild = falseChild.toLeaf();
+    public Node merge() {
+        trueChild = trueChild.merge();
+        falseChild = falseChild.merge();
 
         if (trueChild instanceof DecisionNode && falseChild instanceof DecisionNode) {
             if (((DecisionNode) trueChild).output() == ((DecisionNode) falseChild).output()) {
@@ -94,7 +94,7 @@ public abstract class InternalNode implements Node {
                 RegressionNode b = (RegressionNode) falseChild;
 
                 int size = a.size + b.size;
-                return new RegressionNode(size, a.output(), a.impurity() + b.impurity());
+                return new RegressionNode(size, a.output(), (a.size * a.mean() + b.size * b.mean()) / size, a.impurity() + b.impurity());
             }
         }
 

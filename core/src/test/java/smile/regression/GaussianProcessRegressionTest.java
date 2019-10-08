@@ -148,12 +148,12 @@ public class GaussianProcessRegressionTest {
         double[][] x = MathEx.clone(Planes.x);
         double[] y = Planes.y;
 
-        int[] perm = MathEx.permutate(x.length);
+        int[] permutation = MathEx.permutate(x.length);
         double[][] datax = new double[4000][];
         double[] datay = new double[datax.length];
         for (int i = 0; i < datax.length; i++) {
-            datax[i] = x[perm[i]];
-            datay[i] = y[perm[i]];
+            datax[i] = x[permutation[i]];
+            datay[i] = y[permutation[i]];
         }
 
         CrossValidation cv = new CrossValidation(datax.length, 10);
@@ -217,12 +217,12 @@ public class GaussianProcessRegressionTest {
             y[i] *= 10000;
         }
 
-        int[] perm = MathEx.permutate(x.length);
+        int[] permutation = MathEx.permutate(x.length);
         double[][] datax = new double[4000][];
         double[] datay = new double[datax.length];
         for (int i = 0; i < datax.length; i++) {
-            datax[i] = x[perm[i]];
-            datay[i] = y[perm[i]];
+            datax[i] = x[permutation[i]];
+            datay[i] = y[permutation[i]];
         }
 
         CrossValidation cv = new CrossValidation(datax.length, 10);
@@ -283,12 +283,12 @@ public class GaussianProcessRegressionTest {
         double[] y = Bank32nh.y;
         MathEx.standardize(x);
 
-        int[] perm = MathEx.permutate(x.length);
+        int[] permutation = MathEx.permutate(x.length);
         double[][] datax = new double[4000][];
         double[] datay = new double[datax.length];
         for (int i = 0; i < datax.length; i++) {
-            datax[i] = x[perm[i]];
-            datay[i] = y[perm[i]];
+            datax[i] = x[permutation[i]];
+            datay[i] = y[permutation[i]];
         }
 
         CrossValidation cv = new CrossValidation(datax.length, 10);
@@ -348,12 +348,12 @@ public class GaussianProcessRegressionTest {
         double[][] x = Puma8NH.x;
         double[] y = Puma8NH.y;
 
-        int[] perm = MathEx.permutate(x.length);
+        int[] permutation = MathEx.permutate(x.length);
         double[][] datax = new double[4000][];
         double[] datay = new double[datax.length];
         for (int i = 0; i < datax.length; i++) {
-            datax[i] = x[perm[i]];
-            datay[i] = y[perm[i]];
+            datax[i] = x[permutation[i]];
+            datay[i] = y[permutation[i]];
         }
 
         CrossValidation cv = new CrossValidation(datax.length, 10);
@@ -412,12 +412,12 @@ public class GaussianProcessRegressionTest {
 
         double[][] x = MathEx.clone(Kin8nm.x);
         double[] y = Kin8nm.y;
-        int[] perm = MathEx.permutate(x.length);
+        int[] permutation = MathEx.permutate(x.length);
         double[][] datax = new double[4000][];
         double[] datay = new double[datax.length];
         for (int i = 0; i < datax.length; i++) {
-            datax[i] = x[perm[i]];
-            datay[i] = y[perm[i]];
+            datax[i] = x[permutation[i]];
+            datay[i] = y[permutation[i]];
         }
 
         CrossValidation cv = new CrossValidation(datax.length, 10);

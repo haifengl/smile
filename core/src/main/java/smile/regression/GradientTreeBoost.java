@@ -198,7 +198,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
         Loss loss = Loss.valueOf(prop.getProperty("smile.gbt.loss", "LeastAbsoluteDeviation"));
         int maxNodes = Integer.valueOf(prop.getProperty("smile.gbt.max.nodes", "6"));
         int nodeSize = Integer.valueOf(prop.getProperty("smile.gbt.node.size", "5"));
-        double shrinkage = Double.valueOf(prop.getProperty("smile.gbt.shrinkage", "0.005"));
+        double shrinkage = Double.valueOf(prop.getProperty("smile.gbt.shrinkage", "0.05"));
         double subsample = Double.valueOf(prop.getProperty("smile.gbt.sample.rate", "0.7"));
         return fit(formula, data, loss, ntrees, maxNodes, nodeSize, shrinkage, subsample);
     }
@@ -245,57 +245,60 @@ public class GradientTreeBoost implements Regression<Tuple> {
         final int N = (int) Math.round(n * subsample);
         final int[][] order = CART.order(x);
 
-        int[] perm = IntStream.range(0, n).toArray();
+        int[] permutation = IntStream.range(0, n).toArray();
         int[] samples = new int[n];
         
         double[] residual = new double[n];
-        double[] response = null; // response variable for regression tree.
+        double[] response = loss == Loss.LeastSquares ? residual : new double[n]; // response variable for regression tree.
         
         RegressionNodeOutput output = null;
         double b = 0.0;
-        if (loss == Loss.LeastSquares) {
-            output = new LeastSquaresNodeOutput(residual);
-            response = residual;
-            b = MathEx.mean(y);
-            for (int i = 0; i < n; i++) {
-                residual[i] = y[i] - b;
-            }
-        } else if (loss == Loss.LeastAbsoluteDeviation) {
-            output = new LeastAbsoluteDeviationNodeOutput(residual);
-            System.arraycopy(y, 0, residual, 0, n);
-            b = QuickSelect.median(residual);
-            response = new double[n];
-            for (int i = 0; i < n; i++) {
-                residual[i] = y[i] - b;
-                response[i] = Math.signum(residual[i]);
-            }
-        } else if (loss == Loss.Huber) {
-            response = new double[n];
-            System.arraycopy(y, 0, residual, 0, n);
-            b = QuickSelect.median(residual);
-            for (int i = 0; i < n; i++) {
-                residual[i] = y[i] - b;
-            }
+        switch (loss) {
+            case LeastSquares:
+                output = new LeastSquaresNodeOutput(residual);
+                b = MathEx.mean(y);
+                break;
+
+            case LeastAbsoluteDeviation:
+                output = new LeastAbsoluteDeviationNodeOutput(residual);
+                System.arraycopy(y, 0, residual, 0, n);
+                b = QuickSelect.median(residual);
+                break;
+
+            case Huber:
+                System.arraycopy(y, 0, residual, 0, n);
+                b = QuickSelect.median(residual);
+                break;
+
+            default:
+                throw new IllegalArgumentException("Unsupported loss: " + loss);
+        }
+
+        for (int i = 0; i < n; i++) {
+            residual[i] = y[i] - b;
         }
 
         RegressionTree[] trees = new RegressionTree[ntrees];
 
         for (int m = 0; m < ntrees; m++) {
             Arrays.fill(samples, 0);
-            MathEx.permutate(perm);
-            IntStream.range(0, N).forEach(i -> samples[perm[i]] = 1);
+            MathEx.permutate(permutation);
+            IntStream.range(0, N).forEach(i -> samples[permutation[i]] = 1);
             
-            if (loss == Loss.Huber) {
-                output = new HuberNodeOutput(residual, response, 0.9);
+            switch (loss) {
+                case Huber:
+                    output = new HuberNodeOutput(residual, response, 0.9);
+                    break;
+
+                case LeastAbsoluteDeviation:
+                    for (int i = 0; i < n; i++) response[i] = Math.signum(residual[i]);
+                    break;
             }
-            
+
             trees[m] = new RegressionTree(x, DoubleVector.of("residual", response), maxNodes, nodeSize, x.ncols(), samples, order, output);
 
             for (int i = 0; i < n; i++) {
                 residual[i] -= shrinkage * trees[m].predict(x.get(i));
-                if (loss == Loss.LeastAbsoluteDeviation) {
-                    response[i] = Math.signum(residual[i]);
-                }
             }
         }
         
@@ -384,60 +387,24 @@ public class GradientTreeBoost implements Regression<Tuple> {
      * Test the model on a validation dataset.
      *
      * @param data the test data set.
-     * @return RMSEs with first 1, 2, ..., regression trees.
+     * @return the predictions with first 1, 2, ..., regression trees.
      */
-    public double[] test(DataFrame data) {
+    public double[][] test(DataFrame data) {
         DataFrame x = formula.x(data);
-        double[] y = formula.y(data).toDoubleArray();
-
-        int ntrees = trees.length;
-        double[] rmse = new double[ntrees];
 
         int n = x.nrows();
-        double[] prediction = new double[n];
-        Arrays.fill(prediction, b);
-
-        RMSE measure = new RMSE();
-        
-        for (int i = 0; i < ntrees; i++) {
-            for (int j = 0; j < n; j++) {
-                prediction[j] += shrinkage * trees[i].predict(x.get(j));
-            }
-
-            rmse[i] = measure.measure(y, prediction);
-        }
-
-        return rmse;
-    }
-    
-    /**
-     * Test the model on a validation dataset.
-     *
-     * @param data the test data set.
-     * @param measures the performance measures of regression.
-     * @return performance measures with first 1, 2, ..., regression trees.
-     */
-    public double[][] test(DataFrame data, RegressionMeasure[] measures) {
-        DataFrame x = formula.x(data);
-        double[] y = formula.y(data).toDoubleArray();
-
         int ntrees = trees.length;
-        int m = measures.length;
-        double[][] results = new double[ntrees][m];
+        double[][] prediction = new double[ntrees][n];
 
-        int n = x.nrows();
-        double[] prediction = new double[n];
-        Arrays.fill(prediction, b);
-
-        for (int i = 0; i < ntrees; i++) {
-            for (int j = 0; j < n; j++) {
-                prediction[j] += shrinkage * trees[i].predict(x.get(j));
-            }
-
-            for (int j = 0; j < m; j++) {
-                results[i][j] = measures[j].measure(y, prediction);
+        for (int j = 0; j < n; j++) {
+            Tuple xi = x.get(j);
+            double base = b;
+            for (int i = 0; i < ntrees; i++) {
+                prediction[i][j] = base + shrinkage * trees[i].predict(xi);
+                base = prediction[i][j];
             }
         }
-        return results;
+
+        return prediction;
     }
 }

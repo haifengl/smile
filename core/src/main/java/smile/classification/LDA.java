@@ -91,9 +91,9 @@ public class LDA implements SoftClassifier<double[]> {
     private final double[] eigen;
 
     /**
-     * Private constructor.
+     * Constructor.
      */
-    private LDA(int k , int p, double[] priori, double[][] mu, double[] ct, double[] eigen, DenseMatrix scaling) {
+    public LDA(int k , int p, double[] priori, double[][] mu, double[] ct, double[] eigen, DenseMatrix scaling) {
         this.k = k;
         this.p = p;
         this.priori = priori;
@@ -104,7 +104,31 @@ public class LDA implements SoftClassifier<double[]> {
     }
 
     /**
-     * Constructor. Learn linear discriminant analysis.
+     * Learns linear discriminant analysis.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    /*
+    public static LDA fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Properties());
+    }
+*/
+    /**
+     * Learns linear discriminant analysis.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    /*
+    public static LDA fit(Formula formula, DataFrame data, Properties prop) {
+        double tol = Double.valueOf(prop.getProperty("smile.lda.tolerance", "1E-4"));
+        return fit(formula, data, null, tol);
+    }
+     */
+
+    /**
+     * Learns linear discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      */
@@ -113,7 +137,7 @@ public class LDA implements SoftClassifier<double[]> {
     }
 
     /**
-     * Constructor. Learn linear discriminant analysis.
+     * Learns linear discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @param priori the priori probability of each class. If null, it will be
@@ -248,7 +272,7 @@ public class LDA implements SoftClassifier<double[]> {
     /**
      * Returns a priori probabilities.
      */
-    public double[] getPriori() {
+    public double[] priori() {
         return priori;
     }
 

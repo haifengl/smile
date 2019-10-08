@@ -53,6 +53,6 @@ public interface Node extends Serializable {
      * Try to merge the children nodes and return a leaf node.
      * If not able to merge, return this node itself.
      */
-    Node toLeaf();
+    Node merge();
 }
 

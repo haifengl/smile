@@ -77,6 +77,12 @@ public class RandomForestTest {
         assertEquals(31075.0867, importance[4], 1E-4);
         assertEquals(31644.9317, importance[5], 1E-4);
 
+        System.out.println("----- Progressive RMSE -----");
+        double[][] test = model.test(Longley.data);
+        for (int i = 0; i < test.length; i++) {
+            System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.apply(Longley.y, test[i]));
+        }
+
         double[] prediction = LOOCV.regression(Longley.data, x -> RandomForest.fit(Longley.formula, x));
         double rmse = RMSE.apply(Longley.y, prediction);
 

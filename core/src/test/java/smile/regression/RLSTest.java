@@ -68,13 +68,13 @@ public class RLSTest {
         DataFrame online = Longley.data.of(IntStream.range(n/2, n).toArray());
         LinearModel model = OLS.fit(Longley.formula, batch);
         double[] prediction = Validation.test(model, online);
-        double rmse = RMSE.apply(Longley.y, prediction);
+        double rmse = RMSE.apply(Longley.formula.y(online).toDoubleArray(), prediction);
         System.out.println("Batch RMSE = " + rmse);
         assertEquals(6.229663, rmse, 1E-4);
 
         model.update(online);
         prediction = Validation.test(model, online);
-        rmse = RMSE.apply(Longley.y, prediction);
+        rmse = RMSE.apply(Longley.formula.y(online).toDoubleArray(), prediction);
         System.out.println("Online RMSE = " + rmse);
         assertEquals(0.973663, rmse, 1E-4);
     }
