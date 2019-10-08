@@ -238,8 +238,8 @@ public class GradientTreeBoost implements Regression<Tuple> {
             throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
         }
 
-        DataFrame x = formula.frame(data).drop(formula.response().get());
-        double[] y = formula.response(data).toDoubleArray();
+        DataFrame x = formula.x(data);
+        double[] y = formula.y(data).toDoubleArray();
 
         final int n = x.nrows();
         final int N = (int) Math.round(n * subsample);
@@ -371,7 +371,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
     
     @Override
     public double predict(Tuple x) {
-        Tuple xt = formula.apply(x);
+        Tuple xt = formula.x(x);
         double y = b;
         for (RegressionTree tree : trees) {
             y += shrinkage * tree.predict(xt);
@@ -387,8 +387,8 @@ public class GradientTreeBoost implements Regression<Tuple> {
      * @return RMSEs with first 1, 2, ..., regression trees.
      */
     public double[] test(DataFrame data) {
-        DataFrame x = formula.frame(data);
-        double[] y = formula.response(data).toDoubleArray();
+        DataFrame x = formula.x(data);
+        double[] y = formula.y(data).toDoubleArray();
 
         int ntrees = trees.length;
         double[] rmse = new double[ntrees];
@@ -418,8 +418,8 @@ public class GradientTreeBoost implements Regression<Tuple> {
      * @return performance measures with first 1, 2, ..., regression trees.
      */
     public double[][] test(DataFrame data, RegressionMeasure[] measures) {
-        DataFrame x = formula.frame(data);
-        double[] y = formula.response(data).toDoubleArray();
+        DataFrame x = formula.x(data);
+        double[] y = formula.y(data).toDoubleArray();
 
         int ntrees = trees.length;
         int m = measures.length;

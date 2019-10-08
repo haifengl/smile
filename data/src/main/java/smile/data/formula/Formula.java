@@ -39,12 +39,14 @@ public class Formula implements Serializable {
     private Optional<Term> response = Optional.empty();
     /** The right-hand side of formula. */
     private HyperTerm[] predictors;
-    /** The terms (both predictors and response) after binding to a schema and expanding the hyper-terms. */
-    private Term[] terms;
-    /** The terms (only predictors) after binding to a schema and expanding the hyper-terms. */
-    private Term[] rhs;
     /** The formula output schema. */
     private StructType schema;
+    /** The right hand side schema. */
+    private StructType xschema;
+    /** The terms (only predictors) after binding to a schema and expanding the hyper-terms. */
+    private Term[] x;
+    /** The terms (both predictors and response) after binding to a schema and expanding the hyper-terms. */
+    private Term[] xy;
 
     /**
      * Constructor.
@@ -139,51 +141,18 @@ public class Formula implements Serializable {
         return new Formula(response, predictors);
     }
 
-    /** Returns the terms of formula. This should be called after bind() called. */
-    public Term[] terms() {
-        return terms;
+    /**
+     * Returns the schema of output data frame.
+     */
+    public StructType schema() {
+        return schema;
     }
 
     /**
-     * Apply the formula on a tuple to generate the model data.
+     * Returns the schema of design matrix.
      */
-    public Tuple apply(Tuple t) {
-        return new smile.data.AbstractTuple() {
-            @Override
-            public StructType schema() {
-                return schema;
-            }
-
-            @Override
-            public Object get(int i) {
-                return terms[i].apply(t);
-            }
-
-            @Override
-            public int getInt(int i) {
-                return terms[i].applyAsInt(t);
-            }
-
-            @Override
-            public long getLong(int i) {
-                return terms[i].applyAsLong(t);
-            }
-
-            @Override
-            public float getFloat(int i) {
-                return terms[i].applyAsFloat(t);
-            }
-
-            @Override
-            public double getDouble(int i) {
-                return terms[i].applyAsDouble(t);
-            }
-
-            @Override
-            public String toString() {
-                return schema.toString(this);
-            }
-        };
+    public StructType xschema() {
+        return xschema;
     }
 
     /** Binds the formula to a schema and returns the output schema of formula. */
@@ -232,28 +201,134 @@ public class Formula implements Serializable {
 
         result.addAll(factors);
         result.removeAll(removes);
-        this.terms = result.toArray(new Term[result.size()]);
-        if (response.isPresent()) {
-            this.rhs = Arrays.stream(this.terms).filter(term -> term != response.get()).toArray(Term[]::new);
-        } else {
-            this.rhs = terms;
-        }
+        this.xy = result.toArray(new Term[result.size()]);
 
         List<StructField> fields = result.stream()
                 .map(factor -> new StructField(factor.toString(), factor.type(), factor.measure()))
                 .collect(Collectors.toList());
 
         schema = DataTypes.struct(fields);
+
+        if (response.isPresent()) {
+            this.x = Arrays.stream(this.xy).filter(term -> term != response.get()).toArray(Term[]::new);
+            String y = response.get().toString();
+            this.xschema = DataTypes.struct(fields.stream().filter(field -> !field.name.equals(y)).toArray(StructField[]::new));
+        } else {
+            this.x = xy;
+            this.xschema = schema;
+        }
+
         return schema;
     }
 
     /**
-     * Returns a data frame with the variables needed to use formula.
+     * Apply the formula on a tuple to generate the model data.
+     */
+    public Tuple apply(Tuple t) {
+        return new smile.data.AbstractTuple() {
+            @Override
+            public StructType schema() {
+                return schema;
+            }
+
+            @Override
+            public Object get(int i) {
+                return xy[i].apply(t);
+            }
+
+            @Override
+            public int getInt(int i) {
+                return xy[i].applyAsInt(t);
+            }
+
+            @Override
+            public long getLong(int i) {
+                return xy[i].applyAsLong(t);
+            }
+
+            @Override
+            public float getFloat(int i) {
+                return xy[i].applyAsFloat(t);
+            }
+
+            @Override
+            public double getDouble(int i) {
+                return xy[i].applyAsDouble(t);
+            }
+
+            @Override
+            public String toString() {
+                return schema.toString(this);
+            }
+        };
+    }
+
+    /**
+     * Apply the formula on a tuple to generate the predictors data.
+     */
+    public Tuple x(Tuple t) {
+        return new smile.data.AbstractTuple() {
+            @Override
+            public StructType schema() {
+                return xschema;
+            }
+
+            @Override
+            public Object get(int i) {
+                return x[i].apply(t);
+            }
+
+            @Override
+            public int getInt(int i) {
+                return x[i].applyAsInt(t);
+            }
+
+            @Override
+            public long getLong(int i) {
+                return x[i].applyAsLong(t);
+            }
+
+            @Override
+            public float getFloat(int i) {
+                return x[i].applyAsFloat(t);
+            }
+
+            @Override
+            public double getDouble(int i) {
+                return x[i].applyAsDouble(t);
+            }
+
+            @Override
+            public String toString() {
+                return xschema.toString(this);
+            }
+        };
+    }
+
+    /**
+     * Returns the real values of predictors.
+     */
+    public double[] predictors(Tuple t) {
+        return Arrays.stream(x).mapToDouble(term -> term.applyAsDouble(t)).toArray();
+    }
+
+    /**
+     * Returns a data frame of predictors and response variable
      * @param df The input DataFrame.
      */
-    public DataFrame frame(DataFrame df) {
+    public DataFrame apply(DataFrame df) {
         bind(df.schema());
-        BaseVector[] vectors = Arrays.stream(terms()).map(term -> term.apply(df)).toArray(BaseVector[]::new);
+        BaseVector[] vectors = Arrays.stream(xy).map(term -> term.apply(df)).toArray(BaseVector[]::new);
+        return DataFrame.of(vectors);
+    }
+
+    /**
+     * Returns a data frame of predictors.
+     * @param df The input DataFrame.
+     */
+    public DataFrame x(DataFrame df) {
+        bind(df.schema());
+        BaseVector[] vectors = Arrays.stream(x).map(term -> term.apply(df)).toArray(BaseVector[]::new);
         return DataFrame.of(vectors);
     }
 
@@ -272,10 +347,9 @@ public class Formula implements Serializable {
      */
     public DenseMatrix matrix(DataFrame df, boolean bias) {
         bind(df.schema());
-        Term[] terms = terms();
 
         int nrows = df.nrows();
-        int ncols = terms.length;
+        int ncols = xy.length;
 
         if (response.isPresent()) {
             ncols -= 1;
@@ -285,11 +359,11 @@ public class Formula implements Serializable {
         DenseMatrix m = Matrix.of(nrows, ncols, 0.0);
         if (bias) for (int i = 0; i < nrows; i++) m.set(i, ncols-1, 1.0);
 
-        for (int j = 0, jj = 0; jj < terms.length; j++, jj++) {
-            if (response.isPresent() && terms[jj] == response.get()) continue;
+        for (int j = 0, jj = 0; jj < xy.length; j++, jj++) {
+            if (response.isPresent() && xy[jj] == response.get()) continue;
 
-            BaseVector v = terms[jj].apply(df);
-            DataType type = terms[jj].type();
+            BaseVector v = xy[jj].apply(df);
+            DataType type = xy[jj].type();
             switch (type.id()) {
                 case Double:
                 case Integer:
@@ -341,7 +415,7 @@ public class Formula implements Serializable {
      * Returns the response vector.
      * @param df The input DataFrame.
      */
-    public BaseVector response(DataFrame df) {
+    public BaseVector y(DataFrame df) {
         return response.map(r -> {
             r.bind(df.schema());
             return r.apply(df);
@@ -351,55 +425,14 @@ public class Formula implements Serializable {
     /**
      * Returns the real-valued response value.
      */
-    public double response(Tuple t) {
+    public double y(Tuple t) {
         return response.map(r -> r.applyAsDouble(t)).orElse(0.0);
     }
 
     /**
-     * Returns the class label.
+     * Returns the integer-valued response value.
      */
-    public int label(Tuple t) {
+    public int yint(Tuple t) {
         return response.map(r -> r.applyAsInt(t)).orElse(-1);
-    }
-
-    /**
-     * Returns the names of response variable.
-     */
-    public Optional<String> response() {
-        return response.map(Objects::toString);
-    }
-
-    /**
-     * Returns the real values of predictors.
-     */
-    public double[] predictors(Tuple t) {
-        return Arrays.stream(rhs).mapToDouble(term -> term.applyAsDouble(t)).toArray();
-    }
-
-    /**
-     * Returns the names of predictors.
-     */
-    public String[] predictors() {
-        return Arrays.stream(rhs).map(Object::toString).toArray(String[]::new);
-    }
-
-    /**
-     * Returns the schema of output data frame.
-     */
-    public StructType schema() {
-        return schema;
-    }
-
-    /**
-     * Returns the schema of design matrix.
-     */
-    public StructType predictorSchema() {
-        Optional<String> y = response();
-        if (y.isPresent()) {
-            StructField[] fields = Arrays.stream(schema.fields()).filter(field -> !field.name.equals(y.get())).toArray(StructField[]::new);
-            return DataTypes.struct(fields);
-        } else {
-            return schema;
-        }
     }
 }

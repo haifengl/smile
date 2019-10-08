@@ -111,7 +111,7 @@ public class RidgeRegression {
         }
 
         DenseMatrix X = formula.matrix(data, false);
-        double[] y = formula.response(data).toDoubleArray();
+        double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrows();
         int p = X.ncols();
@@ -122,14 +122,14 @@ public class RidgeRegression {
 
         LinearModel model = new LinearModel();
         model.formula = formula;
-        model.schema = formula.predictorSchema();
+        model.schema = formula.xschema();
         model.p = p;
         double[] center = X.colMeans();
         double[] scale = X.colSds();
 
         for (int j = 0; j < scale.length; j++) {
             if (MathEx.isZero(scale[j])) {
-                throw new IllegalArgumentException(String.format("The column '%s' is constant", formula.predictors()[j]));
+                throw new IllegalArgumentException(String.format("The column '%s' is constant", formula.schema().fieldName(j)));
             }
         }
 

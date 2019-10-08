@@ -316,7 +316,7 @@ public class LinearModel implements OnlineRegression<double[]> {
 
     /** Online update the regression model with a new training instance. */
     public void update(Tuple data) {
-        update(formula.predictors(data), formula.response(data));
+        update(formula.predictors(data), formula.y(data));
     }
 
     /** Online update the regression model with a new data frame. */

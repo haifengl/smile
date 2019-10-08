@@ -119,7 +119,7 @@ public class OLS {
      */
     public static LinearModel fit(Formula formula, DataFrame data, String method, boolean stderr, boolean recursive) {
         DenseMatrix X = formula.matrix(data, true);
-        double[] y = formula.response(data).toDoubleArray();
+        double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrows();
         int p = X.ncols() - 1;
@@ -152,7 +152,7 @@ public class OLS {
 
         LinearModel model = new LinearModel();
         model.formula = formula;
-        model.schema = formula.predictorSchema();
+        model.schema = formula.xschema();
         model.p = p;
         model.b = w1[p];
         model.w = new double[p];

@@ -214,8 +214,8 @@ public class RandomForest implements Regression<Tuple> {
             throw new IllegalArgumentException("Invalid sampling rate: " + subsample);
         }
 
-        DataFrame x = formula.frame(data).drop(formula.response().get());
-        BaseVector y = formula.response(data);
+        DataFrame x = formula.x(data);
+        BaseVector y = formula.y(data);
 
         if (mtry > x.ncols()) {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
@@ -239,7 +239,6 @@ public class RandomForest implements Regression<Tuple> {
         // train trees with parallel stream
         RegressionTree[] trees = Arrays.stream(seedArray).parallel().mapToObj(seed -> {
             // set RNG seed for the tree
-            //System.out.print(seed+" ");
             if (seed > 1) MathEx.setSeed(seed);
 
             final int[] samples = new int[n];
@@ -390,7 +389,7 @@ public class RandomForest implements Regression<Tuple> {
     
     @Override
     public double predict(Tuple x) {
-        Tuple xt = formula.apply(x);
+        Tuple xt = formula.x(x);
         double y = 0;
         for (RegressionTree tree : trees) {
             y += tree.predict(xt);
@@ -406,8 +405,8 @@ public class RandomForest implements Regression<Tuple> {
      * @return RMSEs with first 1, 2, ..., regression trees.
      */
     public double[] test(DataFrame data) {
-        DataFrame x = formula.frame(data);
-        double[] y = formula.response(data).toDoubleArray();
+        DataFrame x = formula.x(data);
+        double[] y = formula.y(data).toDoubleArray();
 
         double[] rmse = new double[trees.length];
 
@@ -437,8 +436,8 @@ public class RandomForest implements Regression<Tuple> {
      * @return performance measures with first 1, 2, ..., regression trees.
      */
     public double[][] test(DataFrame data, RegressionMeasure[] measures) {
-        DataFrame x = formula.frame(data);
-        double[] y = formula.response(data).toDoubleArray();
+        DataFrame x = formula.x(data);
+        double[] y = formula.y(data).toDoubleArray();
 
         int m = measures.length;
         double[][] results = new double[trees.length][m];

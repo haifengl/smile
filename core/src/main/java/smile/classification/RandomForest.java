@@ -18,18 +18,18 @@
 package smile.classification;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.function.LongSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import smile.base.cart.CART;
 import smile.base.cart.SplitRule;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
+import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.validation.Accuracy;
@@ -130,11 +130,77 @@ public class RandomForest implements SoftClassifier<Tuple> {
     /**
      * Constructor.
      */
-    public RandomForest(Formula formula, List<Tree> trees, double error, double[] importance) {
+    public RandomForest(Formula formula, int k, List<Tree> trees, double error, double[] importance) {
         this.formula = formula;
+        this.k = k;
         this.trees = trees;
         this.error = error;
         this.importance = importance;
+    }
+
+    /**
+     * Learns a random forest for classification.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static RandomForest fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Properties());
+    }
+
+    /**
+     * Learns a random forest for classification.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static RandomForest fit(Formula formula, DataFrame data, Properties prop) {
+        int ntrees = Integer.valueOf(prop.getProperty("smile.random.forest.trees", "500"));
+        int mtry = Integer.valueOf(prop.getProperty("smile.random.forest.mtry", "-1"));
+        SplitRule rule = SplitRule.valueOf(prop.getProperty("smile.random.forest.split.rule", "GINI"));
+        int maxNodes = Integer.valueOf(prop.getProperty("smile.random.forest.max.nodes", "100"));
+        int nodeSize = Integer.valueOf(prop.getProperty("smile.random.forest.node.size", "5"));
+        double subsample = Double.valueOf(prop.getProperty("smile.random.forest.sample.rate", "1.0"));
+        return fit(formula, data, ntrees, mtry, rule, maxNodes, nodeSize, subsample);
+    }
+
+    /**
+     * Learns a random forest for classification.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     * @param ntrees the number of trees.
+     * @param mtry the number of input variables to be used to determine the decision
+     * at a node of the tree. p/3 seems to give generally good performance,
+     * where p is the number of variables.
+     * @param nodeSize the number of instances in a node below which the tree will
+     * not split, setting nodeSize = 5 generally gives good results.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+     *                  sampling without replacement.
+     */
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxNodes, int nodeSize, double subsample) {
+        return fit(formula, data, ntrees, mtry, rule, maxNodes, nodeSize, subsample, Optional.empty(), Optional.empty());
+    }
+
+    /**
+     * Learns a random forest for regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     * @param ntrees the number of trees.
+     * @param mtry the number of input variables to be used to determine the decision
+     * at a node of the tree. p/3 seems to give generally good performance,
+     * where p is the number of variables.
+     * @param nodeSize the number of instances in a node below which the tree will
+     * not split, setting nodeSize = 5 generally gives good results.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
+     *                  sampling without replacement.
+     * @param seedGenerator RNG seed generator.
+     */
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxNodes, int nodeSize, double subsample, Optional<int[]> classWeight, LongSupplier seedGenerator) {
+        return fit(formula, data, ntrees, mtry, rule, maxNodes, nodeSize, subsample, classWeight, Optional.of(LongStream.generate(seedGenerator)));
     }
 
     /**
@@ -153,13 +219,13 @@ public class RandomForest implements SoftClassifier<Tuple> {
      * @param rule Decision tree split rule.
      * @param classWeight Priors of the classes. The weight of each class
      *                    is roughly the ratio of samples in each class.
-     *                    For example, if
-     *                    there are 400 positive samples and 100 negative
-     *                    samples, the classWeight should be [1, 4]
-     *                    (assuming label 0 is of negative, label 1 is of
+     *                    For example, if there are 400 positive samples
+     *                    and 100 negative samples, the classWeight should
+     *                    be [1, 4] (assuming label 0 is of negative, label 1 is of
      *                    positive).
+     * @param seeds optional RNG seeds for each regression tree.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxNodes, int nodeSize, double subsample, int[] classWeight) {
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxNodes, int nodeSize, double subsample, Optional<int[]> classWeight, Optional<LongStream> seeds) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }
@@ -176,8 +242,8 @@ public class RandomForest implements SoftClassifier<Tuple> {
             throw new IllegalArgumentException("Invalid sampling rating: " + subsample);
         }
 
-        DataFrame x = formula.frame(data);
-        BaseVector y = formula.response(data);
+        DataFrame x = formula.x(data);
+        BaseVector y = formula.y(data);
 
         if (mtry < 1 || mtry > x.ncols()) {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
@@ -186,14 +252,22 @@ public class RandomForest implements SoftClassifier<Tuple> {
         final int n = x.nrows();
         final int k = Classifier.classes(y).length;
 
-        final int[] weight = classWeight != null ? classWeight : Collections.nCopies(k, 1).stream().mapToInt(i -> i).toArray();
+        final int[] weight = classWeight.orElseGet(() -> Collections.nCopies(k, 1).stream().mapToInt(i -> i).toArray());
 
         final int[][] order = CART.order(x);
         final int[][] prediction = new int[n][k]; // out-of-bag prediction
 
-        List<Tree> trees = IntStream.range(0, ntrees).parallel().mapToObj(t -> {
-            int[] samples = new int[n];
+        // generate seeds with sequential stream
+        long[] seedArray = seeds.orElse(LongStream.range(-ntrees, 0)).sequential().distinct().limit(ntrees).toArray();
+        if (seedArray.length != ntrees) {
+            throw new IllegalArgumentException(String.format("seed stream has only %d distinct values, expected %d", seedArray.length, ntrees));
+        }
 
+        List<Tree> trees = Arrays.stream(seedArray).parallel().mapToObj(seed -> {
+            // set RNG seed for the tree
+            if (seed > 1) MathEx.setSeed(seed);
+
+            final int[] samples = new int[n];
             // Stratified sampling in case class is unbalanced.
             // That is, we sample each class separately.
             if (subsample == 1.0) {
@@ -274,7 +348,17 @@ public class RandomForest implements SoftClassifier<Tuple> {
             }
         }
 
-        return new RandomForest(formula, trees, error, importance);
+        return new RandomForest(formula, k, trees, error, importance);
+    }
+
+    @Override
+    public Optional<Formula> formula() {
+        return Optional.of(formula);
+    }
+
+    @Override
+    public Optional<StructType> schema() {
+        return trees.get(0).tree.schema();
     }
 
     /**
@@ -345,10 +429,11 @@ public class RandomForest implements SoftClassifier<Tuple> {
     
     @Override
     public int predict(Tuple x) {
+        Tuple xt = formula.x(x);
         int[] y = new int[k];
         
         for (Tree tree : trees) {
-            y[tree.tree.predict(x)]++;
+            y[tree.tree.predict(xt)]++;
         }
         
         return MathEx.whichMax(y);
@@ -382,8 +467,8 @@ public class RandomForest implements SoftClassifier<Tuple> {
      * @return accuracies with first 1, 2, ..., decision trees.
      */
     public double[] test(DataFrame data) {
-        DataFrame x = formula.frame(data);
-        int[] y = formula.response(data).toIntArray();
+        DataFrame x = formula.x(data);
+        int[] y = formula.y(data).toIntArray();
 
         int T = trees.size();
         double[] accuracy = new double[T];
@@ -414,8 +499,8 @@ public class RandomForest implements SoftClassifier<Tuple> {
      * @return performance measures with first 1, 2, ..., decision trees.
      */
     public double[][] test(DataFrame data, ClassificationMeasure[] measures) {
-        DataFrame x = formula.frame(data);
-        int[] y = formula.response(data).toIntArray();
+        DataFrame x = formula.x(data);
+        int[] y = formula.y(data).toIntArray();
 
         int T = trees.size();
         int m = measures.length;

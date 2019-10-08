@@ -163,8 +163,8 @@ public class AdaBoost implements SoftClassifier<Tuple> {
             throw new IllegalArgumentException("Invalid minimum size of leaves: " + nodeSize);
         }
 
-        DataFrame x = formula.frame(data).drop(formula.response().get());
-        BaseVector y = formula.response(data);
+        DataFrame x = formula.x(data);
+        BaseVector y = formula.y(data);
         int k = Classifier.classes(y).length;
         int[][] order = CART.order(x);
         
@@ -300,7 +300,7 @@ public class AdaBoost implements SoftClassifier<Tuple> {
     
     @Override
     public int predict(Tuple x) {
-        Tuple xt = formula.apply(x);
+        Tuple xt = formula.x(x);
         double[] y = new double[k];
 
         for (int i = 0; i < trees.length; i++) {

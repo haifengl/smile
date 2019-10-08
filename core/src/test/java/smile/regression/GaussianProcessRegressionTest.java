@@ -76,7 +76,7 @@ public class GaussianProcessRegressionTest {
         System.out.println(model);
 
         double[] prediction = LOOCV.regression(longley, Longley.y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(8.0), 0.2));
-        double rmse = RMSE.apply(Longley.formula.response(Longley.data).toDoubleArray(), prediction);
+        double rmse = RMSE.apply(Longley.y, prediction);
 
         System.out.println("RMSE = " + rmse);
         assertEquals(3.978109808216234, rmse, 1E-4);

@@ -122,7 +122,7 @@ public class Bootstrap {
 
             DataFrame oob = data.of(test[i]);
             int[] prediction = model.predict(oob);
-            int[] testy = model.formula().get().response(oob).toIntArray();
+            int[] testy = model.formula().get().y(oob).toIntArray();
 
             error[i] = 1 - Accuracy.apply(testy, prediction);
         }
@@ -162,7 +162,7 @@ public class Bootstrap {
             Regression<T> model = trainer.apply(data.of(train[i]));
             DataFrame oob = data.of(test[i]);
             double[] prediction = model.predict(oob);
-            double[] testy = model.formula().get().response(oob).toDoubleArray();
+            double[] testy = model.formula().get().y(oob).toDoubleArray();
 
             rmse[i] = RMSE.apply(testy, prediction);
         }

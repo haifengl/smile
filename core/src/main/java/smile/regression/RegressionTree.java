@@ -285,8 +285,8 @@ public class RegressionTree extends CART implements Regression<Tuple> {
      * @param maxNodes the maximum number of leaf nodes in the tree.
      */
     public static RegressionTree fit(Formula formula, DataFrame data, int maxNodes, int nodeSize) {
-        DataFrame x = formula.frame(data).drop(formula.response().get());
-        BaseVector y = formula.response(data);
+        DataFrame x = formula.x(data);
+        BaseVector y = formula.y(data);
         RegressionNodeOutput output = new LeastSquaresNodeOutput(y.toDoubleArray());
         RegressionTree tree = new RegressionTree(x, y, maxNodes, nodeSize, -1, null, null, output);
         tree.formula = Optional.of(formula);
@@ -295,7 +295,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
 
     @Override
     public double predict(Tuple x) {
-        RegressionNode leaf = (RegressionNode) root.predict(formula.map(f -> f.apply(x)).orElse(x));
+        RegressionNode leaf = (RegressionNode) root.predict(formula.map(f -> f.x(x)).orElse(x));
         return leaf.output();
     }
 

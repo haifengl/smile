@@ -109,7 +109,7 @@ public class ElasticNet {
         double c = 1 / Math.sqrt(1 + lambda2);
 
         DenseMatrix X = formula.matrix(data, false);
-        double[] y = formula.response(data).toDoubleArray();
+        double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrows();
         int p = X.ncols();
@@ -133,7 +133,7 @@ public class ElasticNet {
 
         LinearModel model = LASSO.train(X2, y2,lambda1 * c, tol, maxIter);
         model.formula = formula;
-        model.schema = formula.predictorSchema();
+        model.schema = formula.xschema();
 
         double[] w = new double[p];
         for (int i = 0; i < p; i++) {
