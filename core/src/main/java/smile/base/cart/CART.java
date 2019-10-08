@@ -283,7 +283,7 @@ public abstract class CART {
 
         // skip the pure columns
         int p = schema.length();
-        int[] columns = IntStream.range(0, p).filter(i -> pure == null || !pure[i]).toArray();
+        int[] columns = IntStream.range(0, p).filter(i -> !pure[i]).toArray();
 
         // random forest
         if (mtry < p) {

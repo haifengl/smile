@@ -91,16 +91,32 @@ public class RegressionTree extends CART implements Regression<Tuple> {
 
     @Override
     protected LeafNode newNode(int[] nodeSamples) {
+        // The output of node may be different from the sample mean.
+        // In fact, it may be based on different data from the response
+        // in gradient tree boosting.
         double out = output.calculate(nodeSamples, samples);
+
+        // RSS computation should always based on the sample mean in the node.
+        double mean = out;
+        if (!(output instanceof LeastSquaresNodeOutput)) {
+            int n = 0;
+            mean = 0.0;
+            for (int i : nodeSamples) {
+                n += samples[i];
+                mean += y.getDouble(i) * samples[i];
+            }
+
+            mean /= n;
+        }
 
         int n = 0;
         double rss = 0.0;
         for (int i : nodeSamples) {
             n += samples[i];
-            rss += samples[i] * MathEx.sqr(y.getDouble(i) - out);
+            rss += samples[i] * MathEx.sqr(y.getDouble(i) - mean);
         }
 
-        return new RegressionNode(n, out, rss);
+        return new RegressionNode(n, out, mean, rss);
     }
 
     @Override
@@ -109,7 +125,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
         BaseVector xj = x.column(j);
 
         double sum = IntStream.range(lo, hi).map(i -> index[i]).mapToDouble(i -> y.getDouble(i) * samples[i]).sum();
-        double nodeOutputSquared = node.size() * node.output() * node.output();
+        double nodeMeanSquared = node.size() * node.mean() * node.mean();
 
         Split split = null;
         double splitScore = 0.0;
@@ -144,7 +160,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
                 double trueMean = trueSum[l] / tc;
                 double falseMean = (sum - trueSum[l]) / fc;
 
-                double gain = (tc * trueMean * trueMean + fc * falseMean * falseMean) - nodeOutputSquared;
+                double gain = (tc * trueMean * trueMean + fc * falseMean * falseMean) - nodeMeanSquared;
 
                 // new best split
                 if (gain > splitScore) {
@@ -183,7 +199,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
                     double trueMean = trueSum / tc;
                     double falseMean = (sum - trueSum) / fc;
 
-                    double gain = (tc * trueMean * trueMean + fc * falseMean * falseMean) - nodeOutputSquared;
+                    double gain = (tc * trueMean * trueMean + fc * falseMean * falseMean) - nodeMeanSquared;
 
                     // new best split
                     if (gain > splitScore) {
@@ -221,11 +237,12 @@ public class RegressionTree extends CART implements Regression<Tuple> {
      *               samples[i] is the number of sampling for instance i.
      * @param order the index of training values in ascending order. Note
      *              that only numeric attributes need be sorted.
+     * @param output a lambda to calculate node output.
      */
     public RegressionTree(DataFrame x, BaseVector y, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order, RegressionNodeOutput output) {
         super(x, y, maxNodes, nodeSize, mtry, samples, order);
 
-        this.output = output;
+        this.output = output == null ? new LeastSquaresNodeOutput(y.toDoubleArray()) : output;
 
         LeafNode node = newNode(IntStream.range(0, x.size()).filter(i -> this.samples[i] > 0).toArray());
         this.root = node;
@@ -246,7 +263,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
         }
 
         // merge the sister leaves that produce the same output.
-        this.root = this.root.toLeaf();
+        this.root = this.root.merge();
 
         clear();
     }
@@ -287,8 +304,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
     public static RegressionTree fit(Formula formula, DataFrame data, int maxNodes, int nodeSize) {
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
-        RegressionNodeOutput output = new LeastSquaresNodeOutput(y.toDoubleArray());
-        RegressionTree tree = new RegressionTree(x, y, maxNodes, nodeSize, -1, null, null, output);
+        RegressionTree tree = new RegressionTree(x, y, maxNodes, nodeSize, -1, null, null, null);
         tree.formula = Optional.of(formula);
         return tree;
     }

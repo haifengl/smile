@@ -27,7 +27,14 @@ import smile.math.MathEx;
 public class RegressionNode extends LeafNode {
     private static final long serialVersionUID = 1L;
 
-    /** The predicted output. */
+    /** The mean of response variable. */
+    private double mean;
+
+    /**
+     * The predicted output. In standard regression tree,
+     * this is same as the mean. However, in gradient tree
+     * boosting, this may be different.
+     */
     private double output;
 
     /** The residual sum of squares. */
@@ -38,11 +45,13 @@ public class RegressionNode extends LeafNode {
      *
      * @param size the number of samples in the node
      * @param output the predicted value for this node.
+     * @param mean the mean of response variable.
      * @param rss the residual sum of squares.
      */
-    public RegressionNode(int size, double output, double rss) {
+    public RegressionNode(int size, double output, double mean, double rss) {
         super(size);
         this.output = output;
+        this.mean = mean;
         this.rss = rss;
     }
 
@@ -51,9 +60,12 @@ public class RegressionNode extends LeafNode {
         return output;
     }
 
-    /**
-     * Returns the residual sum of squares.
-     */
+    /** Returns the mean of response variable. */
+    public double mean() {
+        return mean;
+    }
+
+    /** Returns the residual sum of squares. */
     public double impurity() {
         return rss;
     }

@@ -17,42 +17,33 @@
 
 package smile.base.cart;
 
-import java.io.Serializable;
-import smile.data.Tuple;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
-
 /**
- * CART tree node.
+ * Calculates the node output for two-class logistic regression.
  */
-public interface Node extends Serializable {
-    /**
-     * Evaluate the tree over an instance.
-     */
-    LeafNode predict(Tuple x);
+public class BinaryLogisticRegressionNodeOutput implements RegressionNodeOutput {
 
     /**
-     * Returns a dot representation for visualization.
-     * @param schema the schema of data
-     * @param yfield the schema of response variable
-     * @param id node id
+     * Pseudo response to fit.
      */
-    String dot(StructType schema, StructField yfield, int id);
-
-    /** Returns the number of samples in the node. */
-    int size();
-
+    double[] y;
     /**
-     * Returns the maximum depth of the tree -- the number of
-     * nodes along the longest path from this node
-     * down to the farthest leaf node.
+     * Constructor.
+     * @param y pseudo response to fit.
      */
-    int depth();
+    public BinaryLogisticRegressionNodeOutput(double[] y) {
+        this.y = y;
+    }
 
-    /**
-     * Try to merge the children nodes and return a leaf node.
-     * If not able to merge, return this node itself.
-     */
-    Node merge();
+    @Override
+    public double calculate(int[] nodeSamples, int[] sampleCount) {
+        double nu = 0.0;
+        double de = 0.0;
+        for (int i : nodeSamples) {
+            double abs = Math.abs(y[i]);
+            nu += y[i];
+            de += abs * (2.0 - abs);
+        }
+
+        return nu / de;
+    }
 }
-

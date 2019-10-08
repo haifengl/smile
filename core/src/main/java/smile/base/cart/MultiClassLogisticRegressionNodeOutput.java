@@ -18,20 +18,39 @@
 package smile.base.cart;
 
 /**
- * An interface to calculate node output. Note that samples[i] is the
- * number of sampling of dataset[i]. 0 means that the datum is not
- * included and values of greater than 1 are possible because of
- * sampling with replacement.
+ * Calculates the node output for multi-class logistic regression.
  */
-public interface RegressionNodeOutput {
+public class MultiClassLogisticRegressionNodeOutput implements RegressionNodeOutput {
+    /** The number of classes. */
+    int k;
+
+    /** The responses to fit. */
+    double[] y;
+
     /**
-     * Calculate the node output.
-     *
-     * @param nodeSamples the index of node samples to their original locations in training dataset.
-     * @param sampleCount samples[i] is the number of sampling of dataset[i]. 0 means that the
-     *               datum is not included and values of greater than 1 are
-     *               possible because of sampling with replacement.
-     * @return the node output
+     * Constructor.
+     * @param k the number of classes.
+     * @param response response to fit.
      */
-    double calculate(int[] nodeSamples, int[] sampleCount);
+    public MultiClassLogisticRegressionNodeOutput(int k, double[] response) {
+        this.k = k;
+        this.y = response;
+    }
+
+    @Override
+    public double calculate(int[] nodeSamples, int[] sampleCount) {
+        double nu = 0.0;
+        double de = 0.0;
+        for (int i : nodeSamples) {
+            double abs = Math.abs(y[i]);
+            nu += y[i];
+            de += abs * (1.0 - abs);
+        }
+
+        if (de < 1E-10) {
+            return nu / nodeSamples.length;
+        }
+
+        return ((k-1.0) / k) * (nu / de);
+    }
 }

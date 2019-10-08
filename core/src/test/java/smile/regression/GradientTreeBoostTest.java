@@ -72,10 +72,16 @@ public class GradientTreeBoostTest {
             System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
+        System.out.println("----- Progressive RMSE -----");
+        double[][] test = model.test(Longley.data);
+        for (int i = 0; i < test.length; i++) {
+            System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.apply(Longley.y, test[i]));
+        }
+
         double[] prediction = LOOCV.regression(Longley.data, x -> GradientTreeBoost.fit(Longley.formula, x));
         double rmse = RMSE.apply(Longley.y, prediction);
         System.out.println("LOOCV RMSE = " + rmse);
-        assertEquals(6.497666978811788, rmse, 1E-4);
+        assertEquals(3.545378550497016, rmse, 1E-4);
     }
 
     public void test(GradientTreeBoost.Loss loss, String name, Formula formula, DataFrame data, double expected) {
@@ -112,27 +118,27 @@ public class GradientTreeBoostTest {
 
     @Test
     public void testLAD() {
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "CPU", CPU.formula, CPU.data, 144.5555);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "2dplanes", Planes.formula, Planes.data, 2.6505);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "abalone", Abalone.formula, Abalone.train, 2.3665);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "CPU", CPU.formula, CPU.data, 89.6677);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "2dplanes", Planes.formula, Planes.data, 1.1347);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "abalone", Abalone.formula, Abalone.train, 2.2990);
         test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0969);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1272);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "cal_housing", CalHousing.formula, CalHousing.data, 118361.1368);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "puma8nh", Puma8NH.formula, Puma8NH.data, 4.2626);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1893);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0912);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8460);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "cal_housing", CalHousing.formula, CalHousing.data, 66772.6697);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2495);
+        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1815);
     }
 
     @Test
     public void testHuber() {
-        test(GradientTreeBoost.Loss.Huber, "CPU", CPU.formula, CPU.data, 89.9275);
-        test(GradientTreeBoost.Loss.Huber, "2dplanes", Planes.formula, Planes.data, 1.1122);
-        test(GradientTreeBoost.Loss.Huber, "abalone", Abalone.formula, Abalone.train, 2.2244);
+        test(GradientTreeBoost.Loss.Huber, "CPU", CPU.formula, CPU.data, 85.3103);
+        test(GradientTreeBoost.Loss.Huber, "2dplanes", Planes.formula, Planes.data, 1.1080);
+        test(GradientTreeBoost.Loss.Huber, "abalone", Abalone.formula, Abalone.train, 2.2262);
         test(GradientTreeBoost.Loss.Huber, "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
-        test(GradientTreeBoost.Loss.Huber, "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0857);
-        test(GradientTreeBoost.Loss.Huber, "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8347);
-        test(GradientTreeBoost.Loss.Huber, "cal_housing", CalHousing.formula, CalHousing.data, 62077.1824);
-        test(GradientTreeBoost.Loss.Huber, "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2767);
-        test(GradientTreeBoost.Loss.Huber, "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1827);
+        test(GradientTreeBoost.Loss.Huber, "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0855);
+        test(GradientTreeBoost.Loss.Huber, "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8316);
+        test(GradientTreeBoost.Loss.Huber, "cal_housing", CalHousing.formula, CalHousing.data, 62115.9896);
+        test(GradientTreeBoost.Loss.Huber, "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2435);
+        test(GradientTreeBoost.Loss.Huber, "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1795);
     }
 }

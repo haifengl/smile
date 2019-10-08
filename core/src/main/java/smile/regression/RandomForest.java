@@ -247,8 +247,8 @@ public class RandomForest implements Regression<Tuple> {
                 IntStream.generate(() -> MathEx.randomInt(n)).limit(n).forEach(i -> samples[i]++);
             } else {
                 // Training samples draw without replacement.
-                int[] perm = MathEx.permutate(n);
-                Arrays.stream(perm).limit((int) Math.round(n * subsample)).forEach(i -> samples[i]++);
+                int[] permutation = MathEx.permutate(n);
+                Arrays.stream(permutation).limit((int) Math.round(n * subsample)).forEach(i -> samples[i]++);
             }
 
             RegressionTree tree = new RegressionTree(x, y, maxNodes, nodeSize, mtryFinal, samples, order, output);
@@ -402,60 +402,25 @@ public class RandomForest implements Regression<Tuple> {
      * Test the model on a validation dataset.
      *
      * @param data the test data set.
-     * @return RMSEs with first 1, 2, ..., regression trees.
+     * @return the predictions with first 1, 2, ..., regression trees.
      */
-    public double[] test(DataFrame data) {
+    public double[][] test(DataFrame data) {
         DataFrame x = formula.x(data);
-        double[] y = formula.y(data).toDoubleArray();
-
-        double[] rmse = new double[trees.length];
 
         int n = x.nrows();
         double[] sum = new double[n];
-        double[] prediction = new double[n];
+        int ntrees = trees.length;
+        double[][] prediction = new double[ntrees][n];
 
-        RMSE measure = new RMSE();
-        
-        for (int i = 0, nt = 1; i < trees.length; i++, nt++) {
-            for (int j = 0; j < n; j++) {
-                sum[j] += trees[i].predict(x.get(j));
-                prediction[j] = sum[j] / nt;
-            }
-
-            rmse[i] = measure.measure(y, prediction);
-        }
-
-        return rmse;
-    }
-    
-    /**
-     * Test the model on a validation dataset.
-     *
-     * @param data the test data set.
-     * @param measures the performance measures of regression.
-     * @return performance measures with first 1, 2, ..., regression trees.
-     */
-    public double[][] test(DataFrame data, RegressionMeasure[] measures) {
-        DataFrame x = formula.x(data);
-        double[] y = formula.y(data).toDoubleArray();
-
-        int m = measures.length;
-        double[][] results = new double[trees.length][m];
-
-        int n = x.nrows();
-        double[] sum = new double[n];
-        double[] prediction = new double[n];
-
-        for (int i = 0, nt = 1; i < trees.length; i++, nt++) {
-            for (int j = 0; j < n; j++) {
-                sum[j] += trees[i].predict(x.get(j));
-                prediction[j] = sum[j] / nt;
-            }
-
-            for (int j = 0; j < m; j++) {
-                results[i][j] = measures[j].measure(y, prediction);
+        for (int j = 0; j < n; j++) {
+            Tuple xi = x.get(j);
+            double base = 0;
+            for (int i = 0; i < ntrees; i++) {
+                base = base + trees[i].predict(xi);
+                prediction[i][j] = base / (i+1);
             }
         }
-        return results;
+
+        return prediction;
     }
 }

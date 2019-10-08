@@ -50,5 +50,5 @@ public abstract class LeafNode implements Node {
     }
 
     @Override
-    public Node toLeaf() { return this; }
+    public Node merge() { return this; }
 }

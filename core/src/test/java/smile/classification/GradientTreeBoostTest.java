@@ -17,18 +17,19 @@
 
 package smile.classification;
 
+import smile.data.Iris;
+import smile.data.USPS;
+import smile.data.WeatherNominal;
+import smile.math.MathEx;
+import smile.validation.Validation;
+import smile.validation.Error;
 import smile.validation.LOOCV;
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
-import smile.math.MathEx;
-import smile.sort.QuickSort;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -55,204 +56,63 @@ public class GradientTreeBoostTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of predict method, of class GradientTreeBoost.
-     */
+
     @Test
-    public void testIris2() {
-        System.out.println("Iris binary");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.util.Paths.getTestData("weka/iris.arff"));
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            int[] y = iris.toArray(new int[iris.size()]);
+    public void testWeather() {
+        System.out.println("Weather");
 
-            for (int i = 0; i < y.length; i++) {
-                if (y[i] == 2) {
-                    y[i] = 1;
-                } else {
-                    y[i] = 0;
-                }
-            }
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
+        GradientTreeBoost model = GradientTreeBoost.fit(WeatherNominal.formula, WeatherNominal.data, 100, 6, 5, 0.05, 0.7);
 
-            int n = x.length;
-            LOOCV loocv = new LOOCV(n);
-            int error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = MathEx.slice(x, loocv.train[i]);
-                int[] trainy = MathEx.slice(y, loocv.train[i]);
-                GradientTreeBoost boost = new GradientTreeBoost(iris.attributes(), trainx, trainy, 100);
-
-                if (y[loocv.test[i]] != boost.predict(x[loocv.test[i]]))
-                    error++;
-            }
-
-            System.out.println("Gradient Tree Boost error = " + error);
-            //assertEquals(6, error);
-        } catch (Exception ex) {
-            System.err.println(ex);
+        double[] importance = model.importance();
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
+
+        int[] prediction = LOOCV.classification(WeatherNominal.data, x -> GradientTreeBoost.fit(WeatherNominal.formula, x, 100, 6, 5, 0.05, 0.7));
+        int error = Error.apply(WeatherNominal.y, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(6, error);
     }
-    /**
-     * Test of learn method, of class GradientTreeBoost.
-     */
+
     @Test
     public void testIris() {
         System.out.println("Iris");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.util.Paths.getTestData("weka/iris.arff"));
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            int[] y = iris.toArray(new int[iris.size()]);
 
-            int n = x.length;
-            LOOCV loocv = new LOOCV(n);
-            int error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = MathEx.slice(x, loocv.train[i]);
-                int[] trainy = MathEx.slice(y, loocv.train[i]);
-                GradientTreeBoost boost = new GradientTreeBoost(iris.attributes(), trainx, trainy, 100);
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
+        GradientTreeBoost model = GradientTreeBoost.fit(Iris.formula, Iris.data, 100, 6, 5, 0.05, 0.7);
 
-                if (y[loocv.test[i]] != boost.predict(x[loocv.test[i]]))
-                    error++;
-            }
-
-            System.out.println("Gradient Tree Boost error = " + error);
-            //assertEquals(6, error);
-        } catch (Exception ex) {
-            System.err.println(ex);
+        double[] importance = model.importance();
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
+
+        int[] prediction = LOOCV.classification(Iris.data, x -> GradientTreeBoost.fit(Iris.formula, x, 100, 6, 5, 0.05, 0.7));
+        int error = Error.apply(Iris.y, prediction);
+        System.out.println("Error = " + error);
+        assertEquals(8, error);
     }
 
-    /**
-     * Test of learn method, of class GradientTreeBoost.
-     */
-    @Test
-    public void testSegment() {
-        System.out.println("Segment");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(19);
-        try {
-            AttributeDataset train = arffParser.parse(smile.util.Paths.getTestData("weka/segment-challenge.arff"));
-            AttributeDataset test = arffParser.parse(smile.util.Paths.getTestData("weka/segment-test.arff"));
-
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-
-            GradientTreeBoost boost = new GradientTreeBoost(train.attributes(), x, y, 100);
-            
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (boost.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
-
-            System.out.format("Gradient Tree Boost error rate = %.2f%%%n", 100.0 * error / testx.length);
-            //assertEquals(28, error);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
-    }
-
-    /**
-     * Test of learn method, of class GradientTreeBoost.
-     */
     @Test
     public void testUSPS() {
         System.out.println("USPS");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.util.Paths.getTestData("usps/zip.test"));
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-            
-            GradientTreeBoost boost = new GradientTreeBoost(train.attributes(), x, y, 100);
-            
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (boost.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
+        GradientTreeBoost model = GradientTreeBoost.fit(USPS.formula, USPS.train, 100, 100, 5, 0.05, 0.7);
 
-            System.out.format("Gradient Tree Boost error rate = %.2f%%%n", 100.0 * error / testx.length);
-
-            double[] accuracy = boost.test(testx, testy);
-            for (int i = 1; i <= accuracy.length; i++) {
-                System.out.format("%d trees accuracy = %.2f%%%n", i, 100.0 * accuracy[i-1]);
-            }
-            
-            double[] importance = boost.importance();
-            int[] index = QuickSort.sort(importance);
-            for (int i = importance.length; i-- > 0; ) {
-                System.out.format("%s importance is %.4f%n", train.attributes()[index[i]], importance[i]);
-            }
-        } catch (Exception ex) {
-            System.err.println(ex);
+        double[] importance = model.importance();
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
-    }
 
-    /**
-     * Test of learn method, of class GradientTreeBoost.
-     */
-    @Test
-    public void testUSPS2() {
-        System.out.println("USPS 2 classes");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.util.Paths.getTestData("usps/zip.test"));
+        int[] prediction = Validation.test(model, USPS.test);
+        int error = Error.apply(USPS.testy, prediction);
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-            
-            for (int i = 0; i < y.length; i++) {
-                if (y[i] != 0) {
-                    y[i] = 1;
-                }
-            }
-            for (int i = 0; i < testy.length; i++) {
-                if (testy[i] != 0) {
-                    testy[i] = 1;
-                }
-            }
-            
-            GradientTreeBoost boost = new GradientTreeBoost(train.attributes(), x, y, 100);
-            
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (boost.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
-
-            System.out.format("Gradient Tree Boost error rate = %.2f%%%n", 100.0 * error / testx.length);
-            
-            double[] accuracy = boost.test(testx, testy);
-            for (int i = 1; i <= accuracy.length; i++) {
-                System.out.format("%d trees accuracy = %.2f%%%n", i, 100.0 * accuracy[i-1]);
-            }
-            
-            double[] importance = boost.importance();
-            int[] index = QuickSort.sort(importance);
-            for (int i = importance.length; i-- > 0; ) {
-                System.out.format("%s importance is %.4f%n", train.attributes()[index[i]], importance[i]);
-            }
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        System.out.println("Error = " + error);
+        assertEquals(147, error);
     }
 }

@@ -273,7 +273,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
         }
 
         // merge the sister leaves that produce the same output.
-        this.root = this.root.toLeaf();
+        this.root = this.root.merge();
 
         clear();
     }
