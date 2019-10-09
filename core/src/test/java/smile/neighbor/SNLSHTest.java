@@ -97,8 +97,7 @@ public class SNLSHTest {
 
     private List<Sentence> loadData(String path) throws IOException {
         List<Sentence> data = new ArrayList<>();
-        Stream<String> lines = Files.lines(smile.util.Paths.getTestData(path));
-        lines.forEach(line -> {
+        Files.lines(smile.util.Paths.getTestData(path)).forEach(line -> {
             List<String> s = tokenize(line, "\t");
             data.add(new Sentence(s.get(s.size() - 1)));
             data.add(new Sentence(s.get(s.size() - 2)));

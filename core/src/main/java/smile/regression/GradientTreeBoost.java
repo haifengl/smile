@@ -283,7 +283,9 @@ public class GradientTreeBoost implements Regression<Tuple> {
         for (int m = 0; m < ntrees; m++) {
             Arrays.fill(samples, 0);
             MathEx.permutate(permutation);
-            IntStream.range(0, N).forEach(i -> samples[permutation[i]] = 1);
+            for (int i = 0; i < N; i++) {
+                samples[permutation[i]]++;
+            }
             
             switch (loss) {
                 case Huber:

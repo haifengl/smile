@@ -244,11 +244,16 @@ public class RandomForest implements Regression<Tuple> {
             final int[] samples = new int[n];
             if (subsample == 1.0) {
                 // Training samples draw with replacement.
-                IntStream.generate(() -> MathEx.randomInt(n)).limit(n).forEach(i -> samples[i]++);
+                for (int i = 0; i < n; i++) {
+                    samples[MathEx.randomInt(n)]++;
+                }
             } else {
                 // Training samples draw without replacement.
                 int[] permutation = MathEx.permutate(n);
-                Arrays.stream(permutation).limit((int) Math.round(n * subsample)).forEach(i -> samples[i]++);
+                int N = (int) Math.round(n * subsample);
+                for (int i = 0; i < N; i++) {
+                    samples[permutation[i]] = 1;
+                }
             }
 
             RegressionTree tree = new RegressionTree(x, y, maxNodes, nodeSize, mtryFinal, samples, order, output);

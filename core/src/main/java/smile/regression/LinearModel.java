@@ -323,7 +323,6 @@ public class LinearModel implements OnlineRegression<double[]> {
     public void update(DataFrame data) {
         // Don't use data.stream, which may run in parallel.
         // However, update is not multi-thread safe
-        //data.stream().forEach(this::update);
         int n = data.size();
         for (int i = 0; i < n; i++) {
             update(data.get(i));

@@ -280,7 +280,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         int k = 2;
 
         int[] nc = new int[k];
-        Arrays.stream(y).forEach(yi -> nc[yi]++);
+        for (int i = 0; i < n; i++) nc[y[i]]++;
 
         int[] y2 = Arrays.stream(y).map(i -> 2 * i - 1).toArray();
 
@@ -330,7 +330,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
         int n = x.nrows();
 
         int[] nc = new int[k];
-        Arrays.stream(y).forEach(yi -> nc[yi]++);
+        for (int i = 0; i < n; i++) nc[y[i]]++;
 
         double[][] h = new double[k][n]; // boost tree output.
         double[][] p = new double[k][n]; // posteriori probabilities.

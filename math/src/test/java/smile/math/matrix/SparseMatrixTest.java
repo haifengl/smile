@@ -222,34 +222,30 @@ public class SparseMatrixTest {
         assertEquals(limitedNonZeros, k.get());
 
         k.set(0);
-        m.nonzeros()
-                .forEach(
-                        entry -> {
-                            int i = entry.row;
-                            int j = entry.col;
-                            double x = entry.value;
+        m.nonzeros().forEach(
+                entry -> {
+                    int i = entry.row;
+                    int j = entry.col;
+                    double x = entry.value;
 
-                            assertEquals(d[i][j], x, 0);
-                            assertEquals(d[i][j], m.get(i, j), 0);
-                            k.incrementAndGet();
-                        }
-                );
+                    assertEquals(d[i][j], x, 0);
+                    assertEquals(d[i][j], m.get(i, j), 0);
+                    k.incrementAndGet();
+                });
         assertEquals(nonzeroCount, k.get());
 
         k.set(0);
-        m.nonzeros(100, 400)
-                .forEach(
-                        entry -> {
-                            int col = entry.col;
+        m.nonzeros(100, 400).forEach(
+                entry -> {
+                    int col = entry.col;
 
-                            assertTrue(col >= 100);
-                            assertTrue(col < 400);
+                    assertTrue(col >= 100);
+                    assertTrue(col < 400);
 
-                            assertEquals(d[entry.row][col], entry.value, 0);
-                            assertEquals(d[entry.row][col], m.get(entry.row, col), 0);
-                            k.incrementAndGet();
-                        }
-                );
+                    assertEquals(d[entry.row][col], entry.value, 0);
+                    assertEquals(d[entry.row][col], m.get(entry.row, col), 0);
+                    k.incrementAndGet();
+                });
         assertEquals(limitedNonZeros, k.get());
     }
 
@@ -270,9 +266,7 @@ public class SparseMatrixTest {
         double t0 = System.nanoTime() / 1e9;
         double[] sum1 = new double[2000];
         for (int rep = 0; rep < 1000; rep++) {
-            m.foreachNonzero(
-                    (i, j, x) -> sum1[j] += x
-            );
+            m.foreachNonzero((i, j, x) -> sum1[j] += x);
         }
         double t1 = System.nanoTime() / 1e9;
         double sum = 0;
@@ -284,8 +278,7 @@ public class SparseMatrixTest {
         t0 = System.nanoTime() / 1e9;
         double[] sum2 = new double[2000];
         for (int rep = 0; rep < 1000; rep++) {
-            m.nonzeros()
-                    .forEach(entry -> sum2[entry.col] += entry.value);
+            m.nonzeros().forEach(entry -> sum2[entry.col] += entry.value);
         }
         t1 = System.nanoTime() / 1e9;
         sum = 0;

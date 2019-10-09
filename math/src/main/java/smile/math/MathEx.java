@@ -681,7 +681,8 @@ public class MathEx {
 
     /** Merges multiple vectors into one. */
     public static int[] c(int[]... list) {
-        int n = Arrays.stream(list).mapToInt(x -> x.length).sum();
+        int n = 0;
+        for (int[] x : list) n += x.length;
         int[] y = new int[n];
         int pos = 0;
         for (int[] x: list) {
@@ -693,7 +694,8 @@ public class MathEx {
 
     /** Merges multiple vectors into one. */
     public static float[] c(float[]... list) {
-        int n = Arrays.stream(list).mapToInt(x -> x.length).sum();
+        int n = 0;
+        for (float[] x : list) n += x.length;
         float[] y = new float[n];
         int pos = 0;
         for (float[] x: list) {
@@ -705,7 +707,8 @@ public class MathEx {
 
     /** Merges multiple vectors into one. */
     public static double[] c(double[]... list) {
-        int n = Arrays.stream(list).mapToInt(x -> x.length).sum();
+        int n = 0;
+        for (double[] x : list) n += x.length;
         double[] y = new double[n];
         int pos = 0;
         for (double[] x: list) {
@@ -717,7 +720,8 @@ public class MathEx {
 
     /** Concatenates multiple vectors into one array of strings. */
     public static String[] c(String[]... list) {
-        int n = Arrays.stream(list).mapToInt(x -> x.length).sum();
+        int n = 0;
+        for (String[] x : list) n += x.length;
         String[] y = new String[n];
         int pos = 0;
         for (String[] x: list) {
@@ -3348,7 +3352,9 @@ public class MathEx {
      * @return x<sup>n</sup>
      */
     public static double[] pow(double[] x, double n) {
-        return Arrays.stream(x).map(xi -> Math.pow(xi, n)).toArray();
+        double[] y = new double[x.length];
+        for (int i = 0; i < x.length; i++) y[i] = Math.pow(x[i], n);
+        return y;
     }
 
     /**

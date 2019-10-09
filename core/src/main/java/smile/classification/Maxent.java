@@ -240,13 +240,15 @@ public class Maxent implements SoftClassifier<int[]> {
         @Override
         public double f(double[] w) {
             int n = x.length;
+            int p = x[0].length;
             double f = IntStream.range(0, n).parallel().mapToDouble(i -> {
                 double wx = dot(x[i], w);
                 return log1pe(wx) - y[i] * wx;
             }).sum();
 
             if (lambda > 0.0) {
-                double wnorm = Arrays.stream(w).limit(w.length - 1).map(wi -> wi * wi).sum();
+                double wnorm = 0.0;
+                for (int i = 0; i < p; i++) wnorm += w[i] * w[i];
                 f += 0.5 * lambda * wnorm;
             }
 
@@ -270,12 +272,12 @@ public class Maxent implements SoftClassifier<int[]> {
             }).sum();
 
             if (lambda > 0.0) {
-                double wnorm = Arrays.stream(w).limit(p).map(wi -> wi * wi).sum();
-                f += 0.5 * lambda * wnorm;
-
-                for (int j = 0; j < p; j++) {
-                    g[j] += lambda * w[j];
+                double wnorm = 0.0;
+                for (int i = 0; i < p; i++) {
+                    wnorm += w[i] * w[i];
+                    g[i] += lambda * w[i];
                 }
+                f += 0.5 * lambda * wnorm;
             }
 
             return f;
@@ -334,9 +336,8 @@ public class Maxent implements SoftClassifier<int[]> {
         
         @Override
         public double f(double[] w) {
-            double[] prob = new double[k];
-
             double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
+                double[] prob = new double[k];
                 for (int j = 0; j < k; j++) {
                     prob[j] = dot(x[i], w, j, p);
                 }
@@ -347,7 +348,8 @@ public class Maxent implements SoftClassifier<int[]> {
             }).sum();
 
             if (lambda > 0.0) {
-                double wnorm = Arrays.stream(w).limit(w.length - 1).map(wi -> wi * wi).sum();
+                double wnorm = 0.0;
+                for (int i = 0; i < p; i++) wnorm += w[i] * w[i];
                 f += 0.5 * lambda * wnorm;
             }
 
@@ -356,10 +358,10 @@ public class Maxent implements SoftClassifier<int[]> {
 
         @Override
         public double g(double[] w, double[] g) {
-            double[] prob = new double[k];
             Arrays.fill(g, 0.0);
 
             double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
+                double[] prob = new double[k];
                 for (int j = 0; j < k; j++) {
                     prob[j] = dot(x[i], w, j, p);
                 }
