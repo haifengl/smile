@@ -40,8 +40,8 @@ public class Diabetes {
         try {
             data = csv.read(Paths.getTestData("regression/diabetes.csv"));
 
-            x = data.drop("y").toArray();
-            y = data.column("y").toDoubleArray();
+            x = formula.x(data).toArray();
+            y = formula.y(data).toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'diabetes': " + ex);
             System.exit(-1);

@@ -38,8 +38,8 @@ public class WeatherNominal {
             Arff arff = new Arff(Paths.getTestData("weka/weather.nominal.arff"));
             data = arff.read();
 
-            x = data.drop("play").toArray();
-            y = data.column("play").toIntArray();
+            x = formula.x(data).toArray();
+            y = formula.y(data).toIntArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'weather nominal': " + ex);
             System.exit(-1);

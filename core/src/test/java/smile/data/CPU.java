@@ -38,8 +38,8 @@ public class CPU {
             Arff arff = new Arff(Paths.getTestData("weka/cpu.arff"));
             data = arff.read();
 
-            x = data.drop("class").toArray();
-            y = data.column("class").toDoubleArray();
+            x = formula.x(data).toArray();
+            y = formula.y(data).toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'CPU': " + ex);
             System.exit(-1);

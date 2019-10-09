@@ -44,10 +44,10 @@ public class Prostate {
             train = csv.read(Paths.getTestData("regression/prostate-train.csv"));
             test = csv.read(Paths.getTestData("regression/prostate-test.csv"));
 
-            x = train.drop("lpsa").toArray();
-            y = train.column("lpsa").toDoubleArray();
-            testx = test.drop("lpsa").toArray();
-            testy = test.column("lpsa").toDoubleArray();
+            x = formula.x(train).toArray();
+            y = formula.y(train).toDoubleArray();
+            testx = formula.x(test).toArray();
+            testy = formula.y(test).toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'prostate': " + ex);
             System.exit(-1);

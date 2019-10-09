@@ -60,8 +60,6 @@ public class MaxentTest {
     public void testProtein() throws IOException {
         System.out.println("protein");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
         Maxent model = Maxent.fit(Protein.p, Protein.x, Protein.y);
 
         int[] prediction = Validation.test(model, Protein.testx);
@@ -75,8 +73,6 @@ public class MaxentTest {
     public void testHyphen() throws IOException {
         System.out.println("hyphen");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
         Maxent model = Maxent.fit(Hyphen.p, Hyphen.x, Hyphen.y);
 
         int[] prediction = Validation.test(model, Hyphen.testx);

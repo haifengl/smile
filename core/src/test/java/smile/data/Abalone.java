@@ -61,10 +61,10 @@ public class Abalone {
             train = csv.read(Paths.getTestData("regression/abalone-train.data"));
             test = csv.read(Paths.getTestData("regression/abalone-test.data"));
 
-            x = train.drop("rings").toArray();
-            y = train.column("rings").toDoubleArray();
-            testx = test.drop("rings").toArray();
-            testy = test.column("rings").toDoubleArray();
+            x = formula.x(train).toArray();
+            y = formula.y(train).toDoubleArray();
+            testx = formula.x(test).toArray();
+            testy = formula.y(test).toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'abalone': " + ex);
             ex.printStackTrace();
