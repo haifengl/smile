@@ -26,6 +26,7 @@ import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
@@ -79,6 +80,9 @@ import smile.math.MathEx;
 public class RegressionTree extends CART implements Regression<Tuple> {
     private static final long serialVersionUID = 2L;
 
+    /** The dependent variable. */
+    private transient double[] y;
+
     /**
      * The trait to calculate the leaf node output.
      */
@@ -103,7 +107,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
             mean = 0.0;
             for (int i : nodeSamples) {
                 n += samples[i];
-                mean += y.getDouble(i) * samples[i];
+                mean += y[i] * samples[i];
             }
 
             mean /= n;
@@ -113,7 +117,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
         double rss = 0.0;
         for (int i : nodeSamples) {
             n += samples[i];
-            rss += samples[i] * MathEx.sqr(y.getDouble(i) - mean);
+            rss += samples[i] * MathEx.sqr(y[i] - mean);
         }
 
         return new RegressionNode(n, out, mean, rss);
@@ -124,7 +128,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
         RegressionNode node = (RegressionNode) leaf;
         BaseVector xj = x.column(j);
 
-        double sum = IntStream.range(lo, hi).map(i -> index[i]).mapToDouble(i -> y.getDouble(i) * samples[i]).sum();
+        double sum = IntStream.range(lo, hi).map(i -> index[i]).mapToDouble(i -> y[i] * samples[i]).sum();
         double nodeMeanSquared = node.size() * node.mean() * node.mean();
 
         Split split = null;
@@ -144,7 +148,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
                 int o = index[i];
                 int idx = xj.getInt(o);
                 trueCount[idx] += samples[o];
-                trueSum[idx] += y.getDouble(o) * samples[o];
+                trueSum[idx] += y[o] * samples[o];
             }
 
             for (int l = 0; l < m; l++) {
@@ -211,7 +215,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
                 }
 
                 prevx = xij;
-                trueSum += y.getDouble(o) * samples[o];
+                trueSum += y[o] * samples[o];
                 tc += samples[o];
             }
 
@@ -228,6 +232,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
      * Constructor. Learns a regression tree for AdaBoost and Random Forest.
      * @param x the data frame of the explanatory variable.
      * @param y the response variables.
+     * @param response the metadata of response variable.
      * @param nodeSize the minimum size of leaf nodes.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param mtry the number of input variables to pick to split on at each
@@ -239,10 +244,11 @@ public class RegressionTree extends CART implements Regression<Tuple> {
      *              that only numeric attributes need be sorted.
      * @param output a lambda to calculate node output.
      */
-    public RegressionTree(DataFrame x, BaseVector y, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order, RegressionNodeOutput output) {
-        super(x, y, maxNodes, nodeSize, mtry, samples, order);
+    public RegressionTree(DataFrame x, double[] y, StructField response, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order, RegressionNodeOutput output) {
+        super(x, response, maxNodes, nodeSize, mtry, samples, order);
 
-        this.output = output == null ? new LeastSquaresNodeOutput(y.toDoubleArray()) : output;
+        this.y = y;
+        this.output = output == null ? new LeastSquaresNodeOutput(y) : output;
 
         LeafNode node = newNode(IntStream.range(0, x.size()).filter(i -> this.samples[i] > 0).toArray());
         this.root = node;
@@ -304,7 +310,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
     public static RegressionTree fit(Formula formula, DataFrame data, int maxNodes, int nodeSize) {
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
-        RegressionTree tree = new RegressionTree(x, y, maxNodes, nodeSize, -1, null, null, null);
+        RegressionTree tree = new RegressionTree(x, y.toDoubleArray(), y.field(), maxNodes, nodeSize, -1, null, null, null);
         tree.formula = Optional.of(formula);
         return tree;
     }

@@ -29,6 +29,7 @@ import smile.base.cart.RegressionNodeOutput;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
@@ -215,7 +216,9 @@ public class RandomForest implements Regression<Tuple> {
         }
 
         DataFrame x = formula.x(data);
-        BaseVector y = formula.y(data);
+        BaseVector response = formula.y(data);
+        StructField field = response.field();
+        double[] y = response.toDoubleArray();
 
         if (mtry > x.ncols()) {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
@@ -227,7 +230,7 @@ public class RandomForest implements Regression<Tuple> {
         double[] prediction = new double[n];
         int[] oob = new int[n];
 
-        final RegressionNodeOutput output = new LeastSquaresNodeOutput(y.toDoubleArray());
+        final RegressionNodeOutput output = new LeastSquaresNodeOutput(y);
         final int[][] order = CART.order(x);
 
         // generate seeds with sequential stream
@@ -256,7 +259,7 @@ public class RandomForest implements Regression<Tuple> {
                 }
             }
 
-            RegressionTree tree = new RegressionTree(x, y, maxNodes, nodeSize, mtryFinal, samples, order, output);
+            RegressionTree tree = new RegressionTree(x, y, field, maxNodes, nodeSize, mtryFinal, samples, order, output);
 
             IntStream.range(0, n).filter(i -> samples[i] == 0).forEach(i -> {
                 double pred = tree.predict(x.get(i));
@@ -274,7 +277,7 @@ public class RandomForest implements Regression<Tuple> {
             if (oob[i] > 0) {
                 m++;
                 double pred = prediction[i] / oob[i];
-                error += MathEx.sqr(pred - y.getDouble(i));
+                error += MathEx.sqr(pred - y[i]);
             }
         }
 

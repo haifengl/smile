@@ -39,7 +39,7 @@ public abstract class CART {
     protected StructType schema;
 
     /** The schema of response variable. */
-    protected StructField yfield;
+    protected StructField response;
 
     /** Design matrix formula */
     protected Optional<Formula> formula = Optional.empty();
@@ -72,9 +72,6 @@ public abstract class CART {
 
     /** The training data. */
     protected transient DataFrame x;
-
-    /** The dependent variable. */
-    protected transient BaseVector y;
 
     /**
      * The samples for training this node. Note that samples[i] is the
@@ -117,11 +114,10 @@ public abstract class CART {
      * @param order the index of training values in ascending order. Note
      *              that only numeric attributes need be sorted.
      */
-    public CART(DataFrame x, BaseVector y, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
+    public CART(DataFrame x, StructField y, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
         this.x = x;
-        this.y = y;
+        this.response = y;
         this.schema = x.schema();
-        this.yfield = y.field();
         this.importance = new double[x.ncols()];
         this.nodeSize = nodeSize;
         this.maxNodes = maxNodes;
@@ -190,7 +186,6 @@ public abstract class CART {
     /** Clear the workspace of building tree. */
     protected void clear() {
         this.x = null;
-        this.y = null;
         this.order = null;
         this.index = null;
         this.samples = null;
@@ -361,7 +356,7 @@ public abstract class CART {
             Node node = entry.getValue();
 
             // leaf node
-            builder.append(node.dot(schema, yfield, id));
+            builder.append(node.dot(schema, response, id));
 
             if (node instanceof InternalNode) {
                 int tid = 2 * id;

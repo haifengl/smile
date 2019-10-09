@@ -52,11 +52,20 @@ import smile.sort.QuickSort;
 public interface Classifier<T> extends Serializable {
     /**
      * Predicts the class label of an instance.
-     * 
+     *
      * @param x the instance to be classified.
      * @return the predicted class label.
      */
     int predict(T x);
+
+    /**
+     * Predicts the class label of an instance.
+     * @param x a tuple instance.
+     * @return the predicted class label.
+     */
+    default int predict(Tuple x) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Predicts the class labels of an array of instances.
@@ -69,27 +78,23 @@ public interface Classifier<T> extends Serializable {
     }
 
     /**
-     * Predicts the dependent variable of a tuple instance.
-     * @param x a tuple instance.
-     * @return the predicted value of dependent variable.
-     */
-    default int predict(Tuple x) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Predicts the dependent variables of a data frame.
+     * Predicts the class labels of a data frame.
      *
      * @param data the data frame.
-     * @return the predicted values.
+     * @return the predicted class labels.
      */
     default int[] predict(DataFrame data) {
         return data.stream().mapToInt(x -> predict(x)).toArray();
     }
 
-    /** Returns the unique classes of sample labels. */
-    static int[] classes(BaseVector y) {
-        return classes(y.toIntArray());
+    /** Returns the formula associated with the model. */
+    default Optional<Formula> formula() {
+        return Optional.empty();
+    }
+
+    /** Returns the design matrix schema. */
+    default Optional<StructType> schema() {
+        return Optional.empty();
     }
 
     /** Returns the unique classes of sample labels. */
@@ -101,26 +106,6 @@ public interface Classifier<T> extends Serializable {
             throw new IllegalArgumentException("Only one class.");
         }
 
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]);
-            }
-
-            if (labels[i] != i) {
-                throw new IllegalArgumentException("Missing class: " + i);
-            }
-        }
-
         return labels;
-    }
-
-    /** Returns the formula associated with the model. */
-    default Optional<Formula> formula() {
-        return Optional.empty();
-    }
-
-    /** Returns the design matrix schema. */
-    default Optional<StructType> schema() {
-        return Optional.empty();
     }
 }
