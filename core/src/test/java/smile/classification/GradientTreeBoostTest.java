@@ -18,6 +18,7 @@
 package smile.classification;
 
 import smile.data.Iris;
+import smile.data.Segment;
 import smile.data.USPS;
 import smile.data.WeatherNominal;
 import smile.math.MathEx;
@@ -95,6 +96,32 @@ public class GradientTreeBoostTest {
         int error = Error.apply(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(8, error);
+    }
+
+    @Test
+    public void testSegment() {
+        System.out.println("Segment");
+
+        // to get repeatable results.
+        MathEx.setSeed(19650218);
+        GradientTreeBoost model = GradientTreeBoost.fit(Segment.formula, Segment.train, 100, 6, 5, 0.05, 0.7);
+
+        double[] importance = model.importance();
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+        }
+
+        int[] prediction = Validation.test(model, Segment.test);
+        int error = Error.apply(Segment.testy, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(20, error);
+
+        System.out.println("----- Progressive Accuracy -----");
+        int[][] test = model.test(Segment.test);
+        for (int i = 0; i < test.length; i++) {
+            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.apply(Segment.testy, test[i]));
+        }
     }
 
     @Test

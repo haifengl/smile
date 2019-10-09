@@ -19,6 +19,7 @@ package smile.classification;
 
 import smile.base.cart.SplitRule;
 import smile.data.Iris;
+import smile.data.Segment;
 import smile.data.USPS;
 import smile.data.WeatherNominal;
 import smile.validation.Error;
@@ -91,6 +92,25 @@ public class DecisionTreeTest {
         int error = Error.apply(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(9, error);
+    }
+
+    @Test
+    public void testSegment() {
+        System.out.println("Segment");
+
+        DecisionTree model = DecisionTree.fit(Segment.formula, Segment.train, SplitRule.ENTROPY, 100, 5);
+        System.out.println(model);
+
+        double[] importance = model.importance();
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+        }
+
+        int[] prediction = Validation.test(model, Segment.test);
+        int error = Error.apply(Segment.testy, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(43, error);
     }
 
     @Test

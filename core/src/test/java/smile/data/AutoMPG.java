@@ -38,8 +38,8 @@ public class AutoMPG {
             Arff arff = new Arff(Paths.getTestData("weka/regression/autoMpg.arff"));
             data = arff.read().omitNullRows();
 
-            x = data.drop("class").toArray();
-            y = data.column("class").toDoubleArray();
+            x = formula.x(data).toArray();
+            y = formula.y(data).toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'autoMpg': " + ex);
             System.exit(-1);

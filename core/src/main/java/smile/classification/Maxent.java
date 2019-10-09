@@ -82,12 +82,11 @@ public class Maxent implements SoftClassifier<int[]> {
 
     /**
      * Constructor of binary logistic regression.
-     * @param p the dimension of input space.
      * @param L the log-likelihood of learned model.
      * @param w the weights.
      */
-    public Maxent(int p, double L, double[] w) {
-        this.p = p;
+    public Maxent(double L, double[] w) {
+        this.p = w.length - 1;
         this.k = 2;
         this.L = L;
         this.w = w;
@@ -95,12 +94,11 @@ public class Maxent implements SoftClassifier<int[]> {
 
     /**
      * Constructor of multi-class logistic regression.
-     * @param p the dimension of input space.
      * @param L the log-likelihood of learned model.
      * @param W the weights.
      */
-    public Maxent(int p, double L, double[][] W) {
-        this.p = p;
+    public Maxent(double L, double[][] W) {
+        this.p = W[0].length - 1;
         this.k = W.length;
         this.L = L;
         this.W = W;
@@ -128,7 +126,7 @@ public class Maxent implements SoftClassifier<int[]> {
     public static Maxent fit(int p, int[][] x, int[] y, Properties prop) {
         double lambda = Double.valueOf(prop.getProperty("smile.maxent.lambda", "0.1"));
         double tol = Double.valueOf(prop.getProperty("smile.maxent.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.lasso.max.iterations", "500"));
+        int maxIter = Integer.valueOf(prop.getProperty("smile.maxent.max.iterations", "500"));
         return fit(p, x, y, lambda, tol, maxIter);
     }
 
@@ -171,16 +169,12 @@ public class Maxent implements SoftClassifier<int[]> {
         BFGS bfgs = new BFGS(tol, maxIter);
         if (k == 2) {
             BinaryObjectiveFunction func = new BinaryObjectiveFunction(x, y, lambda);
-
             double[] w = new double[p + 1];
-
             double L = -bfgs.minimize(func, 5, w);
-            return new Maxent(p, L, w);
+            return new Maxent(L, w);
         } else {
             MultiClassObjectiveFunction func = new MultiClassObjectiveFunction(x, y, k, p, lambda);
-
             double[] w = new double[k * (p + 1)];
-
             double L = -bfgs.minimize(func, 5, w);
 
             double[][] W = new double[k][p+1];
@@ -190,7 +184,7 @@ public class Maxent implements SoftClassifier<int[]> {
                 }
             }
 
-            return new Maxent(p, L, W);
+            return new Maxent(L, W);
         }
     }
 
@@ -251,14 +245,8 @@ public class Maxent implements SoftClassifier<int[]> {
                 return log1pe(wx) - y[i] * wx;
             }).sum();
 
-            if (lambda != 0.0) {
-                int p = w.length - 1;
-                double wnorm = 0.0;
-
-                for (int i = 0; i < p; i++) {
-                    wnorm += w[i] * w[i];
-                }
-
+            if (lambda > 0.0) {
+                double wnorm = Arrays.stream(w).limit(w.length - 1).map(wi -> wi * wi).sum();
                 f += 0.5 * lambda * wnorm;
             }
 
@@ -281,12 +269,8 @@ public class Maxent implements SoftClassifier<int[]> {
                 return log1pe(wx) - y[i] * wx;
             }).sum();
 
-            if (lambda != 0.0) {
-                double wnorm = 0.0;
-                for (int i = 0; i < p; i++) {
-                    wnorm += w[i] * w[i];
-                }
-
+            if (lambda > 0.0) {
+                double wnorm = Arrays.stream(w).limit(p).map(wi -> wi * wi).sum();
                 f += 0.5 * lambda * wnorm;
 
                 for (int j = 0; j < p; j++) {
@@ -362,14 +346,8 @@ public class Maxent implements SoftClassifier<int[]> {
                 return -log(prob[y[i]]);
             }).sum();
 
-            if (lambda != 0.0) {
-                double wnorm = 0.0;
-                for (int i = 0; i < k; i++) {
-                    for (int j = 0; j < p; j++) {
-                        wnorm += MathEx.sqr(w[i*(p+1) + j]);
-                    }
-                }
-
+            if (lambda > 0.0) {
+                double wnorm = Arrays.stream(w).limit(w.length - 1).map(wi -> wi * wi).sum();
                 f += 0.5 * lambda * wnorm;
             }
 
