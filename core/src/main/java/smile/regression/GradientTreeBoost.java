@@ -397,11 +397,11 @@ public class GradientTreeBoost implements Regression<Tuple> {
         double[][] prediction = new double[ntrees][n];
 
         for (int j = 0; j < n; j++) {
-            Tuple xi = x.get(j);
+            Tuple xj = x.get(j);
             double base = b;
             for (int i = 0; i < ntrees; i++) {
-                prediction[i][j] = base + shrinkage * trees[i].predict(xi);
-                base = prediction[i][j];
+                base += shrinkage * trees[i].predict(xj);
+                prediction[i][j] = base;
             }
         }
 

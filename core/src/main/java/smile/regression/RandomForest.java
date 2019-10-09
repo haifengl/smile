@@ -408,15 +408,14 @@ public class RandomForest implements Regression<Tuple> {
         DataFrame x = formula.x(data);
 
         int n = x.nrows();
-        double[] sum = new double[n];
         int ntrees = trees.length;
         double[][] prediction = new double[ntrees][n];
 
         for (int j = 0; j < n; j++) {
-            Tuple xi = x.get(j);
+            Tuple xj = x.get(j);
             double base = 0;
             for (int i = 0; i < ntrees; i++) {
-                base = base + trees[i].predict(xi);
+                base = base + trees[i].predict(xj);
                 prediction[i][j] = base / (i+1);
             }
         }

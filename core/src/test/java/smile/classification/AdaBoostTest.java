@@ -21,6 +21,7 @@ import smile.data.Iris;
 import smile.data.USPS;
 import smile.data.WeatherNominal;
 import smile.math.MathEx;
+import smile.validation.Accuracy;
 import smile.validation.Error;
 import smile.validation.LOOCV;
 import org.junit.After;
@@ -114,5 +115,11 @@ public class AdaBoostTest {
 
         System.out.println("Error = " + error);
         assertEquals(152, error);
+
+        System.out.println("----- Progressive Accuracy -----");
+        int[][] test = model.test(USPS.test);
+        for (int i = 0; i < test.length; i++) {
+            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.apply(USPS.testy, test[i]));
+        }
     }
 }

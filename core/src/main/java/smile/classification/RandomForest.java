@@ -464,62 +464,25 @@ public class RandomForest implements SoftClassifier<Tuple> {
      * Test the model on a validation dataset.
      *
      * @param data the test data set.
-     * @return accuracies with first 1, 2, ..., decision trees.
+     * @return the predictions with first 1, 2, ..., decision trees.
      */
-    public double[] test(DataFrame data) {
+    public int[][] test(DataFrame data) {
         DataFrame x = formula.x(data);
-        int[] y = formula.y(data).toIntArray();
 
-        int T = trees.size();
-        double[] accuracy = new double[T];
+        int n = x.size();
+        int ntrees = trees.size();
+        int[] p = new int[k];
+        int[][] prediction = new int[ntrees][n];
 
-        int n = x.nrows();
-        int[] label = new int[n];
-        int[][] prediction = new int[n][k];
-
-        Accuracy measure = new Accuracy();
-        
-        for (int i = 0; i < T; i++) {
-            for (int j = 0; j < n; j++) {
-                prediction[j][trees.get(i).tree.predict(x.get(j))]++;
-                label[j] = MathEx.whichMax(prediction[j]);
+        for (int j = 0; j < n; j++) {
+            Tuple xj = x.get(j);
+            Arrays.fill(p, 0);
+            for (int i = 0; i < ntrees; i++) {
+                p[trees.get(i).tree.predict(xj)]++;
+                prediction[i][j] = MathEx.whichMax(p);
             }
-
-            accuracy[i] = measure.measure(y, label);
         }
 
-        return accuracy;
-    }
-    
-    /**
-     * Test the model on a validation dataset.
-     * 
-     * @param data the test data set.
-     * @param measures the performance measures of classification.
-     * @return performance measures with first 1, 2, ..., decision trees.
-     */
-    public double[][] test(DataFrame data, ClassificationMeasure[] measures) {
-        DataFrame x = formula.x(data);
-        int[] y = formula.y(data).toIntArray();
-
-        int T = trees.size();
-        int m = measures.length;
-        double[][] results = new double[T][m];
-
-        int n = x.nrows();
-        int[] label = new int[n];
-        double[][] prediction = new double[n][k];
-
-        for (int i = 0; i < T; i++) {
-            for (int j = 0; j < n; j++) {
-                prediction[j][trees.get(i).tree.predict(x.get(j))]++;
-                label[j] = MathEx.whichMax(prediction[j]);
-            }
-
-            for (int j = 0; j < m; j++) {
-                results[i][j] = measures[j].measure(y, label);
-            }
-        }
-        return results;
+        return prediction;
     }
 }
