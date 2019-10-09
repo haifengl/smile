@@ -139,7 +139,6 @@ public class AdaBoost implements SoftClassifier<Tuple> {
         return fit(formula, data, ntrees, maxNodes, nodeSize);
     }
 
-
     /**
      * Constructor.
      *

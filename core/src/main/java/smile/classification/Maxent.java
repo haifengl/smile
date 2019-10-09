@@ -18,8 +18,11 @@
 package smile.classification;
 
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.stream.IntStream;
 
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
 import smile.math.BFGS;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
@@ -76,36 +79,61 @@ public class Maxent implements SoftClassifier<int[]> {
      * The linear weights for multi-class logistic regression.
      */
     private double[][] W;
-    
+
     /**
-     * Learn maximum entropy classifier from samples of binary sparse features.
+     * Constructor of binary logistic regression.
+     * @param p the dimension of input space.
+     * @param L the log-likelihood of learned model.
+     * @param w the weights.
+     */
+    public Maxent(int p, double L, double[] w) {
+        this.p = p;
+        this.k = 2;
+        this.L = L;
+        this.w = w;
+    }
+
+    /**
+     * Constructor of multi-class logistic regression.
+     * @param p the dimension of input space.
+     * @param L the log-likelihood of learned model.
+     * @param W the weights.
+     */
+    public Maxent(int p, double L, double[][] W) {
+        this.p = p;
+        this.k = W.length;
+        this.L = L;
+        this.W = W;
+    }
+    /**
+     * Learn maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
      */
-    public Maxent(int p, int[][] x, int[] y) {
-        this(p, x, y, 0.1);
+    public static Maxent fit(int p, int[][] x, int[] y) {
+        return fit(p, x, y, new Properties());
     }
 
     /**
-     * Learn maximum entropy classifier from samples of binary sparse features.
+     * Learn maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
      */
-    public Maxent(int p, int[][] x, int[] y, double lambda) {
-        this(p, x, y, lambda, 1E-5, 500);
+    public static Maxent fit(int p, int[][] x, int[] y, Properties prop) {
+        double lambda = Double.valueOf(prop.getProperty("smile.maxent.lambda", "0.1"));
+        double tol = Double.valueOf(prop.getProperty("smile.maxent.tolerance", "1E-5"));
+        int maxIter = Integer.valueOf(prop.getProperty("smile.lasso.max.iterations", "500"));
+        return fit(p, x, y, lambda, tol, maxIter);
     }
 
     /**
-     * Learn maximum entropy classifier from samples of binary sparse features.
+     * Learn maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which
@@ -117,7 +145,7 @@ public class Maxent implements SoftClassifier<int[]> {
      * @param tol tolerance for stopping iterations.
      * @param maxIter maximum number of iterations.
      */
-    public Maxent(int p, int[][] x, int[] y, double lambda, double tol, int maxIter) {
+    public static Maxent fit(int p, int[][] x, int[] y, double lambda, double tol, int maxIter) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -138,59 +166,31 @@ public class Maxent implements SoftClassifier<int[]> {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);            
         }
         
-        this.p = p;
-        
-        // class label set.
-        int[] labels = MathEx.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
-        }
-
-        k = labels.length;
-        if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
-        }
+        int k = Classifier.classes(y).length;
 
         BFGS bfgs = new BFGS(tol, maxIter);
         if (k == 2) {
             BinaryObjectiveFunction func = new BinaryObjectiveFunction(x, y, lambda);
 
-            w = new double[p + 1];
+            double[] w = new double[p + 1];
 
-            L = 0.0;
-            try {
-                L = -bfgs.minimize(func, 5, w);
-            } catch (Exception ex) {
-                logger.error("Failed to minimize binary objective function of Maximum Entropy Classifier", ex);
-            }
+            double L = -bfgs.minimize(func, 5, w);
+            return new Maxent(p, L, w);
         } else {
             MultiClassObjectiveFunction func = new MultiClassObjectiveFunction(x, y, k, p, lambda);
 
-            w = new double[k * (p + 1)];
+            double[] w = new double[k * (p + 1)];
 
-            L = 0.0;
-            try {
-                L = -bfgs.minimize(func, 5, w);
-            } catch (Exception ex) {
-                logger.error("Failed to minimize multi-class objective function of Maximum Entropy Classifier", ex);
-            }
+            double L = -bfgs.minimize(func, 5, w);
 
-            W = new double[k][p+1];
+            double[][] W = new double[k][p+1];
             for (int i = 0, m = 0; i < k; i++) {
                 for (int j = 0; j <= p; j++, m++) {
                     W[i][j] = w[m];
                 }
             }
 
-            w = null;
+            return new Maxent(p, L, W);
         }
     }
 
@@ -198,7 +198,7 @@ public class Maxent implements SoftClassifier<int[]> {
      * Returns the dimension of input space.
      * @return the dimension of input space.
      */
-    public int getDimension() {
+    public int dimension() {
         return p;
     }
     
