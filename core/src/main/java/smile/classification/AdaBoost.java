@@ -273,7 +273,14 @@ public class AdaBoost implements SoftClassifier<Tuple> {
     public int size() {
         return trees.length;
     }
-    
+
+    /**
+     * Returns the decision trees.
+     */
+    public DecisionTree[] trees() {
+        return trees;
+    }
+
     /**
      * Trims the tree model set to a smaller size in case of over-fitting.
      * Or if extra decision trees in the model don't improve the performance,
@@ -333,94 +340,37 @@ public class AdaBoost implements SoftClassifier<Tuple> {
     /**
      * Test the model on a validation dataset.
      * 
-     * @param x the test data set.
-     * @param y the test data response values.
-     * @return accuracies with first 1, 2, ..., decision trees.
+     * @return the predictions with first 1, 2, ..., decision trees.
      */
-    public double[] test(DataFrame x, int[] y) {
-        int T = trees.length;
-        double[] accuracy = new double[T];
+    public int[][] test(DataFrame data) {
+        DataFrame x = formula.x(data);
 
         int n = x.size();
-        int[] label = new int[n];
-
-        Accuracy measure = new Accuracy();
-        
-        if (k == 2) {
-            double[] prediction = new double[n];
-            for (int i = 0; i < T; i++) {
-                for (int j = 0; j < n; j++) {
-                    prediction[j] += alpha[i] * trees[i].predict(x.get(j));
-                    label[j] = prediction[j] > 0 ? 1 : 0;
-                }
-                accuracy[i] = measure.measure(y, label);
-            }
-        } else {
-            double[][] prediction = new double[n][k];
-            for (int i = 0; i < T; i++) {
-                for (int j = 0; j < n; j++) {
-                    prediction[j][trees[i].predict(x.get(j))] += alpha[i];
-                    label[j] = MathEx.whichMax(prediction[j]);
-                }
-
-                accuracy[i] = measure.measure(y, label);
-            }
-        }
-        
-        return accuracy;
-    }
-    
-    /**
-     * Test the model on a validation dataset.
-     * 
-     * @param x the test data set.
-     * @param y the test data labels.
-     * @param measures the performance measures of classification.
-     * @return performance measures with first 1, 2, ..., decision trees.
-     */
-    public double[][] test(DataFrame x, int[] y, ClassificationMeasure[] measures) {
-        int T = trees.length;
-        int m = measures.length;
-        double[][] results = new double[T][m];
-
-        int n = x.size();
-        int[] label = new int[n];
+        int ntrees = trees.length;
+        int[][] prediction = new int[ntrees][n];
 
         if (k == 2) {
-            double[] prediction = new double[n];
-            for (int i = 0; i < T; i++) {
-                for (int j = 0; j < n; j++) {
-                    prediction[j] += alpha[i] * trees[i].predict(x.get(j));
-                    label[j] = prediction[j] > 0 ? 1 : 0;
-                }
-
-                for (int j = 0; j < m; j++) {
-                    results[i][j] = measures[j].measure(y, label);
+            for (int j = 0; j < n; j++) {
+                Tuple xj = x.get(j);
+                double base = 0;
+                for (int i = 0; i < ntrees; i++) {
+                    base += alpha[i] * trees[i].predict(xj);
+                    prediction[i][j] = base > 0 ? 1 : 0;
                 }
             }
         } else {
-            double[][] prediction = new double[n][k];
-            for (int i = 0; i < T; i++) {
-                for (int j = 0; j < n; j++) {
-                    prediction[j][trees[i].predict(x.get(j))] += alpha[i];
-                    label[j] = MathEx.whichMax(prediction[j]);
-                }
-
-                for (int j = 0; j < m; j++) {
-                    results[i][j] = measures[j].measure(y, label);
+            double[] p = new double[k];
+            for (int j = 0; j < n; j++) {
+                Tuple xj = x.get(j);
+                Arrays.fill(p, 0);
+                for (int i = 0; i < ntrees; i++) {
+                    p[trees[i].predict(xj)] += alpha[i];
+                    prediction[i][j] = MathEx.whichMax(p);
                 }
             }
-
         }
         
-        return results;
-    }
-
-    /**
-     * Returns the decision trees.
-     */
-    public DecisionTree[] trees() {
-        return trees;
+        return prediction;
     }
 }
 
