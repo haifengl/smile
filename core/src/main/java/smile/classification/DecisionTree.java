@@ -252,7 +252,10 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
         this.rule = rule;
 
         final int[] count = new int[k];
-        IntStream.range(0, x.size()).forEach(i -> count[y.getInt(i)] += this.samples[i]);
+        int n = x.size();
+        for (int i = 0; i < n; i++) {
+            count[y.getInt(i)] += this.samples[i];
+        }
 
         LeafNode node = new DecisionNode(count);
         this.root = node;

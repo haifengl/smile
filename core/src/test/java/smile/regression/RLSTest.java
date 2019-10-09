@@ -112,7 +112,7 @@ public class RLSTest {
             DataFrame batch = x.of(IntStream.range(0, n/2).toArray());
             DataFrame online = x.of(IntStream.range(n/2, n).toArray());
             LinearModel model = OLS.fit(formula, batch);
-            online.stream().forEach(t -> model.update(t));
+            model.update(online);
             return model;
         });
         double rmse = RMSE.apply(formula.y(data).toDoubleArray(), prediction);
