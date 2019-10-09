@@ -26,6 +26,7 @@ import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
@@ -110,6 +111,13 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
      * The number of classes.
      */
     private int k = 2;
+    /**
+     * The class label encoder;
+     */
+    private Optional<ClassLabel> labels = Optional.empty();
+
+    /** The dependent variable. */
+    private transient int[] y;
 
     @Override
     protected double impurity(LeafNode node) {
@@ -120,7 +128,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
     protected LeafNode newNode(int[] nodeSamples) {
         int[] count = new int[k];
         for (int i : nodeSamples) {
-            count[y.getInt(i)] += samples[i];
+            count[y[i]] += samples[i];
         }
         return new DecisionNode(count);
     }
@@ -146,7 +154,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
 
             for (int i = lo; i < hi; i++) {
                 int o = index[i];
-                trueCount[xj.getInt(o)][y.getInt(o)] += samples[o];
+                trueCount[xj.getInt(o)][y[o]] += samples[o];
             }
 
             for (int l = 0; l < m; l++) {
@@ -184,14 +192,14 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
 
             int first = orderj[lo];
             double prevx = xj.getDouble(first);
-            int prevy = y.getInt(first);
+            int prevy = y[first];
 
             for (int i = lo; i < hi; i++) {
                 int tc = 0;
                 int fc = 0;
 
                 int o = orderj[i];
-                int yi = y.getInt(o);
+                int yi = y[o];
                 double xij = xj.getDouble(o);
 
                 if (yi != prevy && xij != prevx) {
@@ -234,6 +242,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
      * Constructor. Learns a classification tree for AdaBoost and Random Forest.
      * @param x the data frame of the explanatory variable.
      * @param y the response variables.
+     * @param response the metadata of response variable.
      * @param k the number of classes.
      * @param nodeSize the minimum size of leaf nodes.
      * @param maxNodes the maximum number of leaf nodes in the tree.
@@ -246,15 +255,16 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
      * @param order the index of training values in ascending order. Note
      *              that only numeric attributes need be sorted.
      */
-    public DecisionTree(DataFrame x, BaseVector y, int k, SplitRule rule, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
-        super(x, y, maxNodes, nodeSize, mtry, samples, order);
+    public DecisionTree(DataFrame x, int[] y, StructField response, int k, SplitRule rule, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
+        super(x, response, maxNodes, nodeSize, mtry, samples, order);
         this.k = k;
+        this.y = y;
         this.rule = rule;
 
         final int[] count = new int[k];
         int n = x.size();
         for (int i = 0; i < n; i++) {
-            count[y.getInt(i)] += this.samples[i];
+            count[y[i]] += this.samples[i];
         }
 
         LeafNode node = new DecisionNode(count);
@@ -320,16 +330,19 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
     public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxNodes, int nodeSize) {
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
-        int k = Classifier.classes(y).length;
-        DecisionTree tree = new DecisionTree(x, y, k, rule, maxNodes, nodeSize, -1, null, null);
+        ClassLabel.Result codec = ClassLabel.fit(y);
+
+        DecisionTree tree = new DecisionTree(x, codec.y, codec.field.get(), codec.k, rule, maxNodes, nodeSize, -1, null, null);
         tree.formula = Optional.of(formula);
+        tree.labels = Optional.of(codec.labels);
         return tree;
     }
 
     @Override
     public int predict(Tuple x) {
         DecisionNode leaf = (DecisionNode) root.predict(formula.map(f -> f.x(x)).orElse(x));
-        return leaf.output();
+        int y = leaf.output();
+        return labels.map($ -> $.label(y)).orElse(y);
     }
 
     /**
@@ -347,7 +360,8 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
         for (int i = 0; i < count.length; i++) {
             posteriori[i] = (count[i] + 1) / n;
         }
-        return leaf.output();
+        int y = leaf.output();
+        return labels.map($ -> $.label(y)).orElse(y);
     }
 
     @Override

@@ -96,6 +96,10 @@ public class AdaBoost implements SoftClassifier<Tuple> {
      * importance measure.
      */
     private double[] importance;
+    /**
+     * The class label encoder;
+     */
+    private ClassLabel labels;
 
     /**
      * Constructor.
@@ -107,13 +111,14 @@ public class AdaBoost implements SoftClassifier<Tuple> {
      * @param error the weighted error of each decision tree during training.
      * @param importance variable importance
      */
-    public AdaBoost(Formula formula, int k, DecisionTree[] trees, double[] alpha, double[] error, double[] importance) {
+    public AdaBoost(Formula formula, int k, DecisionTree[] trees, double[] alpha, double[] error, double[] importance, ClassLabel labels) {
         this.formula = formula;
         this.k = k;
         this.trees = trees;
         this.alpha = alpha;
         this.error = error;
         this.importance = importance;
+        this.labels = labels;
     }
 
     /**
@@ -164,9 +169,11 @@ public class AdaBoost implements SoftClassifier<Tuple> {
 
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
-        int k = Classifier.classes(y).length;
+
+        ClassLabel.Result codec = ClassLabel.fit(y);
         int[][] order = CART.order(x);
-        
+
+        int k = codec.k;
         int n = data.size();
         int[] samples = new int[n];
         double[] w = new double[n];
@@ -194,7 +201,7 @@ public class AdaBoost implements SoftClassifier<Tuple> {
                 samples[s]++;
             }
 
-            trees[t] = new DecisionTree(x, y, k, SplitRule.GINI, maxNodes, nodeSize, -1, samples, order);
+            trees[t] = new DecisionTree(x, codec.y, codec.field.get(), k, SplitRule.GINI, maxNodes, nodeSize, -1, samples, order);
             
             for (int i = 0; i < n; i++) {
                 err[i] = trees[t].predict(x.get(i)) != y.getInt(i);
@@ -238,7 +245,7 @@ public class AdaBoost implements SoftClassifier<Tuple> {
             }
         }
 
-        return new AdaBoost(formula, k, trees, alpha, error, importance);
+        return new AdaBoost(formula, k, trees, alpha, error, importance, codec.labels);
     }
 
     @Override
@@ -313,7 +320,7 @@ public class AdaBoost implements SoftClassifier<Tuple> {
             y[trees[i].predict(xt)] += alpha[i];
         }
             
-        return MathEx.whichMax(y);
+        return labels.label(MathEx.whichMax(y));
     }
     
     /**
@@ -333,7 +340,7 @@ public class AdaBoost implements SoftClassifier<Tuple> {
             posteriori[i] /= sum;
         }
 
-        return MathEx.whichMax(posteriori);
+        return labels.label(MathEx.whichMax(posteriori));
     }
     
     /**

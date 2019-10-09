@@ -128,14 +128,20 @@ public class RandomForest implements SoftClassifier<Tuple> {
     private double[] importance;
 
     /**
+     * The class label encoder;
+     */
+    private ClassLabel labels;
+
+    /**
      * Constructor.
      */
-    public RandomForest(Formula formula, int k, List<Tree> trees, double error, double[] importance) {
+    public RandomForest(Formula formula, int k, List<Tree> trees, double error, double[] importance, ClassLabel labels) {
         this.formula = formula;
         this.k = k;
         this.trees = trees;
         this.error = error;
         this.importance = importance;
+        this.labels = labels;
     }
 
     /**
@@ -249,8 +255,9 @@ public class RandomForest implements SoftClassifier<Tuple> {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
         }
 
+        ClassLabel.Result codec = ClassLabel.fit(y);
+        final int k = codec.k;
         final int n = x.nrows();
-        final int k = Classifier.classes(y).length;
 
         final int[] weight = classWeight.orElseGet(() -> Collections.nCopies(k, 1).stream().mapToInt(i -> i).toArray());
 
@@ -298,7 +305,7 @@ public class RandomForest implements SoftClassifier<Tuple> {
                 });
             }
 
-            DecisionTree tree = new DecisionTree(x, y, k, rule, maxNodes, nodeSize, mtry, samples, order);
+            DecisionTree tree = new DecisionTree(x, codec.y, codec.field.get(), k, rule, maxNodes, nodeSize, mtry, samples, order);
 
             // estimate OOB error
             int oob = 0;
@@ -348,7 +355,7 @@ public class RandomForest implements SoftClassifier<Tuple> {
             }
         }
 
-        return new RandomForest(formula, k, trees, error, importance);
+        return new RandomForest(formula, k, trees, error, importance, codec.labels);
     }
 
     @Override
@@ -436,7 +443,7 @@ public class RandomForest implements SoftClassifier<Tuple> {
             y[tree.tree.predict(xt)]++;
         }
         
-        return MathEx.whichMax(y);
+        return labels.label(MathEx.whichMax(y));
     }
     
     @Override
@@ -457,7 +464,7 @@ public class RandomForest implements SoftClassifier<Tuple> {
         }
 
         MathEx.unitize1(posteriori);
-        return MathEx.whichMax(y);
+        return labels.label(MathEx.whichMax(y));
     }    
     
     /**

@@ -283,7 +283,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         public double g(double[] w, double[] g) {
             final int p = w.length - 1;
             Arrays.fill(g, 0.0);
-            double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
+            double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
                 double wx = dot(x[i], w);
 
                 double yi = y[i] - MathEx.logistic(wx);
@@ -356,9 +356,9 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         @Override
         public double f(double[] w) {
             int p = x[0].length;
+            double[] prob = new double[k];
 
-            double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
-                double[] prob = new double[k];
+            double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
                 for (int j = 0; j < k; j++) {
                     prob[j] = dot(x[i], w, j, p);
                 }
@@ -380,10 +380,10 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         @Override
         public double g(double[] w, double[] g) {
             int p = x[0].length;
+            double[] prob = new double[k];
             Arrays.fill(g, 0.0);
 
-            double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
-                double[] prob = new double[k];
+            double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
                 for (int j = 0; j < k; j++) {
                     prob[j] = dot(x[i], w, j, p);
                 }

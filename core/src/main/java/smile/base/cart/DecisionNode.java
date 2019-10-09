@@ -55,8 +55,8 @@ public class DecisionNode extends LeafNode {
     }
 
     @Override
-    public String dot(StructType schema, StructField yfield, int id) {
-        return String.format(" %d [label=<%s = %s<br/>size = %d<br/>GINI = %.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, yfield.name, yfield.toString(output), size, impurity(SplitRule.GINI));
+    public String dot(StructType schema, StructField response, int id) {
+        return String.format(" %d [label=<%s = %s<br/>size = %d<br/>GINI = %.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, response.name, response.toString(output), size, impurity(SplitRule.GINI));
     }
 
     /**

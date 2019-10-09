@@ -25,6 +25,8 @@ import smile.base.cart.*;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.DoubleVector;
 import smile.math.MathEx;
@@ -250,7 +252,8 @@ public class GradientTreeBoost implements Regression<Tuple> {
         
         double[] residual = new double[n];
         double[] response = loss == Loss.LeastSquares ? residual : new double[n]; // response variable for regression tree.
-        
+        StructField field = new StructField("residual", DataTypes.DoubleType);
+
         RegressionNodeOutput output = null;
         double b = 0.0;
         switch (loss) {
@@ -297,7 +300,7 @@ public class GradientTreeBoost implements Regression<Tuple> {
                     break;
             }
 
-            trees[m] = new RegressionTree(x, DoubleVector.of("residual", response), maxNodes, nodeSize, x.ncols(), samples, order, output);
+            trees[m] = new RegressionTree(x, response, field, maxNodes, nodeSize, x.ncols(), samples, order, output);
 
             for (int i = 0; i < n; i++) {
                 residual[i] -= shrinkage * trees[m].predict(x.get(i));
