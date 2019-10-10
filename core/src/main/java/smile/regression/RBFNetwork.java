@@ -92,6 +92,9 @@ public class RBFNetwork<T> implements Regression<T> {
 
     /**
      * Constructor.
+     * @param rbf the radial basis functions.
+     * @param w the weights of RBFs.
+     * @param normalized True if this is a normalized RBF network.
      */
     public RBFNetwork(RBF<T>[] rbf, double[] w, boolean normalized) {
         this.rbf = rbf;
@@ -146,6 +149,11 @@ public class RBFNetwork<T> implements Regression<T> {
         qr.solve(b, w);
 
         return new RBFNetwork<>(rbf, w, normalized);
+    }
+
+    /** Returns true if the model is  normalized. */
+    public boolean isNormalized() {
+        return normalized;
     }
 
     @Override
