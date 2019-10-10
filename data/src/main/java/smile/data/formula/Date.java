@@ -56,7 +56,7 @@ class Date implements HyperTerm {
     public Date(String name, DateFeature... features) {
         this.name = name;
         this.features = features;
-        terms = Arrays.stream(features).map(feature -> new FeatureExtractor(feature)).collect(Collectors.toList());
+        this.terms = Arrays.stream(features).map(feature -> new FeatureExtractor(feature)).collect(Collectors.toList());
     }
 
     @Override
@@ -123,7 +123,7 @@ class Date implements HyperTerm {
     }
 
     /** The date/time feature extractor. */
-    class FeatureExtractor extends AbstractTerm implements Term {
+    class FeatureExtractor extends AbstractTerm {
         /** The feature to be extracted. */
         DateFeature feature;
         /** The level of nominal scale. */
@@ -135,12 +135,18 @@ class Date implements HyperTerm {
         public FeatureExtractor(DateFeature feature) {
             this.feature = feature;
             switch (feature) {
-                case MONTH:
-                    measure = Optional.of(new NominalScale(DayOfWeek.class));
+                case MONTH: {
+                    int[] values = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+                    String[] levels = {"JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"};
+                    measure = Optional.of(new NominalScale(values, levels));
                     break;
-                case DAY_OF_WEEK:
-                    measure = Optional.of(new NominalScale(Month.class));
+                }
+                case DAY_OF_WEEK: {
+                    int[] values = {1, 2, 3, 4, 5, 6, 7};
+                    String[] levels = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"};
+                    measure = Optional.of(new NominalScale(values, levels));
                     break;
+                }
                 default:
                     measure = Optional.empty();
             }
@@ -148,7 +154,7 @@ class Date implements HyperTerm {
 
         @Override
         public String toString() {
-            return String.format("%s_%s", name, feature);
+            return name();
         }
 
         @Override
@@ -205,6 +211,11 @@ class Date implements HyperTerm {
                 }
             }
             throw new IllegalStateException("Unsupported data type for date/time features");
+        }
+
+        @Override
+        public String name() {
+            return String.format("%s_%s", name, feature);
         }
 
         @Override

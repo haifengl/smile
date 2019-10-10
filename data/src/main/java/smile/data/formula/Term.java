@@ -20,6 +20,7 @@ package smile.data.formula;
 import smile.data.Tuple;
 import smile.data.measure.Measure;
 import smile.data.type.DataType;
+import smile.data.type.StructField;
 import smile.data.vector.*;
 import smile.data.DataFrame;
 import java.util.Collections;
@@ -39,12 +40,20 @@ public interface Term extends HyperTerm {
         return Collections.singletonList(this);
     }
 
+    /** Returns the name of output values. */
+    String name();
+
     /** Returns the data type of output values. */
     DataType type();
 
     /** Returns the optional level of measurements of output values. */
     default Optional<Measure> measure() {
         return Optional.empty();
+    }
+
+    /** Returns the field meta data of output variable. */
+    default StructField field() {
+        return new StructField(name(), type(), measure());
     }
 
     /** Applies the term on a data object. */
@@ -102,7 +111,7 @@ public interface Term extends HyperTerm {
 
     default BaseVector apply(DataFrame df) {
         if (isVariable()) {
-            return df.column(toString());
+            return df.column(name());
         }
 
         int size = df.size();
@@ -110,55 +119,55 @@ public interface Term extends HyperTerm {
             case Integer: {
                 int[] values = new int[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsInt(df.get(i));
-                return IntVector.of(toString(), values);
+                return IntVector.of(field(), values);
             }
 
             case Long: {
                 long[] values = new long[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsLong(df.get(i));
-                return LongVector.of(toString(), values);
+                return LongVector.of(field(), values);
             }
 
             case Double: {
                 double[] values = new double[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsDouble(df.get(i));
-                return DoubleVector.of(toString(), values);
+                return DoubleVector.of(field(), values);
             }
 
             case Float: {
                 float[] values = new float[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsFloat(df.get(i));
-                return FloatVector.of(toString(), values);
+                return FloatVector.of(field(), values);
             }
 
             case Boolean: {
                 boolean[] values = new boolean[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsBoolean(df.get(i));
-                return BooleanVector.of(toString(), values);
+                return BooleanVector.of(field(), values);
             }
 
             case Byte: {
                 byte[] values = new byte[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsByte(df.get(i));
-                return ByteVector.of(toString(), values);
+                return ByteVector.of(field(), values);
             }
 
             case Short: {
                 short[] values = new short[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsShort(df.get(i));
-                return ShortVector.of(toString(), values);
+                return ShortVector.of(field(), values);
             }
 
             case Char: {
                 char[] values = new char[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsChar(df.get(i));
-                return CharVector.of(toString(), values);
+                return CharVector.of(field(), values);
             }
 
             default: {
                 Object[] values = new Object[size];
                 for (int i = 0; i < size; i++) values[i] = apply(df.get(i));
-                return Vector.of(toString(), type(), values);
+                return Vector.of(field(), values);
             }
         }
     }

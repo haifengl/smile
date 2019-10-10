@@ -15,47 +15,26 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.data.formula;
+package smile.data;
 
-import java.util.List;
-import java.util.Set;
-import smile.data.type.StructType;
+import smile.io.Arff;
+import smile.util.Paths;
 
 /**
- * Remove a factor from the formula.
  *
- * @author Haifeng Li
+ * @author Haifeng
  */
-class Delete implements HyperTerm {
-    /** The term to delete. */
-    HyperTerm x;
+public class Date {
 
-    /**
-     * Constructor.
-     *
-     * @param x the term to delete.
-     */
-    public Delete(HyperTerm x) {
-        this.x = x;
-    }
+    public static DataFrame data;
 
-    @Override
-    public String toString() {
-        return String.format("delete(%s)", x);
-    }
-
-    @Override
-    public void bind(StructType schema) {
-        x.bind(schema);
-    }
-
-    @Override
-    public List<? extends Term> terms() {
-        return x.terms();
-    }
-
-    @Override
-    public Set<String> variables() {
-        return x.variables();
+    static {
+        try {
+            Arff arff = new Arff(Paths.getTestData("weka/date.arff"));
+            data = arff.read();
+        } catch (Exception ex) {
+            System.err.println("Failed to load 'date': " + ex);
+            System.exit(-1);
+        }
     }
 }

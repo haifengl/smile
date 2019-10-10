@@ -107,13 +107,13 @@ class StringVectorImpl extends VectorImpl<String> implements StringVector {
             case Byte:
                 byte[] bytes = new byte[data.length];
                 System.arraycopy(data, 0, bytes, 0, data.length);
-                return new ByteVectorImpl(name(), bytes);
+                return new ByteVectorImpl(new StructField(name(), DataTypes.ByteType, scale), bytes);
             case Short:
                 short[] shorts = new short[data.length];
                 System.arraycopy(data, 0, shorts, 0, data.length);
-                return new ShortVectorImpl(name(), shorts);
+                return new ShortVectorImpl(new StructField(name(), DataTypes.ShortType, scale), shorts);
             case Integer:
-                return new IntVectorImpl(name(), data);
+                return new IntVectorImpl(new StructField(name(), DataTypes.IntegerType, scale), data);
             default:
                 // we should never reach here.
                 throw new UnsupportedOperationException("Unsupported data type for nominal measure: " + scale.type());

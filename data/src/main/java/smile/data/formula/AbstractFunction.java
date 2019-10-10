@@ -25,7 +25,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public abstract class AbstractFunction extends AbstractTerm implements Term {
+public abstract class AbstractFunction extends AbstractTerm {
     /** The name of function. */
     String name;
     /** The operand. */
@@ -43,8 +43,13 @@ public abstract class AbstractFunction extends AbstractTerm implements Term {
     }
 
     @Override
-    public String toString() {
+    public String name() {
         return String.format("%s(%s)", name, x);
+    }
+
+    @Override
+    public String toString() {
+        return name();
     }
 
     @Override

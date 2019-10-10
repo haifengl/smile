@@ -26,7 +26,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public abstract class AbstractBiFunction extends AbstractTerm implements Term {
+public abstract class AbstractBiFunction extends AbstractTerm {
     /** The name of function. */
     String name;
     /** The first parameter of function. */
@@ -48,8 +48,13 @@ public abstract class AbstractBiFunction extends AbstractTerm implements Term {
     }
 
     @Override
-    public String toString() {
+    public String name() {
         return String.format("%s(%s, %s)", name, x, y);
+    }
+
+    @Override
+    public String toString() {
+        return name();
     }
 
     @Override

@@ -83,7 +83,7 @@ class OneHot implements HyperTerm {
     }
 
     /** The one-hot term. */
-    class OneHotEncoder extends AbstractTerm implements Term {
+    class OneHotEncoder extends AbstractTerm {
         /** The index value of level. */
         int i;
         /** The level of nominal scale. */
@@ -99,7 +99,7 @@ class OneHot implements HyperTerm {
 
         @Override
         public String toString() {
-            return String.format("%s_%s", name, level);
+            return name();
         }
 
         @Override
@@ -115,6 +115,11 @@ class OneHot implements HyperTerm {
         @Override
         public byte applyAsByte(Tuple o) {
             return i == ((Number) o.get(index)).intValue() ? (byte) 1 : (byte) 0;
+        }
+
+        @Override
+        public String name() {
+            return String.format("%s_%s", name, level);
         }
 
         @Override

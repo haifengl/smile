@@ -48,6 +48,16 @@ public class OrdinalScale extends DiscreteMeasure {
 
     /**
      * Constructor.
+     * @param values the valid values.
+     * @param levels the levels of discrete values.
+     */
+    public OrdinalScale(int[] values, String[] levels) {
+        super(values, levels);
+        Arrays.sort(values);
+    }
+
+    /**
+     * Constructor.
      * @param levels the levels of discrete values.
      */
     public OrdinalScale(List<String> levels) {
@@ -60,10 +70,7 @@ public class OrdinalScale extends DiscreteMeasure {
      * @param clazz an Enum class.
      */
     public OrdinalScale(Class<? extends Enum> clazz) {
-        super(Arrays.stream(clazz.getEnumConstants())
-                .map(Object::toString)
-                .toArray(String[]::new)
-        );
+        super(values(clazz), levels(clazz));
     }
 
     @Override

@@ -46,6 +46,15 @@ public class NominalScale extends DiscreteMeasure {
 
     /**
      * Constructor.
+     * @param values the valid values.
+     * @param levels the levels of discrete values.
+     */
+    public NominalScale(int[] values, String[] levels) {
+        super(values, levels);
+    }
+
+    /**
+     * Constructor.
      * @param levels the levels of discrete values.
      */
     public NominalScale(List<String> levels) {
@@ -58,10 +67,7 @@ public class NominalScale extends DiscreteMeasure {
      * @param clazz an Enum class.
      */
     public NominalScale(Class<? extends Enum> clazz) {
-        super(Arrays.stream(clazz.getEnumConstants())
-                .map(Object::toString)
-                .toArray(String[]::new)
-        );
+        super(values(clazz), levels(clazz));
     }
 
     @Override
