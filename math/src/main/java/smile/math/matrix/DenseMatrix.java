@@ -74,11 +74,13 @@ public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, D
      * Returns the submatrix which top left at (i, j) and bottom right at (k, l).
      */
     default DenseMatrix submat(int i, int j, int k, int l) {
-        DenseMatrix w = Matrix.zeros(k - i + 1, l - j + 1);
+        int p = k - i + 1;
+        int q = l - j + 1;
+        DenseMatrix w = Matrix.zeros(p, q);
 
-        for (int n = 0; j <= l; n++, j++) {
-            for (int m = 0; i <= k; m++, i++) {
-                w.set(m, n, get(i, j));
+        for (int n = 0; n < q; n++) {
+            for (int m = 0; m < p; m++) {
+                w.set(m, n, get(i+m, j+n));
             }
         }
 

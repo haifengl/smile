@@ -81,7 +81,7 @@ public class RBF<T> implements Serializable {
     }
 
     /** Makes a set of RBF neurons. */
-    private static <T> RBF<T>[] neurons(T[] centers, RadialBasisFunction basis, Metric<T> distance) {
+    public static <T> RBF<T>[] of(T[] centers, RadialBasisFunction basis, Metric<T> distance) {
         int k = centers.length;
         @SuppressWarnings("unchecked")
         RBF<T>[] rbf = new RBF[k];
@@ -92,7 +92,7 @@ public class RBF<T> implements Serializable {
     }
 
     /** Makes a set of RBF neurons. */
-    private static <T> RBF<T>[] neurons(T[] centers, RadialBasisFunction[] basis, Metric<T> distance) {
+    public static <T> RBF<T>[] of(T[] centers, RadialBasisFunction[] basis, Metric<T> distance) {
         int k = centers.length;
         @SuppressWarnings("unchecked")
         RBF<T>[] rbf = new RBF[k];
@@ -102,7 +102,8 @@ public class RBF<T> implements Serializable {
         return rbf;
     }
 
-    /** Estimates the width of RBF. Let d<sub>max</sub> be the maximum
+    /**
+     * Estimates the width of RBF. Let d<sub>max</sub> be the maximum
      * distance between the chosen centers, the standard deviation (i.e. width)
      * of Gaussian radial basis function is d<sub>max</sub> / sqrt(2*k), where
      * k is number of centers. This choice would be close to the optimal
@@ -125,7 +126,8 @@ public class RBF<T> implements Serializable {
         return r0;
     }
 
-    /** Estimates the width of RBF. Let d<sub>max</sub> be the maximum
+    /**
+     * Estimates the width of RBF. Let d<sub>max</sub> be the maximum
      * distance between the chosen centers, the standard deviation (i.e. width)
      * of Gaussian radial basis function is d<sub>max</sub> / sqrt(2*k), where
      * k is number of centers. This choice would be close to the optimal
@@ -153,7 +155,8 @@ public class RBF<T> implements Serializable {
         return r;
     }
 
-    /** Estimates the width of RBF. Let d<sub>max</sub> be the maximum
+    /**
+     * Estimates the width of RBF. Let d<sub>max</sub> be the maximum
      * distance between the chosen centers, the standard deviation (i.e. width)
      * of Gaussian radial basis function is d<sub>max</sub> / sqrt(2*k), where
      * k is number of centers. This choice would be close to the optimal
@@ -219,7 +222,7 @@ public class RBF<T> implements Serializable {
 
         EuclideanDistance distance = new EuclideanDistance();
         GaussianRadialBasis basis = new GaussianRadialBasis(estimateWidth(centers, distance));
-        return neurons(centers, basis, distance);
+        return of(centers, basis, distance);
     }
 
     /**
@@ -245,7 +248,7 @@ public class RBF<T> implements Serializable {
         EuclideanDistance distance = new EuclideanDistance();
         double[] width = estimateWidth(centers, distance, p);
         GaussianRadialBasis[] basis = gaussian(width);
-        return neurons(centers, basis, distance);
+        return of(centers, basis, distance);
     }
 
     /**
@@ -270,7 +273,7 @@ public class RBF<T> implements Serializable {
         double[] width = estimateWidth(x, kmeans.getClusterLabel(), centers, kmeans.getClusterSize(), distance, r);
         GaussianRadialBasis[] basis = gaussian(width);
 
-        return neurons(centers, basis, distance);
+        return of(centers, basis, distance);
     }
 
     /**
@@ -292,7 +295,7 @@ public class RBF<T> implements Serializable {
         T[] centers = clarans.medoids();
 
         GaussianRadialBasis basis = new GaussianRadialBasis(estimateWidth(centers, distance));
-        return neurons(centers, basis, distance);
+        return of(centers, basis, distance);
     }
 
     /**
@@ -319,7 +322,7 @@ public class RBF<T> implements Serializable {
         double[] width = estimateWidth(centers, distance, p);
         GaussianRadialBasis[] basis = gaussian(width);
 
-        return neurons(centers, basis, distance);
+        return of(centers, basis, distance);
     }
 
     /**
@@ -344,6 +347,6 @@ public class RBF<T> implements Serializable {
         double[] width = estimateWidth(x, clarans.getClusterLabel(), centers, clarans.getClusterSize(), distance, r);
         GaussianRadialBasis[] basis = gaussian(width);
 
-        return neurons(centers, basis, distance);
+        return of(centers, basis, distance);
     }
 }
