@@ -79,6 +79,11 @@ public class ClassLabel implements Serializable {
         return labels[id];
     }
 
+    /** Maps the class label to id. */
+    public int id(int y) {
+        return map.get(y);
+    }
+
     /** Maps the class labels to id. */
     public int[] id(int[] y) {
         int[] x = new int[y.length];

@@ -134,6 +134,26 @@ public class RandomForest implements SoftClassifier<Tuple> {
 
     /**
      * Constructor.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param k the number of classes.
+     * @param trees forest of decision trees.
+     * @param error the out-of-bag estimation of error rate.
+     * @param importance variable importance
+     */
+    public RandomForest(Formula formula, int k, List<Tree> trees, double error, double[] importance) {
+        this(formula, k, trees, error, importance, ClassLabel.of(k));
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param k the number of classes.
+     * @param trees forest of decision trees.
+     * @param error the out-of-bag estimation of error rate.
+     * @param importance variable importance
+     * @param labels class labels
      */
     public RandomForest(Formula formula, int k, List<Tree> trees, double error, double[] importance, ClassLabel labels) {
         this.formula = formula;
