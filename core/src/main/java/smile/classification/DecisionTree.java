@@ -149,7 +149,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
             int splitValue = -1;
 
             NominalScale scale = (NominalScale) measure.get();
-            int m = scale.levels().length;
+            int m = scale.size();
             int[][] trueCount = new int[m][k];
 
             for (int i = lo; i < hi; i++) {
@@ -157,7 +157,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
                 trueCount[xj.getInt(o)][y[o]] += samples[o];
             }
 
-            for (int l = 0; l < m; l++) {
+            for (int l : scale.values()) {
                 int tc = MathEx.sum(trueCount[l]);
                 int fc = node.size() - tc;
 
