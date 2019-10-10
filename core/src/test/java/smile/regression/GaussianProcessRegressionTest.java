@@ -66,8 +66,7 @@ public class GaussianProcessRegressionTest {
     public void testLongley() {
         System.out.println("longley");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] longley = MathEx.clone(Longley.x);
         MathEx.standardize(longley);
@@ -86,8 +85,7 @@ public class GaussianProcessRegressionTest {
     public void testCPU() {
         System.out.println("CPU");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = MathEx.clone(CPU.x);
         MathEx.standardize(x);
@@ -142,8 +140,7 @@ public class GaussianProcessRegressionTest {
     public void test2DPlanes() throws Exception {
         System.out.println("2dplanes");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = MathEx.clone(Planes.x);
         double[] y = Planes.y;
@@ -207,8 +204,7 @@ public class GaussianProcessRegressionTest {
     public void testAilerons() throws Exception {
         System.out.println("ailerons");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = MathEx.clone(Ailerons.x);
         MathEx.standardize(x);
@@ -276,8 +272,7 @@ public class GaussianProcessRegressionTest {
     public void testBank32nh() throws Exception {
         System.out.println("bank32nh");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = MathEx.clone(Bank32nh.x);
         double[] y = Bank32nh.y;
@@ -342,8 +337,7 @@ public class GaussianProcessRegressionTest {
     public void testPuma8nh() throws Exception {
         System.out.println("puma8nh");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = Puma8NH.x;
         double[] y = Puma8NH.y;
@@ -407,8 +401,7 @@ public class GaussianProcessRegressionTest {
     public void testKin8nm() throws Exception {
         System.out.println("kin8nm");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = MathEx.clone(Kin8nm.x);
         double[] y = Kin8nm.y;

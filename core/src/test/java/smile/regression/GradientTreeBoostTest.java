@@ -62,8 +62,7 @@ public class GradientTreeBoostTest {
     public void testLongley() {
         System.out.println("longley");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         GradientTreeBoost model = GradientTreeBoost.fit(Longley.formula, Longley.data);
 
         double[] importance = model.importance();
@@ -87,8 +86,7 @@ public class GradientTreeBoostTest {
     public void test(GradientTreeBoost.Loss loss, String name, Formula formula, DataFrame data, double expected) {
         System.out.println(name + "\t" + loss);
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         GradientTreeBoost model = GradientTreeBoost.fit(formula, data);
 
         double[] importance = model.importance();

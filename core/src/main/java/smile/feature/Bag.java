@@ -58,27 +58,25 @@ public class Bag {
     public Bag(String[] words, boolean binary) {
         this.binary = binary;
         this.words = new HashMap<>();
-        for (int i = 0, k = 0; i < words.length; i++) {
+        for (int i = 0; i < words.length; i++) {
             if (this.words.containsKey(words[i])) {
                 throw new IllegalArgumentException("Duplicated word:" + words[i]);
             }
-            this.words.put(words[i], k++);
+            this.words.put(words[i], i);
         }
     }
 
     /**
-     * Returns the bag-of-words features of a document. The features are real-valued
-     * in convenience of most learning algorithms although they take only integer
-     * or binary values.
+     * Returns the bag-of-words features of a document.
      */
-    public double[] apply(String[] x) {
-        double[] bag = new double[words.size()];
+    public int[] apply(String[] x) {
+        int[] bag = new int[words.size()];
 
         if (binary) {
             for (String word : x) {
                 Integer f = words.get(word);
                 if (f != null) {
-                    bag[f] = 1.0;
+                    bag[f] = 1;
                 }
             }
         } else {

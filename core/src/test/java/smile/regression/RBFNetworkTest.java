@@ -60,8 +60,7 @@ public class RBFNetworkTest {
     public void testLongley() {
         System.out.println("longley");
 
-        // to get repeatable results as RBF.fit calls k-means
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = MathEx.clone(Longley.x);
         MathEx.standardize(x);
@@ -75,8 +74,7 @@ public class RBFNetworkTest {
     public void testCPU() {
         System.out.println("CPU");
 
-        // to get repeatable results as RBF.fit calls k-means
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = MathEx.clone(CPU.x);
         MathEx.standardize(x);
@@ -90,8 +88,7 @@ public class RBFNetworkTest {
     public void test2DPlanes() {
         System.out.println("2dplanes");
 
-        // to get repeatable results as RBF.fit calls k-means
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[] prediction = CrossValidation.regression(10, Planes.x, Planes.y, (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
         double rmse = RMSE.apply(Planes.y, prediction);
@@ -103,8 +100,7 @@ public class RBFNetworkTest {
     public void testAilerons() {
         System.out.println("ailerons");
 
-        // to get repeatable results as RBF.fit calls k-means
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = MathEx.clone(Ailerons.x);
         MathEx.standardize(x);
@@ -118,8 +114,7 @@ public class RBFNetworkTest {
     public void testBank32nh() {
         System.out.println("bank32nh");
 
-        // to get repeatable results as RBF.fit calls k-means
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = MathEx.clone(Bank32nh.x);
         MathEx.standardize(x);

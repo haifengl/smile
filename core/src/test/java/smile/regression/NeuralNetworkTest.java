@@ -56,8 +56,7 @@ public class NeuralNetworkTest {
     public void test(ActivationFunction activation, String dataset, double[][] x, double[] y, double expected) {
         System.out.println(dataset + "\t" + activation);
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         int n = x.length;
         int p = x[0].length;
         double[] xmu = MathEx.colMeans(x);
