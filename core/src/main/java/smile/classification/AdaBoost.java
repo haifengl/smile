@@ -111,6 +111,21 @@ public class AdaBoost implements SoftClassifier<Tuple> {
      * @param error the weighted error of each decision tree during training.
      * @param importance variable importance
      */
+    public AdaBoost(Formula formula, int k, DecisionTree[] trees, double[] alpha, double[] error, double[] importance) {
+        this(formula, k, trees, alpha, error, importance, ClassLabel.of(k));
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param k the number of classes.
+     * @param trees forest of decision trees.
+     * @param alpha the weight of each decision tree.
+     * @param error the weighted error of each decision tree during training.
+     * @param importance variable importance
+     * @param labels class labels
+     */
     public AdaBoost(Formula formula, int k, DecisionTree[] trees, double[] alpha, double[] error, double[] importance, ClassLabel labels) {
         this.formula = formula;
         this.k = k;

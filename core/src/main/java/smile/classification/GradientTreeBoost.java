@@ -156,6 +156,19 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
      * @param b          the intercept
      * @param importance variable importance
      */
+    public GradientTreeBoost(Formula formula, RegressionTree[] trees, double b, double shrinkage, double[] importance) {
+        this(formula, trees, b, shrinkage, importance, ClassLabel.of(2));
+    }
+
+    /**
+     * Constructor of binary class.
+     *
+     * @param formula    a symbolic description of the model to be fitted.
+     * @param trees      forest of regression trees.
+     * @param b          the intercept
+     * @param importance variable importance
+     * @param labels     class labels
+     */
     public GradientTreeBoost(Formula formula, RegressionTree[] trees, double b, double shrinkage, double[] importance, ClassLabel labels) {
         this.formula = formula;
         this.k = 2;
@@ -172,6 +185,18 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
      * @param formula    a symbolic description of the model to be fitted.
      * @param forest     forest of regression trees.
      * @param importance variable importance
+     */
+    public GradientTreeBoost(Formula formula, RegressionTree[][] forest, double shrinkage, double[] importance) {
+        this(formula, forest, shrinkage, importance, ClassLabel.of(forest.length));
+    }
+
+    /**
+     * Constructor of multi-class.
+     *
+     * @param formula    a symbolic description of the model to be fitted.
+     * @param forest     forest of regression trees.
+     * @param importance variable importance
+     * @param labels     class labels
      */
     public GradientTreeBoost(Formula formula, RegressionTree[][] forest, double shrinkage, double[] importance, ClassLabel labels) {
         this.formula = formula;

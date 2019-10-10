@@ -17,6 +17,8 @@
 
 package smile.classification;
 
+import smile.data.Tuple;
+
 /**
  * Soft classifiers calculate a posteriori probabilities besides the class
  * label of an instance.
@@ -32,10 +34,23 @@ public interface SoftClassifier<T> extends Classifier<T> {
      * classification algorithms are able to calculate such a posteriori
      * probabilities.
      *
-     * @param x the instance to be classified.
+     * @param x an instance to be classified.
      * @param posteriori the array to store a posteriori probabilities on output.
      * @return the predicted class label
      */
-    public int predict(T x, double[] posteriori);
+    int predict(T x, double[] posteriori);
 
+    /**
+     * Predicts the class label of an instance and also calculate a posteriori
+     * probabilities. Classifiers may NOT support this method since not all
+     * classification algorithms are able to calculate such a posteriori
+     * probabilities.
+     *
+     * @param x a tuple instance.
+     * @param posteriori the array to store a posteriori probabilities on output.
+     * @return the predicted class label
+     */
+    default int predict(Tuple x, double[] posteriori) {
+        throw new UnsupportedOperationException();
+    }
 }
