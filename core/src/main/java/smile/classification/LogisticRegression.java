@@ -78,7 +78,7 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LogisticRegression.class);
 
     /**

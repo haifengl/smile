@@ -60,8 +60,7 @@ public class RandomForestTest {
     public void testLongley() {
         System.out.println("longley");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218L);
+        MathEx.setSeed(19650218); // to get repeatable results.
         RandomForest model = RandomForest.fit(Longley.formula, Longley.data, 100, 3, 10, 3, 1.0, () -> MathEx.probablePrime(19650218L, 256));
 
         double[] importance = model.importance();

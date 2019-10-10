@@ -109,8 +109,7 @@ public class OLSTest {
     public void testCPU() {
         System.out.println("CPU");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         LinearModel model = OLS.fit(CPU.formula, CPU.data);
         System.out.println(model);

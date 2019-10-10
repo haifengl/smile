@@ -85,8 +85,7 @@ public class RegressionTreeTest {
     public void test(String name, Formula formula, DataFrame data, double expected) {
         System.out.println(name);
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         RegressionTree model = RegressionTree.fit(formula, data);
         System.out.println("----- dot -----");
