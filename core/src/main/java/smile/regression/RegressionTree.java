@@ -140,7 +140,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
         if (measure.isPresent() && measure.get() instanceof NominalScale) {
             int splitValue = -1;
             NominalScale scale = (NominalScale) measure.get();
-            int m = scale.levels().length;
+            int m = scale.size();
             int[] trueCount = new int[m];
             double[] trueSum = new double[m];
 
@@ -151,7 +151,7 @@ public class RegressionTree extends CART implements Regression<Tuple> {
                 trueSum[idx] += y[o] * samples[o];
             }
 
-            for (int l = 0; l < m; l++) {
+            for (int l : scale.values()) {
                 int tc = trueCount[l];
                 int fc = node.size() - tc;
 
