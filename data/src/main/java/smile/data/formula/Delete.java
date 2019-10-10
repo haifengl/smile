@@ -26,7 +26,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Delete extends AbstractTerm {
+class Delete implements HyperTerm {
     /** The term to delete. */
     HyperTerm x;
 

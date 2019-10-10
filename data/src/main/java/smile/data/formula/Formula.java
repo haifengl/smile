@@ -204,14 +204,14 @@ public class Formula implements Serializable {
         this.xy = result.toArray(new Term[result.size()]);
 
         List<StructField> fields = result.stream()
-                .map(factor -> new StructField(factor.toString(), factor.type(), factor.measure()))
+                .map(factor -> factor.field())
                 .collect(Collectors.toList());
 
         schema = DataTypes.struct(fields);
 
         if (response.isPresent()) {
             this.x = Arrays.stream(this.xy).filter(term -> term != response.get()).toArray(Term[]::new);
-            String y = response.get().toString();
+            String y = response.get().name();
             this.xschema = DataTypes.struct(fields.stream().filter(field -> !field.name.equals(y)).toArray(StructField[]::new));
         } else {
             this.x = xy;

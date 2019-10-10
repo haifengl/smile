@@ -27,7 +27,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class IntFunction extends AbstractFunction {
+public class IntFunction extends AbstractFunction {
     /** The function on an integer. */
     private smile.math.IntFunction lambda;
 

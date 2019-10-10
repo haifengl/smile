@@ -21,13 +21,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
+
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 
 /**
  * Discrete data can only take particular values. There may potentially
  * be an infinite number of those values, but each is distinct.
- * The integer encoding of values starts with zero.
  *
  * Both integer and string variables can be made into discrete measure,
  * but a discrete measure's levels will always be string values.
@@ -36,47 +37,93 @@ import smile.data.type.DataTypes;
  */
 public abstract class DiscreteMeasure implements Measure {
     /**
-     * The string values of the discrete scale.
+     * The valid values.
+     */
+    final int[] values;
+    /**
+     * The levels of measurement.
      */
     final String[] levels;
     /**
+     * Map an integer to string.
+     */
+    final Map<Number, String> value2level;
+    /**
      * Map a string to an integer level.
      */
-    final Map<String, Number> map;
+    final Map<String, Number> level2value;
 
     /**
      * Constructor.
-     * @param values the levels of discrete values.
+     * @param levels the levels of discrete values.
      */
-    public DiscreteMeasure(String... values) {
-        this.levels = values;
-        map = new HashMap<>();
-        if (values.length <= Byte.MAX_VALUE + 1) {
-            for (byte i = 0; i < values.length; i++) {
-                map.put(values[i], i);
-            }
-        } else if (values.length <= Short.MAX_VALUE + 1) {
-            for (short i = 0; i < values.length; i++) {
-                map.put(values[i], i);
-            }
-        } else {
-            for (int i = 0; i < values.length; i++) {
-                map.put(values[i], i);
-            }
-        }
+    public DiscreteMeasure(String... levels) {
+        this(IntStream.range(0, levels.length).toArray(), levels);
     }
 
     /**
      * Constructor.
-     * @param values the levels of discrete values.
+     * @param levels the levels of discrete values.
      */
-    public DiscreteMeasure(List<String> values) {
-        this(values.toArray(new String[values.size()]));
+    public DiscreteMeasure(List<String> levels) {
+        this(levels.toArray(new String[levels.size()]));
+    }
+
+    /**
+     * Constructor.
+     * @param values the valid values.
+     * @param levels the levels of discrete values.
+     */
+    public DiscreteMeasure(int[] values, String[] levels) {
+        if (values.length != levels.length) {
+            throw new IllegalArgumentException("The size of values and levels don't match");
+        }
+
+        this.values = values;
+        this.levels = levels;
+        this.value2level = new HashMap<>();
+        this.level2value = new HashMap<>();
+
+        if (levels.length <= Byte.MAX_VALUE + 1) {
+            for (int i = 0; i < values.length; i++) {
+                value2level.put(values[i], levels[i]);
+                level2value.put(levels[i], (byte) values[i]);
+            }
+        } else if (levels.length <= Short.MAX_VALUE + 1) {
+            for (int i = 0; i < values.length; i++) {
+                value2level.put(values[i], levels[i]);
+                level2value.put(levels[i], (short) values[i]);
+            }
+        } else {
+            for (int i = 0; i < values.length; i++) {
+                value2level.put(values[i], levels[i]);
+                level2value.put(levels[i], values[i]);
+            }
+        }
+    }
+
+    /** Returns the ordinal values of an enum. */
+    static int[] values(Class<? extends Enum> clazz) {
+        return Arrays.stream(clazz.getEnumConstants())
+                .mapToInt(e -> ((Enum) e).ordinal())
+                .toArray();
+    }
+
+    /** Returns the string values of an enum. */
+    static String[] levels(Class<? extends Enum> clazz) {
+        return Arrays.stream(clazz.getEnumConstants())
+                .map(Object::toString)
+                .toArray(String[]::new);
     }
 
     /** Returns the number of levels. */
     public int size() {
         return levels.length;
+    }
+
+    /** Returns the valid value set. */
+    public int[] values() {
+        return values;
     }
 
     /** Returns the levels. */
@@ -86,7 +133,7 @@ public abstract class DiscreteMeasure implements Measure {
 
     /** Returns the level string representation. */
     public String level(int i) {
-        return levels[i];
+        return value2level.get(i);
     }
 
     /** Returns the data type that is suitable for this measure scale. */
@@ -102,24 +149,24 @@ public abstract class DiscreteMeasure implements Measure {
 
     /** Returns the string value of a level. */
     public String toString(int level) {
-        return levels[level];
+        return level(level);
     }
 
     @Override
     public String toString(Object o) {
-        return levels[((Number) o).intValue()];
+        return level(((Number) o).intValue());
     }
 
     @Override
     public Number valueOf(String s) {
-        return map.get(s);
+        return level2value.get(s);
     }
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof DiscreteMeasure) {
             DiscreteMeasure measure = (DiscreteMeasure) o;
-            return Arrays.equals(levels, measure.levels);
+            return Arrays.equals(levels, measure.levels) && Arrays.equals(values, values);
         }
 
         return false;

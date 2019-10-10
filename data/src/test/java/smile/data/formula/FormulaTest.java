@@ -150,6 +150,7 @@ public class FormulaTest {
         System.out.println("date");
         Formula formula = Formula.rhs(date("birthday", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH, DateFeature.DAY_OF_WEEK));
         DataFrame output = formula.apply(df);
+        System.out.println(output.schema());
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(4, output.ncols());

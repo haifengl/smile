@@ -23,7 +23,7 @@ package smile.data.formula;
  *
  * @author Haifeng Li
  */
-public abstract class AbstractTerm implements HyperTerm {
+public abstract class AbstractTerm implements Term {
     /**
      * Constructor.
      */
@@ -37,8 +37,9 @@ public abstract class AbstractTerm implements HyperTerm {
             return true;
         }
 
-        if (o instanceof HyperTerm) {
-            return toString().equals(o.toString());
+        if (o instanceof Term) {
+            Term t = (Term) o;
+            return name().equals(t.name());
         }
 
         return false;
@@ -46,6 +47,6 @@ public abstract class AbstractTerm implements HyperTerm {
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return name().hashCode();
     }
 }

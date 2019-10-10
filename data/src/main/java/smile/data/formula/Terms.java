@@ -398,6 +398,11 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
+                return name();
+            }
+
+            @Override
+            public String name() {
                 return String.valueOf(x);
             }
 
@@ -418,6 +423,11 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
+                return name();
+            }
+
+            @Override
+            public String name() {
                 return String.valueOf(x);
             }
 
@@ -453,6 +463,11 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
+                return name();
+            }
+
+            @Override
+            public String name() {
                 return String.valueOf(x);
             }
 
@@ -488,6 +503,11 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
+                return name();
+            }
+
+            @Override
+            public String name() {
                 return String.valueOf(x);
             }
 
@@ -523,6 +543,11 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
+                return name();
+            }
+
+            @Override
+            public String name() {
                 return String.valueOf(x);
             }
 
@@ -558,6 +583,11 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
+                return name();
+            }
+
+            @Override
+            public String name() {
                 return String.valueOf(x);
             }
 
@@ -588,6 +618,11 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
+                return name();
+            }
+
+            @Override
+            public String name() {
                 return String.valueOf(x);
             }
 
@@ -618,6 +653,11 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
+                return name();
+            }
+
+            @Override
+            public String name() {
                 return String.valueOf(x);
             }
 
@@ -645,6 +685,11 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
+                return name();
+            }
+
+            @Override
+            public String name() {
                 return x.toString();
             }
 
