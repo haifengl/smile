@@ -65,8 +65,7 @@ public class RandomForestTest {
     public void testWeather() {
         System.out.println("Weather");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         RandomForest model = RandomForest.fit(WeatherNominal.formula, WeatherNominal.data, 100, 2, SplitRule.GINI, 100, 5, 1.0);
 
         double[] importance = model.importance();
@@ -85,8 +84,7 @@ public class RandomForestTest {
     public void testIris() {
         System.out.println("Iris");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         RandomForest model = RandomForest.fit(Iris.formula, Iris.data, 100, 2, SplitRule.GINI, 100, 5, 1.0);
 
         double[] importance = model.importance();
@@ -104,8 +102,7 @@ public class RandomForestTest {
     public void testSegment() {
         System.out.println("Segment");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         LongStream seeds = LongStream.generate(() -> MathEx.probablePrime(19650218L, 256));
         RandomForest model = RandomForest.fit(Segment.formula, Segment.train, 200, 16, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(seeds));
 
@@ -131,8 +128,7 @@ public class RandomForestTest {
     public void testUSPS() {
         System.out.println("USPS");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         LongStream seeds = LongStream.generate(() -> MathEx.probablePrime(19650218L, 256));
         RandomForest model = RandomForest.fit(USPS.formula, USPS.train, 200, 16, SplitRule.GINI, 200, 5, 1.0, Optional.empty(), Optional.of(seeds));
 

@@ -54,25 +54,14 @@ public class BagTest {
     public void tearDown() {
     }
 
-
-    @Test
     /**
      * Test of the uniqueness of features in the class Bag
      */
+    @Test(expected = IllegalArgumentException.class)
     public void testUniquenessOfFeatures() {
         System.out.println("unique features");
-        String[] featuresForBirdStories = {"crane", "sparrow", "hawk", "owl", "kiwi"};
-        String[] featuresForBuildingStories = {"truck", "concrete", "foundation", "steel", "crane"};
-        String testMessage = "This story is about a crane and a sparrow";
-
-        ArrayList<String> mergedFeatureLists = new ArrayList<>();
-        mergedFeatureLists.addAll(Arrays.asList(featuresForBirdStories));
-        mergedFeatureLists.addAll(Arrays.asList(featuresForBuildingStories));
-
-        Bag bag = new Bag(mergedFeatureLists.toArray(new String[featuresForBirdStories.length + featuresForBuildingStories.length]));
-
-        double[] result = bag.apply(testMessage.split(" "));
-        assertEquals(9, result.length);
+        String[] features = {"crane", "sparrow", "hawk", "owl", "kiwi", "kiwi"};
+        Bag bag = new Bag(features);
     }
 
     /**
@@ -94,12 +83,12 @@ public class BagTest {
         
         Bag bag = new Bag(feature);
         
-        double[][] x = new double[text.length][];
+        int[][] x = new int[text.length][];
         for (int i = 0; i < text.length; i++) {
             x[i] = bag.apply(text[i]);
             assertEquals(feature.length, x[i].length);
         }
         
-        assertEquals(1.0, x[0][15], 1E-7);
+        assertEquals(1, x[0][15]);
     }
 }

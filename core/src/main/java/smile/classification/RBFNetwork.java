@@ -17,10 +17,8 @@
 
 package smile.classification;
 
-import java.util.Arrays;
 import smile.base.RBF;
 import smile.math.MathEx;
-import smile.math.distance.Metric;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QR;
@@ -92,7 +90,7 @@ import smile.math.rbf.RadialBasisFunction;
  * @author Haifeng Li
  */
 public class RBFNetwork<T> implements Classifier<T> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The number of classes.

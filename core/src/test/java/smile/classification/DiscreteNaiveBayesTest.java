@@ -26,6 +26,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.validation.CrossValidation;
+
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 
 /**
@@ -63,9 +66,12 @@ public class DiscreteNaiveBayesTest {
             bayes.update(x, y);
             return bayes;
         });
-        int error = Error.apply(Movie.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(463, error);
+
+        // discount the instance without any feature words.
+        int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
+        int error = Error.apply(Movie.y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        assertEquals(316, error);
     }
 
     @Test
@@ -80,9 +86,12 @@ public class DiscreteNaiveBayesTest {
             }
             return bayes;
         });
-        int error = Error.apply(Movie.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(463, error);
+
+        // discount the instance without any feature words.
+        int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
+        int error = Error.apply(Movie.y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        assertEquals(316, error);
     }
 
     @Test
@@ -95,9 +104,12 @@ public class DiscreteNaiveBayesTest {
             bayes.update(x, y);
             return bayes;
         });
-        int error = Error.apply(Movie.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(462, error);
+
+        // discount the instance without any feature words.
+        int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
+        int error = Error.apply(Movie.y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        assertEquals(316, error);
     }
 
     @Test
@@ -112,9 +124,12 @@ public class DiscreteNaiveBayesTest {
             }
             return bayes;
         });
-        int error = Error.apply(Movie.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(462, error);
+
+        // discount the instance without any feature words.
+        int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
+        int error = Error.apply(Movie.y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        assertEquals(316, error);
     }
 
     @Test
@@ -127,9 +142,12 @@ public class DiscreteNaiveBayesTest {
             bayes.update(x, y);
             return bayes;
         });
-        int error = Error.apply(Movie.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(435, error);
+
+        // discount the instance without any feature words.
+        int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
+        int error = Error.apply(Movie.y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        assertEquals(309, error);
     }
 
     @Test
@@ -144,8 +162,11 @@ public class DiscreteNaiveBayesTest {
             }
             return bayes;
         });
-        int error = Error.apply(Movie.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(435, error);
+
+        // discount the instance without any feature words.
+        int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
+        int error = Error.apply(Movie.y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        assertEquals(309, error);
     }
 }

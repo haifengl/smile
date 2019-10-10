@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import smile.data.measure.DiscreteMeasure;
 import smile.math.MathEx;
 import smile.math.SparseArray;
 import smile.stat.distribution.Distribution;
@@ -79,6 +80,7 @@ import smile.stat.distribution.Distribution;
  */
 public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifier<int[]> {
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DiscreteMeasure.class);
 
     /**
      * The generation models of naive Bayes classifier.
@@ -306,8 +308,9 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      */
     @Override
     public void update(int[] x, int y) {
-        if (x.length != p) {
-            throw new IllegalArgumentException("Invalid input vector size: " + x.length);
+        if (!isGoodInstance(x)) {
+            logger.info("Skip updating the model with a sample without any feature word");
+            return;
         }
 
         switch (model) {
@@ -348,6 +351,11 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      * @param y training label.
      */
     public void update(SparseArray x, int y) {
+        if (!isGoodInstance(x)) {
+            logger.info("Skip updating the model with a sample without any feature word");
+            return;
+        }
+
         switch (model) {
             case MULTINOMIAL:
                 for (SparseArray.Entry e : x) {
@@ -389,6 +397,11 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
         switch (model) {
             case MULTINOMIAL:
                 for (int i = 0; i < x.length; i++) {
+                    if (!isGoodInstance(x[i])) {
+                        logger.info("Skip updating the model with a sample without any feature word");
+                        continue;
+                    }
+
                     for (int j = 0; j < p; j++) {
                         ntc[y[i]][j] += x[i][j];
                         nt[y[i]] += x[i][j];
@@ -401,6 +414,11 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
 
             case POLYAURN:
                 for (int i = 0; i < x.length; i++) {
+                    if (!isGoodInstance(x[i])) {
+                        logger.info("Skip updating the model with a sample without any feature word");
+                        continue;
+                    }
+
                     for (int j = 0; j < p; j++) {
                         ntc[y[i]][j] += x[i][j] * 2;
                         nt[y[i]] += x[i][j] * 2;
@@ -413,6 +431,11 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
 
             case BERNOULLI:
                 for (int i = 0; i < x.length; i++) {
+                    if (!isGoodInstance(x[i])) {
+                        logger.info("Skip updating the model with a sample without any feature word");
+                        continue;
+                    }
+
                     for (int j = 0; j < p; j++) {
                         if (x[i][j] > 0) {
                             ntc[y[i]][j]++;
@@ -462,8 +485,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      * Predict the class of an instance.
      *
      * @param x the instance to be classified.
-     * @return the predicted class label. For MULTINOMIAL and BERNOULLI models,
-     * returns -1 if the instance does not contain any feature words.
+     * @return the predicted class label.
      */
     @Override
     public int predict(int[] x) {
@@ -474,14 +496,13 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      * Predict the class of an instance.
      *
      * @param x the instance to be classified.
-     * @param posteriori the array to store a posteriori probabilities on output.
-     * @return the predicted class label. For MULTINOMIAL and BERNOULLI models,
-     * returns -1 if the instance does not contain any feature words.
+     * @return the predicted class label. If the instance is of all zeros, return
+     * returns Integer.MIN_VALUE.
      */
     @Override
     public int predict(int[] x, double[] posteriori) {
-        if (x.length != p) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d", x.length));
+        if (!isGoodInstance(x)) {
+            return Integer.MIN_VALUE;
         }
 
         if (posteriori == null) {
@@ -535,6 +556,33 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
     }
 
     /**
+     * Return true if the instance has any positive features.
+     */
+    private boolean isGoodInstance(int[] x) {
+        if (x.length != p) {
+            throw new IllegalArgumentException(String.format("Invalid vector size: %d", x.length));
+        }
+
+        boolean any = false;
+        for (int xi : x) {
+            if (xi > 0) {
+                any = true;
+                break;
+            }
+        }
+
+        return any;
+    }
+
+    /**
+     * In case of MULTINOMIAL and BERNOULLI, check if the instance
+     * has any positive values of features.
+     */
+    private boolean isGoodInstance(SparseArray x) {
+        return !x.isEmpty();
+    }
+
+    /**
      * Predict the class of an instance.
      *
      * @param x the instance to be classified.
@@ -550,10 +598,14 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      *
      * @param x the instance to be classified.
      * @param posteriori the array to store a posteriori probabilities on output.
-     * @return the predicted class label. For MULTINOMIAL and BERNOULLI models,
-     * returns -1 if the instance does not contain any feature words.
+     * @return the predicted class label. If the instance is of all zeros, return
+     * returns Integer.MIN_VALUE.
      */
     public int predict(SparseArray x, double[] posteriori) {
+        if (!isGoodInstance(x)) {
+            return Integer.MIN_VALUE;
+        }
+
         if (posteriori == null) {
             posteriori = new double[k];
         }
