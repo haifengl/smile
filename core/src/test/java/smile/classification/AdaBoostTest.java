@@ -63,8 +63,7 @@ public class AdaBoostTest {
     public void testWeather() {
         System.out.println("Weather");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         AdaBoost model = AdaBoost.fit(WeatherNominal.formula, WeatherNominal.data, 200, 4, 1);
 
         double[] importance = model.importance();
@@ -83,8 +82,7 @@ public class AdaBoostTest {
     public void testIris() {
         System.out.println("Iris");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         AdaBoost model = AdaBoost.fit(Iris.formula, Iris.data, 200, 4, 5);
 
         double[] importance = model.importance();
@@ -102,8 +100,7 @@ public class AdaBoostTest {
     public void testSegment() {
         System.out.println("Segment");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         AdaBoost model = AdaBoost.fit(Segment.formula, Segment.train, 200, 6, 1);
 
         double[] importance = model.importance();
@@ -128,8 +125,7 @@ public class AdaBoostTest {
     public void testUSPS() {
         System.out.println("USPS");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         AdaBoost model = AdaBoost.fit(USPS.formula, USPS.train, 200, 64, 1);
 
         double[] importance = model.importance();

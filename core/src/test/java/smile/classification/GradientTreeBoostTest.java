@@ -63,8 +63,7 @@ public class GradientTreeBoostTest {
     public void testWeather() {
         System.out.println("Weather");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         GradientTreeBoost model = GradientTreeBoost.fit(WeatherNominal.formula, WeatherNominal.data, 100, 6, 5, 0.05, 0.7);
 
         double[] importance = model.importance();
@@ -83,8 +82,7 @@ public class GradientTreeBoostTest {
     public void testIris() {
         System.out.println("Iris");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         GradientTreeBoost model = GradientTreeBoost.fit(Iris.formula, Iris.data, 100, 6, 5, 0.05, 0.7);
 
         double[] importance = model.importance();
@@ -102,8 +100,7 @@ public class GradientTreeBoostTest {
     public void testSegment() {
         System.out.println("Segment");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         GradientTreeBoost model = GradientTreeBoost.fit(Segment.formula, Segment.train, 100, 6, 5, 0.05, 0.7);
 
         double[] importance = model.importance();
@@ -128,8 +125,7 @@ public class GradientTreeBoostTest {
     public void testUSPS() {
         System.out.println("USPS");
 
-        // to get repeatable results.
-        MathEx.setSeed(19650218);
+        MathEx.setSeed(19650218); // to get repeatable results.
         GradientTreeBoost model = GradientTreeBoost.fit(USPS.formula, USPS.train, 100, 100, 5, 0.05, 0.7);
 
         double[] importance = model.importance();
