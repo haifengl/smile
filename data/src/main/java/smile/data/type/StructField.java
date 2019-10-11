@@ -20,8 +20,11 @@ package smile.data.type;
 import smile.data.measure.ContinuousMeasure;
 import smile.data.measure.DiscreteMeasure;
 import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
+import smile.data.vector.DoubleVector;
 
 import java.util.Optional;
+import java.util.stream.DoubleStream;
 
 /**
  * A field in a Struct data type.
@@ -80,6 +83,15 @@ public class StructField {
     /** Returns the string representation of the field with given value. */
     public Object valueOf(String s) {
         return measure.map(m -> (Object) m.valueOf(s)).orElseGet(() -> type.valueOf(s));
+    }
+
+    /** Returns true if the field is of integer or floating but not nominal scale. */
+    public boolean isNumeric() {
+        if (measure.isPresent() && measure.get() instanceof NominalScale) {
+            return false;
+        }
+
+        return type.isFloating() || type.isIntegral();
     }
 
     @Override

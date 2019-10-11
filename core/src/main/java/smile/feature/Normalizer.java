@@ -53,7 +53,7 @@ public class Normalizer {
 
     /** Default constructor with L2 norm. */
     public Normalizer() {
-
+        this(Norm.L2);
     }
 
     /**

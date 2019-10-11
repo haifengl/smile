@@ -97,4 +97,13 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
     static DoubleVector of(StructField field, double[] vector) {
         return new DoubleVectorImpl(field, vector);
     }
+
+    /** Creates a named double vector.
+     *
+     * @param field the struct field of vector.
+     * @param stream the data stream of vector.
+     */
+    static DoubleVector of(StructField field, DoubleStream stream) {
+        return new DoubleVectorImpl(field, stream.toArray());
+    }
 }

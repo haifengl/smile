@@ -17,10 +17,15 @@
 
 package smile.feature;
 
+import java.util.Optional;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.Collectors;
+
+import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
 import smile.data.type.DataType;
+import smile.data.type.StructField;
 import smile.data.vector.BaseVector;
 import smile.data.vector.DoubleVector;
 import smile.math.MathEx;
@@ -91,7 +96,7 @@ public class Scaler implements FeatureTransform {
         double[] hi = new double[schema.length()];
 
         for (int i = 0; i < lo.length; i++) {
-            if (DataType.isDouble(schema.field(i).type)) {
+            if (schema.field(i).isNumeric()) {
                 lo[i] = data.doubleVector(i).stream().min().getAsDouble();
                 hi[i] = data.doubleVector(i).stream().max().getAsDouble();
             }
@@ -100,11 +105,28 @@ public class Scaler implements FeatureTransform {
         return new Scaler(schema, lo, hi);
     }
 
+    /**
+     * Learns transformation parameters from a dataset.
+     * @param data The training data.
+     */
+    public static Scaler fit(double[][] data) {
+        return fit(DataFrame.of(data));
+    }
+
     /** Scales a value with i-th column parameters. */
     private double scale(double x, int i) {
         double y = (x - lo[i]) / hi[i];
         if (y < 0.0) y = 0.0;
         if (y > 1.0) y = 1.0;
+        return y;
+    }
+
+    @Override
+    public double[] transform(double[] x) {
+        double[] y = new double[x.length];
+        for (int i = 0; i < y.length; i++) {
+            y[i] = scale(x[i], i);
+        }
         return y;
     }
 
@@ -117,7 +139,7 @@ public class Scaler implements FeatureTransform {
         return new smile.data.AbstractTuple() {
             @Override
             public Object get(int i) {
-                if (DataType.isDouble(schema.field(i).type)) {
+                if (schema.field(i).isNumeric()) {
                     return scale(x.getDouble(i), i);
                 } else {
                     return x.get(i);
@@ -139,12 +161,13 @@ public class Scaler implements FeatureTransform {
 
         BaseVector[] vectors = new BaseVector[schema.length()];
         for (int i = 0; i < lo.length; i++) {
-            if (DataType.isDouble(schema.field(i).type)) {
-                final int idx = i;
-                DoubleStream stream = data.doubleVector(i).stream().map(x -> scale(x, idx));
-                vectors[i] = DoubleVector.of(schema.field(i).name, stream);
+            StructField field = schema.field(i);
+            if (field.isNumeric()) {
+                final int col = i;
+                DoubleStream stream = data.stream().mapToDouble(t -> scale(t.getDouble(col), col));
+                vectors[i] = DoubleVector.of(field, stream);
             } else {
-                vectors[i] = data.vector(i);
+                vectors[i] = data.column(i);
             }
         }
         return DataFrame.of(vectors);
@@ -152,8 +175,8 @@ public class Scaler implements FeatureTransform {
 
     @Override
     public String toString() {
-        return IntStream.range(0, lo.length).mapToObj(
-                i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, lo[i], hi[i])
-        ).collect(Collectors.joining(",", "Scaler(", ")"));
+        return IntStream.range(0, lo.length)
+                .mapToObj(i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, lo[i], hi[i]))
+                .collect(Collectors.joining(",", "Scaler(", ")"));
     }
 }

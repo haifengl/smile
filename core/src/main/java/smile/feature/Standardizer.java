@@ -23,6 +23,7 @@ import java.util.stream.IntStream;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.type.DataType;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.data.vector.DoubleVector;
@@ -88,7 +89,7 @@ public class Standardizer implements FeatureTransform {
 
         int n = data.nrows();
         for (int i = 0; i < mu.length; i++) {
-            if (DataType.isDouble(schema.field(i).type)) {
+            if (schema.field(i).isNumeric()) {
                 double sum = data.doubleVector(i).stream().sum();
                 double squaredSum = data.doubleVector(i).stream().map(x -> x*x).sum();
                 mu[i] = sum / n;
@@ -99,9 +100,26 @@ public class Standardizer implements FeatureTransform {
         return new Standardizer(schema, mu, std);
     }
 
+    /**
+     * Learns transformation parameters from a dataset.
+     * @param data The training data.
+     */
+    public static Standardizer fit(double[][] data) {
+        return fit(DataFrame.of(data));
+    }
+
     /** Scales a value with i-th column parameters. */
     private double scale(double x, int i) {
         return (x - mu[i]) / std[i];
+    }
+
+    @Override
+    public double[] transform(double[] x) {
+        double[] y = new double[x.length];
+        for (int i = 0; i < y.length; i++) {
+            y[i] = scale(x[i], i);
+        }
+        return y;
     }
 
     @Override
@@ -113,7 +131,7 @@ public class Standardizer implements FeatureTransform {
         return new smile.data.AbstractTuple() {
             @Override
             public Object get(int i) {
-                if (DataType.isDouble(schema.field(i).type)) {
+                if (schema.field(i).isNumeric()) {
                     return scale(x.getDouble(i), i);
                 } else {
                     return x.get(i);
@@ -135,12 +153,13 @@ public class Standardizer implements FeatureTransform {
 
         BaseVector[] vectors = new BaseVector[schema.length()];
         for (int i = 0; i < mu.length; i++) {
-            if (DataType.isDouble(schema.field(i).type)) {
-                final int idx = i;
-                DoubleStream stream = data.doubleVector(i).stream().map(x -> scale(x, idx));
-                vectors[i] = DoubleVector.of(schema.field(i).name, stream);
+            StructField field = schema.field(i);
+            if (field.isNumeric()) {
+                final int col = i;
+                DoubleStream stream = data.stream().mapToDouble(t -> scale(t.getDouble(col), col));
+                vectors[i] = DoubleVector.of(field, stream);
             } else {
-                vectors[i] = data.vector(i);
+                vectors[i] = data.column(i);
             }
         }
         return DataFrame.of(vectors);
@@ -148,8 +167,8 @@ public class Standardizer implements FeatureTransform {
 
     @Override
     public String toString() {
-        return IntStream.range(0, mu.length).mapToObj(
-                i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, mu[i], std[i])
-        ).collect(Collectors.joining(",", "Standardizer(", ")"));
+        return IntStream.range(0, mu.length)
+                .mapToObj(i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, mu[i], std[i]))
+                .collect(Collectors.joining(",", "Standardizer(", ")"));
     }
 }

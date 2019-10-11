@@ -97,4 +97,13 @@ public interface IntVector extends BaseVector<Integer, Integer, IntStream> {
     static IntVector of(StructField field, int[] vector) {
         return new IntVectorImpl(field, vector);
     }
+
+    /** Creates a named integer vector.
+     *
+     * @param field the struct field of vector.
+     * @param stream the data stream of vector.
+     */
+    static IntVector of(StructField field, IntStream stream) {
+        return new IntVectorImpl(field, stream.toArray());
+    }
 }
