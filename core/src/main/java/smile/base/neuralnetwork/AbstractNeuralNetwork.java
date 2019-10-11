@@ -45,7 +45,7 @@ public abstract class AbstractNeuralNetwork {
     /**
      * weight decay factor, which is also a regularization term.
      */
-    protected double lambda = 0.9;
+    protected double lambda = 0.0;
     /**
      * The input layer with bias.
      */
@@ -58,7 +58,10 @@ public abstract class AbstractNeuralNetwork {
      * layers of this net
      */
     protected Layer[] net;
-
+    /**
+     * The dimensionality of input data.
+     */
+    protected int p;
 
     /**
      * Constructor.
@@ -78,7 +81,7 @@ public abstract class AbstractNeuralNetwork {
 
         this.obj = obj;
         this.net = net;
-        int p = net[0].getInputUnits();
+        this.p = net[0].getInputUnits();
         int d = net[net.length-1].getOutputUnits();
         x1 = new double[p+1];
         x1[p] = 1.0;
@@ -110,10 +113,12 @@ public abstract class AbstractNeuralNetwork {
     }
 
     /**
-     * Sets the weight decay factor. lambda = 1.0 means no decay.
+     * Sets the weight decay factor. After each weight update,
+     * every weight is simply "decayed" or shrunk according to
+     * w = w * (1 - eta * lambda).
      */
     public void setWeightDecay(double lambda) {
-        if (lambda < 0.0 || lambda >= 1.0) {
+        if (lambda < 0.0 || lambda > 0.1) {
             throw new IllegalArgumentException("Invalid weight decay factor: " + lambda);
         }
 
@@ -162,18 +167,23 @@ public abstract class AbstractNeuralNetwork {
     public void backpropagate(double[] y) {
         computeOutputError(y);
         for (int l = net.length; --l > 0;) {
-            net[l-1].backpropagate(net[l], eta);
+            net[l].computeUpdate(net[l-1].getOutput(), eta, alpha);
+            net[l-1].backpropagate(net[l]);
         }
+
+        net[0].computeUpdate(x1, eta, alpha);
     }
 
     /** Updates the weights. */
     protected void update() {
-        for (Layer layer : net) {
-            layer.update(alpha);
+        double decay = 1.0 - eta * lambda;
+        if (decay <= 0.0) {
+            throw new IllegalStateException(String.format("Invalid learning rate (eta = %.2f) and/or decay (lambda = %.2f)", eta, lambda));
+        }
 
-            if (lambda != 1.0) {
-                layer.decay(lambda);
-            }
+        for (Layer layer : net) {
+            layer.update();
+            if (decay < 1.0) layer.decay(decay);
         }
     }
 

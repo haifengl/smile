@@ -36,6 +36,8 @@ import smile.data.type.StructType;
  * @author Haifeng Li
  */
 public class WinsorScaler extends Scaler {
+    private static final long serialVersionUID = 2L;
+
     /**
      * Constructor.
      * @param schema the schema of data.

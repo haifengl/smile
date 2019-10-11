@@ -52,7 +52,7 @@ import smile.math.DifferentiableMultivariateFunction;
  * @author Haifeng Li
  */
 public class Maxent implements SoftClassifier<int[]> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Maxent.class);
 
     /**
@@ -259,7 +259,7 @@ public class Maxent implements SoftClassifier<int[]> {
         public double g(double[] w, double[] g) {
             final int p = w.length - 1;
             Arrays.fill(g, 0.0);
-            double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
+            double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
                 double wx = dot(x[i], w);
 
                 double yi = y[i] - MathEx.logistic(wx);
@@ -336,7 +336,7 @@ public class Maxent implements SoftClassifier<int[]> {
         
         @Override
         public double f(double[] w) {
-            double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
+            double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
                 double[] prob = new double[k];
                 for (int j = 0; j < k; j++) {
                     prob[j] = dot(x[i], w, j, p);
@@ -360,7 +360,7 @@ public class Maxent implements SoftClassifier<int[]> {
         public double g(double[] w, double[] g) {
             Arrays.fill(g, 0.0);
 
-            double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
+            double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
                 double[] prob = new double[k];
                 for (int j = 0; j < k; j++) {
                     prob[j] = dot(x[i], w, j, p);

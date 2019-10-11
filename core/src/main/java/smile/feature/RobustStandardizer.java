@@ -34,6 +34,7 @@ import java.util.stream.IntStream;
  * @author Haifeng Li
  */
 public class RobustStandardizer extends Standardizer {
+    private static final long serialVersionUID = 2L;
 
     /**
      * Constructor.

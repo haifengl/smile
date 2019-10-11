@@ -112,10 +112,6 @@ public class NeuralNetwork extends AbstractNeuralNetwork implements OnlineClassi
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NeuralNetwork.class);
 
     /**
-     * The dimensionality of input data.
-     */
-    private int p;
-    /**
      * The number of classes.
      */
     private int k;
@@ -161,7 +157,6 @@ public class NeuralNetwork extends AbstractNeuralNetwork implements OnlineClassi
                 }
         }
 
-        p = net[0].getInputUnits();
         k = outputLayer.getOutputUnits();
         if (k == 1) k = 2;
     }
@@ -205,7 +200,6 @@ public class NeuralNetwork extends AbstractNeuralNetwork implements OnlineClassi
         propagate(x);
         setTarget(y);
         backpropagate(target);
-
         update();
     }
 

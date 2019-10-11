@@ -30,6 +30,8 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class Normalizer {
+    private static final long serialVersionUID = 2L;
+
     /**
      * The types of data scaling.
      */

@@ -223,8 +223,8 @@ public abstract class CART {
 
         shuffle(split.lo, mid, split.hi, trues);
 
-        Optional<Split> trueSplit = findBestSplit(trueChild, split.lo, mid, split.pure.clone());
-        Optional<Split> falseSplit = findBestSplit(falseChild, mid, split.hi, split.pure); // reuse parent's pure array
+        Optional<Split> trueSplit = findBestSplit(trueChild, split.lo, mid, split.unsplittable.clone());
+        Optional<Split> falseSplit = findBestSplit(falseChild, mid, split.hi, split.unsplittable); // reuse parent's array
 
         // Prune the branch if both children are leaf nodes and of same output value.
         if (trueChild.equals(falseChild) && !trueSplit.isPresent() && !falseSplit.isPresent()) {
@@ -264,9 +264,9 @@ public abstract class CART {
      * @param node the leaf node to split.
      * @param lo the inclusive lower bound of the data partition in the reordered sample index array.
      * @param hi the exclusive upper bound of the data partition in the reordered sample index array.
-     * @param pure true if all the samples in the split have the same value in the column.
+     * @param unsplittable unsplittable[j] is true if the column j cannot be split further in the node.
      */
-    protected Optional<Split> findBestSplit(LeafNode node, int lo, int hi, boolean[] pure) {
+    protected Optional<Split> findBestSplit(LeafNode node, int lo, int hi, boolean[] unsplittable) {
         if (node.size() < 2 * nodeSize) {
             return Optional.empty(); // one child will has less than nodeSize samples.
         }
@@ -276,9 +276,9 @@ public abstract class CART {
             return Optional.empty(); // all the samples in the node have the same response
         }
 
-        // skip the pure columns
+        // skip the insplitable columns
         int p = schema.length();
-        int[] columns = IntStream.range(0, p).filter(i -> !pure[i]).toArray();
+        int[] columns = IntStream.range(0, p).filter(i -> !unsplittable[i]).toArray();
 
         // random forest
         if (mtry < p) {
@@ -289,14 +289,14 @@ public abstract class CART {
         Optional<Split> split = (mtry < p ? stream : stream.parallel()) // random forest is in parallel already
                 .mapToObj(j -> {
                     Optional<Split> s = findBestSplit(node, j, impurity, lo, hi);
-                    if (!s.isPresent()) pure[j] = true;
+                    if (!s.isPresent()) unsplittable[j] = true;
                     return s;
                 })
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .max(Split.comparator);
 
-        split.ifPresent(s -> s.pure = pure);
+        split.ifPresent(s -> s.unsplittable = unsplittable);
         return split;
     }
 

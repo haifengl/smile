@@ -103,7 +103,7 @@ public class Layer implements Serializable {
 
     /** Returns the error/gradient vector. */
     public double[] getError() {
-        return output;
+        return error;
     }
 
     /**
@@ -146,29 +146,36 @@ public class Layer implements Serializable {
     /**
      * Propagates the errors back from a upper layer to this layer.
      * @param upper the upper layer where errors are from.
-     * @param eta the learning rate
      */
-    public void backpropagate(Layer upper, double eta) {
+    public void backpropagate(Layer upper) {
         upper.weight.atx(upper.error, error);
-        for (int i = 0; i < units; i++) {
+        for (int i = 0; i <= units; i++) {
             double out = output[i];
             error[i] = out * (1.0 - out) * error[i];
         }
+    }
 
-        for (int j = 0; j <= units; j++) {
-            for (int i = 0; i < upper.units; i++) {
-                upper.delta.add(i, j, eta * upper.error[i] * output[j]);
+    /**
+     * Computes the update to weights.
+     *
+     * @param input the input vector of layer.
+     * @param eta the learning rate.
+     * @param alpha the momentum factor
+     */
+    public void computeUpdate(double[] input, double eta, double alpha) {
+        for (int j = 0; j < input.length; j++) {
+            for (int i = 0; i < units; i++) {
+                double update = alpha * delta.get(i, j) + (1 - alpha) * eta * error[i] * input[j];
+                delta.set(i, j, update);
             }
         }
     }
 
     /**
      * Adjust network weights by back-propagation algorithm.
-     * @param alpha the momentum factor
      */
-    public void update(double alpha) {
+    public void update() {
         weight.add(delta);
-        delta.mul(alpha);
     }
 
     /**
