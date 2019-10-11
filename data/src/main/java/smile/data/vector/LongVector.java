@@ -97,4 +97,13 @@ public interface LongVector extends BaseVector<Long, Long, LongStream> {
     static LongVector of(StructField field, long[] vector) {
         return new LongVectorImpl(field, vector);
     }
+
+    /** Creates a named long integer vector.
+     *
+     * @param field the struct field of vector.
+     * @param stream the data stream of vector.
+     */
+    static LongVector of(StructField field, LongStream stream) {
+        return new LongVectorImpl(field, stream.toArray());
+    }
 }

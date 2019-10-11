@@ -19,6 +19,7 @@ package smile.feature;
 
 import smile.data.DataFrame;
 import smile.data.type.DataType;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.sort.QuickSelect;
@@ -58,9 +59,11 @@ public class RobustStandardizer extends Standardizer {
         double[] iqr = new double[schema.length()];
 
         for (int i = 0; i < median.length; i++) {
-            if (DataType.isDouble(schema.field(i).type)) {
+            if (schema.field(i).isNumeric()) {
+                final int col = i;
                 final smile.sort.IQAgent agent = new smile.sort.IQAgent();
-                data.doubleVector(i).stream().forEach(agent::add);
+                // IQAgent is stateful and thus should not be used with parallel stream
+                data.stream().sequential().forEach(t -> agent.add(t.getDouble(col)));
                 median[i] = agent.quantile(0.5);
                 iqr[i] = agent.quantile(0.75) - agent.quantile(0.25);
             }
@@ -69,10 +72,18 @@ public class RobustStandardizer extends Standardizer {
         return new RobustStandardizer(schema, median, iqr);
     }
 
+    /**
+     * Learns transformation parameters from a dataset.
+     * @param data The training data.
+     */
+    public static RobustStandardizer fit(double[][] data) {
+        return fit(DataFrame.of(data));
+    }
+
     @Override
     public String toString() {
-        return IntStream.range(0, mu.length).mapToObj(
-                i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, mu[i], std[i])
-        ).collect(Collectors.joining(",", "RobustStandardizer(", ")"));
+        return IntStream.range(0, mu.length)
+                .mapToObj(i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, mu[i], std[i]))
+                .collect(Collectors.joining(",", "RobustStandardizer(", ")"));
     }
 }

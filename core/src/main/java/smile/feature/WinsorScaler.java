@@ -85,9 +85,11 @@ public class WinsorScaler extends Scaler {
         double[] hi = new double[schema.length()];
 
         for (int i = 0; i < lo.length; i++) {
-            if (DataType.isDouble(schema.field(i).type)) {
+            if (schema.field(i).isNumeric()) {
+                final int col = i;
                 final smile.sort.IQAgent agent = new smile.sort.IQAgent();
-                data.doubleVector(i).stream().forEach(agent::add);
+                // IQAgent is stateful and thus should not be used with parallel stream
+                data.stream().sequential().forEach(t -> agent.add(t.getDouble(col)));
                 lo[i] = agent.quantile(lower);
                 hi[i] = agent.quantile(upper);
             }
@@ -96,10 +98,18 @@ public class WinsorScaler extends Scaler {
         return new WinsorScaler(schema, lo, hi);
     }
 
+    /**
+     * Learns transformation parameters from a dataset.
+     * @param data The training data.
+     */
+    public static WinsorScaler fit(double[][] data) {
+        return fit(DataFrame.of(data));
+    }
+
     @Override
     public String toString() {
-        return IntStream.range(0, lo.length).mapToObj(
-                i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, lo[i], hi[i])
-        ).collect(Collectors.joining(",", "WinsorScaler(", ")"));
+        return IntStream.range(0, lo.length)
+                .mapToObj(i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, lo[i], hi[i]))
+                .collect(Collectors.joining(",", "WinsorScaler(", ")"));
     }
 }

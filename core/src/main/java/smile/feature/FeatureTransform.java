@@ -35,6 +35,27 @@ public interface FeatureTransform extends Serializable {
      * @param x a feature vector.
      * @return the transformed feature value.
      */
+    double[] transform(double[] x);
+
+    /**
+     * Transform a data frame.
+     * @param data a data frame.
+     * @return the transformed data frame.
+     */
+    default double[][] transform(double[][] data) {
+        int n = data.length;
+        double[][] y = new double[n][];
+        for (int i = 0; i < n; i++) {
+            y[i] = transform(data[i]);
+        }
+        return y;
+    }
+
+    /**
+     * Transform a feature vector.
+     * @param x a feature vector.
+     * @return the transformed feature value.
+     */
     Tuple transform(Tuple x);
 
     /**
