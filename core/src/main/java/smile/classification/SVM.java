@@ -760,7 +760,7 @@ public class SVM <T> implements OnlineClassifier<T>, SoftClassifier<T> {
             for (int i = 0; i < l; i++) {
                 scores[i] = predict(x[i]);
             }
-            platt = new PlattScaling(scores, y);
+            platt = PlattScaling.fit(scores, y);
         }
 
         void evict() {
