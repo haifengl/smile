@@ -44,7 +44,7 @@ public abstract class AbstractFunction extends AbstractTerm {
 
     @Override
     public String name() {
-        return String.format("%s(%s)", name, x);
+        return String.format("%s(%s)", name, x.name());
     }
 
     @Override

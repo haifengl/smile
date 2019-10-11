@@ -27,8 +27,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import smile.data.DataFrame;
+import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.math.matrix.DenseMatrix;
 import static smile.data.formula.Terms.*;
 
@@ -95,17 +98,54 @@ public class FormulaTest {
     }
 
     @Test
+    public void testToString() {
+        System.out.println("toString");
+        Formula formula = Formula.lhs("salary");
+        assertEquals("salary ~ .", formula.toString());
+
+        formula = Formula.rhs($("salary"));
+        assertEquals(" ~ salary", formula.toString());
+
+        formula = Formula.of("salary", all(), cross("a", "b", "c") , delete("d"));
+        assertEquals("salary ~ . + (a x b x c) - d", formula.toString());
+    }
+
+    @Test
+    public void testAll() {
+        System.out.println("all");
+        Formula formula = Formula.of("salary", all(), log("age"), onehot("gender"));
+        assertEquals("salary ~ . + log(age) + OneHot(gender)", formula.toString());
+
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+
+        StructType schema = DataTypes.struct(
+                new StructField("salary", DataTypes.DoubleObjectType),
+                new StructField("age", DataTypes.IntegerType),
+                new StructField("birthday", DataTypes.DateType),
+                new StructField("gender", DataTypes.ByteType, new NominalScale("Male", "Female")),
+                new StructField("name", DataTypes.StringType),
+                new StructField("log(age)", DataTypes.DoubleType),
+                new StructField("gender_Male", DataTypes.ByteType),
+                new StructField("gender_Female", DataTypes.ByteType)
+        );
+        assertEquals(schema, formula.schema());
+    }
+
+    @Test
     public void testFormula() {
         System.out.println("formula");
         Formula formula = Formula.of("salary", $("age"));
+        assertEquals("salary ~ age", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(2, output.ncols());
 
         smile.data.type.StructType schema = DataTypes.struct(
-                new StructField("age", DataTypes.IntegerType),
-                new StructField("salary", DataTypes.object(Double.class))
+                new StructField("salary", DataTypes.object(Double.class)),
+                new StructField("age", DataTypes.IntegerType)
         );
         assertEquals(schema, output.schema());
 
@@ -128,9 +168,130 @@ public class FormulaTest {
     }
 
     @Test
+    public void testInteraction() {
+        System.out.println("interaction");
+
+        Formula formula = Formula.rhs(interact("water", "sowing_density", "wind"));
+        StructType inputSchema = DataTypes.struct(
+                new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
+                new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
+                new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong"))
+        );
+        assertEquals(" ~ water:sowing_density:wind", formula.toString());
+
+        StructType outputSchema = formula.bind(inputSchema);
+        StructType schema = DataTypes.struct(
+                new StructField("water_dry-sowing_density_low-wind_weak", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_low-wind_weak", DataTypes.ByteType),
+                new StructField("water_dry-sowing_density_high-wind_weak", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_high-wind_weak", DataTypes.ByteType),
+                new StructField("water_dry-sowing_density_low-wind_strong", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_low-wind_strong", DataTypes.ByteType),
+                new StructField("water_dry-sowing_density_high-wind_strong", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_high-wind_strong", DataTypes.ByteType)
+        );
+        assertEquals(schema, outputSchema);
+    }
+
+    @Test
+    public void testCrossing() {
+        System.out.println("crossing");
+
+        Formula formula = Formula.rhs(cross(2, "water", "sowing_density", "wind"));
+        StructType inputSchema = DataTypes.struct(
+                new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
+                new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
+                new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong"))
+        );
+        assertEquals(" ~ (water + sowing_density + wind)^2", formula.toString());
+
+        StructType outputSchema = formula.bind(inputSchema);
+        StructType schema = DataTypes.struct(
+                new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
+                new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
+                new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong")),
+                new StructField("sowing_density_low-wind_weak", DataTypes.ByteType),
+                new StructField("sowing_density_high-wind_weak", DataTypes.ByteType),
+                new StructField("sowing_density_low-wind_strong", DataTypes.ByteType),
+                new StructField("sowing_density_high-wind_strong", DataTypes.ByteType),
+                new StructField("water_dry-wind_weak", DataTypes.ByteType),
+                new StructField("water_wet-wind_weak", DataTypes.ByteType),
+                new StructField("water_dry-wind_strong", DataTypes.ByteType),
+                new StructField("water_wet-wind_strong", DataTypes.ByteType),
+                new StructField("water_dry-sowing_density_low", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_low", DataTypes.ByteType),
+                new StructField("water_dry-sowing_density_high", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_high", DataTypes.ByteType)
+        );
+        assertEquals(schema, outputSchema);
+
+        formula = Formula.rhs(cross("water", "sowing_density", "wind"));
+        assertEquals(" ~ (water x sowing_density x wind)", formula.toString());
+
+        outputSchema = formula.bind(inputSchema);
+        schema = DataTypes.struct(
+                new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
+                new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
+                new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong")),
+                new StructField("sowing_density_low-wind_weak", DataTypes.ByteType),
+                new StructField("sowing_density_high-wind_weak", DataTypes.ByteType),
+                new StructField("sowing_density_low-wind_strong", DataTypes.ByteType),
+                new StructField("sowing_density_high-wind_strong", DataTypes.ByteType),
+                new StructField("water_dry-wind_weak", DataTypes.ByteType),
+                new StructField("water_wet-wind_weak", DataTypes.ByteType),
+                new StructField("water_dry-wind_strong", DataTypes.ByteType),
+                new StructField("water_wet-wind_strong", DataTypes.ByteType),
+                new StructField("water_dry-sowing_density_low", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_low", DataTypes.ByteType),
+                new StructField("water_dry-sowing_density_high", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_high", DataTypes.ByteType),
+                new StructField("water_dry-sowing_density_low-wind_weak", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_low-wind_weak", DataTypes.ByteType),
+                new StructField("water_dry-sowing_density_high-wind_weak", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_high-wind_weak", DataTypes.ByteType),
+                new StructField("water_dry-sowing_density_low-wind_strong", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_low-wind_strong", DataTypes.ByteType),
+                new StructField("water_dry-sowing_density_high-wind_strong", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_high-wind_strong", DataTypes.ByteType)
+        );
+        assertEquals(schema, outputSchema);
+    }
+
+    @Test
+    public void testBind() {
+        System.out.println("bind");
+
+        Formula formula = Formula.of("revenue", all(), cross("water", "sowing_density") , mul("humidity", "wind"), delete("wind"));
+        StructType inputSchema = DataTypes.struct(
+                new StructField("revenue", DataTypes.DoubleType, Measure.Currency),
+                new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
+                new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
+                new StructField("humidity", DataTypes.FloatType, Measure.Percent),
+                new StructField("wind", DataTypes.FloatType)
+        );
+        assertEquals("revenue ~ . + (water x sowing_density) + (humidity * wind) - wind", formula.toString());
+
+        StructType outputSchema = formula.bind(inputSchema);
+        StructType schema = DataTypes.struct(
+                new StructField("revenue", DataTypes.DoubleType, Measure.Currency),
+                new StructField("humidity", DataTypes.FloatType, Measure.Percent),
+                new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
+                new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
+                new StructField("water_dry-sowing_density_low", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_low", DataTypes.ByteType),
+                new StructField("water_dry-sowing_density_high", DataTypes.ByteType),
+                new StructField("water_wet-sowing_density_high", DataTypes.ByteType),
+                new StructField("humidity * wind", DataTypes.FloatType)
+        );
+        assertEquals(schema, outputSchema);
+    }
+
+    @Test
     public void testFormulaOneHot() {
         System.out.println("one-hot");
         Formula formula = Formula.rhs(onehot("gender"));
+        assertEquals(" ~ OneHot(gender)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -149,6 +310,8 @@ public class FormulaTest {
     public void testFormulaDate() {
         System.out.println("date");
         Formula formula = Formula.rhs(date("birthday", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH, DateFeature.DAY_OF_WEEK));
+        assertEquals(" ~ birthday[YEAR, MONTH, DAY_OF_MONTH, DAY_OF_WEEK]", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output.schema());
         System.out.println(output);
@@ -168,6 +331,8 @@ public class FormulaTest {
     public void testFormulaAbs() {
         System.out.println("abs");
         Formula formula = Formula.rhs(abs("age"));
+        assertEquals(" ~ abs(age)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -182,6 +347,8 @@ public class FormulaTest {
     public void testFormulaAbsNullable() {
         System.out.println("abs null");
         Formula formula = Formula.rhs(abs("salary"));
+        assertEquals(" ~ abs(salary)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -196,6 +363,8 @@ public class FormulaTest {
     public void testFormulaExp() {
         System.out.println("exp");
         Formula formula = Formula.rhs(exp("age"));
+        assertEquals(" ~ exp(age)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -210,6 +379,8 @@ public class FormulaTest {
     public void testFormulaExpNullable() {
         System.out.println("exp null");
         Formula formula = Formula.rhs(exp(div("salary", val(10000))));
+        assertEquals(" ~ exp(salary / 10000)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -224,6 +395,8 @@ public class FormulaTest {
     public void testFormulaLog() {
         System.out.println("log");
         Formula formula = Formula.rhs(log("age"));
+        assertEquals(" ~ log(age)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -238,6 +411,8 @@ public class FormulaTest {
     public void testFormulaLogNullable() {
         System.out.println("log null");
         Formula formula = Formula.rhs(log("salary"));
+        assertEquals(" ~ log(salary)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -252,6 +427,8 @@ public class FormulaTest {
     public void testFormulaLog10() {
         System.out.println("log10");
         Formula formula = Formula.rhs(log10("age"));
+        assertEquals(" ~ log10(age)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -264,8 +441,10 @@ public class FormulaTest {
 
     @Test
     public void testFormulaLog10Nullable() {
-        System.out.println("log null");
+        System.out.println("log10 null");
         Formula formula = Formula.rhs(log10("salary"));
+        assertEquals(" ~ log10(salary)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -280,6 +459,8 @@ public class FormulaTest {
     public void testFormulaSqrt() {
         System.out.println("sqrt");
         Formula formula = Formula.rhs(sqrt("age"));
+        assertEquals(" ~ sqrt(age)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -294,6 +475,8 @@ public class FormulaTest {
     public void testFormulaSqrtNullable() {
         System.out.println("sqrt null");
         Formula formula = Formula.rhs(sqrt("salary"));
+        assertEquals(" ~ sqrt(salary)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -308,6 +491,8 @@ public class FormulaTest {
     public void testFormulaCeilNullable() {
         System.out.println("ceil null");
         Formula formula = Formula.rhs(ceil("salary"));
+        assertEquals(" ~ ceil(salary)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -322,6 +507,8 @@ public class FormulaTest {
     public void testFormulaFloorNullable() {
         System.out.println("floor null");
         Formula formula = Formula.rhs(floor("salary"));
+        assertEquals(" ~ floor(salary)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -336,6 +523,8 @@ public class FormulaTest {
     public void testFormulaRoundNullable() {
         System.out.println("round null");
         Formula formula = Formula.rhs(round("salary"));
+        assertEquals(" ~ round(salary)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -375,6 +564,8 @@ public class FormulaTest {
     public void testFormulaSignumNullable() {
         System.out.println("signum null");
         Formula formula = Formula.rhs(signum("salary"));
+        assertEquals(" ~ signum(salary)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -389,111 +580,127 @@ public class FormulaTest {
     public void testFormulaAddCst() {
         System.out.println("add cst");
         Formula formula = Formula.rhs(all(), add("age", val(10)));
+        assertEquals(" ~ . + (age + 10)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(5, output.ncols());
-        assertEquals(48, output.get(0,4));
-        assertEquals(33, output.get(1,4));
-        assertEquals(58, output.get(2,4));
-        assertEquals(23, output.get(3,4));
+        assertEquals(6, output.ncols());
+        assertEquals(48, output.get(0,5));
+        assertEquals(33, output.get(1,5));
+        assertEquals(58, output.get(2,5));
+        assertEquals(23, output.get(3,5));
     }
 
     @Test
     public void testFormulaAddNullable() {
         System.out.println("add nullable");
         Formula formula = Formula.rhs(all(), add("salary", "age"));
+        assertEquals(" ~ . + (salary + age)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(4, output.ncols());
-        assertEquals(10038., output.get(0,3));
-        assertEquals(null, output.get(1,3));
-        assertEquals(230048., output.get(2,3));
-        assertEquals(null, output.get(3,3));
+        assertEquals(6, output.ncols());
+        assertEquals(10038., output.get(0,5));
+        assertEquals(null, output.get(1,5));
+        assertEquals(230048., output.get(2,5));
+        assertEquals(null, output.get(3,5));
     }
 
     @Test
     public void testFormulaSubCst() {
         System.out.println("sub cst");
         Formula formula = Formula.rhs(all(), sub("age", val(10)));
+        assertEquals(" ~ . + (age - 10)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(5, output.ncols());
-        assertEquals(28, output.get(0,4));
-        assertEquals(13, output.get(1,4));
-        assertEquals(38, output.get(2,4));
-        assertEquals( 3, output.get(3,4));
+        assertEquals(6, output.ncols());
+        assertEquals(28, output.get(0,5));
+        assertEquals(13, output.get(1,5));
+        assertEquals(38, output.get(2,5));
+        assertEquals( 3, output.get(3,5));
     }
 
     @Test
     public void testFormulaSubNullable() {
         System.out.println("sub nullable");
         Formula formula = Formula.rhs(all(), sub("salary", "age"));
+        assertEquals(" ~ . + (salary - age)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(4, output.ncols());
-        assertEquals(10000.-38, output.get(0,3));
-        assertEquals(null, output.get(1,3));
-        assertEquals(230000.-48, output.get(2,3));
-        assertEquals(null, output.get(3,3));
+        assertEquals(6, output.ncols());
+        assertEquals(10000.-38, output.get(0,5));
+        assertEquals(null, output.get(1,5));
+        assertEquals(230000.-48, output.get(2,5));
+        assertEquals(null, output.get(3,5));
     }
 
     @Test
     public void testFormulaMulCst() {
         System.out.println("mul cst");
         Formula formula = Formula.rhs(all(), mul("age", val(10)));
+        assertEquals(" ~ . + (age * 10)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(5, output.ncols());
-        assertEquals(380, output.get(0,4));
-        assertEquals(230, output.get(1,4));
-        assertEquals(480, output.get(2,4));
-        assertEquals(130, output.get(3,4));
+        assertEquals(6, output.ncols());
+        assertEquals(380, output.get(0,5));
+        assertEquals(230, output.get(1,5));
+        assertEquals(480, output.get(2,5));
+        assertEquals(130, output.get(3,5));
     }
 
     @Test
     public void testFormulaMulNullable() {
         System.out.println("mul nullable");
         Formula formula = Formula.rhs(all(), mul("salary", "age"));
+        assertEquals(" ~ . + (salary * age)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(4, output.ncols());
-        assertEquals(10000.*38, output.get(0,3));
-        assertEquals(null, output.get(1,3));
-        assertEquals(230000.*48, output.get(2,3));
-        assertEquals(null, output.get(3,3));
+        assertEquals(6, output.ncols());
+        assertEquals(10000.*38, output.get(0,5));
+        assertEquals(null, output.get(1,5));
+        assertEquals(230000.*48, output.get(2,5));
+        assertEquals(null, output.get(3,5));
     }
 
     @Test
     public void testFormulaDivCst() {
         System.out.println("div cst");
         Formula formula = Formula.rhs(all(), div("age", val(10)));
+        assertEquals(" ~ . + (age / 10)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(5, output.ncols());
-        assertEquals(3, output.get(0,4));
-        assertEquals(2, output.get(1,4));
-        assertEquals(4, output.get(2,4));
-        assertEquals(1, output.get(3,4));
+        assertEquals(6, output.ncols());
+        assertEquals(3, output.get(0,5));
+        assertEquals(2, output.get(1,5));
+        assertEquals(4, output.get(2,5));
+        assertEquals(1, output.get(3,5));
     }
 
     @Test
     public void testFormulaDivNullable() {
         System.out.println("div nullable");
         Formula formula = Formula.rhs(all(), div("salary", "age"));
+        assertEquals(" ~ . + (salary / age)", formula.toString());
+
         DataFrame output = formula.apply(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(4, output.ncols());
-        assertEquals(10000./38, output.get(0,3));
-        assertEquals(null, output.get(1,3));
-        assertEquals(230000./48, output.get(2,3));
-        assertEquals(null, output.get(3,3));
+        assertEquals(6, output.ncols());
+        assertEquals(10000./38, output.get(0,5));
+        assertEquals(null, output.get(1,5));
+        assertEquals(230000./48, output.get(2,5));
+        assertEquals(null, output.get(3,5));
     }
 }

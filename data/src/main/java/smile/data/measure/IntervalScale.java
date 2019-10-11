@@ -51,4 +51,9 @@ public class IntervalScale extends ContinuousMeasure {
     public IntervalScale(NumberFormat format) {
         super(format);
     }
+
+    @Override
+    public String toString() {
+        return "interval";
+    }
 }

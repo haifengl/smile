@@ -55,7 +55,7 @@ public abstract class Operator extends AbstractTerm {
 
     @Override
     public String name() {
-        return String.format("%s %s %s", a, name, b);
+        return String.format("%s %s %s", a.name(), name, b.name());
     }
 
     @Override
@@ -65,7 +65,7 @@ public abstract class Operator extends AbstractTerm {
 
     @Override
     public String toString() {
-        return name();
+        return String.format("(%s)", name());
     }
 
     @Override

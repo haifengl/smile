@@ -41,7 +41,7 @@ class Delete implements HyperTerm {
 
     @Override
     public String toString() {
-        return String.format("delete(%s)", x);
+        return String.format("- %s", x);
     }
 
     @Override

@@ -29,8 +29,6 @@ import smile.data.type.StructType;
  * @author Haifeng Li
  */
 class All implements HyperTerm {
-    /** If true, only columns not in the formula. Otherwise, keep all the original columns. */
-    private boolean rest;
     /** All columns in the schema. */
     private List<Variable> columns;
 
@@ -38,23 +36,7 @@ class All implements HyperTerm {
      * Constructor. All columns not otherwise in the formula.
      */
     public All() {
-        this(true);
-    }
 
-    /**
-     * Constructor.
-     * @param rest If true, only columns not in the formula.
-     *             Otherwise, keep all the original columns.
-     */
-    public All(boolean rest) {
-        this.rest = rest;
-    }
-
-    /**
-     * Return true if only columns not in the formula.
-     */
-    public boolean rest() {
-        return rest;
     }
 
     @Override
