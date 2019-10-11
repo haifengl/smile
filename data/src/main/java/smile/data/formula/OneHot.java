@@ -18,6 +18,8 @@
 package smile.data.formula;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
 import smile.data.Tuple;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
@@ -36,23 +38,26 @@ import smile.data.type.StructType;
  */
 class OneHot implements HyperTerm {
     /** The name of variable. */
-    private final String name;
+    private String[] variables;
     /** The terms after binding to the schema. */
     private List<OneHotEncoder> terms;
-    /** Column index after binding to a schema. */
-    private int index = -1;
 
     /**
      * Constructor.
-     * @param name the name of variable/column.
+     * @param variables the factor names. If empty, all nominal factors
+     *               in the schema will be one-hot encoded.
      */
-    public OneHot(String name) {
-        this.name = name;
+    public OneHot(String... variables) {
+        this.variables = variables;
     }
 
     @Override
     public String toString() {
-        return String.format("OneHot(%s)", name);
+        if (variables == null || variables.length == 0) {
+            return "one-hot";
+        } else {
+            return String.format("one-hot(%s)", Arrays.stream(variables).collect(Collectors.joining(", ")));
+        }
     }
 
     @Override
@@ -62,73 +67,37 @@ class OneHot implements HyperTerm {
 
     @Override
     public Set<String> variables() {
-        return Collections.singleton(name);
+        if (variables == null || variables.length == 0) {
+            return Collections.emptySet();
+        } else {
+            Set<String> set = new HashSet<>();
+            for (String column : variables) set.add(column);
+            return set;
+        }
     }
 
     @Override
     public void bind(StructType schema) {
-        index = schema.fieldIndex(name);
-
-        Optional<Measure> measure = schema.field(index).measure;
-        if (!measure.isPresent() || !(measure.get() instanceof NominalScale)) {
-            throw new UnsupportedOperationException(String.format("The variable %s is not of nominal", name));
+        if (variables == null || variables.length == 0) {
+            variables = Arrays.stream(schema.fields())
+                    .filter(field -> field.measure.isPresent() && field.measure.get() instanceof NominalScale)
+                    .map(field -> field.name)
+                    .toArray(String[]::new);
         }
 
-        NominalScale scale = (NominalScale) measure.get();
         terms = new ArrayList<>();
-        for (int i : scale.values()) {
-            terms.add(new OneHotEncoder(i, scale.level(i)));
-        }
-    }
+        for (String name : variables) {
+            int column = schema.fieldIndex(name);
 
-    /** The one-hot term. */
-    class OneHotEncoder extends AbstractTerm {
-        /** The index value of level. */
-        int i;
-        /** The level of nominal scale. */
-        String level;
+            Optional<Measure> measure = schema.field(column).measure;
+            if (!measure.isPresent() || !(measure.get() instanceof NominalScale)) {
+                throw new UnsupportedOperationException(String.format("The variable %s is not of nominal", name));
+            }
 
-        /**
-         * Constructor.
-         */
-        public OneHotEncoder(int i, String level) {
-            this.i = i;
-            this.level = level;
-        }
-
-        @Override
-        public String toString() {
-            return name();
-        }
-
-        @Override
-        public Set<String> variables() {
-            return Collections.singleton(name);
-        }
-
-        @Override
-        public Object apply(Tuple o) {
-            return applyAsByte(o);
-        }
-
-        @Override
-        public byte applyAsByte(Tuple o) {
-            return i == ((Number) o.get(index)).intValue() ? (byte) 1 : (byte) 0;
-        }
-
-        @Override
-        public String name() {
-            return String.format("%s_%s", name, level);
-        }
-
-        @Override
-        public DataType type() {
-            return DataTypes.ByteType;
-        }
-
-        @Override
-        public void bind(StructType schema) {
-
+            NominalScale scale = (NominalScale) measure.get();
+            for (int value : scale.values()) {
+                terms.add(new OneHotEncoder(name, column, value, scale.level(value)));
+            }
         }
     }
 }
