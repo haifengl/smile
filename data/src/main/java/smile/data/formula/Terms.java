@@ -35,12 +35,22 @@ public interface Terms {
 
     /** Returns all columns not otherwise in the formula. */
     static HyperTerm all() {
-        return all(true);
+        return new All();
     }
 
-    /** Returns all columns if rest is true or only those not otherwise in the formula. */
-    static HyperTerm all(boolean rest) {
-        return new All(rest);
+    /** Factor interaction of two or more factors. */
+    static HyperTerm interact(String... factors) {
+        return new Interaction(factors);
+    }
+
+    /** Factor crossing of two or more factors. */
+    static HyperTerm cross(String... factors) {
+        return new FactorCrossing(factors);
+    }
+
+    /** Factor crossing of two or more factors. */
+    static HyperTerm cross(int order, String... factors) {
+        return new FactorCrossing(order, factors);
     }
 
     /** Deletes a variable from the formula. */

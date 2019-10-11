@@ -49,7 +49,7 @@ public abstract class AbstractBiFunction extends AbstractTerm {
 
     @Override
     public String name() {
-        return String.format("%s(%s, %s)", name, x, y);
+        return String.format("%s(%s, %s)", name, x.name(), y.name());
     }
 
     @Override

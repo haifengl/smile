@@ -56,7 +56,7 @@ class OneHot implements HyperTerm {
     }
 
     @Override
-    public List<? extends Term> terms() {
+    public List<OneHotEncoder> terms() {
         return terms;
     }
 
@@ -75,10 +75,9 @@ class OneHot implements HyperTerm {
         }
 
         NominalScale scale = (NominalScale) measure.get();
-        String[] levels = scale.levels();
         terms = new ArrayList<>();
-        for (int i = 0; i < levels.length; i++) {
-            terms.add(new OneHotEncoder(i, levels[i]));
+        for (int i : scale.values()) {
+            terms.add(new OneHotEncoder(i, scale.level(i)));
         }
     }
 
@@ -109,7 +108,7 @@ class OneHot implements HyperTerm {
 
         @Override
         public Object apply(Tuple o) {
-            return i == ((Number) o.get(index)).intValue() ? (byte) 1 : (byte) 0;
+            return applyAsByte(o);
         }
 
         @Override
