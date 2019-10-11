@@ -41,19 +41,30 @@ import static java.lang.Math.*;
  */
 public class PlattScaling implements Serializable {
     private static final long serialVersionUID = 1L;
-
-    /** The scalar parameters to be learned by the algorithm. */
-    private double alpha;
-    private double beta;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlattScaling.class);
+
+    /** The scaling parameter. */
+    private double alpha;
+    /** The scaling parameter. */
+    private double beta;
+
+    /**
+     * Constructor. P(y = 1 | x) = 1 / (1 + exp(alpha * f(x) + beta))
+     * @param alpha The scaling parameter.
+     * @param beta The scaling parameter.
+     */
+    public PlattScaling(double alpha, double beta) {
+        this.alpha = alpha;
+        this.beta = beta;
+    }
 
     /**
      * Trains the Platt scaling.
      * @param scores The predicted scores.
      * @param y The training labels.
      */
-    public PlattScaling(double[] scores, int[] y) {
-        this(scores, y, 100);
+    public static PlattScaling fit(double[] scores, int[] y) {
+        return fit(scores, y, 100);
     }
 
     /**
@@ -62,7 +73,7 @@ public class PlattScaling implements Serializable {
      * @param y The training labels.
      * @param maxIters The maximal number of iterations.
      */
-    public PlattScaling(double[] scores, int[] y, int maxIters) {
+    public static PlattScaling fit(double[] scores, int[] y, int maxIters) {
         int l = scores.length;
         double prior1 = 0, prior0 = 0;
         int i;
@@ -80,8 +91,8 @@ public class PlattScaling implements Serializable {
         double[] t = new double[l];
 
         // Initial Point and Initial Fun Value
-        alpha = 0.0;
-        beta = Math.log((prior0 + 1.0) / (prior1 + 1.0));
+        double alpha = 0.0;
+        double beta = Math.log((prior0 + 1.0) / (prior1 + 1.0));
         double fval = 0.0;
 
         for (i = 0; i < l; i++) {
@@ -167,6 +178,8 @@ public class PlattScaling implements Serializable {
         if (iter >= maxIters) {
             logger.warn("Reaches maximal iterations");
         }
+
+        return new PlattScaling(alpha, beta);
     }
 
     /**
