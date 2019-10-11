@@ -22,15 +22,14 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import java.util.Optional;
 import smile.data.DataFrame;
-import smile.data.formula.DateFeature;
+import smile.data.Date;
 import smile.data.formula.Formula;
+import smile.data.formula.DateFeature;
 import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
 import smile.data.type.StructType;
-import smile.io.Arff;
-import smile.util.Paths;
-
 import static org.junit.Assert.*;
 import static smile.data.formula.Terms.date;
 
@@ -63,55 +62,40 @@ public class DateFeatureTest {
      * Test of attributes method, of class DateFeature.
      */
     @Test
-    public void testAttributes() {
-        System.out.println("attributes");
-        try {
-            Arff arff = new Arff(Paths.getTestData("weka/date.arff"));
-            DataFrame data = arff.read();
+    public void testDateFeatures() {
+        System.out.println("date");
 
-            Formula formula = Formula.rhs(date("timestamp", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH, DateFeature.DAY_OF_WEEK, DateFeature.HOURS, DateFeature.MINUTES, DateFeature.SECONDS));
-            DataFrame output = formula.frame(data);
-            assertEquals(output.ncols(), 7);
-            StructType schema = output.schema();
-            System.out.println(schema);
-            for (int i = 0; i < output.ncols(); i++) {
-                if (i == 1 || i == 3) {
-                    assertEquals(DataTypes.IntegerType, schema.field(i).type);
-                    assertTrue(schema.field(i).measure instanceof NominalScale);
-                } else {
-                    assertEquals(DataTypes.DoubleType, schema.field(i).type);
-                }
-            }
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
-    }
-
-    /**
-     * Test of feature method, of class DateFeature.
-     */
-    @Test
-    public void testFeature() {
-        System.out.println("feature");
         double[][] result = {
-            {2001.0, 3.0, 3.0, 2.0, 12.0, 12.0, 12.0},
-            {2001.0, 4.0, 3.0, 4.0, 12.0, 59.0, 55.0},
+                {2001.0, 4.0, 3.0, 2.0, 12.0, 12.0, 12.0},
+                {2001.0, 5.0, 3.0, 4.0, 12.0, 59.0, 55.0},
         };
 
-        try {
-            Arff arff = new Arff(Paths.getTestData("weka/date.arff"));
-            DataFrame data = arff.read();
+        Formula formula = Formula.rhs(date("timestamp", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH, DateFeature.DAY_OF_WEEK, DateFeature.HOURS, DateFeature.MINUTES, DateFeature.SECONDS));
+        DataFrame output = formula.apply(Date.data);
+        assertEquals(output.ncols(), 7);
 
-            Formula formula = Formula.rhs(date("timestamp", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH, DateFeature.DAY_OF_WEEK, DateFeature.HOURS, DateFeature.MINUTES, DateFeature.SECONDS));
-            DataFrame output = formula.frame(data);
+        StructType schema = output.schema();
+        System.out.println(schema);
+        System.out.println(output);
 
-            for (int i = 0; i < output.nrows(); i++) {
-                for (int j = 0; j < output.ncols(); j++) {
-                    assertEquals(result[i][j], output.getDouble(i, j), 1E-7);
-                }
+        for (int i = 0; i < output.ncols(); i++) {
+            assertEquals(DataTypes.IntegerType, schema.field(i).type);
+            if (i == 1 || i == 3) {
+                assertTrue(schema.field(i).measure.get() instanceof NominalScale);
+            } else {
+                assertEquals(Optional.empty(), schema.field(i).measure);
             }
-        } catch (Exception ex) {
-            System.err.println(ex);
         }
+
+        for (int i = 0; i < output.nrows(); i++) {
+            for (int j = 0; j < output.ncols(); j++) {
+                assertEquals(result[i][j], output.getDouble(i, j), 1E-7);
+            }
+        }
+
+        assertEquals("APRIL", output.getScale(0, 1));
+        assertEquals("MAY", output.getScale(1, 1));
+        assertEquals("TUESDAY", output.getScale(0, 3));
+        assertEquals("THURSDAY", output.getScale(1, 3));
     }
 }

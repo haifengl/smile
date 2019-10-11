@@ -17,17 +17,21 @@
 
 package smile.classification;
 
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.base.neuralnetwork.ActivationFunction;
+import smile.base.neuralnetwork.Layer;
+import smile.base.neuralnetwork.ObjectiveFunction;
+import smile.data.Segment;
+import smile.data.USPS;
+import smile.feature.WinsorScaler;
 import smile.math.MathEx;
-import smile.validation.LOOCV;
+import smile.validation.Error;
+import smile.validation.Validation;
+
 import static org.junit.Assert.*;
 
 /**
@@ -55,296 +59,94 @@ public class NeuralNetworkTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class NeuralNetwork.
-     */
-    @Test
-    public void testIris() {
-        System.out.println("Iris");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.util.Paths.getTestData("weka/iris.arff"));
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            int[] y = iris.toArray(new int[iris.size()]);
-
-            int n = x.length;
-            int p = x[0].length;
-            double[] mu = MathEx.colMeans(x);
-            double[] sd = MathEx.colSds(x);
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < p; j++) {
-                    x[i][j] = (x[i][j] - mu[j]) / sd[j];
-                }
-            }
-
-            LOOCV loocv = new LOOCV(n);
-            int error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = MathEx.slice(x, loocv.train[i]);
-                int[] trainy = MathEx.slice(y, loocv.train[i]);
-                NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.CROSS_ENTROPY, NeuralNetwork.ActivationFunction.SOFTMAX, x[0].length, 10, 3);
-                for (int j = 0; j < 20; j++) {
-                    net.learn(trainx, trainy);
-                }
-
-                if (y[loocv.test[i]] != net.predict(x[loocv.test[i]]))
-                    error++;
-            }
-
-            System.out.println("Neural network error = " + error);
-            assertTrue(error <= 8);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
-    }
-
-    /**
-     * Test of learn method, of class NeuralNetwork.
-     */
-    @Test
-    public void testIris2() {
-        System.out.println("Iris binary");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.util.Paths.getTestData("weka/iris.arff"));
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            int[] y = iris.toArray(new int[iris.size()]);
-
-            for (int i = 0; i < y.length; i++) {
-                if (y[i] == 2) {
-                    y[i] = 1;
-                } else {
-                    y[i] = 0;
-                }
-            }
-
-            int n = x.length;
-            int p = x[0].length;
-            double[] mu = MathEx.colMeans(x);
-            double[] sd = MathEx.colSds(x);
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < p; j++) {
-                    x[i][j] = (x[i][j] - mu[j]) / sd[j];
-                }
-            }
-
-            LOOCV loocv = new LOOCV(n);
-            int error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = MathEx.slice(x, loocv.train[i]);
-                int[] trainy = MathEx.slice(y, loocv.train[i]);
-                NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.CROSS_ENTROPY, NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, x[0].length, 10, 1);
-                for (int j = 0; j < 30; j++) {
-                    net.learn(trainx, trainy);
-                }
-
-                if (y[loocv.test[i]] != net.predict(x[loocv.test[i]]))
-                    error++;
-            }
-
-            System.out.println("Neural network error = " + error);
-            assertTrue(error <= 8);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
-    }
-
-    /**
-     * Test of learn method, of class NeuralNetwork.
-     */
     @Test
     public void testSegment() {
         System.out.println("Segment");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(19);
-        try {
-            AttributeDataset train = parser.parse(smile.util.Paths.getTestData("weka/segment-challenge.arff"));
-            AttributeDataset test = parser.parse(smile.util.Paths.getTestData("weka/segment-test.arff"));
 
-            double[][] x = train.toArray(new double[0][]);
-            int[] y = train.toArray(new int[0]);
-            double[][] testx = test.toArray(new double[0][]);
-            int[] testy = test.toArray(new int[0]);
-            
-            int p = x[0].length;
-            double[] mu = MathEx.colMin(x);
-            double[] sd = MathEx.colMax(x);
+        MathEx.setSeed(19650218); // to get repeatable results.
+
+        WinsorScaler scaler = WinsorScaler.fit(Segment.x);
+        double[][] x = scaler.transform(Segment.x);
+        double[][] testx = scaler.transform(Segment.testx);
+        int p = x[0].length;
+        int k = MathEx.max(Segment.y) + 1;
+
+        NeuralNetwork model = new NeuralNetwork(ObjectiveFunction.CROSS_ENTROPY,
+//                new Layer(ActivationFunction.RECTIFIER, 30, p),
+                new Layer(ActivationFunction.HYPERBOLIC_TANGENT, 30, p),
+                new Layer(ActivationFunction.SOFTMAX, k, 30)
+        );
+
+        for (int e = 0; e < 20; e++) {
             for (int i = 0; i < x.length; i++) {
-                for (int j = 0; j < p; j++) {
-                    x[i][j] = (x[i][j] - mu[j]) / sd[j];
-                }
+                model.update(x[i], Segment.y[i]);
             }
-
-            for (int i = 0; i < testx.length; i++) {
-                for (int j = 0; j < p; j++) {
-                    testx[i][j] = (testx[i][j] - mu[j]) / sd[j];
-                }
-            }
-
-            NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.CROSS_ENTROPY, NeuralNetwork.ActivationFunction.SOFTMAX, x[0].length, 30, MathEx.max(y)+1);
-            for (int j = 0; j < 20; j++) {
-                net.learn(x, y);
-            }
-            
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (net.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
-
-            System.out.format("Segment error rate = %.2f%%%n", 100.0 * error / testx.length);
-        } catch (Exception ex) {
-            System.err.println(ex);
         }
+
+        int[] prediction = Validation.test(model, testx);
+        int error = Error.apply(Segment.testy, prediction);
+        System.out.println("Online Error = " + error);
+        //assertEquals(123, error);
+
+        model = new NeuralNetwork(ObjectiveFunction.CROSS_ENTROPY,
+                new Layer(ActivationFunction.RECTIFIER, 30, p),
+                new Layer(ActivationFunction.HYPERBOLIC_TANGENT, 50, 30),
+                new Layer(ActivationFunction.SOFTMAX, k, 50)
+        );
+
+        int b = 50;
+        double[][] batchx = new double[b][];
+        int[] batchy = new int[b];
+        for (int e = 0; e < 10; e++) {
+            int i = 0;
+            for (; i < x.length-b; i+=b) {
+                System.arraycopy(x, i, batchx, 0, b);
+                System.arraycopy(Segment.y, i, batchy, 0, b);
+                model.update(batchx, batchy);
+            }
+
+            for (; i < x.length; i++) {
+                model.update(x[i], Segment.y[i]);
+            }
+        }
+
+        prediction = Validation.test(model, testx);
+        error = Error.apply(Segment.testy, prediction);
+        System.out.println("Mini-batch Error = " + error);
+        assertEquals(123, error);
     }
 
-    /**
-     * Test of learn method, of class NeuralNetwork.
-     */
-    @Test
-    public void testSegmentLMS() {
-        System.out.println("Segment LMS");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(19);
-        try {
-            AttributeDataset train = parser.parse(smile.util.Paths.getTestData("weka/segment-challenge.arff"));
-            AttributeDataset test = parser.parse(smile.util.Paths.getTestData("weka/segment-test.arff"));
-
-            double[][] x = train.toArray(new double[0][]);
-            int[] y = train.toArray(new int[0]);
-            double[][] testx = test.toArray(new double[0][]);
-            int[] testy = test.toArray(new int[0]);
-            
-            int p = x[0].length;
-            double[] mu = MathEx.colMin(x);
-            double[] sd = MathEx.colMax(x);
-            for (int i = 0; i < x.length; i++) {
-                for (int j = 0; j < p; j++) {
-                    x[i][j] = (x[i][j] - mu[j]) / sd[j];
-                }
-            }
-
-            for (int i = 0; i < testx.length; i++) {
-                for (int j = 0; j < p; j++) {
-                    testx[i][j] = (testx[i][j] - mu[j]) / sd[j];
-                }
-            }
-
-            NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.LEAST_MEAN_SQUARES, NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, x[0].length, 30, MathEx.max(y)+1);
-            for (int j = 0; j < 30; j++) {
-                net.learn(x, y);
-            }
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (net.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
-
-            System.out.format("Segment error rate = %.2f%%%n", 100.0 * error / testx.length);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
-    }
-
-    /**
-     * Test of learn method, of class NeuralNetwork.
-     */
     @Test
     public void testUSPS() {
         System.out.println("USPS");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.util.Paths.getTestData("usps/zip.test"));
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-            
-            int p = x[0].length;
-            double[] mu = MathEx.colMeans(x);
-            double[] sd = MathEx.colSds(x);
-            for (int i = 0; i < x.length; i++) {
-                for (int j = 0; j < p; j++) {
-                    x[i][j] = (x[i][j] - mu[j]) / sd[j];
-                }
-            }
+        MathEx.setSeed(19650218); // to get repeatable results.
 
-            for (int i = 0; i < testx.length; i++) {
-                for (int j = 0; j < p; j++) {
-                    testx[i][j] = (testx[i][j] - mu[j]) / sd[j];
-                }
-            }
+        WinsorScaler scaler = WinsorScaler.fit(USPS.x);
+        double[][] x = scaler.transform(USPS.x);
+        double[][] testx = scaler.transform(USPS.testx);
+        int p = x[0].length;
+        int k = MathEx.max(USPS.y) + 1;
 
-            NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.CROSS_ENTROPY, NeuralNetwork.ActivationFunction.SOFTMAX, x[0].length, 40, MathEx.max(y)+1);
-            for (int j = 0; j < 30; j++) {
-                net.learn(x, y);
-            }
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (net.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
+        NeuralNetwork model = new NeuralNetwork(ObjectiveFunction.CROSS_ENTROPY,
+                new Layer(ActivationFunction.HYPERBOLIC_TANGENT, 40, p),
+                new Layer(ActivationFunction.SOFTMAX, k, 40)
+        );
 
-            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
-        } catch (Exception ex) {
-            System.err.println(ex);
+        int b = 50;
+        double[][] batchx = new double[b][];
+        int[] batchy = new int[b];
+        for (int e = 0; e < 10; e++) {
+            for (int i = 0; i < x.length-b; i+=b) {
+                System.arraycopy(x, i, batchx, 0, b);
+                System.arraycopy(USPS.y, i, batchy, 0, b);
+                model.update(batchx, batchy);
+            }
         }
-    }
 
-    /**
-     * Test of learn method, of class NeuralNetwork.
-     */
-    @Test
-    public void testUSPSLMS() {
-        System.out.println("USPS LMS");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.util.Paths.getTestData("usps/zip.test"));
-
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-            
-            int p = x[0].length;
-            double[] mu = MathEx.colMeans(x);
-            double[] sd = MathEx.colSds(x);
-            for (int i = 0; i < x.length; i++) {
-                for (int j = 0; j < p; j++) {
-                    x[i][j] = (x[i][j] - mu[j]) / sd[j];
-                }
-            }
-
-            for (int i = 0; i < testx.length; i++) {
-                for (int j = 0; j < p; j++) {
-                    testx[i][j] = (testx[i][j] - mu[j]) / sd[j];
-                }
-            }
-
-            NeuralNetwork net = new NeuralNetwork(NeuralNetwork.ErrorFunction.LEAST_MEAN_SQUARES, NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, x[0].length, 40, MathEx.max(y)+1);
-            for (int j = 0; j < 30; j++) {
-                net.learn(x, y);
-            }
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (net.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
-
-            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        int[] prediction = Validation.test(model, testx);
+        int error = Error.apply(USPS.testy, prediction);
+        System.out.println("Online Error = " + error);
+        assertEquals(123, error);
     }
 }

@@ -59,9 +59,18 @@ public abstract class Split {
     InternalNode parent;
 
     /**
-     * True if all the samples in the split have the same value in the column.
+     * insplitable[j] is true if
+     * <ul>
+     * <li>The column j in the node is constant</li>
+     * <li>The column j is almost constant, i.e. but after the split,
+     * the size of one or two children is less than nodeSize.</li>
+     * <li>The column j is not (almost) constant, but the impurity of
+     * node doesn't decrease after the split.</li>
+     * </ul>
+     * No matter which case, the column j in the children nodes
+     * (split on another column) are still insplitable.
      */
-    boolean[] pure;
+    boolean[] unsplittable;
 
     /** Constructor. */
     public Split(LeafNode leaf, int feature, double score, int lo, int hi, int trueCount, int falseCount) {

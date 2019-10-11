@@ -39,6 +39,8 @@ import java.util.stream.IntStream;
  * @author Haifeng Li
  */
 public class MaxAbsScaler implements FeatureTransform {
+    private static final long serialVersionUID = 2L;
+
     /**
      * The schema of data.
      */

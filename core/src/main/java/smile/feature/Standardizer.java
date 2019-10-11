@@ -39,6 +39,8 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class Standardizer implements FeatureTransform {
+    private static final long serialVersionUID = 2L;
+
     /**
      * The schema of data.
      */
@@ -65,7 +67,7 @@ public class Standardizer implements FeatureTransform {
 
         for (int i = 0; i < std.length; i++) {
             if (MathEx.isZero(std[i])) {
-                throw new IllegalArgumentException("Invalid standard deviation: 0");
+                std[i] = 1.0;
             }
         }
 
@@ -90,10 +92,14 @@ public class Standardizer implements FeatureTransform {
         int n = data.nrows();
         for (int i = 0; i < mu.length; i++) {
             if (schema.field(i).isNumeric()) {
-                double sum = data.doubleVector(i).stream().sum();
-                double squaredSum = data.doubleVector(i).stream().map(x -> x*x).sum();
+                final int col = i;
+                double sum = data.stream().mapToDouble(t -> t.getDouble(col)).sum();
+                double squaredSum = data.stream().mapToDouble(t -> t.getDouble(col)).map(x -> x*x).sum();
                 mu[i] = sum / n;
                 std[i] = Math.sqrt(squaredSum / n - mu[i] * mu[i]);
+                if (MathEx.isZero(std[i])) {
+                    std[i] = 1.0;
+                }
             }
         }
 

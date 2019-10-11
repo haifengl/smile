@@ -38,11 +38,6 @@ import smile.base.neuralnetwork.ObjectiveFunction;
  public class NeuralNetwork extends AbstractNeuralNetwork implements OnlineRegression<double[]> {
     private static final long serialVersionUID = 2L;
 
-     /**
-      * The dimensionality of input data.
-      */
-     private int p;
-
     /**
      * Constructor.
      *
@@ -55,8 +50,6 @@ import smile.base.neuralnetwork.ObjectiveFunction;
         if (outputLayer.getOutputUnits() != 1) {
             throw new IllegalArgumentException("The output layer must have only one output value: " + outputLayer.getOutputUnits());
         }
-
-        p = net[0].getInputUnits();
     }
 
     @Override

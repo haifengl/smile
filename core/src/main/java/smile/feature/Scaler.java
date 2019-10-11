@@ -46,6 +46,8 @@ import smile.data.type.StructType;
  * @author Haifeng Li
  */
 public class Scaler implements FeatureTransform {
+    private static final long serialVersionUID = 2L;
+
     /**
      * The schema of data.
      */
