@@ -114,7 +114,7 @@ public class FormulaTest {
     public void testAll() {
         System.out.println("all");
         Formula formula = Formula.of("salary", all(), log("age"), onehot("gender"));
-        assertEquals("salary ~ . + log(age) + OneHot(gender)", formula.toString());
+        assertEquals("salary ~ . + log(age) + one-hot(gender)", formula.toString());
 
         DataFrame output = formula.apply(df);
         System.out.println(output);
@@ -290,7 +290,7 @@ public class FormulaTest {
     public void testFormulaOneHot() {
         System.out.println("one-hot");
         Formula formula = Formula.rhs(onehot("gender"));
-        assertEquals(" ~ OneHot(gender)", formula.toString());
+        assertEquals(" ~ one-hot(gender)", formula.toString());
 
         DataFrame output = formula.apply(df);
         System.out.println(output);

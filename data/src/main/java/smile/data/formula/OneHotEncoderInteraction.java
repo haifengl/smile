@@ -17,25 +17,24 @@
 
 package smile.data.formula;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructType;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 /** The interaction of one-hot term. */
 class OneHotEncoderInteraction extends AbstractTerm {
     /** The one-hot encoders. */
-    List<OneHot.OneHotEncoder> encoders;
+    List<OneHotEncoder> encoders;
 
     /**
      * Constructor.
      */
-    public OneHotEncoderInteraction(List<OneHot.OneHotEncoder> encoders) {
+    public OneHotEncoderInteraction(List<OneHotEncoder> encoders) {
         this.encoders = encoders;
     }
 
@@ -47,7 +46,7 @@ class OneHotEncoderInteraction extends AbstractTerm {
     @Override
     public Set<String> variables() {
         Set<String> set = new HashSet<>();
-        for (OneHot.OneHotEncoder encoder : encoders) {
+        for (OneHotEncoder encoder : encoders) {
             set.addAll(encoder.variables());
         }
         return set;
@@ -60,7 +59,7 @@ class OneHotEncoderInteraction extends AbstractTerm {
 
     @Override
     public byte applyAsByte(Tuple o) {
-        for (OneHot.OneHotEncoder encoder : encoders) {
+        for (OneHotEncoder encoder : encoders) {
             if (encoder.applyAsByte(o) == 0) return 0;
         }
         return 1;

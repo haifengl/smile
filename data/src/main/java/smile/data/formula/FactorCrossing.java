@@ -89,7 +89,7 @@ class FactorCrossing implements HyperTerm {
 
     @Override
     public void bind(StructType schema) {
-        List<List<OneHot.OneHotEncoder>> encoders = new ArrayList<>();
+        List<List<OneHotEncoder>> encoders = new ArrayList<>();
 
         OneHot factor = new OneHot(factors.get(factors.size() - 1));
         factor.bind(schema);
@@ -101,12 +101,12 @@ class FactorCrossing implements HyperTerm {
         for (int i = factors.size() - 2; i >= 0; i--) {
             factor = new OneHot(factors.get(i));
             factor.bind(schema);
-            List<OneHot.OneHotEncoder> terms = factor.terms();
+            List<OneHotEncoder> terms = factor.terms();
 
             // combine terms with existing combinations
             encoders.addAll(encoders.stream().flatMap(list ->
                     terms.stream().map(term -> {
-                        List<OneHot.OneHotEncoder> newList = new ArrayList<>();
+                        List<OneHotEncoder> newList = new ArrayList<>();
                         newList.add(term);
                         newList.addAll(list);
                         return newList;

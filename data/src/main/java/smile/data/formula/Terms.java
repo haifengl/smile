@@ -63,9 +63,9 @@ public interface Terms {
         return new Delete(x);
     }
 
-    /** One-hot encoding of a nominal scale. */
-    static HyperTerm onehot(String x) {
-        return new OneHot(x);
+    /** One-hot encoding of nominal factors. */
+    static HyperTerm onehot(String... factors) {
+        return new OneHot(factors);
     }
 
     /** Extracts date/time features. */
