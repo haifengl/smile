@@ -17,9 +17,7 @@
 
 package smile.classification;
 
-import java.util.Arrays;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
 
@@ -46,7 +44,7 @@ import smile.math.matrix.EVD;
  * @author Haifeng Li
  */
 public class QDA implements SoftClassifier<double[]> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The dimensionality of data.
@@ -59,7 +57,7 @@ public class QDA implements SoftClassifier<double[]> {
     /**
      * Constant term of discriminant function of each class.
      */
-    private final double[] ct;
+    private final double[] logppriori;
     /**
      * A priori probabilities of each class.
      */
@@ -69,44 +67,66 @@ public class QDA implements SoftClassifier<double[]> {
      */
     private final double[][] mu;
     /**
+     * Eigen values of each covariance matrix.
+     */
+    private final double[][] eigen;
+    /**
      * Eigen vectors of each covariance matrix, which transforms observations
      * to discriminant functions, normalized so that within groups covariance
      * matrix is spherical.
      */
     private final DenseMatrix[] scaling;
     /**
-     * Eigen values of each covariance matrix.
+     * The class label encoder;
      */
-    private final double[][] ev;
-    
+    private final ClassLabel labels;
+
     /**
-     * Learn quadratic discriminant analysis.
-     * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * Constructor.
+     * @param priori a priori probabilities of each class.
+     * @param mu the mean vectors of each class.
+     * @param eigen the eigen values of each variance matrix.
+     * @param scaling the eigen vectors of each covariance matrix.
      */
-    public QDA(double[][] x, int[] y) {
-        this(x, y, null);
+    public QDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling) {
+        this(priori, mu, eigen, scaling, ClassLabel.of(priori.length));
+    }
+
+    /**
+     * Constructor.
+     * @param priori a priori probabilities of each class.
+     * @param mu the mean vectors of each class.
+     * @param eigen the eigen values of each variance matrix.
+     * @param scaling the eigen vectors of each covariance matrix.
+     * @param labels class labels
+     */
+    public QDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling, ClassLabel labels) {
+        this.k = priori.length;
+        this.p = mu[0].length;
+        this.priori = priori;
+        this.mu = mu;
+        this.eigen = eigen;
+        this.scaling = scaling;
+        this.labels = labels;
+
+        logppriori = new double[k];
+        for (int i = 0; i < k; i++) {
+            double logev = 0.0;
+            for (int j = 0; j < p; j++) {
+                logev += Math.log(eigen[i][j]);
+            }
+
+            logppriori[i] = Math.log(priori[i]) - 0.5 * logev;
+        }
     }
 
     /**
      * Learn quadratic discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param priori the priori probability of each class.
      */
-    public QDA(double[][] x, int[] y, double[] priori) {
-        this(x, y, priori, 1E-4);
-    }
-
-    /**
-     * Learn quadratic discriminant analysis.
-     * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
-     * @param tol a tolerance to decide if a covariance matrix is singular; it
-     * will reject variables whose variance is less than tol<sup>2</sup>.
-     */
-    public QDA(double[][] x, int[] y, double tol) {
-        this(x, y, null, tol);
+    public static QDA fit(double[][] x, int[] y) {
+        return fit(x, y, null, 1E-4);
     }
     
     /**
@@ -118,150 +138,44 @@ public class QDA implements SoftClassifier<double[]> {
      * @param tol a tolerance to decide if a covariance matrix is singular; it
      * will reject variables whose variance is less than tol<sup>2</sup>.
      */
-    public QDA(double[][] x, int[] y, double[] priori, double tol) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
-        }
+    public static QDA fit(double[][] x, int[] y, double[] priori, double tol) {
+        DiscriminantAnalysis da = DiscriminantAnalysis.qda(x, y, priori, tol);
 
-        if (priori != null) {
-            if (priori.length < 2) {
-                throw new IllegalArgumentException("Invalid number of priori probabilities: " + priori.length);
-            }
+        DenseMatrix[] cov = DiscriminantAnalysis.cov(x, y, da.mu, da.ni, tol);
 
-            double sum = 0.0;
-            for (double pr : priori) {
-                if (pr <= 0.0 || pr >= 1.0) {
-                    throw new IllegalArgumentException("Invalid priori probability: " + pr);
-                }
-                sum += pr;
-            }
-
-            if (Math.abs(sum - 1.0) > 1E-10) {
-                throw new IllegalArgumentException("The sum of priori probabilities is not one: " + sum);
-            }
-        }
-
-        // class label set.
-        int[] labels = MathEx.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
-        }
-
-        k = labels.length;
-        if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
-        }
-        
-        if (priori != null && k != priori.length) {
-            throw new IllegalArgumentException("The number of classes and the number of priori probabilities don't match.");                        
-        }
-        
-        if (tol < 0.0) {
-            throw new IllegalArgumentException("Invalid tol: " + tol);
-        }
-        
-        final int n = x.length;
-
-        if (n <= k) {
-            throw new IllegalArgumentException(String.format("Sample size is too small: %d <= %d", n, k));
-        }
-
-        p = x[0].length;
-        // The number of instances in each class.
-        int[] ni = new int[k];
-        // Class mean vectors.
-        mu = new double[k][p];
-        // Class covarainces.
-        DenseMatrix[] cov = new DenseMatrix[k];
-
-        for (int i = 0; i < n; i++) {
-            int c = y[i];
-            ni[c]++;
-            for (int j = 0; j < p; j++) {
-                mu[c][j] += x[i][j];
-            }
-        }
-
-        for (int i = 0; i < k; i++) {
-            if (ni[i] <= 1) {
-                throw new IllegalArgumentException(String.format("Class %d has only one sample.", i));
-            }
-
-            cov[i] = Matrix.zeros(p, p);
-
-            for (int j = 0; j < p; j++) {
-                mu[i][j] /= ni[i];
-            }
-        }
-
-        if (priori == null) {
-            priori = new double[k];
-            for (int i = 0; i < k; i++) {
-                priori[i] = (double) ni[i] / n;
-            }
-        }
-        this.priori = priori;
-
-        for (int i = 0; i < n; i++) {
-            int c = y[i];
-            for (int j = 0; j < p; j++) {
-                for (int l = 0; l <= j; l++) {
-                    cov[c].add(j, l, (x[i][j] - mu[c][j]) * (x[i][l] - mu[c][l]));
-                }
-            }
-        }
+        int k = cov.length;
+        int p = cov[0].nrows();
+        double[][] eigen = new double[k][];
+        DenseMatrix[] scaling = new DenseMatrix[k];
 
         tol = tol * tol;
-        ev = new double[k][];
         for (int i = 0; i < k; i++) {
+            // quick test of singularity
             for (int j = 0; j < p; j++) {
-                for (int l = 0; l <= j; l++) {
-                    cov[i].div(j, l, (ni[i] - 1));
-                    cov[i].set(l, j, cov[i].get(j, l));
-                }
-
                 if (cov[i].get(j, j) < tol) {
-                    throw new IllegalArgumentException(String.format("Class %d covariance matrix (variable %d) is close to singular.", i, j));
+                    throw new IllegalArgumentException(String.format("Class %d covariance matrix (column %d) is close to singular.", i, j));
                 }
             }
 
-            cov[i].setSymmetric(true);
-            EVD eigen = cov[i].eigen();
+            EVD evd = cov[i].eigen();
 
-            for (double s : eigen.getEigenValues()) {
+            for (double s : evd.getEigenValues()) {
                 if (s < tol) {
                     throw new IllegalArgumentException(String.format("Class %d covariance matrix is close to singular.", i));
                 }
             }
 
-            ev[i] = eigen.getEigenValues();
-            cov[i] = eigen.getEigenVectors();
+            eigen[i] = evd.getEigenValues();
+            scaling[i] = evd.getEigenVectors();
         }
 
-        scaling = cov;
-        ct = new double[k];
-        for (int i = 0; i < k; i++) {
-            double logev = 0.0;
-            for (int j = 0; j < p; j++) {
-                logev += Math.log(ev[i][j]);
-            }
-
-            ct[i] = Math.log(priori[i]) - 0.5 * logev;
-        }
+        return new QDA(da.priori, da.mu, eigen, scaling, da.labels);
     }
 
     /**
      * Returns a priori probabilities.
      */
-    public double[] getPriori() {
+    public double[] priori() {
         return priori;
     }
 
@@ -276,51 +190,30 @@ public class QDA implements SoftClassifier<double[]> {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        if (posteriori != null && posteriori.length != k) {
-            throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
+        if (posteriori == null) {
+            posteriori = new double[k];
         }
-
-        int y = 0;
-        double max = Double.NEGATIVE_INFINITY;
 
         double[] d = new double[p];
         double[] ux = new double[p];
 
         for (int i = 0; i < k; i++) {
+            double[] mui = mu[i];
             for (int j = 0; j < p; j++) {
-                d[j] = x[j] - mu[i][j];
+                d[j] = x[j] - mui[j];
             }
 
             scaling[i].atx(d, ux);
 
             double f = 0.0;
+            double[] ev = eigen[i];
             for (int j = 0; j < p; j++) {
-                f += ux[j] * ux[j] / ev[i][j];
+                f += ux[j] * ux[j] / ev[j];
             }
 
-            f = ct[i] - 0.5 * f;
-            if (max < f) {
-                max = f;
-                y = i;
-            }
-
-            if (posteriori != null) {
-                posteriori[i] = f;
-            }
+            posteriori[i] = logppriori[i] - 0.5 * f;
         }
 
-        if (posteriori != null) {
-            double sum = 0.0;
-            for (int i = 0; i < k; i++) {
-                posteriori[i] = Math.exp(posteriori[i] - max);
-                sum += posteriori[i];
-            }
-            
-            for (int i = 0; i < k; i++) {
-                posteriori[i] /= sum;
-            }
-        }
-
-        return y;
+        return labels.label(MathEx.softmax(posteriori));
     }
 }

@@ -55,6 +55,10 @@ public class Layer implements Serializable {
      * weight changes for mini batch or for momentum
      */
     private DenseMatrix delta;
+    /**
+     * weight updates for mini batch or for momentum
+     */
+    private DenseMatrix update;
 
     /**
      * Constructor.
@@ -67,10 +71,11 @@ public class Layer implements Serializable {
         this.p = p;
         this.activation = activation;
         output = new double[n + 1];
-        output[n] = 1.0; // for intercept
+        output[n] = 1.0; // intercept
         error = new double[n + 1];
         weight = Matrix.zeros(n, p + 1);
-        delta = Matrix.zeros(n, p + 1);
+        delta  = Matrix.zeros(n, p + 1);
+        update = Matrix.zeros(n, p + 1);
 
         // Initialize random weights.
         double r = 1.0 / Math.sqrt(n);
@@ -111,7 +116,7 @@ public class Layer implements Serializable {
      * @param x the lower layer signals.
      */
     public void propagate(double[] x) {
-        assert x[x.length-1] == 1.0 : "bias/intercept element is not 1"; // for intercept
+        assert x[x.length-1] == 1.0 : "bias/intercept is not 1";
 
         weight.ax(x, output);
 
@@ -135,7 +140,7 @@ public class Layer implements Serializable {
                 break;
 
             case SOFTMAX:
-                softmax();
+                MathEx.softmax(output, units);
                 break;
 
             case LINEAR: // nop
@@ -151,66 +156,68 @@ public class Layer implements Serializable {
         upper.weight.atx(upper.error, error);
         for (int i = 0; i <= units; i++) {
             double out = output[i];
-            error[i] = out * (1.0 - out) * error[i];
+            error[i] *= out * (1.0 - out);
         }
+        /*
+        System.out.println((units+1)+" "+upper.units+" "+upper.weight.nrows()+" "+upper.weight.ncols());
+        for (int i = 0; i <= units; i++) {
+            double out = output[i];
+            double err = 0;
+            for (int j = 0; j < upper.units; j++) {
+                err += upper.weight.get(j, i) * upper.error[j];
+            }
+            error[i] = out * (1.0 - out) * err;
+        }
+         */
     }
 
     /**
-     * Computes the update to weights.
+     * Computes the gradient of weight.
      *
      * @param input the input vector of layer.
-     * @param eta the learning rate.
-     * @param alpha the momentum factor
      */
-    public void computeUpdate(double[] input, double eta, double alpha) {
+    public void computeGradient(double[] input) {
         for (int j = 0; j < input.length; j++) {
             for (int i = 0; i < units; i++) {
-                double update = alpha * delta.get(i, j) + (1 - alpha) * eta * error[i] * input[j];
-                delta.set(i, j, update);
+                double gradient = error[i] * input[j];
+                delta.set(i, j, gradient);
             }
         }
     }
 
     /**
      * Adjust network weights by back-propagation algorithm.
-     */
-    public void update() {
-        weight.add(delta);
-    }
-
-    /**
-     * Weight decay. After each update, the weights are multiplied
-     * by a factor slightly less than 1. This prevents the weights
-     * from growing too large, and can be seen as gradient descent
-     * on a quadratic regularization term.
-     *
+     * @param eta the learning rate.
+     * @param alpha the momentum factor
      * @param lambda weight decay factor
      */
-    public void decay(double lambda) {
-        int m = weight.nrows();
-        int n = weight.ncols() - 1;
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                weight.mul(i, j, lambda);
+    public void update(double eta, double alpha, double lambda) {
+        for (int j = 0; j <= p; j++) {
+            for (int i = 0; i < units; i++) {
+                double change = alpha * update.get(i, j) + (1 - alpha) * eta * delta.get(i, j);
+                update.set(i, j, change);
             }
         }
-    }
 
-    /**
-     * Calculate softmax activation function without overflow.
-     */
-    private void softmax() {
-        double max = MathEx.max(output);
+        weight.add(update);
 
-        double sum = 0.0;
-        for (int i = 0; i < output.length; i++) {
-            double out = Math.exp(output[i] - max);
-            output[i] = out;
-            sum += out;
+        /*
+         * Weight decay as the weights are multiplied
+         * by a factor slightly less than 1. This prevents the weights
+         * from growing too large, and can be seen as gradient descent
+         * on a quadratic regularization term.
+         */
+        if (lambda < 1.0) {
+            weight.mul(lambda);
+/*
+            for (int j = 0; j < p; j++) {
+                for (int i = 0; i < units; i++) {
+                    weight.mul(i, j, lambda);
+                }
+            }
+ */
         }
 
-        for (int i = 0; i < output.length; i++) {
-            output[i] /= sum;
-        }
+        delta.fill(0.0);
     }
 }
