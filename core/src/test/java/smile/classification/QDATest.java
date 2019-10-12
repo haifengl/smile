@@ -17,15 +17,15 @@
 
 package smile.classification;
 
-import smile.data.parser.ArffParser;
-import smile.data.AttributeDataset;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.MathEx;
+import smile.data.Iris;
+import smile.validation.Error;
 import smile.validation.LOOCV;
+
 import static org.junit.Assert.*;
 
 /**
@@ -53,38 +53,13 @@ public class QDATest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class QDA.
-     */
     @Test
-    public void testLearn() {
-        System.out.println("learn");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.util.Paths.getTestData("weka/iris.arff"));
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            int[] y = iris.toArray(new int[iris.size()]);
+    public void testIris() {
+        System.out.println("Iris");
 
-            int n = x.length;
-            LOOCV loocv = new LOOCV(n);
-            int error = 0;
-            double[] posteriori = new double[3];
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = MathEx.slice(x, loocv.train[i]);
-                int[] trainy = MathEx.slice(y, loocv.train[i]);
-                QDA qda = new QDA(trainx, trainy);
-
-                if (y[loocv.test[i]] != qda.predict(x[loocv.test[i]], posteriori))
-                    error++;
-                
-                //System.out.println(posteriori[0]+"\t"+posteriori[1]+"\t"+posteriori[2]);
-            }
-
-            System.out.println("QDA error = " + error);
-            assertEquals(4, error);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> QDA.fit(x, y));
+        int error = Error.apply(Iris.y, prediction);
+        System.out.println("Error = " + error);
+        assertEquals(4, error);
     }
 }

@@ -659,6 +659,65 @@ public class MathEx {
         random.get().permutate(x);
     }
 
+    /**
+     * The softmax function without overflow. The function takes as
+     * an input vector of K real numbers, and normalizes it into a
+     * probability distribution consisting of K probabilities
+     * proportional to the exponentials of the input numbers.
+     * That is, prior to applying softmax, some vector components
+     * could be negative, or greater than one; and might not sum
+     * to 1; but after applying softmax, each component will be
+     * in the interval (0,1), and the components will add up to 1,
+     * so that they can be interpreted as probabilities. Furthermore,
+     * the larger input components will correspond to larger probabilities.
+     *
+     * @param posteriori the input/output vector.
+     * @return the index of largest component.
+     */
+    public static int softmax(double[] posteriori) {
+        return softmax(posteriori, posteriori.length);
+    }
+
+    /**
+     * The softmax function without overflow. The function takes as
+     * an input vector of K real numbers, and normalizes it into a
+     * probability distribution consisting of K probabilities
+     * proportional to the exponentials of the input numbers.
+     * That is, prior to applying softmax, some vector components
+     * could be negative, or greater than one; and might not sum
+     * to 1; but after applying softmax, each component will be
+     * in the interval (0,1), and the components will add up to 1,
+     * so that they can be interpreted as probabilities. Furthermore,
+     * the larger input components will correspond to larger probabilities.
+     *
+     * @param posteriori the input/output vector.
+     * @param k uses only first k components of input vector.
+     * @return the index of largest component.
+     */
+    public static int softmax(double[] posteriori, int k) {
+        int y = -1;
+        double max = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < k; i++) {
+            if (posteriori[i] > max) {
+                max = posteriori[i];
+                y = i;
+            }
+        }
+
+        double Z = 0.0;
+        for (int i = 0; i < k; i++) {
+            double out = Math.exp(posteriori[i] - max);
+            posteriori[i] = out;
+            Z += out;
+        }
+
+        for (int i = 0; i < k; i++) {
+            posteriori[i] /= Z;
+        }
+
+        return y;
+    }
+
     /** Combines the arguments to form a vector. */
     public static int[] c(int... x) {
         return x;

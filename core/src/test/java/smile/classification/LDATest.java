@@ -17,17 +17,17 @@
 
 package smile.classification;
 
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.MathEx;
+import smile.data.Iris;
+import smile.data.USPS;
+import smile.validation.Error;
 import smile.validation.LOOCV;
+import smile.validation.Validation;
+
 import static org.junit.Assert.*;
 
 /**
@@ -55,71 +55,26 @@ public class LDATest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class LDA.
-     */
     @Test
-    public void testLearn() {
-        System.out.println("learn");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.util.Paths.getTestData("weka/iris.arff"));
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            int[] y = iris.toArray(new int[iris.size()]);
+    public void testIris() {
+        System.out.println("Iris");
 
-            int n = x.length;
-            LOOCV loocv = new LOOCV(n);
-            int error = 0;
-            double[] posteriori = new double[3];
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = MathEx.slice(x, loocv.train[i]);
-                int[] trainy = MathEx.slice(y, loocv.train[i]);
-                LDA lda = new LDA(trainx, trainy);
-
-                if (y[loocv.test[i]] != lda.predict(x[loocv.test[i]], posteriori))
-                    error++;
-                
-                //System.out.println(posteriori[0]+"\t"+posteriori[1]+"\t"+posteriori[2]);
-            }
-            
-            System.out.println("LDA error = " + error);
-            assertEquals(22, error);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> LDA.fit(x, y));
+        int error = Error.apply(Iris.y, prediction);
+        System.out.println("Error = " + error);
+        assertEquals(22, error);
     }
 
-    /**
-     * Test of learn method, of class LDA.
-     */
     @Test
     public void testUSPS() {
         System.out.println("USPS");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.util.Paths.getTestData("usps/zip.test"));
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-            
-            LDA lda = new LDA(x, y);
-            
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (lda.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
+        LDA model = LDA.fit(USPS.x, USPS.y);
 
-            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
-            assertEquals(256, error);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        int[] prediction = Validation.test(model, USPS.testx);
+        int error = Error.apply(USPS.testy, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(256, error);
     }
 }

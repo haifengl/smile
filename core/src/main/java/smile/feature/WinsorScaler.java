@@ -108,6 +108,18 @@ public class WinsorScaler extends Scaler {
         return fit(DataFrame.of(data));
     }
 
+    /**
+     * Learns transformation parameters from a dataset.
+     * @param data The training data.
+     * @param lower the lower limit in terms of percentiles of the original
+     *              distribution (say 5th percentile).
+     * @param upper the upper limit in terms of percentiles of the original
+     *              distribution (say 95th percentile).
+     */
+    public static WinsorScaler fit(double[][] data, double lower, double upper) {
+        return fit(DataFrame.of(data), lower, upper);
+    }
+
     @Override
     public String toString() {
         return IntStream.range(0, lo.length)

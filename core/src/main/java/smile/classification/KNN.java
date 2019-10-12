@@ -17,7 +17,6 @@
 
 package smile.classification;
 
-import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;

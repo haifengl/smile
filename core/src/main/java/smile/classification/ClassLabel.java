@@ -101,7 +101,11 @@ public class ClassLabel implements Serializable {
         public final ClassLabel labels;
         /** The sample class id in [0, k). */
         public final int[] y;
-        /** The optional meta data of response variable if the input is a vector. */
+        /** The number of samples per classes. */
+        public final int[] ni;
+        /** The estimated priori probabilities. */
+        public final double[] priori;
+        /** The optional meta data of response variable. */
         public final Optional<StructField> field;
 
         /** Constructor. */
@@ -115,6 +119,13 @@ public class ClassLabel implements Serializable {
             this.y = y;
             this.labels = labels;
             this.field = field;
+            this.ni = count(y, k);
+
+            priori = new double[k];
+            double n = y.length;
+            for (int i = 0; i < k; i++) {
+                priori[i] = ni[i] / n;
+            }
         }
     }
 
@@ -183,5 +194,21 @@ public class ClassLabel implements Serializable {
             field = new StructField(field.name, field.type, encoder.scale());
             return new Result(k, encoder.id(y), encoder, Optional.of(field));
         }
+    }
+
+    /**
+     * Returns the number of samples per class.
+     * @param y sample labels in [0, k)
+     * @param k the number of classes.
+     * @return the number of samples per class.
+     */
+    private static int[] count(int[] y, int k) {
+        int[] ni = new int[k];
+
+        for (int yi : y) {
+            ni[yi]++;
+        }
+
+        return ni;
     }
 }
