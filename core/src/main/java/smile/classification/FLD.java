@@ -239,14 +239,11 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         int n = x.length;
         double sqrtn = Math.sqrt(n);
 
-        // This is actually the transpose of X in the paper
-        DenseMatrix X = Matrix.of(x);
-
-        for (int j = 0; j < p; j++) {
-            double mj = mean[j];
-            for (int i = 0; i < n; i++) {
-                double xij = (X.get(i, j) - mj) / sqrtn;
-                X.set(i, j, xij);
+        DenseMatrix X = Matrix.zeros(p, n);
+        for (int i = 0; i < n; i++) {
+            double[] xi = x[i];
+            for (int j = 0; j < p; j++) {
+                X.set(j, i, (xi[j] - mean[j]) / sqrtn);
             }
         }
 
@@ -257,27 +254,21 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             }
         }
 
-        // This is actually the transpose of M in the paper
-        DenseMatrix M = Matrix.of(mu);
+        DenseMatrix M = Matrix.zeros(p, k);
         for (int i = 0; i < k; i++) {
-            double pi = priori[i];
+            double pi = Math.sqrt(priori[i]);
+            double[] mui = mu[i];
             for (int j = 0; j < p; j++) {
-                M.mul(i, j, pi);
+                M.set(j, i, pi * mui[j]);
             }
         }
 
         SVD svd = X.svd(true);
-        // Since X is transposed, U is actually V of SVD.
-        DenseMatrix U = svd.getV();
+        DenseMatrix U = svd.getU();
         double[] s = svd.getSingularValues();
 
         tol = tol * tol;
-
-        // atbtmm is not stable with netlib. So we do it in two steps.
-        //DenseMatrix UTM = U.atbtmm(M);
-        DenseMatrix UT = U.transpose();
-        DenseMatrix UTM = UT.abtmm(M);
-
+        DenseMatrix UTM = U.atbmm(M);
         for (int i = 0; i < n; i++) {
             // Since the rank of St is only n - k, there are some singular values of 0.
             double si = 0.0;
