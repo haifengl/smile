@@ -182,10 +182,7 @@ public class LDA implements SoftClassifier<double[]> {
             }
         }
 
-        da.St = St;
-        da.StEigen = eigen;
-
-        return new LDA(da.priori, da.mu, da.StEigen.getEigenValues(), da.StEigen.getEigenVectors(), da.labels);
+        return new LDA(da.priori, da.mu, eigen.getEigenValues(), eigen.getEigenVectors(), da.labels);
     }
 
     /**

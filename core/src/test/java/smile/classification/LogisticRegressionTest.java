@@ -22,15 +22,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.Iris;
-import smile.data.Segment;
-import smile.data.USPS;
-import smile.data.WeatherNominal;
+import smile.data.*;
 import smile.math.MathEx;
-import smile.validation.Accuracy;
+import smile.validation.*;
 import smile.validation.Error;
-import smile.validation.LOOCV;
-import smile.validation.Validation;
 
 import static org.junit.Assert.*;
 
@@ -74,9 +69,33 @@ public class LogisticRegressionTest {
         System.out.println("Weather");
 
         int[] prediction = LOOCV.classification(WeatherNominal.x, WeatherNominal.y, (x, y) -> LogisticRegression.fit(x, y));
-        int error = Error.apply(Iris.y, prediction);
+        int error = Error.apply(WeatherNominal.y, prediction);
         System.out.println("Error = " + error);
-        assertEquals(7, error);
+        assertEquals(8, error);
+    }
+
+    @Test
+    public void testPenDigits() {
+        System.out.println("Pen Digits");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        int[] prediction = CrossValidation.classification(10, PenDigits.x, PenDigits.y, (x, y) -> LogisticRegression.fit(x, y));
+        int error = Error.apply(PenDigits.y, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(884, error);
+    }
+
+    @Test
+    public void testBreastCancer() {
+        System.out.println("Breast Cancer");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        int[] prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (x, y) -> LogisticRegression.fit(x, y));
+        int error = Error.apply(BreastCancer.y, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(42, error);
     }
 
     @Test

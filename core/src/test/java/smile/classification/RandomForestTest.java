@@ -20,20 +20,16 @@ package smile.classification;
 import java.util.Optional;
 import java.util.stream.LongStream;
 import smile.base.cart.SplitRule;
-import smile.data.Iris;
-import smile.data.Segment;
-import smile.data.USPS;
-import smile.data.WeatherNominal;
+import smile.data.*;
 import smile.math.MathEx;
-import smile.validation.Accuracy;
-import smile.validation.Error;
-import smile.validation.LOOCV;
-import smile.validation.Validation;
+import smile.validation.*;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.validation.Error;
+
 import static org.junit.Assert.*;
 
 /**
@@ -96,6 +92,30 @@ public class RandomForestTest {
         int error = Error.apply(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(7, error);
+    }
+
+    @Test
+    public void testPenDigits() {
+        System.out.println("Pen Digits");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> RandomForest.fit(PenDigits.formula, x, 100, 4, SplitRule.GINI, 100, 5, 1.0));
+        int error = Error.apply(PenDigits.y, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(195, error);
+    }
+
+    @Test
+    public void testBreastCancer() {
+        System.out.println("Breast Cancer");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> RandomForest.fit(BreastCancer.formula, x, 100, 5, SplitRule.GINI, 100, 5, 1.0));
+        int error = Error.apply(BreastCancer.y, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(21, error);
     }
 
     @Test

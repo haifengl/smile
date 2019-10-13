@@ -138,8 +138,34 @@ public class Formula implements Serializable {
      * Factory method.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
+    public static Formula rhs(String... predictors) {
+        return new Formula(
+                Arrays.stream(predictors)
+                        .map(predictor -> new Variable(predictor))
+                        .toArray(Term[]::new)
+        );
+    }
+
+    /**
+     * Factory method.
+     * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
+     */
     public static Formula rhs(HyperTerm... predictors) {
         return new Formula(predictors);
+    }
+
+    /**
+     * Factory method.
+     * @param response the left-hand side of formula, i.e. dependent variable.
+     * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
+     */
+    public static Formula of(String response, String... predictors) {
+        return new Formula(
+                response,
+                Arrays.stream(predictors)
+                        .map(predictor -> new Variable(predictor))
+                        .toArray(Term[]::new)
+        );
     }
 
     /**

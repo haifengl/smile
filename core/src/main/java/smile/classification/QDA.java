@@ -139,7 +139,7 @@ public class QDA implements SoftClassifier<double[]> {
      * will reject variables whose variance is less than tol<sup>2</sup>.
      */
     public static QDA fit(double[][] x, int[] y, double[] priori, double tol) {
-        DiscriminantAnalysis da = DiscriminantAnalysis.qda(x, y, priori, tol);
+        DiscriminantAnalysis da = DiscriminantAnalysis.fit(x, y, priori, tol);
 
         DenseMatrix[] cov = DiscriminantAnalysis.cov(x, y, da.mu, da.ni, tol);
 
