@@ -19,6 +19,7 @@ package smile.association;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.stream.Stream;
 import smile.sort.QuickSort;
 import smile.math.MathEx;
 
@@ -36,7 +37,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-final class FPTree {
+public class FPTree {
 
     /**
      * FP-tree node object.
@@ -138,7 +139,6 @@ final class FPTree {
 
         /**
          * Adds this node to header table.
-         * @param header the header table.
          */
         void addToHeaderTable() {
             next = headerTable[order[id]].node;
@@ -279,7 +279,7 @@ final class FPTree {
      * of frequency.
      */
     public FPTree(int[][] itemsets, int minSupport) {
-        this(freq(itemsets), minSupport);
+        this(freq(MathEx.max(itemsets)+1, Arrays.stream(itemsets)), minSupport);
 
         // Add each itemset into to the FP-tree.
         for (int[] itemset : itemsets) {
@@ -289,16 +289,13 @@ final class FPTree {
     
     /**
      * Returns the frequency of single items.
+     * @param n the number of items.
      * @param itemsets the transaction database.
      * @return the frequency of single items
      */
-    private static int[] freq(int[][] itemsets) {
-        int[] f = new int[MathEx.max(itemsets) + 1];
-        for (int[] itemset : itemsets) {
-            for (int i : itemset) {
-                f[i]++;
-            }
-        }
+    public static int[] freq(int n, Stream<int[]> itemsets) {
+        int[] f = new int[n];
+        itemsets.forEach(itemset -> { for (int i : itemset) f[i]++; });
         return f;
     }
     

@@ -96,7 +96,7 @@ public class RDA extends QDA {
         int p = da.mean.length;
 
         DenseMatrix St = DiscriminantAnalysis.St(x, da.mean, k, tol);
-        DenseMatrix[] cov = DiscriminantAnalysis.cov(x, y, da.mu, da.ni, tol);
+        DenseMatrix[] cov = DiscriminantAnalysis.cov(x, y, da.mu, da.ni);
 
         double[][] eigen = new double[k][];
         DenseMatrix[] scaling = new DenseMatrix[k];
