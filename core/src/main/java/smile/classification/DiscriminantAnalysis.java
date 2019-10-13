@@ -162,7 +162,7 @@ class DiscriminantAnalysis {
     }
 
     /** Computes the covariance matrix of each class. */
-    public static DenseMatrix[] cov(double[][] x, int[] y, double[][] mu, int[] ni, double tol) {
+    public static DenseMatrix[] cov(double[][] x, int[] y, double[][] mu, int[] ni) {
         int n = x.length;
         int p = x[0].length;
         int k = mu.length;
@@ -189,7 +189,6 @@ class DiscriminantAnalysis {
             }
         }
 
-        tol = tol * tol;
         for (int i = 0; i < k; i++) {
             DenseMatrix v = cov[i];
             int m = ni[i] - 1;

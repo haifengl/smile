@@ -68,7 +68,7 @@ import smile.neighbor.Neighbor;
  * @author Haifeng Li
  */
 public class KNN<T> implements SoftClassifier<T> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The data structure for nearest neighbor search.

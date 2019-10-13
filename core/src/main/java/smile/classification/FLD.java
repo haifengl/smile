@@ -17,11 +17,11 @@
 
 package smile.classification;
 
-import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
+import smile.math.matrix.SVD;
 import smile.projection.Projection;
 
 /**
@@ -62,7 +62,7 @@ import smile.projection.Projection;
  * @author Haifeng Li
  */
 public class FLD implements Classifier<double[]>, Projection<double[]> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The dimensionality of data.
@@ -73,84 +73,82 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
      */
     private final int k;
     /**
-     * Original common mean vector.
-     */
-    private final double[] mean;
-    /**
-     * Original class mean vectors.
-     */
-    private final DenseMatrix mu;
-    /**
      * Project matrix.
      */
     private final DenseMatrix scaling;
     /**
-     * Projected common mean vector.
+     * Projected mean vector.
      */
-    private final double[] smean;
+    private final double[] mean;
     /**
      * Projected class mean vectors.
      */
-    private final double[][] smu;
-    
+    private final double[][] mu;
     /**
-     * Constructor. Learn Fisher's linear discriminant.
-     * @param x training instances.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * The class label encoder;
      */
-    public FLD(double[][] x, int[] y) {
-        this(x, y, -1);
+    private final ClassLabel labels;
+
+    /**
+     * Constructor.
+     * @param mean the mean vector of all samples.
+     * @param mu the mean vectors of each class.
+     * @param scaling the projection matrix.
+     */
+    public FLD(double[] mean, double[][] mu, DenseMatrix scaling) {
+        this(mean, mu, scaling, ClassLabel.of(mu.length));
     }
 
     /**
-     * Constructor. Learn Fisher's linear discriminant.
-     * @param x training instances.
-     * @param y training labels in [0, k), where k is the number of classes.
-     * @param L the dimensionality of mapped space.
+     * Constructor.
+     * @param mean the mean vector of all samples.
+     * @param mu the mean vectors of each class - mean.
+     * @param scaling the projection matrix.
+     * @param labels class labels
      */
-    public FLD(double[][] x, int[] y, int L) {
-        this(x, y, L, 1E-4);
+    public FLD(double[] mean, double[][] mu, DenseMatrix scaling, ClassLabel labels) {
+        this.k = mu.length;
+        this.p = mean.length;
+        this.scaling = scaling;
+        this.labels = labels;
+
+        int L = scaling.ncols();
+        this.mean = new double[L];
+        scaling.atx(mean, this.mean);
+
+        this.mu = new double[k][L];
+        for (int i = 0; i < k; i++) {
+            scaling.atx(mu[i], this.mu[i]);
+        }
     }
 
     /**
-     * Constructor. Learn Fisher's linear discriminant.
-     * @param x training instances.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * Learn Fisher's linear discriminant.
+     * @param x training samples.
+     * @param y training labels.
+     */
+    public static FLD fit (double[][] x, int[] y) {
+        return fit(x, y, -1, 1E-4);
+    }
+
+    /**
+     * Learn Fisher's linear discriminant.
+     * @param x training samples.
+     * @param y training labels.
      * @param L the dimensionality of mapped space.
      * @param tol a tolerance to decide if a covariance matrix is singular; it
      * will reject variables whose variance is less than tol<sup>2</sup>.
      */
-    public FLD(double[][] x, int[] y, int L, double tol) {
+    public static FLD fit(double[][] x, int[] y, int L, double tol) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        // class label set.
-        int[] labels = MathEx.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
-        }
+        DiscriminantAnalysis da = DiscriminantAnalysis.fit(x, y, null, tol);
 
-        k = labels.length;
-        if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
-        }
-        
-        if (tol < 0.0) {
-            throw new IllegalArgumentException("Invalid tol: " + tol);
-        }
-        
-        if (x.length <= k) {
-            throw new IllegalArgumentException(String.format("Sample size is too small: %d <= %d", x.length, k));
-        }
+        int n = x.length;
+        int k = da.k;
+        int p = da.mean.length;
 
         if (L >= k) {
             throw new IllegalArgumentException(String.format("The dimensionality of mapped space is too high: %d >= %d", L, k));
@@ -160,68 +158,27 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             L = k - 1;
         }
 
-        final int n = x.length;
-        p = x[0].length;
+        double[] mean = da.mean;
+        double[][] mu = da.mu;
 
-        // The number of instances in each class.
-        int[] ni = new int[k];
-        // Common mean vector.
-        mean = MathEx.colMeans(x);
-        // Common covariance.
-        DenseMatrix T = Matrix.zeros(p, p);
-        // Class mean vectors.
-        mu = Matrix.zeros(k, p);
-
-        for (int i = 0; i < n; i++) {
-            int c = y[i];
-            ni[c]++;
-            for (int j = 0; j < p; j++) {
-                mu.add(c, j, x[i][j]);
-            }
+        DenseMatrix scaling;
+        if (n - k < p) {
+            scaling = small(L, x, mean, mu, da.priori, tol);
+        } else {
+            scaling = fld(L, x, mean, mu, tol);
         }
 
-        for (int i = 0; i < k; i++) {
-            for (int j = 0; j < p; j++) {
-                mu.div(i, j, ni[i]);
-                mu.sub(i, j, mean[j]);
-            }
-        }
+        return new FLD(mean, mu, scaling, da.labels);
+    }
 
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++) {
-                for (int l = 0; l <= j; l++) {
-                    T.add(j, l, (x[i][j] - mean[j]) * (x[i][l] - mean[l]));
-                }
-            }
-        }
+    /** FLD when the sample size is large. */
+    private static DenseMatrix fld(int L, double[][] x, double[] mean, double[][] mu, double tol) {
+        int k = mu.length;
+        int p = mean.length;
 
-        for (int j = 0; j < p; j++) {
-            for (int l = 0; l <= j; l++) {
-                T.div(j, l, n);
-                T.set(l, j, T.get(j, l));
-            }
-        }
+        DenseMatrix St = DiscriminantAnalysis.St(x, mean, k, tol);
+        EVD eigen = St.eigen();
 
-        // Between class scatter
-        DenseMatrix B = Matrix.zeros(p, p);
-        for (int i = 0; i < k; i++) {
-            for (int j = 0; j < p; j++) {
-                for (int l = 0; l <= j; l++) {
-                    B.add(j, l, mu.get(i, j) * mu.get(i, l));
-                }
-            }
-        }
-
-        for (int j = 0; j < p; j++) {
-            for (int l = 0; l <= j; l++) {
-                B.div(j, l, k);
-                B.set(l, j, B.get(j, l));
-            }
-        }
-
-        T.setSymmetric(true);
-        EVD eigen = T.eigen();
-        
         tol = tol * tol;
         double[] s = eigen.getEigenValues();
         for (int i = 0; i < s.length; i++) {
@@ -232,30 +189,103 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             s[i] = 1.0 / s[i];
         }
 
+        for (int i = 0; i < k; i++) {
+            double[] mui = mu[i];
+            for (int j = 0; j < p; j++) {
+                mui[j] -= mean[j];
+            }
+        }
+
+        // Between class scatter
+        DenseMatrix Sb = Matrix.zeros(p, p);
+        for (int c = 0; c < k; c++) {
+            double[] mui = mu[c];
+            for (int j = 0; j < p; j++) {
+                for (int i = 0; i <= j; i++) {
+                    Sb.add(i, j, mui[i] * mui[j]);
+                }
+            }
+        }
+
+        for (int j = 0; j < p; j++) {
+            for (int i = 0; i <= j; i++) {
+                Sb.div(i, j, k);
+                Sb.set(j, i, Sb.get(i, j));
+            }
+        }
+
         DenseMatrix U = eigen.getEigenVectors();
-        DenseMatrix UB = U.atbmm(B);
+        DenseMatrix UB = U.atbmm(Sb);
+
+        for (int j = 0; j < p; j++) {
+            double sj = s[j];
+            for (int i = 0; i < k; i++) {
+                UB.mul(i, j, sj);
+            }
+        }
+
+        DenseMatrix StInvSb = U.abmm(UB);
+        StInvSb.setSymmetric(true);
+        DenseMatrix scaling = StInvSb.eigen().getEigenVectors().submat(0, 0, p-1, L-1);
+
+        return scaling;
+    }
+
+    /** Generalized FLD for small sample size. */
+    private static DenseMatrix small(int L, double[][] x, double[] mean, double[][] mu, double[] priori, double tol) {
+        int k = mu.length;
+        int p = mean.length;
+
+        int n = x.length;
+        double sqrtn = Math.sqrt(n);
+        DenseMatrix X = Matrix.of(x);
+
+        for (int j = 0; j < p; j++) {
+            double mj = mean[j];
+            for (int i = 0; i < n; i++) {
+                double xij = (X.get(i, j) - mj) / sqrtn;
+                X.set(i, j, xij);
+            }
+        }
 
         for (int i = 0; i < k; i++) {
+            double[] mui = mu[i];
             for (int j = 0; j < p; j++) {
-                UB.mul(i, j, s[j]);
+                mui[j] -= mean[j];
             }
         }
 
-        B = U.abmm(UB);
-        B.setSymmetric(true);
-        eigen = B.eigen();
-
-        U = eigen.getEigenVectors();
-        scaling = Matrix.zeros(p, L);
-        for (int j = 0; j < L; j++) {
-            for (int i = 0; i < p; i++) {
-                scaling.set(i, j, U.get(i, j));
+        DenseMatrix M = Matrix.of(mu);
+        for (int i = 0; i < k; i++) {
+            double pi = priori[i];
+            for (int j = 0; j < p; j++) {
+                M.mul(i, j, pi);
             }
         }
-        
-        smean = new double[L];
-        scaling.atx(mean, smean);
-        smu = mu.abmm(scaling).toArray();
+
+        SVD svd = X.svd(true);
+        DenseMatrix U = svd.getU();
+        double[] s = svd.getSingularValues();
+
+        tol = tol * tol;
+        DenseMatrix UT = U.transpose();
+        for (int i = 0; i < n; i++) {
+            if (s[i] < tol) {
+                throw new IllegalArgumentException("The covariance matrix is close to singular.");
+            }
+
+            double si = 1.0 / Math.sqrt(s[i]);
+            for (int j = 0; j < n; j++) {
+                UT.mul(i, j, si);
+            }
+        }
+
+        DenseMatrix StInv= U.abmm(UT);
+        DenseMatrix StInvM = StInv.abmm(M);
+        svd = StInvM.svd(true);
+        DenseMatrix scaling = StInv.abmm(svd.getU()).submat(0, 0, n-1, L-1);
+
+        return scaling;
     }
 
     @Override
@@ -269,14 +299,14 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         int y = 0;
         double nearest = Double.POSITIVE_INFINITY;
         for (int i = 0; i < k; i++) {
-            double d = MathEx.distance(wx, smu[i]);
+            double d = MathEx.distance(wx, mu[i]);
             if (d < nearest) {
                 nearest = d;
                 y = i;
             }
         }
 
-        return y;
+        return labels.label(y);
     }
 
     @Override
@@ -287,7 +317,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
 
         double[] y = new double[scaling.ncols()];
         scaling.atx(x, y);
-        MathEx.sub(y, smean);
+        MathEx.sub(y, mean);
         return y;
     }
 
@@ -301,7 +331,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             }
 
             scaling.atx(x[i], y[i]);
-            MathEx.sub(y[i], smean);
+            MathEx.sub(y[i], mean);
         }
         
         return y;
