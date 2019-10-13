@@ -238,6 +238,8 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
 
         int n = x.length;
         double sqrtn = Math.sqrt(n);
+
+        // This is actually the transpose of X in the paper
         DenseMatrix X = Matrix.of(x);
 
         for (int j = 0; j < p; j++) {
@@ -255,6 +257,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             }
         }
 
+        // This is actually the transpose of M in the paper
         DenseMatrix M = Matrix.of(mu);
         for (int i = 0; i < k; i++) {
             double pi = priori[i];
@@ -264,27 +267,45 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         }
 
         SVD svd = X.svd(true);
-        DenseMatrix U = svd.getU();
+        // Since X is transposed, U is actually V of SVD.
+        DenseMatrix U = svd.getV();
         double[] s = svd.getSingularValues();
 
         tol = tol * tol;
+
+        // atbtmm is not stable with netlib. So we do it in two steps.
+        //DenseMatrix UTM = U.atbtmm(M);
         DenseMatrix UT = U.transpose();
+        DenseMatrix UTM = UT.abtmm(M);
+
         for (int i = 0; i < n; i++) {
-            if (s[i] < tol) {
-                throw new IllegalArgumentException("The covariance matrix is close to singular.");
+            // Since the rank of St is only n - k, there are some singular values of 0.
+            double si = 0.0;
+            if (s[i] > tol) {
+                si = 1.0 / Math.sqrt(s[i]);
             }
 
-            double si = 1.0 / Math.sqrt(s[i]);
-            for (int j = 0; j < n; j++) {
-                UT.mul(i, j, si);
+            for (int j = 0; j < k; j++) {
+                UTM.mul(i, j, si);
             }
         }
 
-        DenseMatrix StInv= U.abmm(UT);
-        DenseMatrix StInvM = StInv.abmm(M);
-        svd = StInvM.svd(true);
-        DenseMatrix scaling = StInv.abmm(svd.getU()).submat(0, 0, n-1, L-1);
+        DenseMatrix StInvM = U.abmm(UTM);
+        DenseMatrix U2 = U.atbmm(StInvM.svd(true).getU().submat(0, 0, p, L-1));
 
+        for (int i = 0; i < n; i++) {
+            // Since the rank of St is only n - k, there are some singular values of 0.
+            double si = 0.0;
+            if (s[i] > tol) {
+                si = 1.0 / Math.sqrt(s[i]);
+            }
+
+            for (int j = 0; j < L; j++) {
+                U2.mul(i, j, si);
+            }
+        }
+
+        DenseMatrix scaling = U.abmm(U2);
         return scaling;
     }
 

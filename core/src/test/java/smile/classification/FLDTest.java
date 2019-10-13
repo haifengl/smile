@@ -27,10 +27,15 @@ import smile.data.Iris;
 import smile.data.PenDigits;
 import smile.data.USPS;
 import smile.math.MathEx;
+import smile.util.Paths;
 import smile.validation.CrossValidation;
 import smile.validation.Error;
 import smile.validation.LOOCV;
 import smile.validation.Validation;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
@@ -104,5 +109,27 @@ public class FLDTest {
 
         System.out.println("Error = " + error);
         assertEquals(561, error);
+    }
+
+    @Test(expected = Test.None.class)
+    public void testColon() throws IOException {
+        System.out.println("Colon");
+
+        BufferedReader reader = Paths.getTestDataReader("microarray/colon.txt");
+        int[] y = Arrays.stream(reader.readLine().split(" ")).mapToInt(s -> Integer.valueOf(s) > 0 ? 1 : 0).toArray();
+
+        double[][] x = new double[62][2000];
+        for (int i = 0; i < 2000; i++) {
+            String[] tokens = reader.readLine().split(" ");
+            for (int j = 0; j < 62; j++) {
+                x[j][i] = Double.valueOf(tokens[j]);
+            }
+        }
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        int[] prediction = CrossValidation.classification(5, x, y, (xi, yi) -> FLD.fit(xi, yi));
+        int error = Error.apply(y, prediction);
+        System.out.println("Error = " + error);
+        assertEquals(9, error);
     }
 }
