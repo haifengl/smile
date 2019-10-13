@@ -90,7 +90,7 @@ public class RDA extends QDA {
             throw new IllegalArgumentException("Invalid regularization factor: " + alpha);
         }
 
-        DiscriminantAnalysis da = DiscriminantAnalysis.rda(x, y, priori, tol);
+        DiscriminantAnalysis da = DiscriminantAnalysis.fit(x, y, priori, tol);
 
         int k = da.k;
         int p = da.mean.length;

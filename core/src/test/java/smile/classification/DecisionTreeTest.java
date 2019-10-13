@@ -18,10 +18,9 @@
 package smile.classification;
 
 import smile.base.cart.SplitRule;
-import smile.data.Iris;
-import smile.data.Segment;
-import smile.data.USPS;
-import smile.data.WeatherNominal;
+import smile.data.*;
+import smile.math.MathEx;
+import smile.validation.CrossValidation;
 import smile.validation.Error;
 import smile.validation.LOOCV;
 import org.junit.After;
@@ -92,6 +91,30 @@ public class DecisionTreeTest {
         int error = Error.apply(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(9, error);
+    }
+
+    @Test
+    public void testPenDigits() {
+        System.out.println("Pen Digits");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> DecisionTree.fit(PenDigits.formula, x, SplitRule.GINI, 100, 5));
+        int error = Error.apply(PenDigits.y, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(351, error);
+    }
+
+    @Test
+    public void testBreastCancer() {
+        System.out.println("Breast Cancer");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> DecisionTree.fit(BreastCancer.formula, x, SplitRule.GINI, 100, 5));
+        int error = Error.apply(BreastCancer.y, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(42, error);
     }
 
     @Test

@@ -18,13 +18,13 @@
 package smile.classification;
 
 import smile.base.RBF;
+import smile.base.cart.SplitRule;
 import smile.clustering.KMeans;
-import smile.data.Iris;
-import smile.data.Segment;
-import smile.data.USPS;
+import smile.data.*;
 import smile.math.distance.EuclideanDistance;
 import smile.math.MathEx;
 import smile.math.rbf.GaussianRadialBasis;
+import smile.validation.CrossValidation;
 import smile.validation.Error;
 import smile.validation.LOOCV;
 import smile.validation.Validation;
@@ -78,6 +78,40 @@ public class RBFNetworkTest {
         error = Error.apply(Iris.y, prediction);
         System.out.println("Normalized RBF Network Error = " + error);
         assertEquals(4, error);
+    }
+
+    @Test
+    public void testPenDigits() {
+        System.out.println("Pen Digits");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        int[] prediction = CrossValidation.classification(10, PenDigits.x, PenDigits.y, (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50)));
+        int error = Error.apply(PenDigits.y, prediction);
+
+        System.out.println("RBF Network Error = " + error);
+        assertEquals(628, error);
+
+        prediction = CrossValidation.classification(10, PenDigits.x, PenDigits.y, (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50), true));
+        error = Error.apply(PenDigits.y, prediction);
+        System.out.println("Normalized RBF Network Error = " + error);
+        assertEquals(607, error);
+    }
+
+    @Test
+    public void testBreastCancer() {
+        System.out.println("Breast Cancer");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        int[] prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30)));
+        int error = Error.apply(BreastCancer.y, prediction);
+
+        System.out.println("RBF Network Error = " + error);
+        assertEquals(32, error);
+
+        prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30), true));
+        error = Error.apply(BreastCancer.y, prediction);
+        System.out.println("Normalized RBF Network Error = " + error);
+        assertEquals(38, error);
     }
 
     @Test
