@@ -672,7 +672,7 @@ public class MathEx {
      * the larger input components will correspond to larger probabilities.
      *
      * @param posteriori the input/output vector.
-     * @return the index of largest component.
+     * @return the index of largest posteriori probability.
      */
     public static int softmax(double[] posteriori) {
         return softmax(posteriori, posteriori.length);
@@ -692,7 +692,7 @@ public class MathEx {
      *
      * @param posteriori the input/output vector.
      * @param k uses only first k components of input vector.
-     * @return the index of largest component.
+     * @return the index of largest posteriori probability.
      */
     public static int softmax(double[] posteriori, int k) {
         int y = -1;

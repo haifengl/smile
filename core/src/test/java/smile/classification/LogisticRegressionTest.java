@@ -61,7 +61,7 @@ public class LogisticRegressionTest {
         int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> LogisticRegression.fit(x, y));
         int error = Error.apply(Iris.y, prediction);
         System.out.println("Error = " + error);
-        assertEquals(7, error);
+        assertEquals(5, error);
     }
 
     @Test
@@ -83,7 +83,7 @@ public class LogisticRegressionTest {
         int error = Error.apply(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(884, error);
+        assertEquals(331, error);
     }
 
     @Test
@@ -95,26 +95,64 @@ public class LogisticRegressionTest {
         int error = Error.apply(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(42, error);
+        assertEquals(28, error);
     }
 
     @Test
     public void testSegment() {
         System.out.println("Segment");
 
-        int[] prediction = LOOCV.classification(Segment.x, Segment.y, (x, y) -> LogisticRegression.fit(x, y));
-        int error = Error.apply(Iris.y, prediction);
+        LogisticRegression model = LogisticRegression.fit(Segment.x, Segment.y, 0.05, 1E-3, 1000);
+
+        int[] prediction = Validation.test(model, Segment.testx);
+        int error = Error.apply(Segment.testy, prediction);
         System.out.println("Error = " + error);
-        assertEquals(7, error);
+        assertEquals(52, error);
+
+        int t = Segment.x.length;
+        int round = (int) Math.round(Math.log(Segment.testx.length));
+        for (int loop = 0; loop < round; loop++) {
+            double eta = 0.1 / t;
+            System.out.format("Set learning rate at %.5f%n", eta);
+            model.setLearningRate(eta);
+            for (int i = 0; i < Segment.testx.length; i++) {
+                model.update(Segment.testx[i], Segment.testy[i]);
+            }
+            t += Segment.testx.length;
+        }
+
+        prediction = Validation.test(model, Segment.testx);
+        error = Error.apply(Segment.testy, prediction);
+        System.out.println("Error after online update = " + error);
+        assertEquals(41, error);
     }
 
     @Test
     public void testUSPS() {
         System.out.println("USPS");
 
-        int[] prediction = LOOCV.classification(USPS.x, USPS.y, (x, y) -> LogisticRegression.fit(x, y));
-        int error = Error.apply(USPS.y, prediction);
+        LogisticRegression model = LogisticRegression.fit(USPS.x, USPS.y, 0.3, 1E-3, 1000);
+
+        int[] prediction = Validation.test(model, USPS.testx);
+        int error = Error.apply(USPS.testy, prediction);
         System.out.println("Error = " + error);
-        assertEquals(7, error);
+        assertEquals(185, error);
+
+        int t = USPS.x.length;
+        int round = (int) Math.round(Math.log(USPS.testx.length));
+        for (int loop = 0; loop < round; loop++) {
+            double eta = 0.1 / t;
+            System.out.format("Set learning rate at %.5f%n", eta);
+            model.setLearningRate(eta);
+            for (int i = 0; i < USPS.testx.length; i++) {
+                model.update(USPS.testx[i], USPS.testy[i]);
+            }
+            t += USPS.testx.length;
+        }
+
+        prediction = Validation.test(model, USPS.testx);
+        error = Error.apply(USPS.testy, prediction);
+        System.out.println("Error after online update = " + error);
+        assertEquals(184, error);
     }
 }
