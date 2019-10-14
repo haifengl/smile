@@ -165,7 +165,7 @@ public class BFGS {
         // Current function value.
         double f = func.g(x, g);
 
-        logger.info(String.format("L-BFGS: initial function value: %.5g", f));
+        logger.info(String.format("L-BFGS: initial function value: %.5f", f));
 
         double sum = 0.0;
         // Initial line search direction.
@@ -198,7 +198,7 @@ public class BFGS {
             }
 
             if (test < TOLX) {
-                logger.info(String.format("L-BFGS converges on x after %d iterations: %.5g", iter, f));
+                logger.info(String.format("L-BFGS converges on x after %d iterations: %.5f", iter, f));
                 return f;
             }
 
@@ -214,12 +214,12 @@ public class BFGS {
             }
 
             if (test < gtol) {
-                logger.info(String.format("L-BFGS converges on gradient after %d iterations: %.5g", iter, f));
+                logger.info(String.format("L-BFGS converges on gradient after %d iterations: %.5f", iter, f));
                 return f;
             }
 
-            if (iter % 10 == 0) {
-                logger.info(String.format("L-BFGS: the function value after %3d iterations: %.5g", iter, f));
+            if (iter % 100 == 0) {
+                logger.info(String.format("L-BFGS: the function value after %3d iterations: %.5f", iter, f));
             }
 
             double ys = MathEx.dot(y[k], s[k]);
@@ -260,7 +260,8 @@ public class BFGS {
             }
         }
 
-        throw new IllegalStateException("L-BFGS: Too many iterations.");
+        logger.warn("L-BFGS reaches the maximum number of iterations: " + maxIter);
+        return f;
     }
 
     /**
@@ -298,7 +299,7 @@ public class BFGS {
         // Calculate starting function value and gradient and initialize the
         // inverse Hessian to the unit matrix.
         double f = func.g(x, g);
-        logger.info(String.format("BFGS: initial function value: %.5g", f));
+        logger.info(String.format("BFGS: initial function value: %.5f", f));
 
         double sum = 0.0;
         for (int i = 0; i < n; i++) {
@@ -314,8 +315,8 @@ public class BFGS {
             // The new function evaluation occurs in line search.
             f = linesearch(func, x, f, g, xi, xnew, stpmax);
 
-            if (iter % 10 == 0) {
-                logger.info(String.format("BFGS: the function value after %3d iterations: %.5g", iter, f));
+            if (iter % 100 == 0) {
+                logger.info(String.format("BFGS: the function value after %3d iterations: %.5f", iter, f));
             }
 
             // update the line direction and current point.
@@ -334,7 +335,7 @@ public class BFGS {
             }
 
             if (test < TOLX) {
-                logger.info(String.format("BFGS converges on x after %d iterations: %.5g", iter, f));
+                logger.info(String.format("BFGS converges on x after %d iterations: %.5f", iter, f));
                 return f;
             }
 
@@ -353,7 +354,7 @@ public class BFGS {
             }
 
             if (test < gtol) {
-                logger.info(String.format("BFGS converges on gradient after %d iterations: %.5g", iter, f));
+                logger.info(String.format("BFGS converges on gradient after %d iterations: %.5f", iter, f));
                 return f;
             }
 
@@ -404,7 +405,9 @@ public class BFGS {
             }
         }
 
-        throw new IllegalStateException("BFGS: Too many iterations.");
+        logger.warn("BFGS reaches the maximum number of iterations: " + maxIter);
+        return f;
+
     }
 
     /**

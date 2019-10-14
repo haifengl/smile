@@ -66,7 +66,7 @@ public class MaxentTest {
         int error = Error.apply(prediction, Protein.testy);
 
         System.out.format("The error is %d of %d%n", error, Protein.testx.length);
-        assertEquals(1338, error);
+        assertEquals(1339, error);
     }
 
     @Test(expected = Test.None.class)
@@ -79,6 +79,6 @@ public class MaxentTest {
         int error = Error.apply(prediction, Hyphen.testy);
 
         System.out.format("The error is %d of %d%n", error, Hyphen.testx.length);
-        assertEquals(768, error);
+        assertEquals(762, error);
     }
 }

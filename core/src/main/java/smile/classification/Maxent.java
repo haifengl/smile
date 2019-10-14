@@ -20,9 +20,6 @@ package smile.classification;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
-
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.math.BFGS;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
@@ -81,27 +78,54 @@ public class Maxent implements SoftClassifier<int[]> {
     private double[][] W;
 
     /**
-     * Constructor of binary logistic regression.
+     * The class label encoder;
+     */
+    private final ClassLabel labels;
+
+    /**
+     * Constructor of binary maximum entropy classifier.
      * @param L the log-likelihood of learned model.
      * @param w the weights.
      */
     public Maxent(double L, double[] w) {
+        this(L, w, ClassLabel.of(2));
+    }
+
+    /**
+     * Constructor of binary maximum entropy classifier.
+     * @param L the log-likelihood of learned model.
+     * @param w the weights.
+     * @param labels class labels
+     */
+    public Maxent(double L, double[] w, ClassLabel labels) {
         this.p = w.length - 1;
         this.k = 2;
         this.L = L;
         this.w = w;
+        this.labels = labels;
     }
 
     /**
-     * Constructor of multi-class logistic regression.
+     * Constructor of multi-class maximum entropy classifier.
      * @param L the log-likelihood of learned model.
-     * @param W the weights.
+     * @param W the weights of first k - 1 classes.
      */
     public Maxent(double L, double[][] W) {
+        this(L, W, ClassLabel.of(W.length+1));
+    }
+
+    /**
+     * Constructor of multi-class maximum entropy classifier.
+     * @param L the log-likelihood of learned model.
+     * @param W the weights of first k - 1 classes.
+     * @param labels class labels
+     */
+    public Maxent(double L, double[][] W, ClassLabel labels) {
         this.p = W[0].length - 1;
-        this.k = W.length;
+        this.k = W.length + 1;
         this.L = L;
         this.W = W;
+        this.labels = labels;
     }
     /**
      * Learn maximum entropy classifier.
@@ -163,28 +187,30 @@ public class Maxent implements SoftClassifier<int[]> {
         if (maxIter <= 0) {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);            
         }
-        
-        int k = Classifier.classes(y).length;
+
+        ClassLabel.Result codec = ClassLabel.fit(y);
+        int k = codec.k;
+        y = codec.y;
 
         BFGS bfgs = new BFGS(tol, maxIter);
         if (k == 2) {
-            BinaryObjectiveFunction func = new BinaryObjectiveFunction(x, y, lambda);
+            BinaryObjectiveFunction func = new BinaryObjectiveFunction(x, y, p, lambda);
             double[] w = new double[p + 1];
             double L = -bfgs.minimize(func, 5, w);
-            return new Maxent(L, w);
+            return new Maxent(L, w, codec.labels);
         } else {
             MultiClassObjectiveFunction func = new MultiClassObjectiveFunction(x, y, k, p, lambda);
-            double[] w = new double[k * (p + 1)];
+            double[] w = new double[(k - 1) * (p + 1)];
             double L = -bfgs.minimize(func, 5, w);
 
-            double[][] W = new double[k][p+1];
-            for (int i = 0, m = 0; i < k; i++) {
-                for (int j = 0; j <= p; j++, m++) {
-                    W[i][j] = w[m];
+            double[][] W = new double[k-1][p+1];
+            for (int i = 0, l = 0; i < k-1; i++) {
+                for (int j = 0; j <= p; j++, l++) {
+                    W[i][j] = w[l];
                 }
             }
 
-            return new Maxent(L, W);
+            return new Maxent(L, W, codec.labels);
         }
     }
 
@@ -196,20 +222,6 @@ public class Maxent implements SoftClassifier<int[]> {
         return p;
     }
     
-    /**
-     * Returns natural log(1+exp(x)) without overflow.
-     */
-    private static double log1pe(double x) {
-        double y = 0.0;
-        if (x > 15) {
-            y = x;
-        } else {
-            y += Math.log1p(Math.exp(x));
-        }
-
-        return y;
-    }
-
     /**
      * Binary-class logistic regression objective function.
      */
@@ -224,6 +236,10 @@ public class Maxent implements SoftClassifier<int[]> {
          */
         int[] y;
         /**
+         * The dimension of feature space.
+         */
+        int p;
+        /**
          * Regularization factor.
          */
         double lambda;
@@ -231,17 +247,19 @@ public class Maxent implements SoftClassifier<int[]> {
         /**
          * Constructor.
          */
-        BinaryObjectiveFunction(int[][] x, int[] y, double lambda) {
+        BinaryObjectiveFunction(int[][] x, int[] y, int p, double lambda) {
             this.x = x;
             this.y = y;
+            this.p = p;
             this.lambda = lambda;
         }
         
         @Override
         public double f(double[] w) {
-            int n = x.length;
-            int p = x[0].length;
-            double f = IntStream.range(0, n).parallel().mapToDouble(i -> {
+            // Since BFGS try to minimize the objective function
+            // and we try to maximize the log-likelihood, we really
+            // return the negative log-likelihood here.
+            double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
                 double wx = dot(x[i], w);
                 return log1pe(wx) - y[i] * wx;
             }).sum();
@@ -257,16 +275,14 @@ public class Maxent implements SoftClassifier<int[]> {
         
         @Override
         public double g(double[] w, double[] g) {
-            final int p = w.length - 1;
             Arrays.fill(g, 0.0);
             double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
                 double wx = dot(x[i], w);
-
-                double yi = y[i] - MathEx.logistic(wx);
+                double err = y[i] - MathEx.logistic(wx);
                 for (int j : x[i]) {
-                    g[j] -= yi * j;
+                    g[j] -= err;
                 }
-                g[p] -= yi;
+                g[p] -= err;
 
                 return log1pe(wx) - y[i] * wx;
             }).sum();
@@ -282,19 +298,6 @@ public class Maxent implements SoftClassifier<int[]> {
 
             return f;
         }
-    }
-
-    /**
-     * Returns natural log without underflow.
-     */
-    private static double log(double x) {
-        double y = 0.0;
-        if (x < 1E-300) {
-            y = -690.7755;
-        } else {
-            y = Math.log(x);
-        }
-        return y;
     }
 
     /**
@@ -322,6 +325,10 @@ public class Maxent implements SoftClassifier<int[]> {
          * Regularization factor.
          */
         double lambda;
+        /**
+         * The workspace to store posteriori probabilities.
+         */
+        double[] posteriori;
 
         /**
          * Constructor.
@@ -332,24 +339,30 @@ public class Maxent implements SoftClassifier<int[]> {
             this.k = k;
             this.p = p;
             this.lambda = lambda;
+            posteriori = new double[k];
         }
         
         @Override
         public double f(double[] w) {
             double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
-                double[] prob = new double[k];
-                for (int j = 0; j < k; j++) {
-                    prob[j] = dot(x[i], w, j, p);
+                posteriori[k-1] = 0.0;
+                for (int j = 0; j < k-1; j++) {
+                    posteriori[j] = dot(x[i], w, j, p);
                 }
 
-                softmax(prob);
+                MathEx.softmax(posteriori);
 
-                return -log(prob[y[i]]);
+                return -log(posteriori[y[i]]);
             }).sum();
 
             if (lambda > 0.0) {
                 double wnorm = 0.0;
-                for (int i = 0; i < p; i++) wnorm += w[i] * w[i];
+                for (int i = 0; i < k-1; i++) {
+                    for (int j = 0, pos = i * (p+1); j < p; j++) {
+                        double wi = w[pos + j];
+                        wnorm += wi * wi;
+                    }
+                }
                 f += 0.5 * lambda * wnorm;
             }
 
@@ -361,34 +374,33 @@ public class Maxent implements SoftClassifier<int[]> {
             Arrays.fill(g, 0.0);
 
             double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
-                double[] prob = new double[k];
-                for (int j = 0; j < k; j++) {
-                    prob[j] = dot(x[i], w, j, p);
+                posteriori[k-1] = 0.0;
+                for (int j = 0; j < k-1; j++) {
+                    posteriori[j] = dot(x[i], w, j, p);
                 }
 
-                softmax(prob);
+                MathEx.softmax(posteriori);
 
-                double yi = 0.0;
-                for (int j = 0; j < k; j++) {
-                    yi = (y[i] == j ? 1.0 : 0.0) - prob[j];
+                for (int j = 0; j < k-1; j++) {
+                    double err = (y[i] == j ? 1.0 : 0.0) - posteriori[j];
 
                     int pos = j * (p + 1);
                     for (int l : x[i]) {
-                        g[pos + l] -= yi;
+                        g[pos + l] -= err;
                     }
-                    g[pos + p] -= yi;
+                    g[pos + p] -= err;
                 }
 
-                return -log(prob[y[i]]);
+                return -log(posteriori[y[i]]);
             }).sum();
 
-            if (lambda != 0.0) {
+            if (lambda > 0.0) {
                 double wnorm = 0.0;
-                for (int i = 0; i < k; i++) {
-                    for (int j = 0; j < p; j++) {
-                        int pos = i * (p+1) + j;
-                        wnorm += w[pos] * w[pos];
-                        g[pos] += lambda * w[pos];
+                for (int i = 0; i < k-1; i++) {
+                    for (int j = 0, pos = i * (p+1); j < p; j++) {
+                        double wi = w[pos + j];
+                        wnorm += wi * wi;
+                        g[pos + j] += lambda * wi;
                     }
                 }
 
@@ -399,27 +411,28 @@ public class Maxent implements SoftClassifier<int[]> {
         }
     }
 
+
     /**
-     * Calculate softmax function without overflow.
+     * Returns natural log(1+exp(x)) without overflow.
      */
-    private static void softmax(double[] prob) {
-        double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < prob.length; i++) {
-            if (prob[i] > max) {
-                max = prob[i];
-            }
+    private static double log1pe(double x) {
+        double y = x;
+        if (x <= 15) {
+            y = Math.log1p(Math.exp(x));
         }
 
-        double Z = 0.0;
-        for (int i = 0; i < prob.length; i++) {
-            double p = Math.exp(prob[i] - max);
-            prob[i] = p;
-            Z += p;
-        }
+        return y;
+    }
 
-        for (int i = 0; i < prob.length; i++) {
-            prob[i] /= Z;
+    /**
+     * Returns natural log without underflow.
+     */
+    private static double log(double x) {
+        double y = -690.7755;
+        if (x > 1E-300) {
+            y = Math.log(x);
         }
+        return y;
     }
 
     /**
@@ -467,7 +480,7 @@ public class Maxent implements SoftClassifier<int[]> {
             throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
         }
 
-        if (w != null) {
+        if (k == 2) {
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
 
             if (posteriori != null) {
@@ -475,39 +488,19 @@ public class Maxent implements SoftClassifier<int[]> {
                 posteriori[1] = f;
             }
 
-            if (f < 0.5) {
-                return 0;
-            } else {
-                return 1;
-            }
+            return labels.label(f < 0.5 ? 0 : 1);
         } else {
-            int label = -1;
-            double max = Double.NEGATIVE_INFINITY;
-            for (int i = 0; i < k; i++) {
-                double prob = dot(x, W[i]);
-                if (prob > max) {
-                    max = prob;
-                    label = i;
-                }
-
-                if (posteriori != null) {
-                    posteriori[i] = prob;
-                }
+            if (posteriori == null) {
+                posteriori = new double[k];
             }
 
-            if (posteriori != null) {
-                double Z = 0.0;
-                for (int i = 0; i < k; i++) {
-                    posteriori[i] = Math.exp(posteriori[i] - max);
-                    Z += posteriori[i];
-                }
-
-                for (int i = 0; i < k; i++) {
-                    posteriori[i] /= Z;
-                }
+            posteriori[k-1] = 0.0;
+            for (int i = 0; i < k-1; i++) {
+                posteriori[i] = dot(x, W[i]);
             }
 
-            return label;
+            MathEx.softmax(posteriori);
+            return labels.label(MathEx.whichMax(posteriori));
         }
     }
 }
