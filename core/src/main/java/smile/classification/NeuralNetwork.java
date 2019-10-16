@@ -18,10 +18,9 @@
 package smile.classification;
 
 import java.io.Serializable;
-import smile.base.neuralnetwork.AbstractNeuralNetwork;
-import smile.base.neuralnetwork.ActivationFunction;
-import smile.base.neuralnetwork.ObjectiveFunction;
-import smile.base.neuralnetwork.Layer;
+import java.util.Arrays;
+
+import smile.base.mlp.*;
 import smile.math.MathEx;
 
 /**
@@ -117,142 +116,99 @@ public class NeuralNetwork extends AbstractNeuralNetwork implements OnlineClassi
     private int k;
 
     /**
-     * Constructor. The activation function of output layer will be chosen
-     * by natural pairing based on the error function and the number of
-     * classes.
+     * Constructor.
      *
-     * @param obj the objective function.
-     * @param net the layers in the neural network. The input layer should not be included.
+     * @param output the output layer.
+     * @param net the hidden layers in the neural network. The input layer should not be included.
      */
-    public NeuralNetwork(ObjectiveFunction obj, Layer... net) {
-        super(obj, net);
+    public NeuralNetwork(OutputLayer output, HiddenLayer... net) {
+        super(output, net);
 
-        Layer outputLayer = outputLayer();
-        ActivationFunction activation = outputLayer.getActivation();
-        switch (obj) {
-            case LEAST_MEAN_SQUARES:
-                if (activation == ActivationFunction.SOFTMAX) {
-                    throw new IllegalArgumentException("Sofmax activation function is invalid for least mean squares error.");
-                }
-                break;
-
-            case CROSS_ENTROPY:
-                //this.alpha = 0.0;
-                //this.lambda = 0.0;
-                switch (activation) {
-                    case RECTIFIER:
-                    case LINEAR:
-                        throw new IllegalArgumentException("Rectifier/Linear activation function is invalid with cross entropy error.");
-
-                    case SOFTMAX:
-                        if (outputLayer.getOutputUnits() == 1) {
-                            throw new IllegalArgumentException("Softmax activation function is for multi-class.");
-                        }
-                        break;
-
-                    case LOGISTIC_SIGMOID:
-                        if (outputLayer.getOutputUnits() != 1) {
-                            throw new IllegalArgumentException("For cross entropy error, logistic sigmoid output is for binary classification.");
-                        }
-                        break;
-                }
-                break;
-        }
-
-        k = outputLayer.getOutputUnits();
+        k = output.getOutputSize();
         if (k == 1) k = 2;
     }
-    
-    /**
-     * Predict the target value of a given instance. Note that this method is NOT
-     * multi-thread safe.
-     * @param x the instance.
-     * @param y the array to store network output on output. For softmax
-     * activation function, these are estimated posteriori probabilities.
-     * @return the predicted class label.
-     */
+/*
+    public static NeuralNetwork sigmoid(int k, int p, HiddenLayerBuilder... builders) {
+
+    }
+
+    public static NeuralNetwork softmax() {
+
+    }
+*/
     @Override
-    public int predict(double[] x, double[] y) {
+    public int predict(double[] x, double[] posteriori) {
         propagate(x);
 
-        Layer outputLayer = outputLayer();
-        System.arraycopy(outputLayer.getOutput(), 0, y, 0, outputLayer.getOutputUnits());
+        int n = output.getOutputSize();
+        if (n == 1 && k == 2) {
+            posteriori[1] = output.output()[0];
+            posteriori[0] = 1.0 - posteriori[1];
+        } else {
+            System.arraycopy(output.output(), 0, posteriori, 0, n);
+        }
 
-        return output();
+        return MathEx.whichMax(posteriori);
     }
 
     @Override
     public int predict(double[] x) {
         propagate(x);
-        return output();
-    }
+        int n = output.getOutputSize();
 
-    /** Returns the prediction. */
-    private int output() {
-        Layer outputLayer = outputLayer();
-        int units = outputLayer.getOutputUnits();
-        double[] output = outputLayer.getOutput();
-
-        if (units == 1) {
-            return output[0] > 0.5 ? 0 : 1;
+        if (n == 1 && k == 2) {
+            return output.output()[0] > 0.5 ? 1 : 0;
+        } else {
+            return MathEx.whichMax(output.output());
         }
-
-        int y = -1;
-        double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < units; i++) {
-            if (output[i] > max) {
-                max = output[i];
-                y = i;
-            }
-        }
-
-        return y;
     }
 
     @Override
     public void update(double[] x, int y) {
         propagate(x);
         setTarget(y);
-        backpropagate(target);
+        backpropagate();
         update();
     }
 
     /** Mini-batch. */
     @Override
     public void update(double[][] x, int[] y) {
+        // Set momentum factor to 1.0 so that mini-batch is in play.
+        double a = alpha;
+        alpha = 1.0;
+
         for (int i = 0; i < x.length; i++) {
             propagate(x[i]);
             setTarget(y[i]);
-            backpropagate(target);
+            backpropagate();
         }
 
         update();
+        alpha = a;
     }
 
     /** Sets the target vector. */
     private void setTarget(int y) {
-        Layer outputLayer = outputLayer();
-        switch (obj) {
-            case CROSS_ENTROPY:
-                switch (outputLayer.getActivation()) {
-                    case LOGISTIC_SIGMOID:
-                        target[0] = y == 0 ? 0.9 : 0.1;
-                        break;
+        int n = output.getOutputSize();
 
-                    default:
-                        for (int i = 0; i < target.length; i++) {
-                            target[i] = 0.1;
-                        }
-                        target[y] = 0.9;
-                }
-                break;
+        double t = 0.9; //output.cost() == Cost.LIKELIHOOD ? 1.0 : 0.9;
+        double f = 1.0 - t;
 
-            case LEAST_MEAN_SQUARES:
-                for (int i = 0; i < target.length; i++) {
-                    target[i] = 0.1;
-                }
-                target[y] = 0.9;
-                break;
+        if (output.cost() == Cost.LIKELIHOOD) {
+            if (n == 1) {
+                target[0] = y == 1 ? t : f;
+            } else {
+                Arrays.fill(target, f);
+                target[y] = t;
+            }
+        } else {
+            if (n == 1) {
+                target[0] = y == 1 ? t : f;
+            } else {
+                Arrays.fill(target, f);
+                target[y] = t;
+            }
         }
     }
 }

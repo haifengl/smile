@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.base.neuralnetwork;
+package smile.base.mlp;
 
 /**
  * Neural network objective/error function.
