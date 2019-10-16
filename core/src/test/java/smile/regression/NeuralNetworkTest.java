@@ -22,13 +22,15 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.base.neuralnetwork.Layer;
+import smile.base.mlp.HiddenLayer;
+import smile.base.mlp.HiddenLayerBuilder;
+import smile.base.mlp.Layer;
 import smile.data.*;
 import smile.data.formula.Formula;
 import smile.feature.Standardizer;
 import smile.validation.CrossValidation;
 import smile.math.MathEx;
-import smile.base.neuralnetwork.ActivationFunction;
+import smile.base.mlp.ActivationFunction;
 import smile.validation.RMSE;
 import static org.junit.Assert.assertEquals;
 
@@ -54,26 +56,24 @@ public class NeuralNetworkTest {
     @After
     public void tearDown() {
     }
-    public void test(ActivationFunction activation, String dataset, Formula formula, DataFrame data, double expected) {
-        System.out.println(dataset + "\t" + activation);
+    public void test(String dataset, double[][] x, double[] y, double expected, HiddenLayerBuilder... builders) {
+        System.out.println(dataset);
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        Standardizer scaler = Standardizer.fit(data);
-        DataFrame df = scaler.transform(data);
-        double[][] x = formula.x(df).toArray();
-        double[] y = formula.y(df).toDoubleArray();
+        Standardizer scaler = Standardizer.fit(x);
+        x = scaler.transform(x);
         int p = x[0].length;
 
         double[] prediction = CrossValidation.regression(10, x, y, (xi, yi) -> {
-            NeuralNetwork model = new NeuralNetwork(
-                    new Layer(activation, 10, p),
-                    new Layer(ActivationFunction.LINEAR, 1, 10));
+            NeuralNetwork model = new NeuralNetwork(p, builders);
+            // regularize the weight to counter large gradient
+            model.setWeightDecay(0.1);
 
-            int b = 50;
+            int b = 5; // small batch to avoid exploding gradient
             double[][] batchx = new double[b][];
             double[] batchy = new double[b];
-            for (int e = 0; e < 5; e++) {
+            for (int e = 0; e < 30; e++) {
                 int i = 0;
                 for (; i < xi.length-b; i+=b) {
                     System.arraycopy(xi, i, batchx, 0, b);
@@ -94,38 +94,41 @@ public class NeuralNetworkTest {
     }
 
     @Test
-    public void testLogisticSigmoid() {
-        test(ActivationFunction.LOGISTIC_SIGMOID, "CPU", CPU.formula, CPU.data, 1.2137);
-        test(ActivationFunction.LOGISTIC_SIGMOID, "2dplanes", Planes.formula, Planes.data, 1.1856);
-        test(ActivationFunction.LOGISTIC_SIGMOID, "abalone", Abalone.formula, Abalone.train, 1.0551);
-        test(ActivationFunction.LOGISTIC_SIGMOID, "ailerons", Ailerons.formula, Ailerons.data, 1.1503);
-        test(ActivationFunction.LOGISTIC_SIGMOID, "bank32nh", Bank32nh.formula, Bank32nh.data, 1.1922);
-        test(ActivationFunction.LOGISTIC_SIGMOID, "cal_housing", CalHousing.formula, CalHousing.data, 1.0678);
-        test(ActivationFunction.LOGISTIC_SIGMOID, "puma8nh", Puma8NH.formula, Puma8NH.data, 1.0647);
-        test(ActivationFunction.LOGISTIC_SIGMOID, "kin8nm", Kin8nm.formula, Kin8nm.data, 1.0640);
+    public void testSigmoid() {
+        System.out.println("----- sigmoid -----");
+        test("CPU", CPU.x, CPU.y, 0.7644, HiddenLayer.rectifier(50), HiddenLayer.sigmoid(30));
+        test("2dplanes", Planes.x, Planes.y, 0.7092, HiddenLayer.sigmoid(30));
+        test("abalone", Abalone.x, Abalone.y, 0.8441, HiddenLayer.sigmoid(30));
+        test("ailerons", Ailerons.x, Ailerons.y, 0.6631, HiddenLayer.sigmoid(30));
+        test("bank32nh", Bank32nh.x, Bank32nh.y, 1.0924, HiddenLayer.sigmoid(30));
+        test("cal_housing", CalHousing.x, CalHousing.y, 0.9747, HiddenLayer.sigmoid(30));
+        test("puma8nh", Puma8NH.x, Puma8NH.y, 0.9093, HiddenLayer.sigmoid(30));
+        test("kin8nm", Kin8nm.x, Kin8nm.y, 1.0135, HiddenLayer.sigmoid(30));
     }
     
     @Test
     public void testTanh() {
-        test(ActivationFunction.HYPERBOLIC_TANGENT, "CPU", CPU.formula, CPU.data, 1.2260);
-        test(ActivationFunction.HYPERBOLIC_TANGENT, "2dplanes", Planes.formula, Planes.data, 1.1856);
-        test(ActivationFunction.HYPERBOLIC_TANGENT, "abalone", Abalone.formula, Abalone.train, 1.0551);
-        test(ActivationFunction.HYPERBOLIC_TANGENT, "ailerons", Ailerons.formula, Ailerons.data, 1.1503);
-        test(ActivationFunction.HYPERBOLIC_TANGENT, "bank32nh", Bank32nh.formula, Bank32nh.data, 1.1922);
-        test(ActivationFunction.HYPERBOLIC_TANGENT, "cal_housing", CalHousing.formula, CalHousing.data, 1.0678);
-        test(ActivationFunction.HYPERBOLIC_TANGENT, "puma8nh", Puma8NH.formula, Puma8NH.data, 1.0647);
-        test(ActivationFunction.HYPERBOLIC_TANGENT, "kin8nm", Kin8nm.formula, Kin8nm.data, 1.0640);
+        System.out.println("----- sigmoid -----");
+        test("CPU", CPU.x, CPU.y, 0.7644, HiddenLayer.tanh(30));
+        test("2dplanes", Planes.x, Planes.y, 0.7092, HiddenLayer.tanh(30));
+        test("abalone", Abalone.x, Abalone.y, 0.8441, HiddenLayer.tanh(30));
+        test("ailerons", Ailerons.x, Ailerons.y, 0.6631, HiddenLayer.tanh(30));
+        test("bank32nh", Bank32nh.x, Bank32nh.y, 1.0924, HiddenLayer.tanh(30));
+        test("cal_housing", CalHousing.x, CalHousing.y, 0.9747, HiddenLayer.tanh(30));
+        test("puma8nh", Puma8NH.x, Puma8NH.y, 0.9093, HiddenLayer.tanh(30));
+        test("kin8nm", Kin8nm.x, Kin8nm.y, 1.0135, HiddenLayer.tanh(30));
     }
 
     @Test
     public void testReLU() {
-        test(ActivationFunction.RECTIFIER, "CPU", CPU.formula, CPU.data, 1.2198);
-        test(ActivationFunction.RECTIFIER, "2dplanes", Planes.formula, Planes.data, 1.1856);
-        test(ActivationFunction.RECTIFIER, "abalone", Abalone.formula, Abalone.train, 1.0551);
-        test(ActivationFunction.RECTIFIER, "ailerons", Ailerons.formula, Ailerons.data, 1.1503);
-        test(ActivationFunction.RECTIFIER, "bank32nh", Bank32nh.formula, Bank32nh.data, 1.1922);
-        test(ActivationFunction.RECTIFIER, "cal_housing", CalHousing.formula, CalHousing.data, 1.0678);
-        test(ActivationFunction.RECTIFIER, "puma8nh", Puma8NH.formula, Puma8NH.data, 1.0647);
-        test(ActivationFunction.RECTIFIER, "kin8nm", Kin8nm.formula, Kin8nm.data, 1.0640);
+        System.out.println("----- sigmoid -----");
+        test("CPU", CPU.x, CPU.y, 0.7644, HiddenLayer.rectifier(30));
+        test("2dplanes", Planes.x, Planes.y, 0.7092, HiddenLayer.rectifier(30));
+        test("abalone", Abalone.x, Abalone.y, 0.8441, HiddenLayer.rectifier(30));
+        test("ailerons", Ailerons.x, Ailerons.y, 0.6631, HiddenLayer.rectifier(30));
+        test("bank32nh", Bank32nh.x, Bank32nh.y, 1.0924, HiddenLayer.rectifier(30));
+        test("cal_housing", CalHousing.x, CalHousing.y, 0.9747, HiddenLayer.rectifier(30));
+        test("puma8nh", Puma8NH.x, Puma8NH.y, 0.9093, HiddenLayer.rectifier(30));
+        test("kin8nm", Kin8nm.x, Kin8nm.y, 1.0135, HiddenLayer.rectifier(30));
     }
 }

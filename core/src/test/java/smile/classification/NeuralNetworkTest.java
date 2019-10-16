@@ -22,14 +22,11 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.base.neuralnetwork.ActivationFunction;
-import smile.base.neuralnetwork.Layer;
-import smile.base.neuralnetwork.ObjectiveFunction;
+import smile.base.mlp.*;
 import smile.data.BreastCancer;
 import smile.data.PenDigits;
 import smile.data.Segment;
 import smile.data.USPS;
-import smile.feature.Standardizer;
 import smile.feature.WinsorScaler;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
@@ -75,9 +72,10 @@ public class NeuralNetworkTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         int[] prediction = CrossValidation.classification(10, x, PenDigits.y, (xi, yi) -> {
-            NeuralNetwork model = new NeuralNetwork(ObjectiveFunction.CROSS_ENTROPY,
-                    new Layer(ActivationFunction.LOGISTIC_SIGMOID, 30, p),
-                    new Layer(ActivationFunction.SOFTMAX, k, 30)
+            NeuralNetwork model = new NeuralNetwork(
+                    OutputLayer.mle(k, 50, OutputFunction.SIGMOID),
+                    HiddenLayer.sigmoid(50, 30),
+                    HiddenLayer.rectifier(30, p)
             );
 
             for (int e = 0; e < 20; e++) {
@@ -89,8 +87,8 @@ public class NeuralNetworkTest {
 
             return model;
         });
-        int error = Error.apply(PenDigits.y, prediction);
 
+        int error = Error.apply(PenDigits.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(884, error);
     }
@@ -107,11 +105,13 @@ public class NeuralNetworkTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         int[] prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (xi, yi) -> {
-            NeuralNetwork model = new NeuralNetwork(ObjectiveFunction.CROSS_ENTROPY,
-                    new Layer(ActivationFunction.LOGISTIC_SIGMOID, 30, p),
-                    new Layer(ActivationFunction.SOFTMAX, k, 30)
+            NeuralNetwork model = new NeuralNetwork(
+                    OutputLayer.mle(1, 50, OutputFunction.SIGMOID),
+                    HiddenLayer.sigmoid(50, 30),
+                    HiddenLayer.rectifier(30, p)
             );
 
+            model.setMomentum(0.0);
             for (int e = 0; e < 20; e++) {
                 int[] permutation = MathEx.permutate(xi.length);
                 for (int i : permutation) {
@@ -121,8 +121,8 @@ public class NeuralNetworkTest {
 
             return model;
         });
-        int error = Error.apply(BreastCancer.y, prediction);
 
+        int error = Error.apply(BreastCancer.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(42, error);
     }
@@ -134,15 +134,15 @@ public class NeuralNetworkTest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         WinsorScaler scaler = WinsorScaler.fit(Segment.x, 0.01, 0.99);
-        //Standardizer scaler = Standardizer.fit(Segment.x);
         double[][] x = scaler.transform(Segment.x);
         double[][] testx = scaler.transform(Segment.testx);
         int p = x[0].length;
         int k = MathEx.max(Segment.y) + 1;
 
-        NeuralNetwork model = new NeuralNetwork(ObjectiveFunction.CROSS_ENTROPY,
-                new Layer(ActivationFunction.LOGISTIC_SIGMOID, 30, p),
-                new Layer(ActivationFunction.SOFTMAX, k, 30)
+        NeuralNetwork model = new NeuralNetwork(
+                OutputLayer.mle(k, 50, OutputFunction.SIGMOID),
+                HiddenLayer.sigmoid(50, 30),
+                HiddenLayer.rectifier(30, p)
         );
 
         for (int e = 0; e < 20; e++) {
@@ -155,18 +155,17 @@ public class NeuralNetworkTest {
         int[] prediction = Validation.test(model, testx);
         int error = Error.apply(Segment.testy, prediction);
         System.out.println("Online Error = " + error);
-        //assertEquals(123, error);
 
-        model = new NeuralNetwork(ObjectiveFunction.CROSS_ENTROPY,
-                new Layer(ActivationFunction.RECTIFIER, 30, p),
-                new Layer(ActivationFunction.RECTIFIER, 50, 30),
-                new Layer(ActivationFunction.SOFTMAX, k, 50)
+        model = new NeuralNetwork(
+                OutputLayer.mle(k, 50, OutputFunction.SIGMOID),
+                HiddenLayer.sigmoid(50, 30),
+                HiddenLayer.rectifier(30, p)
         );
 
-        int b = 50;
+        int b = 10;
         double[][] batchx = new double[b][];
         int[] batchy = new int[b];
-        for (int e = 0; e < 5; e++) {
+        for (int e = 0; e < 20; e++) {
             int i = 0;
             for (; i < x.length-b; i+=b) {
                 System.arraycopy(x, i, batchx, 0, b);
@@ -197,12 +196,13 @@ public class NeuralNetworkTest {
         int p = x[0].length;
         int k = MathEx.max(USPS.y) + 1;
 
-        NeuralNetwork model = new NeuralNetwork(ObjectiveFunction.CROSS_ENTROPY,
-                new Layer(ActivationFunction.HYPERBOLIC_TANGENT, 40, p),
-                new Layer(ActivationFunction.SOFTMAX, k, 40)
+        NeuralNetwork model = new NeuralNetwork(
+                OutputLayer.mle(k, 50, OutputFunction.SIGMOID),
+                HiddenLayer.rectifier(30, p),
+                HiddenLayer.sigmoid(50, 30)
         );
 
-        int b = 50;
+        int b = 10;
         double[][] batchx = new double[b][];
         int[] batchy = new int[b];
         for (int e = 0; e < 10; e++) {

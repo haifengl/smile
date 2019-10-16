@@ -690,29 +690,29 @@ public class MathEx {
      * so that they can be interpreted as probabilities. Furthermore,
      * the larger input components will correspond to larger probabilities.
      *
-     * @param posteriori the input/output vector.
+     * @param x the input/output vector.
      * @param k uses only first k components of input vector.
      * @return the index of largest posteriori probability.
      */
-    public static int softmax(double[] posteriori, int k) {
+    public static int softmax(double[] x, int k) {
         int y = -1;
         double max = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < k; i++) {
-            if (posteriori[i] > max) {
-                max = posteriori[i];
+            if (x[i] > max) {
+                max = x[i];
                 y = i;
             }
         }
 
         double Z = 0.0;
         for (int i = 0; i < k; i++) {
-            double out = Math.exp(posteriori[i] - max);
-            posteriori[i] = out;
+            double out = Math.exp(x[i] - max);
+            x[i] = out;
             Z += out;
         }
 
         for (int i = 0; i < k; i++) {
-            posteriori[i] /= Z;
+            x[i] /= Z;
         }
 
         return y;

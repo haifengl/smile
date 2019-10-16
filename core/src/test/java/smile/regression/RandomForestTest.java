@@ -99,7 +99,8 @@ public class RandomForestTest {
             System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
-        //double rmse = CrossValidation.test(10, data, x -> RandomForest.fit(formula, x));
+        //double[] prediction = CrossValidation.regression(3, data, x -> RandomForest.fit(formula, x));
+        //double rmse = RMSE.apply(formula.y(data).toDoubleArray(), prediction);
         //System.out.format("10-CV RMSE = %.4f%n", rmse);
     }
 

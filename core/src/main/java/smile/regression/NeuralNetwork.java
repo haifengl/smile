@@ -17,11 +17,9 @@
 
 package smile.regression;
 
-import smile.base.neuralnetwork.AbstractNeuralNetwork;
-import smile.base.neuralnetwork.Layer;
-import smile.base.neuralnetwork.ObjectiveFunction;
- 
- /**
+import smile.base.mlp.*;
+
+/**
   * Multilayer perceptron neural network for regression.
   * An MLP consists of several layers of nodes, interconnected through weighted
   * acyclic arcs from each preceding layer to the following, without lateral or
@@ -33,7 +31,7 @@ import smile.base.neuralnetwork.ObjectiveFunction;
   * Another popular activation function is hyperbolic tangent which is actually
   * equivalent to the sigmoid function in shape but ranges from -1 to 1.
   *
-  * @author Sam Erickson
+  * @author Haifeng Li
   */
  public class NeuralNetwork extends AbstractNeuralNetwork implements OnlineRegression<double[]> {
     private static final long serialVersionUID = 2L;
@@ -41,41 +39,57 @@ import smile.base.neuralnetwork.ObjectiveFunction;
     /**
      * Constructor.
      *
-     * @param net the layers in the neural network. The input layer should not be included.
+     * @param p the number of variables in input layer.
+     * @param builders the builders of hidden layers.
      */
-    public NeuralNetwork(Layer... net) {
-        super(ObjectiveFunction.LEAST_MEAN_SQUARES, net);
+    public NeuralNetwork(int p, HiddenLayerBuilder... builders) {
+        super(output(builders[builders.length-1].neurons()), net(p, builders));
+    }
 
-        Layer outputLayer = outputLayer();
-        if (outputLayer.getOutputUnits() != 1) {
-            throw new IllegalArgumentException("The output layer must have only one output value: " + outputLayer.getOutputUnits());
+    /** Builds the output layer. */
+    private static OutputLayer output(int p) {
+        return OutputLayer.mse(1, p, OutputFunction.LINEAR);
+    }
+
+    /** Builds the hidden layers. */
+    private static HiddenLayer[] net(int p, HiddenLayerBuilder... builders) {
+        int l = builders.length;
+        HiddenLayer[] net = new HiddenLayer[l];
+        for (int i = 0; i < l; i++) {
+            net[i] = builders[i].build(p);
+            p = builders[i].neurons();
         }
+        return net;
     }
 
     @Override
     public double predict(double[] x) {
         propagate(x);
-        return outputLayer().getOutput()[0];
+        return output.output()[0];
     }
 
     @Override
     public void update(double[] x, double y) {
         propagate(x);
         target[0] = y;
-        backpropagate(target);
-
+        backpropagate();
         update();
     }
 
     @Override
     public void update(double[][] x, double[] y) {
+        // Set momentum factor to 1.0 so that mini-batch is in play.
+        double a = alpha;
+        alpha = 1.0;
+
         for (int i = 0; i < x.length; i++) {
             propagate(x[i]);
             target[0] = y[i];
-            backpropagate(target);
+            backpropagate();
         }
 
         update();
+        alpha = a;
     }
 }
 
