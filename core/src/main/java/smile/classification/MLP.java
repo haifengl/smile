@@ -24,18 +24,16 @@ import smile.base.mlp.*;
 import smile.math.MathEx;
 
 /**
- * Multilayer perceptron neural network. 
- * An MLP consists of several layers of nodes, interconnected through weighted
- * acyclic arcs from each preceding layer to the following, without lateral or
- * feedback connections. Each node calculates a transformed weighted linear
- * combination of its inputs (output activations from the preceding layer), with
- * one of the weights acting as a trainable bias connected to a constant input.
- * The transformation, called activation function, is a bounded non-decreasing
- * (non-linear) function, such as the sigmoid functions (ranges from 0 to 1).
- * Another popular activation function is hyperbolic tangent which is actually
- * equivalent to the sigmoid function in shape but ranges from -1 to 1. 
- * More specialized activation functions include radial basis functions which
- * are used in RBF networks.
+ * Fully connected multilayer perceptron neural network for classification.
+ * An MLP consists of at least three layers of nodes: an input layer,
+ * a hidden layer and an output layer. The nodes are interconnected
+ * through weighted acyclic arcs from each preceding layer to the
+ * following, without lateral or feedback connections. Each node
+ * calculates a transformed weighted linear combination of its inputs
+ * (output activations from the preceding layer), with one of the weights
+ * acting as a trainable bias connected to a constant input. The
+ * transformation, called activation function, is a bounded non-decreasing
+ * (non-linear) function.
  * <p>
  * The representational capabilities of a MLP are determined by the range of
  * mappings it may implement through weight variation. Single layer perceptrons
@@ -106,9 +104,9 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class NeuralNetwork extends AbstractNeuralNetwork implements OnlineClassifier<double[]>, SoftClassifier<double[]>, Serializable {
+public class MLP extends MultilayerPerceptron implements OnlineClassifier<double[]>, SoftClassifier<double[]>, Serializable {
     private static final long serialVersionUID = 2L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NeuralNetwork.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MLP.class);
 
     /**
      * The number of classes.
@@ -118,24 +116,29 @@ public class NeuralNetwork extends AbstractNeuralNetwork implements OnlineClassi
     /**
      * Constructor.
      *
-     * @param output the output layer.
-     * @param net the hidden layers in the neural network. The input layer should not be included.
+     * @param p the number of variables in input layer.
+     * @param builders the builders of layers from bottom to top.
      */
-    public NeuralNetwork(OutputLayer output, HiddenLayer... net) {
-        super(output, net);
+    public MLP(int p, LayerBuilder... builders) {
+        super(net(p, builders));
 
         k = output.getOutputSize();
         if (k == 1) k = 2;
     }
-/*
-    public static NeuralNetwork sigmoid(int k, int p, HiddenLayerBuilder... builders) {
 
+    /** Builds the layers. */
+    private static Layer[] net(int p, LayerBuilder... builders) {
+        int l = builders.length;
+        Layer[] net = new Layer[l];
+
+        for (int i = 0; i < l; i++) {
+            net[i] = builders[i].build(p);
+            p = builders[i].neurons();
+        }
+
+        return net;
     }
 
-    public static NeuralNetwork softmax() {
-
-    }
-*/
     @Override
     public int predict(double[] x, double[] posteriori) {
         propagate(x);
@@ -192,23 +195,14 @@ public class NeuralNetwork extends AbstractNeuralNetwork implements OnlineClassi
     private void setTarget(int y) {
         int n = output.getOutputSize();
 
-        double t = 0.9; //output.cost() == Cost.LIKELIHOOD ? 1.0 : 0.9;
+        double t = output.cost() == Cost.LIKELIHOOD ? 1.0 : 0.9;
         double f = 1.0 - t;
 
-        if (output.cost() == Cost.LIKELIHOOD) {
-            if (n == 1) {
-                target[0] = y == 1 ? t : f;
-            } else {
-                Arrays.fill(target, f);
-                target[y] = t;
-            }
+        if (n == 1) {
+            target[0] = y == 1 ? t : f;
         } else {
-            if (n == 1) {
-                target[0] = y == 1 ? t : f;
-            } else {
-                Arrays.fill(target, f);
-                target[y] = t;
-            }
+            Arrays.fill(target, f);
+            target[y] = t;
         }
     }
 }

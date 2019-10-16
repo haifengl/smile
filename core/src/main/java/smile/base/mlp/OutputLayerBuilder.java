@@ -18,16 +18,33 @@
 package smile.base.mlp;
 
 /**
- * Neural network objective/error function.
+ * The builder of output layers.
  */
-public enum ObjectiveFunction {
-    /**
-     * Least mean squares error function.
-     */
-    LEAST_MEAN_SQUARES,
+class OutputLayerBuilder extends LayerBuilder {
+
+    /** The output function. */
+    private OutputFunction f;
+    /** The cost function. */
+    private Cost cost;
 
     /**
-     * Cross entropy error function for output as probabilities.
+     * Constructor.
+     * @param n the number of neurons.
+     * @param f the activation function.
      */
-    CROSS_ENTROPY
+    public OutputLayerBuilder(int n, OutputFunction f, Cost cost) {
+        super(n);
+        this.f = f;
+        this.cost = cost;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s(%d) | %s", f.name(), n, cost);
+    }
+
+    @Override
+    public OutputLayer build(int p) {
+        return new OutputLayer(n, p, f, cost);
+    }
 }

@@ -124,13 +124,17 @@ public abstract class Layer implements Serializable {
      * Computes the updates of weight.
      *
      * @param eta the learning rate.
+     * @param alpha the momentum factor
      * @param x the input vector.
      */
-    public void computeUpdate(double eta, double[] x) {
+    public void computeUpdate(double eta, double alpha, double[] x) {
         for (int j = 0; j <= p; j++) {
             double xj = x[j];
             for (int i = 0; i < n; i++) {
-                delta.set(i, j, eta * gradient[i] * xj);
+                double dw = eta * gradient[i] * xj;
+                delta.set(i, j, dw);
+                if (alpha > 0.0) dw += alpha * update.get(i, j);
+                update.set(i, j, dw);
             }
         }
     }
@@ -141,12 +145,6 @@ public abstract class Layer implements Serializable {
      * @param lambda weight decay factor
      */
     public void update(double alpha, double lambda) {
-        for (int j = 0; j <= p; j++) {
-            for (int i = 0; i < n; i++) {
-                update.set(i, j, delta.get(i, j) + alpha * update.get(i, j));
-            }
-        }
-
         weight.add(update);
 
         // Weight decay as the weights are multiplied
@@ -154,7 +152,6 @@ public abstract class Layer implements Serializable {
         // from growing too large, and can be seen as gradient descent
         // on a quadratic regularization term.
         if (lambda < 1.0) {
-            //weight.mul(lambda);
             for (int j = 0; j < p; j++) {
                 for (int i = 0; i < n; i++) {
                     weight.mul(i, j, lambda);
@@ -166,5 +163,55 @@ public abstract class Layer implements Serializable {
         if (alpha == 1.0) {
             update.fill(0.0);
         }
+    }
+
+    /**
+     * Returns a hidden layer with linear activation function.
+     * @param n the number of neurons.
+     */
+    public static HiddenLayerBuilder linear(int n) {
+        return new HiddenLayerBuilder(n, ActivationFunction.linear());
+    }
+
+    /**
+     * Returns a hidden layer with rectified linear activation function.
+     * @param n the number of neurons.
+     */
+    public static HiddenLayerBuilder rectifier(int n) {
+        return new HiddenLayerBuilder(n, ActivationFunction.rectifier());
+    }
+
+    /**
+     * Returns a hidden layer with sigmoid activation function.
+     * @param n the number of neurons.
+     */
+    public static HiddenLayerBuilder sigmoid(int n) {
+        return new HiddenLayerBuilder(n, ActivationFunction.sigmoid());
+    }
+
+    /**
+     * Returns a hidden layer with hyperbolic tangent activation function.
+     * @param n the number of neurons.
+     */
+    public static HiddenLayerBuilder tanh(int n) {
+        return new HiddenLayerBuilder(n, ActivationFunction.tanh());
+    }
+
+    /**
+     * Returns an output layer with mean squared error cost function.
+     * @param n the number of neurons.
+     * @param f the output function.
+     */
+    public static OutputLayerBuilder mse(int n, OutputFunction f) {
+        return new OutputLayerBuilder(n, f, Cost.MEAN_SQUARED_ERROR);
+    }
+
+    /**
+     * Returns an output layer with (log-)likelihood cost function.
+     * @param n the number of neurons.
+     * @param f the output function.
+     */
+    public static OutputLayerBuilder mle(int n, OutputFunction f) {
+        return new OutputLayerBuilder(n, f, Cost.LIKELIHOOD);
     }
 }

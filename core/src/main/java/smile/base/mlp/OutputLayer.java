@@ -37,6 +37,23 @@ public class OutputLayer extends Layer {
      */
     public OutputLayer(int n, int p, OutputFunction f, Cost cost) {
         super(n, p);
+
+        switch (cost) {
+            case MEAN_SQUARED_ERROR:
+                switch(f) {
+                    case SOFTMAX:
+                        throw new IllegalArgumentException("Softmax output function is not allowed with mean squared error cost function");
+                }
+                break;
+
+            case LIKELIHOOD:
+                switch(f) {
+                    case LINEAR:
+                        throw new IllegalArgumentException("Linear output function is not allowed with likelihood cost function");
+                }
+                break;
+        }
+
         this.f = f;
         this.cost = cost;
         activation = f::f;
@@ -81,37 +98,5 @@ public class OutputLayer extends Layer {
                 gradient[i] *= weight;
             }
         }
-    }
-
-    /**
-     * Returns an output layer with mean squared error cost function.
-     * @param n the number of neurons.
-     * @param p the number of input variables (not including bias value).
-     * @param f the output function.
-     */
-    public static OutputLayer mse(int n, int p, OutputFunction f) {
-        switch(f) {
-            case SOFTMAX:
-                throw new IllegalArgumentException("Softmax output function is not allowed with mean squared error cost function");
-        }
-
-        OutputLayer layer = new OutputLayer(n, p, f, Cost.MEAN_SQUARED_ERROR);
-        return layer;
-    }
-
-    /**
-     * Returns an output layer with (log-)likelihood cost function.
-     * @param n the number of neurons.
-     * @param p the number of input variables (not including bias value).
-     * @param f the output function.
-     */
-    public static OutputLayer mle(int n, int p, OutputFunction f) {
-        switch(f) {
-            case LINEAR:
-                throw new IllegalArgumentException("Linear output function is not allowed with likelihood cost function");
-        }
-
-        OutputLayer layer = new OutputLayer(n, p, f, Cost.LIKELIHOOD);
-        return layer;
     }
 }

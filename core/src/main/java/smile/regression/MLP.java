@@ -20,45 +20,43 @@ package smile.regression;
 import smile.base.mlp.*;
 
 /**
-  * Multilayer perceptron neural network for regression.
-  * An MLP consists of several layers of nodes, interconnected through weighted
-  * acyclic arcs from each preceding layer to the following, without lateral or
-  * feedback connections. Each node calculates a transformed weighted linear
-  * combination of its inputs (output activations from the preceding layer), with
-  * one of the weights acting as a trainable bias connected to a constant input.
-  * The transformation, called activation function, is a bounded non-decreasing
-  * (non-linear) function, such as the sigmoid functions (ranges from 0 to 1).
-  * Another popular activation function is hyperbolic tangent which is actually
-  * equivalent to the sigmoid function in shape but ranges from -1 to 1.
-  *
-  * @author Haifeng Li
-  */
- public class NeuralNetwork extends AbstractNeuralNetwork implements OnlineRegression<double[]> {
+ * Fully connected multilayer perceptron neural network for regression.
+ * An MLP consists of at least three layers of nodes: an input layer,
+ * a hidden layer and an output layer. The nodes are interconnected
+ * through weighted acyclic arcs from each preceding layer to the
+ * following, without lateral or feedback connections. Each node
+ * calculates a transformed weighted linear combination of its inputs
+ * (output activations from the preceding layer), with one of the weights
+ * acting as a trainable bias connected to a constant input. The
+ * transformation, called activation function, is a bounded non-decreasing
+ * (non-linear) function.
+ *
+ * @author Haifeng Li
+ */
+ public class MLP extends MultilayerPerceptron implements OnlineRegression<double[]> {
     private static final long serialVersionUID = 2L;
 
     /**
      * Constructor.
      *
      * @param p the number of variables in input layer.
-     * @param builders the builders of hidden layers.
+     * @param builders the builders of hidden layers from bottom to top.
      */
-    public NeuralNetwork(int p, HiddenLayerBuilder... builders) {
-        super(output(builders[builders.length-1].neurons()), net(p, builders));
+    public MLP(int p, LayerBuilder... builders) {
+        super(net(p, builders));
     }
 
-    /** Builds the output layer. */
-    private static OutputLayer output(int p) {
-        return OutputLayer.mse(1, p, OutputFunction.LINEAR);
-    }
-
-    /** Builds the hidden layers. */
-    private static HiddenLayer[] net(int p, HiddenLayerBuilder... builders) {
+    /** Builds the layers. */
+    private static Layer[] net(int p, LayerBuilder... builders) {
         int l = builders.length;
-        HiddenLayer[] net = new HiddenLayer[l];
+        Layer[] net = new Layer[l+1];
+
         for (int i = 0; i < l; i++) {
             net[i] = builders[i].build(p);
             p = builders[i].neurons();
         }
+
+        net[l] = new OutputLayer(1, p, OutputFunction.LINEAR, Cost.MEAN_SQUARED_ERROR);
         return net;
     }
 

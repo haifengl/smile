@@ -21,18 +21,20 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 /**
- * Multilayer perceptron neural network.
- * An MLP consists of several layers of nodes, interconnected through weighted
- * acyclic arcs from each preceding layer to the following, without lateral or
- * feedback connections. Each node calculates a transformed weighted linear
- * combination of its inputs (output activations from the preceding layer), with
- * one of the weights acting as a trainable bias connected to a constant input.
- * The transformation, called activation function, is a bounded non-decreasing
+ * Fully connected multilayer perceptron neural network.
+ * An MLP consists of at least three layers of nodes: an input layer,
+ * a hidden layer and an output layer. The nodes are interconnected
+ * through weighted acyclic arcs from each preceding layer to the
+ * following, without lateral or feedback connections. Each node
+ * calculates a transformed weighted linear combination of its inputs
+ * (output activations from the preceding layer), with one of the weights
+ * acting as a trainable bias connected to a constant input. The
+ * transformation, called activation function, is a bounded non-decreasing
  * (non-linear) function.
  *
  * @author Haifeng Li
  */
-public abstract class AbstractNeuralNetwork {
+public abstract class MultilayerPerceptron {
     /**
      * The dimensionality of input data.
      */
@@ -68,54 +70,41 @@ public abstract class AbstractNeuralNetwork {
 
     /**
      * Constructor.
-     * @param output the output layer.
-     * @param net the hidden layers in the neural network
-     *            from bottom to top.
+     * @param net the layers from bottom to top.
      *            The input layer should not be included.
      */
-    public AbstractNeuralNetwork(OutputLayer output, HiddenLayer... net) {
-        if (net.length < 1) {
+    public MultilayerPerceptron(Layer... net) {
+        if (net.length < 2) {
             throw new IllegalArgumentException("Too few layers: " + net.length);
         }
 
-        Layer upper = output;
-        for (int i = net.length-1; i >= 0; i--) {
+        Layer lower = net[0];
+        for (int i = 1; i < net.length; i++) {
             Layer layer = net[i];
-            if (layer.getOutputSize() != upper.getInputSize()) {
+            if (layer.getInputSize() != lower.getOutputSize()) {
                 throw new IllegalArgumentException(String.format(
                         "Invalid network architecture. Layer %d has %d neurons while layer %d takes %d inputs",
-                        i, layer.getOutputSize(),
-                        i+1, upper.getInputSize()));
+                        i-1, lower.getOutputSize(),
+                        i, layer.getInputSize()));
             }
-            upper = layer;
+            lower = layer;
         }
-/*
-        if (net.length > 1) {
-            // reverse the order of layers as the input is from top to bottom
-            int l = net.length;
-            for (int i = 0; i < l/2; i++) {
-                HiddenLayer tmp = net[i];
-                net[i] = net[l - i - 1];
-                net[l - i - 1] = tmp;
-            }
-        }
-*/
-        this.output = output;
-        this.net = net;
+
+        this.output = (OutputLayer) net[net.length - 1];
+        this.net = Arrays.copyOf(net, net.length - 1);
         this.p = net[0].getInputSize();
 
         x1 = new double[p+1];
         x1[p] = 1.0;
 
-        int d = output.getOutputSize();
-        target = new double[d];
+        target = new double[output.getOutputSize()];
     }
 
     @Override
     public String toString() {
-        return String.format("x(%d) -> %s -> %s", p,
+        return String.format("x(%d) -> %s -> %s(eta = %.2f, alpha = %.2f, lambda = %.2f)", p,
                 Arrays.stream(net).map(Object::toString).collect(Collectors.joining(" -> ")),
-                output);
+                output, eta, alpha, lambda);
     }
 
     /**
@@ -208,6 +197,14 @@ public abstract class AbstractNeuralNetwork {
         }
         // first hidden layer
         upper.backpropagate(null);
+
+        double[] x = x1;
+        for (Layer layer : net) {
+            layer.computeUpdate(eta, alpha, x);
+            x = layer.output();
+        }
+
+        output.computeUpdate(eta, alpha, x);
     }
 
     /** Updates the weights. */
@@ -217,14 +214,10 @@ public abstract class AbstractNeuralNetwork {
             throw new IllegalStateException(String.format("Invalid learning rate (eta = %.2f) and/or decay (lambda = %.2f)", eta, lambda));
         }
 
-        double[] x = x1;
         for (Layer layer : net) {
-            layer.computeUpdate(eta, x);
             layer.update(alpha, decay);
-            x = layer.output();
         }
 
-        output.computeUpdate(eta, x);
         output.update(alpha, decay);
     }
 }

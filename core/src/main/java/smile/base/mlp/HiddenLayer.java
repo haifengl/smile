@@ -17,8 +17,6 @@
 
 package smile.base.mlp;
 
-import smile.math.MathEx;
-
 /**
  * A hidden layer in the neural network.
  */
@@ -54,73 +52,5 @@ public class HiddenLayer extends Layer {
         if (error != null) {
             weight.atx(gradient, error);
         }
-    }
-
-    /**
-     * Returns a hidden layer with linear activation function.
-     * @param n the number of neurons.
-     * @param p the number of input variables (not including bias value).
-     */
-    public static HiddenLayer linear(int n, int p) {
-        return new HiddenLayer(n, p, ActivationFunction.linear());
-    }
-
-    /**
-     * Returns a hidden layer with rectified linear activation function.
-     * @param n the number of neurons.
-     * @param p the number of input variables (not including bias value).
-     */
-    public static HiddenLayer rectifier(int n, int p) {
-        return new HiddenLayer(n, p, ActivationFunction.rectifier());
-    }
-
-    /**
-     * Returns a hidden layer with sigmoid activation function.
-     * @param n the number of neurons.
-     * @param p the number of input variables (not including bias value).
-     */
-    public static HiddenLayer sigmoid(int n, int p) {
-        return new HiddenLayer(n, p, ActivationFunction.sigmoid());
-    }
-
-    /**
-     * Returns a hidden layer with hyperbolic tangent activation function.
-     * @param n the number of neurons.
-     * @param p the number of input variables (not including bias value).
-     */
-    public static HiddenLayer tanh(int n, int p) {
-        return new HiddenLayer(n, p, ActivationFunction.tanh());
-    }
-
-    /**
-     * Returns a hidden layer with linear activation function.
-     * @param n the number of neurons.
-     */
-    public static HiddenLayerBuilder linear(int n) {
-        return new HiddenLayerBuilder(n, ActivationFunction.linear());
-    }
-
-    /**
-     * Returns a hidden layer with rectified linear activation function.
-     * @param n the number of neurons.
-     */
-    public static HiddenLayerBuilder rectifier(int n) {
-        return new HiddenLayerBuilder(n, ActivationFunction.rectifier());
-    }
-
-    /**
-     * Returns a hidden layer with sigmoid activation function.
-     * @param n the number of neurons.
-     */
-    public static HiddenLayerBuilder sigmoid(int n) {
-        return new HiddenLayerBuilder(n, ActivationFunction.sigmoid());
-    }
-
-    /**
-     * Returns a hidden layer with hyperbolic tangent activation function.
-     * @param n the number of neurons.
-     */
-    public static HiddenLayerBuilder tanh(int n) {
-        return new HiddenLayerBuilder(n, ActivationFunction.tanh());
     }
 }

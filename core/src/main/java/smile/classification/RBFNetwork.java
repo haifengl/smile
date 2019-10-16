@@ -85,7 +85,7 @@ import smile.math.rbf.RadialBasisFunction;
  * 
  * @see RadialBasisFunction
  * @see SVM
- * @see NeuralNetwork
+ * @see MLP
  * 
  * @author Haifeng Li
  */
