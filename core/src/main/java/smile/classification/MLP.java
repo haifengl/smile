@@ -112,6 +112,10 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
      * The number of classes.
      */
     private int k;
+    /**
+     * The class label encoder;
+     */
+    private ClassLabel labels;
 
     /**
      * Constructor.
@@ -124,6 +128,21 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
 
         k = output.getOutputSize();
         if (k == 1) k = 2;
+        labels = ClassLabel.of(k);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param p the number of variables in input layer.
+     * @param builders the builders of layers from bottom to top.
+     */
+    public MLP(ClassLabel labels, int p, LayerBuilder... builders) {
+        super(net(p, builders));
+
+        k = output.getOutputSize();
+        if (k == 1) k = 2;
+        this.labels = labels;
     }
 
     /** Builds the layers. */
@@ -151,7 +170,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
             System.arraycopy(output.output(), 0, posteriori, 0, n);
         }
 
-        return MathEx.whichMax(posteriori);
+        return labels.label(MathEx.whichMax(posteriori));
     }
 
     @Override
@@ -160,16 +179,16 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
         int n = output.getOutputSize();
 
         if (n == 1 && k == 2) {
-            return output.output()[0] > 0.5 ? 1 : 0;
+            return labels.label(output.output()[0] > 0.5 ? 1 : 0);
         } else {
-            return MathEx.whichMax(output.output());
+            return labels.label(MathEx.whichMax(output.output()));
         }
     }
 
     @Override
     public void update(double[] x, int y) {
         propagate(x);
-        setTarget(y);
+        setTarget(labels.id(y));
         backpropagate();
         update();
     }
@@ -183,7 +202,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
 
         for (int i = 0; i < x.length; i++) {
             propagate(x[i]);
-            setTarget(y[i]);
+            setTarget(labels.id(y[i]));
             backpropagate();
         }
 

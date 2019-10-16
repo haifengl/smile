@@ -142,7 +142,7 @@ public class MLPTest {
         System.out.format("----- Online Learning -----%n");
         MLP model = new MLP(p,
                 Layer.sigmoid(50),
-                Layer.mle(k, OutputFunction.SIGMOID)
+                Layer.mle(k, OutputFunction.SOFTMAX)
         );
 
         model.setLearningRate(0.2);
@@ -160,12 +160,12 @@ public class MLPTest {
             error = Error.apply(Segment.testy, prediction);
             System.out.println("Test Error = " + error);
         }
-        assertEquals(37, error);
+        assertEquals(36, error);
 
         System.out.format("----- Mini-Batch Learning -----%n");
         model = new MLP(p,
                 Layer.sigmoid(50),
-                Layer.mle(k, OutputFunction.SIGMOID)
+                Layer.mle(k, OutputFunction.SOFTMAX)
         );
 
         model.setLearningRate(0.3);
@@ -174,7 +174,7 @@ public class MLPTest {
         int batch = 20;
         double[][] batchx = new double[batch][];
         int[] batchy = new int[batch];
-        for (int epoch = 1; epoch <= 20; epoch++) {
+        for (int epoch = 1; epoch <= 11; epoch++) {
             System.out.format("----- epoch %d -----%n", epoch);
             int[] permutation = MathEx.permutate(x.length);
             int i = 0;
@@ -195,7 +195,7 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(35, error);
+        assertEquals(33, error);
     }
 
     @Test
