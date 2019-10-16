@@ -99,7 +99,7 @@ object USPS {
 
     test2(x, y, testx, testy) { (x, y) =>
       println("Training Neural Network, 30 epoch...")
-      val nnet = new NeuralNetwork(NeuralNetwork.ErrorFunction.LEAST_MEAN_SQUARES, NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, p, 40, k)
+      val nnet = new MLP(MLP.ErrorFunction.LEAST_MEAN_SQUARES, MLP.ActivationFunction.LOGISTIC_SIGMOID, p, 40, k)
       (0 until 30) foreach { _ => nnet.learn(x, y) }
       nnet
     }

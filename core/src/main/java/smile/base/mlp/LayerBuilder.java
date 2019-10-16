@@ -18,39 +18,30 @@
 package smile.base.mlp;
 
 /**
- * A hidden layer in the neural network.
+ * The builder of layers.
  */
-public class HiddenLayer extends Layer {
-    private static final long serialVersionUID = 2L;
+public abstract class LayerBuilder {
 
-    /** The activation function. */
-    private ActivationFunction f;
+    /** The number of neurons. */
+    protected int n;
 
     /**
      * Constructor.
      * @param n the number of neurons.
-     * @param p the number of input variables (not including bias value).
-     * @param f the activation function.
      */
-    public HiddenLayer(int n, int p, ActivationFunction f) {
-        super(n, p);
-        this.f = f;
-        activation = f::f;
-        output = new double[n + 1];
-        gradient = new double[n + 1];
-        output[n] = 1.0; // intercept
+    public LayerBuilder(int n) {
+        this.n = n;
     }
 
-    @Override
-    public String toString() {
-        return String.format("%s(%d)", f.name(), n);
+    /** Returns the number of neurons. */
+    public int neurons() {
+        return n;
     }
 
-    @Override
-    public void backpropagate(double[] error) {
-        f.g(gradient, output);
-        if (error != null) {
-            weight.atx(gradient, error);
-        }
-    }
+    /**
+     * Creates a hidden layer.
+     *
+     * @param p the number of input variables (not including bias value).
+     */
+    public abstract Layer build(int p);
 }

@@ -24,7 +24,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
-import smile.classification.NeuralNetwork;
+import smile.classification.MLP;
 import smile.math.MathEx;
 
 /**
@@ -78,11 +78,11 @@ public class NeuralNetworkDemo extends ClassificationDemo {
         int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
         
         int k = MathEx.max(label) + 1;
-        NeuralNetwork net = null;
+        MLP net = null;
         if (k == 2) {
-            net = new NeuralNetwork(NeuralNetwork.ErrorFunction.CROSS_ENTROPY, NeuralNetwork.ActivationFunction.LOGISTIC_SIGMOID, data[0].length, units, 1);
+            net = new MLP(MLP.ErrorFunction.CROSS_ENTROPY, MLP.ActivationFunction.LOGISTIC_SIGMOID, data[0].length, units, 1);
         } else {
-            net = new NeuralNetwork(NeuralNetwork.ErrorFunction.CROSS_ENTROPY, NeuralNetwork.ActivationFunction.SOFTMAX, data[0].length, units, k);
+            net = new MLP(MLP.ErrorFunction.CROSS_ENTROPY, MLP.ActivationFunction.SOFTMAX, data[0].length, units, k);
         }
         
         for (int i = 0; i < epochs; i++) {

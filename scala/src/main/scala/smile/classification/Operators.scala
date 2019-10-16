@@ -288,9 +288,9 @@ trait Operators {
     * @param alpha the momentum factor.
     * @param lambda the weight decay for regularization.
     */
-  def mlp(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, activation: NeuralNetwork.ActivationFunction, epochs: Int = 25, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork = {
+  def mlp(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: MLP.ErrorFunction, activation: MLP.ActivationFunction, epochs: Int = 25, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP = {
     time {
-      val nnet = new NeuralNetwork(error, activation, numUnits: _*)
+      val nnet = new MLP(error, activation, numUnits: _*)
       nnet.setLearningRate(eta)
       nnet.setMomentum(alpha)
       nnet.setWeightDecay(lambda)

@@ -66,7 +66,7 @@ import smile.math.BFGS;
  * thus logistic regression is sometimes called "maximum entropy modeling",
  * and the resulting classifier the "maximum entropy classifier".
  * 
- * @see NeuralNetwork
+ * @see MLP
  * @see Maxent
  * @see LDA
  * 
