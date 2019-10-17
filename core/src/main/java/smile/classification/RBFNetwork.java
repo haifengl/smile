@@ -17,7 +17,7 @@
 
 package smile.classification;
 
-import smile.base.RBF;
+import smile.base.rbf.RBF;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;

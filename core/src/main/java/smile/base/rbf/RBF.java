@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.base;
+package smile.base.rbf;
 
 import java.io.Serializable;
 import java.util.Arrays;

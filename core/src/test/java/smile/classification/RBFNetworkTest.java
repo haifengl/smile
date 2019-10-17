@@ -17,8 +17,7 @@
 
 package smile.classification;
 
-import smile.base.RBF;
-import smile.base.cart.SplitRule;
+import smile.base.rbf.RBF;
 import smile.clustering.KMeans;
 import smile.data.*;
 import smile.math.distance.EuclideanDistance;
@@ -28,8 +27,6 @@ import smile.validation.CrossValidation;
 import smile.validation.Error;
 import smile.validation.LOOCV;
 import smile.validation.Validation;
-
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

@@ -22,7 +22,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.base.RBF;
+import smile.base.rbf.RBF;
 import smile.data.*;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
