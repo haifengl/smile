@@ -17,7 +17,7 @@
 
 package smile.regression;
 
-import smile.base.RBF;
+import smile.base.rbf.RBF;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QR;
