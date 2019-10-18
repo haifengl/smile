@@ -219,7 +219,8 @@ public class SVR<T> {
         int nbsv = 0;
         double[] w = new double[nsv];
         @SuppressWarnings("unchecked")
-        T[] vectors = (T[]) new Object[nsv];
+        T[] vectors = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), nsv);
+
         for (int i = 0; i < sv.size(); i++) {
             SupportVector v = sv.get(i);
             vectors[i] = v.x;

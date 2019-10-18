@@ -113,7 +113,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
      */
     private int k;
     /**
-     * The class label encoder;
+     * The class label encoder.
      */
     private ClassLabel labels;
 

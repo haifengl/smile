@@ -59,6 +59,16 @@ public interface Classifier<T> extends Serializable {
     int predict(T x);
 
     /**
+     * Returns the real-valued decision function value.
+     *
+     * @param x the instance to be classified.
+     * @return the prediction score.
+     */
+    default double f(T x) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * Predicts the class label of an instance.
      * @param x a tuple instance.
      * @return the predicted class label.

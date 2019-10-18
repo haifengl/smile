@@ -144,7 +144,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple> {
      */
     private double shrinkage = 0.005;
     /**
-     * The class label encoder;
+     * The class label encoder.
      */
     private ClassLabel labels;
 

@@ -78,7 +78,7 @@ public class Maxent implements SoftClassifier<int[]> {
     private double[][] W;
 
     /**
-     * The class label encoder;
+     * The class label encoder.
      */
     private final ClassLabel labels;
 

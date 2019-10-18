@@ -36,25 +36,8 @@ import smile.math.kernel.MercerKernel;
  *
  * @author Haifeng Li
  */
-public class KernelMachine<T> implements Regression<T> {
+public class KernelMachine<T> extends smile.base.svm.KernelMachine<T> implements Regression<T> {
     private static final long serialVersionUID = 2L;
-
-    /**
-     * The kernel function.
-     */
-    private MercerKernel<T> kernel;
-    /**
-     * The control points in the regression.
-     */
-    private T[] instances;
-    /**
-     * The linear weights.
-     */
-    private double[] w;
-    /**
-     * The intercept.
-     */
-    private double b = 0.0;
 
     /**
      * True if the instances are double[].
@@ -79,50 +62,13 @@ public class KernelMachine<T> implements Regression<T> {
      * @param b The intercept;
      */
     public KernelMachine(MercerKernel<T> kernel, T[] instances, double[] weight, double b) {
-        this.kernel = kernel;
-        this.instances = instances;
-        this.w = weight;
-        this.b = b;
+        super(kernel, instances, weight, b);
         isInstanceDoubleArray = instances.getClass().getComponentType().equals(double[].class);
-    }
-
-    /**
-     * Returns the kernel function.
-     */
-    public MercerKernel<T> kernel() {
-        return kernel;
-    }
-
-    /**
-     * Returns the instances of kernel machines.
-     */
-    public T[] instances() {
-        return instances;
-    }
-
-    /**
-     * Returns the weights of instances.
-     */
-    public double[] weights() {
-        return w;
-    }
-
-    /**
-     * Returns the intercept.
-     */
-    public double intercept() {
-        return b;
     }
 
     @Override
     public double predict(T x) {
-        double f = b;
-
-        for (int i = 0; i < instances.length; i++) {
-            f += w[i] * kernel.k(x, instances[i]);
-        }
-
-        return f;
+        return f(x);
     }
 
     @Override
@@ -133,10 +79,5 @@ public class KernelMachine<T> implements Regression<T> {
         }
 
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Kernel Machine (%s): %d vectors, intercept = %.4f", kernel, instances.length, b);
     }
 }

@@ -102,7 +102,7 @@ public class GAFeatureSelection {
      * @param k k-fold cross validation for the evaluation.
      * @return bit strings of last generation.
      */
-    public BitString[] learn(int size, int generation, BiFunction<double[][], int[], Classifier<double[]>> trainer, ClassificationMeasure measure, double[][] x, int[] y, int k) {
+    public BitString[] learn(int size, int generation, double[][] x, int[] y, int k, ClassificationMeasure measure, BiFunction<double[][], int[], Classifier<double[]>> trainer) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid population size: " + size);
         }
@@ -141,7 +141,7 @@ public class GAFeatureSelection {
      * @param testy testing instance labels.
      * @return bit strings of last generation.
      */
-    public BitString[] learn(int size, int generation, BiFunction<double[][], int[], Classifier<double[]>> trainer, ClassificationMeasure measure, double[][] x, int[] y, double[][] testx, int[] testy) {
+    public BitString[] learn(int size, int generation, double[][] x, int[] y, double[][] testx, int[] testy, ClassificationMeasure measure, BiFunction<double[][], int[], Classifier<double[]>> trainer) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid population size: " + size);
         }
@@ -290,7 +290,7 @@ public class GAFeatureSelection {
      * @param k k-fold cross validation for the evaluation.
      * @return bit strings of last generation.
      */
-    public BitString[] learn(int size, int generation, BiFunction<double[][], double[], Regression<double[]>> trainer, RegressionMeasure measure, double[][] x, double[] y, int k) {
+    public BitString[] learn(int size, int generation, double[][] x, double[] y, int k, RegressionMeasure measure, BiFunction<double[][], double[], Regression<double[]>> trainer) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid population size: " + size);
         }
@@ -329,7 +329,7 @@ public class GAFeatureSelection {
      * @param testy testing instance labels.
      * @return bit strings of last generation.
      */
-    public BitString[] learn(int size, int generation, BiFunction<double[][], double[], Regression<double[]>> trainer, RegressionMeasure measure, double[][] x, double[] y, double[][] testx, double[] testy) {
+    public BitString[] learn(int size, int generation, double[][] x, double[] y, double[][] testx, double[] testy, RegressionMeasure measure, BiFunction<double[][], double[], Regression<double[]>> trainer) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid population size: " + size);
         }

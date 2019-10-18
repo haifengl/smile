@@ -77,7 +77,7 @@ public class QDA implements SoftClassifier<double[]> {
      */
     private final DenseMatrix[] scaling;
     /**
-     * The class label encoder;
+     * The class label encoder.
      */
     private final ClassLabel labels;
 
