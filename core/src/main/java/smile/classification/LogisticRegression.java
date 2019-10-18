@@ -112,7 +112,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
     private double eta = 0.1;
 
     /**
-     * The class label encoder;
+     * The class label encoder.
      */
     private final ClassLabel labels;
 

@@ -23,11 +23,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.classification.ClassifierTrainer;
 import smile.classification.LDA;
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
+import smile.data.USPS;
 import smile.gap.BitString;
 import smile.validation.Accuracy;
 import smile.validation.ClassificationMeasure;
@@ -58,43 +55,27 @@ public class GAFeatureSelectionTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class GAFeatureSelection.
-     */
     @Test
     public void testLearn() {
         System.out.println("learn");
 
+        MathEx.setSeed(19650218); // to get repeatable results.
+
         int size = 100;
         int generation = 20;
-        ClassifierTrainer<double[]> trainer = new LDA.Trainer();
         ClassificationMeasure measure = new Accuracy();
 
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.util.Paths.getTestData("usps/zip.test"));
-
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-
-            GAFeatureSelection instance = new GAFeatureSelection();
-            BitString[] result = instance.learn(size, generation, trainer, measure, x, y, testx, testy);
+        GAFeatureSelection gap = new GAFeatureSelection();
+        BitString[] result = gap.learn(size, generation, USPS.x, USPS.y, USPS.testx, USPS.testy, measure, (x, y) -> LDA.fit(x, y));
             
-            for (BitString bits : result) {
-                System.out.format("%.2f%% %d ", 100*bits.fitness(), MathEx.sum(bits.bits()));
-                for (int i = 0; i < x[0].length; i++) {
-                    System.out.print(bits.bits()[i] + " ");
-                }
-                System.out.println();
+        for (BitString bits : result) {
+            System.out.format("%.2f%% %d ", 100*bits.fitness(), MathEx.sum(bits.bits()));
+            for (int i = 0; i < USPS.x[0].length; i++) {
+                System.out.print(bits.bits()[i] + " ");
             }
-
-            assertTrue(result[result.length-1].fitness() > 0.88);
-        } catch (Exception ex) {
-            System.err.println(ex);
+            System.out.println();
         }
+
+        assertEquals(0.8859, result[result.length-1].fitness(), 1E-4);
     }
 }

@@ -97,7 +97,7 @@ public class AdaBoost implements SoftClassifier<Tuple> {
      */
     private double[] importance;
     /**
-     * The class label encoder;
+     * The class label encoder.
      */
     private ClassLabel labels;
 

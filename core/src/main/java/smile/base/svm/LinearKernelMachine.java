@@ -18,20 +18,25 @@
 package smile.base.svm;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 import smile.math.MathEx;
 import smile.math.SparseArray;
+import smile.math.kernel.BinarySparseLinearKernel;
+import smile.math.kernel.SparseLinearKernel;
+import smile.regression.LinearModel;
 
-/** Linear support vector machine. */
-public class LinearSupportVectorMachine implements Serializable {
+/** Linear kernel machine. */
+public class LinearKernelMachine implements Serializable {
     private static final long serialVersionUID = 2L;
 
     /**
-     * Weight vector for linear SVM.
+     * The weight vector.
      */
     private double[] w;
     /**
-     * Threshold of decision function.
+     * The intercept.
      */
     private double b = 0.0;
 
@@ -41,81 +46,93 @@ public class LinearSupportVectorMachine implements Serializable {
      * @param w the weight vector.
      * @param b the intercept.
      */
-    public LinearSupportVectorMachine(double[] w, double b) {
+    public LinearKernelMachine(double[] w, double b) {
         this.w = w;
         this.b = b;
     }
 
     /**
-     * Creates a linear SVM from a set of support vectors.
-     * @param p the dimension of input vector.
-     * @param sv the support vectors.
-     * @param b the threshold of decision function.
-     * @return a linear SVM
+     * Creates a linear kernel machine.
+     * @param kernelMachine a generic kernel machine.
+     * @return a linear kernel machine
      */
-    public static LinearSupportVectorMachine of(int p, double b, List<SupportVector<double[]>> sv) {
+    public static LinearKernelMachine of(KernelMachine<double[]> kernelMachine) {
+        if (!(kernelMachine.kernel instanceof LinearModel)) {
+            throw new IllegalArgumentException("Not a linear kernel");
+        }
+
+        int n = kernelMachine.instances.length;
+        int p = kernelMachine.instances[0].length;
         double[] w = new double[p];
 
-        for (SupportVector<double[]> v : sv) {
-            double[] x = v.x;
-
-            for (int i = 0; i < w.length; i++) {
-                w[i] += v.alpha * x[i];
+        for (int i = 0; i < n; i++) {
+            double alpha = kernelMachine.w[i];
+            double[] x = kernelMachine.instances[i];
+            for (int j = 0; j < p; j++) {
+                w[j] += alpha * x[j];
             }
         }
 
-        return new LinearSupportVectorMachine(w, b);
+        return new LinearKernelMachine(w, kernelMachine.b);
     }
 
     /**
-     * Creates a linear SVM from a set of binary sparse support vectors.
+     * Creates a linear kernel machine.
      * @param p the dimension of input vector.
-     * @param sv the support vectors.
-     * @param b the threshold of decision function.
-     * @return a linear SVM
+     * @param kernelMachine a generic kernel machine.
+     * @return a linear kernel machine
      */
-    public static LinearSupportVectorMachine binary(int p, double b, List<SupportVector<int[]>> sv) {
-        double[] w = new double[p];
+    public static LinearKernelMachine binary(int p, KernelMachine<int[]> kernelMachine) {
+        if (!(kernelMachine.kernel instanceof BinarySparseLinearKernel)) {
+            throw new IllegalArgumentException("Not a linear kernel");
+        }
 
-        for (SupportVector<int[]> v : sv) {
-            for (int i : v.x) {
-                w[i] += v.alpha;
+        double[] w = new double[p];
+        double[] alpha = kernelMachine.w;
+
+        for (int[] x : kernelMachine.instances) {
+            for (int i : x) {
+                w[i] += alpha[i];
             }
         }
 
-        return new LinearSupportVectorMachine(w, b);
+        return new LinearKernelMachine(w, kernelMachine.b);
     }
 
     /**
-     * Creates a linear SVM from a set of sparse support vectors.
+     * Creates a linear kernel machine.
      * @param p the dimension of input vector.
-     * @param sv the support vectors.
-     * @param b the threshold of decision function.
-     * @return a linear SVM
+     * @param kernelMachine a generic kernel machine.
+     * @return a linear kernel machine
      */
-    public static LinearSupportVectorMachine sparse(int p, double b, List<SupportVector<SparseArray>> sv) {
-        double[] w = new double[p];
+    public static LinearKernelMachine sparse(int p, KernelMachine<SparseArray> kernelMachine) {
+        if (!(kernelMachine.kernel instanceof SparseLinearKernel)) {
+            throw new IllegalArgumentException("Not a linear kernel");
+        }
 
-        for (SupportVector<SparseArray> v : sv) {
-            for (SparseArray.Entry e : v.x) {
-                w[e.i] += v.alpha * e.x;
+        double[] w = new double[p];
+        double[] alpha = kernelMachine.w;
+
+        for (SparseArray x : kernelMachine.instances) {
+            for (SparseArray.Entry e : x) {
+                w[e.i] += alpha[e.i] * e.x;
             }
         }
 
-        return new LinearSupportVectorMachine(w, b);
+        return new LinearKernelMachine(w, kernelMachine.b);
     }
 
     /**
      * Returns the value of decision function.
      */
-    public double predict(double[] x) {
+    public double f(double[] x) {
         return b + MathEx.dot(w, x);
     }
 
     /**
      * Returns the value of decision function.
      */
-    public double predict(int[] x) {
+    public double f(int[] x) {
         double f = b;
         for (int i : x) {
             f += w[i];
@@ -127,7 +144,7 @@ public class LinearSupportVectorMachine implements Serializable {
     /**
      * Returns the value of decision function.
      */
-    public double predict(SparseArray x) {
+    public double f(SparseArray x) {
         double f = b;
         for (SparseArray.Entry e : x) {
             f += w[e.i] * e.x;

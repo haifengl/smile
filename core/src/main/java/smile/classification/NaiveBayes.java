@@ -70,7 +70,7 @@ public class NaiveBayes implements SoftClassifier<double[]> {
      */
     private Distribution[][] prob;
     /**
-     * The class label encoder;
+     * The class label encoder.
      */
     private ClassLabel labels;
 

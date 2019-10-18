@@ -112,7 +112,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple> {
      */
     private int k = 2;
     /**
-     * The class label encoder;
+     * The class label encoder.
      */
     private Optional<ClassLabel> labels = Optional.empty();
 

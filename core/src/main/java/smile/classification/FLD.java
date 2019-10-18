@@ -85,7 +85,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
      */
     private final double[][] mu;
     /**
-     * The class label encoder;
+     * The class label encoder.
      */
     private final ClassLabel labels;
 

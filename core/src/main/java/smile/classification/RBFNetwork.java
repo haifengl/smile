@@ -109,7 +109,7 @@ public class RBFNetwork<T> implements Classifier<T> {
      */
     private boolean normalized;
     /**
-     * The class label encoder;
+     * The class label encoder.
      */
     private ClassLabel labels;
 
