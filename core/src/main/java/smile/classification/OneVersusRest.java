@@ -95,6 +95,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
      * @param neg the class label for rest cases.
      * @param trainer the lambda to train binary classifiers.
      */
+    @SuppressWarnings("unchecked")
     public static <T> OneVersusRest<T> fit(T[] x, int[] y, int pos, int neg, BiFunction<T[], int[], Classifier<T>> trainer) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));

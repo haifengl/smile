@@ -17,13 +17,10 @@
 
 package smile.classification;
 
-import smile.math.MathEx;
-
-import java.util.Arrays;
 import java.util.function.BiFunction;
-
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import smile.math.MathEx;
 
 /**
  * One-vs-one strategy for reducing the problem of
@@ -95,6 +92,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
      * @param neg the class label for rest cases.
      * @param trainer the lambda to train binary classifiers.
      */
+    @SuppressWarnings("unchecked")
     public static <T> OneVersusOne<T> fit(T[] x, int[] y, int pos, int neg, BiFunction<T[], int[], Classifier<T>> trainer) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
@@ -196,8 +194,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
      * @param r pairwise class probability
      * @param p the estimated posteriori probabilities on output.
      */
-    private static void coupling(double[][] r, double[] p) {
-        int k = r.length;
+    private void coupling(double[][] r, double[] p) {
         double[][] Q = new double[k][k];
         double[] Qp = new double[k];
         double pQp, eps = 0.005 / k;

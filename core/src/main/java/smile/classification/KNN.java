@@ -132,7 +132,7 @@ public class KNN<T> implements SoftClassifier<T> {
             knn = new LinearSearch<>(x, distance);
         }
 
-        return new KNN(knn, y, k);
+        return new KNN<>(knn, y, k);
     }
 
     /**
