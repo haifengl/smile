@@ -18,14 +18,11 @@
 package smile.base.svm;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-
 import smile.math.MathEx;
 import smile.math.SparseArray;
 import smile.math.kernel.BinarySparseLinearKernel;
+import smile.math.kernel.LinearKernel;
 import smile.math.kernel.SparseLinearKernel;
-import smile.regression.LinearModel;
 
 /** Linear kernel machine. */
 public class LinearKernelMachine implements Serializable {
@@ -57,7 +54,7 @@ public class LinearKernelMachine implements Serializable {
      * @return a linear kernel machine
      */
     public static LinearKernelMachine of(KernelMachine<double[]> kernelMachine) {
-        if (!(kernelMachine.kernel instanceof LinearModel)) {
+        if (!(kernelMachine.kernel instanceof LinearKernel)) {
             throw new IllegalArgumentException("Not a linear kernel");
         }
 
