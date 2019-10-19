@@ -66,12 +66,9 @@ public class LASVM<T> implements Serializable {
      * Threshold of decision function.
      */
     private double b = 0.0;
+
     /**
-     * The number of bounded support vectors.
-     */
-    private int bsv = 0;
-    /**
-     * True if minmax is already called after update.
+     * True if minmax() is already called after update.
      */
     private boolean minmaxflag = false;
     /**
@@ -86,6 +83,10 @@ public class LASVM<T> implements Serializable {
     private double gmin = Double.MAX_VALUE;
     private double gmax = -Double.MAX_VALUE;
 
+    /**
+     * The training samples.
+     */
+    private T[] x;
     /**
      * The kernel value cache.
      */
@@ -129,12 +130,17 @@ public class LASVM<T> implements Serializable {
      * @param epoch the number of epochs, usually 1 or 2 is sufficient.
      */
     public KernelMachine<T>  fit(T[] x, int[] y, int epoch) {
-        cache = new SparseArray[x.length];
+        this.x = x;
+        this.cache = new SparseArray[x.length];
+
+        // pick initial support vectors.
         init(x, y);
 
+        // stochastic training
         for (int i = 0; i < epoch; i++) {
             update(x, y);
         }
+
         finish();
 
         int n = sv.size();
@@ -147,6 +153,24 @@ public class LASVM<T> implements Serializable {
             alpha[i] = v.alpha;
         }
         return new KernelMachine<>(kernel, vectors, alpha, b);
+    }
+
+    /**
+     * Initialize the SVM with some instances as support vectors.
+     */
+    private void init(T[] x, int[] y) {
+        int few = 5;
+        int cp = 0, cn = 0;
+
+        for (int i : MathEx.permutate(x.length)) {
+            if (y[i] == 1 && cp < few) {
+                if (process(i, x[i], y[i])) cp++;
+            } else if (y[i] == -1 && cn < few) {
+                if (process(i, x[i], y[i])) cn++;
+            }
+
+            if (cp >= few && cn >= few) break;
+        }
     }
 
     /**
@@ -169,23 +193,6 @@ public class LASVM<T> implements Serializable {
     }
 
     /**
-     * Initialize the SVM with some instances as support vectors.
-     */
-    private void init(T[] x, int[] y) {
-        int few = 5;
-        int cp = 0, cn = 0;
-        for (int i : MathEx.permutate(x.length)) {
-            if (y[i] == 1 && cp < few) {
-                if (process(i, x[i], y[i])) cp++;
-            } else if (y[i] == -1 && cn < few) {
-                if (process(i, x[i], y[i])) cn++;
-            }
-
-            if (cp >= few && cn >= few) break;
-        }
-    }
-
-    /**
      * Find support vectors with smallest (of I_up) and largest (of I_down) gradients.
      */
     private void minmax() {
@@ -195,37 +202,19 @@ public class LASVM<T> implements Serializable {
         gmax = -Double.MAX_VALUE;
 
         for (SupportVector<T> v : sv) {
-            if (v != null) {
-                double gi = v.g;
-                double ai = v.alpha;
-                if (gi < gmin && ai > v.cmin) {
-                    svmin = v;
-                    gmin = gi;
-                }
-                if (gi > gmax && ai < v.cmax) {
-                    svmax = v;
-                    gmax = gi;
-                }
+            double gi = v.g;
+            double ai = v.alpha;
+            if (gi < gmin && ai > v.cmin) {
+                svmin = v;
+                gmin = gi;
+            }
+            if (gi > gmax && ai < v.cmax) {
+                svmax = v;
+                gmax = gi;
             }
         }
 
         minmaxflag = true;
-    }
-
-    /** Computes the kernel cache for a support vector. */
-    private SparseArray cache(SupportVector<T> v) {
-        int i = v.i;
-
-        SparseArray cachei = cache[i];
-        if (cachei == null) {
-            cachei = new SparseArray();
-            T x = v.x;
-            for (SupportVector<T> v2 : sv) {
-                cachei.append(v2.i, kernel.k(x, v2.x));
-            }
-        }
-
-        return cachei;
     }
 
     /**
@@ -234,7 +223,20 @@ public class LASVM<T> implements Serializable {
      * @param j the index of support vector.
      */
     private double k(int i, int j) {
-        return cache[i].get(j);
+        SparseArray a = cache[i];
+        if (a != null) {
+            for (SparseArray.Entry e : a) {
+                if (e.i == j) return e.x;
+            }
+        }
+
+        // cache miss
+        double k = kernel.k(x[i], x[j]);
+        if (a != null) {
+            a.append(j, k);
+        }
+
+        return k;
     }
 
     /**
@@ -256,16 +258,17 @@ public class LASVM<T> implements Serializable {
             }
         }
 
-        if (v2 == null) {
-            SparseArray k1 = cache(v1);
+        // kernel(v1, v2)
+        double k12 = Double.NaN;
 
+        if (v2 == null) {
             // determine imax
             double km = v1.k;
             double gm = v1.g;
             double best = 0.0;
             for (SupportVector<T> v : sv) {
                 double Z = v.g - gm;
-                double k = k1.get(v.i);
+                double k = k(v1.i, v.i);
                 double curv = km + v.k - 2.0 * k;
                 if (curv <= 0.0) curv = TAU;
                 double mu = Z / curv;
@@ -274,21 +277,20 @@ public class LASVM<T> implements Serializable {
                     if (gain > best) {
                         best = gain;
                         v2 = v;
+                        k12 = k;
                     }
                 }
             }
         }
 
         if (v1 == null) {
-            SparseArray k2 = cache(v2);
-
             // determine imin
             double km = v2.k;
             double gm = v2.g;
             double best = 0.0;
             for (SupportVector<T> v : sv) {
                 double Z = gm - v.g;
-                double k = k2.get(v.i);
+                double k = k(v2.i, v.i);
                 double curv = km + v.k - 2.0 * k;
                 if (curv <= 0.0) curv = TAU;
 
@@ -298,6 +300,7 @@ public class LASVM<T> implements Serializable {
                     if (gain > best) {
                         best = gain;
                         v1 = v;
+                        k12 = k;
                     }
                 }
             }
@@ -307,11 +310,12 @@ public class LASVM<T> implements Serializable {
             return false;
         }
 
-        SparseArray k1 = cache(v1);
-        SparseArray k2 = cache(v2);
+        if (Double.isNaN(k12)) {
+            k12 = kernel.k(v1.x, v2.x);
+        }
 
         // Determine curvature
-        double curv = v1.k + v2.k - 2 * kernel.k(v1.x, v2.x);
+        double curv = v1.k + v2.k - 2 * k12;
         if (curv <= 0.0) curv = TAU;
 
         double step = (v2.g - v1.g) / curv;
@@ -340,17 +344,14 @@ public class LASVM<T> implements Serializable {
         // Perform update
         v1.alpha -= step;
         v2.alpha += step;
-        for (int i = 0; i < sv.size(); i++) {
-            SupportVector v = sv.get(i);
-            if (v != null) {
-                v.g -= step * (k2.get(i) - k1.get(i));
-            }
+        for (SupportVector v : sv) {
+            v.g -= step * (k(v2.i, v.i) - k(v1.i, v.i));
         }
 
-        minmaxflag = false;
-
         // optimality test
+        minmaxflag = false;
         minmax();
+
         b = (gmax + gmin) / 2;
         return gmax - gmin > epsgr;
     }
@@ -374,7 +375,6 @@ public class LASVM<T> implements Serializable {
             double k = kernel.k(v.x, x);
             g -= v.alpha * k;
             cachei.append(v.i, k);
-            cache[v.i].append(i, k);
         }
 
         // Decide insertion
@@ -417,7 +417,7 @@ public class LASVM<T> implements Serializable {
     private void finish() {
         finish(tol, sv.size());
 
-        bsv = 0;
+        int bsv = 0;
         for (SupportVector v : sv) {
             if (v.alpha == v.cmin || v.alpha == v.cmax) {
                 bsv++;
@@ -443,6 +443,15 @@ public class LASVM<T> implements Serializable {
         logger.info("LASVM finished the reprocess.");
     }
 
+    /**
+     * Removes support vectors from the kernel expansion.
+     * Online kernel classifiers usually experience considerable problems
+     * with noisy data sets. Each iteration is likely to cause a mistake
+     * because the best achievable misclassification rate for such problems
+     * is high. The number of support vectors increases very rapidly and
+     * potentially causes overfitting and poor convergence. Support vector
+     * removal criteria avoid this drawback.
+     */
     private void evict() {
         minmax();
 
@@ -451,6 +460,7 @@ public class LASVM<T> implements Serializable {
             SupportVector v = iter.next();
             if (v.alpha == 0) {
                 if ((v.g >= gmax && 0 >= v.cmax) || (v.g <= gmin && 0 <= v.cmin)) {
+                    cache[v.i] = null;
                     iter.remove();
                 }
             }
