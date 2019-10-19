@@ -17,24 +17,17 @@
 
 package smile.regression;
 
-import smile.data.CPU;
-import smile.data.DataFrame;
-import smile.data.Longley;
-import smile.data.formula.Formula;
-import smile.io.Arff;
-import smile.math.kernel.GaussianKernel;
-import smile.math.kernel.LinearKernel;
-import smile.math.kernel.PolynomialKernel;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.CPU;
+import smile.data.Longley;
+import smile.math.kernel.GaussianKernel;
+import smile.math.kernel.LinearKernel;
 import smile.math.MathEx;
-import smile.util.Paths;
 import smile.validation.CrossValidation;
-import smile.validation.LOOCV;
 import smile.validation.RMSE;
 import smile.validation.Validation;
 
@@ -69,8 +62,7 @@ public class SVRTest {
     public void testLongley() {
         System.out.println("longley");
 
-        SVR<double[]> svr = new SVR<>(new LinearKernel(), 0.5, 10.0, 1E-3);
-        KernelMachine<double[]> model = svr.fit(Longley.x, Longley.y);
+        Regression<double[]> model = SVR.fit(Longley.x, Longley.y, 0.5, 10.0, 1E-3);
         System.out.println(model);
 
         double[] prediction = Validation.test(model, Longley.x);
@@ -89,14 +81,14 @@ public class SVRTest {
         double[][] x = MathEx.clone(CPU.x);
         MathEx.standardize(x);
 
-        SVR<double[]> svr = new SVR<>(new LinearKernel(), 5.0, 1.0, 1E-3);
-        KernelMachine<double[]> model = svr.fit(x, CPU.y);
+        GaussianKernel kernel = new GaussianKernel(36);
+        KernelMachine<double[]> model = SVR.fit(x, CPU.y, kernel, 5.0, 1.0, 1E-3);
         System.out.println(model);
 
-        double[] prediction = CrossValidation.regression(10, x, CPU.y, (xi, yi) -> svr.fit(xi, yi));
+        double[] prediction = CrossValidation.regression(10, x, CPU.y, (xi, yi) -> SVR.fit(xi, yi,40.0, 10.0, 1E-3));
         double rmse = RMSE.apply(CPU.y, prediction);
 
         System.out.println("10-CV RMSE = " + rmse);
-        assertEquals(162.84821957220652, rmse, 1E-4);
+        assertEquals(54.63430240465948, rmse, 1E-4);
     }
 }
