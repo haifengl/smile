@@ -100,7 +100,7 @@ public class SVMTest {
         int[] prediction = Validation.test(model, testx);
         int error = Error.apply(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
-        assertEquals(147, error);
+        assertEquals(132, error);
     }
 
     @Test(expected = Test.None.class)
@@ -140,7 +140,7 @@ public class SVMTest {
         }
 
         BinarySparseGaussianKernel kernel = new BinarySparseGaussianKernel(31);
-        Classifier<int[]> model = SVM.fit(x, y, kernel, 100, 1E-3);
+        Classifier<int[]> model = SVM.fit(x, y, kernel, 10, 1E-3);
 
         int[] prediction = Validation.test(model, testx);
         int error = Error.apply(testy, prediction);
@@ -152,19 +152,19 @@ public class SVMTest {
     public void testSegment() {
         System.out.println("Segment");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
+        MathEx.setSeed(19650217); // to get repeatable results.
 
         Standardizer scaler = Standardizer.fit(Segment.x);
         double[][] x = scaler.transform(Segment.x);
         double[][] testx = scaler.transform(Segment.testx);
 
-        GaussianKernel kernel = new GaussianKernel(8.0);
-        OneVersusOne<double[]> model = OneVersusOne.fit(x, Segment.y, (xi, y) -> SVM.fit(xi, y, kernel, 5, 1E-3));
+        GaussianKernel kernel = new GaussianKernel(6.4);
+        OneVersusOne<double[]> model = OneVersusOne.fit(x, Segment.y, (xi, y) -> SVM.fit(xi, y, kernel, 100, 1E-3));
 
         int[] prediction = Validation.test(model, testx);
         int error = Error.apply(Segment.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / Segment.testx.length);
-        assertEquals(98, error);
+        assertEquals(33, error);
     }
 
     @Test
@@ -174,11 +174,11 @@ public class SVMTest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GaussianKernel kernel = new GaussianKernel(8.0);
-        OneVersusRest<double[]> model = OneVersusRest.fit(USPS.x, USPS.y, (x, y) -> SVM.fit(x, y, kernel, 1000, 1E-3));
+        OneVersusRest<double[]> model = OneVersusRest.fit(USPS.x, USPS.y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3));
 
         int[] prediction = Validation.test(model, USPS.testx);
         int error = Error.apply(USPS.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / USPS.testx.length);
-        assertEquals(210, error);
+        assertEquals(87, error);
     }
 }
