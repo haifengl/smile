@@ -46,6 +46,8 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
     private int k;
     /** The binary classifier. */
     private Classifier<T>[][] classifiers;
+    /** The binary classifier. */
+    private PlattScaling[][] platts;
     /** The class label encoder. */
     private ClassLabel labels;
 
@@ -54,8 +56,9 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
      * @param classifiers the binary classifier for each one-vs-one case.
      *                    Only the lower half is needed.
      */
-    public OneVersusOne(Classifier<T>[][] classifiers) {
+    public OneVersusOne(Classifier<T>[][] classifiers, PlattScaling[][] platts) {
         this.classifiers = classifiers;
+        this.platts = platts;
         k = classifiers.length;
         labels = ClassLabel.of(k);
     }
@@ -66,8 +69,9 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
      *                    Only the lower half is needed.
      * @param labels the class labels.
      */
-    public OneVersusOne(Classifier<T>[][] classifiers, ClassLabel labels) {
+    public OneVersusOne(Classifier<T>[][] classifiers, PlattScaling[][] platts, ClassLabel labels) {
         this.classifiers = classifiers;
+        this.platts = platts;
         this.k = classifiers.length;
         this.labels = labels;
     }
@@ -107,8 +111,10 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
         y = codec.y;
 
         Classifier<T>[][] classifiers = new Classifier[k][];
+        PlattScaling[][] platts = new PlattScaling[k][];
         for (int i = 1; i < k; i++) {
             classifiers[i] = new Classifier[i];
+            platts[i] = new PlattScaling[i];
             for (int j = 0; j < i; j++) {
                 int n = ni[i] + ni[j];
 
@@ -129,57 +135,69 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
                 }
 
                 classifiers[i][j] = trainer.apply(xij, yij);
+                platts[i][j] = PlattScaling.fit(classifiers[i][j], xij, yij);
             }
         }
 
-        return new OneVersusOne<>(classifiers);
+        return new OneVersusOne<>(classifiers, platts);
     }
 
+    /** Prediction is based on voting. */
     @Override
     public int predict(T x) {
-        double[] posteriori = new double[k];
-        return predict(x, posteriori);
-    }
+        int[] count = new int[k];
 
-    @Override
-    public int predict(T x, double[] posteriori) {
-        Arrays.fill(posteriori, 0.0);
-
-        for (int i = 0; i < k; i++) {
+        for (int i = 1; i < k; i++) {
             for (int j = 0; j < i; j++) {
-                int c = classifiers[i][j].predict(x);
-                if (c > 0) {
-                    posteriori[i]++;
+                if (classifiers[i][j].predict(x) > 0) {
+                    count[i]++;
                 } else {
-                    posteriori[j]++;
+                    count[j]++;
                 }
             }
         }
 
-        MathEx.unitize1(posteriori);
+        return labels.label(MathEx.whichMax(count));
+    }
+
+    /**
+     * Prediction is based posteriori probability estimation.
+     * The result may be different from predict(T x).
+     */
+    @Override
+    public int predict(T x, double[] posteriori) {
+        double[][] r = new double[k][k];
+
+        for (int i = 1; i < k; i++) {
+            for (int j = 0; j < i; j++) {
+                r[i][j] = platts[i][j].scale(classifiers[i][j].f(x));
+                r[j][i] = 1.0 - r[i][j];
+            }
+        }
+
+        coupling(r, posteriori);
         return labels.label(MathEx.whichMax(posteriori));
     }
 
     /**
-     * Estimates probability for multiclass problems by combining
-     * calibrated binary probability estimates.
+     * Combines pairwise class probability estimates into
+     * a joint probability estimate for all k classes.
+     *
+     * This method implements Method 2 from the paper by Wu, Lin, and Weng.
      *
      * <h2>References</h2>
      * <ol>
-     * <li> B Zadrozny, C Elkan. Transforming classifier scores into accurate multiclass probability estimates, ACM SIGKDD, 2002.</li>
+     * <li>T. Hastie and R. Tibshirani. Classification by pairwise coupling. NIPS, 1998.</li>
+     * <li>B. Zadrozny and C. Elkan. Transforming classifier scores into accurate multiclass probability estimates. ACM SIGKDD, 2002.</li>
+     * <li>B. Zadrozny. Reducing multiclass to binary by coupling probability estimates. NIPS, 2002.</li>
+     * <li>Wu, Lin and Weng. Probability estimates for multi-class classification by pairwise coupling. JMLR 5:975-1005, 2004.</li>
      * </ol>
      *
-     * @param k the number of classes.
-     * @param r the code matrix k by l, where k is the number of classes
-     *          and l is the number of binary problems. If M(c, b) = +1, then
-     *          the examples belonging to class c are considered to be
-     *          positive examples for the binary classification problem b.
-     *          Similarly, if M(c, b) = -1, the examples belonging to c are
-     *          considered to be negative examples for b. Finally, if M(c, b) = 0,
-     *          the examples belonging to c are not used in training a classifier for b.
+     * @param r pairwise class probability
      * @param p the estimated posteriori probabilities on output.
      */
-    private static void multiclass(int k, double[][] r, double[] p) {
+    private static void coupling(double[][] r, double[] p) {
+        int k = r.length;
         double[][] Q = new double[k][k];
         double[] Qp = new double[k];
         double pQp, eps = 0.005 / k;
@@ -228,7 +246,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
         }
 
         if (iter >= maxIter) {
-            logger.warn("Probability estimation reaches maximal iterations");
+            logger.warn("coupling reaches maximal iterations");
         }
     }
 }

@@ -18,6 +18,7 @@
 package smile.classification;
 
 import java.util.function.BiFunction;
+import smile.math.MathEx;
 
 /**
  * One-vs-rest (or one-vs-all) strategy for reducing the problem of
@@ -40,7 +41,7 @@ import java.util.function.BiFunction;
  * learners see unbalanced distributions because typically the set of
  * negatives they see is much larger than the set of positives.
  */
-public class OneVersusRest<T> implements Classifier<T> {
+public class OneVersusRest<T> implements SoftClassifier<T> {
     private static final long serialVersionUID = 2L;
 
     /** The number of classes. */
@@ -117,27 +118,10 @@ public class OneVersusRest<T> implements Classifier<T> {
             }
 
             classifiers[i] = trainer.apply(x, yi);
-            platts[i] = platt(classifiers[i], x, yi);
+            platts[i] = PlattScaling.fit(classifiers[i], x, yi);
         }
 
         return new OneVersusRest<>(classifiers, platts);
-    }
-
-    /**
-     * Fits Platt Scaling to estimate posteriori probabilities.
-     *
-     * @param model the binary-class model to fit Platt scaling.
-     * @param x training samples.
-     * @param y training labels.
-     */
-    private static <T> PlattScaling platt(Classifier<T> model, T[] x, int[] y) {
-        int n = y.length;
-        double[] scores = new double[n];
-        for (int i = 0; i < n; i++) {
-            scores[i] = model.f(x[i]);
-        }
-
-        return PlattScaling.fit(scores, y);
     }
 
     @Override
@@ -153,5 +137,15 @@ public class OneVersusRest<T> implements Classifier<T> {
         }
 
         return labels.label(y);
+    }
+
+    @Override
+    public int predict(T x, double[] posteriori) {
+        for (int i = 0; i < k; i++) {
+            posteriori[i] = platts[i].scale(classifiers[i].f(x));
+        }
+
+        MathEx.unitize1(posteriori);
+        return labels.label(MathEx.whichMax(posteriori));
     }
 }
