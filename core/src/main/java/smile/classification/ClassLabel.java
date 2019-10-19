@@ -170,6 +170,7 @@ public class ClassLabel implements Serializable {
         int[] y = response.toIntArray();
         StructField field = response.field();
 
+        @SuppressWarnings("unchecked")
         Optional<Measure> measure = response.measure();
         if (measure.isPresent() && measure.get() instanceof NominalScale) {
             NominalScale scale = (NominalScale) measure.get();

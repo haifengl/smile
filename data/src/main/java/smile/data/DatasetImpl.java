@@ -17,7 +17,7 @@
 
 package smile.data;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Stream;
 
@@ -32,30 +32,28 @@ class DatasetImpl<T> implements Dataset<T> {
     /**
      * The data objects.
      */
-    private T[] data;
+    private ArrayList<T> data;
 
     /**
      * Constructor
      * @param data The underlying data collection.
      */
-    @SuppressWarnings("unchecked")
     public DatasetImpl(Collection<T> data) {
-        this.data = (T[]) new Object[data.size()];
-        this.data = data.toArray(this.data);
+        this.data = new ArrayList<>(data);
     }
 
     @Override
     public int size() {
-        return data.length;
+        return data.size();
     }
 
     @Override
     public T get(int i) {
-        return data[i];
+        return data.get(i);
     }
 
     @Override
     public Stream<T> stream() {
-        return Arrays.stream(data);
+        return data.stream();
     }
 }
