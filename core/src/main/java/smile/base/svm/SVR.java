@@ -119,11 +119,9 @@ public class SVR<T> {
          */
         double k;
 
-        double C;
-        SupportVector(int i, T x, double y, double C) {
+        SupportVector(int i, T x, double y) {
             this.i = i;
             this.x = x;
-            this.C = C;
             g[0] = eps + y;
             g[1] = eps - y;
             k = kernel.k(x, x);
@@ -169,24 +167,23 @@ public class SVR<T> {
         // Initialize support vectors.
         sv = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
-            sv.add(new SupportVector(i, x[i], y[i], C));
+            sv.add(new SupportVector(i, x[i], y[i]));
         }
 
         minmax();
         int phase = Math.min(n, 1000);
         for (int count = 1; smo(tol); count++) {
             if (count % phase == 0) {
-                logger.info("SVR finishes {} SMO iterations", count);
+                logger.info("{} SMO iterations", count);
             }
         }
-        logger.info("SVR finishes training");
 
         int nsv = 0;
         int bsv = 0;
 
         for (int i = 0; i < n; i++) {
             SupportVector v = sv.get(i);
-            if (v.alpha[0] == 0.0 && v.alpha[1] == 0.0) {
+            if (v.alpha[0] == v.alpha[1]) {
                 sv.set(i, null);
             } else {
                 nsv++;
@@ -200,15 +197,15 @@ public class SVR<T> {
         @SuppressWarnings("unchecked")
         T[] vectors = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), nsv);
 
-        for (int i = 0, j = 0; i < sv.size(); i++) {
-            SupportVector v = sv.get(i);
+        int i = 0;
+        for (SupportVector v : sv) {
             if (v != null) {
-                vectors[j] = v.x;
-                alpha[j++] = v.alpha[1] - v.alpha[0];
+                vectors[i] = v.x;
+                alpha[i++] = v.alpha[1] - v.alpha[0];
             }
         }
 
-        logger.info("{} support vectors, {} bounded", nsv, bsv);
+        logger.info("{} samples, {} support vectors, {} bounded", n, nsv, bsv);
 
         return new KernelMachine<>(kernel, vectors, alpha, b);
     }
@@ -334,17 +331,17 @@ public class SVR<T> {
                 }
             }
 
-            if (diff > v1.C - v2.C) {
+            if (diff > 0) {
                 // Region I
-                if (v1.alpha[i] > v1.C) {
-                    v1.alpha[i] = v1.C;
-                    v2.alpha[j] = v1.C - diff;
+                if (v1.alpha[i] > C) {
+                    v1.alpha[i] = C;
+                    v2.alpha[j] = C - diff;
                 }
             } else {
                 // Region II
-                if (v2.alpha[j] > v2.C) {
-                    v2.alpha[j] = v2.C;
-                    v1.alpha[i] = v2.C + diff;
+                if (v2.alpha[j] > C) {
+                    v2.alpha[j] = C;
+                    v1.alpha[i] = C + diff;
                 }
             }
         } else {
@@ -354,10 +351,10 @@ public class SVR<T> {
             v1.alpha[i] -= delta;
             v2.alpha[j] += delta;
 
-            if (sum > v1.C) {
-                if (v1.alpha[i] > v1.C) {
-                    v1.alpha[i] = v1.C;
-                    v2.alpha[j] = sum - v1.C;
+            if (sum > C) {
+                if (v1.alpha[i] > C) {
+                    v1.alpha[i] = C;
+                    v2.alpha[j] = sum - C;
                 }
             } else {
                 if (v2.alpha[j] < 0) {
@@ -366,10 +363,10 @@ public class SVR<T> {
                 }
             }
 
-            if (sum > v2.C) {
-                if (v2.alpha[j] > v2.C) {
-                    v2.alpha[j] = v2.C;
-                    v1.alpha[i] = sum - v2.C;
+            if (sum > C) {
+                if (v2.alpha[j] > C) {
+                    v2.alpha[j] = C;
+                    v1.alpha[i] = sum - C;
                 }
             } else {
                 if (v1.alpha[i] < 0) {
