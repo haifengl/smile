@@ -99,10 +99,6 @@ public class ElasticNetTest {
         assertEquals(4.2299495472273, rmse, 1E-4);
     }
 
-
-    /**
-     * Test of learn method, of class LinearRegression.
-     */
     @Test
     public void testCPU() {
         System.out.println("CPU");
@@ -116,9 +112,6 @@ public class ElasticNetTest {
         assertEquals(55.313225659429634, rmse, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class LinearRegression.
-     */
     @Test
     public void tesProstate() {
         System.out.println("Prostate");
@@ -131,9 +124,6 @@ public class ElasticNetTest {
         assertEquals(0.7076752687983124, rmse, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class LinearRegression.
-     */
     @Test
     public void tesAbalone() {
         System.out.println("Abalone");
@@ -146,9 +136,6 @@ public class ElasticNetTest {
         assertEquals(2.1395194279255536, rmse, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class LinearRegression.
-     */
     @Test
     public void tesDiabetes() {
         System.out.println("Diabetes");
