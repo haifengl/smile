@@ -23,11 +23,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-
+import java.io.IOException;
 import smile.data.Dataset;
 import smile.data.Instance;
 import smile.data.Segment;
 import smile.data.USPS;
+import smile.feature.Standardizer;
 import smile.io.DatasetReader;
 import smile.math.MathEx;
 import smile.math.SparseArray;
@@ -35,8 +36,6 @@ import smile.math.kernel.GaussianKernel;
 import smile.math.kernel.BinarySparseGaussianKernel;
 import smile.validation.Error;
 import smile.validation.Validation;
-
-import java.io.IOException;
 
 /**
  *
@@ -155,13 +154,17 @@ public class SVMTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        GaussianKernel kernel = new GaussianKernel(8.0);
-        OneVersusOne<double[]> model = OneVersusOne.fit(Segment.x, Segment.y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3));
+        Standardizer scaler = Standardizer.fit(Segment.x);
+        double[][] x = scaler.transform(Segment.x);
+        double[][] testx = scaler.transform(Segment.testx);
 
-        int[] prediction = Validation.test(model, Segment.testx);
+        GaussianKernel kernel = new GaussianKernel(8.0);
+        OneVersusOne<double[]> model = OneVersusOne.fit(x, Segment.y, (xi, y) -> SVM.fit(xi, y, kernel, 5, 1E-3));
+
+        int[] prediction = Validation.test(model, testx);
         int error = Error.apply(Segment.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / Segment.testx.length);
-        assertEquals(70, error);
+        assertEquals(98, error);
     }
 
     @Test
@@ -176,6 +179,6 @@ public class SVMTest {
         int[] prediction = Validation.test(model, USPS.testx);
         int error = Error.apply(USPS.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / USPS.testx.length);
-        assertEquals(95, error);
+        assertEquals(210, error);
     }
 }

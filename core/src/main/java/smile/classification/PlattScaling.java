@@ -59,6 +59,21 @@ public class PlattScaling implements Serializable {
     }
 
     /**
+     * Returns the posterior probability estimate P(y = 1 | x).
+     *
+     * @param y the binary classifier output score.
+     * @return the estimated probability.
+     */
+    public double scale(double y) {
+        double fApB = y * alpha + beta;
+
+        if (fApB >= 0)
+            return exp(-fApB) / (1.0 + exp(-fApB));
+        else
+            return 1.0 / (1 + exp(fApB));
+    }
+
+    /**
      * Trains the Platt scaling.
      * @param scores The predicted scores.
      * @param y The training labels.
@@ -183,17 +198,19 @@ public class PlattScaling implements Serializable {
     }
 
     /**
-     * Returns the posterior probability estimate P(y = 1 | x).
+     * Fits Platt Scaling to estimate posteriori probabilities.
      *
-     * @param y the binary classifier output score.
-     * @return the estimated probability.
+     * @param model the binary-class model to fit Platt scaling.
+     * @param x training samples.
+     * @param y training labels.
      */
-    public double scale(double y) {
-        double fApB = y * alpha + beta;
+    public  static <T> PlattScaling fit(Classifier<T> model, T[] x, int[] y) {
+        int n = y.length;
+        double[] scores = new double[n];
+        for (int i = 0; i < n; i++) {
+            scores[i] = model.f(x[i]);
+        }
 
-        if (fApB >= 0)
-            return exp(-fApB) / (1.0 + exp(-fApB));
-        else
-            return 1.0 / (1 + exp(fApB));
+        return fit(scores, y);
     }
 }
