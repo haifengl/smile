@@ -80,7 +80,6 @@ public interface Validation {
     /**
      * Tests a regression model on a validation set.
      *
-     * @param <T> the data type of input objects.
      * @param model a trained regression model to be tested.
      * @param data the test data set.
      * @return the predictions.

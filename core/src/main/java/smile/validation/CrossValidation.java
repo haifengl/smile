@@ -17,14 +17,12 @@
 
 package smile.validation;
 
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.BiFunction;
 
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.DataFrameRegression;
 import smile.regression.Regression;

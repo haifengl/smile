@@ -243,6 +243,18 @@ public class Maxent implements SoftClassifier<int[]> {
          * Regularization factor.
          */
         double lambda;
+        /**
+         * The number of samples in a partition.
+         */
+        int partitionSize;
+        /**
+         * The number of partitions.
+         */
+        int partitions;
+        /**
+         * The workspace to store gradient for each data partition.
+         */
+        double[][] gradients;
 
         /**
          * Constructor.
@@ -252,6 +264,10 @@ public class Maxent implements SoftClassifier<int[]> {
             this.y = y;
             this.p = p;
             this.lambda = lambda;
+
+            partitionSize = Integer.valueOf(System.getProperty("smile.data.partition.size", "1000"));
+            partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
+            gradients = new double[partitions][p+1];
         }
         
         @Override
@@ -275,17 +291,32 @@ public class Maxent implements SoftClassifier<int[]> {
         
         @Override
         public double g(double[] w, double[] g) {
-            Arrays.fill(g, 0.0);
-            double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
-                double wx = dot(x[i], w);
-                double err = y[i] - MathEx.logistic(wx);
-                for (int j : x[i]) {
-                    g[j] -= err;
-                }
-                g[p] -= err;
+            double f = IntStream.range(0, partitions).parallel().mapToDouble(r -> {
+                double[] gradient = gradients[r];
+                Arrays.fill(gradient, 0.0);
 
-                return log1pe(wx) - y[i] * wx;
+                int begin = r * partitionSize;
+                int end = (r + 1) * partitionSize;
+                if (end > x.length) end = x.length;
+
+                return IntStream.range(begin, end).sequential().mapToDouble(i -> {
+                    double wx = dot(x[i], w);
+                    double err = y[i] - MathEx.logistic(wx);
+                    for (int j : x[i]) {
+                        gradient[j] -= err;
+                    }
+                    gradient[p] -= err;
+
+                    return log1pe(wx) - y[i] * wx;
+                }).sum();
             }).sum();
+
+            Arrays.fill(g, 0.0);
+            for (double[] gradient : gradients) {
+                for (int i = 0; i < g.length; i++) {
+                    g[i] += gradient[i];
+                }
+            }
 
             if (lambda > 0.0) {
                 double wnorm = 0.0;
@@ -326,9 +357,21 @@ public class Maxent implements SoftClassifier<int[]> {
          */
         double lambda;
         /**
-         * The workspace to store posteriori probabilities.
+         * The number of samples in a partition.
          */
-        double[] posteriori;
+        int partitionSize;
+        /**
+         * The number of partitions.
+         */
+        int partitions;
+        /**
+         * The workspace to store gradient for each data partition.
+         */
+        double[][] gradients;
+        /**
+         * The workspace to store posteriori probability for each data partition.
+         */
+        double[][] posterioris;
 
         /**
          * Constructor.
@@ -339,20 +382,32 @@ public class Maxent implements SoftClassifier<int[]> {
             this.k = k;
             this.p = p;
             this.lambda = lambda;
-            posteriori = new double[k];
+
+            partitionSize = Integer.valueOf(System.getProperty("smile.data.partition.size", "1000"));
+            partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
+            gradients = new double[partitions][(k-1)*(p+1)];
+            posterioris = new double[partitions][k];
         }
         
         @Override
         public double f(double[] w) {
-            double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
-                posteriori[k-1] = 0.0;
-                for (int j = 0; j < k-1; j++) {
-                    posteriori[j] = dot(x[i], w, j, p);
-                }
+            double f = IntStream.range(0, partitions).parallel().mapToDouble(r -> {
+                double[] posteriori = posterioris[r];
 
-                MathEx.softmax(posteriori);
+                int begin = r * partitionSize;
+                int end = (r + 1) * partitionSize;
+                if (end > x.length) end = x.length;
 
-                return -log(posteriori[y[i]]);
+                return IntStream.range(begin, end).sequential().mapToDouble(i -> {
+                    posteriori[k - 1] = 0.0;
+                    for (int j = 0; j < k - 1; j++) {
+                        posteriori[j] = dot(x[i], w, j, p);
+                    }
+
+                    MathEx.softmax(posteriori);
+
+                    return -log(posteriori[y[i]]);
+                }).sum();
             }).sum();
 
             if (lambda > 0.0) {
@@ -371,28 +426,43 @@ public class Maxent implements SoftClassifier<int[]> {
 
         @Override
         public double g(double[] w, double[] g) {
-            Arrays.fill(g, 0.0);
+            double f = IntStream.range(0, partitions).parallel().mapToDouble(r -> {
+                double[] posteriori = posterioris[r];
+                double[] gradient = gradients[r];
+                Arrays.fill(gradient, 0.0);
 
-            double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
-                posteriori[k-1] = 0.0;
-                for (int j = 0; j < k-1; j++) {
-                    posteriori[j] = dot(x[i], w, j, p);
-                }
+                int begin = r * partitionSize;
+                int end = (r + 1) * partitionSize;
+                if (end > x.length) end = x.length;
 
-                MathEx.softmax(posteriori);
-
-                for (int j = 0; j < k-1; j++) {
-                    double err = (y[i] == j ? 1.0 : 0.0) - posteriori[j];
-
-                    int pos = j * (p + 1);
-                    for (int l : x[i]) {
-                        g[pos + l] -= err;
+                return IntStream.range(begin, end).sequential().mapToDouble(i -> {
+                    posteriori[k - 1] = 0.0;
+                    for (int j = 0; j < k - 1; j++) {
+                        posteriori[j] = dot(x[i], w, j, p);
                     }
-                    g[pos + p] -= err;
-                }
 
-                return -log(posteriori[y[i]]);
+                    MathEx.softmax(posteriori);
+
+                    for (int j = 0; j < k - 1; j++) {
+                        double err = (y[i] == j ? 1.0 : 0.0) - posteriori[j];
+
+                        int pos = j * (p + 1);
+                        for (int l : x[i]) {
+                            gradient[pos + l] -= err;
+                        }
+                        gradient[pos + p] -= err;
+                    }
+
+                    return -log(posteriori[y[i]]);
+                }).sum();
             }).sum();
+
+            Arrays.fill(g, 0.0);
+            for (double[] gradient : gradients) {
+                for (int i = 0; i < g.length; i++) {
+                    g[i] += gradient[i];
+                }
+            }
 
             if (lambda > 0.0) {
                 double wnorm = 0.0;
