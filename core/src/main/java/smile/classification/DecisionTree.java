@@ -100,7 +100,7 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class DecisionTree extends CART implements SoftClassifier<Tuple> {
+public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFrameClassifier {
     private static final long serialVersionUID = 2L;
 
     /**

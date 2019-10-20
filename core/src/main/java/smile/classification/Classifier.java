@@ -19,17 +19,6 @@ package smile.classification;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Optional;
-
-import smile.data.DataFrame;
-import smile.data.Tuple;
-import smile.data.formula.Formula;
-import smile.data.measure.Measure;
-import smile.data.measure.NominalScale;
-import smile.data.type.StructType;
-import smile.data.vector.BaseVector;
-import smile.math.MathEx;
-import smile.sort.QuickSort;
 
 /**
  * A classifier assigns an input object into one of a given number of categories.
@@ -69,41 +58,17 @@ public interface Classifier<T> extends Serializable {
     }
 
     /**
-     * Predicts the class label of an instance.
-     * @param x a tuple instance.
-     * @return the predicted class label.
-     */
-    default int predict(Tuple x) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
      * Predicts the class labels of an array of instances.
      *
      * @param x the instances to be classified.
      * @return the predicted class labels.
      */
     default int[] predict(T[] x) {
-        return Arrays.stream(x).mapToInt(xi -> predict(xi)).toArray();
-    }
-
-    /**
-     * Predicts the class labels of a data frame.
-     *
-     * @param data the data frame.
-     * @return the predicted class labels.
-     */
-    default int[] predict(DataFrame data) {
-        return data.stream().mapToInt(x -> predict(x)).toArray();
-    }
-
-    /** Returns the formula associated with the model. */
-    default Optional<Formula> formula() {
-        return Optional.empty();
-    }
-
-    /** Returns the design matrix schema. */
-    default Optional<StructType> schema() {
-        return Optional.empty();
+        int n = x.length;
+        int[] y = new int[n];
+        for (int i = 0; i < n; i++) {
+            y[i] = predict(x[i]);
+        }
+        return y;
     }
 }

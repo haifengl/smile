@@ -17,19 +17,11 @@
 
 package smile.classification;
 
-import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Optional;
-
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
-import smile.data.measure.Measure;
-import smile.data.measure.NominalScale;
 import smile.data.type.StructType;
-import smile.data.vector.BaseVector;
-import smile.math.MathEx;
-import smile.sort.QuickSort;
 
 /**
  * Classification trait on DataFrame.

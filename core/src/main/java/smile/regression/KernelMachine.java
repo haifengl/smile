@@ -40,11 +40,6 @@ public class KernelMachine<T> extends smile.base.svm.KernelMachine<T> implements
     private static final long serialVersionUID = 2L;
 
     /**
-     * True if the instances are double[].
-     */
-    private boolean isInstanceDoubleArray = false;
-
-    /**
      * Constructor.
      * @param kernel Kernel function.
      * @param instances The instances in the kernel machine, e.g. support vectors.
@@ -63,21 +58,10 @@ public class KernelMachine<T> extends smile.base.svm.KernelMachine<T> implements
      */
     public KernelMachine(MercerKernel<T> kernel, T[] instances, double[] weight, double b) {
         super(kernel, instances, weight, b);
-        isInstanceDoubleArray = instances.getClass().getComponentType().equals(double[].class);
     }
 
     @Override
     public double predict(T x) {
         return f(x);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public double predict(Tuple x) {
-        if (isInstanceDoubleArray) {
-            return predict((T) x.toArray());
-        }
-
-        throw new UnsupportedOperationException();
     }
 }

@@ -17,7 +17,6 @@
 
 package smile.regression;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Optional;
 import smile.data.DataFrame;
@@ -26,35 +25,36 @@ import smile.data.formula.Formula;
 import smile.data.type.StructType;
 
 /**
- * Regression analysis includes any techniques for modeling and analyzing
- * the relationship between a dependent variable and one or more independent
- * variables. Most commonly, regression analysis estimates the conditional
- * expectation of the dependent variable given the independent variables.
- * Regression analysis is widely used for prediction and forecasting, where
- * its use has substantial overlap with the field of machine learning. 
- * 
+ * Regression trait on DataFrame.
+ *
  * @author Haifeng Li
  */
-public interface Regression<T> extends Serializable {
+public interface DataFrameRegression {
     /**
-     * Predicts the dependent variable of an instance.
-     * @param x an instance.
+     * Predicts the dependent variable of a tuple instance.
+     * @param x a tuple instance.
      * @return the predicted value of dependent variable.
      */
-    double predict(T x);
+    double predict(Tuple x);
 
     /**
-     * Predicts the dependent variables of an array of instances.
+     * Predicts the dependent variables of a data frame.
      *
-     * @param x the instances.
+     * @param data the data frame.
      * @return the predicted values.
      */
-    default double[] predict(T[] x) {
-        int n = x.length;
+    default double[] predict(DataFrame data) {
+        int n = data.size();
         double[] y = new double[n];
         for (int i = 0; i < n; i++) {
-            y[i] = predict(x[i]);
+            y[i] = predict(data.get(i));
         }
         return y;
     }
+
+    /** Returns the formula associated with the model. */
+    Optional<Formula> formula();
+
+    /** Returns the design matrix schema. */
+    Optional<StructType> schema();
 }

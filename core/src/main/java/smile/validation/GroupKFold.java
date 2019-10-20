@@ -18,9 +18,11 @@
 package smile.validation;
 
 import smile.classification.Classifier;
+import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
 import smile.math.Histogram;
 import smile.math.MathEx;
+import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
 import smile.sort.QuickSort;
 
@@ -161,11 +163,11 @@ public class GroupKFold {
      * Runs cross validation tests.
      * @return the predictions.
      */
-    public <T> int[] classification(DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
+    public int[] classification(DataFrame data, Function<DataFrame, DataFrameClassifier> trainer) {
         int[] prediction = new int[data.size()];
 
         for (int i = 0; i < k; i++) {
-            Classifier<T> model = trainer.apply(data.of(train[i]));
+            DataFrameClassifier model = trainer.apply(data.of(train[i]));
             for (int j : test[i]) {
                 prediction[j] = model.predict(data.get(j));
             }
@@ -199,11 +201,11 @@ public class GroupKFold {
      * Runs cross validation tests.
      * @return the predictions.
      */
-    public <T> double[] regression(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+    public double[] regression(DataFrame data, Function<DataFrame, DataFrameRegression> trainer) {
         double[] prediction = new double[data.size()];
 
         for (int i = 0; i < k; i++) {
-            Regression<T> model = trainer.apply(data.of(train[i]));
+            DataFrameRegression model = trainer.apply(data.of(train[i]));
 
             for (int j : test[i]) {
                 prediction[j] = model.predict(data.get(j));

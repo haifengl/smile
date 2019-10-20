@@ -18,10 +18,12 @@
 package smile.validation;
 
 import smile.classification.Classifier;
+import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
+import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
 
 import java.util.Optional;
@@ -96,13 +98,13 @@ public class LOOCV {
      * Runs leave-one-out cross validation tests.
      * @return the predictions.
      */
-    public static <T> int[] classification(DataFrame data, Function<DataFrame, Classifier<T>> trainer) {
+    public static int[] classification(DataFrame data, Function<DataFrame, DataFrameClassifier> trainer) {
         int n = data.size();
         LOOCV cv = new LOOCV(n);
         int[] prediction = new int[n];
 
         for (int i = 0; i < n; i++) {
-            Classifier<T> model = trainer.apply(data.of(cv.train[i]));
+            DataFrameClassifier model = trainer.apply(data.of(cv.train[i]));
             prediction[cv.test[i]] = model.predict(data.get(cv.test[i]));
         }
 
@@ -133,13 +135,13 @@ public class LOOCV {
      * Runs leave-one-out cross validation tests.
      * @return the predictions.
      */
-    public static <T> double[] regression(DataFrame data, Function<DataFrame, Regression<T>> trainer) {
+    public static double[] regression(DataFrame data, Function<DataFrame, DataFrameRegression> trainer) {
         int n = data.size();
         LOOCV cv = new LOOCV(n);
         double[] prediction = new double[n];
 
         for (int i = 0; i < n; i++) {
-            Regression<T> model = trainer.apply(data.of(cv.train[i]));
+            DataFrameRegression model = trainer.apply(data.of(cv.train[i]));
             prediction[cv.test[i]] = model.predict(data.get(cv.test[i]));
         }
 

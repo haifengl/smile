@@ -75,7 +75,7 @@ import smile.validation.RegressionMeasure;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements Regression<Tuple> {
+public class RandomForest implements Regression<Tuple>, DataFrameRegression {
     private static final long serialVersionUID = 2L;
 
     /**
