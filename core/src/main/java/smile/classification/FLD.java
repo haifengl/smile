@@ -17,12 +17,17 @@
 
 package smile.classification;
 
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
 import smile.math.matrix.SVD;
 import smile.projection.Projection;
+import smile.util.Strings;
+
+import java.util.Properties;
 
 /**
  * Fisher's linear discriminant. Fisher defined the separation between two
@@ -120,6 +125,30 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         for (int i = 0; i < k; i++) {
             scaling.atx(mu[i], this.mu[i]);
         }
+    }
+
+    /**
+     * Learn Fisher's linear discriminant.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static FLD fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Properties());
+    }
+
+    /**
+     * Learn Fisher's linear discriminant.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static FLD fit(Formula formula, DataFrame data, Properties prop) {
+        int L = Integer.valueOf(prop.getProperty("smile.fld.dimension", "-1"));
+        double tol = Double.valueOf(prop.getProperty("smile.fld.tolerance", "1E-4"));
+        double[][] x = formula.x(data).toArray();
+        int[] y = formula.y(data).toIntArray();
+        return fit(x, y, L, tol);
     }
 
     /**

@@ -17,9 +17,14 @@
 
 package smile.classification;
 
+import java.util.Arrays;
+import java.util.Properties;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
+import smile.util.Strings;
 
 /**
  * Linear discriminant analysis. LDA is based on the Bayes decision theory
@@ -132,23 +137,23 @@ public class LDA implements SoftClassifier<double[]> {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      */
-    /*
     public static LDA fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
     }
-*/
+
     /**
      * Learns linear discriminant analysis.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      */
-    /*
     public static LDA fit(Formula formula, DataFrame data, Properties prop) {
+        double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.lda.priori"));
         double tol = Double.valueOf(prop.getProperty("smile.lda.tolerance", "1E-4"));
-        return fit(formula, data, null, tol);
+        double[][] x = formula.x(data).toArray();
+        int[] y = formula.y(data).toIntArray();
+        return fit(x, y, priori, tol);
     }
-     */
 
     /**
      * Learns linear discriminant analysis.

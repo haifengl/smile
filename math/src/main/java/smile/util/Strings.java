@@ -18,6 +18,8 @@
 package smile.util;
 
 import java.util.Arrays;
+import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
  * String utility functions.
@@ -73,5 +75,37 @@ public interface Strings {
         char[] chars = new char[len];
         Arrays.fill(chars, ch);
         return new String(chars);
+    }
+
+    /** Returns the string representation of array in format '[1, 2, 3'." */
+    static String toString(int[] a) {
+        return Arrays.stream(a).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
+    }
+
+    /** Returns the string representation of array in format '[1.0, 2.0, 3.0'." */
+    static String toString(double[] a) {
+        return Arrays.stream(a).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
+    }
+
+    /**
+     * Parses a double array in format '[1.0, 2.0, 3.0]'.
+     * Returns null if s is null or empty.
+     */
+    static int[] parseIntArray(String s) {
+        if (isNullOrEmpty(s)) return null;
+
+        String[] tokens = s.trim().substring(1, s.length() - 1).split(",");
+        return Arrays.stream(tokens).map(String::trim).mapToInt(Integer::parseInt).toArray();
+    }
+
+    /**
+     * Parses a double array in format '[1.0, 2.0, 3.0]'.
+     * Returns null if s is null or empty.
+     */
+    static double[] parseDoubleArray(String s) {
+        if (isNullOrEmpty(s)) return null;
+
+        String[] tokens = s.trim().substring(1, s.length() - 1).split(",");
+        return Arrays.stream(tokens).map(String::trim).mapToDouble(Double::parseDouble).toArray();
     }
 }
