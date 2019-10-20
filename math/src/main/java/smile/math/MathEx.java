@@ -27,6 +27,7 @@ import java.util.concurrent.ForkJoinPool;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.Sort;
+import smile.util.SparseArray;
 
 /**
  * Extra basic numeric functions. The following functions are

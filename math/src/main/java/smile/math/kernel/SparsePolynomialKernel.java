@@ -18,7 +18,7 @@
 package smile.math.kernel;
 
 import smile.math.MathEx;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 
 /**
  * The polynomial kernel. k(u, v) = (&gamma; u<sup>T</sup>v - &lambda;)<sup>d</sup>,

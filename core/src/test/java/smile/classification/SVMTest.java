@@ -31,9 +31,9 @@ import smile.data.USPS;
 import smile.feature.Standardizer;
 import smile.io.DatasetReader;
 import smile.math.MathEx;
-import smile.math.SparseArray;
 import smile.math.kernel.GaussianKernel;
 import smile.math.kernel.BinarySparseGaussianKernel;
+import smile.util.SparseArray;
 import smile.validation.Error;
 import smile.validation.Validation;
 
@@ -100,7 +100,7 @@ public class SVMTest {
         int[] prediction = Validation.test(model, testx);
         int error = Error.apply(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
-        assertEquals(132, error);
+        assertEquals(131, error);
     }
 
     @Test(expected = Test.None.class)

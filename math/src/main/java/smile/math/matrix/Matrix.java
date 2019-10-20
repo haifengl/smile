@@ -24,7 +24,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 import smile.stat.distribution.GaussianDistribution;
 
 /**

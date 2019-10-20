@@ -19,7 +19,7 @@ package smile.math.distance;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 
 /**
  * Euclidean distance. Use getInstance() to get the standard unweighted

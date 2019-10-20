@@ -29,8 +29,8 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 
 import smile.math.MathEx;
-import smile.math.SparseArray;
 import smile.math.matrix.SparseMatrix;
+import smile.util.SparseArray;
 
 /**
  * List of Lists sparse matrix format. LIL stores one list per row,

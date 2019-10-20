@@ -106,16 +106,4 @@ public interface Classifier<T> extends Serializable {
     default Optional<StructType> schema() {
         return Optional.empty();
     }
-
-    /** Returns the unique classes of sample labels. */
-    static int[] classes(int[] y) {
-        int[] labels = MathEx.unique(y);
-        Arrays.sort(labels);
-
-        if (labels.length < 2) {
-            throw new IllegalArgumentException("Only one class.");
-        }
-
-        return labels;
-    }
 }

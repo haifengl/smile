@@ -19,7 +19,7 @@ package smile.math.kernel;
 
 import java.util.Iterator;
 import smile.math.MathEx;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 
 /**
  * The Thin Plate Spline Kernel. k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;),

@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.PriorityQueue;
 
-import smile.math.IntArrayList;
+import smile.util.IntArrayList;
 import smile.math.MathEx;
 import smile.sort.HeapSelect;
 import smile.stat.distribution.GaussianDistribution;

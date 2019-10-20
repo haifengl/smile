@@ -18,7 +18,6 @@
 package smile.base.svm;
 
 import java.io.Serializable;
-import smile.math.DoubleArrayList;
 
 /**
  * Support vector.

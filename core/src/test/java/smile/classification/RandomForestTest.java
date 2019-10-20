@@ -17,7 +17,9 @@
 
 package smile.classification;
 
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import smile.base.cart.SplitRule;
 import smile.data.*;
@@ -37,7 +39,9 @@ import static org.junit.Assert.*;
  * @author Haifeng
  */
 public class RandomForestTest {
-    
+
+    long[] seeds = LongStream.generate(() -> MathEx.probablePrime(19650218L, 256)).limit(200).toArray();
+
     public RandomForestTest() {
     }
 
@@ -62,14 +66,14 @@ public class RandomForestTest {
         System.out.println("Weather");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        RandomForest model = RandomForest.fit(WeatherNominal.formula, WeatherNominal.data, 100, 2, SplitRule.GINI, 100, 5, 1.0);
+        RandomForest model = RandomForest.fit(WeatherNominal.formula, WeatherNominal.data, 100, 2, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds)));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(WeatherNominal.data, x -> RandomForest.fit(WeatherNominal.formula, x, 100, 2, SplitRule.GINI, 100, 5, 1.0));
+        int[] prediction = LOOCV.classification(WeatherNominal.data, x -> RandomForest.fit(WeatherNominal.formula, x, 100, 2, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
         int error = Error.apply(WeatherNominal.y, prediction);
 
         System.out.println("Error = " + error);
@@ -81,17 +85,17 @@ public class RandomForestTest {
         System.out.println("Iris");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        RandomForest model = RandomForest.fit(Iris.formula, Iris.data, 100, 2, SplitRule.GINI, 100, 5, 1.0);
+        RandomForest model = RandomForest.fit(Iris.formula, Iris.data, 100, 2, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds)));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(Iris.data, x -> RandomForest.fit(Iris.formula, x, 100, 3, SplitRule.GINI, 100, 5, 1.0));
+        int[] prediction = LOOCV.classification(Iris.data, x -> RandomForest.fit(Iris.formula, x, 100, 3, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
         int error = Error.apply(Iris.y, prediction);
         System.out.println("Error = " + error);
-        assertEquals(7, error);
+        assertEquals(8, error);
     }
 
     @Test
@@ -99,11 +103,11 @@ public class RandomForestTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> RandomForest.fit(PenDigits.formula, x, 100, 4, SplitRule.GINI, 100, 5, 1.0));
+        int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> RandomForest.fit(PenDigits.formula, x, 100, 4, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
         int error = Error.apply(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(195, error);
+        assertEquals(185, error);
     }
 
     @Test
@@ -111,11 +115,11 @@ public class RandomForestTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> RandomForest.fit(BreastCancer.formula, x, 100, 5, SplitRule.GINI, 100, 5, 1.0));
+        int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> RandomForest.fit(BreastCancer.formula, x, 100, 5, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
         int error = Error.apply(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(21, error);
+        assertEquals(27, error);
     }
 
     @Test
@@ -123,8 +127,7 @@ public class RandomForestTest {
         System.out.println("Segment");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        LongStream seeds = LongStream.generate(() -> MathEx.probablePrime(19650218L, 256));
-        RandomForest model = RandomForest.fit(Segment.formula, Segment.train, 200, 16, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(seeds));
+        RandomForest model = RandomForest.fit(Segment.formula, Segment.train, 200, 16, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds)));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
@@ -149,8 +152,7 @@ public class RandomForestTest {
         System.out.println("USPS");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        LongStream seeds = LongStream.generate(() -> MathEx.probablePrime(19650218L, 256));
-        RandomForest model = RandomForest.fit(USPS.formula, USPS.train, 200, 16, SplitRule.GINI, 200, 5, 1.0, Optional.empty(), Optional.of(seeds));
+        RandomForest model = RandomForest.fit(USPS.formula, USPS.train, 200, 16, SplitRule.GINI, 200, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds)));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {

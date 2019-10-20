@@ -19,7 +19,7 @@ package smile.math.distance;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 
 /**
  * Minkowski distance of order p or L<sub>p</sub>-norm, is a generalization of

@@ -15,19 +15,18 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.math;
+package smile.util;
 
 import org.junit.*;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
 
 /**
  *
  * @author Haifeng Li
  */
-public class IntArrayListTest {
-    public IntArrayListTest() {
+public class SparseArrayTest {
+    public SparseArrayTest() {
     }
 
     @BeforeClass
@@ -47,41 +46,50 @@ public class IntArrayListTest {
     }
 
     /**
-     * Test of all methods, of class IntArrayList.
+     * Test of all methods, of class SparseArrayTest.
      */
     @Test
     public void testAll() {
-        System.out.println("IntArrayList");
-        IntArrayList a = new IntArrayList();
+        System.out.println("SparseArray");
+        SparseArray a = new SparseArray();
         assertEquals(true, a.isEmpty());
 
-        a.add(1);
-        a.add(2);
+        a.set(1, 0.5);
+        a.set(2, 1.0);
         assertEquals(2, a.size());
-        assertEquals(1, a.get(0));
-        assertEquals(2, a.get(1));
+        assertEquals(0.0, a.get(0), 1E-15);
+        assertEquals(0.5, a.get(1), 1E-15);
+        assertEquals(1.0, a.get(2), 1E-15);
         assertEquals(false, a.isEmpty());
 
-        a.remove(0);
+        a.remove(1);
         assertEquals(1, a.size());
-        assertEquals(2, a.get(0));
+        assertEquals(0.0, a.get(1), 1E-15);
+        assertEquals(1.0, a.get(2), 1E-15);
         assertEquals(false, a.isEmpty());
 
 
-        a.remove(0);
-        assertEquals(0, a.size());
-        assertEquals(true, a.isEmpty());
-
-        a.add(new int[]{1, 2, 3, 4});
-        assertEquals(4, a.size());
-        assertEquals(3, a.get(2));
+        a.remove(1);
+        assertEquals(1, a.size());
+        assertEquals(0.0, a.get(1), 1E-15);
+        assertEquals(1.0, a.get(2), 1E-15);
         assertEquals(false, a.isEmpty());
-        assertEquals(4, a.stream().count());
 
-        a.set(2, 4);
-        assertEquals(4, a.get(2));
+        SparseArray.Entry e = a.stream().findFirst().get();
+        assertEquals(1, a.stream().count());
+        assertEquals(2, e.i);
+        assertEquals(1.0, e.x, 1E-15);
 
-        int[] b = a.toArray();
-        assertArrayEquals(new int[]{1, 2, 4, 4}, b);
+        a.set(0, 4);
+        e = a.stream().findFirst().get();
+        assertEquals(2, a.stream().count());
+        assertEquals(2, e.i);
+        assertEquals(1.0, e.x, 1E-15);
+
+        a.sort();
+        e = a.stream().findFirst().get();
+        assertEquals(2, a.stream().count());
+        assertEquals(0, e.i);
+        assertEquals(4.0, e.x, 1E-15);
     }
 }

@@ -19,7 +19,7 @@ package smile.math.distance;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 
 /**
  * Manhattan distance, also known as L<sub>1</sub> distance or L<sub>1</sub>

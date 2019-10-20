@@ -22,7 +22,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.Weather;
+import smile.data.DataFrame;
 import smile.data.WeatherNominal;
 
 import static org.junit.Assert.*;
@@ -74,10 +74,11 @@ public class SparseOneHotEncoderTest {
             {1, 3, 7, 9},
             {2, 4, 6, 8}
         };
-        
-        SparseOneHotEncoder n2sb = new SparseOneHotEncoder(Weather.data.schema());
-        for (int i = 0; i < Weather.data.size(); i++) {
-            int[] y = n2sb.apply(Weather.data.get(i));
+
+        DataFrame data = WeatherNominal.formula.x(WeatherNominal.data);
+        SparseOneHotEncoder n2sb = new SparseOneHotEncoder(data.schema());
+        for (int i = 0; i < data.size(); i++) {
+            int[] y = n2sb.apply(data.get(i));
             assertEquals(result[i].length, y.length);
             for (int j = 0; j < y.length; j++) {
                 assertEquals(result[i][j], y[j]);

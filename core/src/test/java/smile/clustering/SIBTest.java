@@ -28,7 +28,7 @@ import smile.data.Dataset;
 import smile.data.Instance;
 import smile.data.SparseDataset;
 import smile.io.DatasetReader;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 import smile.validation.AdjustedRandIndex;
 import smile.validation.RandIndex;
 

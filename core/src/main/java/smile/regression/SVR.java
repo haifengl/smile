@@ -18,7 +18,7 @@
 package smile.regression;
 
 import smile.base.svm.LinearKernelMachine;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 import smile.math.kernel.BinarySparseLinearKernel;
 import smile.math.kernel.LinearKernel;
 import smile.math.kernel.MercerKernel;

@@ -18,7 +18,7 @@
 package smile.math.kernel;
 
 import smile.math.MathEx;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 
 /**
  * The hyperbolic tangent kernel.
