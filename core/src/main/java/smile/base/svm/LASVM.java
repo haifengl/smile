@@ -18,10 +18,10 @@
 package smile.base.svm;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import smile.math.MathEx;
-import smile.math.SparseArray;
 import smile.math.kernel.MercerKernel;
 
 /**
@@ -88,9 +88,9 @@ public class LASVM<T> implements Serializable {
      */
     private T[] x;
     /**
-     * The kernel value cache.
+     * The kernel matrix.
      */
-    private SparseArray[] cache;
+    private double[][] K;
 
     /**
      * Constructor.
@@ -131,14 +131,26 @@ public class LASVM<T> implements Serializable {
      */
     public KernelMachine<T>  fit(T[] x, int[] y, int epoch) {
         this.x = x;
-        this.cache = new SparseArray[x.length];
+        this.K = new double[x.length][];
 
         // pick initial support vectors.
         init(x, y);
 
         // stochastic training
-        for (int i = 0; i < epoch; i++) {
-            update(x, y);
+        int phase = Math.min(x.length, 1000);
+        for (int e = 0, iter = 0; e < epoch; e++) {
+            for (int i : MathEx.permutate(x.length)) {
+                process(i, x[i], y[i]);
+
+                do {
+                    reprocess(tol); // at least one call to reprocess
+                    minmax();
+                } while (gmax - gmin > 1000);
+
+                if (++iter % phase == 0) {
+                    logger.info("{} iterations, {} support vectors", iter, sv.size());
+                }
+            }
         }
 
         finish();
@@ -174,25 +186,6 @@ public class LASVM<T> implements Serializable {
     }
 
     /**
-     * Trains the SVM with the given dataset for one epoch. The caller may
-     * call this method multiple times to obtain better accuracy although
-     * one epoch is usually sufficient. After calling this method sufficient
-     * times (usually 1 or 2), the users should call {@link #finish()}
-     * to further process support vectors.
-     */
-    private void update(T[] x, int[] y) {
-        // train SVM in a stochastic order.
-        for (int i : MathEx.permutate(x.length)) {
-            process(i, x[i], y[i]);
-
-            do {
-                reprocess(tol); // at least one call to reprocess
-                minmax();
-            } while (gmax - gmin > 1000);
-        }
-    }
-
-    /**
      * Find support vectors with smallest (of I_up) and largest (of I_down) gradients.
      */
     private void minmax() {
@@ -223,17 +216,15 @@ public class LASVM<T> implements Serializable {
      * @param j the index of support vector.
      */
     private double k(int i, int j) {
-        SparseArray a = cache[i];
-        if (a != null) {
-            for (SparseArray.Entry e : a) {
-                if (e.i == j) return e.x;
-            }
+        double k = Double.NaN;
+        double[] ki = K[i];
+        if (ki != null) {
+            k = ki[j];
         }
 
-        // cache miss
-        double k = kernel.k(x[i], x[j]);
-        if (a != null) {
-            a.append(j, k);
+        if (Double.isNaN(k)) {
+            k = kernel.k(x[i], x[j]);
+            if (ki != null) ki[j] = k;
         }
 
         return k;
@@ -364,18 +355,21 @@ public class LASVM<T> implements Serializable {
             throw new IllegalArgumentException("Invalid label: " + y);
         }
 
+        // Bail out if already in expansion
+        for (SupportVector<T> v : sv) {
+            if (v.x == x) return true;
+        }
+
         // Compute gradient
         double g = y;
-        SparseArray cachei = new SparseArray();
 
-        for (SupportVector<T> v : sv) {
-            // Bail out if already in expansion?
-            if (v.x == x) return true;
-
+        double[] cache = new double[K.length];
+        Arrays.fill(cache, Double.NaN);
+        g -= sv.stream().parallel().mapToDouble(v -> {
             double k = kernel.k(v.x, x);
-            g -= v.alpha * k;
-            cachei.append(v.i, k);
-        }
+            cache[v.i] = k;
+            return v.alpha * k;
+        }).sum();
 
         // Decide insertion
         minmax();
@@ -388,7 +382,7 @@ public class LASVM<T> implements Serializable {
         // Insert
         SupportVector<T> v = new SupportVector<>(i, x, y, 0.0, g, Cp, Cn, kernel.k(x, x));
         sv.addFirst(v);
-        cache[i] = cachei;
+        K[i] = cache;
 
         // Process
         if (y > 0) {
@@ -424,7 +418,8 @@ public class LASVM<T> implements Serializable {
             }
         }
 
-        logger.info("{} support vectors, {} bounded\n", sv.size(), bsv);
+        logger.info("{} samples, {} support vectors, {} bounded", x.length, sv.size(), bsv);
+
     }
 
     /**
@@ -433,14 +428,13 @@ public class LASVM<T> implements Serializable {
      * @param maxIter the maximum number of iterations.
      */
     private void finish(double epsgr, int maxIter) {
-        logger.info("SVM is finalizing the training by reprocess.");
+        logger.info("Finalizing the training by reprocess.");
         for (int count = 1; count <= maxIter && smo(null, null, epsgr); count++) {
             if (count % 1000 == 0) {
-                logger.info("finishing {} reprocess iterations.", count);
+                logger.info("{} reprocess iterations.", count);
             }
         }
         evict();
-        logger.info("LASVM finished the reprocess.");
     }
 
     /**
@@ -460,7 +454,7 @@ public class LASVM<T> implements Serializable {
             SupportVector v = iter.next();
             if (v.alpha == 0) {
                 if ((v.g >= gmax && 0 >= v.cmax) || (v.g <= gmin && 0 <= v.cmin)) {
-                    cache[v.i] = null;
+                    K[v.i] = null;
                     iter.remove();
                 }
             }
