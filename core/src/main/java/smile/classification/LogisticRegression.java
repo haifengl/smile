@@ -281,7 +281,19 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
          * Regularization factor.
          */
         double lambda;
-        
+        /**
+         * The number of samples in a partition.
+         */
+        int partitionSize;
+        /**
+         * The number of partitions.
+         */
+        int partitions;
+        /**
+         * The workspace to store gradient for each data partition.
+         */
+        double[][] gradients;
+
         /**
          * Constructor.
          */
@@ -290,6 +302,10 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
             this.y = y;
             this.lambda = lambda;
             this.p = x[0].length;
+
+            partitionSize = Integer.valueOf(System.getProperty("smile.data.partition.size", "1000"));
+            partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
+            gradients = new double[partitions][p+1];
         }
 
         @Override
@@ -313,18 +329,33 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
 
         @Override
         public double g(double[] w, double[] g) {
-            Arrays.fill(g, 0.0);
-            double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
-                double[] xi = x[i];
-                double wx = dot(xi, w);
-                double err = y[i] - MathEx.logistic(wx);
-                for (int j = 0; j < p; j++) {
-                    g[j] -= err * xi[j];
-                }
-                g[p] -= err;
+            double f = IntStream.range(0, partitions).parallel().mapToDouble(r -> {
+                double[] gradient = gradients[r];
+                Arrays.fill(gradient, 0.0);
 
-                return log1pe(wx) - y[i] * wx;
+                int begin = r * partitionSize;
+                int end = (r + 1) * partitionSize;
+                if (end > x.length) end = x.length;
+
+                return IntStream.range(begin, end).sequential().mapToDouble(i -> {
+                    double[] xi = x[i];
+                    double wx = dot(xi, w);
+                    double err = y[i] - MathEx.logistic(wx);
+                    for (int j = 0; j < p; j++) {
+                        gradient[j] -= err * xi[j];
+                    }
+                    gradient[p] -= err;
+
+                    return log1pe(wx) - y[i] * wx;
+                }).sum();
             }).sum();
+
+            Arrays.fill(g, 0.0);
+            for (double[] gradient : gradients) {
+                for (int i = 0; i < g.length; i++) {
+                    g[i] += gradient[i];
+                }
+            }
 
             if (lambda > 0.0) {
                 double wnorm = 0.0;
@@ -365,9 +396,21 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
          */
         double lambda;
         /**
-         * The workspace to store posteriori probabilities.
+         * The number of samples in a partition.
          */
-        double[] posteriori;
+        int partitionSize;
+        /**
+         * The number of partitions.
+         */
+        int partitions;
+        /**
+         * The workspace to store gradient for each data partition.
+         */
+        double[][] gradients;
+        /**
+         * The workspace to store posteriori probability for each data partition.
+         */
+        double[][] posterioris;
 
         /**
          * Constructor.
@@ -378,20 +421,32 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
             this.k = k;
             this.lambda = lambda;
             this.p = x[0].length;
-            posteriori = new double[k];
+
+            partitionSize = Integer.valueOf(System.getProperty("smile.data.partition.size", "1000"));
+            partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
+            gradients = new double[partitions][(k-1)*(p+1)];
+            posterioris = new double[partitions][k];
         }
 
         @Override
         public double f(double[] w) {
-            double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
-                posteriori[k-1] = 0.0;
-                for (int j = 0; j < k-1; j++) {
-                    posteriori[j] = dot(x[i], w, j, p);
-                }
+            double f = IntStream.range(0, partitions).parallel().mapToDouble(r -> {
+                double[] posteriori = posterioris[r];
 
-                MathEx.softmax(posteriori);
+                int begin = r * partitionSize;
+                int end = (r+1) * partitionSize;
+                if (end > x.length) end = x.length;
 
-                return -log(posteriori[y[i]]);
+                return IntStream.range(begin, end).sequential().mapToDouble(i -> {
+                    posteriori[k - 1] = 0.0;
+                    for (int j = 0; j < k - 1; j++) {
+                        posteriori[j] = dot(x[i], w, j, p);
+                    }
+
+                    MathEx.softmax(posteriori);
+
+                    return -log(posteriori[y[i]]);
+                }).sum();
             }).sum();
 
             if (lambda > 0.0) {
@@ -410,28 +465,43 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
 
         @Override
         public double g(double[] w, double[] g) {
-            Arrays.fill(g, 0.0);
+            double f = IntStream.range(0, partitions).parallel().mapToDouble(r -> {
+                        double[] posteriori = posterioris[r];
+                        double[] gradient = gradients[r];
+                        Arrays.fill(gradient, 0.0);
 
-            double f = IntStream.range(0, x.length).sequential().mapToDouble(i -> {
-                posteriori[k-1] = 0.0;
-                for (int j = 0; j < k-1; j++) {
-                    posteriori[j] = dot(x[i], w, j, p);
-                }
+                        int begin = r * partitionSize;
+                        int end = (r+1) * partitionSize;
+                        if (end > x.length) end = x.length;
 
-                MathEx.softmax(posteriori);
+                        return IntStream.range(begin, end).sequential().mapToDouble(i -> {
+                            posteriori[k - 1] = 0.0;
+                            for (int j = 0; j < k - 1; j++) {
+                                posteriori[j] = dot(x[i], w, j, p);
+                            }
 
-                for (int j = 0; j < k-1; j++) {
-                    double err = (y[i] == j ? 1.0 : 0.0) - posteriori[j];
+                            MathEx.softmax(posteriori);
 
-                    int pos = j * (p + 1);
-                    for (int l = 0; l < p; l++) {
-                        g[pos + l] -= err * x[i][l];
-                    }
-                    g[pos + p] -= err;
-                }
+                            for (int j = 0; j < k - 1; j++) {
+                                double err = (y[i] == j ? 1.0 : 0.0) - posteriori[j];
 
-                return -log(posteriori[y[i]]);
+                                int pos = j * (p + 1);
+                                for (int l = 0; l < p; l++) {
+                                    gradient[pos + l] -= err * x[i][l];
+                                }
+                                gradient[pos + p] -= err;
+                            }
+
+                            return -log(posteriori[y[i]]);
+                        }).sum();
             }).sum();
+
+            Arrays.fill(g, 0.0);
+            for (double[] gradient : gradients) {
+                for (int i = 0; i < g.length; i++) {
+                    g[i] += gradient[i];
+                }
+            }
 
             if (lambda > 0.0) {
                 double wnorm = 0.0;

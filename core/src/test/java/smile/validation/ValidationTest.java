@@ -25,15 +25,9 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 import smile.classification.DecisionTree;
-import smile.classification.LDA;
 import smile.data.Abalone;
 import smile.data.USPS;
-import smile.regression.RBFNetwork;
 import smile.regression.RegressionTree;
-import smile.util.SmileUtils;
-import smile.math.MathEx;
-import smile.math.distance.EuclideanDistance;
-import smile.math.rbf.RadialBasisFunction;
 
 /**
  *

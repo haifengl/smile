@@ -20,13 +20,10 @@ package smile.validation;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
-import smile.data.Tuple;
-import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
 
-import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 

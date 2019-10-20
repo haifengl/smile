@@ -83,7 +83,7 @@ public class LogisticRegressionTest {
         int error = Error.apply(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(331, error);
+        assertEquals(339, error);
     }
 
     @Test
@@ -107,7 +107,7 @@ public class LogisticRegressionTest {
         int[] prediction = Validation.test(model, Segment.testx);
         int error = Error.apply(Segment.testy, prediction);
         System.out.println("Error = " + error);
-        assertEquals(52, error);
+        assertEquals(50, error);
 
         int t = Segment.x.length;
         int round = (int) Math.round(Math.log(Segment.testx.length));
@@ -124,7 +124,7 @@ public class LogisticRegressionTest {
         prediction = Validation.test(model, Segment.testx);
         error = Error.apply(Segment.testy, prediction);
         System.out.println("Error after online update = " + error);
-        assertEquals(41, error);
+        assertEquals(39, error);
     }
 
     @Test
