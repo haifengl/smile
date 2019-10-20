@@ -50,35 +50,11 @@ public interface Regression<T> extends Serializable {
      * @return the predicted values.
      */
     default double[] predict(T[] x) {
-        return Arrays.stream(x).mapToDouble(xi -> predict(xi)).toArray();
-    }
-
-    /**
-     * Predicts the dependent variable of a tuple instance.
-     * @param x a tuple instance.
-     * @return the predicted value of dependent variable.
-     */
-    default double predict(Tuple x) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Predicts the dependent variables of a data frame.
-     *
-     * @param data the data frame.
-     * @return the predicted values.
-     */
-    default double[] predict(DataFrame data) {
-        return data.stream().mapToDouble(x -> predict(x)).toArray();
-    }
-
-    /** Returns the formula associated with the model. */
-    default Optional<Formula> formula() {
-        return Optional.empty();
-    }
-
-    /** Returns the design matrix schema. */
-    default Optional<StructType> schema() {
-        return Optional.empty();
+        int n = x.length;
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            y[i] = predict(x[i]);
+        }
+        return y;
     }
 }

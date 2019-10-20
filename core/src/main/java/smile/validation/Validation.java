@@ -18,6 +18,8 @@
 package smile.validation;
 
 import smile.classification.Classifier;
+import smile.classification.DataFrameClassifier;
+import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
 import smile.data.DataFrame;
 
@@ -53,7 +55,7 @@ public interface Validation {
      * @param data the test data set.
      * @return the predictions.
      */
-    static <T> int[] test(Classifier<T> model, DataFrame data) {
+    static <T> int[] test(DataFrameClassifier model, DataFrame data) {
         return model.predict(data);
     }
 
@@ -83,7 +85,7 @@ public interface Validation {
      * @param data the test data set.
      * @return the predictions.
      */
-    static <T> double[] test(Regression<T> model, DataFrame data) {
+    static double[] test(DataFrameRegression model, DataFrame data) {
         return model.predict(data);
     }
 }

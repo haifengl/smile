@@ -27,6 +27,8 @@ import smile.validation.LOOCV;
 import smile.validation.RMSE;
 import smile.validation.Validation;
 
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.stream.LongStream;
 
 import static org.junit.Assert.assertEquals;
@@ -36,7 +38,8 @@ import static org.junit.Assert.assertEquals;
  * @author Haifeng Li
  */
 public class RandomForestTest {
-    
+    long[] seeds = MathEx.seeds(19650218L, 256).limit(200).toArray();
+
     public RandomForestTest() {
     }
 
@@ -61,7 +64,7 @@ public class RandomForestTest {
         System.out.println("longley");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        RandomForest model = RandomForest.fit(Longley.formula, Longley.data, 100, 3, 10, 3, 1.0, () -> MathEx.probablePrime(19650218L, 256));
+        RandomForest model = RandomForest.fit(Longley.formula, Longley.data, 100, 3, 10, 3, 1.0, Optional.of(Arrays.stream(seeds)));
 
         double[] importance = model.importance();
         System.out.println("----- importance -----");
