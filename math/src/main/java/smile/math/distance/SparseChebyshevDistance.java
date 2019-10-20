@@ -18,7 +18,7 @@
 package smile.math.distance;
 
 import java.util.Iterator;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 
 /**
  * Chebyshev distance (or Tchebychev distance), or L<sub>&infin;</sub> metric

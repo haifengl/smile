@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.math;
+package smile.util;
 
 import org.junit.*;
 
@@ -26,8 +26,8 @@ import static org.junit.Assert.assertArrayEquals;
  *
  * @author Haifeng Li
  */
-public class DoubleArrayListTest {
-    public DoubleArrayListTest() {
+public class IntArrayListTest {
+    public IntArrayListTest() {
     }
 
     @BeforeClass
@@ -47,24 +47,24 @@ public class DoubleArrayListTest {
     }
 
     /**
-     * Test of all methods, of class DoubleArrayListTest.
+     * Test of all methods, of class IntArrayList.
      */
     @Test
     public void testAll() {
-        System.out.println("DoubleArrayList");
-        DoubleArrayList a = new DoubleArrayList();
+        System.out.println("IntArrayList");
+        IntArrayList a = new IntArrayList();
         assertEquals(true, a.isEmpty());
 
         a.add(1);
         a.add(2);
         assertEquals(2, a.size());
-        assertEquals(1, a.get(0), 1E-15);
-        assertEquals(2, a.get(1), 1E-15);
+        assertEquals(1, a.get(0));
+        assertEquals(2, a.get(1));
         assertEquals(false, a.isEmpty());
 
         a.remove(0);
         assertEquals(1, a.size());
-        assertEquals(2, a.get(0), 1E-15);
+        assertEquals(2, a.get(0));
         assertEquals(false, a.isEmpty());
 
 
@@ -72,16 +72,16 @@ public class DoubleArrayListTest {
         assertEquals(0, a.size());
         assertEquals(true, a.isEmpty());
 
-        a.add(new double[]{1, 2, 3, 4});
+        a.add(new int[]{1, 2, 3, 4});
         assertEquals(4, a.size());
-        assertEquals(3, a.get(2), 1E-15);
+        assertEquals(3, a.get(2));
         assertEquals(false, a.isEmpty());
         assertEquals(4, a.stream().count());
 
         a.set(2, 4);
-        assertEquals(4, a.get(2), 1E-15);
+        assertEquals(4, a.get(2));
 
-        double[] b = a.toArray();
-        assertArrayEquals(new double[]{1, 2, 4, 4}, b, 1E-15);
+        int[] b = a.toArray();
+        assertArrayEquals(new int[]{1, 2, 4, 4}, b);
     }
 }

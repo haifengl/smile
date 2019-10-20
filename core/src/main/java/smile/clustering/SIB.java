@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import smile.math.MathEx;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 import smile.data.SparseDataset;
 import smile.util.MulticoreExecutor;
 

@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 import static org.junit.Assert.*;
 
 /**

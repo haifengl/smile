@@ -22,10 +22,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
-import smile.math.SparseArray;
 import smile.math.matrix.SparseMatrix;
 import static org.junit.Assert.*;
 

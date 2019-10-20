@@ -30,7 +30,7 @@ import smile.data.DataFrame;
 import smile.data.Dataset;
 import smile.data.Instance;
 import smile.data.type.StructType;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 
 /**
  * Interface to load a Dataset from external storage systems.

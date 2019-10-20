@@ -17,19 +17,10 @@
 
 package smile.io;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
-import smile.data.Dataset;
-import smile.data.Instance;
-import smile.data.type.StructType;
-import smile.math.SparseArray;
 
 /**
  * Interface to write a Dataset to external storage systems.

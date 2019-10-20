@@ -19,9 +19,7 @@ package smile.data;
 
 import java.util.*;
 import java.util.stream.Stream;
-
-import smile.math.SparseArray;
-import smile.math.matrix.SparseMatrix;
+import smile.util.SparseArray;
 
 /**
  * List of Lists sparse matrix format. LIL stores one list per row,

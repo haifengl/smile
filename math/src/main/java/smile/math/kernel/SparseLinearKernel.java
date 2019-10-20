@@ -18,7 +18,7 @@
 package smile.math.kernel;
 
 import smile.math.MathEx;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 
 /**
  * The linear dot product kernel on sparse arrays. When using a linear kernel, input space is

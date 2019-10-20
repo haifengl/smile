@@ -19,7 +19,7 @@ package smile.base.svm;
 
 import java.io.Serializable;
 import smile.math.MathEx;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 import smile.math.kernel.BinarySparseLinearKernel;
 import smile.math.kernel.LinearKernel;
 import smile.math.kernel.SparseLinearKernel;

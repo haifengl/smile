@@ -20,7 +20,7 @@ package smile.io;
 import org.junit.*;
 import smile.data.Dataset;
 import smile.data.Instance;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 
 import static org.junit.Assert.assertEquals;
 

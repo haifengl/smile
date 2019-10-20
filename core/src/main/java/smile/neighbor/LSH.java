@@ -24,7 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import smile.math.IntArrayList;
+import smile.util.IntArrayList;
 import smile.math.MathEx;
 import smile.sort.HeapSelect;
 import smile.stat.distribution.GaussianDistribution;

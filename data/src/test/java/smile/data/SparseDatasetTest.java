@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 import smile.math.matrix.SparseMatrix;
 import static org.junit.Assert.*;
 

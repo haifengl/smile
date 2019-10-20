@@ -18,7 +18,7 @@
 package smile.math.kernel;
 
 import smile.math.MathEx;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 
 /**
  * The Laplacian Kernel. k(u, v) = e<sup>-||u-v|| / &sigma;</sup>,

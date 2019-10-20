@@ -19,7 +19,7 @@ package smile.classification;
 
 import smile.data.measure.DiscreteMeasure;
 import smile.math.MathEx;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 import smile.stat.distribution.Distribution;
 
 /**
