@@ -32,6 +32,7 @@ import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
+import smile.util.Strings;
 import smile.validation.Accuracy;
 import smile.validation.ClassificationMeasure;
 
@@ -187,7 +188,8 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
         int maxNodes = Integer.valueOf(prop.getProperty("smile.random.forest.max.nodes", "100"));
         int nodeSize = Integer.valueOf(prop.getProperty("smile.random.forest.node.size", "5"));
         double subsample = Double.valueOf(prop.getProperty("smile.random.forest.sample.rate", "1.0"));
-        return fit(formula, data, ntrees, mtry, rule, maxNodes, nodeSize, subsample);
+        Optional<int[]> classWeight = Optional.ofNullable(Strings.parseIntArray(prop.getProperty("smile.random.forest.class.weight")));
+        return fit(formula, data, ntrees, mtry, rule, maxNodes, nodeSize, subsample, classWeight, Optional.empty());
     }
 
     /**

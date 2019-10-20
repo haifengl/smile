@@ -33,8 +33,6 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
-import smile.validation.RMSE;
-import smile.validation.RegressionMeasure;
 
 /**
  * Random forest for regression. Random forest is an ensemble method that
