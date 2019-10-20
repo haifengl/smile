@@ -276,7 +276,7 @@ public abstract class CART {
             return Optional.empty(); // all the samples in the node have the same response
         }
 
-        // skip the insplitable columns
+        // skip the unsplittable columns
         int p = schema.length();
         int[] columns = IntStream.range(0, p).filter(i -> !unsplittable[i]).toArray();
 
