@@ -90,9 +90,9 @@ public class SVR<T> {
     private int gmaxindex;
 
     /**
-     * The kernel value cache.
+     * The kernel matrix.
      */
-    private double[][] cache;
+    private double[][] K;
 
     /**
      * Support vector.
@@ -162,7 +162,7 @@ public class SVR<T> {
         }
 
         int n = x.length;
-        cache = new double[n][];
+        K = new double[n][];
 
         // Initialize support vectors.
         sv = new ArrayList<>(n);
@@ -251,14 +251,12 @@ public class SVR<T> {
      * @param v data vector to evaluate kernel matrix.
      */
     private double[] gram(SupportVector v) {
-        double[] cachei = cache[v.i];
-        if (cachei == null) {
-            double[] c = new double[sv.size()];
-            cachei = c;
-            cache[v.i] = c;
-            sv.stream().parallel().forEach(vi -> c[vi.i] = kernel.k(v.x, vi.x));
+        if (K[v.i] == null) {
+            double[] ki = new double[sv.size()];
+            sv.stream().parallel().forEach(vi -> ki[vi.i] = kernel.k(v.x, vi.x));
+            K[v.i] = ki;
         }
-        return cachei;
+        return K[v.i];
     }
 
     /**

@@ -139,13 +139,13 @@ public class SVMTest {
             testy[i] = sample.label();
         }
 
-        BinarySparseGaussianKernel kernel = new BinarySparseGaussianKernel(31);
-        Classifier<int[]> model = SVM.fit(x, y, kernel, 10, 1E-3);
+        BinarySparseGaussianKernel kernel = new BinarySparseGaussianKernel(31.6);
+        Classifier<int[]> model = SVM.fit(x, y, kernel, 100, 1E-3);
 
         int[] prediction = Validation.test(model, testx);
         int error = Error.apply(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
-        assertEquals(2912, error);
+        assertEquals(2451, error);
     }
 
     @Test
