@@ -96,7 +96,7 @@ public class SVMTest {
 
         GaussianKernel kernel = new GaussianKernel(90);
         SVM<double[]> model = SVM.fit(x, y, kernel, 100, 1E-3);
-
+        
         int[] prediction = Validation.test(model, testx);
         int error = Error.apply(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
