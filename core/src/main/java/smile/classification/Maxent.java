@@ -48,9 +48,8 @@ import smile.math.DifferentiableMultivariateFunction;
  * 
  * @author Haifeng Li
  */
-public class Maxent implements SoftClassifier<int[]> {
+public class Maxent implements SoftClassifier<int[]>, OnlineClassifier<int[]> {
     private static final long serialVersionUID = 2L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Maxent.class);
 
     /**
      * The dimension of input space.
@@ -76,6 +75,11 @@ public class Maxent implements SoftClassifier<int[]> {
      * The linear weights for multi-class logistic regression.
      */
     private double[][] W;
+
+    /**
+     * learning rate for stochastic gradient descent.
+     */
+    private double eta = 0.1;
 
     /**
      * The class label encoder.
@@ -192,12 +196,13 @@ public class Maxent implements SoftClassifier<int[]> {
         int k = codec.k;
         y = codec.y;
 
+        Maxent model;
         BFGS bfgs = new BFGS(tol, maxIter);
         if (k == 2) {
             BinaryObjectiveFunction func = new BinaryObjectiveFunction(x, y, p, lambda);
             double[] w = new double[p + 1];
             double L = -bfgs.minimize(func, 5, w);
-            return new Maxent(L, w, codec.labels);
+            model = new Maxent(L, w, codec.labels);
         } else {
             MultiClassObjectiveFunction func = new MultiClassObjectiveFunction(x, y, k, p, lambda);
             double[] w = new double[(k - 1) * (p + 1)];
@@ -210,8 +215,11 @@ public class Maxent implements SoftClassifier<int[]> {
                 }
             }
 
-            return new Maxent(L, W, codec.labels);
+            model = new Maxent(L, W, codec.labels);
         }
+
+        model.setLearningRate(0.1 / x.length);
+        return model;
     }
 
     /**
@@ -480,8 +488,7 @@ public class Maxent implements SoftClassifier<int[]> {
             return f;
         }
     }
-
-
+    
     /**
      * Returns natural log(1+exp(x)) without overflow.
      */
@@ -530,6 +537,62 @@ public class Maxent implements SoftClassifier<int[]> {
         }
 
         return dot;
+    }
+
+    @Override
+    public void update(int[] x, int y) {
+        y = labels.id(y);
+        if (k == 2) {
+            // calculate gradient for incoming data
+            double wx = dot(x, w);
+            double err = y - MathEx.logistic(wx);
+
+            // update the weights
+            w[p] += eta * err;
+            for (int j : x) {
+                w[j] += eta * err;
+            }
+        } else {
+            double[] prob = new double[k];
+            for (int j = 0; j < k-1; j++) {
+                prob[j] = dot(x, W[j]);
+            }
+
+            MathEx.softmax(prob);
+
+            // update the weights
+            for (int i = 0; i < k-1; i++) {
+                double[] w = W[i];
+                double err = (y == i ? 1.0 : 0.0) - prob[i];
+                w[p] += eta * err;
+                for (int j : x) {
+                    w[j] += eta * err;
+                }
+            }
+        }
+    }
+
+    /**
+     * Sets the learning rate of stochastic gradient descent.
+     * It is a good practice to adapt the learning rate for
+     * different data sizes. For example, it is typical to
+     * set the learning rate to eta/n, where eta is in [0.1, 0.3]
+     * and n is the size of the training data.
+     *
+     * @param rate the learning rate.
+     */
+    public void setLearningRate(double rate) {
+        if (rate <= 0.0) {
+            throw new IllegalArgumentException("Invalid learning rate: " + rate);
+        }
+        this.eta = rate;
+    }
+
+    /**
+     * Returns the learning rate of stochastic gradient descent.
+     */
+    public double getLearningRate() {
+        return eta;
     }
 
     /**
