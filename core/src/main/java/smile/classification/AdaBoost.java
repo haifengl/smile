@@ -18,7 +18,6 @@
 package smile.classification;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.Properties;
 import smile.base.cart.CART;
 import smile.base.cart.SplitRule;
@@ -261,12 +260,12 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
     }
 
     @Override
-    public Optional<Formula> formula() {
-        return Optional.of(formula);
+    public Formula formula() {
+        return formula;
     }
 
     @Override
-    public Optional<StructType> schema() {
+    public StructType schema() {
         return trees[0].schema();
     }
 

@@ -101,7 +101,7 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         int[] prediction = LOOCV.classification(WeatherNominal.data, x -> RandomForest.fit(WeatherNominal.formula, x, 100, 2, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
@@ -120,7 +120,7 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         int[] prediction = LOOCV.classification(Iris.data, x -> RandomForest.fit(Iris.formula, x, 100, 3, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
@@ -161,7 +161,7 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         int[] prediction = Validation.test(model, Segment.test);
@@ -185,7 +185,7 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         int[] prediction = Validation.test(model, USPS.test);

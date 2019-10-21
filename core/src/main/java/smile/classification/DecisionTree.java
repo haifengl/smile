@@ -362,13 +362,14 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
         return labels.map($ -> $.label(y)).orElse(y);
     }
 
+    /** Returns null if the tree is part of ensemble algorithm. */
     @Override
-    public Optional<Formula> formula() {
-        return formula;
+    public Formula formula() {
+        return formula.orElse(null);
     }
 
     @Override
-    public Optional<StructType> schema() {
-        return Optional.of(schema);
+    public StructType schema() {
+        return schema;
     }
 }

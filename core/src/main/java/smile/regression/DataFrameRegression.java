@@ -17,7 +17,6 @@
 
 package smile.regression;
 
-import java.util.Optional;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -52,8 +51,8 @@ public interface DataFrameRegression {
     }
 
     /** Returns the formula associated with the model. */
-    Optional<Formula> formula();
+    Formula formula();
 
     /** Returns the design matrix schema. */
-    Optional<StructType> schema();
+    StructType schema();
 }
