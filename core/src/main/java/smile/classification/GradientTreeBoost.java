@@ -18,7 +18,6 @@
 package smile.classification;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.IntStream;
 
@@ -276,12 +275,12 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     }
 
     @Override
-    public Optional<Formula> formula() {
-        return Optional.of(formula);
+    public Formula formula() {
+        return formula;
     }
 
     @Override
-    public Optional<StructType> schema() {
+    public StructType schema() {
         if (trees != null)
             return trees[0].schema();
         else

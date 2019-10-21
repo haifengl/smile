@@ -63,7 +63,7 @@ public class AdaBoostTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         int[] prediction = LOOCV.classification(WeatherNominal.data, x -> AdaBoost.fit(WeatherNominal.formula, x, 200, 4, 1));
@@ -82,7 +82,7 @@ public class AdaBoostTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         int[] prediction = LOOCV.classification(Iris.data, x -> AdaBoost.fit(Iris.formula, x, 200, 4, 1));
@@ -124,7 +124,7 @@ public class AdaBoostTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         int[] prediction = Validation.test(model, Segment.test);
@@ -149,7 +149,7 @@ public class AdaBoostTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         int[] prediction = Validation.test(model, USPS.test);

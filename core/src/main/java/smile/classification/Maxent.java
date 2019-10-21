@@ -488,7 +488,7 @@ public class Maxent implements SoftClassifier<int[]>, OnlineClassifier<int[]> {
             return f;
         }
     }
-    
+
     /**
      * Returns natural log(1+exp(x)) without overflow.
      */

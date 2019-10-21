@@ -379,12 +379,12 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
     }
 
     @Override
-    public Optional<Formula> formula() {
-        return Optional.of(formula);
+    public Formula formula() {
+        return formula;
     }
 
     @Override
-    public Optional<StructType> schema() {
+    public StructType schema() {
         return trees.get(0).tree.schema();
     }
 

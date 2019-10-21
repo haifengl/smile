@@ -64,7 +64,7 @@ public class GradientTreeBoostTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         int[] prediction = LOOCV.classification(WeatherNominal.data, x -> GradientTreeBoost.fit(WeatherNominal.formula, x, 100, 6, 5, 0.05, 0.7));
@@ -83,7 +83,7 @@ public class GradientTreeBoostTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         int[] prediction = LOOCV.classification(Iris.data, x -> GradientTreeBoost.fit(Iris.formula, x, 100, 6, 5, 0.05, 0.7));
@@ -125,7 +125,7 @@ public class GradientTreeBoostTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         int[] prediction = Validation.test(model, Segment.test);
@@ -150,7 +150,7 @@ public class GradientTreeBoostTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().get().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         int[] prediction = Validation.test(model, USPS.test);

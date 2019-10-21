@@ -18,7 +18,6 @@
 package smile.regression;
 
 import java.util.Arrays;
-import java.util.Optional;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -144,13 +143,13 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
     }
 
     @Override
-    public Optional<Formula> formula() {
-        return Optional.of(formula);
+    public Formula formula() {
+        return formula;
     }
 
     @Override
-    public Optional<StructType> schema() {
-        return Optional.of(schema);
+    public StructType schema() {
+        return schema;
     }
 
     /**

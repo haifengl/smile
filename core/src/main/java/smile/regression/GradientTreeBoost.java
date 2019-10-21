@@ -18,7 +18,6 @@
 package smile.regression;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.base.cart.*;
@@ -316,12 +315,12 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
     }
 
     @Override
-    public Optional<Formula> formula() {
-        return Optional.of(formula);
+    public Formula formula() {
+        return formula;
     }
 
     @Override
-    public Optional<StructType> schema() {
+    public StructType schema() {
         return trees[0].schema();
     }
 
