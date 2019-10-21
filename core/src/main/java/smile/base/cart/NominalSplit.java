@@ -42,7 +42,7 @@ public class NominalSplit extends Split {
 
     @Override
     public NominalNode toNode(Node trueChild, Node falseChild) {
-        return new NominalNode(feature, value, score, trueChild, falseChild);
+        return new NominalNode(feature, value, score, leaf.deviance(), trueChild, falseChild);
     }
 
     @Override

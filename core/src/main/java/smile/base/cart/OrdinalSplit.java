@@ -42,7 +42,7 @@ public class OrdinalSplit extends Split {
 
     @Override
     public OrdinalNode toNode(Node trueChild, Node falseChild) {
-        return new OrdinalNode(feature, value, score, trueChild, falseChild);
+        return new OrdinalNode(feature, value, score, leaf.deviance(), trueChild, falseChild);
     }
 
     @Override

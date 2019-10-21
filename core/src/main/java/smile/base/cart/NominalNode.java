@@ -19,11 +19,17 @@ package smile.base.cart;
 
 import smile.data.Tuple;
 import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.measure.Measure;
+import smile.math.MathEx;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * A node with a nominal split variable.
@@ -34,11 +40,11 @@ public class NominalNode extends InternalNode {
     /**
      * The split value.
      */
-    int value = Integer.MIN_VALUE;
+    int value;
 
     /** Constructor. */
-    public NominalNode(int feature, int value, double splitScore, Node trueChild, Node falseChild) {
-        super(feature, splitScore, trueChild, falseChild);
+    public NominalNode(int feature, int value, double splitScore, double deviance, Node trueChild, Node falseChild) {
+        super(feature, splitScore, deviance, trueChild, falseChild);
         this.value = value;
     }
 
@@ -51,5 +57,23 @@ public class NominalNode extends InternalNode {
     public String dot(StructType schema, StructField response, int id) {
         StructField field = schema.field(feature);
         return String.format(" %d [label=<%s = %s<br/>size = %d<br/>impurity reduction = %.4f>, fillcolor=\"#00000000\"];\n", id, field.name, field.toString(value), size(), score);
+    }
+
+    @Override
+    public String toString(StructType schema, boolean trueBranch) {
+        StructField field = schema.field(feature);
+        String values;
+        if (trueBranch) {
+            values = field.toString(value);
+        } else {
+            if (field.measure.isPresent() && field.measure.get() instanceof NominalScale) {
+                NominalScale scale = (NominalScale) field.measure.get();
+                values = Arrays.stream(scale.values()).filter(v -> v != value).mapToObj(v -> scale.level(v)).collect(Collectors.joining(","));
+            } else {
+                values = "/=" + value;
+            }
+        }
+
+        return String.format("%s=%s", field.name, values);
     }
 }

@@ -352,12 +352,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     @Override
     public int predict(Tuple x, double[] posteriori) {
         DecisionNode leaf = (DecisionNode) root.predict(formula.map(f -> f.x(x)).orElse(x));
-        // add-k smoothing
-        double n = leaf.size() + k;
-        int[] count = leaf.count();
-        for (int i = 0; i < count.length; i++) {
-            posteriori[i] = (count[i] + 1) / n;
-        }
+        leaf.posteriori(posteriori);
         int y = leaf.output();
         return labels.map($ -> $.label(y)).orElse(y);
     }

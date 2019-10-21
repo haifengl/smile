@@ -27,6 +27,7 @@ import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.IntStream;
 import java.util.AbstractMap.SimpleEntry;
@@ -330,11 +331,6 @@ public abstract class CART {
         return root;
     }
 
-    @Override
-    public String toString() {
-        return dot();
-    }
-
     /**
      * Returns the graphic representation in Graphviz dot format.
      * Try http://viz-js.com/ to visualize the returned string.
@@ -416,5 +412,26 @@ public abstract class CART {
 
         assert(split + k == high);
         System.arraycopy(buffer, 0, a, split, k);
+    }
+
+    /**
+     * Returns a text representation of the tree in R's rpart format.
+     * A semi-graphical layout of the tree. Indentation is used to convey
+     * the tree topology. Information for each node includes the node number,
+     * split, size, deviance, and fitted value. For the decision tree,
+     * the class probabilities are also printed.
+     */
+    @Override
+    public String toString() {
+        // Build up the lines in reverse order:
+        // the false-child-first postorder turns into
+        // the true-child-first preorder, which is what's needed.
+        List<String> lines = new ArrayList<>();
+        root.toString(schema, response, null, 0, BigInteger.ONE, lines);
+        lines.add("* denotes terminal node");
+        lines.add("node), split, n, loss, yval, (yprob)");
+        lines.add("n=" + root.size());
+        Collections.reverse(lines);
+        return String.join("\n", lines);
     }
 }
