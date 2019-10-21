@@ -17,14 +17,13 @@
 
 package smile.classification;
 
+import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
 import smile.util.Strings;
-
-import java.util.Properties;
 
 /**
  * Quadratic discriminant analysis. QDA is closely related to linear discriminant
@@ -142,11 +141,9 @@ public class QDA implements SoftClassifier<double[]> {
      * @param data the data frame of the explanatory and response variables.
      */
     public static QDA fit(Formula formula, DataFrame data, Properties prop) {
-        double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.lda.priori"));
-        double tol = Double.valueOf(prop.getProperty("smile.qda.tolerance", "1E-4"));
         double[][] x = formula.x(data).toArray();
         int[] y = formula.y(data).toIntArray();
-        return fit(x, y, priori, tol);
+        return fit(x, y, prop);
     }
 
     /**
@@ -157,7 +154,18 @@ public class QDA implements SoftClassifier<double[]> {
     public static QDA fit(double[][] x, int[] y) {
         return fit(x, y, null, 1E-4);
     }
-    
+
+    /**
+     * Learns quadratic discriminant analysis.
+     * @param x training samples.
+     * @param y training labels.
+     */
+    public static QDA fit(double[][] x, int[] y, Properties prop) {
+        double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.qda.priori"));
+        double tol = Double.valueOf(prop.getProperty("smile.qda.tolerance", "1E-4"));
+        return fit(x, y, priori, tol);
+    }
+
     /**
      * Learn quadratic discriminant analysis.
      * @param x training samples.

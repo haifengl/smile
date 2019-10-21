@@ -19,7 +19,6 @@ package smile.classification;
 
 import java.io.Serializable;
 import java.util.Arrays;
-
 import smile.base.mlp.*;
 import smile.math.MathEx;
 
@@ -106,7 +105,6 @@ import smile.math.MathEx;
  */
 public class MLP extends MultilayerPerceptron implements OnlineClassifier<double[]>, SoftClassifier<double[]>, Serializable {
     private static final long serialVersionUID = 2L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MLP.class);
 
     /**
      * The number of classes.

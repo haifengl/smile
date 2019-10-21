@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
-
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructField;

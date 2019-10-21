@@ -20,6 +20,9 @@ package smile.classification;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
+
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.math.BFGS;
@@ -74,7 +77,6 @@ import smile.math.BFGS;
  */
 public class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]> {
     private static final long serialVersionUID = 2L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LogisticRegression.class);
 
     /**
      * The dimension of input space.
@@ -174,6 +176,28 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         this.W = W;
         this.lambda = lambda;
         this.labels = labels;
+    }
+
+    /**
+     * Learn logistic regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static LogisticRegression fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Properties());
+    }
+
+    /**
+     * Learn logistic regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static LogisticRegression fit(Formula formula, DataFrame data, Properties prop) {
+        double[][] x = formula.x(data).toArray();
+        int[] y = formula.y(data).toIntArray();
+        return fit(x, y, prop);
     }
 
     /**
@@ -585,9 +609,11 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
             w[p] += eta * err;
             for (int j = 0; j < p; j++) {
                 w[j] += eta * err * x[j];
+            }
 
-                // add regularization part
-                if (lambda > 0.0) {
+            // add regularization part
+            if (lambda > 0.0) {
+                for (int j = 0; j < p; j++) {
                     w[j] -= eta * lambda * w[j];
                 }
             }
@@ -606,9 +632,11 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
                 w[p] += eta * err;
                 for (int j = 0; j < p; j++) {
                     w[j] += eta * err * x[j];
+                }
 
-                    // add regularization part
-                    if (lambda > 0.0) {
+                // add regularization part
+                if (lambda > 0.0) {
+                    for (int j = 0; j < p; j++) {
                         w[j] -= eta * lambda * w[j];
                     }
                 }
@@ -619,7 +647,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
     /**
      * Sets the learning rate of stochastic gradient descent.
      * It is a good practice to adapt the learning rate for
-     * different dataset sizes. For example, it is typical to
+     * different data sizes. For example, it is typical to
      * set the learning rate to eta/n, where eta is in [0.1, 0.3]
      * and n is the size of the training data.
      *

@@ -18,7 +18,9 @@
 package smile.classification;
 
 import java.io.Serializable;
-import static java.lang.Math.*;
+import static java.lang.Math.abs;
+import static java.lang.Math.exp;
+import static java.lang.Math.log;
 
 /**
  * Platt scaling or Platt calibration is a way of transforming the outputs

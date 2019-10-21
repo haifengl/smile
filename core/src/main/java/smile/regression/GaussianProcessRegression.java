@@ -68,7 +68,7 @@ import smile.math.matrix.EVD;
  * </ol>
  * @author Haifeng Li
  */
-public class GaussianProcessRegression{
+public class GaussianProcessRegression {
     /**
      * Fits a regular Gaussian process model.
      * @param x the training dataset.

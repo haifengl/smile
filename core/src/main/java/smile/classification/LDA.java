@@ -17,7 +17,6 @@
 
 package smile.classification;
 
-import java.util.Arrays;
 import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
@@ -148,11 +147,9 @@ public class LDA implements SoftClassifier<double[]> {
      * @param data the data frame of the explanatory and response variables.
      */
     public static LDA fit(Formula formula, DataFrame data, Properties prop) {
-        double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.lda.priori"));
-        double tol = Double.valueOf(prop.getProperty("smile.lda.tolerance", "1E-4"));
         double[][] x = formula.x(data).toArray();
         int[] y = formula.y(data).toIntArray();
-        return fit(x, y, priori, tol);
+        return fit(x, y, prop);
     }
 
     /**
@@ -162,6 +159,17 @@ public class LDA implements SoftClassifier<double[]> {
      */
     public static LDA fit(double[][] x, int[] y) {
         return fit(x, y, null, 1E-4);
+    }
+
+    /**
+     * Learns linear discriminant analysis.
+     * @param x training samples.
+     * @param y training labels.
+     */
+    public static LDA fit(double[][] x, int[] y, Properties prop) {
+        double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.lda.priori"));
+        double tol = Double.valueOf(prop.getProperty("smile.lda.tolerance", "1E-4"));
+        return fit(x, y, priori, tol);
     }
 
     /**

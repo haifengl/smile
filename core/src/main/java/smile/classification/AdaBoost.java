@@ -20,7 +20,6 @@ package smile.classification;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Properties;
-
 import smile.base.cart.CART;
 import smile.base.cart.SplitRule;
 import smile.data.DataFrame;
@@ -29,8 +28,6 @@ import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
-import smile.validation.Accuracy;
-import smile.validation.ClassificationMeasure;
 
 /**
  * AdaBoost (Adaptive Boosting) classifier with decision trees. In principle,

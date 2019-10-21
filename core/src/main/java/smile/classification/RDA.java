@@ -17,13 +17,12 @@
 
 package smile.classification;
 
+import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
 import smile.util.Strings;
-
-import java.util.Properties;
 
 /**
  * Regularized discriminant analysis. RDA is a compromise between LDA and QDA,
@@ -85,11 +84,20 @@ public class RDA extends QDA {
      * @param data the data frame of the explanatory and response variables.
      */
     public static RDA fit(Formula formula, DataFrame data, Properties prop) {
+        double[][] x = formula.x(data).toArray();
+        int[] y = formula.y(data).toIntArray();
+        return fit(x, y, prop);
+    }
+
+    /**
+     * Learns regularized discriminant analysis.
+     * @param x training samples.
+     * @param y training labels.
+     */
+    public static RDA fit(double[][] x, int[] y, Properties prop) {
         double alpha = Double.valueOf(prop.getProperty("smile.rda.alpha", "0.9"));
         double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.rda.priori"));
         double tol = Double.valueOf(prop.getProperty("smile.rda.tolerance", "1E-4"));
-        double[][] x = formula.x(data).toArray();
-        int[] y = formula.y(data).toIntArray();
         return fit(x, y, alpha, priori, tol);
     }
 

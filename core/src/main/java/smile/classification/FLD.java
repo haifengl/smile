@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
@@ -25,9 +26,6 @@ import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
 import smile.math.matrix.SVD;
 import smile.projection.Projection;
-import smile.util.Strings;
-
-import java.util.Properties;
 
 /**
  * Fisher's linear discriminant. Fisher defined the separation between two

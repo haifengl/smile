@@ -19,7 +19,6 @@ package smile.regression;
 
 import java.util.Arrays;
 import java.util.Optional;
-
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
