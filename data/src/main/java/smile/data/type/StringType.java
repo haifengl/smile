@@ -54,6 +54,16 @@ public class StringType implements DataType {
     }
 
     @Override
+    public boolean isString() {
+        return true;
+    }
+
+    @Override
+    public boolean isObject() {
+        return true;
+    }
+
+    @Override
     public boolean equals(Object o) {
         return o instanceof StringType;
     }

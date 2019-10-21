@@ -157,6 +157,9 @@ public interface DataType extends Serializable {
         return false;
     }
 
+    /** Returns true if the type is String. */
+    default boolean isString() { return false; }
+
     /** Returns true if the type is ObjectType. */
     default boolean isObject() {
         return false;

@@ -77,12 +77,12 @@ public interface Strings {
         return new String(chars);
     }
 
-    /** Returns the string representation of array in format '[1, 2, 3'." */
+    /** Returns the string representation of array in format '[1, 2, 3]'." */
     static String toString(int[] a) {
         return Arrays.stream(a).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
     }
 
-    /** Returns the string representation of array in format '[1.0, 2.0, 3.0'." */
+    /** Returns the string representation of array in format '[1.0, 2.0, 3.0]'." */
     static String toString(double[] a) {
         return Arrays.stream(a).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
     }
