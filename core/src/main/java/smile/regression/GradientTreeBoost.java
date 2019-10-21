@@ -28,11 +28,8 @@ import smile.data.formula.Formula;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.data.vector.DoubleVector;
 import smile.math.MathEx;
 import smile.sort.QuickSelect;
-import smile.validation.RMSE;
-import smile.validation.RegressionMeasure;
 
 /**
  * Gradient boosting for regression. Gradient boosting is typically used

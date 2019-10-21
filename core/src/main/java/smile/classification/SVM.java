@@ -81,8 +81,6 @@ import smile.math.kernel.SparseLinearKernel;
  * @author Haifeng Li
  */
 public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SVM.class);
-
     /**
      * Constructor.
      * @param kernel Kernel function.

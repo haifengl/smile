@@ -18,7 +18,6 @@
 package smile.classification;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 /**
  * A classifier assigns an input object into one of a given number of categories.

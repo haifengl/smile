@@ -17,8 +17,6 @@
 
 package smile.regression;
 
-import smile.data.Tuple;
-import smile.math.MathEx;
 import smile.math.kernel.MercerKernel;
 
 /**

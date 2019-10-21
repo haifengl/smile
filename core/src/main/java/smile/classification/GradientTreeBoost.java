@@ -30,11 +30,8 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
-import smile.data.vector.DoubleVector;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
-import smile.validation.Accuracy;
-import smile.validation.ClassificationMeasure;
 
 /**
  * Gradient boosting for classification. Gradient boosting is typically used

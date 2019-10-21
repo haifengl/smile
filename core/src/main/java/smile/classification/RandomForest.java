@@ -33,8 +33,6 @@ import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.util.Strings;
-import smile.validation.Accuracy;
-import smile.validation.ClassificationMeasure;
 
 /**
  * Random forest for classification. Random forest is an ensemble classifier

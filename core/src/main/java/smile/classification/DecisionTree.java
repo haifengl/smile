@@ -18,8 +18,6 @@
 package smile.classification;
 
 import java.util.*;
-import java.util.stream.IntStream;
-
 import smile.base.cart.*;
 import smile.data.DataFrame;
 import smile.data.Tuple;

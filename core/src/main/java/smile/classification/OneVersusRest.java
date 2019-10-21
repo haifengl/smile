@@ -81,7 +81,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
      * Use +1 and -1 as positive and negative class labels.
      * @param x the training samples.
      * @param y the training labels.
-     * @param trainer the lambda to train binary clasifiers.
+     * @param trainer the lambda to train binary classifiers.
      */
     public static <T> OneVersusRest<T> fit(T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
         return fit(x, y, +1, -1, trainer);
