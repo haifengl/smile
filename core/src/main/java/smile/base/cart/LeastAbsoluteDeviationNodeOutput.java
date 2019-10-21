@@ -22,6 +22,7 @@ import smile.sort.QuickSelect;
 
 /**
  * Calculates the node output for LAD regression.
+ * This is a special case of quantile regression of q = 0.5.
  */
 public class LeastAbsoluteDeviationNodeOutput implements RegressionNodeOutput {
 

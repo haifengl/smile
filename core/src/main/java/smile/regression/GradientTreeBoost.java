@@ -107,31 +107,6 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
     private static final long serialVersionUID = 2L;
 
     /**
-     * Regression loss function.
-     */
-    public enum Loss {
-        /**
-         * Least squares regression. Least-squares is highly efficient for
-         * normally distributed errors but is prone to long tails and outliers.
-         */
-        LeastSquares,
-        /**
-         * Least absolute deviation regression. The gradient tree boosting based
-         * on this loss function is highly robust. The trees use only order
-         * information on the input variables and the pseudo-response has only
-         * two values {-1, +1}. The line searches (terminal node values) use
-         * only medians.
-         */
-        LeastAbsoluteDeviation,
-        /**
-         * Huber loss function for M-regression, which attempts resistance to
-         * long-tailed error distributions and outliers while maintaining high
-         * efficency for normally distributed errors.
-         */
-        Huber,
-    }
-
-    /**
      * Design matrix formula
      */
     private Formula formula;
@@ -247,15 +222,23 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
         int[] samples = new int[n];
         
         double[] residual = new double[n];
-        double[] response = loss == Loss.LeastSquares ? residual : new double[n]; // response variable for regression tree.
+        double[] response = loss.type() == Loss.Type.LeastSquares ? residual : new double[n]; // response variable for regression tree.
         StructField field = new StructField("residual", DataTypes.DoubleType);
 
         RegressionNodeOutput output = null;
         double b = 0.0;
-        switch (loss) {
+        switch (loss.type()) {
             case LeastSquares:
                 output = new LeastSquaresNodeOutput(residual);
                 b = MathEx.mean(y);
+                break;
+
+            case Quantile:
+                double q = loss.parameters()[0];
+                output = new QuantileNodeOutput(q, residual);
+                System.arraycopy(y, 0, residual, 0, n);
+                int p = (int) (residual.length * q);
+                b = QuickSelect.select(residual, p);
                 break;
 
             case LeastAbsoluteDeviation:
@@ -286,11 +269,12 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
                 samples[permutation[i]]++;
             }
             
-            switch (loss) {
+            switch (loss.type()) {
                 case Huber:
                     output = new HuberNodeOutput(residual, response, 0.9);
                     break;
 
+                case Quantile:
                 case LeastAbsoluteDeviation:
                     for (int i = 0; i < n; i++) response[i] = Math.signum(residual[i]);
                     break;

@@ -83,7 +83,7 @@ public class GradientTreeBoostTest {
         assertEquals(3.545378550497016, rmse, 1E-4);
     }
 
-    public void test(GradientTreeBoost.Loss loss, String name, Formula formula, DataFrame data, double expected) {
+    public void test(Loss loss, String name, Formula formula, DataFrame data, double expected) {
         System.out.println(name + "\t" + loss);
 
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -103,40 +103,53 @@ public class GradientTreeBoostTest {
 
     @Test
     public void testLS() {
-        test(GradientTreeBoost.Loss.LeastSquares, "CPU", CPU.formula, CPU.data, 71.9149);
-        test(GradientTreeBoost.Loss.LeastSquares, "2dplanes", Planes.formula, Planes.data, 1.1016);
-        test(GradientTreeBoost.Loss.LeastSquares, "abalone", Abalone.formula, Abalone.train, 2.2199);
-        test(GradientTreeBoost.Loss.LeastSquares, "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
-        test(GradientTreeBoost.Loss.LeastSquares, "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0847);
-        test(GradientTreeBoost.Loss.LeastSquares, "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8148);
-        test(GradientTreeBoost.Loss.LeastSquares, "cal_housing", CalHousing.formula, CalHousing.data, 60604.6920);
-        test(GradientTreeBoost.Loss.LeastSquares, "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2487);
-        test(GradientTreeBoost.Loss.LeastSquares, "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1802);
+        test(Loss.ls(), "CPU", CPU.formula, CPU.data, 71.9149);
+        test(Loss.ls(), "2dplanes", Planes.formula, Planes.data, 1.1016);
+        test(Loss.ls(), "abalone", Abalone.formula, Abalone.train, 2.2199);
+        test(Loss.ls(), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+        test(Loss.ls(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0847);
+        test(Loss.ls(), "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8148);
+        test(Loss.ls(), "cal_housing", CalHousing.formula, CalHousing.data, 60604.6920);
+        test(Loss.ls(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2487);
+        test(Loss.ls(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1802);
     }
 
     @Test
     public void testLAD() {
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "CPU", CPU.formula, CPU.data, 89.6677);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "2dplanes", Planes.formula, Planes.data, 1.1347);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "abalone", Abalone.formula, Abalone.train, 2.2990);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0912);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8460);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "cal_housing", CalHousing.formula, CalHousing.data, 66772.6697);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2495);
-        test(GradientTreeBoost.Loss.LeastAbsoluteDeviation, "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1815);
+        test(Loss.lad(), "CPU", CPU.formula, CPU.data, 89.6677);
+        test(Loss.lad(), "2dplanes", Planes.formula, Planes.data, 1.1347);
+        test(Loss.lad(), "abalone", Abalone.formula, Abalone.train, 2.2990);
+        test(Loss.lad(), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+        test(Loss.lad(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0912);
+        test(Loss.lad(), "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8460);
+        test(Loss.lad(), "cal_housing", CalHousing.formula, CalHousing.data, 66772.6697);
+        test(Loss.lad(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2495);
+        test(Loss.lad(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1815);
+    }
+
+    @Test
+    public void testQuantile() {
+        test(Loss.quantile(0.5), "CPU", CPU.formula, CPU.data, 89.6677);
+        test(Loss.quantile(0.5), "2dplanes", Planes.formula, Planes.data, 1.1347);
+        test(Loss.quantile(0.5), "abalone", Abalone.formula, Abalone.train, 2.2990);
+        test(Loss.quantile(0.5), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+        test(Loss.quantile(0.5), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0912);
+        test(Loss.quantile(0.5), "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8460);
+        test(Loss.quantile(0.5), "cal_housing", CalHousing.formula, CalHousing.data, 66772.6697);
+        test(Loss.quantile(0.5), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2495);
+        test(Loss.quantile(0.5), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1815);
     }
 
     @Test
     public void testHuber() {
-        test(GradientTreeBoost.Loss.Huber, "CPU", CPU.formula, CPU.data, 85.3103);
-        test(GradientTreeBoost.Loss.Huber, "2dplanes", Planes.formula, Planes.data, 1.1080);
-        test(GradientTreeBoost.Loss.Huber, "abalone", Abalone.formula, Abalone.train, 2.2262);
-        test(GradientTreeBoost.Loss.Huber, "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
-        test(GradientTreeBoost.Loss.Huber, "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0855);
-        test(GradientTreeBoost.Loss.Huber, "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8316);
-        test(GradientTreeBoost.Loss.Huber, "cal_housing", CalHousing.formula, CalHousing.data, 62115.9896);
-        test(GradientTreeBoost.Loss.Huber, "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2435);
-        test(GradientTreeBoost.Loss.Huber, "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1795);
+        test(Loss.huber(), "CPU", CPU.formula, CPU.data, 85.3103);
+        test(Loss.huber(), "2dplanes", Planes.formula, Planes.data, 1.1080);
+        test(Loss.huber(), "abalone", Abalone.formula, Abalone.train, 2.2262);
+        test(Loss.huber(), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+        test(Loss.huber(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0855);
+        test(Loss.huber(), "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8316);
+        test(Loss.huber(), "cal_housing", CalHousing.formula, CalHousing.data, 62115.9896);
+        test(Loss.huber(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2435);
+        test(Loss.huber(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1795);
     }
 }
