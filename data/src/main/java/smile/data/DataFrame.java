@@ -26,6 +26,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import smile.data.measure.DiscreteMeasure;
 import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
 import smile.data.type.*;
 import smile.data.vector.*;
 import smile.data.vector.Vector;
@@ -602,7 +603,6 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         return doubleVector(columnIndex(e.toString()));
     }
 
-
     /** Selects column based on the column index. */
     StringVector stringVector(int i);
 
@@ -652,6 +652,31 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     default DataFrame drop(String... cols) {
         int[] indices = Arrays.asList(cols).stream().mapToInt(this::columnIndex).toArray();
         return drop(indices);
+    }
+
+    /**
+     * Returns a new DataFrame with additional nominal columns that
+     * are converted from given string columns.
+     *
+     * @param cols string column names. If empty, all string columns
+     *             in the data frame will be converted.
+     * @return a new DataFrame.
+     */
+    default DataFrame nominal(String... cols) {
+        if (cols.length == 0) {
+            cols = Arrays.stream(schema().fields())
+                    .filter(field -> field.type.isString())
+                    .map(field -> field.name)
+                    .toArray(String[]::new);
+        }
+
+        BaseVector[] vectors = Arrays.stream(cols).map(col -> stringVector(col))
+                .map(c -> {
+                    NominalScale scale = c.nominal();
+                    return c.factorize(scale);
+                }).toArray(BaseVector[]::new);
+
+        return merge(vectors);
     }
 
     /**
