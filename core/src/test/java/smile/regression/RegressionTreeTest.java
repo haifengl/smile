@@ -67,7 +67,7 @@ public class RegressionTreeTest {
 
         RegressionTree model = RegressionTree.fit(Longley.formula, Longley.data, 100, 2);
         System.out.println("----- dot -----");
-        System.out.println(model.dot());
+        System.out.println(model);
 
         double[] importance = model.importance();
         System.out.println("----- importance -----");

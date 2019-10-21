@@ -20,8 +20,15 @@ package smile.base.cart;
 import smile.data.Tuple;
 import smile.data.measure.DiscreteMeasure;
 import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
+import smile.math.MathEx;
+
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * A node with a ordinal split variable (real-valued or ordinal categorical value).
@@ -32,11 +39,11 @@ public class OrdinalNode extends InternalNode {
     /**
      * The split value.
      */
-    double value = Double.NaN;
+    double value;
 
     /** Constructor. */
-    public OrdinalNode(int feature, double value, double score, Node trueChild, Node falseChild) {
-        super(feature, score, trueChild, falseChild);
+    public OrdinalNode(int feature, double value, double score, double deviance, Node trueChild, Node falseChild) {
+        super(feature, score, deviance, trueChild, falseChild);
         this.value = value;
     }
 
@@ -49,5 +56,12 @@ public class OrdinalNode extends InternalNode {
     public String dot(StructType schema, StructField response, int id) {
         StructField field = schema.field(feature);
         return String.format(" %d [label=<%s &le; %s<br/>size = %d<br/>impurity reduction = %.4f>, fillcolor=\"#00000000\"];\n", id, field.name, field.toString(value), size(), score);
+    }
+
+    @Override
+    public String toString(StructType schema, boolean trueBranch) {
+        StructField field = schema.field(feature);
+        String condition = trueBranch ? "<=" : ">";
+        return String.format("%s%s%g", field.name, condition, value);
     }
 }

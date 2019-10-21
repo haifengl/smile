@@ -21,6 +21,11 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * A leaf node in regression tree.
  */
@@ -71,8 +76,40 @@ public class RegressionNode extends LeafNode {
     }
 
     @Override
+    public double deviance() {
+        return rss;
+    }
+
+    @Override
     public String dot(StructType schema, StructField response, int id) {
-        return String.format(" %d [label=<%s = %.4f<br/>size = %d<br/>RMSE = %.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, response.name, output, size, Math.sqrt(rss/size));
+        return String.format(" %d [label=<%s = %.4f<br/>size = %d<br/>deviance = %.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, response.name, output, size, rss);
+    }
+
+    @Override
+    public int[] toString(StructType schema, StructField response, InternalNode parent, int depth, BigInteger id, List<String> lines) {
+        StringBuilder line = new StringBuilder();
+
+        // indent
+        for (int i = 0; i < depth; i++) line.append(" ");
+        line.append(id).append(") ");
+
+        // split
+        line.append(parent == null ? "root" : parent.toString(schema, this == parent.trueChild)).append(" ");
+
+        // size
+        line.append(size).append(" ");
+
+        // deviance
+        line.append(String.format("%.5g", rss)).append(" ");
+
+        // fitted value
+        line.append(String.format("%g", output));
+
+        // terminal node
+        line.append(" *");
+        lines.add(line.toString());
+
+        return null;
     }
 
     @Override

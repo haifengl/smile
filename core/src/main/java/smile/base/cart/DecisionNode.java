@@ -21,6 +21,12 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * A leaf node in decision tree.
  */
@@ -55,8 +61,44 @@ public class DecisionNode extends LeafNode {
     }
 
     @Override
+    public double deviance() {
+        return deviance(count, posteriori(count, new double[count.length]));
+    }
+
+    @Override
     public String dot(StructType schema, StructField response, int id) {
-        return String.format(" %d [label=<%s = %s<br/>size = %d<br/>GINI = %.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, response.name, response.toString(output), size, impurity(SplitRule.GINI));
+        return String.format(" %d [label=<%s = %s<br/>size = %d<br/>deviance = %.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, response.name, response.toString(output), size, deviance());
+    }
+
+    @Override
+    public int[] toString(StructType schema, StructField response, InternalNode parent, int depth, BigInteger id, List<String> lines) {
+        StringBuilder line = new StringBuilder();
+
+        // indent
+        for (int i = 0; i < depth; i++) line.append(" ");
+        line.append(id).append(") ");
+
+        // split
+        line.append(parent == null ? "root" : parent.toString(schema, this == parent.trueChild)).append(" ");
+
+        // size
+        line.append(size).append(" ");
+
+        // deviance
+        double[] prob = posteriori(count, new double[count.length]);
+        line.append(String.format("%.5g", deviance(count, prob))).append(" ");
+
+        // fitted value
+        line.append(response.toString(output)).append(" ");
+
+        // probabilities
+        line.append(Arrays.stream(prob).mapToObj(p -> String.format("%.5g", p)).collect(Collectors.joining(" ", "(", ")")));
+
+        // terminal node
+        line.append(" *");
+        lines.add(line.toString());
+
+        return count;
     }
 
     /**
@@ -112,5 +154,30 @@ public class DecisionNode extends LeafNode {
         }
 
         return false;
+    }
+
+    /** Returns the class probability. */
+    public double[] posteriori(double[] prob) {
+        return posteriori(count, prob);
+    }
+
+    /** Returns the class probability. */
+    public static double[] posteriori(int[] count, double[] prob) {
+        int k = count.length;
+        double n = MathEx.sum(count) + k;
+        for (int i = 0; i < k; i++) {
+            prob[i] = (count[i] + 1) / n;
+        }
+        return prob;
+    }
+
+    /** Returns the deviance of node. */
+    public static double deviance(int[] count, double[] prob) {
+        int k = count.length;
+        double d = 0.0;
+        for (int i = 0; i < k; i++) {
+            d -= count[i] * Math.log(prob[i]);
+        }
+        return 2 * d;
     }
 }

@@ -18,9 +18,12 @@
 package smile.base.cart;
 
 import java.io.Serializable;
+import java.math.BigInteger;
+import java.util.List;
 import smile.data.Tuple;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
+import smile.math.MathEx;
 
 /**
  * CART tree node.
@@ -49,10 +52,25 @@ public interface Node extends Serializable {
      */
     int depth();
 
+    /** Returns the deviance of node. */
+    double deviance();
+
     /**
      * Try to merge the children nodes and return a leaf node.
      * If not able to merge, return this node itself.
      */
     Node merge();
+
+    /**
+     * Adds the string representation (R's rpart format) to a collection.
+     * @param schema the schema of data
+     * @param response the schema of response variable
+     * @param parent the parent node
+     * @param depth the depth of node in the tree. The root node is at depth 0.
+     * @param id node id
+     * @param lines the collection of node's string representation.
+     * @return the sample count of each class for decision tree; null for regression tree.
+     */
+    int[] toString(StructType schema, StructField response, InternalNode parent, int depth, BigInteger id, List<String> lines);
 }
 
