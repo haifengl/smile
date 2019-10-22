@@ -18,10 +18,16 @@
 package smile.classification
 
 import smile.data._
-import smile.math._, distance._, kernel._, rbf._
+import smile.math._
+import smile.math.distance.Distance
+import smile.math.kernel.MercerKernel
+import smile.base.mlp.LayerBuilder
+import smile.base.rbf.RBF
+import smile.base.cart.SplitRule
+import smile.data.formula.Formula
 import smile.stat.distribution.Distribution
 import smile.neighbor._
-import smile.util._
+import smile.util.time
 
 /**  * High level classification operators.
   *
@@ -72,9 +78,7 @@ trait Operators {
     * @param k the number of neighbors for classification.
     */
   def knn[T <: AnyRef](x: KNNSearch[T, T], y: Array[Int], k: Int): KNN[T] = {
-    time {
-      new KNN(x, y, k)
-    }
+    new KNN(x, y, k)
   }
 
   /** K-nearest neighbor classifier.
@@ -84,10 +88,8 @@ trait Operators {
     * @param distance the distance measure for finding nearest neighbors.
     * @param k the number of neighbors for classification.
     */
-  def knn[T <: AnyRef](x: Array[T], y: Array[Int], distance: Distance[T], k: Int): KNN[T] = {
-    time {
-      new KNN(x, y, distance, k)
-    }
+  def knn[T <: AnyRef](x: Array[T], y: Array[Int], distance: Distance[T], k: Int): KNN[T] = time {
+    KNN.fit(x, y, distance, k)
   }
 
   /** K-nearest neighbor classifier with Euclidean distance as the similarity measure.
@@ -96,10 +98,8 @@ trait Operators {
     * @param y training labels in [0, c), where c is the number of classes.
     * @param k the number of neighbors for classification.
     */
-  def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]] = {
-    time {
-      KNN.learn(x, y, k)
-    }
+  def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]] = time {
+    KNN.fit(x, y, k)
   }
 
   /** Logistic regression.
@@ -156,10 +156,8 @@ trait Operators {
     *
     * @return Logistic regression model.
     */
-  def logit(x: Array[Array[Double]], y: Array[Int], lambda: Double = 0.0, tol: Double = 1E-5, maxIter: Int = 500): LogisticRegression = {
-    time {
-      new LogisticRegression(x, y, lambda, tol, maxIter)
-    }
+  def logit(x: Array[Array[Double]], y: Array[Int], lambda: Double = 0.0, tol: Double = 1E-5, maxIter: Int = 500): LogisticRegression = time {
+    LogisticRegression.fit(x, y, lambda, tol, maxIter)
   }
 
   /** Maximum Entropy Classifier.
@@ -192,10 +190,8 @@ trait Operators {
     * @param maxIter maximum number of iterations.
     * @return Maximum entropy model.
     */
-  def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent = {
-    time {
-      new Maxent(p, x, y, lambda, tol, maxIter)
-    }
+  def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent = time {
+    Maxent.fit(p, x, y, lambda, tol, maxIter)
   }
 
   /** Multilayer perceptron neural network.
@@ -280,23 +276,20 @@ trait Operators {
     *
     * @param x training samples.
     * @param y training labels in [0, k), where k is the number of classes.
-    * @param numUnits the number of units in each layer.
-    * @param error the error function.
-    * @param activation the activation function of output layer.
+    * @param p the number of variables in input layer.
+    * @param builders the builders of layers from bottom to top.
     * @param epochs the number of epochs of stochastic learning.
     * @param eta the learning rate.
     * @param alpha the momentum factor.
     * @param lambda the weight decay for regularization.
     */
-  def mlp(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: MLP.ErrorFunction, activation: MLP.ActivationFunction, epochs: Int = 25, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP = {
-    time {
-      val nnet = new MLP(error, activation, numUnits: _*)
-      nnet.setLearningRate(eta)
-      nnet.setMomentum(alpha)
-      nnet.setWeightDecay(lambda)
-      (0 until epochs).foreach { _ => nnet.learn(x, y) }
-      nnet
-    }
+  def mlp(x: Array[Array[Double]], y: Array[Int], p: Int, builders: Array[LayerBuilder], epochs: Int = 10, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP = time {
+    val mlp = new MLP(p, builders: _*)
+    mlp.setLearningRate(eta)
+    mlp.setMomentum(alpha)
+    mlp.setWeightDecay(lambda)
+    (0 until epochs).foreach { _ => mlp.update(x, y) }
+    mlp
   }
 
   /** Radial basis function networks.
@@ -357,95 +350,17 @@ trait Operators {
     *
     * @param x training samples.
     * @param y training labels in [0, k), where k is the number of classes.
-    * @param distance the distance metric functor.
-    * @param rbf the radial basis function.
-    * @param centers the centers of RBF functions.
+    * @param neurons the radial basis functions.
+    * @param normalized train a normalized RBF network or not.
     */
-  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
-    time {
-      new RBFNetwork[T](x, y, distance, rbf, centers, false)
-    }
+  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T] = time {
+    RBFNetwork.fit(x, y, neurons, normalized)
   }
 
-  /** Normalized radial basis function networks. */
-  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
-    time {
-      new RBFNetwork[T](x, y, distance, rbf, centers, true)
-    }
-  }
-
-  /** Radial basis function networks. A radial basis function network is an
-    * artificial neural network that uses radial basis functions as activation
-    * functions. It is a linear combination of radial basis functions. They are
-    * used in function approximation, time series prediction, and control.
-    *
-    * In its basic form, radial basis function network is in the form
-    *
-    * y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
-    *
-    * where the approximating function y(x) is represented as a sum of N radial
-    * basis functions &phi;, each associated with a different center c<sub>i</sub>,
-    * and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
-    * one usually chooses Euclidean distance. The weights w<sub>i</sub> can
-    * be estimated using the matrix methods of linear least squares, because
-    * the approximating function is linear in the weights.
-    *
-    * The centers c<sub>i</sub> can be randomly selected from training data,
-    * or learned by some clustering method (e.g. k-means), or learned together
-    * with weight parameters undergo a supervised learning processing
-    * (e.g. error-correction learning).
-    *
-    * The popular choices for &phi; comprise the Gaussian function and the so
-    * called thin plate splines. The advantage of the thin plate splines is that
-    * their conditioning is invariant under scalings. Gaussian, multi-quadric
-    * and inverse multi-quadric are infinitely smooth and and involve a scale
-    * or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
-    * r<sub><small>0</small></sub> tends to flatten the basis function. For a
-    * given function, the quality of approximation may strongly depend on this
-    * parameter. In particular, increasing r<sub><small>0</small></sub> has the
-    * effect of better conditioning (the separation distance of the scaled points
-    * increases).
-    *
-    * A variant on RBF networks is normalized radial basis function (NRBF)
-    * networks, in which we require the sum of the basis functions to be unity.
-    * NRBF arises more naturally from a Bayesian statistical perspective. However,
-    * there is no evidence that either the NRBF method is consistently superior
-    * to the RBF method, or vice versa.
-    *
-    * SVMs with Gaussian kernel have similar structure as RBF networks with
-    * Gaussian radial basis functions. However, the SVM approach "automatically"
-    * solves the network complexity problem since the size of the hidden layer
-    * is obtained as the result of the QP procedure. Hidden neurons and
-    * support vectors correspond to each other, so the center problems of
-    * the RBF network is also solved, as the support vectors serve as the
-    * basis function centers. It was reported that with similar number of support
-    * vectors/centers, SVM shows better generalization performance than RBF
-    * network when the training data size is relatively small. On the other hand,
-    * RBF network gives better generalization performance than SVM on large
-    * training data.
-    *
-    * ====References:====
-    *  - Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.
-    *  - T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.
-    *  - Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
-    *
-    * @param x training samples.
-    * @param y training labels in [0, k), where k is the number of classes.
-    * @param distance the distance metric functor.
-    * @param rbf the radial basis functions at each center.
-    * @param centers the centers of RBF functions.
-    */
-  def rbfnet[T <: AnyRef, RBF <: RadialBasisFunction](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RBF], centers: Array[T]): RBFNetwork[T] = {
-    time {
-      new RBFNetwork[T](x, y, distance, rbf.asInstanceOf[Array[RadialBasisFunction]], centers, false)
-    }
-  }
-
-  /** Normalized radial basis function networks. */
-  def nrbfnet[T <: AnyRef, RBF <: RadialBasisFunction](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RBF], centers: Array[T]): RBFNetwork[T] = {
-    time {
-      new RBFNetwork[T](x, y, distance, rbf.asInstanceOf[Array[RadialBasisFunction]], centers, true)
-    }
+  /** Trains a Gaussian RBF network with k-means. */
+  def rbfnet(x: Array[Array[Double]], y: Array[Int], k: Int, normalized: Boolean = false): RBFNetwork[Array[Double]] = time {
+    val neurons = RBF.fit(x, k)
+    RBFNetwork.fit(x, y, neurons, normalized)
   }
 
   /** Support vector machines for classification. The basic support vector machine
@@ -492,24 +407,14 @@ trait Operators {
     * @param x training data
     * @param y training labels
     * @param kernel Mercer kernel
-    * @param C Regularization parameter
-    * @param strategy Multi-class classification strategy, one vs all or one vs one. Ignored for binary classification.
-    * @param epoch the number of training epochs
+    * @param C the regularization parameter
+    * @param tol the tolerance of convergence test.
     * @tparam T the data type
     *
     * @return SVM model.
     */
-  def svm[T <: AnyRef](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, strategy: SVM.Multiclass = SVM.Multiclass.ONE_VS_ONE, epoch: Int = 1): SVM[T] = {
-    val k = MathEx.max(y) + 1
-    val svm = if (k == 2) new SVM[T](kernel, C) else new SVM[T](kernel, C, k, strategy)
-    time {
-      for (i <- 1 to epoch) {
-        println(s"SVM training epoch $i...")
-        svm.learn(x, y)
-        svm.finish
-      }
-    }
-    svm
+  def svm[T <: AnyRef](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, tol: Double = 1E-3): SVM[T] = time {
+    SVM.fit(x, y, kernel, C, tol)
   }
 
   /** Decision tree. A decision tree can be learned by
@@ -573,18 +478,14 @@ trait Operators {
     * Some techniques such as bagging, boosting, and random forest use more than
     * one decision tree for their analysis.
     *
-    * @param x the training instances.
-    * @param y the response variable.
+    * @param formula a symbolic description of the model to be fitted.
+    * @param data the data frame of the explanatory and response variables.
     * @param maxNodes the maximum number of leaf nodes in the tree.
-    * @param attributes the attribute properties.
     * @param splitRule the splitting rule.
     * @return Decision tree model.
     */
-  def cart(x: Array[Array[Double]], y: Array[Int], maxNodes: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree = {
-    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
-    time {
-      new DecisionTree(attr, x, y, maxNodes, splitRule)
-    }
+  def cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI, maxNodes: Int = 100, nodeSize: Int = 5): DecisionTree = time {
+    DecisionTree.fit(formula, data, splitRule, maxNodes, nodeSize)
   }
 
   /** Random forest for classification. Random forest is an ensemble classifier
@@ -623,10 +524,8 @@ trait Operators {
     * levels. Therefore, the variable importance scores from random forest are
     * not reliable for this type of data.
     *
-    * @param x the training instances.
-    * @param y the response variable.
-    * @param attributes the attribute properties. If not provided, all attributes
-    *                   are treated as numeric values.
+    * @param formula a symbolic description of the model to be fitted.
+    * @param data the data frame of the explanatory and response variables.
     * @param ntrees the number of trees.
     * @param mtry the number of random selected features to be used to determine
     *             the decision at a node of the tree. floor(sqrt(dim)) seems to give
@@ -636,25 +535,11 @@ trait Operators {
     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
     *                  sampling without replacement.
     * @param splitRule Decision tree node split rule.
-    * @param classWeight Priors of the classes.
     *
     * @return Random forest classification model.
     */
-  def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 1, mtry: Int = -1, subsample: Double = 1.0, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest = {
-    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
-
-    val p = x(0).length
-
-    val m = if (mtry <= 0) Math.floor(Math.sqrt(p)).toInt else mtry
-
-    val j = if (maxNodes <= 1) x.length / nodeSize else maxNodes
-
-    val k = MathEx.max(y) + 1
-    val weight = if (classWeight == null) Array.fill[Int](k)(1) else classWeight
-
-    time {
-      new RandomForest(attr, x, y, ntrees, j, nodeSize, m, subsample, splitRule, weight)
-    }
+  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = -1, splitRule: SplitRule = SplitRule.GINI, maxNodes: Int = -1, nodeSize: Int = 1, subsample: Double = 1.0): RandomForest = time {
+    RandomForest.fit(formula, data, ntrees, mtry, splitRule, maxNodes, nodeSize, subsample)
   }
 
   /** Gradient boosted classification trees.
@@ -721,23 +606,18 @@ trait Operators {
     *  - J. H. Friedman. Greedy Function Approximation: A Gradient Boosting Machine, 1999.
     *  - J. H. Friedman. Stochastic Gradient Boosting, 1999.
     *
-    * @param x the training instances.
-    * @param y the class labels.
-    * @param attributes the attribute properties. If not provided, all attributes
-    *                   are treated as numeric values.
+    * @param formula a symbolic description of the model to be fitted.
+    * @param data the data frame of the explanatory and response variables.
     * @param ntrees the number of iterations (trees).
     * @param maxNodes the number of leaves in each tree.
+    * @param nodeSize number of instances in a node below which the tree will not split.
     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
     * @param subsample the sampling fraction for stochastic tree boosting.
     *
     * @return Gradient boosted trees.
     */
-  def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
-    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
-
-    time {
-      new GradientTreeBoost(attr, x, y, ntrees, maxNodes, shrinkage, subsample)
-    }
+  def gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time {
+    GradientTreeBoost.fit(formula, data, ntrees, maxNodes, nodeSize, shrinkage, subsample)
   }
 
   /** AdaBoost (Adaptive Boosting) classifier with decision trees. In principle,
@@ -766,27 +646,16 @@ trait Operators {
     *  - Yoav Freund, Robert E. Schapire. A Decision-Theoretic Generalization of on-Line Learning and an Application to Boosting, 1995.
     *  - Ji Zhu, Hui Zhou, Saharon Rosset and Trevor Hastie. Multi-class Adaboost, 2009.
     *
-    * @param x the training instances.
-    * @param y the response variable.
-    * @param attributes the attribute properties. If not provided, all attributes
-    *                   are treated as numeric values.
+    * @param formula a symbolic description of the model to be fitted.
+    * @param data the data frame of the explanatory and response variables.
     * @param ntrees the number of trees.
     * @param maxNodes the maximum number of leaf nodes in the trees.
+    * @param nodeSize number of instances in a node below which the tree will not split.
     *
     * @return AdaBoost model.
     */
-  def adaboost(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 2): AdaBoost = {
-    val p = x(0).length
-
-    val attr = if (attributes == null) {
-      val attr = new Array[Attribute](p)
-      for (i <- 0 until p) attr(i) = new NumericAttribute(s"V$i")
-      attr
-    } else attributes
-
-    time {
-      new AdaBoost(attr, x, y, ntrees, maxNodes)
-    }
+  def adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost = time {
+    AdaBoost.fit(formula, data, ntrees, maxNodes, nodeSize)
   }
 
   /** Fisher's linear discriminant. Fisher defined the separation between two
@@ -823,10 +692,8 @@ trait Operators {
     *
     * @return fisher discriminant analysis model.
     */
-  def fisher(x: Array[Array[Double]], y: Array[Int], L: Int = -1, tol: Double = 0.0001): FLD = {
-    time {
-      new FLD(x, y, L, tol)
-    }
+  def fisher(x: Array[Array[Double]], y: Array[Int], L: Int = -1, tol: Double = 0.0001): FLD = time {
+    FLD.fit(x, y, L, tol)
   }
 
   /** Linear discriminant analysis. LDA is based on the Bayes decision theory
@@ -863,10 +730,8 @@ trait Operators {
     *
     * @return linear discriminant analysis model.
     */
-  def lda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): LDA = {
-    time {
-      new LDA(x, y, priori, tol)
-    }
+  def lda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): LDA = time {
+    LDA.fit(x, y, priori, tol)
   }
 
   /** Quadratic discriminant analysis. QDA is closely related to linear discriminant
@@ -893,10 +758,8 @@ trait Operators {
     *
     * @return Quadratic discriminant analysis model.
     */
-  def qda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): QDA = {
-    time {
-      new QDA(x, y, priori, tol)
-    }
+  def qda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): QDA = time {
+    QDA.fit(x, y, priori, tol)
   }
 
   /** Regularized discriminant analysis. RDA is a compromise between LDA and QDA,
@@ -920,10 +783,8 @@ trait Operators {
     *
     * @return Regularized discriminant analysis model.
     */
-  def rda(x: Array[Array[Double]], y: Array[Int], alpha: Double, priori: Array[Double] = null, tol: Double = 0.0001): RDA = {
-    time {
-      new RDA(x, y, priori, alpha, tol)
-    }
+  def rda(x: Array[Array[Double]], y: Array[Int], alpha: Double, priori: Array[Double] = null, tol: Double = 0.0001): RDA = time {
+    RDA.fit(x, y, alpha, priori, tol)
   }
 
   /** Creates a naive Bayes classifier for document classification.
@@ -935,14 +796,16 @@ trait Operators {
     * @param priori the priori probability of each class. If null, equal probability is assume for each class.
     * @param sigma the prior count of add-k smoothing of evidence.
     */
-  def naiveBayes(x: Array[Array[Double]], y: Array[Int], model: NaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): NaiveBayes = {
-    time {
+  def naiveBayes(x: Array[Array[Int]], y: Array[Int], model: DiscreteNaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): DiscreteNaiveBayes = time {
       val p = x(0).length
       val k = MathEx.max(y) + 1
-      val naive = if (priori == null) new NaiveBayes(model, k, p, sigma) else new NaiveBayes(model, priori, p, sigma)
-      naive.learn(x, y)
+      val labels = ClassLabel.fit(y).labels
+      val naive = if (priori == null)
+        new DiscreteNaiveBayes(model, k, p, sigma, labels)
+      else
+        new DiscreteNaiveBayes(model, priori, p, sigma, labels)
+      naive.update(x, y)
       naive
-    }
   }
 
   /** Creates a general naive Bayes classifier.

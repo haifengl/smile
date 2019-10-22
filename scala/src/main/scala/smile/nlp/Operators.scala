@@ -18,8 +18,7 @@
 package smile.nlp
 
 import smile.math.MathEx
-
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import smile.nlp.collocation._
 import smile.nlp.pos.{HMMPOSTagger, PennTreebankPOS}
 import smile.util._
@@ -91,7 +90,7 @@ trait Operators {
     * @param text input text.
     * @return An array of sets of n-grams. The i-th entry is the set of i-grams.
     */
-  def ngram(maxNGramSize: Int, minFreq: Int, text: String*): Seq[Seq[NGram]] = {
+  def ngram(maxNGramSize: Int, minFreq: Int, text: String*): Array[Array[NGram]] = {
     time {
       val sentences = text.flatMap { text =>
         text.sentences.map { sentence =>
@@ -103,7 +102,7 @@ trait Operators {
 
       println(sentences)
       val ngrams = phrase.extract(sentences.asJava, maxNGramSize, minFreq)
-      ngrams.asScala.map(_.asScala)
+      ngrams.toArray(Array.ofDim[Array[NGram]](ngrams.size))
     }
   }
 

@@ -113,8 +113,8 @@ trait Operators {
     * agreement even when the partitions compared have different numbers of clusters.
     */
   def adjustedRandIndex(truth: Array[Int], prediction: Array[Int]): Double = AdjustedRandIndex.apply(truth, prediction)
-  /** Normalized mutual information score between two clusterings. */
-  //def mutualInformationScore(truth: Array[Int], prediction: Array[Int]): Double = MutualInformationScore.apply(truth, prediction)
+  /** Normalized mutual information score between two clusters. */
+  def mis(truth: Array[Int], prediction: Array[Int]): Double = MutualInformationScore(truth, prediction)._1
 
   /** Test a generic classifier.
     * The accuracy will be measured and printed out on standard output.
@@ -123,12 +123,11 @@ trait Operators {
     * @param y training labels.
     * @param testx test data.
     * @param testy test data labels.
-    * @param parTest Parallel test if true.
     * @param trainer a code block to return a classifier trained on the given data.
     * @tparam T the type of training and test data.
     * @return the trained classifier.
     */
-  def test[T,  C <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => C): C = {
+  def test[T,  C <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => C): C = {
     println("training...")
     val classifier = time {
       trainer(x, y)
@@ -136,10 +135,7 @@ trait Operators {
 
     println("testing...")
     val pred = time {
-      if (parTest)
-        testx.par.map(classifier.predict(_)).toArray
-      else
-        testx.map(classifier.predict(_))
+      testx.map(classifier.predict(_))
     }
 
     println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
@@ -156,12 +152,11 @@ trait Operators {
     * @param y training labels.
     * @param testx test data.
     * @param testy test data labels.
-    * @param parTest Parallel test if true.
     * @param trainer a code block to return a binary classifier trained on the given data.
     * @tparam T the type of training and test data.
     * @return the trained classifier.
     */
-  def test2[T,  C <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => C): C = {
+  def test2[T,  C <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => C): C = {
     println("training...")
     val classifier = time {
       trainer(x, y)
@@ -169,10 +164,7 @@ trait Operators {
 
     println("testing...")
     val pred = time {
-      if (parTest)
-        testx.par.map(classifier.predict(_)).toArray
-      else
-        testx.map(classifier.predict(_))
+      testx.map(classifier.predict(_))
     }
 
     println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
@@ -187,7 +179,6 @@ trait Operators {
     classifier
   }
 
-
   /** Test a binary soft classifier.
     * The accuracy, sensitivity, specificity, precision, F-1 score, F-2 score, F-0.5 score, and AUC will be measured
     * and printed out on standard output.
@@ -196,12 +187,11 @@ trait Operators {
     * @param y training labels.
     * @param testx test data.
     * @param testy test data labels.
-    * @param parTest Parallel test if true.
     * @param trainer a code block to return a binary classifier trained on the given data.
     * @tparam T the type of training and test data.
     * @return the trained classifier.
     */
-  def test2soft[T,  C <: SoftClassifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], parTest: Boolean = true)(trainer: => (Array[T], Array[Int]) => C): C = {
+  def test2soft[T,  C <: SoftClassifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => C): C = {
     println("training...")
     val classifier = time {
       trainer(x, y)
@@ -209,24 +199,14 @@ trait Operators {
 
     println("testing...")
     val results = time {
-      if (parTest)
-        testx.par.map { xi =>
-          val posteriori = Array(0.0, 0.0)
-          val yi = classifier.predict(xi, posteriori)
-          (yi, posteriori(1))
-        }.toArray
-      else {
-        val posteriori = Array(0.0, 0.0)
-        testx.map { xi =>
-          val yi = classifier.predict(xi, posteriori)
-          (yi, posteriori(1))
-        }
+      val posteriori = Array(0.0, 0.0)
+      testx.map { xi =>
+        val yi = classifier.predict(xi, posteriori)
+        (yi, posteriori(1))
       }
     }
 
-    val (pred, prob) = results.unzip
-    val prediction = pred.toArray
-    val probability = prob.toArray
+    val (prediction, probability) = results.unzip
 
     println("Accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, prediction)))
     println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.apply(testy, prediction)))

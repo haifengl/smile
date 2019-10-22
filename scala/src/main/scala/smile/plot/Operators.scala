@@ -20,7 +20,7 @@ package smile.plot
 import java.awt.{Color, GridLayout}
 import javax.swing.{JFrame, JPanel}
 
-import smile.data.AttributeDataset
+import smile.data.DataFrame
 import smile.classification.Classifier
 import smile.regression.Regression
 import smile.clustering.HierarchicalClustering
@@ -108,10 +108,10 @@ trait Operators {
     * @param legend the legend for all classes.
     * @return the window frame.
     */
-  def plot(data: AttributeDataset, legend: Char): JFrame = {
-    val x = data.unzip
-    val p = data.attributes.length
-    val names = data.attributes.map(_.getName)
+  def plot(data: DataFrame, legend: Char): JFrame = {
+    val x = data.toArray
+    val p = data.ncols
+    val names = data.names
 
     val panel = new JPanel(new GridLayout(p, p))
     panel.setBackground(Color.white)
@@ -125,7 +125,7 @@ trait Operators {
       }
     }
 
-    val frame = Window.frame(data.getName)
+    val frame = Window.frame()
     frame.add(panel)
     frame
   }
@@ -138,10 +138,12 @@ trait Operators {
     * @param palette the color for each class.
     * @return the window frame.
     */
-  def plot(data: AttributeDataset, legend: Char, palette: Array[Color]): JFrame = {
-    val (x, y) = data.unzipInt
-    val p = data.attributes.length
-    val names = data.attributes.map(_.getName)
+  def plot(data: DataFrame, category: String, legend: Char, palette: Array[Color]): JFrame = {
+    val dat = data.drop(category)
+    val x = dat.toArray
+    val y = data.column(category).toIntArray
+    val p = x(0).length
+    val names = dat.names()
 
     val panel = new JPanel(new GridLayout(p, p))
     panel.setBackground(Color.white)
@@ -155,7 +157,7 @@ trait Operators {
       }
     }
 
-    val frame = Window.frame(data.getName)
+    val frame = Window.frame()
     frame.add(panel)
     frame
   }
@@ -168,10 +170,12 @@ trait Operators {
     * @param palette the color for each class.
     * @return the window frame.
     */
-  def plot(data: AttributeDataset, legend: Array[Char], palette: Array[Color]): JFrame = {
-    val (x, y) = data.unzipInt
-    val p = data.attributes.length
-    val names = data.attributes.map(_.getName)
+  def plot(data: DataFrame, category: String, legend: Array[Char], palette: Array[Color]): JFrame = {
+    val dat = data.drop(category)
+    val x = dat.toArray
+    val y = data.column(category).toIntArray
+    val p = x(0).length
+    val names = dat.names()
 
     val panel = new JPanel(new GridLayout(p, p))
     panel.setBackground(Color.white)
@@ -185,7 +189,7 @@ trait Operators {
       }
     }
 
-    val frame = Window.frame(data.getName)
+    val frame = Window.frame()
     frame.add(panel)
     frame
   }

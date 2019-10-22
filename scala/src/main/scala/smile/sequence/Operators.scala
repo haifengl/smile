@@ -17,7 +17,6 @@
 
 package smile.sequence
 
-import smile.data.Attribute
 import smile.sequence.CRF.Trainer
 import smile.util._
 
@@ -83,6 +82,7 @@ trait Operators {
     * @param ntrees the number of trees/iterations.
     * @param maxNodes the maximum number of leaf nodes in the tree.
     */
+  /*
   def crf(sequences: Array[Array[Array[Double]]], labels: Array[Array[Int]], attributes: Array[Attribute], k: Int, eta: Double = 1.0, ntrees: Int = 100, maxNodes: Int = 100): CRF = {
     time {
       val trainer = new Trainer(attributes, k)
@@ -92,4 +92,5 @@ trait Operators {
       trainer.train(sequences, labels)
     }
   }
+   */
 }

@@ -18,7 +18,7 @@
 package smile
 
 import scala.language.implicitConversions
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import smile.nlp.dictionary.StopWords
 
 /** Natural language processing.
@@ -209,8 +209,9 @@ package nlp {
       * @param k the number of top keywords to return.
       * @return the top keywords.
       */
-    def keywords(k: Int = 10): Seq[NGram] = {
-      keywordExtractor.extract(text, k).asScala
+    def keywords(k: Int = 10): Array[NGram] = {
+      val keywords = keywordExtractor.extract(text, k)
+      keywords.toArray(Array.ofDim[NGram](keywords.size))
     }
   }
 }

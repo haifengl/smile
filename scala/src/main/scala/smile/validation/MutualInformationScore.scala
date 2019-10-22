@@ -35,16 +35,19 @@ import scala.math.{max, log, sqrt}
 	 * @author Beck Gaël
    */
 class MutualInformationScore(normalization: String = "sqrt") extends ClusterMeasure {
-	/**
-	 * Normalize Sequences in order to prevent construction of a to big 'count' matrix
-	 * Ex: [4,5,6,6] -> [0,1,2,2]
-	 **/
-	private def prepareList(x: Array[Int]) = {
-		val indexedValuesMap = x.distinct.zipWithIndex.toMap
-		x.map(indexedValuesMap)
+	override def measure(x: Array[Int], y: Array[Int]) = {
+		val (mi, hu, hv) = MutualInformationScore(x, y)
+		normalization match {
+			case "mi" => mi // no normalization
+			case "sqrt" => mi / sqrt(hu * hv)
+			case "max" => mi / max(hu, hv)
+			case _ => throw new UnsupportedOperationException("Unsupported normalization type: " + normalization)
+		}
 	}
+}
 
-	private def mutualInformation(x: Array[Int], y:Array[Int]) = {
+object MutualInformationScore {
+	def apply(x: Array[Int], y:Array[Int]): (Double, Double, Double) = {
 		require( x.size == y.size )
 		val n = x.size
 		val xx = prepareList(x)
@@ -71,22 +74,21 @@ class MutualInformationScore(normalization: String = "sqrt") extends ClusterMeas
 		ai.foreach( v => { val c = v / nN; if( c > 0 ) hu -= c * log(c) } )
 		// Entropy for true labeled data
 		var hv = 0D
-		bj.foreach( v => { val c = v / nN; if( c > 0) hv -= c * log(c) } ) 
+		bj.foreach( v => { val c = v / nN; if( c > 0) hv -= c * log(c) } )
 
 		var huStrichV = 0D
-	    maxOneIndices.foreach( i => maxTwoIndices.foreach( j => if( count(i)(j) > 0 ) huStrichV -= count(i)(j) / nN * log( (count(i)(j)) / bj(j) ) ) )
+		maxOneIndices.foreach( i => maxTwoIndices.foreach( j => if( count(i)(j) > 0 ) huStrichV -= count(i)(j) / nN * log( (count(i)(j)) / bj(j) ) ) )
 
 		val mi = hu - huStrichV
 		(mi, hu, hv)
 	}
 
-	override def measure(x: Array[Int], y: Array[Int]) = {
-		val (mi, hu, hv) = mutualInformation(x, y)
-		normalization match {
-			case "mi" => mi // no normalization
-			case "sqrt" => mi / sqrt(hu * hv)
-			case "max" => mi / max(hu, hv)
-			case _ => throw new UnsupportedOperationException("Unsupported normalization type: " + normalization)
-		}
+	/**
+		* Normalize Sequences in order to prevent construction of a to big 'count' matrix
+		* Ex: [4,5,6,6] -> [0,1,2,2]
+		**/
+	private def prepareList(x: Array[Int]): Array[Int] = {
+		val indexedValuesMap = x.distinct.zipWithIndex.toMap
+		x.map(indexedValuesMap)
 	}
 }
