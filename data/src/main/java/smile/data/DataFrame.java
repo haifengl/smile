@@ -655,14 +655,13 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     }
 
     /**
-     * Returns a new DataFrame with additional nominal columns that
-     * are converted from given string columns.
+     * Returns a new DataFrame with given string columns converted to nominal.
      *
      * @param cols string column names. If empty, all string columns
      *             in the data frame will be converted.
      * @return a new DataFrame.
      */
-    default DataFrame nominal(String... cols) {
+    default DataFrame factorize(String... cols) {
         if (cols.length == 0) {
             cols = Arrays.stream(schema().fields())
                     .filter(field -> field.type.isString())
@@ -670,13 +669,16 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
                     .toArray(String[]::new);
         }
 
-        BaseVector[] vectors = Arrays.stream(cols).map(col -> stringVector(col))
-                .map(c -> {
-                    NominalScale scale = c.nominal();
-                    return c.factorize(scale);
-                }).toArray(BaseVector[]::new);
+        HashSet<String> set = new HashSet<>(Arrays.asList(cols));
+        BaseVector[] vectors = Arrays.stream(names()).map(col -> {
+            if (set.contains(col)) {
+                StringVector c = stringVector(col);
+                NominalScale scale = c.nominal();
+                return c.factorize(scale);
+            } else return column(col);
+        }).toArray(BaseVector[]::new);
 
-        return merge(vectors);
+        return of(vectors);
     }
 
     /**
