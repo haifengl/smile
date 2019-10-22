@@ -27,28 +27,14 @@ import smile.data.DataFrame;
  *
  * @author Haifeng Li
  */
-public class DatasetWriter {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DatasetWriter.class);
-
-    /** CSV format. */
-    private CSVFormat format = CSVFormat.DEFAULT;
-
-    /**
-     * Constructor.
-     */
-    public DatasetWriter() {
-
-    }
-
-    /**
-     * Sets the CSV format.
-     */
-    public void format(CSVFormat format) {
-        this.format = format;
+public interface DatasetWriter {
+    /** Writes a CSV file. */
+    static void csv(DataFrame df, Path path) throws IOException {
+        csv(df, path, CSVFormat.DEFAULT);
     }
 
     /** Writes a CSV file. */
-    public void csv(DataFrame df, Path path) throws IOException {
+    static void csv(DataFrame df, Path path, CSVFormat format) throws IOException {
         CSV csv = new CSV(format);
         csv.write(df, path);
     }
@@ -60,8 +46,18 @@ public class DatasetWriter {
      * for flat and hierarchical data, organized for efficient analytic
      * operations on modern hardware.
      */
-    public void arrow(DataFrame df, Path path) throws IOException {
+    static void arrow(DataFrame df, Path path) throws IOException {
         Arrow arrow = new Arrow();
         arrow.write(df, path);
+    }
+
+    /**
+     * Writes the data frame to an ARFF file.
+     * @param df the data frame.
+     * @param path the file path.
+     * @param relation the relation name of ARFF.
+     */
+    static void arff(DataFrame df, Path path, String relation) throws IOException {
+        Arff.write(df, path, relation);
     }
 }

@@ -18,7 +18,7 @@
 package smile.data;
 
 import org.apache.commons.csv.CSVFormat;
-import smile.io.CSV;
+import smile.io.DatasetReader;
 import smile.util.Paths;
 
 /**
@@ -31,10 +31,8 @@ public class Movement {
     public static double[][] x;
 
     static {
-        CSV csv = new CSV(CSVFormat.DEFAULT);
-
         try {
-            data = csv.read(Paths.getTestData("uci/movement_libras.data"));
+            data = DatasetReader.csv(Paths.getTestData("uci/movement_libras.data"), CSVFormat.DEFAULT);
             x = data.toArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'movement_libras': " + ex);

@@ -17,13 +17,18 @@
  
 package smile.benchmark
 
+import java.util
+import java.util.stream.IntStream
+import org.apache.commons.csv.CSVFormat
+import smile.base.mlp.{Layer, OutputFunction}
 import smile.data._
-import smile.data.parser.DelimitedTextParser
 import smile.classification._
+import smile.data.`type`.{DataTypes, StructField}
+import smile.data.formula.Formula
+import smile.feature.Standardizer
+import smile.read
 import smile.math.MathEx
-import smile.math.distance.EuclideanDistance
 import smile.math.kernel.GaussianKernel
-import smile.math.rbf.GaussianRadialBasis
 import smile.validation._
 import smile.util._
 
@@ -37,71 +42,76 @@ object USPS {
     benchmark
   }
 
-  def benchmark() {
+  def benchmark(): Unit = {
     println("USPS")
 
-    val parser = new DelimitedTextParser
-    parser.setResponseIndex(new NominalAttribute("class"), 0)
+    val fields = new util.ArrayList[StructField]
+    fields.add(new StructField("class", DataTypes.ByteType))
+    (1 to 256).foreach(i => fields.add(new StructField("V" + i, DataTypes.DoubleType)))
+    val schema = DataTypes.struct(fields)
 
-    val train = parser.parse(smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"))
-    val test = parser.parse(smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"))
-    val (x, y) = train.unzipInt
-    val (testx, testy) = test.unzipInt
-    val k = MathEx.max(y) + 1
+    val formula = Formula.lhs("class")
+    val train = read.csv(Paths.getTestData("usps/zip.train").toString, delimiter = ' ', header = false, schema = schema)
+    val test = read.csv(Paths.getTestData("usps/zip.test").toString, delimiter = ' ', header = false, schema = schema)
+    val x = formula.x(train).toArray
+    val y = formula.y(train).toIntArray
+    val testx = formula.x(test).toArray
+    val testy = formula.y(test).toIntArray
+    val k = 10
 
     // Random Forest
-    val forest = test2(x, y, testx, testy) { (x, y) =>
-      println("Training Random Forest of 200 trees...")
-      new RandomForest(x, y, 200)
-    }.asInstanceOf[RandomForest]
-
+    println("Training Random Forest of 200 trees...")
+    val forest = randomForest(formula, train, ntrees = 200)
     println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
+    val p1 = forest.predict(test)
+    println("Test accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, p1)))
 
     // Gradient Tree Boost
-    test2(x, y, testx, testy) { (x, y) =>
-      println("Training Gradient Tree Boost of 200 trees...")
-      new GradientTreeBoost(x, y, 200)
-    }
+    println("Training Gradient Tree Boost of 200 trees...")
+    val boost = gbm(formula, train, ntrees = 200)
+    val p2 = boost.predict(test)
+    println("Test accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, p2)))
 
     // SVM
-    test2(x, y, testx, testy) { (x, y) =>
-      println("Training SVM, one epoch...")
-      val svm = new SVM[Array[Double]](new GaussianKernel(8.0), 5.0, k, SVM.Multiclass.ONE_VS_ONE)
-      svm.learn(x, y)
-      svm.finish
-      svm
-    }
+    println("Training SVM, one epoch...")
+    val kernel = new GaussianKernel(8.0)
+    //val svm = OneVersusOne.fit(x, y, (xi: Array[Array[Double]], yi: Array[Int]) => SVM.fit(xi, yi, kernel, 5, 1E-3))
+    //val p3 = svm.predict(testx)
+    //println("Test accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, p3)))
 
     // RBF Network
-    test2(x, y, testx, testy) { (x, y) =>
-      println("Training RBF Network...")
-      val centers = new Array[Array[Double]](200)
-      val basis = SmileUtils.learnGaussianRadialBasis(x, centers)
-      new RBFNetwork[Array[Double]](x, y, new EuclideanDistance, new GaussianRadialBasis(8.0), centers)
-    }
+    println("Training RBF Network...")
+    val rbf = rbfnet(x, y, 200)
+    val p4 = rbf.predict(testx)
+    println("Test accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, p4)))
 
     // Logistic Regression
-    test2(x, y, testx, testy) { (x, y) =>
-      println("Training Logistic regression...")
-      new LogisticRegression(x, y, 0.3, 1E-3, 1000)
-    }
+    println("Training Logistic regression...")
+    val logistic = logit(x, y, 0.3, 1E-3, 1000)
+    val p5 = logistic.predict(testx)
+    println("Test accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, p5)))
 
     // Neural Network
-    val p = x(0).length
-    val mu = MathEx.colMeans(x)
-    val sd = MathEx.colSds(x)
-    x.foreach { xi =>
-      (0 until p) foreach { j => xi(j) = (xi(j) - mu(j)) / sd(j)}
-    }
-    testx.foreach { xi =>
-      (0 until p) foreach { j => xi(j) = (xi(j) - mu(j)) / sd(j)}
-    }
+    val scaler = Standardizer.fit(x)
+    val x2 = scaler.transform(x)
+    val testx2 = scaler.transform(testx)
 
-    test2(x, y, testx, testy) { (x, y) =>
-      println("Training Neural Network, 30 epoch...")
-      val nnet = new MLP(MLP.ErrorFunction.LEAST_MEAN_SQUARES, MLP.ActivationFunction.LOGISTIC_SIGMOID, p, 40, k)
-      (0 until 30) foreach { _ => nnet.learn(x, y) }
-      nnet
-    }
+    println("Training Neural Network, 10 epoch...")
+    val net = new MLP(256,
+      Layer.sigmoid(768),
+      Layer.sigmoid(192),
+      Layer.sigmoid(30),
+      Layer.mle(k, OutputFunction.SIGMOID)
+    )
+    net.setLearningRate(0.1)
+    net.setMomentum(0.0)
+
+    (0 until 10).foreach(epoch => {
+      println("----- epoch %d -----%n", epoch)
+      MathEx.permutate(x2.length).foreach(i => net.update(x2(i), y(i)))
+      val prediction = Validation.test(net, testx2)
+      val error = Error.apply(testy, prediction)
+      println("Test Error = %d", error)
+    })
   }
 }

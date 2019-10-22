@@ -18,6 +18,7 @@
 package smile.data;
 
 import smile.io.Arff;
+import smile.io.DatasetReader;
 import smile.util.Paths;
 
 /**
@@ -30,8 +31,7 @@ public class Date {
 
     static {
         try {
-            Arff arff = new Arff(Paths.getTestData("weka/date.arff"));
-            data = arff.read();
+            data = DatasetReader.arff(Paths.getTestData("weka/date.arff"));
         } catch (Exception ex) {
             System.err.println("Failed to load 'date': " + ex);
             System.exit(-1);

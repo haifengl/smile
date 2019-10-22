@@ -313,6 +313,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
             return;
         }
 
+        y = labels.id(y);
         switch (model) {
             case MULTINOMIAL:
                 for (int i = 0; i < p; i++) {
@@ -356,6 +357,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
             return;
         }
 
+        y = labels.id(y);
         switch (model) {
             case MULTINOMIAL:
                 for (SparseArray.Entry e : x) {
@@ -393,6 +395,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      * @param x training instances.
      * @param y training labels.
      */
+    @Override
     public void update(int[][] x, int[] y) {
         switch (model) {
             case MULTINOMIAL:
@@ -402,13 +405,14 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
                         continue;
                     }
 
+                    int yi = labels.id(y[i]);
                     for (int j = 0; j < p; j++) {
-                        ntc[y[i]][j] += x[i][j];
-                        nt[y[i]] += x[i][j];
+                        ntc[yi][j] += x[i][j];
+                        nt[yi] += x[i][j];
                     }
 
                     n++;
-                    nc[y[i]]++;
+                    nc[yi]++;
                 }
                 break;
 
@@ -419,13 +423,14 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
                         continue;
                     }
 
+                    int yi = labels.id(y[i]);
                     for (int j = 0; j < p; j++) {
-                        ntc[y[i]][j] += x[i][j] * 2;
-                        nt[y[i]] += x[i][j] * 2;
+                        ntc[yi][j] += x[i][j] * 2;
+                        nt[yi] += x[i][j] * 2;
                     }
 
                     n++;
-                    nc[y[i]]++;
+                    nc[yi]++;
                 }
                 break;
 
@@ -436,14 +441,15 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
                         continue;
                     }
 
+                    int yi = labels.id(y[i]);
                     for (int j = 0; j < p; j++) {
                         if (x[i][j] > 0) {
-                            ntc[y[i]][j]++;
+                            ntc[yi][j]++;
                         }
                     }
 
                     n++;
-                    nc[y[i]]++;
+                    nc[yi]++;
                 }
                 break;
         }

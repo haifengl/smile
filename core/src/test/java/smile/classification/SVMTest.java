@@ -68,9 +68,8 @@ public class SVMTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        DatasetReader reader = new DatasetReader();
-        Dataset<Instance<SparseArray>> train = reader.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1"));
-        Dataset<Instance<SparseArray>> test  = reader.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1.t"));
+        Dataset<Instance<SparseArray>> train = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1"));
+        Dataset<Instance<SparseArray>> test  = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1.t"));
 
         int n = train.size();
         double[][] x = new double[n][4];
@@ -109,9 +108,8 @@ public class SVMTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        DatasetReader reader = new DatasetReader();
-        Dataset<Instance<SparseArray>> train = reader.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.trn"));
-        Dataset<Instance<SparseArray>> test  = reader.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.tst"));
+        Dataset<Instance<SparseArray>> train = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.trn"));
+        Dataset<Instance<SparseArray>> test  = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.tst"));
 
         int n = train.size();
         int[][] x = new int[n][];
