@@ -55,9 +55,8 @@ public class LibsvmTest {
     @Test(expected = Test.None.class)
     public void testParseNG20() throws Exception {
         System.out.println("NG20");
-        DatasetReader reader = new DatasetReader();
-        Dataset<Instance<SparseArray>> train = reader.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
-        Dataset<Instance<SparseArray>> test  = reader.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
+        Dataset<Instance<SparseArray>> train = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
+        Dataset<Instance<SparseArray>> test  = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
 
         assertEquals(15935, train.size());
         assertEquals(1, train.get(0).label());
@@ -94,8 +93,7 @@ public class LibsvmTest {
     @Test(expected = Test.None.class)
     public void testParseGlass() throws Exception {
         System.out.println("glass");
-        DatasetReader reader = new DatasetReader();
-        Dataset<Instance<SparseArray>> train = reader.libsvm(smile.util.Paths.getTestData("libsvm/glass.txt"));
+        Dataset<Instance<SparseArray>> train = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/glass.txt"));
 
         assertEquals(214, train.size());
         assertEquals(9, train.get(0).x().size());

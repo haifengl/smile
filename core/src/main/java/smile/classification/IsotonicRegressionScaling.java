@@ -18,10 +18,11 @@
 package smile.classification;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
 import smile.sort.QuickSort;
 
 /**

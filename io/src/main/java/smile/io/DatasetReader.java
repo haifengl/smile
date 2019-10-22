@@ -37,77 +37,34 @@ import smile.util.SparseArray;
  * 
  * @author Haifeng Li
  */
-public class DatasetReader {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DatasetReader.class);
-
-    /** Reads a limited number of records. */
-    private int limit = Integer.MAX_VALUE;
-    /** CSV format. */
-    private CSVFormat format = CSVFormat.DEFAULT;
-    /** Avro schema. */
-    private Schema schema;
-    /** CSV or JSON schema. */
-    private StructType struct;
-    /** JSON mode. */
-    private JSON.Mode mode = JSON.Mode.SINGLE_LINE;
-
-    /**
-     * Constructor.
-     */
-    public DatasetReader() {
-
-    }
-
-    /**
-     * Reads a limited number of records.
-     */
-    public void limit(int max) {
-        if (max <= 0) {
-            throw new IllegalArgumentException("Invalid limit: " + max);
-        }
-        this.limit = max;
-    }
-
-    /**
-     * Sets the CSV format.
-     */
-    public void format(CSVFormat format) {
-        this.format = format;
-    }
-
-    /**
-     * Sets the JSON read mode.
-     */
-    public void mode(JSON.Mode mode) {
-        this.mode = mode;
-    }
-
-    /**
-     * Sets the Avro schema.
-     */
-    public void schema(Schema schema) {
-        this.schema = schema;
-    }
-
-    /**
-     * Sets the CSV or JSON schema.
-     */
-    public void schema(StructType schema) {
-        this.struct = schema;
+public interface DatasetReader {
+    /** Reads a CSV file. */
+    static DataFrame csv(Path path) throws IOException {
+        return csv(path, CSVFormat.DEFAULT);
     }
 
     /** Reads a CSV file. */
-    public DataFrame csv(Path path) throws IOException {
+    static DataFrame csv(Path path, CSVFormat format) throws IOException {
+        return csv(path, format, null);
+    }
+
+    /** Reads a CSV file. */
+    static DataFrame csv(Path path, CSVFormat format, StructType schema) throws IOException {
         CSV csv = new CSV(format);
-        if (struct != null) csv.schema(struct);
-        return csv.read(path, limit);
+        if (schema != null) csv.schema(schema);
+        return csv.read(path);
     }
 
     /** Reads a JSON file. */
-    public DataFrame json(Path path) throws IOException {
+    static DataFrame json(Path path) throws IOException {
+        return json(path, JSON.Mode.SINGLE_LINE, null);
+    }
+
+    /** Reads a JSON file. */
+    static DataFrame json(Path path, JSON.Mode mode, StructType schema) throws IOException {
         JSON json = new JSON().mode(mode);
-        if (struct != null) json.schema(struct);
-        return json.read(path, limit);
+        if (schema != null) json.schema(schema);
+        return json.read(path);
     }
 
     /**
@@ -137,9 +94,9 @@ public class DatasetReader {
      *
      * @param path the input file path.
      */
-    public DataFrame arff(Path path) throws IOException, ParseException {
+    static DataFrame arff(Path path) throws IOException, ParseException {
         Arff arff = new Arff(path);
-        return arff.read(limit);
+        return arff.read();
     }
 
     /**
@@ -147,9 +104,8 @@ public class DatasetReader {
      *
      * @param path the input file path.
      */
-    public DataFrame sas(Path path) throws IOException {
-        SAS sas = new SAS();
-        return sas.read(path, limit);
+    static DataFrame sas(Path path) throws IOException {
+        return SAS.read(path);
     }
 
     /**
@@ -161,9 +117,9 @@ public class DatasetReader {
      *
      * @param path the input file path.
      */
-    public DataFrame arrow(Path path) throws IOException {
+    static DataFrame arrow(Path path) throws IOException {
         Arrow arrow = new Arrow();
-        return arrow.read(path, limit);
+        return arrow.read(path);
     }
 
     /**
@@ -171,13 +127,9 @@ public class DatasetReader {
      *
      * @param path the input file path.
      */
-    public DataFrame avro(Path path) throws IOException {
-        if (schema == null) {
-            throw new IllegalStateException("Avro schema is not set yet. Call schema(org.apache.avro.Schema) first.");
-        }
-
+    static DataFrame avro(Path path, Schema schema) throws IOException {
         Avro avro = new Avro(schema);
-        return avro.read(path, limit);
+        return avro.read(path);
     }
 
     /**
@@ -185,9 +137,8 @@ public class DatasetReader {
      *
      * @param path the input file path.
      */
-    public DataFrame parquet(Path path) throws IOException {
-        Parquet parquet = new Parquet();
-        return parquet.read(path, limit);
+    static DataFrame parquet(Path path) throws IOException {
+        return Parquet.read(path);
     }
 
     /**
@@ -206,7 +157,7 @@ public class DatasetReader {
      *
      * @param path the input file path.
      */
-    public Dataset<Instance<SparseArray>> libsvm(Path path) throws IOException {
+    static Dataset<Instance<SparseArray>> libsvm(Path path) throws IOException {
         try (BufferedReader reader = Files.newBufferedReader(path)) {
             String line = reader.readLine();
             if (line == null) {
@@ -223,7 +174,6 @@ public class DatasetReader {
                     Double.valueOf(token);
                     classification = false;
                 } catch (NumberFormatException ex) {
-                    logger.error("Failed to parse {}", token, ex);
                     throw new NumberFormatException("Unrecognized response variable value: " + token);
                 }
             }

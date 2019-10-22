@@ -41,8 +41,7 @@ public class ParquetTest {
 
     public ParquetTest() {
         try {
-            Parquet parquet = new Parquet();
-            df = parquet.read(Paths.getTestData("parquet/userdata1.parquet"));
+            df = Parquet.read(Paths.getTestData("parquet/userdata1.parquet"));
         } catch (Exception ex) {
             ex.printStackTrace();
         }

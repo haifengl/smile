@@ -19,7 +19,7 @@ package smile.data;
 
 import org.apache.commons.csv.CSVFormat;
 import smile.data.formula.Formula;
-import smile.io.CSV;
+import smile.io.DatasetReader;
 import smile.util.Paths;
 
 /**
@@ -35,10 +35,8 @@ public class Diabetes {
     public static double[] y;
 
     static {
-        CSV csv = new CSV(CSVFormat.DEFAULT.withFirstRecordAsHeader());
-
         try {
-            data = csv.read(Paths.getTestData("regression/diabetes.csv"));
+            data = DatasetReader.csv(Paths.getTestData("regression/diabetes.csv"), CSVFormat.DEFAULT.withFirstRecordAsHeader());
 
             x = formula.x(data).toArray();
             y = formula.y(data).toDoubleArray();

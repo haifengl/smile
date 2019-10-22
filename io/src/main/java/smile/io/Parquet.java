@@ -55,15 +55,16 @@ import smile.data.type.*;
 public class Parquet {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Parquet.class);
 
-    /** Constructor. */
-    public Parquet() {
+    /** Private constructor to prevent object creation. */
+    private Parquet() {
+
     }
 
     /**
      * Reads a local parquet file.
      * @param path an Apache Parquet file path.
      */
-    public DataFrame read(Path path) throws IOException {
+    public static DataFrame read(Path path) throws IOException {
         return read(new LocalInputFile(path));
     }
 
@@ -72,7 +73,7 @@ public class Parquet {
      * @param path an Apache Parquet file path.
      * @param limit reads a limited number of records.
      */
-    public DataFrame read(Path path, int limit) throws IOException {
+    public static DataFrame read(Path path, int limit) throws IOException {
         return read(new LocalInputFile(path), limit);
     }
 
@@ -81,7 +82,7 @@ public class Parquet {
      * @param file an interface with the methods needed by Parquet
      *             to read data files. See HadoopInputFile for example.
      */
-    public DataFrame read(InputFile file) throws IOException {
+    public static DataFrame read(InputFile file) throws IOException {
         return read(file, Integer.MAX_VALUE);
     }
 
@@ -91,7 +92,7 @@ public class Parquet {
      *             to read data files. See HadoopInputFile for example.
      * @param limit reads a limited number of records.
      */
-    public DataFrame read(InputFile file, int limit) throws IOException {
+    public static DataFrame read(InputFile file, int limit) throws IOException {
 
         try (ParquetFileReader reader = ParquetFileReader.open(file)) {
             ParquetMetadata footer = reader.getFooter();
@@ -116,7 +117,7 @@ public class Parquet {
         }
     }
 
-    private Object[] group2object(Group g, List<ColumnDescriptor> columns, StructType schema) {
+    private static Object[] group2object(Group g, List<ColumnDescriptor> columns, StructType schema) {
         int length = schema.length();
         Object[] o = new Object[length];
         for (int i = 0; i < length; i++) {
@@ -331,7 +332,7 @@ public class Parquet {
     }
 
     /** Converts a parquet schema to smile schema. */
-    private StructType toSmileSchema(MessageType schema) {
+    private static StructType toSmileSchema(MessageType schema) {
         List<StructField> fields = new ArrayList<>();
         for (ColumnDescriptor column : schema.getColumns()) {
             fields.add(toSmileField(column));
@@ -341,7 +342,7 @@ public class Parquet {
     }
 
     /** Converts a parquet column to smile struct field. */
-    private StructField toSmileField(ColumnDescriptor column) {
+    private static StructField toSmileField(ColumnDescriptor column) {
         String name = String.join(".", column.getPath());
         PrimitiveType primitiveType = column.getPrimitiveType();
         OriginalType originalType = primitiveType.getOriginalType();

@@ -23,7 +23,7 @@ import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.io.CSV;
+import smile.io.DatasetReader;
 import smile.util.Paths;
 
 /**
@@ -73,11 +73,8 @@ public class BreastCancer {
                 new StructField("fractal_dimension_worst", DataTypes.DoubleType)
         );
 
-        CSV csv = new CSV(CSVFormat.DEFAULT.withFirstRecordAsHeader());
-        csv.schema(schema);
-
         try {
-            data = csv.read(Paths.getTestData("classification/breastcancer.csv"));
+            data = DatasetReader.csv(Paths.getTestData("classification/breastcancer.csv"), CSVFormat.DEFAULT.withFirstRecordAsHeader(), schema);
             data = data.drop("id");
             x = formula.x(data).toArray();
             y = formula.y(data).toIntArray();

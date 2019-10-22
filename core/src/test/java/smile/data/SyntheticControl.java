@@ -18,7 +18,7 @@
 package smile.data;
 
 import org.apache.commons.csv.CSVFormat;
-import smile.io.CSV;
+import smile.io.DatasetReader;
 import smile.util.Paths;
 
 /**
@@ -31,10 +31,8 @@ public class SyntheticControl {
     public static double[][] x;
 
     static {
-        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
-
         try {
-            data = csv.read(Paths.getTestData("uci/synthetic_control.data"));
+            data = DatasetReader.csv(Paths.getTestData("uci/synthetic_control.data"), CSVFormat.DEFAULT.withDelimiter(' '));
             x = data.toArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'synthetic_control': " + ex);

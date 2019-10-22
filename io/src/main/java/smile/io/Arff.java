@@ -17,16 +17,18 @@
 
 package smile.io;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StreamTokenizer;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import smile.data.DataFrame;
 import smile.data.Tuple;
+import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.*;
 
@@ -447,5 +449,50 @@ public class Arff implements AutoCloseable {
         }
 
         return x;
+    }
+
+    /**
+     * Writes the data frame to an ARFF file.
+     * @param df the data frame.
+     * @param path the file path.
+     * @param relation the relation name of ARFF.
+     */
+    public static void write(DataFrame df, Path path, String relation) throws IOException {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(path.toFile()))) {
+
+            writer.print("@RELATION ");
+            writer.println(relation);
+
+            for (StructField field : df.schema().fields()) {
+                writeField(writer, field);
+            }
+
+            writer.println("@DATA");
+
+            int p = df.ncols();
+            df.stream().forEach(t -> {
+                String line = IntStream.range(0, p).mapToObj(i -> t.toString()).collect(Collectors.joining(","));
+                writer.println(line);
+            });
+        }
+    }
+
+    /** Write the meta of field to ARFF file. */
+    private static void writeField(PrintWriter writer, StructField field) throws IOException {
+        writer.print("@ATTRIBUTE ");
+        writer.print(field.name);
+        if (field.type.isFloating()) writer.println(" REAL");
+        else if (field.type.isString()) writer.println(" STRING");
+        else if (field.type.id() == DataType.ID.DateTime) writer.println(" DATE \"yyyy-MM-dd HH:mm:ss\"");
+        else if (field.type.isIntegral()) {
+            Optional<Measure> measure = field.measure;
+            if (measure.isPresent() && measure.get() instanceof NominalScale) {
+                NominalScale scale = (NominalScale) measure.get();
+                String levels = Arrays.stream(scale.levels()).collect(Collectors.joining(",", " {", "}"));
+                writer.println(levels);
+            } else {
+                writer.println(" REAL");
+            }
+        }
     }
 }

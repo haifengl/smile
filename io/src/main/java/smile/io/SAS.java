@@ -45,20 +45,13 @@ import smile.data.vector.Vector;
  *
  * @author Haifeng Li
  */
-public class SAS {
-    /**
-     * Constructor.
-     */
-    public SAS() {
-
-    }
-
+public interface SAS {
     /**
      * Reads a SAS7BDAT file.
      *
      * @param path a SAS7BDAT file path.
      */
-    public DataFrame read(Path path) throws IOException {
+    static DataFrame read(Path path) throws IOException {
         return read(path, Integer.MAX_VALUE);
     }
 
@@ -68,7 +61,7 @@ public class SAS {
      * @param path a SAS7BDAT file path.
      * @param limit reads a limited number of records.
      */
-    public DataFrame read(Path path, int limit) throws IOException {
+    static DataFrame read(Path path, int limit) throws IOException {
         try (InputStream input = Files.newInputStream(path)) {
             SasFileReader reader = new SasFileReaderImpl(input);
             SasFileProperties properties = reader.getSasFileProperties();

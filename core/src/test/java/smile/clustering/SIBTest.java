@@ -63,9 +63,8 @@ public class SIBTest {
     @Test(expected = Test.None.class)
     public void testParseNG20() throws Exception {
         System.out.println("NG20");
-        DatasetReader reader = new DatasetReader();
-        Dataset<Instance<SparseArray>> train = reader.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
-        Dataset<Instance<SparseArray>> test = reader.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
+        Dataset<Instance<SparseArray>> train = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
+        Dataset<Instance<SparseArray>> test = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
 
         SparseDataset trainx = SparseDataset.of(train);
         int[] y = train.stream().mapToInt(i -> i.label()).toArray();

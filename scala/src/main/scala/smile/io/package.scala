@@ -18,9 +18,16 @@
 package smile
 
 import java.io._
+import java.nio.file.Paths
+import java.sql.ResultSet
 import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
 import com.thoughtworks.xstream.XStream
+import org.apache.commons.csv.CSVFormat
+import smile.data.{DataFrame, Dataset, Instance}
+import smile.data.`type`.StructType
+import smile.io.{DatasetReader, DatasetWriter, JSON}
+import smile.util.SparseArray
 
 /** Output operators. */
 object write {
@@ -51,6 +58,40 @@ object write {
     data.foreach(writer.println(_))
     writer.close
   }
+
+  /** Writes a data frame to an Apache Arrow file. */
+  def arrow(data: DataFrame, file: String): Unit = DatasetWriter.arrow(data, Paths.get(file))
+
+  /** Writes a data frame to an ARFF file. */
+  def arff(data: DataFrame, file: String, relation: String): Unit = DatasetWriter.arff(data, Paths.get(file), relation)
+
+  /** Writes an AttributeDataset to a delimited text file.
+    *
+    * @param data an attribute dataset.
+    * @param file the file path
+    */
+  def csv(data: DataFrame, file: String, delimiter: Char = ','): Unit = {
+    val format = CSVFormat.DEFAULT.withDelimiter(delimiter)
+    DatasetWriter.csv(data, Paths.get(file), format)
+  }
+
+  /** Writes a two-dimensional array to a delimited text file.
+    *
+    * @param data a two-dimensional array.
+    * @param file the file path
+    * @param delimiter delimiter string
+    */
+  def table[T](data: Array[Array[T]], file: String, delimiter: Char = ','): Unit = {
+    val writer = new PrintWriter(new File(file))
+    val sb = new StringBuilder
+    val del = sb.append(delimiter).toString
+
+    data.foreach { row =>
+      writer.println(row.mkString(del))
+    }
+
+    writer.close
+  }
 }
 
 /** Input operators. */
@@ -69,6 +110,62 @@ object read {
     val xstream = new XStream
     xstream.fromXML(xml)
   }
+
+  /** Reads a JDBC query result to a data frame. */
+  def jdbc(rs: ResultSet): DataFrame = {
+    DataFrame.of(rs)
+  }
+
+  /** Reads a CSV file. */
+  def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame = {
+    var format = CSVFormat.DEFAULT.withDelimiter(delimiter).withQuote(quote).withEscape(escape)
+    if (header) format = format.withFirstRecordAsHeader
+    DatasetReader.csv(Paths.get(file), format, schema)
+  }
+
+  /** Reads a CSV file. */
+  def csv(file: String, format: CSVFormat, schema: StructType): DataFrame = DatasetReader.csv(Paths.get(file), format, schema)
+
+  /** Reads a JSON file. */
+  def json(file: String): DataFrame = DatasetReader.json(Paths.get(file))
+
+  /** Reads a JSON file. */
+  def json(file: String, mode: JSON.Mode, schema: StructType): DataFrame = DatasetReader.json(Paths.get(file), mode, schema)
+
+  /** Reads an ARFF file. */
+  def arff(file: String): DataFrame = DatasetReader.arff(Paths.get(file))
+
+  /**
+    * Reads a SAS7BDAT file.
+    *
+    * @param file the input file path.
+    */
+  def sas(file: String): DataFrame = DatasetReader.sas(Paths.get(file))
+
+  /**
+    * Reads an Apache Arrow file.
+    *
+    * @param file the input file path.
+    */
+  def arrow(file: String): DataFrame = DatasetReader.arrow(Paths.get(file))
+
+  /**
+    * Reads an Apache Avro file.
+    *
+    * @param file the input file path.
+    */
+  def avro(file: String, schema: org.apache.avro.Schema): DataFrame = DatasetReader.avro(Paths.get(file), schema)
+
+  /**
+    * Reads an Apache Parquet file.
+    *
+    * @param file the input file path.
+    */
+  def parquet(file: String): DataFrame = DatasetReader.parquet(Paths.get(file))
+
+
+  /** Reads a LivSVM file. */
+  def libsvm(file: String): Dataset[Instance[SparseArray]] = DatasetReader.libsvm(Paths.get(file))
 
   /** Reads a Wavefront OBJ file. The OBJ file format is a simple format of 3D geometry including
     * the position of each vertex, the UV position of each texture coordinate vertex,

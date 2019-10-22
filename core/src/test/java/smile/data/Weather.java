@@ -19,6 +19,7 @@ package smile.data;
 
 import smile.data.formula.Formula;
 import smile.io.Arff;
+import smile.io.DatasetReader;
 import smile.util.Paths;
 
 /**
@@ -35,8 +36,7 @@ public class Weather {
 
     static {
         try {
-            Arff arff = new Arff(Paths.getTestData("weka/weather.arff"));
-            data = arff.read();
+            data = DatasetReader.arff(Paths.getTestData("weka/weather.arff"));
 
             x = formula.x(data).toArray();
             y = formula.y(data).toIntArray();

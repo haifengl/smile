@@ -538,8 +538,8 @@ trait Operators {
     *
     * @return Random forest classification model.
     */
-  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = -1, splitRule: SplitRule = SplitRule.GINI, maxNodes: Int = -1, nodeSize: Int = 1, subsample: Double = 1.0): RandomForest = time {
-    RandomForest.fit(formula, data, ntrees, mtry, splitRule, maxNodes, nodeSize, subsample)
+  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = -1, splitRule: SplitRule = SplitRule.GINI, maxNodes: Int = 100, nodeSize: Int = 1, subsample: Double = 1.0): RandomForest = time {
+    RandomForest.fit(formula, data, ntrees, if (mtry > 0) mtry else Math.sqrt(data.ncols).asInstanceOf[Int], splitRule, maxNodes, nodeSize, subsample)
   }
 
   /** Gradient boosted classification trees.

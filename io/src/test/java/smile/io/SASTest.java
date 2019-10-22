@@ -60,8 +60,7 @@ public class SASTest {
     public void testAirline() throws Exception {
         System.out.println("airline");
 
-        SAS sas = new SAS();
-        DataFrame df = sas.read(Paths.getTestData("sas/airline.sas7bdat"));
+        DataFrame df = SAS.read(Paths.getTestData("sas/airline.sas7bdat"));
 
         System.out.println(df);
         System.out.println(df.schema());
@@ -86,8 +85,7 @@ public class SASTest {
     public void testFlorida() throws Exception {
         System.out.println("florida");
 
-        SAS sas = new SAS();
-        DataFrame df = sas.read(Paths.getTestData("sas/florida.sas7bdat"));
+        DataFrame df = SAS.read(Paths.getTestData("sas/florida.sas7bdat"));
 
         System.out.println(df);
         System.out.println(df.schema());
@@ -112,8 +110,7 @@ public class SASTest {
     public void testGlod() throws Exception {
         System.out.println("gold");
 
-        SAS sas = new SAS();
-        DataFrame df = sas.read(Paths.getTestData("sas/gold.sas7bdat"));
+        DataFrame df = SAS.read(Paths.getTestData("sas/gold.sas7bdat"));
 
         System.out.println(df);
         System.out.println(df.schema());
@@ -138,8 +135,7 @@ public class SASTest {
     public void testGolf() throws Exception {
         System.out.println("golf");
 
-        SAS sas = new SAS();
-        DataFrame df = sas.read(Paths.getTestData("sas/golf.sas7bdat"));
+        DataFrame df = SAS.read(Paths.getTestData("sas/golf.sas7bdat"));
 
         System.out.println(df);
         System.out.println(df.schema());
@@ -163,8 +159,7 @@ public class SASTest {
     public void testJobs() throws Exception {
         System.out.println("jobs");
 
-        SAS sas = new SAS();
-        DataFrame df = sas.read(Paths.getTestData("sas/jobs.sas7bdat"));
+        DataFrame df = SAS.read(Paths.getTestData("sas/jobs.sas7bdat"));
 
         System.out.println(df);
         System.out.println(df.schema());
@@ -188,8 +183,7 @@ public class SASTest {
     public void testMeat() throws Exception {
         System.out.println("meta");
 
-        SAS sas = new SAS();
-        DataFrame df = sas.read(Paths.getTestData("sas/meat.sas7bdat"));
+        DataFrame df = SAS.read(Paths.getTestData("sas/meat.sas7bdat"));
 
         System.out.println(df);
         System.out.println(df.schema());
@@ -214,8 +208,7 @@ public class SASTest {
     public void testTax() throws Exception {
         System.out.println("tax");
 
-        SAS sas = new SAS();
-        DataFrame df = sas.read(Paths.getTestData("sas/tax.sas7bdat"));
+        DataFrame df = SAS.read(Paths.getTestData("sas/tax.sas7bdat"));
 
         System.out.println(df);
         System.out.println(df.schema());
