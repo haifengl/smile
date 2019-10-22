@@ -101,19 +101,34 @@ class StringVectorImpl extends VectorImpl<String> implements StringVector {
 
     @Override
     public BaseVector factorize(DiscreteMeasure scale) {
-        int[] data = stream().mapToInt(s -> s == null ? -1 : (int) scale.valueOf(s)).toArray();
-
         switch (scale.type().id()) {
-            case Byte:
-                byte[] bytes = new byte[data.length];
-                System.arraycopy(data, 0, bytes, 0, data.length);
-                return new ByteVectorImpl(new StructField(name(), DataTypes.ByteType, scale), bytes);
-            case Short:
-                short[] shorts = new short[data.length];
-                System.arraycopy(data, 0, shorts, 0, data.length);
-                return new ShortVectorImpl(new StructField(name(), DataTypes.ShortType, scale), shorts);
-            case Integer:
+            case Byte: {
+                byte[] data = new byte[size()];
+                for (int i = 0; i < data.length; i++) {
+                    String s = get(i);
+                    data[i] = s == null ? (byte) -1 : scale.valueOf(s).byteValue();
+                }
+
+                return new ByteVectorImpl(new StructField(name(), DataTypes.ByteType, scale), data);
+            }
+            case Short: {
+                short[] data = new short[size()];
+                for (int i = 0; i < data.length; i++) {
+                    String s = get(i);
+                    data[i] = s == null ? (byte) -1 : scale.valueOf(s).shortValue();
+                }
+
+                return new ShortVectorImpl(new StructField(name(), DataTypes.ShortType, scale), data);
+            }
+            case Integer: {
+                int[] data = new int[size()];
+                for (int i = 0; i < data.length; i++) {
+                    String s = get(i);
+                    data[i] = s == null ? (byte) -1 : scale.valueOf(s).intValue();
+                }
+
                 return new IntVectorImpl(new StructField(name(), DataTypes.IntegerType, scale), data);
+            }
             default:
                 // we should never reach here.
                 throw new UnsupportedOperationException("Unsupported data type for nominal measure: " + scale.type());
