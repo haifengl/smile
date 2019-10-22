@@ -152,7 +152,7 @@ trait Operators {
     * different means. Small values of p-value indicate that the two arrays
     * have significantly different means.
     */
-  def ttest(x: Array[Double], y: Array[Double]): TTest = TTest.pairedTest(x, y)
+  def ttest(x: Array[Double], y: Array[Double]): TTest = TTest.testPaired(x, y)
 
   /** Test if the arrays x and y have significantly different means.  Small
     * values of p-value indicate that the two arrays have significantly
@@ -212,7 +212,7 @@ trait Operators {
     * is subtracted from all |O-E| differences. The correlation coefficient is
     * calculated as Cramer's V.
     */
-  def chisqtest(table: Array[Array[Int]]): CorTest = CorTest.chisq(table)
+  def chisqtest(table: Array[Array[Int]]): ChiSqTest = ChiSqTest.test(table)
 
   /** Returns an n-by-n zero matrix. */
   def zeros(n: Int) = Matrix.zeros(n, n)

@@ -18,8 +18,13 @@
 package smile.regression
 
 import smile.data._
-import smile.math._, distance._, kernel._, rbf._
-import smile.util._
+import smile.math._
+import distance._
+import kernel._
+import rbf._
+import smile.base.rbf.RBF
+import smile.data.formula.Formula
+import smile.util.time
 
 /** High level regression operators.
   *
@@ -71,18 +76,12 @@ trait Operators {
     * however, a central limit theorem can be invoked such that hypothesis
     * testing may proceed using asymptotic approximations.
     *
-    * @param x a matrix containing the explanatory variables.
-    * @param y the response values.
+    * @param formula a symbolic description of the model to be fitted.
+    * @param data the data frame of the explanatory and response variables.
     * @param method qr or svd.
     */
-  def ols(x: Array[Array[Double]], y: Array[Double], method: String = "qr"): OLS = {
-    time {
-      method match {
-        case "qr" => new OLS(x, y, false)
-        case "svd" => new OLS(x, y, true)
-        case _ => throw new IllegalArgumentException(s"Invalid method: $method")
-      }
-    }
+  def ols(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolean, recursive: Boolean): LinearModel = time {
+    OLS.fit(formula, data, method, stderr, recursive)
   }
 
   /** Ridge Regression. When the predictor variables are highly correlated amongst
@@ -103,14 +102,12 @@ trait Operators {
     * In this setting the belief that weight should be small is coded into a prior
     * distribution.
     *
-    * @param x a matrix containing the explanatory variables.
-    * @param y the response values.
+    * @param formula a symbolic description of the model to be fitted.
+    * @param data the data frame of the explanatory and response variables.
     * @param lambda the shrinkage/regularization parameter.
     */
-  def ridge(x: Array[Array[Double]], y: Array[Double], lambda: Double): RidgeRegression = {
-    time {
-      new RidgeRegression(x, y, lambda)
-    }
+  def ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel = time {
+    RidgeRegression.fit(formula, data, lambda)
   }
 
   /** Least absolute shrinkage and selection operator.
@@ -147,16 +144,14 @@ trait Operators {
     *  - B. Efron, I. Johnstone, T. Hastie, and R. Tibshirani. Least angle regression. Annals of Statistics, 2003
     *  - Seung-Jean Kim, K. Koh, M. Lustig, Stephen Boyd, and Dimitry Gorinevsky. An Interior-Point Method for Large-Scale L1-Regularized Least Squares. IEEE JOURNAL OF SELECTED TOPICS IN SIGNAL PROCESSING, VOL. 1, NO. 4, 2007.
     *
-    * @param x a matrix containing the explanatory variables.
-    * @param y the response values.
+    * @param formula a symbolic description of the model to be fitted.
+    * @param data the data frame of the explanatory and response variables.
     * @param lambda the shrinkage/regularization parameter.
     * @param tol the tolerance for stopping iterations (relative target duality gap).
     * @param maxIter the maximum number of iterations.
     */
-  def lasso(x: Array[Array[Double]], y: Array[Double], lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LASSO = {
-    time {
-      new LASSO(x, y, lambda, tol, maxIter)
-    }
+  def lasso(formula: Formula, data: DataFrame, lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LinearModel = time {
+    LASSO.fit(formula, data, lambda, tol, maxIter)
   }
 
   /** Support vector regression. Like SVM for classification, the model produced
@@ -169,18 +164,13 @@ trait Operators {
     * @param kernel the kernel function.
     * @param eps the loss function error threshold.
     * @param C the soft margin penalty parameter.
-    * @param weight positive instance weight. The soft margin penalty
-    *               parameter for instance i will be weight[i] * C.
     * @param tol the tolerance of convergence test.
     * @tparam T the data type
     *
     * @return SVR model.
     */
-  def svr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, weight: Array[Double] = null, tol: Double = 1E-3): SVR[T] = {
-    if (weight == null)
-      new SVR[T](x, y, kernel, eps, C, tol)
-    else
-      new SVR[T](x, y, weight, kernel, eps, C, tol)
+  def svr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): KernelMachine[T] = time {
+    SVR.fit(x, y, kernel, eps, C, tol)
   }
 
   /** Regression tree. A decision tree can be learned by
@@ -245,18 +235,13 @@ trait Operators {
     * Some techniques such as bagging, boosting, and random forest use more than
     * one decision tree for their analysis.
     *
-    * @param x the training instances.
-    * @param y the response variable.
+    * @param formula a symbolic description of the model to be fitted.
+    * @param data the data frame of the explanatory and response variables.
     * @param maxNodes the maximum number of leaf nodes in the tree.
-    * @param attributes the attribute properties.
     * @return Regression tree model.
     */
-  def cart(x: Array[Array[Double]], y: Array[Double], maxNodes: Int, attributes: Array[Attribute] = null): RegressionTree = {
-    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
-
-    time {
-      new RegressionTree(attr, x, y, maxNodes)
-    }
+  def cart(formula: Formula, data: DataFrame, maxNodes: Int = 100, nodeSize: Int = 5): RegressionTree = time {
+    RegressionTree.fit(formula, data, maxNodes, nodeSize)
   }
 
   /** Random forest for regression. Random forest is an ensemble classifier
@@ -295,10 +280,8 @@ trait Operators {
     * levels. Therefore, the variable importance scores from random forest are
     * not reliable for this type of data.
     *
-    * @param x the training instances.
-    * @param y the response variable.
-    * @param attributes the attribute properties. If not provided, all attributes
-    *                   are treated as numeric values.
+    * @param formula a symbolic description of the model to be fitted.
+    * @param data the data frame of the explanatory and response variables.
     * @param ntrees the number of trees.
     * @param mtry the number of input variables to be used to determine the decision
     *             at a node of the tree. dim/3 seems to give generally good performance,
@@ -311,18 +294,8 @@ trait Operators {
     *
     * @return Random forest regression model.
     */
-  def randomForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 5, mtry: Int = -1, subsample: Double = 1.0): RandomForest = {
-    val p = x(0).length
-
-    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
-
-    val m = if (mtry <= 0) p / 3 else mtry
-
-    val j = if (maxNodes <= 1) x.length / nodeSize else maxNodes
-
-    time {
-      new RandomForest(attr, x, y, ntrees, j, nodeSize, m, subsample)
-    }
+  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = -1, maxNodes: Int = -1, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest = time {
+    RandomForest.fit(formula, data, ntrees, mtry, maxNodes, nodeSize, subsample)
   }
 
   /** Gradient boosted regression trees.
@@ -389,10 +362,8 @@ trait Operators {
     *  - J. H. Friedman. Greedy Function Approximation: A Gradient Boosting Machine, 1999.
     *  - J. H. Friedman. Stochastic Gradient Boosting, 1999.
     *
-    * @param x the training instances.
-    * @param y the response variable.
-    * @param attributes the attribute properties. If not provided, all attributes
-    *                   are treated as numeric values.
+    * @param formula a symbolic description of the model to be fitted.
+    * @param data the data frame of the explanatory and response variables.
     * @param loss loss function for regression. By default, least absolute
     *             deviation is employed for robust regression.
     * @param ntrees the number of iterations (trees).
@@ -402,13 +373,8 @@ trait Operators {
     *
     * @return Gradient boosted trees.
     */
-  def gbm(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = {
-
-    val attr = Option(attributes).getOrElse(numericAttributes(x(0).length))
-
-    time {
-      new GradientTreeBoost(attr, x, y, loss, ntrees, maxNodes, shrinkage, subsample)
-    }
+  def gbm(formula: Formula, data: DataFrame, loss: Loss, ntrees: Int = 500, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time {
+    GradientTreeBoost.fit(formula, data, loss, ntrees, maxNodes, nodeSize, shrinkage, subsample)
   }
 
   /** Gaussian Process for Regression. A Gaussian process is a stochastic process
@@ -457,10 +423,8 @@ trait Operators {
     * @param kernel the Mercer kernel.
     * @param lambda the shrinkage/regularization parameter.
     */
-  def gpr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T] = {
-    time {
-      new GaussianProcessRegression[T](x, y, kernel, lambda)
-    }
+  def gpr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): KernelMachine[T] = time {
+    GaussianProcessRegression.fit(x, y, kernel, lambda)
   }
 
   /** This method fits an approximate Gaussian process model by the method
@@ -473,15 +437,24 @@ trait Operators {
     *          randomly from the training set or as the centers of k-means clustering.
     * @param kernel the Mercer kernel.
     * @param lambda the shrinkage/regularization parameter.
-    * @param nystrom set it true for Nystrom approximation of kernel matrix.
     */
-  def gpr[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double, nystrom: Boolean = false): GaussianProcessRegression[T] = {
-    time {
-      if (nystrom)
-        new GaussianProcessRegression[T](x, y, t, kernel, lambda, true)
-      else
-        new GaussianProcessRegression[T](x, y, t, kernel, lambda)
-    }
+  def gpr[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T] = time {
+    GaussianProcessRegression.fit(x, y, t, kernel, lambda)
+  }
+
+  /** This method fits an approximate Gaussian process model by the method
+    * of subset of regressors.
+    *
+    * @param x the training dataset.
+    * @param y the response variable.
+    * @param t the inducing input, which are pre-selected or inducing samples
+    *          acting as active set of regressors. In simple case, these can be chosen
+    *          randomly from the training set or as the centers of k-means clustering.
+    * @param kernel the Mercer kernel.
+    * @param lambda the shrinkage/regularization parameter.
+    */
+  def nystrom[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T] = time {
+    GaussianProcessRegression.nystrom(x, y, t, kernel, lambda)
   }
 
   /** Radial basis function networks. A radial basis function network is an
@@ -541,94 +514,16 @@ trait Operators {
     *
     * @param x training samples.
     * @param y response variable.
-    * @param distance the distance metric functor.
-    * @param rbf the radial basis function.
-    * @param centers the centers of RBF functions.
+    * @param neurons the radial basis functions.
+    * @param normalized train a normalized RBF network or not.
     */
-  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
-    time {
-      new RBFNetwork[T](x, y, distance, rbf, centers, false)
-    }
+  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T] = time {
+    RBFNetwork.fit(x, y, neurons, normalized)
   }
 
-  /** Normalized radial basis function networks. */
-  def nrbfnet[T <: AnyRef](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T] = {
-    time {
-      new RBFNetwork[T](x, y, distance, rbf, centers, true)
-    }
-  }
-
-  /** Radial basis function networks. A radial basis function network is an
-    * artificial neural network that uses radial basis functions as activation
-    * functions. It is a linear combination of radial basis functions. They are
-    * used in function approximation, time series prediction, and control.
-    *
-    * In its basic form, radial basis function network is in the form
-    *
-    * y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
-    *
-    * where the approximating function y(x) is represented as a sum of N radial
-    * basis functions &phi;, each associated with a different center c<sub>i</sub>,
-    * and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
-    * one usually chooses Euclidean distance. The weights w<sub>i</sub> can
-    * be estimated using the matrix methods of linear least squares, because
-    * the approximating function is linear in the weights.
-    *
-    * The centers c<sub>i</sub> can be randomly selected from training data,
-    * or learned by some clustering method (e.g. k-means), or learned together
-    * with weight parameters undergo a supervised learning processing
-    * (e.g. error-correction learning).
-    *
-    * The popular choices for &phi; comprise the Gaussian function and the so
-    * called thin plate splines. The advantage of the thin plate splines is that
-    * their conditioning is invariant under scalings. Gaussian, multi-quadric
-    * and inverse multi-quadric are infinitely smooth and and involve a scale
-    * or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
-    * r<sub><small>0</small></sub> tends to flatten the basis function. For a
-    * given function, the quality of approximation may strongly depend on this
-    * parameter. In particular, increasing r<sub><small>0</small></sub> has the
-    * effect of better conditioning (the separation distance of the scaled points
-    * increases).
-    *
-    * A variant on RBF networks is normalized radial basis function (NRBF)
-    * networks, in which we require the sum of the basis functions to be unity.
-    * NRBF arises more naturally from a Bayesian statistical perspective. However,
-    * there is no evidence that either the NRBF method is consistently superior
-    * to the RBF method, or vice versa.
-    *
-    * SVMs with Gaussian kernel have similar structure as RBF networks with
-    * Gaussian radial basis functions. However, the SVM approach "automatically"
-    * solves the network complexity problem since the size of the hidden layer
-    * is obtained as the result of the QP procedure. Hidden neurons and
-    * support vectors correspond to each other, so the center problems of
-    * the RBF network is also solved, as the support vectors serve as the
-    * basis function centers. It was reported that with similar number of support
-    * vectors/centers, SVM shows better generalization performance than RBF
-    * network when the training data size is relatively small. On the other hand,
-    * RBF network gives better generalization performance than SVM on large
-    * training data.
-    *
-    * ====References:====
-    *  - Simon Haykin. Neural Networks: A Comprehensive Foundation (2nd edition). 1999.
-    *  - T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.
-    *  - Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.
-    *
-    * @param x training samples.
-    * @param y response variable.
-    * @param distance the distance metric functor.
-    * @param rbf the radial basis functions at each center.
-    * @param centers the centers of RBF functions.
-    */
-  def rbfnet[T <: AnyRef, RBF <: RadialBasisFunction](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RBF], centers: Array[T]): RBFNetwork[T] = {
-    time {
-      new RBFNetwork[T](x, y, distance, rbf.asInstanceOf[Array[RadialBasisFunction]], centers, false)
-    }
-  }
-
-  /** Normalized radial basis function networks. */
-  def nrbfnet[T <: AnyRef, RBF <: RadialBasisFunction](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RBF], centers: Array[T]): RBFNetwork[T] = {
-    time {
-      new RBFNetwork[T](x, y, distance, rbf.asInstanceOf[Array[RadialBasisFunction]], centers, true)
-    }
+  /** Trains a Gaussian RBF network with k-means. */
+  def rbfnet(x: Array[Array[Double]], y: Array[Double], k: Int, normalized: Boolean = false): RBFNetwork[Array[Double]] = time {
+    val neurons = RBF.fit(x, k)
+    RBFNetwork.fit(x, y, neurons, normalized)
   }
 }

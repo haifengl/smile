@@ -35,7 +35,7 @@ object Window {
     jframe.add(canvas)
 
     java.awt.EventQueue.invokeLater(new Runnable() {
-      override def run() {
+      override def run(): Unit = {
         jframe.toFront()
         jframe.repaint()
       }
