@@ -58,8 +58,8 @@ buildInfoPackage := "smile.shell"
 
 buildInfoOptions += BuildInfoOption.BuildTime
 
-libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.12.8"
+libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.13.1"
 
-libraryDependencies += "com.lihaoyi" % "ammonite" % "1.6.7" cross CrossVersion.full
+libraryDependencies += "com.lihaoyi" % "ammonite" % "1.7.4" cross CrossVersion.full
 
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.26"
