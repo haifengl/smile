@@ -24,6 +24,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
+import smile.base.rbf.RBF;
 import smile.classification.RBFNetwork;
 import smile.math.distance.EuclideanDistance;
 import smile.math.rbf.RadialBasisFunction;
@@ -49,8 +50,8 @@ public class RBFNetworkDemo extends ClassificationDemo {
 
     @Override
     public double[][] learn(double[] x, double[] y) {
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
-        int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
+        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
         try {
             k = Integer.parseInt(kField.getText().trim());
@@ -63,9 +64,7 @@ public class RBFNetworkDemo extends ClassificationDemo {
             return null;
         }
 
-        double[][] centers = new double[k][];
-        RadialBasisFunction basis = SmileUtils.learnGaussianRadialBasis(data, centers);
-        RBFNetwork<double[]> rbf = new RBFNetwork<>(data, label, new EuclideanDistance(), basis, centers);
+        RBFNetwork<double[]> rbf = RBFNetwork.fit(data, label, RBF.fit(data, k));
         int[] pred = new int[label.length];
         for (int i = 0; i < label.length; i++) {
             pred[i] = rbf.predict(data[i]);

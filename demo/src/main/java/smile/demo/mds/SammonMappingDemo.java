@@ -33,9 +33,9 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import smile.data.Attribute;
-import smile.data.AttributeDataset;
-import smile.data.parser.DelimitedTextParser;
+import org.apache.commons.csv.CSVFormat;
+import smile.data.DataFrame;
+import smile.io.DatasetReader;
 import smile.mds.SammonMapping;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;
@@ -56,7 +56,7 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
         "projection/bank25d.txt"
     };
 
-    static AttributeDataset[] dataset = new AttributeDataset[datasetName.length];
+    static DataFrame[] dataset = new DataFrame[datasetName.length];
     static int datasetIndex = 0;
 
     JPanel optionPane;
@@ -96,15 +96,8 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
      */
     public JComponent learn() {
         JPanel pane = new JPanel(new GridLayout(1, 2));
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
-        String[] labels = dataset[datasetIndex].toArray(new String[dataset[datasetIndex].size()]);
-        if (labels[0] == null) {
-            Attribute[] attr = dataset[datasetIndex].attributes();
-            labels = new String[attr.length];
-            for (int i = 0; i < labels.length; i++) {
-                labels[i] = attr[i].getName();
-            }
-        }
+        double[][] data = dataset[datasetIndex].toArray();
+        String[] labels = dataset[datasetIndex].names();
 
         long clock = System.currentTimeMillis();
         SammonMapping sammon = new SammonMapping(data, 2);
@@ -152,16 +145,13 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
             datasetIndex = datasetBox.getSelectedIndex();
 
             if (dataset[datasetIndex] == null) {
-                DelimitedTextParser parser = new DelimitedTextParser();
-                parser.setDelimiter("[\t]+");
-                parser.setRowNames(true);
-                parser.setColumnNames(true);
-                if (datasetIndex == 2 || datasetIndex == 3) {
-                    parser.setRowNames(false);
-                }
+                CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t').withFirstRecordAsHeader();
 
                 try {
-                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.util.Paths.getTestData(datasource[datasetIndex]));
+                    dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+                    if (datasetIndex != 2 && datasetIndex != 3) {
+                        dataset[datasetIndex] = dataset[datasetIndex].drop(0); // row names
+                    }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.err.println(ex);

@@ -26,6 +26,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import smile.data.DataFrame;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.projection.PCA;
@@ -51,10 +52,18 @@ public class PCADemo extends ProjectionDemo {
 
     @Override
     public JComponent learn() {
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
-        String[] names = dataset[datasetIndex].toArray(new String[dataset[datasetIndex].size()]);
-        if (names[0] == null) {
-            names = null;
+        double[][] data;
+        int[] labels = null;
+        String[] names;
+
+        if (formula[datasetIndex] == null) {
+            data = dataset[datasetIndex].toArray();
+            names = dataset[datasetIndex].names();
+        } else {
+            DataFrame datax = formula[datasetIndex].x(dataset[datasetIndex]);
+            data = datax.toArray();
+            names = datax.names();
+            labels = formula[datasetIndex].y(dataset[datasetIndex]).toIntArray();
         }
         boolean cor = corBox.getSelectedIndex() != 0;
 
@@ -73,8 +82,7 @@ public class PCADemo extends ProjectionDemo {
         PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
-        } else if (dataset[datasetIndex].responseAttribute() != null) {
-            int[] labels = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
+        } else if (labels != null) {
             for (int i = 0; i < y.length; i++) {
                 plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
             }

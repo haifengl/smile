@@ -19,15 +19,22 @@ package smile.demo.plot;
 
 import java.awt.Color;
 import java.awt.GridLayout;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import org.apache.commons.csv.CSVFormat;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
+import smile.io.CSV;
+import smile.util.Paths;
 import smile.vq.SOM;
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
 import smile.math.MathEx;
 import smile.mds.IsotonicMDS;
 import smile.mds.MDS;
@@ -92,13 +99,18 @@ public class HexmapDemo extends JPanel {
     }
 
     public static void main(String[] args) {
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
+        ArrayList<StructField> fields = new ArrayList<>();
+        fields.add(new StructField("class", DataTypes.ByteType));
+        IntStream.range(1, 257).forEach(i -> fields.add(new StructField("V"+i, DataTypes.DoubleType)));
+        StructType schema = DataTypes.struct(fields);
+
+        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
+        csv.schema(schema);
         try {
-            AttributeDataset train = parser.parse("USPS Train", smile.util.Paths.getTestData("usps/zip.train"));
-            
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
+            DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
+            Formula formula = Formula.lhs("class");
+            double[][] x = formula.x(train).toArray();
+            int[] y = formula.y(train).toIntArray();
             
             int m = 20;
             int n = 20;

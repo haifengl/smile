@@ -18,11 +18,8 @@
 package smile.demo.plot;
 
 import java.awt.GridLayout;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-
-import smile.data.parser.SparseMatrixParser;
 import smile.math.matrix.SparseMatrix;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
@@ -37,14 +34,13 @@ public class SparseMatrixPlotDemo extends JPanel {
     public SparseMatrixPlotDemo() {
         super(new GridLayout(1,2));
 
-        SparseMatrixParser parser = new SparseMatrixParser();
         try {
-            SparseMatrix m1 = parser.parse(smile.util.Paths.getTestData("matrix/08blocks.txt"));
+            SparseMatrix m1 = SparseMatrix.harwell(smile.util.Paths.getTestData("matrix/08blocks.txt"));
             PlotCanvas canvas = SparseMatrixPlot.plot(m1);
             canvas.setTitle("08blocks");
             add(canvas);
 
-            SparseMatrix m2 = parser.parse(smile.util.Paths.getTestData("matrix/mesh2em5.txt"));
+            SparseMatrix m2 = SparseMatrix.harwell(smile.util.Paths.getTestData("matrix/mesh2em5.txt"));
             canvas = SparseMatrixPlot.plot(m2, Palette.jet(256));
             canvas.setTitle("mesh2em5");
             add(canvas);

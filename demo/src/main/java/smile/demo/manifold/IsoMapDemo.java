@@ -43,7 +43,7 @@ public class IsoMapDemo extends ManifoldDemo {
     @Override
     public JComponent learn() {
         JPanel pane = new JPanel(new GridLayout(1, 2));
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);        
+        double[][] data = dataset[datasetIndex].toArray();
         if (data.length > 1000) {
             double[][] x = new double[1000][];
             for (int i = 0; i < 1000; i++)

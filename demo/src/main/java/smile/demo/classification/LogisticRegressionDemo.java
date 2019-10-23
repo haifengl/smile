@@ -57,10 +57,10 @@ public class LogisticRegressionDemo extends ClassificationDemo {
             return null;
         }
 
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
-        int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
+        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
-        LogisticRegression logit = new LogisticRegression(data, label, lambda);
+        LogisticRegression logit = LogisticRegression.fit(data, label, lambda, 1E-5, 500);
         int[] pred = new int[label.length];
         for (int i = 0; i < label.length; i++) {
             pred[i] = logit.predict(data[i]);

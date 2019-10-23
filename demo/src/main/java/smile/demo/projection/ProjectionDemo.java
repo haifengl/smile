@@ -17,6 +17,11 @@
 
 package smile.demo.projection;
 
+import org.apache.commons.csv.CSVFormat;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.io.DatasetReader;
+
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -29,10 +34,6 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
 
 @SuppressWarnings("serial")
 public abstract class ProjectionDemo extends JPanel implements Runnable, ActionListener {
@@ -50,7 +51,14 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
         "projection/COMBO17.dat"
     };
 
-    protected static AttributeDataset[] dataset = new AttributeDataset[datasetName.length];
+    protected static DataFrame[] dataset = new DataFrame[datasetName.length];
+    protected static Formula[] formula = {
+            Formula.lhs("class"),
+            null,
+            null,
+            Formula.lhs("class"),
+            Formula.lhs("class"),
+    };
     protected static int datasetIndex = 0;
     
     JPanel optionPane;
@@ -119,26 +127,16 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
             datasetIndex = datasetBox.getSelectedIndex();
             
             if (dataset[datasetIndex] == null) {
-                DelimitedTextParser parser = new DelimitedTextParser();
-                parser.setDelimiter("[\t]+");
-                if (datasetIndex < 5 && datasetIndex != 3) {
-                    parser.setColumnNames(true);
-                }
-                if (datasetIndex == 1) {
-                    parser.setRowNames(true);
-                }
-                if (datasetIndex == 0) {
-                    parser.setResponseIndex(new NominalAttribute("class"), 4);
-                }
+                CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
                 if (datasetIndex == 3) {
-                    parser.setResponseIndex(new NominalAttribute("class"), 16);
-                }
-                if (datasetIndex >= 5) {
-                    parser.setResponseIndex(new NominalAttribute("class"), 4);
+                    format = format.withFirstRecordAsHeader();
                 }
 
                 try {
-                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.util.Paths.getTestData(datasource[datasetIndex]));
+                    dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+                    if (datasetIndex == 1) {
+                        dataset[datasetIndex] = dataset[datasetIndex].drop(0);
+                    }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.out.println(ex);

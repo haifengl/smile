@@ -74,12 +74,11 @@ public class SVMDemo extends ClassificationDemo {
             return null;
         }
 
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
-        int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
-        
-        SVM<double[]> svm = new SVM<>(new GaussianKernel(gamma), C);
-        svm.learn(data, label);
-        svm.finish();
+        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        int[] label = formula.y(dataset[datasetIndex]).toIntArray();
+
+        GaussianKernel kernel = new GaussianKernel(gamma);
+        SVM<double[]> svm = SVM.fit(data, label, kernel, C, 1E-3);
 
         int[] pred = new int[label.length];
         for (int i = 0; i < label.length; i++) {

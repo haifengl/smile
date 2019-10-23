@@ -61,7 +61,7 @@ public class LaplacianEigenmapDemo extends ManifoldDemo {
         }
         sigmaField.setEnabled(false);
 
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);        
+        double[][] data = dataset[datasetIndex].toArray();
         if (data.length > 1000) {
             double[][] x = new double[1000][];
             for (int i = 0; i < 1000; i++) {

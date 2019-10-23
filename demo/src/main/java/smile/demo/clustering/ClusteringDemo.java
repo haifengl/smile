@@ -33,8 +33,9 @@ import javax.swing.JTextField;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 
-import smile.data.AttributeDataset;
-import smile.data.parser.DelimitedTextParser;
+import org.apache.commons.csv.CSVFormat;
+import smile.data.DataFrame;
+import smile.io.DatasetReader;
 import smile.plot.ScatterPlot;
 
 @SuppressWarnings("serial")
@@ -86,11 +87,10 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
     public ClusteringDemo() {
         if (dataset == null) {
             dataset = new double[datasetName.length][][];
-            DelimitedTextParser parser = new DelimitedTextParser();
-            parser.setDelimiter("[\t ]+");
+            CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
             try {
-                AttributeDataset data = parser.parse(datasetName[datasetIndex], smile.util.Paths.getTestData(datasource[datasetIndex]));
-                dataset[datasetIndex] = data.toArray(new double[data.size()][]);
+                DataFrame data = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+                dataset[datasetIndex] = data.toArray();
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                 System.err.println(e);
@@ -180,11 +180,10 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
             datasetIndex = datasetBox.getSelectedIndex();
             
             if (dataset[datasetIndex] == null) {
-                DelimitedTextParser parser = new DelimitedTextParser();
-                parser.setDelimiter("[\t ]+");
+                CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
                 try {
-                    AttributeDataset data = parser.parse(datasetName[datasetIndex], smile.util.Paths.getTestData(datasource[datasetIndex]));
-                    dataset[datasetIndex] = data.toArray(new double[data.size()][]);
+                    DataFrame data = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+                    dataset[datasetIndex] = data.toArray();
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.err.println(ex);
