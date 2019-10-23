@@ -25,13 +25,13 @@ bashScriptConfigLocation := Some("${app_home}/../conf/smile.ini")
 
 bashScriptExtraDefines += """addJava "-Dsmile.home=${app_home}/..""""
 
-bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.scala""""
+//bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.scala""""
 
 bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../conf/smile.conf""""
 
-batScriptExtraDefines  += """set _JAVA_OPTS=!_JAVA_OPTS! -Dsmile.home=%SMILE_HOME% -Dscala.repl.autoruncode=%SMILE_HOME%\\bin\\init.scala -Dconfig.file=%SMILE_HOME%\\..\\conf\\smile.conf"""
+//batScriptExtraDefines  += """set _JAVA_OPTS=!_JAVA_OPTS! -Dsmile.home=%SMILE_HOME% -Dscala.repl.autoruncode=%SMILE_HOME%\\bin\\init.scala -Dconfig.file=%SMILE_HOME%\\..\\conf\\smile.conf"""
 
-batScriptExtraDefines  += """set PATH=!PATH!;%~dp0"""
+//batScriptExtraDefines  += """set PATH=!PATH!;%~dp0"""
 
 // native packager Docker plugin
 enablePlugins(DockerPlugin)
@@ -58,7 +58,7 @@ buildInfoPackage := "smile.shell"
 
 buildInfoOptions += BuildInfoOption.BuildTime
 
-libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.13.1"
+//libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.13.1"
 
 libraryDependencies += "com.lihaoyi" % "ammonite" % "1.7.4" cross CrossVersion.full
 

@@ -17,8 +17,7 @@
 
 package smile.shell
 
-import scala.tools.nsc._, GenericRunnerCommand._, io.File
-import ammonite.main.Cli
+import ammonite.main.{Cli, Scripts}
 import ammonite.ops.{Path, pwd}
 
 /** An object that runs Smile script or interactive shell.
@@ -28,103 +27,112 @@ import ammonite.ops.{Path, pwd}
   */
 object Main extends App {
 
+  val help =
+    """
+      |Smile REPL & Script-Runner, 1.7.4
+      |usage: smile [smile-options] [script-file [script-options]]
+      |
+      |  --predef-code        Any commands you want to execute at the start of the REPL session
+      |  -c, --code           Pass in code to be run immediately in the REPL
+      |  -h, --home           The home directory of the REPL; where it looks for config and caches
+      |  -p, --predef         Lets you load your predef from a custom location, rather than the
+      |                       default location in your Smile home
+      |  --no-home-predef     Disables the default behavior of loading predef files from your
+      |                       ~/.smile/predef.sc, predefScript.sc, or predefShared.sc. You can
+      |                       choose an additional predef to use using `--predef
+      |  --no-default-predef  Disable the default predef and run Smile with the minimal predef
+      |                       possible
+      |  -s, --silent         Make ivy logs go silent instead of printing though failures will
+      |                       still throw exception
+      |  --help               Print this message
+      |  --color              Enable or disable colored output; by default colors are enabled
+      |                       in both REPL and scripts if the console is interactive, and disabled
+      |                       otherwise
+      |  -w, --watch          Watch and re-run your scripts when they change
+      |  --thin               Hide parts of the core of Smile and some of its dependencies. By default, the core of
+      |                       Smile and all of its dependencies can be seen by users from the Smile session. This
+      |                       option mitigates that via class loader isolation.
+      |
+      |REPL-specific args:
+      |  -b, --banner         Customize the welcome banner that gets shown when Smile starts
+      |  --no-remote-logging  Disable remote logging of the number of times a REPL starts and runs
+      |                       commands
+      |  --class-based        Wrap user code in classes rather than singletons, typically for Java serialization
+      |                       friendliness.
+    """.stripMargin
+
+  val imports =
+    s"""
+       |import smile._
+       |import smile.util._
+       |import smile.math._
+       |import java.lang.Math._
+       |import smile.math.MathEx.{log2, logistic, factorial, choose, random, randomInt, permutate, c, cbind, rbind, sum, mean, median, q1, q3, `var` => variance, sd, mad, min, max, whichMin, whichMax, unique, dot, distance, pdist, KullbackLeiblerDivergence => kld, JensenShannonDivergence => jsd, cov, cor, spearman, kendall, norm, norm1, norm2, normInf, standardize, normalize, scale, unitize, unitize1, unitize2, root}
+       |import smile.math.distance._
+       |import smile.math.kernel._
+       |import smile.math.matrix._
+       |import smile.math.matrix.Matrix._
+       |import smile.stat.distribution._
+       |import smile.data._
+       |import smile.data.formula._
+       |import smile.data.`type`._
+       |import java.awt.Color, smile.plot._
+       |import smile.interpolation._
+       |import smile.validation._
+       |import smile.association._
+       |import smile.classification._
+       |import smile.regression.{ols, ridge, lasso, svr, gpr}
+       |import smile.feature._
+       |import smile.clustering._
+       |import smile.vq._
+       |import smile.manifold._
+       |import smile.mds._
+       |import smile.sequence._
+       |import smile.projection._
+       |import smile.nlp._
+       |import smile.wavelet._
+       |import smile.shell._
+     """.stripMargin
+
+  val prompt =
+    """
+      |repl.prompt() = "smile> "
+    """.stripMargin
+
   // Ammonite REPL doesn't support Windows
   if (System.getProperty("os.name").startsWith("Windows")) {
-    if (!process(args)) sys.exit(1)
-  } else {
-    Cli.groupArgs(args.toList, Cli.ammoniteArgSignature, Cli.Config()) match {
-      case Left(msg) =>
-        println(msg)
-        false
-      case Right((cliConfig, leftoverArgs)) =>
-        if (cliConfig.help) {
-          println(Cli.ammoniteHelp)
-          true
-        } else {
-          (cliConfig.code, leftoverArgs) match {
-            case (Some(code), Nil) =>
-              AmmoniteREPL.runCode(code)
+    println("Smile shell doesn't support Windows")
+    sys.exit(1)
+  }
 
-            case (None, Nil) =>
-              AmmoniteREPL.run()
-              true
+  Cli.groupArgs(args.toList, Cli.ammoniteArgSignature, Cli.Config()) match {
+    case Left(msg) =>
+      println(msg)
+      false
+    case Right((cliConfig, leftoverArgs)) =>
+      if (cliConfig.help) {
+        println(help)
+        true
+      } else {
+        (cliConfig.code, leftoverArgs) match {
+          case (Some(code), Nil) =>
+            val runner = AmmoniteREPL(imports)
+            runner.runCode(code)
 
-            case (None, head :: rest) if head.startsWith("-") =>
-              val failureMsg = s"Unknown option: $head\nUse --help to list possible options"
-              println(failureMsg)
-              false
+          case (None, Nil) =>
+            val runner = AmmoniteREPL(imports + prompt)
+            runner.run()
+            true
 
-            case (None, head :: rest) =>
-              val success = AmmoniteREPL.runScript(Path(head, pwd)) // ignore script args for now
-              success
-          }
+          case (None, head :: _) if head.startsWith("-") =>
+            val failureMsg = s"Unknown option: $head\nUse --help to list possible options"
+            println(failureMsg)
+            false
+
+          case (None, head :: rest) =>
+            val runner = AmmoniteREPL(imports)
+            runner.runScript(Path(head, pwd), Scripts.groupArgs(rest))
         }
-    }
-  }
-
-  def errorFn(str: String, e: Option[Throwable] = None, isFailure: Boolean = true): Boolean = {
-    if (str.nonEmpty) Console.err println str
-    e foreach (_.printStackTrace())
-    !isFailure
-  }
-
-  def process(args: Array[String]): Boolean = {
-    val command = new GenericRunnerCommand(args.toList, (x: String) => errorFn(x))
-    import command.{ settings, howToRun, thingToRun, shortUsageMsg, shouldStopWithInfo }
-    settings.usejavacp.value = true
-    settings.deprecation.value = true
-    def sampleCompiler = new Global(settings)   // def so it's not created unless needed
-
-    def run(): Boolean = {
-      def isE   = !settings.execute.isDefault
-      def dashe = settings.execute.value
-
-      def isI   = !settings.loadfiles.isDefault
-      def dashi = settings.loadfiles.value
-
-      // Deadlocks on startup under -i unless we disable async.
-      if (isI)
-        settings.Yreplsync.value = true
-
-      def combinedCode  = {
-        val files   = if (isI) dashi map (file => File(file).slurp()) else Nil
-        val str     = if (isE) List(dashe) else Nil
-
-        files ++ str mkString "\n\n"
       }
-
-      def runTarget(): Either[Throwable, Boolean] = howToRun match {
-        case AsObject =>
-          ObjectRunner.runAndCatch(settings.classpathURLs, thingToRun, command.arguments)
-        case AsScript =>
-          ScriptRunner.runScriptAndCatch(settings, thingToRun, command.arguments)
-        case Error =>
-          Right(false)
-        case _  =>
-          Right(new ScalaREPL process settings)
-      }
-
-      /** If -e and -i were both given, we want to execute the -e code after the
-        *  -i files have been included, so they are read into strings and prepended to
-        *  the code given in -e.  The -i option is documented to only make sense
-        *  interactively so this is a pretty reasonable assumption.
-        *
-        *  This all needs a rewrite though.
-        */
-      if (isE) {
-        ScriptRunner.runCommand(settings, combinedCode, thingToRun +: command.arguments)
-      }
-      else runTarget() match {
-        case Left(ex) => errorFn("", Some(ex))  // there must be a useful message of hope to offer here
-        case Right(b) => b
-      }
-    }
-
-    if (!command.ok)
-      errorFn(f"%n$shortUsageMsg")
-    else if (shouldStopWithInfo)
-      errorFn(command getInfoMessage sampleCompiler, isFailure = false)
-    else
-      run()
   }
 }

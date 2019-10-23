@@ -24,9 +24,8 @@ import ammonite.runtime.Storage
   *
   * @author Haifeng Li
   */
-object AmmoniteREPL {
+case class AmmoniteREPL(predefCode: String) {
   val home = Path(System.getProperty("user.home")) / ".smile"
-  val prompt = "smile> "
   val welcome =
     s"""
        |                                                       ..::''''::..
@@ -45,40 +44,8 @@ object AmmoniteREPL {
        |===============================================================================
      """.stripMargin
 
-  val imports =
-    s"""
-       |import smile._
-       |import smile.util._
-       |import smile.math._
-       |import java.lang.Math._
-       |import smile.math.Math.{log2, logistic, factorial, choose, random, randomInt, permutate, c, cbind, rbind, sum, mean, median, q1, q3, `var` => variance, sd, mad, min, max, whichMin, whichMax, unique, dot, distance, pdist, KullbackLeiblerDivergence => kld, JensenShannonDivergence => jsd, cov, cor, spearman, kendall, norm, norm1, norm2, normInf, standardize, normalize, scale, unitize, unitize1, unitize2, root}
-       |import smile.math.distance._
-       |import smile.math.kernel._
-       |import smile.math.matrix._
-       |import smile.math.matrix.Matrix._
-       |import smile.stat.distribution._
-       |import smile.data._
-       |import java.awt.Color, smile.plot._
-       |import smile.interpolation._
-       |import smile.validation._
-       |import smile.association._
-       |import smile.classification._
-       |import smile.regression.{ols, ridge, lasso, svr, gpr}
-       |import smile.feature._
-       |import smile.clustering._
-       |import smile.vq._
-       |import smile.manifold._
-       |import smile.mds._
-       |import smile.sequence._
-       |import smile.projection._
-       |import smile.nlp._
-       |import smile.wavelet._
-       |import smile.shell._
-       |repl.prompt() = "smile> "
-     """.stripMargin
-
   val repl = ammonite.Main(
-    predefCode = imports,
+    predefCode = predefCode,
     defaultPredef = true,
     storageBackend = new Storage.Folder(home),
     welcomeBanner = Some(welcome),
@@ -87,5 +54,5 @@ object AmmoniteREPL {
 
   def run() = repl.run()
   def runCode(code: String) = repl.runCode(code)
-  def runScript(path: Path) = repl.runScript(path, Seq.empty)
+  def runScript(path: Path, args: Seq[(String, Option[String])]) = repl.runScript(path, args)
 }
