@@ -17,6 +17,10 @@
 
 package smile.demo.manifold;
 
+import org.apache.commons.csv.CSVFormat;
+import smile.data.DataFrame;
+import smile.io.DatasetReader;
+
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -30,9 +34,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-
-import smile.data.AttributeDataset;
-import smile.data.parser.DelimitedTextParser;
 
 @SuppressWarnings("serial")
 public abstract class ManifoldDemo extends JPanel implements Runnable, ActionListener {
@@ -48,7 +49,7 @@ public abstract class ManifoldDemo extends JPanel implements Runnable, ActionLis
         "manifold/face.txt"
     };
 
-    static AttributeDataset[] dataset = new AttributeDataset[datasetName.length];
+    static DataFrame[] dataset = new DataFrame[datasetName.length];
     static int datasetIndex = 0;
 
     JPanel optionPane;
@@ -122,18 +123,16 @@ public abstract class ManifoldDemo extends JPanel implements Runnable, ActionLis
             datasetIndex = datasetBox.getSelectedIndex();
 
             if (dataset[datasetIndex] == null) {
-                DelimitedTextParser parser = new DelimitedTextParser();
-                parser.setDelimiter("[\t]+");
-
                 try {
-                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.util.Paths.getTestData(datasource[datasetIndex]));
+                    CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
+                    dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.err.println(ex);
                 }
             }
 
-            double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
+            double[][] data = dataset[datasetIndex].toArray();
         
             if (data.length < 500) {
                 pointLegend = 'o';

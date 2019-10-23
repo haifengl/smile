@@ -18,12 +18,10 @@
 package smile.demo.classification;
 
 import java.awt.Dimension;
-
 import javax.swing.JFrame;
 
+import org.apache.commons.csv.CSVFormat;
 import smile.classification.NaiveBayes;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;
@@ -60,9 +58,7 @@ public class NaiveBayesDemo extends ClassificationDemo {
                 "classification/iris.txt"
         };
 
-        parser = new DelimitedTextParser();
-        parser.setColumnNames(true);// iris data set has column names at row 0
-        parser.setResponseIndex(new NominalAttribute("class"), 4);// iris data set has response label at index position equals to 4 
+        CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t').withFirstRecordAsHeader();
     }
 
 
@@ -101,8 +97,8 @@ public class NaiveBayesDemo extends ClassificationDemo {
     @Override
     public double[][] learn(double[] x, double[] y) {
 
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
-        int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
+        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         int[] labelPredict = new int[label.length];
         
         double[][] trainData = new double[label.length][p];
@@ -112,6 +108,7 @@ public class NaiveBayesDemo extends ClassificationDemo {
             }
         }
 
+        /*
         NaiveBayes nbc = new NaiveBayes(NaiveBayes.Model.POLYAURN, k, p);
         nbc.learn(trainData, label);
         
@@ -129,7 +126,9 @@ public class NaiveBayesDemo extends ClassificationDemo {
                 z[i][j] = nbc.predict(p);
             }
         }
+         */
 
+        double[][] z = new double[y.length][x.length];
         return z;
     }
 

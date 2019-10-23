@@ -30,10 +30,11 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import org.apache.commons.csv.CSVFormat;
 import smile.classification.FLD;
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.io.DatasetReader;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.math.MathEx;
@@ -50,7 +51,8 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
         "pendigits.txt"
     };
 
-    static AttributeDataset[] dataset = new AttributeDataset[datasetName.length];
+    static Formula formula = Formula.lhs("class");
+    static DataFrame[] dataset = new DataFrame[datasetName.length];
     static int datasetIndex = 0;
 
     JPanel optionPane;
@@ -90,21 +92,17 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
      * the clusters.
      */
     public JComponent learn() {
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
+        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        String[] names = formula.x(dataset[datasetIndex]).names();
 
-        String[] names = dataset[datasetIndex].toArray(new String[dataset[datasetIndex].size()]);
-        if (names[0] == null) {
-            names = null;
-        }
-        
-        int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
-        int min = MathEx.min(label);
-        for (int i = 0; i < label.length; i++) {
-            label[i] -= min;
+        int[] labels = formula.y(dataset[datasetIndex]).toIntArray();
+        int min = MathEx.min(labels);
+        for (int i = 0; i < labels.length; i++) {
+            labels[i] -= min;
         }
 
         long clock = System.currentTimeMillis();
-        FLD lda = new FLD(data, label, MathEx.unique(label).length > 3 ? 3 : 2);
+        FLD lda = FLD.fit(data, labels, MathEx.unique(labels).length > 3 ? 3 : 2, 1E-4);
         System.out.format("Learn LDA from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
         double[][] y = lda.project(data);
@@ -112,8 +110,7 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
         PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
             plot.points(y, names);
-        } else if (dataset[datasetIndex].responseAttribute() != null) {
-            int[] labels = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
+        } else if (labels != null) {
             for (int i = 0; i < y.length; i++) {
                 plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
             }
@@ -149,20 +146,10 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
             datasetIndex = datasetBox.getSelectedIndex();
 
             if (dataset[datasetIndex] == null) {
-                DelimitedTextParser parser = new DelimitedTextParser();
-                parser.setDelimiter("[\t]+");
-                if (datasetIndex == 0) {
-                    parser.setColumnNames(true);
-                }
-                if (datasetIndex == 0) {
-                    parser.setResponseIndex(new NominalAttribute("class"), 4);
-                }
-                if (datasetIndex == 1) {
-                    parser.setResponseIndex(new NominalAttribute("class"), 16);
-                }
+                CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t').withFirstRecordAsHeader();
 
                 try {
-                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.util.Paths.getTestData(datasource[datasetIndex]));
+                    dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.out.println(ex);

@@ -36,7 +36,6 @@ import javax.swing.JTextField;
 
 import smile.clustering.SIB;
 import smile.data.SparseDataset;
-import smile.data.parser.SparseDatasetParser;
 
 /**
  *
@@ -123,13 +122,14 @@ public class SIBDemo extends JPanel implements Runnable, ActionListener {
 
         if (dataset[datasetIndex] == null) {
             try {
-                SparseDatasetParser parser = new SparseDatasetParser(1);
-                dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.util.Paths.getTestData(datasource[datasetIndex]));
+                dataset[datasetIndex] = SparseDataset.from(smile.util.Paths.getTestData(datasource[datasetIndex]));
+                /*
                 for (int i = dataset[datasetIndex].size(); i-- > 0; ) {
-                    if (dataset[datasetIndex].get(i).x.isEmpty()) {
+                    if (dataset[datasetIndex].get(i).isEmpty()) {
                         dataset[datasetIndex].remove(i);
                     }
                 }
+                 */
                 dataset[datasetIndex].unitize1();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);

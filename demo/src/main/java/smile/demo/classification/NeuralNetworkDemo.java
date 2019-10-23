@@ -24,6 +24,9 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
+import smile.base.mlp.Layer;
+import smile.base.mlp.OutputFunction;
+import smile.base.mlp.OutputLayer;
 import smile.classification.MLP;
 import smile.math.MathEx;
 
@@ -74,19 +77,21 @@ public class NeuralNetworkDemo extends ClassificationDemo {
             return null;
         }
 
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
-        int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
+        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
         int k = MathEx.max(label) + 1;
-        MLP net = null;
+        MLP net;
         if (k == 2) {
-            net = new MLP(MLP.ErrorFunction.CROSS_ENTROPY, MLP.ActivationFunction.LOGISTIC_SIGMOID, data[0].length, units, 1);
+            net = new MLP(2, Layer.sigmoid(units), Layer.mle(1, OutputFunction.SIGMOID));
         } else {
-            net = new MLP(MLP.ErrorFunction.CROSS_ENTROPY, MLP.ActivationFunction.SOFTMAX, data[0].length, units, k);
+            net = new MLP(2, Layer.sigmoid(units), Layer.mle(k, OutputFunction.SOFTMAX));
         }
         
         for (int i = 0; i < epochs; i++) {
-            net.learn(data, label);
+            for (int j = 0; j < data.length; j++) {
+                net.update(data[j], label[j]);
+            }
         }
 
         int[] pred = new int[label.length];

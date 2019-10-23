@@ -57,10 +57,10 @@ public class RDADemo extends ClassificationDemo {
             return null;
         }
 
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
-        int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
+        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
-        RDA qda = new RDA(data, label, alpha);
+        RDA qda = RDA.fit(data, label, alpha);
         int[] pred = new int[label.length];
         for (int i = 0; i < label.length; i++) {
             pred[i] = qda.predict(data[i]);

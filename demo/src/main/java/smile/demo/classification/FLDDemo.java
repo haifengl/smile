@@ -38,10 +38,10 @@ public class FLDDemo extends ClassificationDemo {
 
     @Override
     public double[][] learn(double[] x, double[] y) {
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
-        int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
+        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
-        FLD fisher = new FLD(data, label);
+        FLD fisher = FLD.fit(data, label);
         int[] pred = new int[label.length];
         for (int i = 0; i < label.length; i++) {
             pred[i] = fisher.predict(data[i]);

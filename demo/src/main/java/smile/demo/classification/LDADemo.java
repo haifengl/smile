@@ -38,10 +38,10 @@ public class LDADemo extends ClassificationDemo {
 
     @Override
     public double[][] learn(double[] x, double[] y) {
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
-        int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
+        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
-        LDA lda = new LDA(data, label);
+        LDA lda = LDA.fit(data, label);
         int[] pred = new int[label.length];
         for (int i = 0; i < label.length; i++) {
             pred[i] = lda.predict(data[i]);
