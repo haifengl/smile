@@ -69,7 +69,7 @@ public interface Node extends Serializable {
      * @param depth the depth of node in the tree. The root node is at depth 0.
      * @param id node id
      * @param lines the collection of node's string representation.
-     * @return the sample count of each class for decision tree; null for regression tree.
+     * @return the sample count of each class for decision tree; single element array [node size] for regression tree.
      */
     int[] toString(StructType schema, StructField response, InternalNode parent, int depth, BigInteger id, List<String> lines);
 }

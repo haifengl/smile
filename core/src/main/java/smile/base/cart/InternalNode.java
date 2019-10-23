@@ -135,14 +135,20 @@ public abstract class InternalNode implements Node {
         int[] c1 = falseChild.toString(schema, response, this, depth + 1, falseId, lines);
         int[] c2 = trueChild. toString(schema, response, this, depth + 1, trueId,  lines);
 
-        int size = size();
-        int[] count = null;
-        if (c1 != null) {
-            int k = c1.length;
+        int size;
+        int k = c1.length;
+        int[] count = new int[k];
+        if (k == 1) {
+            // regression
+            size = c1[0] + c2[0];
+            count[0] = size;
+        } else {
+            // classification
             count = new int[k];
             for (int i = 0; i < k; i++) {
                 count[i] = c1[i] + c2[i];
             }
+            size = MathEx.sum(count);
         }
 
         StringBuilder line = new StringBuilder();
@@ -160,7 +166,7 @@ public abstract class InternalNode implements Node {
         // deviance
         line.append(String.format("%.5g", deviance())).append(" ");
 
-        if (count == null) {
+        if (k == 1) {
             // fitted value
             double output = (sumy()) / size;
             line.append(String.format("%g", output)).append(" ");

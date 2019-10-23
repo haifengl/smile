@@ -109,7 +109,7 @@ public class RegressionNode extends LeafNode {
         line.append(" *");
         lines.add(line.toString());
 
-        return null;
+        return new int[]{size};
     }
 
     @Override
