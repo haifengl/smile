@@ -54,6 +54,16 @@ public class NominalNode extends InternalNode {
     }
 
     @Override
+    public boolean branch(Tuple x) {
+        return x.getInt(feature) == value;
+    }
+
+    @Override
+    public NominalNode replace(Node trueChild, Node falseChild) {
+        return new NominalNode(feature, value, score, deviance, trueChild, falseChild);
+    }
+
+    @Override
     public String dot(StructType schema, StructField response, int id) {
         StructField field = schema.field(feature);
         return String.format(" %d [label=<%s = %s<br/>size = %d<br/>impurity reduction = %.4f>, fillcolor=\"#00000000\"];\n", id, field.name, field.toString(value), size(), score);

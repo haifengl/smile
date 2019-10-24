@@ -101,6 +101,15 @@ public abstract class CART {
      */
     private transient int[] buffer;
 
+    /** Constructor. */
+    public CART(Optional<Formula> formula, StructType schema, StructField response, Node root, double[] importance) {
+        this.formula = formula;
+        this.schema = schema;
+        this.response = response;
+        this.root = root;
+        this.importance = importance;
+    }
+
     /**
      * Constructor.
      * @param x the data frame of the explanatory variable.
@@ -162,6 +171,19 @@ public abstract class CART {
                 }
             }
         }
+    }
+
+    /** Returns the number of nodes in the tree. */
+    public int size() {
+        return size(root);
+    }
+
+    /** Returns the number of nodes of the subtree. */
+    private int size(Node node) {
+        if (node instanceof LeafNode) return 1;
+
+        InternalNode parent = (InternalNode) node;
+        return size(parent.trueChild) + size(parent.falseChild) + 1;
     }
 
     /** Returns the index of ordered samples for each ordinal column. */

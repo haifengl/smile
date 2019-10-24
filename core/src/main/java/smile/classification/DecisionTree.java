@@ -18,6 +18,8 @@
 package smile.classification;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
 import smile.base.cart.*;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -366,5 +368,99 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     @Override
     public StructType schema() {
         return schema;
+    }
+
+    /** Private constructor. */
+    private DecisionTree(Optional<Formula> formula, StructType schema, StructField response, Node root, int k, SplitRule rule, double[] importance, Optional<ClassLabel> labels) {
+        super(formula, schema, response, root, importance);
+        this.k = k;
+        this.rule = rule;
+        this.labels = labels;
+    }
+
+    /**
+     * Returns a new decision tree by reduced error pruning.
+     * @param test the test data set to evaluate the errors of nodes.
+     * @return a new pruned tree.
+     */
+    public DecisionTree prune(DataFrame test) {
+        return prune(test, formula.get(), labels.get());
+    }
+
+    /**
+     * Reduced error pruning for random forest.
+     * @param test the test data set to evaluate the errors of nodes.
+     * @return a new pruned tree.
+     */
+    DecisionTree prune(DataFrame test, Formula formula, ClassLabel labels) {
+        double[] imp = importance.clone();
+        Prune prune = prune(root, test.stream().collect(Collectors.toList()), imp, formula, labels);
+        return new DecisionTree(this.formula, schema, response, prune.node, k, rule, imp, this.labels);
+    }
+
+    /** The result of pruning a subtree. */
+    private static class Prune {
+        /** The merged node if pruned. Otherwise, the original node. */
+        Node node;
+        /** The test error on this node. */
+        int error;
+        /** The training sample count of each class. */
+        int[] count;
+
+        /** Constructor. */
+        Prune(Node node, int error, int[] count) {
+            this.node = node;
+            this.error = error;
+            this.count = count;
+        }
+    }
+
+    /** Prunes a subtree. */
+    private Prune prune(Node node, List<Tuple> test, double[] importance, Formula formula, ClassLabel labels) {
+        if (node instanceof DecisionNode) {
+            DecisionNode leaf = (DecisionNode) node;
+            int y = leaf.output();
+
+            int error = 0;
+            for (Tuple t : test) {
+                if (y != labels.id(formula.yint(t))) error++;
+            }
+
+            return new Prune(node, error, leaf.count());
+        }
+
+        InternalNode parent = (InternalNode) node;
+        List<Tuple> trueBranch = new ArrayList<>();
+        List<Tuple> falseBranch = new ArrayList<>();
+        for (Tuple t : test) {
+            if (parent.branch(formula.x(t)))
+                trueBranch.add(t);
+            else
+                falseBranch.add(t);
+        }
+
+        Prune trueChild = prune(parent.trueChild(), trueBranch, importance, formula, labels);
+        Prune falseChild = prune(parent.falseChild(), falseBranch, importance, formula, labels);
+
+        int[] count = new int[k];
+        for (int i = 0; i < k; i++) {
+            count[i] = trueChild.count[i] + falseChild.count[i];
+        }
+
+        int y = MathEx.whichMax(count);
+        int error = 0;
+        for (Tuple t : test) {
+            if (y != labels.id(formula.yint(t))) error++;
+        }
+
+        if (error < trueChild.error + falseChild.error) {
+            node = new DecisionNode(count);
+            importance[parent.feature()] -= parent.score();
+        } else {
+            error = trueChild.error + falseChild.error;
+            node = parent.replace(trueChild.node, falseChild.node);
+        }
+
+        return new Prune(node, error, count);
     }
 }
