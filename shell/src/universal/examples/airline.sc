@@ -64,8 +64,7 @@ val classWeight = Array(4, 1)
 // Random Forest
 println("Training Random Forest of 500 trees...")
 val forest = test2soft(formula, train, test) { (formula, data) =>
-  randomForest(formula, data, 500, 2,
-    SplitRule.ENTROPY, 150, 50, 1.0, classWeight)
+  randomForest(formula, data, 500, 2, SplitRule.ENTROPY, 150, 50, 1.0, classWeight)
 }
 
 val depth = forest.trees.map(_.root.depth.toDouble)

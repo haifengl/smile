@@ -321,39 +321,55 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
             throw new IllegalArgumentException(String.format("seed stream has only %d distinct values, expected %d", seedArray.length, ntrees));
         }
 
+        // # of samples in each class
+        int[] count = new int[k];
+        for (int i = 0; i < n; i++) {
+            count[y.getInt(i)]++;
+        }
+        // samples in each class
+        int[][] yi = new int[k][];
+        for (int i = 0; i < k; i++) {
+            yi[i] = new int[count[i]];
+        }
+        int[] idx = new int[k];
+        for (int i = 0; i < n; i++) {
+            int j = y.getInt(i);
+            yi[j][idx[j]++] = i;
+        }
+
         List<Tree> trees = Arrays.stream(seedArray).parallel().mapToObj(seed -> {
             // set RNG seed for the tree
             if (seed > 1) MathEx.setSeed(seed);
 
             final int[] samples = new int[n];
-            // Stratified sampling in case class is unbalanced.
+            // Stratified sampling in case that class is unbalanced.
             // That is, we sample each class separately.
             if (subsample == 1.0) {
                 // Training samples draw with replacement.
-                IntStream.range(0, k).forEach(l -> {
-                    int[] cl = IntStream.range(0, n).filter(i -> y.getInt(i) == l).toArray();
-
+                for (int i = 0; i < k; i++) {
                     // We used to do up sampling.
-                    // But we switch to down sampling, which seems has better performance.
-                    int size = cl.length / weight[l];
-                    for (int i = 0; i < size; i++) {
-                        int xi = MathEx.randomInt(cl.length);
-                        samples[cl[xi]] += 1; //classWeight[l];
+                    // But we switch to down sampling, which seems producing better AUC.
+                    int ni = count[i];
+                    int size = ni / weight[i];
+                    int[] yj = yi[i];
+                    for (int j = 0; j < size; j++) {
+                        int xj = MathEx.randomInt(ni);
+                        samples[yj[xj]] += 1; //classWeight[i];
                     }
-                });
+                }
             } else {
                 // Training samples draw without replacement.
-                IntStream.range(0, k).forEach(l -> {
-                    int[] cl = IntStream.range(0, n).filter(i -> y.getInt(i) == l).toArray();
-
+                for (int i = 0; i < k; i++) {
                     // We used to do up sampling.
-                    // But we switch to down sampling, which seems has better performance.
-                    int size = (int) Math.round(subsample * cl.length / weight[l]);
-                    int[] permutation = MathEx.permutate(cl.length);
-                    for (int i = 0; i < size; i++) {
-                        samples[cl[permutation[i]]] += 1; //classWeight[l];
+                    // But we switch to down sampling, which seems producing better AUC.
+                    int size = (int) Math.round(subsample * count[i] / weight[i]);
+                    int[] yj = yi[i];
+                    int[] permutation = MathEx.permutate(count[i]);
+                    for (int j = 0; j < size; j++) {
+                        int xj = permutation[j];
+                        samples[yj[xj]] += 1; //classWeight[i];
                     }
-                });
+                }
             }
 
             DecisionTree tree = new DecisionTree(x, codec.y, codec.field.get(), k, rule, maxNodes, nodeSize, mtry, samples, order);
