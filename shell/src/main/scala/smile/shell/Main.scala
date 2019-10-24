@@ -99,12 +99,6 @@ object Main extends App {
       |repl.prompt() = "smile> "
     """.stripMargin
 
-  // Ammonite REPL doesn't support Windows
-  if (System.getProperty("os.name").startsWith("Windows")) {
-    println("Smile shell doesn't support Windows")
-    sys.exit(1)
-  }
-
   Cli.groupArgs(args.toList, Cli.ammoniteArgSignature, Cli.Config()) match {
     case Left(msg) =>
       println(msg)
