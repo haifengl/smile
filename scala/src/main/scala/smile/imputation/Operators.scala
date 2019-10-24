@@ -36,10 +36,8 @@ trait Operators {
     *
     * @param data the data set with missing values.
     */
-  def avgimpute(data: Array[Array[Double]]): Unit = {
-    time {
-      new AverageImputation().impute(data)
-    }
+  def avgimpute(data: Array[Array[Double]]): Unit = time("Missing value imputation by average") {
+    new AverageImputation().impute(data)
   }
 
   /** Missing value imputation by k-nearest neighbors. The KNN-based method
@@ -54,10 +52,8 @@ trait Operators {
     * @param data the data set with missing values.
     * @param k the number of neighbors.
     */
-  def knnimpute(data: Array[Array[Double]], k: Int): Unit = {
-    time {
-      new KNNImputation(k).impute(data)
-    }
+  def knnimpute(data: Array[Array[Double]], k: Int): Unit = time("Missing value imputation by k-nn") {
+    new KNNImputation(k).impute(data)
   }
 
   /** Missing value imputation by K-Means clustering. First cluster data by K-Means
@@ -68,10 +64,8 @@ trait Operators {
     * @param k the number of clusters.
     * @param runs the number of runs of K-Means algorithm.
     */
-  def impute(data: Array[Array[Double]], k: Int, runs: Int = 1): Unit = {
-    time {
-      new KMeansImputation(k, Math.max(runs, MulticoreExecutor.getThreadPoolSize)).impute(data)
-    }
+  def impute(data: Array[Array[Double]], k: Int, runs: Int = 1): Unit = time("Missing value imputation by k-means") {
+    new KMeansImputation(k, Math.max(runs, MulticoreExecutor.getThreadPoolSize)).impute(data)
   }
 
   /** Local least squares missing value imputation. The local least squares
@@ -82,10 +76,8 @@ trait Operators {
     * @param data the data set.
     * @param k the number of similar rows used for imputation.
     */
-  def llsimpute(data: Array[Array[Double]], k: Int): Unit = {
-    time {
-      new LLSImputation(k).impute(data)
-    }
+  def llsimpute(data: Array[Array[Double]], k: Int): Unit = time("Missing value imputation by local least squares") {
+    new LLSImputation(k).impute(data)
   }
 
   /** Missing value imputation with singular value decomposition. Given SVD
@@ -111,9 +103,7 @@ trait Operators {
     * @param k the number of eigenvectors used for imputation.
     * @param maxIter the maximum number of iterations.
     */
-  def svdimpute(data: Array[Array[Double]], k: Int, maxIter: Int = 10): Unit = {
-    time {
-      new SVDImputation(k).impute(data)
-    }
+  def svdimpute(data: Array[Array[Double]], k: Int, maxIter: Int = 10): Unit = time("Missing value imputation by SVD") {
+    new SVDImputation(k).impute(data)
   }
 }

@@ -42,10 +42,8 @@ trait Operators {
     * @param labels the state labels of observations, of which states take
     *               values in [0, p), where p is the number of hidden states.
     */
-  def hmm(observations: Array[Array[Int]], labels: Array[Array[Int]]): HMM[Int] = {
-    time {
-      new HMM[Int](observations, labels)
-    }
+  def hmm(observations: Array[Array[Int]], labels: Array[Array[Int]]): HMM[Int] = time("Hidden Markov Model") {
+    new HMM[Int](observations, labels)
   }
 
   /** Trains a first-order Hidden Markov Model.
@@ -55,10 +53,8 @@ trait Operators {
     * @param labels the state labels of observations, of which states take
     *               values in [0, p), where p is the number of hidden states.
     */
-  def hmm[T <: Object](observations: Array[Array[T]], labels: Array[Array[Int]]): HMM[T] = {
-    time {
-      new HMM[T](observations, labels)
-    }
+  def hmm[T <: Object](observations: Array[Array[T]], labels: Array[Array[Int]]): HMM[T] = time("Hidden Markov Model") {
+    new HMM[T](observations, labels)
   }
 
   /** First-order linear conditional random field. A conditional random field is a
@@ -83,14 +79,12 @@ trait Operators {
     * @param maxNodes the maximum number of leaf nodes in the tree.
     */
   /*
-  def crf(sequences: Array[Array[Array[Double]]], labels: Array[Array[Int]], attributes: Array[Attribute], k: Int, eta: Double = 1.0, ntrees: Int = 100, maxNodes: Int = 100): CRF = {
-    time {
-      val trainer = new Trainer(attributes, k)
-      trainer.setLearningRate(eta)
-        .setMaxNodes(maxNodes)
-        .setNumTrees(ntrees)
-      trainer.train(sequences, labels)
-    }
+  def crf(sequences: Array[Array[Array[Double]]], labels: Array[Array[Int]], attributes: Array[Attribute], k: Int, eta: Double = 1.0, ntrees: Int = 100, maxNodes: Int = 100): CRF = time("First-order linear conditional random field") {
+    val trainer = new Trainer(attributes, k)
+    trainer.setLearningRate(eta)
+      .setMaxNodes(maxNodes)
+      .setNumTrees(ntrees)
+    trainer.train(sequences, labels)
   }
    */
 }

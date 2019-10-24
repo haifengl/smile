@@ -80,7 +80,7 @@ trait Operators {
     * @param data the data frame of the explanatory and response variables.
     * @param method qr or svd.
     */
-  def ols(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolean, recursive: Boolean): LinearModel = time {
+  def ols(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolean, recursive: Boolean): LinearModel = time("Least Squares") {
     OLS.fit(formula, data, method, stderr, recursive)
   }
 
@@ -106,7 +106,7 @@ trait Operators {
     * @param data the data frame of the explanatory and response variables.
     * @param lambda the shrinkage/regularization parameter.
     */
-  def ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel = time {
+  def ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel = time("Ridge Regression") {
     RidgeRegression.fit(formula, data, lambda)
   }
 
@@ -150,7 +150,7 @@ trait Operators {
     * @param tol the tolerance for stopping iterations (relative target duality gap).
     * @param maxIter the maximum number of iterations.
     */
-  def lasso(formula: Formula, data: DataFrame, lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LinearModel = time {
+  def lasso(formula: Formula, data: DataFrame, lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LinearModel = time("LASSO") {
     LASSO.fit(formula, data, lambda, tol, maxIter)
   }
 
@@ -169,7 +169,7 @@ trait Operators {
     *
     * @return SVR model.
     */
-  def svr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): KernelMachine[T] = time {
+  def svr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): KernelMachine[T] = time("SVR") {
     SVR.fit(x, y, kernel, eps, C, tol)
   }
 
@@ -240,7 +240,7 @@ trait Operators {
     * @param maxNodes the maximum number of leaf nodes in the tree.
     * @return Regression tree model.
     */
-  def cart(formula: Formula, data: DataFrame, maxNodes: Int = 100, nodeSize: Int = 5): RegressionTree = time {
+  def cart(formula: Formula, data: DataFrame, maxNodes: Int = 100, nodeSize: Int = 5): RegressionTree = time("Regression Tree") {
     RegressionTree.fit(formula, data, maxNodes, nodeSize)
   }
 
@@ -294,7 +294,7 @@ trait Operators {
     *
     * @return Random forest regression model.
     */
-  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = -1, maxNodes: Int = -1, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest = time {
+  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = -1, maxNodes: Int = -1, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest = time("Random Forest") {
     RandomForest.fit(formula, data, ntrees, mtry, maxNodes, nodeSize, subsample)
   }
 
@@ -373,88 +373,91 @@ trait Operators {
     *
     * @return Gradient boosted trees.
     */
-  def gbm(formula: Formula, data: DataFrame, loss: Loss, ntrees: Int = 500, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time {
+  def gbm(formula: Formula, data: DataFrame, loss: Loss, ntrees: Int = 500, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boost") {
     GradientTreeBoost.fit(formula, data, loss, ntrees, maxNodes, nodeSize, shrinkage, subsample)
   }
 
-  /** Gaussian Process for Regression. A Gaussian process is a stochastic process
-    * whose realizations consist of random values associated with every point in
-    * a range of times (or of space) such that each such random variable has
-    * a normal distribution. Moreover, every finite collection of those random
-    * variables has a multivariate normal distribution.
-    *
-    * A Gaussian process can be used as a prior probability distribution over
-    * functions in Bayesian inference. Given any set of N points in the desired
-    * domain of your functions, take a multivariate Gaussian whose covariance
-    * matrix parameter is the Gram matrix of N points with some desired kernel,
-    * and sample from that Gaussian. Inference of continuous values with a
-    * Gaussian process prior is known as Gaussian process regression.
-    *
-    * The fitting is performed in the reproducing kernel Hilbert space with
-    * the "kernel trick". The loss function is squared-error. This also arises
-    * as the kriging estimate of a Gaussian random field in spatial statistics.
-    *
-    * A significant problem with Gaussian process prediction is that it typically
-    * scales as O(n<sup>3</sup>). For large problems (e.g. n &gt; 10,000) both
-    * storing the Gram matrix and solving the associated linear systems are
-    * prohibitive on modern workstations. An extensive range of proposals have
-    * been suggested to deal with this problem. A popular approach is the
-    * reduced-rank Approximations of the Gram Matrix, known as Nystrom approximation.
-    * Greedy approximation is another popular approach that uses an active set of
-    * training points of size m selected from the training set of size n &gt; m.
-    * We assume that it is impossible to search for the optimal subset of size m
-    * due to combinatorics. The points in the active set could be selected
-    * randomly, but in general we might expect better performance if the points
-    * are selected greedily w.r.t. some criterion. Recently, researchers had
-    * proposed relaxing the constraint that the inducing variables must be a
-    * subset of training/test cases, turning the discrete selection problem
-    * into one of continuous optimization.
-    *
-    * This method fits a regular Gaussian process model.
-    *
-    * ====References:====
-    *  - Carl Edward Rasmussen and Chris Williams. Gaussian Processes for Machine Learning, 2006.
-    *  - Joaquin Quinonero-candela,  Carl Edward Ramussen,  Christopher K. I. Williams. Approximation Methods for Gaussian Process Regression. 2007.
-    *  - T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.
-    *  - Kai Zhang and James T. Kwok. Clustered Nystrom Method for Large Scale Manifold Learning and Dimension Reduction. IEEE Transactions on Neural Networks, 2010.
-    *
-    * @param x the training dataset.
-    * @param y the response variable.
-    * @param kernel the Mercer kernel.
-    * @param lambda the shrinkage/regularization parameter.
-    */
-  def gpr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): KernelMachine[T] = time {
-    GaussianProcessRegression.fit(x, y, kernel, lambda)
-  }
+  /** Gaussian Process for Regression. */
+  object gpr {
+    /** Gaussian Process for Regression. A Gaussian process is a stochastic process
+      * whose realizations consist of random values associated with every point in
+      * a range of times (or of space) such that each such random variable has
+      * a normal distribution. Moreover, every finite collection of those random
+      * variables has a multivariate normal distribution.
+      *
+      * A Gaussian process can be used as a prior probability distribution over
+      * functions in Bayesian inference. Given any set of N points in the desired
+      * domain of your functions, take a multivariate Gaussian whose covariance
+      * matrix parameter is the Gram matrix of N points with some desired kernel,
+      * and sample from that Gaussian. Inference of continuous values with a
+      * Gaussian process prior is known as Gaussian process regression.
+      *
+      * The fitting is performed in the reproducing kernel Hilbert space with
+      * the "kernel trick". The loss function is squared-error. This also arises
+      * as the kriging estimate of a Gaussian random field in spatial statistics.
+      *
+      * A significant problem with Gaussian process prediction is that it typically
+      * scales as O(n<sup>3</sup>). For large problems (e.g. n &gt; 10,000) both
+      * storing the Gram matrix and solving the associated linear systems are
+      * prohibitive on modern workstations. An extensive range of proposals have
+      * been suggested to deal with this problem. A popular approach is the
+      * reduced-rank Approximations of the Gram Matrix, known as Nystrom approximation.
+      * Greedy approximation is another popular approach that uses an active set of
+      * training points of size m selected from the training set of size n &gt; m.
+      * We assume that it is impossible to search for the optimal subset of size m
+      * due to combinatorics. The points in the active set could be selected
+      * randomly, but in general we might expect better performance if the points
+      * are selected greedily w.r.t. some criterion. Recently, researchers had
+      * proposed relaxing the constraint that the inducing variables must be a
+      * subset of training/test cases, turning the discrete selection problem
+      * into one of continuous optimization.
+      *
+      * This method fits a regular Gaussian process model.
+      *
+      * ====References:====
+      *  - Carl Edward Rasmussen and Chris Williams. Gaussian Processes for Machine Learning, 2006.
+      *  - Joaquin Quinonero-candela,  Carl Edward Ramussen,  Christopher K. I. Williams. Approximation Methods for Gaussian Process Regression. 2007.
+      *  - T. Poggio and F. Girosi. Networks for approximation and learning. Proc. IEEE 78(9):1484-1487, 1990.
+      *  - Kai Zhang and James T. Kwok. Clustered Nystrom Method for Large Scale Manifold Learning and Dimension Reduction. IEEE Transactions on Neural Networks, 2010.
+      *
+      * @param x the training dataset.
+      * @param y the response variable.
+      * @param kernel the Mercer kernel.
+      * @param lambda the shrinkage/regularization parameter.
+      */
+    def apply[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): KernelMachine[T] = time("Gaussian Process Regression") {
+      GaussianProcessRegression.fit(x, y, kernel, lambda)
+    }
 
-  /** This method fits an approximate Gaussian process model by the method
-    * of subset of regressors.
-    *
-    * @param x the training dataset.
-    * @param y the response variable.
-    * @param t the inducing input, which are pre-selected or inducing samples
-    *          acting as active set of regressors. In simple case, these can be chosen
-    *          randomly from the training set or as the centers of k-means clustering.
-    * @param kernel the Mercer kernel.
-    * @param lambda the shrinkage/regularization parameter.
-    */
-  def gpr[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T] = time {
-    GaussianProcessRegression.fit(x, y, t, kernel, lambda)
-  }
+    /** This method fits an approximate Gaussian process model by the method
+      * of subset of regressors.
+      *
+      * @param x the training dataset.
+      * @param y the response variable.
+      * @param t the inducing input, which are pre-selected or inducing samples
+      *          acting as active set of regressors. In simple case, these can be chosen
+      *          randomly from the training set or as the centers of k-means clustering.
+      * @param kernel the Mercer kernel.
+      * @param lambda the shrinkage/regularization parameter.
+      */
+    def approx[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T] = time("Approximate Gaussian Process Regression") {
+      GaussianProcessRegression.fit(x, y, t, kernel, lambda)
+    }
 
-  /** This method fits an approximate Gaussian process model by the method
-    * of subset of regressors.
-    *
-    * @param x the training dataset.
-    * @param y the response variable.
-    * @param t the inducing input, which are pre-selected or inducing samples
-    *          acting as active set of regressors. In simple case, these can be chosen
-    *          randomly from the training set or as the centers of k-means clustering.
-    * @param kernel the Mercer kernel.
-    * @param lambda the shrinkage/regularization parameter.
-    */
-  def nystrom[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T] = time {
-    GaussianProcessRegression.nystrom(x, y, t, kernel, lambda)
+    /** This method fits an approximate Gaussian process model by the method
+      * of subset of regressors.
+      *
+      * @param x the training dataset.
+      * @param y the response variable.
+      * @param t the inducing input, which are pre-selected or inducing samples
+      *          acting as active set of regressors. In simple case, these can be chosen
+      *          randomly from the training set or as the centers of k-means clustering.
+      * @param kernel the Mercer kernel.
+      * @param lambda the shrinkage/regularization parameter.
+      */
+    def nystrom[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T] = time("Nystrom Approximate Gaussian Process Regression") {
+      GaussianProcessRegression.nystrom(x, y, t, kernel, lambda)
+    }
   }
 
   /** Radial basis function networks. A radial basis function network is an
@@ -517,12 +520,12 @@ trait Operators {
     * @param neurons the radial basis functions.
     * @param normalized train a normalized RBF network or not.
     */
-  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T] = time {
+  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Double], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T] = time("RBF Network") {
     RBFNetwork.fit(x, y, neurons, normalized)
   }
 
   /** Trains a Gaussian RBF network with k-means. */
-  def rbfnet(x: Array[Array[Double]], y: Array[Double], k: Int, normalized: Boolean = false): RBFNetwork[Array[Double]] = time {
+  def rbfnet(x: Array[Array[Double]], y: Array[Double], k: Int, normalized: Boolean = false): RBFNetwork[Array[Double]] = time("RBF Network") {
     val neurons = RBF.fit(x, k)
     RBFNetwork.fit(x, y, neurons, normalized)
   }

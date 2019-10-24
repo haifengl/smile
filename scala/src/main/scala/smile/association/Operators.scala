@@ -61,11 +61,9 @@ trait Operators {
     *                   of frequency.
     * @return the list of frequent item sets.
     */
-  def fpgrowth(itemsets: Array[Array[Int]], minSupport: Int): Buffer[ItemSet] = {
-    time {
-      val fim = new FPGrowth(itemsets, minSupport)
-      fim.learn.asScala
-    }
+  def fpgrowth(itemsets: Array[Array[Int]], minSupport: Int): Buffer[ItemSet] = time("FP-growth") {
+    val fim = new FPGrowth(itemsets, minSupport)
+    fim.learn.asScala
   }
 
   /** Frequent item set mining based on the FP-growth (frequent pattern growth)
@@ -82,11 +80,9 @@ trait Operators {
     * @param output a print stream for output of frequent item sets.
     * @return the number of discovered frequent item sets.
     */
-  def fpgrowth(itemsets: Array[Array[Int]], minSupport: Int, output: PrintStream): Long = {
-    time {
-      val fim = new FPGrowth(itemsets, minSupport)
-      fim.learn(output)
-    }
+  def fpgrowth(itemsets: Array[Array[Int]], minSupport: Int, output: PrintStream): Long = time("FP-growth") {
+    val fim = new FPGrowth(itemsets, minSupport)
+    fim.learn(output)
   }
 
   /** Frequent item set mining based on the FP-growth (frequent pattern growth)
@@ -103,11 +99,9 @@ trait Operators {
     * @param output the output file.
     * @return the number of discovered frequent item sets.
     */
-  def fpgrowth(itemsets: Array[Array[Int]], minSupport: Int, output: String): Long = {
-    time {
-      val fim = new FPGrowth(itemsets, minSupport)
-      fim.learn(new PrintStream(output))
-    }
+  def fpgrowth(itemsets: Array[Array[Int]], minSupport: Int, output: String): Long = time("FP-growth") {
+    val fim = new FPGrowth(itemsets, minSupport)
+    fim.learn(new PrintStream(output))
   }
 
   /** Frequent item set mining based on the FP-growth (frequent pattern growth)
@@ -127,27 +121,25 @@ trait Operators {
     * @param output a print stream for output of frequent item sets.
     * @return the number of discovered frequent item sets.
     */
-  def fpgrowth(file: String, minSupport: Int, output: PrintStream): Long = {
-    time {
-      val items = collection.mutable.Map[Int, Int]().withDefaultValue(0)
-      Source.fromFile(file).getLines.foreach { line =>
-        line.trim.split("\\s+").foreach { item =>
-          val i = item.toInt
-          items(i) = items(i) + 1
-        }
+  def fpgrowth(file: String, minSupport: Int, output: PrintStream): Long = time("FP-growth") {
+    val items = collection.mutable.Map[Int, Int]().withDefaultValue(0)
+    Source.fromFile(file).getLines.foreach { line =>
+      line.trim.split("\\s+").foreach { item =>
+        val i = item.toInt
+        items(i) = items(i) + 1
       }
-
-      val n = items.keySet.foldLeft(0)(Math.max) + 1
-      val frequency = new Array[Int](n)
-      items.toSeq.foreach { case (item, count) => frequency(item) = count }
-
-      val fim = new FPGrowth(frequency, minSupport)
-      Source.fromFile(file).getLines.foreach { line =>
-        fim.add(line.trim.split("\\s+").map(_.toInt).toArray)
-      }
-
-      fim.learn(output)
     }
+
+    val n = items.keySet.foldLeft(0)(Math.max) + 1
+    val frequency = new Array[Int](n)
+    items.toSeq.foreach { case (item, count) => frequency(item) = count }
+
+    val fim = new FPGrowth(frequency, minSupport)
+    Source.fromFile(file).getLines.foreach { line =>
+      fim.add(line.trim.split("\\s+").map(_.toInt).toArray)
+    }
+
+    fim.learn(output)
   }
 
   /** Frequent item set mining based on the FP-growth (frequent pattern growth)
@@ -167,10 +159,8 @@ trait Operators {
     * @param output the output file.
     * @return the number of discovered frequent item sets.
     */
-  def fpgrowth(file: String, minSupport: Int, output: String): Long = {
-    time {
-      fpgrowth(file, minSupport, new PrintStream(output))
-    }
+  def fpgrowth(file: String, minSupport: Int, output: String): Long = time("FP-growth") {
+    fpgrowth(file, minSupport, new PrintStream(output))
   }
 
   /** Association Rule Mining.
@@ -200,11 +190,9 @@ trait Operators {
     * @param confidence the confidence threshold for association rules.
     * @return the number of discovered association rules.
     */
-  def arm(itemsets: Array[Array[Int]], minSupport: Int, confidence: Double): Buffer[AssociationRule] = {
-    time {
-      val rule = new ARM(itemsets, minSupport)
-      rule.learn(confidence).asScala
-    }
+  def arm(itemsets: Array[Array[Int]], minSupport: Int, confidence: Double): Buffer[AssociationRule] = time("Association rule mining") {
+    val rule = new ARM(itemsets, minSupport)
+    rule.learn(confidence).asScala
   }
 
   /** Association Rule Mining.
@@ -222,11 +210,9 @@ trait Operators {
     * @param output a print stream for output of association rules.
     * @return the number of discovered association rules.
     */
-  def arm(itemsets: Array[Array[Int]], minSupport: Int, confidence: Double, output: PrintStream): Long = {
-    time {
-      val rule = new ARM(itemsets, minSupport)
-      rule.learn(confidence, output)
-    }
+  def arm(itemsets: Array[Array[Int]], minSupport: Int, confidence: Double, output: PrintStream): Long = time("Association rule mining") {
+    val rule = new ARM(itemsets, minSupport)
+    rule.learn(confidence, output)
   }
 
   /** Association Rule Mining.
@@ -244,11 +230,9 @@ trait Operators {
     * @param output the output file.
     * @return the number of discovered association rules.
     */
-  def arm(itemsets: Array[Array[Int]], minSupport: Int, confidence: Double, output: String): Long = {
-    time {
-      val rule = new ARM(itemsets, minSupport)
-      rule.learn(confidence, new PrintStream(output))
-    }
+  def arm(itemsets: Array[Array[Int]], minSupport: Int, confidence: Double, output: String): Long = time("Association rule mining") {
+    val rule = new ARM(itemsets, minSupport)
+    rule.learn(confidence, new PrintStream(output))
   }
 
   /** Association Rule Mining. This method scans data
@@ -269,28 +253,27 @@ trait Operators {
     * @param output a print stream for output of association rules.
     * @return the number of discovered association rules.
     */
-  def arm(file: String, minSupport: Int, confidence: Double, output: PrintStream): Long = {
-    time {
-      val items = collection.mutable.Map[Int, Int]().withDefaultValue(0)
-      Source.fromFile(file).getLines.foreach { line =>
-        line.trim.split("\\s+").foreach { item =>
-          val i = item.toInt
-          items(i) = items(i) + 1
-        }
+  def arm(file: String, minSupport: Int, confidence: Double, output: PrintStream): Long = time("Association rule mining") {
+    val items = collection.mutable.Map[Int, Int]().withDefaultValue(0)
+    Source.fromFile(file).getLines.foreach { line =>
+      line.trim.split("\\s+").foreach { item =>
+        val i = item.toInt
+        items(i) = items(i) + 1
       }
-
-      val n = items.keySet.foldLeft(0)(Math.max) + 1
-      val frequency = new Array[Int](n)
-      items.toSeq.foreach { case (item, count) => frequency(item) = count }
-
-      val rule = new ARM(frequency, minSupport)
-      Source.fromFile(file).getLines.foreach { line =>
-        rule.add(line.trim.split("\\s+").map(_.toInt).toArray)
-      }
-
-      rule.learn(confidence, new PrintStream(output))
     }
+
+    val n = items.keySet.foldLeft(0)(Math.max) + 1
+    val frequency = new Array[Int](n)
+    items.toSeq.foreach { case (item, count) => frequency(item) = count }
+
+    val rule = new ARM(frequency, minSupport)
+    Source.fromFile(file).getLines.foreach { line =>
+      rule.add(line.trim.split("\\s+").map(_.toInt))
+    }
+
+    rule.learn(confidence, new PrintStream(output))
   }
+
   /** Association Rule Mining. This method scans data
     * twice. We first scan the database to obtains the frequency of
     * single items. Then we scan the data again to construct the FP-Tree, which
@@ -308,9 +291,7 @@ trait Operators {
     * @param output the output file.
     * @return the number of discovered association rules.
     */
-  def arm(file: String, minSupport: Int, confidence: Double, output: String): Long = {
-    time {
-      arm(file, minSupport, confidence, new PrintStream(output))
-    }
+  def arm(file: String, minSupport: Int, confidence: Double, output: String): Long = time("Association rule mining") {
+    arm(file, minSupport, confidence, new PrintStream(output))
   }
 }

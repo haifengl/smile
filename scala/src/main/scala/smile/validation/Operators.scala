@@ -131,12 +131,12 @@ trait Operators {
     */
   def test[T,  C <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => C): C = {
     println("training...")
-    val classifier = time {
+    val classifier = time("training") {
       trainer(x, y)
     }
 
     println("testing...")
-    val pred = time {
+    val pred = time("testing") {
       testx.map(classifier.predict(_))
     }
 
@@ -156,12 +156,12 @@ trait Operators {
     */
   def test[C <: DataFrameClassifier](formula: Formula, train: DataFrame, test: DataFrame)(trainer: => (Formula, DataFrame) => C): C = {
     println("training...")
-    val classifier = time {
+    val classifier = time("training") {
       trainer(formula, train)
     }
 
     println("testing...")
-    val pred = time {
+    val pred = time("testing") {
       classifier.predict(test)
     }
 
@@ -186,12 +186,12 @@ trait Operators {
     */
   def test2[T,  C <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => C): C = {
     println("training...")
-    val classifier = time {
+    val classifier = time("training") {
       trainer(x, y)
     }
 
     println("testing...")
-    val pred = time {
+    val pred = time("testing") {
       testx.map(classifier.predict(_))
     }
 
@@ -218,12 +218,12 @@ trait Operators {
     */
   def test2[C <: DataFrameClassifier](formula: Formula, train: DataFrame, test: DataFrame)(trainer: => (Formula, DataFrame) => C): C = {
     println("training...")
-    val classifier = time {
+    val classifier = time("training") {
       trainer(formula, train)
     }
 
     println("testing...")
-    val pred = time {
+    val pred = time("testing") {
       classifier.predict(test)
     }
 
@@ -254,12 +254,12 @@ trait Operators {
     */
   def test2soft[T,  C <: SoftClassifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => C): C = {
     println("training...")
-    val classifier = time {
+    val classifier = time("training") {
       trainer(x, y)
     }
 
     println("testing...")
-    val results = time {
+    val results = time("testing") {
       val posteriori = Array(0.0, 0.0)
       testx.map { xi =>
         val yi = classifier.predict(xi, posteriori)
@@ -293,12 +293,12 @@ trait Operators {
     */
   def test2soft[C <: SoftClassifier[Tuple]](formula: Formula, train: DataFrame, test: DataFrame)(trainer: (Formula, DataFrame) => C): C = {
     println("training...")
-    val classifier = time {
+    val classifier = time("training") {
       trainer(formula, train)
     }
 
     println("testing...")
-    val results = time {
+    val results = time("testing") {
       val posteriori = Array(0.0, 0.0)
       (0 until test.size).map { i =>
         val y = classifier.predict(test(i), posteriori)
@@ -324,11 +324,11 @@ trait Operators {
     classifier
   }
 
-  private def measuresOrAccuracy(measures: Seq[ClassificationMeasure]): Seq[ClassificationMeasure] = {
+  private def measuresOrAccuracy(measures: collection.Seq[ClassificationMeasure]): collection.Seq[ClassificationMeasure] = {
     if (measures.isEmpty) Seq(new Accuracy) else measures
   }
 
-  private def measuresOrRMSE(measures: Seq[RegressionMeasure]): Seq[RegressionMeasure] = {
+  private def measuresOrRMSE(measures: collection.Seq[RegressionMeasure]): collection.Seq[RegressionMeasure] = {
     if (measures.isEmpty) Seq(new RMSE) else measures
   }
 

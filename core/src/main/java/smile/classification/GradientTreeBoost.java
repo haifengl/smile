@@ -31,6 +31,7 @@ import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
+import smile.util.Strings;
 
 /**
  * Gradient boosting for classification. Gradient boosting is typically used
@@ -107,6 +108,7 @@ import smile.regression.RegressionTree;
  */
 public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GradientTreeBoost.class);
 
     /**
      * Design matrix formula
@@ -328,17 +330,18 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
         int[] permutation = IntStream.range(0, n).toArray();
         int[] samples = new int[n];
 
-        for (int m = 0; m < ntrees; m++) {
+        for (int t = 0; t < ntrees; t++) {
             sampling(samples, permutation, nc, y, subsample);
 
             for (int i = 0; i < n; i++) {
                 response[i] = 2.0 * y2[i] / (1 + Math.exp(2 * y2[i] * h[i]));
             }
 
-            trees[m] = new RegressionTree(x, response, field, maxNodes, nodeSize, x.ncols(), samples, order, output);
+            logger.info("Training {} tree", Strings.ordinal(t+1));
+            trees[t] = new RegressionTree(x, response, field, maxNodes, nodeSize, x.ncols(), samples, order, output);
 
             for (int i = 0; i < n; i++) {
-                h[i] += shrinkage * trees[m].predict(x.get(i));
+                h[i] += shrinkage * trees[t].predict(x.get(i));
             }
         }
 
@@ -379,7 +382,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
         int[] permutation = IntStream.range(0, n).toArray();
         int[] samples = new int[n];
 
-        for (int m = 0; m < ntrees; m++) {
+        for (int t = 0; t < ntrees; t++) {
             for (int i = 0; i < n; i++) {
                 double max = Double.NEGATIVE_INFINITY;
                 for (int j = 0; j < k; j++) {
@@ -399,6 +402,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
                 }
             }
 
+            logger.info("Training {} tree", Strings.ordinal(t+1));
             for (int j = 0; j < k; j++) {
                 for (int i = 0; i < n; i++) {
                     response[j][i] = (y[i] == j ? 1.0 : 0.0) - p[j][i];
@@ -406,10 +410,10 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
 
                 sampling(samples, permutation, nc, y, subsample);
 
-                forest[j][m] = new RegressionTree(x, response[j], field, maxNodes, nodeSize, x.ncols(), samples, order, output[j]);
+                forest[j][t] = new RegressionTree(x, response[j], field, maxNodes, nodeSize, x.ncols(), samples, order, output[j]);
 
                 for (int i = 0; i < n; i++) {
-                    h[j][i] += shrinkage * forest[j][m].predict(x.get(i));
+                    h[j][i] += shrinkage * forest[j][t].predict(x.get(i));
                 }
             }
         }

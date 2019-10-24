@@ -48,10 +48,8 @@ trait Operators {
     *            to minimize the dimensionality of the Euclidean space required for
     *            representing the objects.
     */
-  def mds(proximity: Array[Array[Double]], k: Int, add: Boolean = false): MDS = {
-    time {
-      new MDS(proximity, k, add)
-    }
+  def mds(proximity: Array[Array[Double]], k: Int, add: Boolean = false): MDS = time("MDS") {
+    new MDS(proximity, k, add)
   }
 
   /** Kruskal's nonmetric MDS. In non-metric MDS, only the rank order of entries
@@ -68,10 +66,8 @@ trait Operators {
     * @param tol tolerance for stopping iterations.
     * @param maxIter maximum number of iterations.
     */
-  def isomds(proximity: Array[Array[Double]], k: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS = {
-    time {
-      new IsotonicMDS(proximity, k, tol, maxIter)
-    }
+  def isomds(proximity: Array[Array[Double]], k: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS = time("Kruskal's nonmetric MDS") {
+    new IsotonicMDS(proximity, k, tol, maxIter)
   }
 
   /** The Sammon's mapping is an iterative technique for making interpoint
@@ -109,9 +105,7 @@ trait Operators {
     * @param tol tolerance for stopping iterations.
     * @param maxIter maximum number of iterations.
     */
-  def sammon(proximity: Array[Array[Double]], k: Int, lambda: Double = 0.2, tol: Double = 0.0001, maxIter: Int = 100): SammonMapping = {
-    time {
-      new SammonMapping(proximity, k, lambda, tol, maxIter)
-    }
+  def sammon(proximity: Array[Array[Double]], k: Int, lambda: Double = 0.2, tol: Double = 0.0001, maxIter: Int = 100): SammonMapping = time("Sammon's Mapping") {
+    new SammonMapping(proximity, k, lambda, tol, maxIter)
   }
 }

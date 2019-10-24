@@ -29,6 +29,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.sort.QuickSelect;
+import smile.util.Strings;
 
 /**
  * Gradient boosting for regression. Gradient boosting is typically used
@@ -105,6 +106,7 @@ import smile.sort.QuickSelect;
  */
 public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression {
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GradientTreeBoost.class);
 
     /**
      * Design matrix formula
@@ -262,7 +264,7 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
 
         RegressionTree[] trees = new RegressionTree[ntrees];
 
-        for (int m = 0; m < ntrees; m++) {
+        for (int t = 0; t < ntrees; t++) {
             Arrays.fill(samples, 0);
             MathEx.permutate(permutation);
             for (int i = 0; i < N; i++) {
@@ -280,10 +282,11 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
                     break;
             }
 
-            trees[m] = new RegressionTree(x, response, field, maxNodes, nodeSize, x.ncols(), samples, order, output);
+            logger.info("Training {} tree", Strings.ordinal(t+1));
+            trees[t] = new RegressionTree(x, response, field, maxNodes, nodeSize, x.ncols(), samples, order, output);
 
             for (int i = 0; i < n; i++) {
-                residual[i] -= shrinkage * trees[m].predict(x.get(i));
+                residual[i] -= shrinkage * trees[t].predict(x.get(i));
             }
         }
         

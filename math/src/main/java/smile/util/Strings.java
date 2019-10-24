@@ -32,6 +32,19 @@ public interface Strings {
         return str == null || str.isEmpty();
     }
 
+    /** Returns the string representation of ordinal number with suffix. */
+    static String ordinal(int i) {
+        final String[] suffixes = {"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"};
+        switch (i % 100) {
+            case 11:
+            case 12:
+            case 13:
+                return i + "th";
+            default:
+                return i + suffixes[i % 10];
+        }
+    }
+
     /** Left pad a String with a specified character.
      *
      * @param str  the String to pad out, may be null
