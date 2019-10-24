@@ -17,7 +17,9 @@
 
 package smile.validation
 
-import smile.classification.{Classifier, SoftClassifier}
+import smile.classification.{Classifier, DataFrameClassifier, SoftClassifier}
+import smile.data.{DataFrame, Tuple}
+import smile.data.formula.Formula
 import smile.math.MathEx
 import smile.regression.Regression
 import smile.util._
@@ -144,6 +146,32 @@ trait Operators {
     classifier
   }
 
+  /** Test a generic classifier.
+    * The accuracy will be measured and printed out on standard output.
+    *
+    * @param train training data.
+    * @param test test data.
+    * @param trainer a code block to return a classifier trained on the given data.
+    * @return the trained classifier.
+    */
+  def test[C <: DataFrameClassifier](formula: Formula, train: DataFrame, test: DataFrame)(trainer: => (Formula, DataFrame) => C): C = {
+    println("training...")
+    val classifier = time {
+      trainer(formula, train)
+    }
+
+    println("testing...")
+    val pred = time {
+      classifier.predict(test)
+    }
+
+    val testy = formula.y(test).toIntArray
+    println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
+    println("Confusion Matrix: " + new ConfusionMatrix(testy, pred))
+
+    classifier
+  }
+
   /** Test a binary classifier.
     * The accuracy, sensitivity, specificity, precision, F-1 score, F-2 score, and F-0.5 score will be measured
     * and printed out on standard output.
@@ -167,6 +195,39 @@ trait Operators {
       testx.map(classifier.predict(_))
     }
 
+    println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
+    println("Sensitivity/Recall = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
+    println("Specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
+    println("Precision = %.2f%%" format (100.0 * new Precision().measure(testy, pred)))
+    println("F1-Score = %.2f%%" format (100.0 * new FMeasure().measure(testy, pred)))
+    println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, pred)))
+    println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, pred)))
+    println("Confusion Matrix: " + new ConfusionMatrix(testy, pred))
+
+    classifier
+  }
+
+  /** Test a binary classifier.
+    * The accuracy, sensitivity, specificity, precision, F-1 score, F-2 score, and F-0.5 score will be measured
+    * and printed out on standard output.
+    *
+    * @param train training data.
+    * @param test test data.
+    * @param trainer a code block to return a classifier trained on the given data.
+    * @return the trained classifier.
+    */
+  def test2[C <: DataFrameClassifier](formula: Formula, train: DataFrame, test: DataFrame)(trainer: => (Formula, DataFrame) => C): C = {
+    println("training...")
+    val classifier = time {
+      trainer(formula, train)
+    }
+
+    println("testing...")
+    val pred = time {
+      classifier.predict(test)
+    }
+
+    val testy = formula.y(test).toIntArray
     println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
     println("Sensitivity/Recall = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
     println("Specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
@@ -208,6 +269,48 @@ trait Operators {
 
     val (prediction, probability) = results.unzip
 
+    println("Accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, prediction)))
+    println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.apply(testy, prediction)))
+    println("Specificity = %.2f%%" format (100.0 * Specificity.apply(testy, prediction)))
+    println("Precision = %.2f%%" format (100.0 * Precision.apply(testy, prediction)))
+    println("F1-Score = %.2f%%" format (100.0 * FMeasure.apply(testy, prediction)))
+    println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, prediction)))
+    println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, prediction)))
+    println("AUC = %.2f%%" format (100.0 * AUC.apply(testy, probability)))
+    println("Confusion Matrix: " + new ConfusionMatrix(testy, prediction))
+
+    classifier
+  }
+
+  /** Test a binary soft classifier.
+    * The accuracy, sensitivity, specificity, precision, F-1 score, F-2 score, F-0.5 score, and AUC will be measured
+    * and printed out on standard output.
+    *
+    * @param train training data.
+    * @param test test data.
+    * @param trainer a code block to return a binary classifier trained on the given data.
+    * @return the trained classifier.
+    */
+  def test2soft[C <: SoftClassifier[Tuple]](formula: Formula, train: DataFrame, test: DataFrame)(trainer: (Formula, DataFrame) => C): C = {
+    println("training...")
+    val classifier = time {
+      trainer(formula, train)
+    }
+
+    println("testing...")
+    val results = time {
+      val posteriori = Array(0.0, 0.0)
+      (0 until test.size).map { i =>
+        val y = classifier.predict(test(i), posteriori)
+        (y, posteriori(1))
+      }
+    }
+
+    val (pred, prob) = results.unzip
+    val prediction = pred.toArray
+    val probability = prob.toArray
+
+    val testy = formula.y(test).toIntArray
     println("Accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, prediction)))
     println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.apply(testy, prediction)))
     println("Specificity = %.2f%%" format (100.0 * Specificity.apply(testy, prediction)))

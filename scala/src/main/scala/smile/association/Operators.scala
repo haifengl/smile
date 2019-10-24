@@ -20,7 +20,7 @@ package smile.association
 import java.io.PrintStream
 import scala.io.Source
 import scala.collection.mutable.Buffer
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import smile.util._
 
 /** High level association rule operators.

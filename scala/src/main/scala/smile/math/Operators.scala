@@ -382,11 +382,11 @@ private[math] case class PimpedDouble(a: Double) {
 private[math] class PimpedDoubleArray(override val a: Array[Double]) extends PimpedArray[Double](a) {
   def unary_~ = Matrix.of(a)
 
-  def += (b: Double): Array[Double] = { a.transform(_ + b); a }
-  def -= (b: Double): Array[Double] = { a.transform(_ - b); a }
-  def *= (b: Double): Array[Double] = { a.transform(_ * b); a }
-  def /= (b: Double): Array[Double] = { a.transform(_ / b); a }
-  def ^= (b: Double): Array[Double] = { a.transform(math.pow(_, b)); a }
+  def += (b: Double): Array[Double] = a.mapInPlace(_ + b)
+  def -= (b: Double): Array[Double] = a.mapInPlace(_ - b)
+  def *= (b: Double): Array[Double] = a.mapInPlace(_ * b)
+  def /= (b: Double): Array[Double] = a.mapInPlace(_ / b)
+  def ^= (b: Double): Array[Double] = a.mapInPlace(math.pow(_, b))
 
   def += (b: VectorExpression): Array[Double] = {
     for (i <- 0 until a.length) a(i) += b(i)
