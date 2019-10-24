@@ -17,8 +17,6 @@
  
 package smile.benchmark
 
-import java.util.Optional
-
 import smile.base.cart.SplitRule
 import smile.classification._
 import smile.data.summary
@@ -98,7 +96,6 @@ object Airline {
 
     val formula = Formula.lhs("dep_delayed_15min")
     val train = read.csv(Paths.getTestData(s"airline/train-${dataSize}.csv").toString, schema = schema)
-    //val train = data.factorize("Month", "DayofMonth", "DayOfWeek", "UniqueCarrier", "Origin", "Dest", "dep_delayed_15min")
     val test = read.csv(Paths.getTestData("airline/test.csv").toString, schema = schema)
     val testy = formula.y(test).toIntArray
 
@@ -113,8 +110,7 @@ object Airline {
     // Random Forest
     println("Training Random Forest of 500 trees...")
     val forest = test2soft(formula, train, test) { (formula, data) =>
-      randomForest(formula, data, 500, 2,
-        SplitRule.ENTROPY, 150, 50, 1.0, classWeight)
+      randomForest(formula, data, 500, 2, SplitRule.GINI, 150, 5, 1.0, classWeight)
     }
 
     val depth = forest.trees.map(_.root.depth.toDouble)

@@ -111,12 +111,7 @@ public abstract class InternalNode implements Node {
 
     @Override
     public int depth() {
-        // compute the depth of each subtree
-        int ld = trueChild.depth();
-        int rd = falseChild.depth();
-
-        // use the larger one
-        return Math.max(ld, rd) + 1;
+        return Math.max(trueChild.depth(), falseChild.depth()) + 1;
     }
 
     @Override

@@ -1,3 +1,5 @@
+// Toy example
+
 val data = read.arff(Paths.getTestData("weka/iris.arff").toString)
 val formula = Formula.lhs("class")
 println(data)

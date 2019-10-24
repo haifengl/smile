@@ -818,4 +818,52 @@ trait Operators {
     *                 distribution P(x<sub>j</sub> | class i).
     */
   def naiveBayes(priori: Array[Double], condprob: Array[Array[Distribution]]): NaiveBayes = new NaiveBayes(priori, condprob)
+
+  /** One-vs-one strategy for reducing the problem of
+    * multiclass classification to multiple binary classification problems.
+    * This approach trains K (K − 1) / 2 binary classifiers for a
+    * K-way multiclass problem; each receives the samples of a pair of
+    * classes from the original training set, and must learn to distinguish
+    * these two classes. At prediction time, a voting scheme is applied:
+    * all K (K − 1) / 2 classifiers are applied to an unseen sample and the
+    * class that got the highest number of positive predictions gets predicted
+    * by the combined classifier.
+    * Like One-vs-rest, one-vs-one suffers from ambiguities in that some
+    * regions of its input space may receive the same number of votes.
+    */
+  def ovo[T <: AnyRef](x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): OneVersusOne[T] = time("One vs. One") {
+    val wrapper = new java.util.function.BiFunction[Array[T], Array[Int], Classifier[T]] {
+      override def apply(x: Array[T], y: Array[Int]): Classifier[T] = trainer(x, y)
+    }
+
+    OneVersusOne.fit(x, y, wrapper)
+  }
+
+  /** One-vs-rest (or one-vs-all) strategy for reducing the problem of
+    * multiclass classification to multiple binary classification problems.
+    * It involves training a single classifier per class, with the samples
+    * of that class as positive samples and all other samples as negatives.
+    * This strategy requires the base classifiers to produce a real-valued
+    * confidence score for its decision, rather than just a class label;
+    * discrete class labels alone can lead to ambiguities, where multiple
+    * classes are predicted for a single sample.
+    * <p>
+    * Making decisions means applying all classifiers to an unseen sample
+    * x and predicting the label k for which the corresponding classifier
+    * reports the highest confidence score.
+    * <p>
+    * Although this strategy is popular, it is a heuristic that suffers
+    * from several problems. Firstly, the scale of the confidence values
+    * may differ between the binary classifiers. Second, even if the class
+    * distribution is balanced in the training set, the binary classification
+    * learners see unbalanced distributions because typically the set of
+    * negatives they see is much larger than the set of positives.
+    */
+  def ovr[T <: AnyRef](x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): OneVersusRest[T] = time("One vs. Rest") {
+    val wrapper = new java.util.function.BiFunction[Array[T], Array[Int], Classifier[T]] {
+      override def apply(x: Array[T], y: Array[Int]): Classifier[T] = trainer(x, y)
+    }
+
+    OneVersusRest.fit(x, y, wrapper)
+  }
 }

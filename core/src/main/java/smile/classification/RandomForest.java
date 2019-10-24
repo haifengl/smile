@@ -21,7 +21,6 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.function.LongSupplier;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 import smile.base.cart.CART;
@@ -382,10 +381,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
                     oob++;
                     int p = tree.predict(x.get(i));
                     if (p == y.getInt(i)) correct++;
-                    // atomic operaton. do we really need synchronized?
-                    synchronized (prediction[i]) {
-                        prediction[i][p]++;
-                    }
+                    prediction[i][p]++;
                 }
             }
 
@@ -524,21 +520,37 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
             throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
         }
 
-        Arrays.fill(posteriori, 0.0);
+        Tuple xt = formula.x(x);
 
-        int[] y = new int[k];
         double[] prob = new double[k];
+        Arrays.fill(posteriori, 0.0);
         for (Tree tree : trees) {
-            y[tree.tree.predict(x, prob)]++;
+            tree.tree.predict(xt, prob);
             for (int i = 0; i < k; i++) {
                 posteriori[i] += tree.weight * prob[i];
             }
         }
 
         MathEx.unitize1(posteriori);
-        return labels.label(MathEx.whichMax(y));
-    }    
-    
+        return labels.label(MathEx.whichMax(posteriori));
+    }
+
+    /** Predict and estimate the probability by voting. */
+    public int vote(Tuple x, double[] posteriori) {
+        if (posteriori.length != k) {
+            throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
+        }
+
+        Tuple xt = formula.x(x);
+        Arrays.fill(posteriori, 0.0);
+        for (Tree tree : trees) {
+            posteriori[tree.tree.predict(xt)]++;
+        }
+
+        MathEx.unitize1(posteriori);
+        return labels.label(MathEx.whichMax(posteriori));
+    }
+
     /**
      * Test the model on a validation dataset.
      *
