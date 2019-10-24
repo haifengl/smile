@@ -18,14 +18,18 @@
 package smile.benchmark
 
 import java.util
+import smile.base.rbf.RBF
 import smile.base.mlp.{Layer, OutputFunction}
 import smile.classification._
+import smile.clustering.KMeans
 import smile.data.`type`.{DataTypes, StructField}
 import smile.data.formula.Formula
 import smile.feature.Standardizer
 import smile.read
 import smile.math.MathEx
+import smile.math.distance.EuclideanDistance
 import smile.math.kernel.GaussianKernel
+import smile.math.rbf.GaussianRadialBasis
 import smile.validation._
 import smile.util._
 
@@ -54,44 +58,51 @@ object USPS {
     val y = formula.y(zipTrain).toIntArray
     val testx = formula.x(zipTest).toArray
     val testy = formula.y(zipTest).toIntArray
+
+    val n = x.length
     val k = 10
 
     // Random Forest
     println("Training Random Forest of 200 trees...")
-    val forest = smile.validation.test(formula, zipTrain, zipTest) {
-      (formula, data) => randomForest(formula, data, ntrees = 200)
+    val forest = smile.validation.test(formula, zipTrain, zipTest) { (formula, data) =>
+      randomForest(formula, data, ntrees = 200)
     }
     println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
 
     // Gradient Tree Boost
     println("Training Gradient Tree Boost of 200 trees...")
-    smile.validation.test(formula, zipTrain, zipTest) {
-      (formula, data) => gbm(formula, data, ntrees = 200)
+    test(formula, zipTrain, zipTest) { (formula, data) =>
+      gbm(formula, data, ntrees = 200)
     }
 
     // SVM
     println("Training SVM, one epoch...")
     val kernel = new GaussianKernel(8.0)
-    //val svm = OneVersusOne.fit(x, y, (xi: Array[Array[Double]], yi: Array[Int]) => SVM.fit(xi, yi, kernel, 5, 1E-3))
-    //val p3 = svm.predict(testx)
-    //println("Test accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, p3)))
+    test(x, y, testx, testy) { (x, y) =>
+      ovo(x, y) { (x, y) =>
+        SVM.fit(x, y, kernel, 5, 1E-3)
+      }
+    }
 
     // RBF Network
     println("Training RBF Network...")
-    smile.validation.test(x, y, testx, testy) {
-      (x, y) => rbfnet(x, y, 200)
+    val kmeans = new KMeans(x, 200, 10)
+    val distance = new EuclideanDistance
+    val neurons = RBF.of(kmeans.centroids, new GaussianRadialBasis(8.0), distance)
+    test(x, y, testx, testy) { (x, y) =>
+      rbfnet(x, y, neurons, false)
     }
 
     // Logistic Regression
     println("Training Logistic regression...")
-    test(x, y, testx, testy) {
-      (x, y) => logit(x, y, 0.3, 1E-3, 1000)
+    test(x, y, testx, testy) { (x, y) =>
+      logit(x, y, 0.3, 1E-3, 1000)
     }
 
     // Neural Network
     val scaler = Standardizer.fit(x)
-    val x2 = scaler.transform(x)
-    val testx2 = scaler.transform(testx)
+    val scaledX = scaler.transform(x)
+    val scaledTestX = scaler.transform(testx)
 
     println("Training Neural Network, 10 epoch...")
     val net = new MLP(256,
@@ -104,11 +115,12 @@ object USPS {
     net.setMomentum(0.0)
 
     (0 until 10).foreach(epoch => {
-      println("----- epoch %d -----%n", epoch)
-      MathEx.permutate(x2.length).foreach(i => net.update(x2(i), y(i)))
-      val prediction = Validation.test(net, testx2)
-      val error = Error.apply(testy, prediction)
-      println("Test Error = %d", error)
+      println("----- epoch %d -----" format epoch)
+      MathEx.permutate(n).foreach(i =>
+        net.update(scaledX(i), y(i))
+      )
+      val prediction = Validation.test(net, scaledTestX)
+      println("Accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, prediction)))
     })
   }
 }

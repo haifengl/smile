@@ -72,6 +72,7 @@ object Main extends App {
        |import smile.math.kernel._
        |import smile.math.matrix._
        |import smile.math.matrix.Matrix._
+       |import smile.math.rbf._
        |import smile.stat.distribution._
        |import smile.data._
        |import smile.data.formula._
