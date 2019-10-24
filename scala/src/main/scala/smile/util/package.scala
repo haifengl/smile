@@ -46,10 +46,16 @@ package object util extends LazyLogging {
       * @tparam A The output type of code block.
       * @return the code block expression result.
       */
-    def apply[A](f: => A) = {
+    def apply[A](message: String)(f: => A) = {
       val s = System.nanoTime
       val ret = f
-      if (echo) logger.info("runtime: {} ms", (System.nanoTime - s)/1e6)
+      if (echo) {
+        val time = System.nanoTime - s
+        val micron = (time % 1000000000) / 1000
+        val seconds = time / 1000000000
+        val duration = String.format("%d:%02d:%02d.%d", seconds / 3600, (seconds % 3600) / 60, (seconds % 60), micron)
+        logger.info("{} runtime: {}", message, duration)
+      }
       ret
     }
   }

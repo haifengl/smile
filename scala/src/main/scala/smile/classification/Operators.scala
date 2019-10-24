@@ -17,6 +17,8 @@
  
 package smile.classification
 
+import java.util.Optional
+import java.util.stream.LongStream
 import smile.data._
 import smile.math._
 import smile.math.distance.Distance
@@ -88,7 +90,7 @@ trait Operators {
     * @param distance the distance measure for finding nearest neighbors.
     * @param k the number of neighbors for classification.
     */
-  def knn[T <: AnyRef](x: Array[T], y: Array[Int], distance: Distance[T], k: Int): KNN[T] = time {
+  def knn[T <: AnyRef](x: Array[T], y: Array[Int], distance: Distance[T], k: Int): KNN[T] = time("K-Nearest Neighbor") {
     KNN.fit(x, y, distance, k)
   }
 
@@ -98,7 +100,7 @@ trait Operators {
     * @param y training labels in [0, c), where c is the number of classes.
     * @param k the number of neighbors for classification.
     */
-  def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]] = time {
+  def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]] = time("K-Nearnest Neighbor") {
     KNN.fit(x, y, k)
   }
 
@@ -156,7 +158,7 @@ trait Operators {
     *
     * @return Logistic regression model.
     */
-  def logit(x: Array[Array[Double]], y: Array[Int], lambda: Double = 0.0, tol: Double = 1E-5, maxIter: Int = 500): LogisticRegression = time {
+  def logit(x: Array[Array[Double]], y: Array[Int], lambda: Double = 0.0, tol: Double = 1E-5, maxIter: Int = 500): LogisticRegression = time("Logistic Regression") {
     LogisticRegression.fit(x, y, lambda, tol, maxIter)
   }
 
@@ -190,7 +192,7 @@ trait Operators {
     * @param maxIter maximum number of iterations.
     * @return Maximum entropy model.
     */
-  def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent = time {
+  def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent = time("Maximum Entropy Model") {
     Maxent.fit(p, x, y, lambda, tol, maxIter)
   }
 
@@ -283,7 +285,7 @@ trait Operators {
     * @param alpha the momentum factor.
     * @param lambda the weight decay for regularization.
     */
-  def mlp(x: Array[Array[Double]], y: Array[Int], p: Int, builders: Array[LayerBuilder], epochs: Int = 10, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP = time {
+  def mlp(x: Array[Array[Double]], y: Array[Int], p: Int, builders: Array[LayerBuilder], epochs: Int = 10, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP = time("Multi-layer Perceptron Neural Network") {
     val mlp = new MLP(p, builders: _*)
     mlp.setLearningRate(eta)
     mlp.setMomentum(alpha)
@@ -353,12 +355,12 @@ trait Operators {
     * @param neurons the radial basis functions.
     * @param normalized train a normalized RBF network or not.
     */
-  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T] = time {
+  def rbfnet[T <: AnyRef](x: Array[T], y: Array[Int], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T] = time("RBF Network") {
     RBFNetwork.fit(x, y, neurons, normalized)
   }
 
   /** Trains a Gaussian RBF network with k-means. */
-  def rbfnet(x: Array[Array[Double]], y: Array[Int], k: Int, normalized: Boolean = false): RBFNetwork[Array[Double]] = time {
+  def rbfnet(x: Array[Array[Double]], y: Array[Int], k: Int, normalized: Boolean = false): RBFNetwork[Array[Double]] = time("RBF Network") {
     val neurons = RBF.fit(x, k)
     RBFNetwork.fit(x, y, neurons, normalized)
   }
@@ -413,7 +415,7 @@ trait Operators {
     *
     * @return SVM model.
     */
-  def svm[T <: AnyRef](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, tol: Double = 1E-3): SVM[T] = time {
+  def svm[T <: AnyRef](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, tol: Double = 1E-3): SVM[T] = time("SVM") {
     SVM.fit(x, y, kernel, C, tol)
   }
 
@@ -484,7 +486,7 @@ trait Operators {
     * @param splitRule the splitting rule.
     * @return Decision tree model.
     */
-  def cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI, maxNodes: Int = 100, nodeSize: Int = 5): DecisionTree = time {
+  def cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI, maxNodes: Int = 100, nodeSize: Int = 5): DecisionTree = time("Decision Tree") {
     DecisionTree.fit(formula, data, splitRule, maxNodes, nodeSize)
   }
 
@@ -538,8 +540,8 @@ trait Operators {
     *
     * @return Random forest classification model.
     */
-  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = -1, splitRule: SplitRule = SplitRule.GINI, maxNodes: Int = 100, nodeSize: Int = 1, subsample: Double = 1.0): RandomForest = time {
-    RandomForest.fit(formula, data, ntrees, if (mtry > 0) mtry else Math.sqrt(data.ncols).asInstanceOf[Int], splitRule, maxNodes, nodeSize, subsample)
+  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = -1, splitRule: SplitRule = SplitRule.GINI, maxNodes: Int = 100, nodeSize: Int = 1, subsample: Double = 1.0, classWeight: Array[Int] = null, seeds: LongStream = null): RandomForest = time("Random Forest") {
+    RandomForest.fit(formula, data, ntrees, if (mtry > 0) mtry else Math.sqrt(data.ncols).asInstanceOf[Int], splitRule, maxNodes, nodeSize, subsample, Optional.ofNullable(classWeight), Optional.ofNullable(seeds))
   }
 
   /** Gradient boosted classification trees.
@@ -616,7 +618,7 @@ trait Operators {
     *
     * @return Gradient boosted trees.
     */
-  def gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time {
+  def gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boosting") {
     GradientTreeBoost.fit(formula, data, ntrees, maxNodes, nodeSize, shrinkage, subsample)
   }
 
@@ -654,7 +656,7 @@ trait Operators {
     *
     * @return AdaBoost model.
     */
-  def adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost = time {
+  def adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost = time("AdaBoost") {
     AdaBoost.fit(formula, data, ntrees, maxNodes, nodeSize)
   }
 
@@ -692,7 +694,7 @@ trait Operators {
     *
     * @return fisher discriminant analysis model.
     */
-  def fisher(x: Array[Array[Double]], y: Array[Int], L: Int = -1, tol: Double = 0.0001): FLD = time {
+  def fisher(x: Array[Array[Double]], y: Array[Int], L: Int = -1, tol: Double = 0.0001): FLD = time("Fisher's Linear Discriminant") {
     FLD.fit(x, y, L, tol)
   }
 
@@ -730,7 +732,7 @@ trait Operators {
     *
     * @return linear discriminant analysis model.
     */
-  def lda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): LDA = time {
+  def lda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): LDA = time("Linear Discriminant Analysis") {
     LDA.fit(x, y, priori, tol)
   }
 
@@ -758,7 +760,7 @@ trait Operators {
     *
     * @return Quadratic discriminant analysis model.
     */
-  def qda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): QDA = time {
+  def qda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): QDA = time("Quadratic Discriminant Analysis") {
     QDA.fit(x, y, priori, tol)
   }
 
@@ -783,7 +785,7 @@ trait Operators {
     *
     * @return Regularized discriminant analysis model.
     */
-  def rda(x: Array[Array[Double]], y: Array[Int], alpha: Double, priori: Array[Double] = null, tol: Double = 0.0001): RDA = time {
+  def rda(x: Array[Array[Double]], y: Array[Int], alpha: Double, priori: Array[Double] = null, tol: Double = 0.0001): RDA = time("Regularized Discriminant Analysis") {
     RDA.fit(x, y, alpha, priori, tol)
   }
 
@@ -796,7 +798,7 @@ trait Operators {
     * @param priori the priori probability of each class. If null, equal probability is assume for each class.
     * @param sigma the prior count of add-k smoothing of evidence.
     */
-  def naiveBayes(x: Array[Array[Int]], y: Array[Int], model: DiscreteNaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): DiscreteNaiveBayes = time {
+  def naiveBayes(x: Array[Array[Int]], y: Array[Int], model: DiscreteNaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): DiscreteNaiveBayes = time("Naive Bayes") {
       val p = x(0).length
       val k = MathEx.max(y) + 1
       val labels = ClassLabel.fit(y).labels
@@ -815,9 +817,5 @@ trait Operators {
     *                 each class. In particular, condprob[i][j] is the conditional
     *                 distribution P(x<sub>j</sub> | class i).
     */
-  def naiveBayes(priori: Array[Double], condprob: Array[Array[Distribution]]): NaiveBayes = {
-    time {
-      new NaiveBayes(priori, condprob)
-    }
-  }
+  def naiveBayes(priori: Array[Double], condprob: Array[Array[Distribution]]): NaiveBayes = new NaiveBayes(priori, condprob)
 }

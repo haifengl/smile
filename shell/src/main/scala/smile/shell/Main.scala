@@ -75,11 +75,15 @@ object Main extends App {
        |import smile.stat.distribution._
        |import smile.data._
        |import smile.data.formula._
+       |import smile.data.measure._
        |import smile.data.`type`._
        |import java.awt.Color, smile.plot._
        |import smile.interpolation._
        |import smile.validation._
        |import smile.association._
+       |import smile.base.cart.SplitRule
+       |import smile.base.mlp._
+       |import smile.base.rbf.RBF
        |import smile.classification._
        |import smile.regression.{ols, ridge, lasso, svr, gpr}
        |import smile.feature._

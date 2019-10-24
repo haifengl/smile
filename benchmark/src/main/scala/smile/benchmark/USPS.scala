@@ -18,10 +18,7 @@
 package smile.benchmark
 
 import java.util
-import java.util.stream.IntStream
-import org.apache.commons.csv.CSVFormat
 import smile.base.mlp.{Layer, OutputFunction}
-import smile.data._
 import smile.classification._
 import smile.data.`type`.{DataTypes, StructField}
 import smile.data.formula.Formula
@@ -51,26 +48,26 @@ object USPS {
     val schema = DataTypes.struct(fields)
 
     val formula = Formula.lhs("class")
-    val train = read.csv(Paths.getTestData("usps/zip.train").toString, delimiter = ' ', header = false, schema = schema)
-    val test = read.csv(Paths.getTestData("usps/zip.test").toString, delimiter = ' ', header = false, schema = schema)
-    val x = formula.x(train).toArray
-    val y = formula.y(train).toIntArray
-    val testx = formula.x(test).toArray
-    val testy = formula.y(test).toIntArray
+    val zipTrain = read.csv(Paths.getTestData("usps/zip.train").toString, delimiter = ' ', header = false, schema = schema)
+    val zipTest = read.csv(Paths.getTestData("usps/zip.test").toString, delimiter = ' ', header = false, schema = schema)
+    val x = formula.x(zipTrain).toArray
+    val y = formula.y(zipTrain).toIntArray
+    val testx = formula.x(zipTest).toArray
+    val testy = formula.y(zipTest).toIntArray
     val k = 10
 
     // Random Forest
     println("Training Random Forest of 200 trees...")
-    val forest = randomForest(formula, train, ntrees = 200)
+    val forest = smile.validation.test(formula, zipTrain, zipTest) {
+      (formula, data) => randomForest(formula, data, ntrees = 200)
+    }
     println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
-    val p1 = forest.predict(test)
-    println("Test accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, p1)))
 
     // Gradient Tree Boost
     println("Training Gradient Tree Boost of 200 trees...")
-    val boost = gbm(formula, train, ntrees = 200)
-    val p2 = boost.predict(test)
-    println("Test accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, p2)))
+    smile.validation.test(formula, zipTrain, zipTest) {
+      (formula, data) => gbm(formula, data, ntrees = 200)
+    }
 
     // SVM
     println("Training SVM, one epoch...")
@@ -81,15 +78,15 @@ object USPS {
 
     // RBF Network
     println("Training RBF Network...")
-    val rbf = rbfnet(x, y, 200)
-    val p4 = rbf.predict(testx)
-    println("Test accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, p4)))
+    smile.validation.test(x, y, testx, testy) {
+      (x, y) => rbfnet(x, y, 200)
+    }
 
     // Logistic Regression
     println("Training Logistic regression...")
-    val logistic = logit(x, y, 0.3, 1E-3, 1000)
-    val p5 = logistic.predict(testx)
-    println("Test accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, p5)))
+    test(x, y, testx, testy) {
+      (x, y) => logit(x, y, 0.3, 1E-3, 1000)
+    }
 
     // Neural Network
     val scaler = Standardizer.fit(x)

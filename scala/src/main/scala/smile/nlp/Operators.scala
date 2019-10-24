@@ -58,11 +58,9 @@ trait Operators {
     * @return significant bigram collocations in descending order
     *         of likelihood ratio.
     */
-  def bigram(k: Int, minFreq: Int, text: String*): Array[BigramCollocation] = {
-    time {
-      val finder = new BigramCollocationFinder(minFreq)
-      finder.find(corpus(text), k)
-    }
+  def bigram(k: Int, minFreq: Int, text: String*): Array[BigramCollocation] = time("Bi-gram collocation") {
+    val finder = new BigramCollocationFinder(minFreq)
+    finder.find(corpus(text), k)
   }
 
   /** Identify bigram collocations whose p-value is less than
@@ -74,11 +72,9 @@ trait Operators {
     * @return significant bigram collocations in descending order
     *         of likelihood ratio.
     */
-  def bigram(p: Double, minFreq: Int, text: String*): Array[BigramCollocation] = {
-    time {
-      val finder = new BigramCollocationFinder(minFreq)
-      finder.find(corpus(text), p)
-    }
+  def bigram(p: Double, minFreq: Int, text: String*): Array[BigramCollocation] = time("Bi-gram collocation") {
+    val finder = new BigramCollocationFinder(minFreq)
+    finder.find(corpus(text), p)
   }
 
   private val phrase = new AprioriPhraseExtractor
@@ -90,20 +86,18 @@ trait Operators {
     * @param text input text.
     * @return An array of sets of n-grams. The i-th entry is the set of i-grams.
     */
-  def ngram(maxNGramSize: Int, minFreq: Int, text: String*): Array[Array[NGram]] = {
-    time {
-      val sentences = text.flatMap { text =>
-        text.sentences.map { sentence =>
-          sentence.words("none").map { word =>
-            porter.stripPluralParticiple(word).toLowerCase
-          }
+  def ngram(maxNGramSize: Int, minFreq: Int, text: String*): Array[Array[NGram]] = time("N-gram collocation") {
+    val sentences = text.flatMap { text =>
+      text.sentences.map { sentence =>
+        sentence.words("none").map { word =>
+          porter.stripPluralParticiple(word).toLowerCase
         }
       }
-
-      println(sentences)
-      val ngrams = phrase.extract(sentences.asJava, maxNGramSize, minFreq)
-      ngrams.toArray(Array.ofDim[Array[NGram]](ngrams.size))
     }
+
+    println(sentences)
+    val ngrams = phrase.extract(sentences.asJava, maxNGramSize, minFreq)
+    ngrams.toArray(Array.ofDim[Array[NGram]](ngrams.size))
   }
 
   /** Part-of-speech taggers.
@@ -111,10 +105,8 @@ trait Operators {
     * @param sentence a sentence that is already segmented to words.
     * @return the pos tags.
     */
-  def postag(sentence: Array[String]): Array[PennTreebankPOS] = {
-    time {
-      HMMPOSTagger.getDefault.tag(sentence)
-    }
+  def postag(sentence: Array[String]): Array[PennTreebankPOS] = time("PoS tagging with Hidden Markov Model") {
+    HMMPOSTagger.getDefault.tag(sentence)
   }
 
   /** Converts a bag of words to a feature vector.

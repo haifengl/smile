@@ -511,11 +511,11 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
         Arrays.fill(posteriori, 0.0);
 
         int[] y = new int[k];
-        double[] pos = new double[k];
+        double[] prob = new double[k];
         for (Tree tree : trees) {
-            y[tree.tree.predict(x, pos)]++;
+            y[tree.tree.predict(x, prob)]++;
             for (int i = 0; i < k; i++) {
-                posteriori[i] += tree.weight * pos[i];
+                posteriori[i] += tree.weight * prob[i];
             }
         }
 

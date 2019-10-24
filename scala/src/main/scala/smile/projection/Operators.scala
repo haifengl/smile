@@ -62,10 +62,8 @@ trait Operators {
     *             matrix is performed.
     * @param cor true if use correlation matrix instead of covariance matrix if ture.
     */
-  def pca(data: Array[Array[Double]], cor: Boolean = false): PCA = {
-    time {
-      new PCA(data, cor)
-    }
+  def pca(data: Array[Array[Double]], cor: Boolean = false): PCA = time("PCA") {
+    new PCA(data, cor)
   }
 
   /** Probabilistic principal component analysis. PPCA is a simplified factor analysis
@@ -85,10 +83,8 @@ trait Operators {
     * @param data training data.
     * @param k the number of principal component to learn.
     */
-  def ppca(data: Array[Array[Double]], k: Int): PPCA = {
-    time {
-      new PPCA(data, k)
-    }
+  def ppca(data: Array[Array[Double]], k: Int): PPCA = time("Probabilistic PCA") {
+    new PPCA(data, k)
   }
 
   /** Kernel principal component analysis. Kernel PCA is an extension of
@@ -118,10 +114,8 @@ trait Operators {
     * @param threshold only principal components with eigenvalues larger than
     *                  the given threshold will be kept.
     */
-  def kpca[T <: Object](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T] = {
-    time {
-      new KPCA[T](data, kernel, k, threshold)
-    }
+  def kpca[T <: Object](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T] = time("Kernel PCA") {
+    new KPCA[T](data, kernel, k, threshold)
   }
 
   /** Generalized Hebbian Algorithm. GHA is a linear feed-forward neural
@@ -155,12 +149,10 @@ trait Operators {
     * @param w the initial projection matrix.
     * @param r the learning rate.
     */
-  def gha(data: Array[Array[Double]], w: Array[Array[Double]], r: Double): GHA = {
-    time {
-      val model = new GHA(w, r)
-      data.foreach(model.learn(_))
-      model
-    }
+  def gha(data: Array[Array[Double]], w: Array[Array[Double]], r: Double): GHA = time("Generalized Hebbian Algorithm") {
+    val model = new GHA(w, r)
+    data.foreach(model.learn(_))
+    model
   }
 
   /** Generalized Hebbian Algorithm with random initial projection matrix.
@@ -169,11 +161,9 @@ trait Operators {
     * @param k the dimension of feature space.
     * @param r the learning rate.
     */
-  def gha(data: Array[Array[Double]], k: Int, r: Double): GHA = {
-    time {
-      val model = new GHA(data(0).length, k, r)
-      data.foreach(model.learn(_))
-      model
-    }
+  def gha(data: Array[Array[Double]], k: Int, r: Double): GHA = time("Generalized Hebbian Algorithm") {
+    val model = new GHA(data(0).length, k, r)
+    data.foreach(model.learn(_))
+    model
   }
 }

@@ -36,12 +36,10 @@ import smile.validation._
 object Airline {
 
   def main(args: Array[String]): Unit = {
-    benchmark("0.1m")
-    benchmark("1m")
+    benchmark
   }
 
   def benchmark: Unit = {
-    benchmark("0.1m")
     benchmark("1m")
   }
 
@@ -115,8 +113,8 @@ object Airline {
     // Random Forest
     println("Training Random Forest of 500 trees...")
     val forest = test2soft(formula, train, test) { (formula, data) =>
-      RandomForest.fit(formula, data, 500, 2,
-        SplitRule.ENTROPY, 85, 50, 0.632, Optional.of(classWeight))
+      randomForest(formula, data, 500, 2,
+        SplitRule.ENTROPY, 150, 50, 1.0, classWeight)
     }
 
     val depth = forest.trees.map(_.root.depth.toDouble)
@@ -127,13 +125,13 @@ object Airline {
 
     // Gradient Tree Boost
     println("Training Gradient Tree Boost of 300 trees...")
-    val boost = test2soft(formula, train, test) { (formula, data) =>
+    test2soft(formula, train, test) { (formula, data) =>
       gbm(formula, train, 300, 6, 5, 0.1, 0.5)
     }
 
     // AdaBoost
     println("Training AdaBoost of 300 trees...")
-    val ada = test2soft(formula, train, test) { (formula, data) =>
+    test2soft(formula, train, test) { (formula, data) =>
       adaboost(formula, train, 300, 6, 5)
     }
   }

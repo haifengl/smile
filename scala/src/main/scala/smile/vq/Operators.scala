@@ -83,10 +83,8 @@ trait Operators {
     * @param width the width of map.
     * @param height the height of map.
     */
-  def som(data: Array[Array[Double]], width: Int, height: Int): SOM = {
-    time {
-      new SOM(data, width, height)
-    }
+  def som(data: Array[Array[Double]], width: Int, height: Int): SOM = time("SOM") {
+    new SOM(data, width, height)
   }
 
 
@@ -130,10 +128,8 @@ trait Operators {
     * @param steps the number of iterations. Note that for one iteration, we
     *              mean that the learning process goes through the whole dataset.
     */
-  def neuralgas(data: Array[Array[Double]], k: Int, lambda_i: Double, lambda_f: Double = 0.01, eps_i: Double = 0.5, eps_f: Double = 0.005, steps: Int = 25): NeuralGas = {
-    time {
+  def neuralgas(data: Array[Array[Double]], k: Int, lambda_i: Double, lambda_f: Double = 0.01, eps_i: Double = 0.5, eps_f: Double = 0.005, steps: Int = 25): NeuralGas = time("Neural Gas") {
       new NeuralGas(data, k, lambda_i, lambda_f, eps_i, eps_f, steps)
-    }
   }
 
   /** Growing Neural Gas. As an extension of Neural Gas, Growing Neural Gas
@@ -164,14 +160,12 @@ trait Operators {
     *              during inserting a new neuron.
     * @param beta decrease all error variables by multiply them with beta.
     */
-  def gng(data: Array[Array[Double]], epochs: Int = 25, epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, maxEdgeAge: Int = 88, lambda: Int = 300, alpha: Double = 0.5, beta: Double = 0.9995): GrowingNeuralGas = {
-    time {
-      val gas = new GrowingNeuralGas(data(0).length, epsBest, epsNeighbor, maxEdgeAge, lambda, alpha, beta)
-      for (i <- 0 until epochs) {
-        data.foreach(gas.update(_))
-      }
-      gas
-    }
+  def gng(data: Array[Array[Double]], epochs: Int = 25, epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, maxEdgeAge: Int = 88, lambda: Int = 300, alpha: Double = 0.5, beta: Double = 0.9995): GrowingNeuralGas = time("Growing Neural Gas") {
+    val gas = new GrowingNeuralGas(data(0).length, epsBest, epsNeighbor, maxEdgeAge, lambda, alpha, beta)
+    (0 until epochs).foreach(_ ->
+      data.foreach(gas.update(_))
+    )
+    gas
   }
 
   /** NeuralMap is an efficient competitive learning algorithm inspired by growing
@@ -189,11 +183,9 @@ trait Operators {
     * @param L the number of hash tables.
     * @param k the number of random projection hash functions.
     */
-  def neuralmap(data: Array[Array[Double]], radius: Double, L: Int, k: Int, epsBest: Double = 0.05, epsNeighbor: Double = 0.0006): NeuralMap = {
-    time {
-      val cortex = new NeuralMap(data(0).length, radius, epsBest, epsNeighbor, L, k)
-      data.foreach(cortex.update(_))
-      cortex
-    }
+  def neuralmap(data: Array[Array[Double]], radius: Double, L: Int, k: Int, epsBest: Double = 0.05, epsNeighbor: Double = 0.0006): NeuralMap = time("Neural Map") {
+    val cortex = new NeuralMap(data(0).length, radius, epsBest, epsNeighbor, L, k)
+    data.foreach(cortex.update(_))
+    cortex
   }
 }

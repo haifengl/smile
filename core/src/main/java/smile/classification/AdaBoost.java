@@ -27,6 +27,7 @@ import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
+import smile.util.Strings;
 
 /**
  * AdaBoost (Adaptive Boosting) classifier with decision trees. In principle,
@@ -212,6 +213,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
                 samples[s]++;
             }
 
+            logger.info("Training {} tree", Strings.ordinal(t+1));
             trees[t] = new DecisionTree(x, codec.y, codec.field.get(), k, SplitRule.GINI, maxNodes, nodeSize, -1, samples, order);
             
             for (int i = 0; i < n; i++) {

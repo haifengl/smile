@@ -66,7 +66,7 @@ trait Operators {
       case _ => throw new IllegalArgumentException(s"Unknown agglomeration method: $method")
     }
 
-    time {
+    time("Hierarchical clustering") {
       new HierarchicalClustering(linkage)
     }
   }
@@ -110,10 +110,8 @@ trait Operators {
     * @param maxIter the maximum number of iterations for each running.
     * @param runs the number of runs of K-Means algorithm.
     */
-  def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, runs: Int = 1): KMeans = {
-    time {
+  def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, runs: Int = 1): KMeans = time("K-means") {
       new KMeans(data, k, maxIter, runs)
-    }
   }
 
   /** X-Means clustering algorithm, an extended K-Means which tries to
@@ -130,10 +128,8 @@ trait Operators {
     * @param data the data set.
     * @param k the maximum number of clusters.
     */
-  def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans = {
-    time {
-      new XMeans(data, k)
-    }
+  def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans = time("X-means") {
+    new XMeans(data, k)
   }
 
   /** G-Means clustering algorithm, an extended K-Means which tries to
@@ -149,10 +145,8 @@ trait Operators {
     * @param data the data set.
     * @param k the maximum number of clusters.
     */
-  def gmeans(data: Array[Array[Double]], k: Int = 100): GMeans = {
-    time {
-      new GMeans(data, k)
-    }
+  def gmeans(data: Array[Array[Double]], k: Int = 100): GMeans = time("G-means") {
+    new GMeans(data, k)
   }
 
   /** The Sequential Information Bottleneck algorithm. SIB clusters co-occurrence
@@ -189,10 +183,8 @@ trait Operators {
     * @param maxIter the maximum number of iterations.
     * @param runs the number of runs of SIB algorithm.
     */
-  def sib(data: Array[Array[Double]], k: Int, maxIter: Int, runs: Int): SIB = {
-    time {
-      new SIB(data, k, maxIter, runs)
-    }
+  def sib(data: Array[Array[Double]], k: Int, maxIter: Int, runs: Int): SIB = time("Sequential information bottleneck") {
+    new SIB(data, k, maxIter, runs)
   }
 
   /** The Sequential Information Bottleneck algorithm on sparse dataset.
@@ -202,10 +194,8 @@ trait Operators {
     * @param maxIter the maximum number of iterations.
     * @param runs the number of runs of SIB algorithm.
     */
-  def sib(data: SparseDataset, k: Int, maxIter: Int = 100, runs: Int = 8): SIB = {
-    time {
-      new SIB(data, k, maxIter, runs)
-    }
+  def sib(data: SparseDataset, k: Int, maxIter: Int = 100, runs: Int = 8): SIB = time("Sequential information bottleneck") {
+    new SIB(data, k, maxIter, runs)
   }
 
   /** Deterministic annealing clustering. Deterministic annealing extends
@@ -228,10 +218,8 @@ trait Operators {
     * @param alpha the temperature T is decreasing as T = T * alpha. alpha has
     *              to be in (0, 1).
     */
-  def dac(data: Array[Array[Double]], k: Int, alpha: Double = 0.9): DeterministicAnnealing = {
-    time {
-      new DeterministicAnnealing(data, k, alpha)
-    }
+  def dac(data: Array[Array[Double]], k: Int, alpha: Double = 0.9): DeterministicAnnealing = time("Deterministic annealing clustering") {
+    new DeterministicAnnealing(data, k, alpha)
   }
 
   /** Clustering Large Applications based upon RANdomized Search. CLARANS is an
@@ -262,10 +250,8 @@ trait Operators {
     * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
     * @param numLocal the number of local minima to search for.
     */
-  def clarans[T <: Object](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int): CLARANS[T] = {
-    time {
-      new CLARANS[T](data, distance, k, maxNeighbor, numLocal)
-    }
+  def clarans[T <: Object](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int): CLARANS[T] = time("CLARANS") {
+    new CLARANS[T](data, distance, k, maxNeighbor, numLocal)
   }
 
   /** Clustering Large Applications based upon RANdomized Search. Euclidean distance is assumed.
@@ -275,10 +261,8 @@ trait Operators {
     * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
     * @param numLocal the number of local minima to search for.
     */
-  def clarans(data: Array[Array[Double]], k: Int, maxNeighbor: Int, numLocal: Int): CLARANS[Array[Double]] = {
-    time {
-      new CLARANS(data, new EuclideanDistance, k, maxNeighbor, numLocal)
-    }
+  def clarans(data: Array[Array[Double]], k: Int, maxNeighbor: Int, numLocal: Int): CLARANS[Array[Double]] = time("CLARANS") {
+    new CLARANS(data, new EuclideanDistance, k, maxNeighbor, numLocal)
   }
 
   /** Balanced Iterative Reducing and Clustering using Hierarchies. BIRCH performs
@@ -311,13 +295,11 @@ trait Operators {
     * @param branch the branching factor. Maximum number of children nodes.
     * @param radius the maximum radius of a sub-cluster.
     */
-  def birch(data: Array[Array[Double]], k: Int, minPts: Int, branch: Int, radius: Double): BIRCH = {
-    time {
-      val cluster = new BIRCH(data(0).length, branch, radius)
-      data.foreach(cluster.add(_))
-      cluster.partition(k, minPts)
-      cluster
-    }
+  def birch(data: Array[Array[Double]], k: Int, minPts: Int, branch: Int, radius: Double): BIRCH = time("BIRCH") {
+    val cluster = new BIRCH(data(0).length, branch, radius)
+    data.foreach(cluster.add(_))
+    cluster.partition(k, minPts)
+    cluster
   }
 
   /** Density-Based Spatial Clustering of Applications with Noise.
@@ -377,10 +359,8 @@ trait Operators {
     * @param minPts the minimum number of neighbors for a core data point.
     * @param radius the neighborhood radius.
     */
-  def dbscan[T <: Object](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBSCAN[T] = {
-    time {
-      new DBSCAN[T](data, nns, minPts, radius)
-    }
+  def dbscan[T <: Object](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBSCAN[T] = time("DBSCAN") {
+    new DBSCAN[T](data, nns, minPts, radius)
   }
 
   /** Density-Based Spatial Clustering of Applications with Noise.
@@ -393,10 +373,8 @@ trait Operators {
     * @param minPts the minimum number of neighbors for a core data point.
     * @param radius the neighborhood radius.
    */
-  def dbscan[T <: Object](data: Array[T], distance: Metric[T], minPts: Int, radius: Double): DBSCAN[T] = {
-    time {
-      new DBSCAN[T](data, distance, minPts, radius)
-    }
+  def dbscan[T <: Object](data: Array[T], distance: Metric[T], minPts: Int, radius: Double): DBSCAN[T] = time("DBSCAN") {
+    new DBSCAN[T](data, distance, minPts, radius)
   }
 
   /** DBSCAN with Euclidean distance.
@@ -407,10 +385,8 @@ trait Operators {
     * @param minPts the minimum number of neighbors for a core data point.
     * @param radius the neighborhood radius.
     */
-  def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBSCAN[Array[Double]] = {
-    time {
-      dbscan(data, new EuclideanDistance, minPts, radius)
-    }
+  def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBSCAN[Array[Double]] = time("DBSCAN") {
+    dbscan(data, new EuclideanDistance, minPts, radius)
   }
 
   /** DENsity CLUstering. The DENCLUE algorithm employs a cluster model based on
@@ -436,10 +412,8 @@ trait Operators {
     *          to speed up the algorithm. It should also be large enough to capture
     *          the sufficient information of underlying distribution.
     */
-  def denclue(data: Array[Array[Double]], sigma: Double, m: Int): DENCLUE = {
-    time {
-      new DENCLUE(data, sigma, m)
-    }
+  def denclue(data: Array[Array[Double]], sigma: Double, m: Int): DENCLUE = time("DENCLUE") {
+    new DENCLUE(data, sigma, m)
   }
 
   /** Nonparametric Minimum Conditional Entropy Clustering. This method performs
@@ -470,10 +444,8 @@ trait Operators {
     *          number of clusters may be less.
     * @param radius the neighborhood radius.
     */
-  def mec[T <: Object](data: Array[T], distance: Distance[T], k: Int, radius: Double): MEC[T] = {
-    time {
-      new MEC(data, distance, k, radius)
-    }
+  def mec[T <: Object](data: Array[T], distance: Distance[T], k: Int, radius: Double): MEC[T] = time("MEC") {
+    new MEC(data, distance, k, radius)
   }
 
   /** Nonparametric Minimum Conditional Entropy Clustering.
@@ -484,10 +456,8 @@ trait Operators {
     *          number of clusters may be less.
     * @param radius the neighborhood radius.
     */
-  def mec[T <: Object](data: Array[T], distance: Metric[T], k: Int, radius: Double): MEC[T] = {
-    time {
-      new MEC(data, distance, k, radius)
-    }
+  def mec[T <: Object](data: Array[T], distance: Metric[T], k: Int, radius: Double): MEC[T] = time("MEC") {
+    new MEC(data, distance, k, radius)
   }
 
   /** Nonparametric Minimum Conditional Entropy Clustering. Assume Euclidean distance.
@@ -497,10 +467,8 @@ trait Operators {
     *          number of clusters may be less.
     * @param radius the neighborhood radius.
     */
-  def mec(data: Array[Array[Double]], k: Int, radius: Double): MEC[Array[Double]] = {
-    time {
-      new MEC(data, new EuclideanDistance, k, radius)
-    }
+  def mec(data: Array[Array[Double]], k: Int, radius: Double): MEC[Array[Double]] = time("MEC") {
+    new MEC(data, new EuclideanDistance, k, radius)
   }
 
   /** Nonparametric Minimum Conditional Entropy Clustering.
@@ -511,10 +479,8 @@ trait Operators {
     *          number of clusters may be less.
     * @param radius the neighborhood radius.
     */
-  def mec[T <: Object](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int]): MEC[T] = {
-    time {
-      new MEC(data, nns, k, radius, y)
-    }
+  def mec[T <: Object](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int]): MEC[T] = time("MEC") {
+    new MEC(data, nns, k, radius, y)
   }
 
   /** Spectral Clustering. Given a set of data points, the similarity matrix may
@@ -535,10 +501,8 @@ trait Operators {
     * @param W the adjacency matrix of graph.
     * @param k the number of clusters.
     */
-  def specc(W: Array[Array[Double]], k: Int): SpectralClustering = {
-    time {
-      new SpectralClustering(W, k)
-    }
+  def specc(W: Array[Array[Double]], k: Int): SpectralClustering = time("Spectral clustering") {
+    new SpectralClustering(W, k)
   }
 
   /** Spectral clustering.
@@ -549,10 +513,8 @@ trait Operators {
     *              one may pick the value that gives the tightest clusters (smallest
     *              distortion, see { @link #distortion()}) in feature space.
     */
-  def specc(data: Array[Array[Double]], k: Int, sigma: Double): SpectralClustering = {
-    time {
-      new SpectralClustering(data, k, sigma)
-    }
+  def specc(data: Array[Array[Double]], k: Int, sigma: Double): SpectralClustering = time("Spectral clustering") {
+    new SpectralClustering(data, k, sigma)
   }
 
   /** Spectral clustering with Nystrom approximation.
@@ -564,9 +526,7 @@ trait Operators {
     *              one may pick the value that gives the tightest clusters (smallest
     *              distortion, see { @link #distortion()}) in feature space.
     */
-  def specc(data: Array[Array[Double]], k: Int, l: Int, sigma: Double): SpectralClustering = {
-    time {
-      new SpectralClustering(data, k, l, sigma)
-    }
+  def specc(data: Array[Array[Double]], k: Int, l: Int, sigma: Double): SpectralClustering = time("Spectral clustering") {
+    new SpectralClustering(data, k, l, sigma)
   }
 }
