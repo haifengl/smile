@@ -191,6 +191,7 @@ trait Operators {
     * @return TF-IDF feature vector
     */
   def tfidf(bag: Array[Double], n: Int, df: Array[Int]): Array[Double] = {
+    import Ordering.Double.TotalOrdering
     val maxtf = bag.max
     val features = new Array[Double](bag.length)
 
