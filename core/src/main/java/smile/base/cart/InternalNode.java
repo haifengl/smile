@@ -67,9 +67,37 @@ public abstract class InternalNode implements Node {
     }
 
     /**
-     * Evaluate the tree over an instance.
+     * Evaluates the tree over an instance.
      */
     public abstract LeafNode predict(Tuple x);
+
+    /**
+     * Returns true if the instance goes to the true branch.
+     */
+    public abstract boolean branch(Tuple x);
+
+    /** Returns a new internal node with children replaced. */
+    public abstract InternalNode replace(Node trueChild, Node falseChild);
+
+    /** Returns the true branch child. */
+    public Node trueChild() {
+        return trueChild;
+    }
+
+    /** Returns the false branch child. */
+    public Node falseChild() {
+        return falseChild;
+    }
+
+    /** Returns the split feature. */
+    public int feature() {
+        return feature;
+    }
+
+    /** Returns the split score (reduction of impurity). */
+    public double score () {
+        return score;
+    }
 
     @Override
     public int size() {

@@ -398,15 +398,20 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
 
         double error = m > 0 ? (double) err / m : 0.0;
 
-        double[] importance = new double[x.ncols()];
+        return new RandomForest(formula, k, trees, error, importance(trees), codec.labels);
+    }
+
+    /** Calculate the importance of the whole forest. */
+    private static double[] importance(List<Tree> trees) {
+        int p = trees.get(0).tree.importance().length;
+        double[] importance = new double[p];
         for (Tree tree : trees) {
             double[] imp = tree.tree.importance();
-            for (int i = 0; i < imp.length; i++) {
+            for (int i = 0; i < p; i++) {
                 importance[i] += imp[i];
             }
         }
-
-        return new RandomForest(formula, k, trees, error, importance, codec.labels);
+        return importance;
     }
 
     @Override
@@ -542,5 +547,19 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
         }
 
         return prediction;
+    }
+
+    /**
+     * Returns a new random forest by reduced error pruning.
+     * @param test the test data set to evaluate the errors of nodes.
+     * @return a new pruned random forest.
+     */
+    public RandomForest prune(DataFrame test) {
+        List<Tree> forest = trees.stream().parallel()
+                .map(tree -> new Tree(tree.tree.prune(test, formula, labels), tree.weight))
+                .collect(Collectors.toList());
+
+        // The tree weight and OOB error are still the old one as we don't access to the training data here.
+        return new RandomForest(formula, k, forest, error, importance(forest), labels);
     }
 }

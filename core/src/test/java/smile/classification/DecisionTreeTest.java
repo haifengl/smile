@@ -140,7 +140,7 @@ public class DecisionTreeTest {
     public void testUSPS() {
         System.out.println("USPS");
 
-        DecisionTree model = DecisionTree.fit(USPS.formula, USPS.train, SplitRule.ENTROPY, 350, 5);
+        DecisionTree model = DecisionTree.fit(USPS.formula, USPS.train, SplitRule.ENTROPY, 500, 5);
         System.out.println(model);
 
         double[] importance = model.importance();
@@ -153,5 +153,49 @@ public class DecisionTreeTest {
 
         System.out.println("Error = " + error);
         assertEquals(331, error);
+    }
+
+    @Test
+    public void testPrune() {
+        System.out.println("USPS");
+
+        // Overfitting with very large maxNodes and small nodeSize
+        DecisionTree model = DecisionTree.fit(USPS.formula, USPS.train, SplitRule.ENTROPY, 3000, 1);
+        System.out.println(model);
+
+        double[] importance = model.importance();
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+        }
+
+        int[] prediction = Validation.test(model, USPS.test);
+        int error = Error.apply(USPS.testy, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(897, model.size());
+        assertEquals(324, error);
+
+        DecisionTree lean = model.prune(USPS.test);
+        System.out.println(lean);
+
+        importance = lean.importance();
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", lean.schema().fieldName(i), importance[i]);
+        }
+
+        // The old model should not be modified.
+        prediction = Validation.test(model, USPS.test);
+        error = Error.apply(USPS.testy, prediction);
+
+        System.out.println("Error of old model after pruning = " + error);
+        assertEquals(897, model.size());
+        assertEquals(324, error);
+
+        prediction = Validation.test(lean, USPS.test);
+        error = Error.apply(USPS.testy, prediction);
+
+        System.out.println("Error of pruned model after pruning = " + error);
+        assertEquals(743, lean.size());
+        assertEquals(273, error);
     }
 }
