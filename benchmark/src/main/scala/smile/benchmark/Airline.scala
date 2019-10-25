@@ -17,10 +17,11 @@
  
 package smile.benchmark
 
+import scala.language.postfixOps
 import smile.base.cart.SplitRule
 import smile.classification._
 import smile.data.summary
-import smile.data.formula.Formula
+import smile.data.formula._
 import smile.data.`type`._
 import smile.data.measure.NominalScale
 import smile.read
@@ -94,7 +95,7 @@ object Airline {
       new StructField("dep_delayed_15min", DataTypes.ByteType, new NominalScale("N", "Y"))
     )
 
-    val formula = Formula.lhs("dep_delayed_15min")
+    val formula: Formula = "dep_delayed_15min" ~
     val train = read.csv(Paths.getTestData(s"airline/train-${dataSize}.csv").toString, schema = schema)
     val test = read.csv(Paths.getTestData("airline/test.csv").toString, schema = schema)
     val testy = formula.y(test).toIntArray

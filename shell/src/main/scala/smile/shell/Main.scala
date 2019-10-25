@@ -63,6 +63,7 @@ object Main extends App {
 
   val imports =
     s"""
+       |import scala.language.postfixOps
        |import smile._
        |import smile.util._
        |import smile.math._
