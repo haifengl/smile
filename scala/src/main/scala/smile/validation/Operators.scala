@@ -397,25 +397,6 @@ trait Operators {
     }.toArray
   }
 
-  /** Leave-one-out cross validation on a data frame regression model.
-    *
-    * @param formula model formula.
-    * @param data data samples.
-    * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
-    * @param trainer a code block to return a regression model trained on the given data.
-    * @return measure results.
-    */
-  def loocv(formula: Formula, data: DataFrame, measures: RegressionMeasure*)(trainer: DataFrame => DataFrameRegression): Array[Double] = {
-    val predictions = LOOCV.regression(data, trainer)
-    val y = formula.y(data).toDoubleArray
-
-    measuresOrRMSE(measures).map { measure =>
-      val result = measure.measure(y, predictions)
-      println(f"$measure%s: ${100*result}%.2f%%")
-      result
-    }.toArray
-  }
-
   /** Cross validation on a generic classifier.
     * Cross-validation is a technique for assessing how the results of a
     * statistical analysis will generalize to an independent data set.
@@ -488,26 +469,6 @@ trait Operators {
     }.toArray
   }
 
-  /** Cross validation on a data frame regression model.
-    *
-    * @param formula model formula.
-    * @param data data samples.
-    * @param k k-fold cross validation.
-    * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
-    * @param trainer a code block to return a regression model trained on the given data.
-    * @return measure results.
-    */
-  def cv(k: Int, formula: Formula, data: DataFrame, measures: RegressionMeasure*)(trainer: DataFrame => DataFrameRegression): Array[Double] = {
-    val predictions = CrossValidation.regression(k, data, trainer)
-    val y = formula.y(data).toDoubleArray
-
-    measuresOrRMSE(measures).map { measure =>
-      val result = measure.measure(y, predictions)
-      println(f"$measure%s: $result%.4f")
-      result
-    }.toArray
-  }
-
   /** Bootstrap validation on a generic classifier.
     * The bootstrap is a general tool for assessing statistical accuracy. The basic
     * idea is to randomly draw datasets with replacement from the training data,
@@ -548,16 +509,5 @@ trait Operators {
     */
   def bootstrap[T <: Object](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
     Bootstrap.regression(k, x, y, trainer)
-  }
-
-  /** Bootstrap validation on a data frame regression model.
-    *
-    * @param data data samples.
-    * @param k k-round bootstrap estimation.
-    * @param trainer a code block to return a classifier trained on the given data.
-    * @return the error rates of each round.
-    */
-  def bootstrap(k: Int, data: DataFrame)(trainer: DataFrame => DataFrameRegression): Array[Double] = {
-    Bootstrap.regression(k, data, trainer)
   }
 }
