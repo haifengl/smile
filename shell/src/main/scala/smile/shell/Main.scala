@@ -19,6 +19,7 @@ package smile.shell
 
 import ammonite.main.{Cli, Scripts}
 import ammonite.ops.{Path, pwd}
+import ammonite.util.Res
 
 /** An object that runs Smile script or interactive shell.
   * Based on Scala MainGenericRunner.
@@ -105,10 +106,25 @@ object Main extends App {
       |repl.prompt() = "smile> "
     """.stripMargin
 
+  /** Handle the Ammonite results. */
+  def isSuccess(res: Res[Any]): Boolean = res match {
+    case Res.Failure(msg) =>
+      println(msg)
+      false
+
+    case ammonite.util.Res.Exception(t, msg) =>
+      println(msg)
+      t.printStackTrace
+      false
+
+    case _ => true
+  }
+
   Cli.groupArgs(args.toList, Cli.ammoniteArgSignature, Cli.Config()) match {
     case Left(msg) =>
       println(msg)
       false
+
     case Right((cliConfig, leftoverArgs)) =>
       if (cliConfig.help) {
         println(help)
@@ -121,17 +137,17 @@ object Main extends App {
 
           case (None, Nil) =>
             val runner = AmmoniteREPL(imports + prompt)
-            runner.run()
-            true
+            val (res, _) = runner.run()
+            isSuccess(res)
 
           case (None, head :: _) if head.startsWith("-") =>
-            val failureMsg = s"Unknown option: $head\nUse --help to list possible options"
-            println(failureMsg)
+            println(s"Unknown option: $head\nUse --help to list possible options")
             false
 
           case (None, head :: rest) =>
             val runner = AmmoniteREPL(imports)
-            runner.runScript(Path(head, pwd), Scripts.groupArgs(rest))
+            val (res, _) = runner.runScript(Path(head, pwd), Scripts.groupArgs(rest))
+            isSuccess(res)
         }
       }
   }
