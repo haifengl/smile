@@ -20,9 +20,8 @@ package smile.validation
 import smile.classification.{Classifier, DataFrameClassifier, SoftClassifier}
 import smile.data.{DataFrame, Tuple}
 import smile.data.formula.Formula
-import smile.math.MathEx
-import smile.regression.Regression
-import smile.util._
+import smile.regression.{Regression, DataFrameRegression}
+import smile.util.{time, toJavaBiFunction, toJavaFunction}
 
 /** Model validation.
   *
@@ -129,7 +128,7 @@ trait Operators {
     * @tparam T the type of training and test data.
     * @return the trained classifier.
     */
-  def test[T,  C <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => C): C = {
+  def test[T,  C <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: (Array[T], Array[Int]) => C): C = {
     println("training...")
     val classifier = time("training") {
       trainer(x, y)
@@ -154,7 +153,7 @@ trait Operators {
     * @param trainer a code block to return a classifier trained on the given data.
     * @return the trained classifier.
     */
-  def test[C <: DataFrameClassifier](formula: Formula, train: DataFrame, test: DataFrame)(trainer: => (Formula, DataFrame) => C): C = {
+  def test[C <: DataFrameClassifier](formula: Formula, train: DataFrame, test: DataFrame)(trainer: (Formula, DataFrame) => C): C = {
     println("training...")
     val classifier = time("training") {
       trainer(formula, train)
@@ -184,7 +183,7 @@ trait Operators {
     * @tparam T the type of training and test data.
     * @return the trained classifier.
     */
-  def test2[T,  C <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => C): C = {
+  def test2[T,  C <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: (Array[T], Array[Int]) => C): C = {
     println("training...")
     val classifier = time("training") {
       trainer(x, y)
@@ -216,7 +215,7 @@ trait Operators {
     * @param trainer a code block to return a classifier trained on the given data.
     * @return the trained classifier.
     */
-  def test2[C <: DataFrameClassifier](formula: Formula, train: DataFrame, test: DataFrame)(trainer: => (Formula, DataFrame) => C): C = {
+  def test2[C <: DataFrameClassifier](formula: Formula, train: DataFrame, test: DataFrame)(trainer: (Formula, DataFrame) => C): C = {
     println("training...")
     val classifier = time("training") {
       trainer(formula, train)
@@ -252,7 +251,7 @@ trait Operators {
     * @tparam T the type of training and test data.
     * @return the trained classifier.
     */
-  def test2soft[T,  C <: SoftClassifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => C): C = {
+  def test2soft[T,  C <: SoftClassifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: (Array[T], Array[Int]) => C): C = {
     println("training...")
     val classifier = time("training") {
       trainer(x, y)
@@ -347,18 +346,29 @@ trait Operators {
     * @param trainer a code block to return a classifier trained on the given data.
     * @return measure results.
     */
-  def loocv[T <: Object](x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
-    val n = x.length
-    val predictions = new Array[Int](n)
+  def loocv[T <: Object](x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+    val predictions = LOOCV.classification(x, y, trainer)
 
-    val split = new LOOCV(n)
-    for (i <- 0 until n) {
-      print(s"loocv ${i+1}...")
-      val trainx = MathEx.slice[T](x, split.train(i))
-      val trainy = MathEx.slice(y, split.train(i))
-      val model = trainer(trainx, trainy)
-      predictions(split.test(i)) = model.predict(x(split.test(i)))
-    }
+    println("Confusion Matrix: " + new ConfusionMatrix(y, predictions))
+
+    measuresOrAccuracy(measures).map { measure =>
+      val result = measure.measure(y, predictions)
+      println(f"$measure%s: ${100*result}%.2f%%")
+      result
+    }.toArray
+  }
+
+  /** Leave-one-out cross validation on a data frame classifier.
+    *
+    * @param formula model formula.
+    * @param data data samples.
+    * @param measures validation measures such as accuracy, specificity, etc.
+    * @param trainer a code block to return a classifier trained on the given data.
+    * @return measure results.
+    */
+  def loocv(formula: Formula, data: DataFrame, measures: ClassificationMeasure*)(trainer: DataFrame => DataFrameClassifier): Array[Double] = {
+    val predictions = LOOCV.classification(data, trainer)
+    val y = formula.y(data).toIntArray
 
     println("Confusion Matrix: " + new ConfusionMatrix(y, predictions))
 
@@ -377,18 +387,8 @@ trait Operators {
     * @param trainer a code block to return a regression model trained on the given data.
     * @return measure results.
     */
-  def loocv[T <: Object](x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
-    val n = x.length
-    val predictions = new Array[Double](n)
-
-    val split = new LOOCV(n)
-    for (i <- 0 until n) {
-      print(s"loocv ${i+1}...")
-      val trainx = MathEx.slice[T](x, split.train(i))
-      val trainy = MathEx.slice(y, split.train(i))
-      val model = trainer(trainx, trainy)
-      predictions(split.test(i)) = model.predict(x(split.test(i)))
-    }
+  def loocv[T <: Object](x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+    val predictions = LOOCV.regression(x, y, trainer)
 
     measuresOrRMSE(measures).map { measure =>
       val result = measure.measure(y, predictions)
@@ -397,29 +397,23 @@ trait Operators {
     }.toArray
   }
 
-  /** Cross validation on a generic classifier. Samples will be randomly
-    * shuffled first. So the results will not be repeatable. To disable
-    * shuffle, pass a customized CrossValidation object.
-    * Cross-validation is a technique for assessing how the results of a
-    * statistical analysis will generalize to an independent data set.
-    * It is mainly used in settings where the goal is prediction, and one
-    * wants to estimate how accurately a predictive model will perform in
-    * practice. One round of cross-validation involves partitioning a sample
-    * of data into complementary subsets, performing the analysis on one subset
-    * (called the training set), and validating the analysis on the other subset
-    * (called the validation set or testing set). To reduce variability, multiple
-    * rounds of cross-validation are performed using different partitions, and the
-    * validation results are averaged over the rounds.
+  /** Leave-one-out cross validation on a data frame regression model.
     *
-    * @param x data samples.
-    * @param y sample labels.
-    * @param k k-fold cross validation.
-    * @param measures validation measures such as accuracy, specificity, etc.
-    * @param trainer a code block to return a classifier trained on the given data.
+    * @param formula model formula.
+    * @param data data samples.
+    * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
+    * @param trainer a code block to return a regression model trained on the given data.
     * @return measure results.
     */
-  def cv[T <: Object](x: Array[T], y: Array[Int], k: Int, measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
-    cv(x, y, new CrossValidation(x.length, k), measures: _*)(trainer)
+  def loocv(formula: Formula, data: DataFrame, measures: RegressionMeasure*)(trainer: DataFrame => DataFrameRegression): Array[Double] = {
+    val predictions = LOOCV.regression(data, trainer)
+    val y = formula.y(data).toDoubleArray
+
+    measuresOrRMSE(measures).map { measure =>
+      val result = measure.measure(y, predictions)
+      println(f"$measure%s: ${100*result}%.2f%%")
+      result
+    }.toArray
   }
 
   /** Cross validation on a generic classifier.
@@ -436,25 +430,13 @@ trait Operators {
     *
     * @param x data samples.
     * @param y sample labels.
-    * @param split k-fold cross validation.
+    * @param k k-fold cross validation.
     * @param measures validation measures such as accuracy, specificity, etc.
     * @param trainer a code block to return a classifier trained on the given data.
     * @return measure results.
     */
-  def cv[T <: Object](x: Array[T], y: Array[Int], split: CrossValidation, measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
-    val n = x.length
-    val k = split.k
-    val predictions = new Array[Int](n)
-
-    for (i <- 0 until k) {
-      print(s"cv ${i+1}...")
-      val trainx = MathEx.slice[T](x, split.train(i))
-      val trainy = MathEx.slice(y, split.train(i))
-      val model = trainer(trainx, trainy)
-      split.test(i).foreach { j =>
-        predictions(j) = model.predict(x(j))
-      }
-    }
+  def cv[T <: Object](k: Int, x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+    val predictions = CrossValidation.classification(k, x, y, trainer)
 
     println("Confusion Matrix: " + new ConfusionMatrix(y, predictions))
 
@@ -465,34 +447,24 @@ trait Operators {
     }.toArray
   }
 
-  /** Cross validation on a generic regression model. Samples will be randomly
-    * shuffled first. So the results will not be repeatable. To disable
-    * shuffle, pass a customized CrossValidation object.
+  /** Cross validation on a data frame classifier.
     *
-    * @param x data samples.
-    * @param y response variable.
-    * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
-    * @param trainer a code block to return a regression model trained on the given data.
+    * @param formula model formula.
+    * @param data data samples.
+    * @param k k-fold cross validation.
+    * @param measures validation measures such as accuracy, specificity, etc.
+    * @param trainer a code block to return a classifier trained on the given data.
     * @return measure results.
     */
-  def cv[T <: Object](x: Array[T], y: Array[Double], split: CrossValidation, measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
-    val n = x.length
-    val k = split.k
-    val predictions = new Array[Double](n)
+  def cv(k: Int, formula: Formula, data: DataFrame, measures: ClassificationMeasure*)(trainer: DataFrame => DataFrameClassifier): Array[Double] = {
+    val predictions = CrossValidation.classification(k, data, trainer)
+    val y = formula.y(data).toIntArray
 
-    for (i <- 0 until k) {
-      print(s"cv ${i+1}...")
-      val trainx = MathEx.slice[T](x, split.train(i))
-      val trainy = MathEx.slice(y, split.train(i))
-      val model = trainer(trainx, trainy)
-      split.test(i).foreach { j =>
-        predictions(j) = model.predict(x(j))
-      }
-    }
+    println("Confusion Matrix: " + new ConfusionMatrix(y, predictions))
 
-    measuresOrRMSE(measures).map { measure =>
+    measuresOrAccuracy(measures).map { measure =>
       val result = measure.measure(y, predictions)
-      println(f"$measure%s: $result%.4f")
+      println(f"$measure%s: ${100*result}%.2f%%")
       result
     }.toArray
   }
@@ -506,8 +478,34 @@ trait Operators {
     * @param trainer a code block to return a regression model trained on the given data.
     * @return measure results.
     */
-  def cv[T <: Object](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
-    cv(x, y, new CrossValidation(x.length, k), measures: _*)(trainer)
+  def cv[T <: Object](k: Int, x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+    val predictions = CrossValidation.regression(k, x, y, trainer)
+
+    measuresOrRMSE(measures).map { measure =>
+      val result = measure.measure(y, predictions)
+      println(f"$measure%s: $result%.4f")
+      result
+    }.toArray
+  }
+
+  /** Cross validation on a data frame regression model.
+    *
+    * @param formula model formula.
+    * @param data data samples.
+    * @param k k-fold cross validation.
+    * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
+    * @param trainer a code block to return a regression model trained on the given data.
+    * @return measure results.
+    */
+  def cv(k: Int, formula: Formula, data: DataFrame, measures: RegressionMeasure*)(trainer: DataFrame => DataFrameRegression): Array[Double] = {
+    val predictions = CrossValidation.regression(k, data, trainer)
+    val y = formula.y(data).toDoubleArray
+
+    measuresOrRMSE(measures).map { measure =>
+      val result = measure.measure(y, predictions)
+      println(f"$measure%s: $result%.4f")
+      result
+    }.toArray
   }
 
   /** Bootstrap validation on a generic classifier.
@@ -521,43 +519,22 @@ trait Operators {
     * @param x data samples.
     * @param y sample labels.
     * @param k k-round bootstrap estimation.
-    * @param measures validation measures such as accuracy, specificity, etc.
     * @param trainer a code block to return a classifier trained on the given data.
-    * @return measure results.
+    * @return the error rates of each round.
     */
-  def bootstrap[T <: Object](x: Array[T], y: Array[Int], k: Int, measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
-    val split = new Bootstrap(x.length, k)
+  def bootstrap[T <: Object](k: Int, x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+    Bootstrap.classification(k, x, y, trainer)
+  }
 
-    val m = measuresOrAccuracy(measures)
-    val results = (0 until k).map { i =>
-      print(s"bootstrap ${i+1}...")
-      val trainx = MathEx.slice[T](x, split.train(i))
-      val trainy = MathEx.slice(y, split.train(i))
-      val model = trainer(trainx, trainy)
-
-      val nt = split.test(i).length
-      val truth = new Array[Int](nt)
-      val predictions = new Array[Int](nt)
-      for (j <- 0 until nt) {
-        val l = split.test(i)(j)
-        truth(j) = y(l)
-        predictions(j) = model.predict(x(l))
-      }
-
-      m.map { measure =>
-        val result = measure.measure(truth, predictions)
-        println(f"$measure%s: ${100*result}%.2f%%")
-        result
-      }.toArray
-    }.toArray
-
-    val avg = MathEx.colMeans(results)
-    println("Bootstrap average:")
-    for (i <- 0 until avg.length) {
-      println(f"${m(i)}%s: ${100*avg(i)}%.2f%%")
-    }
-
-    avg
+  /** Bootstrap validation on a data frame classifier.
+    *
+    * @param data data samples.
+    * @param k k-round bootstrap estimation.
+    * @param trainer a code block to return a classifier trained on the given data.
+    * @return the error rates of each round.
+    */
+  def bootstrap(k: Int, data: DataFrame)(trainer: DataFrame => DataFrameClassifier): Array[Double] = {
+    Bootstrap.classification(k, data, trainer)
   }
 
   /** Bootstrap validation on a generic regression model.
@@ -567,40 +544,20 @@ trait Operators {
     * @param k k-round bootstrap estimation.
     * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
     * @param trainer a code block to return a regression model trained on the given data.
-    * @return measure results.
+    * @return the root mean squared error of each round.
     */
-  def bootstrap[T <: Object](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
-    val split = new Bootstrap(x.length, k)
+  def bootstrap[T <: Object](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+    Bootstrap.regression(k, x, y, trainer)
+  }
 
-    val m = measuresOrRMSE(measures)
-    val results = (0 until k).map { i =>
-      print(s"bootstrap ${i+1}...")
-      val trainx = MathEx.slice[T](x, split.train(i))
-      val trainy = MathEx.slice(y, split.train(i))
-      val model = trainer(trainx, trainy)
-
-      val nt = split.test(i).length
-      val truth = new Array[Double](nt)
-      val predictions = new Array[Double](nt)
-      for (j <- 0 until nt) {
-        val l = split.test(i)(j)
-        truth(j) = y(l)
-        predictions(j) = model.predict(x(l))
-      }
-
-      m.map { measure =>
-        val result = measure.measure(truth, predictions)
-        println(f"$measure%s: $result%.4f")
-        result
-      }.toArray
-    }.toArray
-
-    val avg = MathEx.colMeans(results)
-    println("Bootstrap average:")
-    for (i <- 0 until avg.length) {
-      println(f"${m(i)}%s: ${avg(i)}%.4f")
-    }
-
-    avg
+  /** Bootstrap validation on a data frame regression model.
+    *
+    * @param data data samples.
+    * @param k k-round bootstrap estimation.
+    * @param trainer a code block to return a classifier trained on the given data.
+    * @return the error rates of each round.
+    */
+  def bootstrap(k: Int, data: DataFrame)(trainer: DataFrame => DataFrameRegression): Array[Double] = {
+    Bootstrap.regression(k, data, trainer)
   }
 }

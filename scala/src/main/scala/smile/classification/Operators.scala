@@ -29,7 +29,7 @@ import smile.base.cart.SplitRule
 import smile.data.formula.Formula
 import smile.stat.distribution.Distribution
 import smile.neighbor._
-import smile.util.time
+import smile.util.{time, toJavaBiFunction}
 
 /**  * High level classification operators.
   *
@@ -832,11 +832,7 @@ trait Operators {
     * regions of its input space may receive the same number of votes.
     */
   def ovo[T <: AnyRef](x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): OneVersusOne[T] = time("One vs. One") {
-    val wrapper = new java.util.function.BiFunction[Array[T], Array[Int], Classifier[T]] {
-      override def apply(x: Array[T], y: Array[Int]): Classifier[T] = trainer(x, y)
-    }
-
-    OneVersusOne.fit(x, y, wrapper)
+    OneVersusOne.fit(x, y, trainer)
   }
 
   /** One-vs-rest (or one-vs-all) strategy for reducing the problem of
@@ -860,10 +856,6 @@ trait Operators {
     * negatives they see is much larger than the set of positives.
     */
   def ovr[T <: AnyRef](x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): OneVersusRest[T] = time("One vs. Rest") {
-    val wrapper = new java.util.function.BiFunction[Array[T], Array[Int], Classifier[T]] {
-      override def apply(x: Array[T], y: Array[Int]): Classifier[T] = trainer(x, y)
-    }
-
-    OneVersusRest.fit(x, y, wrapper)
+    OneVersusRest.fit(x, y, trainer)
   }
 }
