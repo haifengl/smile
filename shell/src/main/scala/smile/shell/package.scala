@@ -1368,8 +1368,7 @@ package object shell {
       """
         | General:
         |   help  -- print this summary
-        |   :help -- print Scala shell command summary
-        |   :quit -- exit the shell
+        |   exit  -- exit the shell
         |   demo  -- show demo window
         |   benchmark -- benchmark tests
         |

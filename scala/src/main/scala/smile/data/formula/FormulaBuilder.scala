@@ -56,7 +56,10 @@ case class FormulaBuilder(y: Option[Term], x: ListBuffer[HyperTerm]) {
   }
 }
 
-private[formula] case class PimpedString(a: String) {
+/** smile.nlp has pimpString function and PimpedString class.
+  * Use a different name to avoid clash.
+  */
+private[formula] case class PimpedFormulaString(a: String) {
   def ~ (b: String) = FormulaBuilder(Option($(a)), ListBuffer(if (b.equals(".")) all else $(b)))
   def ~ (b: HyperTerm) = FormulaBuilder(Option($(a)), ListBuffer(b))
   def ~ () = FormulaBuilder(Option($(a)), ListBuffer())
