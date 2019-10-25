@@ -17,15 +17,21 @@
 
 package smile
 
+import scala.language.implicitConversions
 import com.typesafe.scalalogging.LazyLogging
-import smile.math.distance.{EuclideanDistance, Distance, Metric}
-import smile.math.rbf.GaussianRadialBasis
+import smile.math.distance.{EuclideanDistance, Distance}
 
 /** Utility functions.
   *
   * @author Haifeng Li
   */
 package object util extends LazyLogging {
+  /** Wraps Scala lambda as Java's. */
+  implicit def toJavaFunction[T, R](f: Function1[T, R]): java.util.function.Function[T, R] = t => f(t)
+
+  /** Wraps Scala lambda as Java's. */
+  implicit def toJavaBiFunction[T, U, R](f: Function2[T, U, R]): java.util.function.BiFunction[T, U, R] = (t, u) => f(t, u)
+
   /** Measure running time of a function/block */
   object time {
     /** Print out switch. */
