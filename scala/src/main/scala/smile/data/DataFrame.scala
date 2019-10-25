@@ -21,7 +21,7 @@ import java.util.Optional
 import java.util.stream.IntStream
 
 /**
-  * Pimped data frame with additional operations.
+  * Pimped data frame with Scala style operations.
   * @param data underlying data frame.
   */
 case class DataFrameOps(data: DataFrame) {

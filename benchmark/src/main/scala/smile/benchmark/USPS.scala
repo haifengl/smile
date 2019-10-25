@@ -18,12 +18,13 @@
 package smile.benchmark
 
 import java.util
+import scala.language.postfixOps
 import smile.base.rbf.RBF
 import smile.base.mlp.{Layer, OutputFunction}
 import smile.classification._
 import smile.clustering.KMeans
 import smile.data.`type`.{DataTypes, StructField}
-import smile.data.formula.Formula
+import smile.data.formula._
 import smile.feature.Standardizer
 import smile.read
 import smile.math.MathEx
@@ -51,7 +52,7 @@ object USPS {
     (1 to 256).foreach(i => fields.add(new StructField("V" + i, DataTypes.DoubleType)))
     val schema = DataTypes.struct(fields)
 
-    val formula = Formula.lhs("class")
+    val formula: Formula = "class" ~
     val zipTrain = read.csv(Paths.getTestData("usps/zip.train").toString, delimiter = ' ', header = false, schema = schema)
     val zipTest = read.csv(Paths.getTestData("usps/zip.test").toString, delimiter = ' ', header = false, schema = schema)
     val x = formula.x(zipTrain).toArray
