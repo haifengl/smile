@@ -65,9 +65,30 @@ private[formula] case class PimpedFormulaString(a: String) {
   def ~ () = FormulaBuilder(Option($(a)), ListBuffer())
   def unary_~ = FormulaBuilder(Option.empty, ListBuffer($(a)))
 
-  def :: (b: String) = interact(a, b)
+  def :: (b: String) = FactorInteractionBuilder(ListBuffer(a, b))
 
-  def & (b: String) = cross(a, b)
+  def && (b: String) = FactorCrossingBuilder(ListBuffer(a, b))
+}
+
+private[formula] case class FactorInteractionBuilder(x: ListBuffer[String]) {
+  def :: (b: String): FactorInteractionBuilder = {
+    x.append(b)
+    this
+  }
+
+  def toFactorInteraction: FactorInteraction = interact(x.reverse.toList: _*)
+}
+
+private[formula] case class FactorCrossingBuilder(x: ListBuffer[String]) {
+  def && (b: String): FactorCrossingBuilder = {
+    x.append(b)
+    this
+  }
+
+  /** Customized degree. */
+  def ^ (degree: Int): FactorCrossing = cross(degree, x.toList: _*)
+
+  def toFactorCrossing: FactorCrossing = cross(x.toList: _*)
 }
 
 private[formula] case class PimpedHyperTerm(a: HyperTerm) {

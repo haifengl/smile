@@ -36,7 +36,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Interaction implements HyperTerm {
+class FactorInteraction implements HyperTerm {
     /** The factors of interaction. */
     private List<String> factors;
     /** The terms after binding. */
@@ -47,7 +47,7 @@ class Interaction implements HyperTerm {
      *
      * @param factors the factors of interaction.
      */
-    public Interaction(String... factors) {
+    public FactorInteraction(String... factors) {
         if (factors.length < 2) {
             throw new IllegalArgumentException("Interaction() takes at least two factors");
         }
