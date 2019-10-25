@@ -42,21 +42,8 @@ public class GHADemo extends ProjectionDemo {
     }
 
     @Override
-    public JComponent learn() {
+    public JComponent learn(double[][] data, int[] labels, String[] names) {
         JPanel pane = new JPanel(new GridLayout(2, 2));
-        double[][] data;
-        int[] labels = null;
-        String[] names;
-
-        if (formula[datasetIndex] == null) {
-            data = dataset[datasetIndex].toArray();
-            names = dataset[datasetIndex].names();
-        } else {
-            DataFrame datax = formula[datasetIndex].x(dataset[datasetIndex]);
-            data = datax.toArray();
-            names = datax.names();
-            labels = formula[datasetIndex].y(dataset[datasetIndex]).toIntArray();
-        }
 
         long clock = System.currentTimeMillis();
         PCA pca = new PCA(data, true);

@@ -62,7 +62,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
             new StructField("V2", DataTypes.DoubleType)
     );
     static Formula formula = Formula.lhs("class");
-    static DataFrame[] dataset;
+    static DataFrame[] dataset = new DataFrame[datasource.length];
     static int datasetIndex = 0;
 
     JPanel optionPane;
@@ -74,16 +74,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
      * Constructor.
      */
     public ClassificationDemo() {
-        if (dataset == null) {
-            dataset = new DataFrame[datasource.length];
-            try {
-                dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format, schema);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
-                System.err.println(e);
-            }
-        }
-
+        loadData(datasetIndex);
         addAncestorListener(this);
 
         startButton = new JButton("Start");
@@ -229,15 +220,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
             thread.start();
         } else if ("datasetBox".equals(e.getActionCommand())) {
             datasetIndex = datasetBox.getSelectedIndex();
-
-            if (dataset[datasetIndex] == null) {
-                try {
-                    dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format, schema);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
-                    System.err.println(ex);
-                }
-            }
+            loadData(datasetIndex);
 
             double[][] data = formula.x(dataset[datasetIndex]).toArray();
             int[] label = formula.y(dataset[datasetIndex]).toIntArray();
@@ -285,5 +268,17 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
 
     @Override
     public void ancestorRemoved(AncestorEvent event) {
+    }
+
+    private void loadData(int datasetIndex) {
+        if (dataset[datasetIndex] != null) return;
+
+        CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t').withIgnoreSurroundingSpaces(true);
+        try {
+            dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format, schema);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, String.format("Failed to load dataset %s", datasetName[datasetIndex]), "ERROR", JOptionPane.ERROR_MESSAGE);
+            System.err.println(e);
+        }
     }
 }

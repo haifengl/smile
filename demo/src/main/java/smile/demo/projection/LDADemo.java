@@ -48,10 +48,13 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
 
     private static final String[] datasource = {
         "classification/iris.txt",
-        "pendigits.txt"
+        "classification/pendigits.txt"
     };
 
-    static Formula formula = Formula.lhs("class");
+    protected static Formula[] formula = {
+            Formula.lhs("Species"),
+            Formula.lhs("V17"),
+    };
     static DataFrame[] dataset = new DataFrame[datasetName.length];
     static int datasetIndex = 0;
 
@@ -92,10 +95,9 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
      * the clusters.
      */
     public JComponent learn() {
-        double[][] data = formula.x(dataset[datasetIndex]).toArray();
-        String[] names = formula.x(dataset[datasetIndex]).names();
+        double[][] data = formula[datasetIndex].x(dataset[datasetIndex]).toArray();
+        int[] labels = formula[datasetIndex].y(dataset[datasetIndex]).toIntArray();
 
-        int[] labels = formula.y(dataset[datasetIndex]).toIntArray();
         int min = MathEx.min(labels);
         for (int i = 0; i < labels.length; i++) {
             labels[i] -= min;
@@ -108,9 +110,7 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
         double[][] y = lda.project(data);
 
         PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
-        if (names != null) {
-            plot.points(y, names);
-        } else if (labels != null) {
+        if (labels != null) {
             for (int i = 0; i < y.length; i++) {
                 plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
             }
@@ -146,13 +146,15 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
             datasetIndex = datasetBox.getSelectedIndex();
 
             if (dataset[datasetIndex] == null) {
-                CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t').withFirstRecordAsHeader();
+                CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
+                if (datasetIndex == 0) format = format.withFirstRecordAsHeader();
 
                 try {
                     dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, String.format("Failed to load dataset %s", datasetName[datasetIndex]), "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.out.println(ex);
+                    ex.printStackTrace();
                 }
             }
 

@@ -22,6 +22,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
 
+import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.io.DatasetReader;
 import smile.plot.Palette;
@@ -133,14 +134,12 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
         if ("startButton".equals(e.getActionCommand())) {
 
             try {
-                DataFrame dataset = DatasetReader.csv(smile.util.Paths.getTestData("mnist/mnist2500_X.txt"));
+                CSVFormat format = CSVFormat.DEFAULT.withDelimiter(' ').withIgnoreSurroundingSpaces(true);
+                DataFrame dataset = DatasetReader.csv(smile.util.Paths.getTestData("mnist/mnist2500_X.txt"), format);
                 data = dataset.toArray();
 
                 dataset = DatasetReader.csv(smile.util.Paths.getTestData("mnist/mnist2500_labels.txt"));
-                labels = new int[dataset.size()];
-                for (int i = 0; i < labels.length; i++) {
-                    labels[i] = dataset.getInt(i, 0);
-                }
+                labels = dataset.column(0).toIntArray();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                 System.err.println(ex);

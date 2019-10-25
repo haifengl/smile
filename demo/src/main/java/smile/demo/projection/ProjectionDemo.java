@@ -53,11 +53,11 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
 
     protected static DataFrame[] dataset = new DataFrame[datasetName.length];
     protected static Formula[] formula = {
-            Formula.lhs("class"),
+            Formula.lhs("Species"),
+            Formula.rhs("Murder", "Assault", "UrbanPop", "Rape"),
             null,
+            Formula.lhs("V17"),
             null,
-            Formula.lhs("class"),
-            Formula.lhs("class"),
     };
     protected static int datasetIndex = 0;
     
@@ -71,6 +71,8 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
      * Constructor.
      */
     public ProjectionDemo() {
+        loadData(datasetIndex);
+
         startButton = new JButton("Start");
         startButton.setActionCommand("startButton");
         startButton.addActionListener(this);
@@ -97,7 +99,7 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
      * Execute the projection algorithm and return a swing JComponent representing
      * the clusters.
      */
-    public abstract JComponent learn();
+    public abstract JComponent learn(double[][] data, int[] labels, String[] names);
 
     @Override
     public void run() {
@@ -105,7 +107,23 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
         datasetBox.setEnabled(false);
 
         try {
-            JComponent plot = learn();
+            double[][] data;
+            int[] labels = null;
+            String[] names = null;
+
+            if (formula[datasetIndex] == null) {
+                data = dataset[datasetIndex].toArray();
+            } else {
+                DataFrame datax = formula[datasetIndex].x(dataset[datasetIndex]);
+                data = datax.toArray();
+                if (datasetIndex == 1) {
+                    names = dataset[datasetIndex].stringVector(0).toArray();
+                } else {
+                    labels = formula[datasetIndex].y(dataset[datasetIndex]).toIntArray();
+                }
+            }
+
+            JComponent plot = learn(data, labels, names);
             if (plot != null) {
                 if (canvas != null)
                     remove(canvas);
@@ -115,6 +133,7 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
             validate();
         } catch (Exception ex) {
             System.err.println(ex);
+            ex.printStackTrace();
         }
         
         startButton.setEnabled(true);
@@ -125,23 +144,7 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
     public void actionPerformed(ActionEvent e) {
         if ("startButton".equals(e.getActionCommand())) {
             datasetIndex = datasetBox.getSelectedIndex();
-            
-            if (dataset[datasetIndex] == null) {
-                CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
-                if (datasetIndex == 3) {
-                    format = format.withFirstRecordAsHeader();
-                }
-
-                try {
-                    dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
-                    if (datasetIndex == 1) {
-                        dataset[datasetIndex] = dataset[datasetIndex].drop(0);
-                    }
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
-                    System.out.println(ex);
-                }
-            }
+            loadData(datasetIndex);
 
             if (dataset[datasetIndex].size() < 500) {
                 pointLegend = 'o';
@@ -151,6 +154,22 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
             
             Thread thread = new Thread(this);
             thread.start();
+        }
+    }
+
+    private void loadData(int datasetIndex) {
+        if (dataset[datasetIndex] != null) return;
+
+        CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
+        if (datasetIndex != 3) {
+            format = format.withFirstRecordAsHeader();
+        }
+
+        try {
+            dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, String.format("Failed to load dataset %s", datasetName[datasetIndex]), "ERROR", JOptionPane.ERROR_MESSAGE);
+            System.out.println(ex);
         }
     }
 }

@@ -25,6 +25,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import smile.classification.SVM;
+import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 
 /**
@@ -76,13 +77,18 @@ public class SVMDemo extends ClassificationDemo {
 
         double[][] data = formula.x(dataset[datasetIndex]).toArray();
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
+        int n = label.length;
+        int[] y2 = new int[n];
+        for (int i = 0; i < n; i++) {
+            y2[i] = label[i] * 2 - 1;
+        }
 
         GaussianKernel kernel = new GaussianKernel(gamma);
-        SVM<double[]> svm = SVM.fit(data, label, kernel, C, 1E-3);
+        SVM<double[]> svm = SVM.fit(data, y2, kernel, C, 1E-3);
 
         int[] pred = new int[label.length];
         for (int i = 0; i < label.length; i++) {
-            pred[i] = svm.predict(data[i]);
+            pred[i] = (svm.predict(data[i]) + 1) / 2;
         }
         double trainError = error(label, pred);
 
@@ -92,7 +98,7 @@ public class SVMDemo extends ClassificationDemo {
         for (int i = 0; i < y.length; i++) {
             for (int j = 0; j < x.length; j++) {
                 double[] p = {x[j], y[i]};
-                z[i][j] = svm.predict(p);
+                z[i][j] = (svm.predict(p) + 1) / 2;
             }
         }
 
