@@ -34,42 +34,42 @@ public interface Terms {
     }
 
     /** Returns all columns not otherwise in the formula. */
-    static HyperTerm all() {
+    static All all() {
         return new All();
     }
 
     /** Factor interaction of two or more factors. */
-    static HyperTerm interact(String... factors) {
-        return new Interaction(factors);
+    static FactorInteraction interact(String... factors) {
+        return new FactorInteraction(factors);
     }
 
     /** Factor crossing of two or more factors. */
-    static HyperTerm cross(String... factors) {
+    static FactorCrossing cross(String... factors) {
         return new FactorCrossing(factors);
     }
 
     /** Factor crossing of two or more factors. */
-    static HyperTerm cross(int order, String... factors) {
+    static FactorCrossing cross(int order, String... factors) {
         return new FactorCrossing(order, factors);
     }
 
     /** Deletes a variable from the formula. */
-    static HyperTerm delete(String x) {
+    static Delete delete(String x) {
         return delete($(x));
     }
 
     /** Deletes a term from the formula. */
-    static HyperTerm delete(Term x) {
+    static Delete delete(Term x) {
         return new Delete(x);
     }
 
     /** One-hot encoding of nominal factors. */
-    static HyperTerm onehot(String... factors) {
+    static OneHot onehot(String... factors) {
         return new OneHot(factors);
     }
 
     /** Extracts date/time features. */
-    static HyperTerm date(String x, DateFeature... features) {
+    static Date date(String x, DateFeature... features) {
         return new Date(x, features);
     }
 

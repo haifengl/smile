@@ -71,7 +71,7 @@ class FactorCrossing implements HyperTerm {
     @Override
     public String toString() {
         if (order < factors.size()) {
-            return factors.stream().collect(Collectors.joining(" + ", "(", ")^"+order));
+            return factors.stream().collect(Collectors.joining(" x ", "(", ")^"+order));
         } else {
             return factors.stream().collect(Collectors.joining(" x ", "(", ")"));
         }

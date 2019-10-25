@@ -22,6 +22,8 @@ import smile.data.formula.Terms.$
 
 package object formula {
   implicit def buildFormula(x: FormulaBuilder) = x.toFormula
+  implicit def buildFactorInteraction(x: FactorInteractionBuilder) = x.toFactorInteraction
+  implicit def buildFactorCrossing(x: FactorCrossingBuilder) = x.toFactorCrossing
   implicit def pimpFormulaString(x: String) = PimpedFormulaString(x)
   implicit def pimpHyperTerm(x: HyperTerm) = PimpedHyperTerm(x)
   implicit def pimpTerm(x: Term) = PimpedTerm(x)
