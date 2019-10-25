@@ -35,17 +35,18 @@ public class SparseMatrixPlotDemo extends JPanel {
         super(new GridLayout(1,2));
 
         try {
-            SparseMatrix m1 = SparseMatrix.harwell(smile.util.Paths.getTestData("matrix/08blocks.txt"));
+            SparseMatrix m1 = SparseMatrix.text(smile.util.Paths.getTestData("matrix/08blocks.txt"));
             PlotCanvas canvas = SparseMatrixPlot.plot(m1);
             canvas.setTitle("08blocks");
             add(canvas);
 
-            SparseMatrix m2 = SparseMatrix.harwell(smile.util.Paths.getTestData("matrix/mesh2em5.txt"));
+            SparseMatrix m2 = SparseMatrix.text(smile.util.Paths.getTestData("matrix/mesh2em5.txt"));
             canvas = SparseMatrixPlot.plot(m2, Palette.jet(256));
             canvas.setTitle("mesh2em5");
             add(canvas);
         } catch (Exception ex) {
             System.err.println(ex);
+            ex.printStackTrace();
         }
     }
 

@@ -110,6 +110,7 @@ public abstract class ManifoldDemo extends JPanel implements Runnable, ActionLis
             validate();
         } catch (Exception ex) {
             System.err.println(ex);
+            ex.printStackTrace();
         }
         
         startButton.setEnabled(true);

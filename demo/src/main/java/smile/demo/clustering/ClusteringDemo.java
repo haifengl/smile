@@ -51,6 +51,20 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
         "Chameleon/t7.10k", "Chameleon/t8.8k"
     };
 
+    private static char[] delimiter = {
+            ' ',  ' ',  ' ',
+            '\t', ' ',  '\t',
+            '\t', '\t', '\t',
+            '\t', '\t', '\t',
+            ' ',  ' ',
+            ' ',  ' ',
+            '\t',  '\t',
+            '\t',  '\t',
+            '\t',  '\t',
+            '\t',  '\t',
+            '\t'
+    };
+
     private static String[] datasource = {
         "clustering/gaussian/one.txt",
         "clustering/gaussian/two.txt",
@@ -70,7 +84,7 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
         "clustering/chameleon/t8.8k.txt"
     };
 
-    static double[][][] dataset = null;
+    static double[][][] dataset = new double[datasetName.length][][];
     static int datasetIndex = 0;
     static int clusterNumber = 2;
     
@@ -85,18 +99,7 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
      * Constructor.
      */
     public ClusteringDemo() {
-        if (dataset == null) {
-            dataset = new double[datasetName.length][][];
-            CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
-            try {
-                DataFrame data = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
-                dataset[datasetIndex] = data.toArray();
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
-                System.err.println(e);
-            }
-        }
-
+        loadData(datasetIndex);
         addAncestorListener(this);
 
         startButton = new JButton("Start");
@@ -178,17 +181,7 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
             thread.start();
         } else if ("datasetBox".equals(e.getActionCommand())) {
             datasetIndex = datasetBox.getSelectedIndex();
-            
-            if (dataset[datasetIndex] == null) {
-                CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
-                try {
-                    DataFrame data = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
-                    dataset[datasetIndex] = data.toArray();
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
-                    System.err.println(ex);
-                }
-            }
+            loadData(datasetIndex);
 
             remove(canvas);
             if (dataset[datasetIndex].length < 500) {
@@ -226,5 +219,18 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
 
     @Override
     public void ancestorRemoved(AncestorEvent event) {
+    }
+
+    private void loadData(int datasetIndex) {
+        if (dataset[datasetIndex] != null) return;
+
+        CSVFormat format = CSVFormat.DEFAULT.withDelimiter(delimiter[datasetIndex]).withIgnoreSurroundingSpaces(true);
+        try {
+            DataFrame data = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+            dataset[datasetIndex] = data.toArray();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, String.format("Failed to load dataset %s", datasetName[datasetIndex]), "ERROR", JOptionPane.ERROR_MESSAGE);
+            System.err.println(e);
+        }
     }
 }

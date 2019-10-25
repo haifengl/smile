@@ -22,6 +22,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -36,6 +37,7 @@ import javax.swing.JTextField;
 
 import smile.clustering.SIB;
 import smile.data.SparseDataset;
+import smile.math.matrix.SparseMatrix;
 
 /**
  *
@@ -122,14 +124,12 @@ public class SIBDemo extends JPanel implements Runnable, ActionListener {
 
         if (dataset[datasetIndex] == null) {
             try {
-                dataset[datasetIndex] = SparseDataset.from(smile.util.Paths.getTestData(datasource[datasetIndex]));
-                /*
-                for (int i = dataset[datasetIndex].size(); i-- > 0; ) {
-                    if (dataset[datasetIndex].get(i).isEmpty()) {
-                        dataset[datasetIndex].remove(i);
-                    }
-                }
-                 */
+                int arrayIndexOrigin = 1;
+                dataset[datasetIndex] = SparseDataset.from(smile.util.Paths.getTestData(datasource[datasetIndex]), arrayIndexOrigin);
+                dataset[datasetIndex] = SparseDataset.of(
+                        dataset[datasetIndex].stream().filter(a -> !a.isEmpty()).collect(Collectors.toList()),
+                        dataset[datasetIndex].ncols()
+                );
                 dataset[datasetIndex].unitize1();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);

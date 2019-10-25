@@ -51,20 +51,7 @@ public class PCADemo extends ProjectionDemo {
     }
 
     @Override
-    public JComponent learn() {
-        double[][] data;
-        int[] labels = null;
-        String[] names;
-
-        if (formula[datasetIndex] == null) {
-            data = dataset[datasetIndex].toArray();
-            names = dataset[datasetIndex].names();
-        } else {
-            DataFrame datax = formula[datasetIndex].x(dataset[datasetIndex]);
-            data = datax.toArray();
-            names = datax.names();
-            labels = formula[datasetIndex].y(dataset[datasetIndex]).toIntArray();
-        }
+    public JComponent learn(double[][] data, int[] labels, String[] names) {
         boolean cor = corBox.getSelectedIndex() != 0;
 
         long clock = System.currentTimeMillis();

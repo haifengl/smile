@@ -131,6 +131,11 @@ class VectorImpl<T> implements Vector<T> {
     }
 
     @Override
+    public T[] toArray() {
+        return vector;
+    }
+
+    @Override
     public Vector<LocalDate> toDate() {
         LocalDate[] dates = null;
         if (type.id() == DataType.ID.DateTime) {

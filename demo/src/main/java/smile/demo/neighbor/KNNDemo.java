@@ -55,7 +55,7 @@ import smile.plot.BarPlot;
 @SuppressWarnings("serial")
 public class KNNDemo extends JPanel implements Runnable, ActionListener {
 
-    private String[] label = {"Naive", "KD-Tree", "Cover Tree", "LSH", "MPLSH"};
+    private String[] label = {"Naive", "KD-Tree", "Cover Tree", "LSH"};
     private JPanel optionPane;
     private JPanel canvas;
     private JButton startButton;
@@ -214,6 +214,7 @@ public class KNNDemo extends JPanel implements Runnable, ActionListener {
         lshRecall /= 1000;
         System.out.format("The recall of LSH is %.1f%%\n", lshRecall * 100);
 
+        /*
         double mplshRecall = 0.0;
         time = System.currentTimeMillis();
         for (int i = 0; i < 1000; i++) {
@@ -232,14 +233,15 @@ public class KNNDemo extends JPanel implements Runnable, ActionListener {
         int mplshSearch = (int) (System.currentTimeMillis() - time);
         mplshRecall /= 1000;
         System.out.format("The recall of MPLSH is %.1f%%\n", mplshRecall * 100);
+         */
 
         canvas.removeAll();
-        double[] buildTime = {naiveBuild, kdtreeBuild, coverBuild, lshBuild, mplshBuild};
+        double[] buildTime = {naiveBuild, kdtreeBuild, coverBuild, lshBuild};
         PlotCanvas build = BarPlot.plot(buildTime, label);
         build.setTitle("Build Time");
         canvas.add(build);
 
-        double[] searchTime = {naiveSearch, kdtreeSearch, coverSearch, lshSearch, mplshSearch};
+        double[] searchTime = {naiveSearch, kdtreeSearch, coverSearch, lshSearch};
         PlotCanvas search = BarPlot.plot(searchTime, label);
         search.setTitle("Search Time");
         canvas.add(search);

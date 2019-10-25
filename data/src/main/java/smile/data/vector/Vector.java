@@ -39,6 +39,9 @@ import smile.data.type.StructField;
  * @author Haifeng Li
  */
 public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
+    /** Returns the array of elements. */
+    T[] toArray();
+
     /**
      * Returns a vector of LocalDate. If the vector is of strings, it uses the default
      * ISO date formatter that parses a date without an offset, such as '2011-12-03'.

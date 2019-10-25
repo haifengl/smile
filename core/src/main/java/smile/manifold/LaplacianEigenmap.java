@@ -143,12 +143,10 @@ public class LaplacianEigenmap {
         for (int i = 0; i < n; i++) {
             Collection<Edge> edges = graph.getEdges(i);
             SparseArray row = new SparseArray();
-            W.set(i, row);
+            W.add(i, row);
             for (Edge edge : edges) {
                 int j = edge.v2;
-                if (i == j) {
-                    j = edge.v1;
-                }
+                if (i == j) j = edge.v1;
 
                 double w = t <= 0 ? 1.0 : Math.exp(gamma * MathEx.sqr(edge.weight));
                 row.set(j, w);
@@ -171,7 +169,7 @@ public class LaplacianEigenmap {
             }
         }
 
-        SparseMatrix L = SparseDataset.of(W).toMatrix();
+        SparseMatrix L = SparseDataset.of(W, n).toMatrix();
         L.setSymmetric(true);
 
         // ARPACK may not find all needed eigen values for k = d + 1.
