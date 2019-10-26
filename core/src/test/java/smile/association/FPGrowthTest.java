@@ -17,14 +17,9 @@
 
 package smile.association;
 
-import java.util.Set;
-import java.util.HashSet;
 import java.io.IOException;
-import java.io.BufferedReader;
-import java.util.ArrayList;
 import java.util.List;
-
-import smile.math.MathEx;
+import java.util.stream.Collectors;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -77,16 +72,13 @@ public class FPGrowthTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class FPGrowth.
-     */
     @Test
-    public void testLearn_0args() {
-        System.out.println("learn");
-        FPGrowth fpgrowth = new FPGrowth(itemsets, 3);
-        List<ItemSet> results = fpgrowth.learn();
+    public void testFPGrowth() {
+        System.out.println("FP-Growth");
+        FPTree tree = FPTree.build(3, itemsets);
+        List<ItemSet> results = FPGrowth.apply(tree).collect(Collectors.toList());
         assertEquals(8, results.size());
-        /*
+
         assertEquals(3, results.get(0).support);
         assertEquals(1, results.get(0).items.length);
         assertEquals(4, results.get(0).items[0]);
@@ -103,70 +95,29 @@ public class FPGrowthTest {
         assertEquals(8, results.get(7).support);
         assertEquals(1, results.get(7).items.length);
         assertEquals(3, results.get(7).items[0]);
-         */
     }
 
-    /**
-     * Test of learn method, of class FPGrowth.
-     */
-    @Test
-    public void testLearn_PrintStream() {
-        System.out.println("learn");
-        FPGrowth fpgrowth = new FPGrowth(itemsets, 3);
-        long n = fpgrowth.learn(System.out);
-        assertEquals(8, n);
-    }
-
-    /**
-     * Test of learn method, of class FPGrowth.
-     */
     @Test
     public void testSinglePath() {
-        System.out.println("singlePath");
+        System.out.println("single path");
 
-        FPGrowth fpgrowth = new FPGrowth(itemsets2, 1);
-        long n = fpgrowth.learn(System.out);
-        assertEquals(15, n);
+        FPTree tree = FPTree.build(1, itemsets2);
+        assertEquals(15, FPGrowth.apply(tree).count());
     }
 
-    /**
-     * Test of learn method, of class FPGrowth.
-     */
     @Test(expected = Test.None.class)
     public void testPima() throws IOException {
         System.out.println("pima");
 
-        int[][] data = ItemSetTestData.read("transaction/pima.D38.N768.C2");
-        
-        long time = System.currentTimeMillis();
-        FPGrowth fpgrowth = new FPGrowth(data, 20);
-        System.out.format("Done building FP-tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
-
-        time = System.currentTimeMillis();
-        long numItemsets = fpgrowth.learn(System.out);
-        System.out.format("%d frequent item sets discovered: %.2f secs.%n", numItemsets, (System.currentTimeMillis() - time) / 1000.0);
-        
-        assertEquals(1803, numItemsets);
-        assertEquals(1803, fpgrowth.learn().size());
+        FPTree tree = FPTree.build(20, () -> ItemSetTestData.read("transaction/pima.D38.N768.C2"));
+        assertEquals(1803, FPGrowth.apply(tree).count());
     }
     
-    /**
-     * Test of learn method, of class FPGrowth.
-     */
     @Test(expected = Test.None.class)
     public void testKosarak() throws IOException {
         System.out.println("kosarak");
 
-        int[][] data = ItemSetTestData.read("transaction/kosarak.dat");
-        
-        long time = System.currentTimeMillis();
-        FPGrowth fpgrowth = new FPGrowth(data, 1500);
-        System.out.format("Done building FP-tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
-
-        time = System.currentTimeMillis();
-        List<ItemSet> results = fpgrowth.learn();
-        System.out.format("%d frequent item sets discovered: %.2f secs.%n", results.size(), (System.currentTimeMillis() - time) / 1000.0);
-        
-        assertEquals(219725, results.size());
+        FPTree tree = FPTree.build(1500, () -> ItemSetTestData.read("transaction/kosarak.dat"));
+        assertEquals(219725, FPGrowth.apply(tree).count());
     }
 }

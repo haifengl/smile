@@ -17,13 +17,9 @@
 
 package smile.association;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
+import java.util.stream.Collectors;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -31,7 +27,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import smile.math.MathEx;
 
 /**
  *
@@ -72,14 +67,13 @@ public class TotalSupportTreeTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of getSupport method, of class TotalSupportTree.
-     */
     @Test
-    public void testGetSupport() {
-        System.out.println("getSupport");
-        FPGrowth fpgrowth = new FPGrowth(itemsets, 3);
-        TotalSupportTree ttree = fpgrowth.buildTotalSupportTree();
+    public void testTTree() {
+        System.out.println("T-Tree");
+
+        FPTree tree = FPTree.build(3, itemsets);
+        TotalSupportTree ttree = new TotalSupportTree(tree);
+
         int[][] items = {
             {3, 2, 1},
             {3},
@@ -95,17 +89,8 @@ public class TotalSupportTreeTest {
         assertEquals(6, ttree.getSupport(items[3]));
         assertEquals(3, ttree.getSupport(items[4]));
         assertEquals(7, ttree.getSupport(items[5]));
-    }
 
-    /**
-     * Test of getFrequentMaximalItemsets method, of class TotalSupportTree.
-     */
-    @Test
-    public void testGetFrequentItemsets_0args() {
-        System.out.println("getFrequentItemsets");
-        FPGrowth fpgrowth = new FPGrowth(itemsets, 3);
-        TotalSupportTree ttree = fpgrowth.buildTotalSupportTree();
-        List<ItemSet> results = ttree.getFrequentItemsets();
+        List<ItemSet> results = ttree.stream().collect(Collectors.toList());
         assertEquals(8, results.size());
         
         assertEquals(8, results.get(0).support);
@@ -126,65 +111,22 @@ public class TotalSupportTreeTest {
         assertEquals(1, results.get(7).items.length);
         assertEquals(4, results.get(7).items[0]);
     }
-
-    /**
-     * Test of getFrequentMaximalItemsets method, of class TotalSupportTree.
-     */
-    @Test
-    public void testGetFrequentItemsets_PrintStream() {
-        System.out.println("getFrequentItemsets");
-        FPGrowth fpgrowth = new FPGrowth(itemsets, 3);
-        TotalSupportTree ttree = fpgrowth.buildTotalSupportTree();
-        long n = ttree.getFrequentItemsets(System.out);
-        assertEquals(8, n);
-    }
     
-    /**
-     * Test of getFrequentItemsets method, of class TotalSupportTree.
-     */
     @Test(expected = Test.None.class)
     public void testPima() throws IOException {
         System.out.println("pima");
 
-        int[][] data = ItemSetTestData.read("transaction/pima.D38.N768.C2");
-        
-        long time = System.currentTimeMillis();
-        FPGrowth fpgrowth = new FPGrowth(data, 20);
-        System.out.format("Done building FP-tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
-
-        time = System.currentTimeMillis();
-        TotalSupportTree ttree = fpgrowth.buildTotalSupportTree();
-        System.out.format("Done building total support tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
-        
-        time = System.currentTimeMillis();
-        long numItemsets = ttree.getFrequentItemsets(System.out);
-        System.out.format("%d frequent item sets discovered: %.2f secs.%n", numItemsets, (System.currentTimeMillis() - time) / 1000.0);
-        
-        assertEquals(1803, numItemsets);
-        assertEquals(1803, ttree.getFrequentItemsets().size());
+        FPTree tree = FPTree.build(20, () -> ItemSetTestData.read("transaction/pima.D38.N768.C2"));
+        TotalSupportTree ttree = new TotalSupportTree(tree);
+        assertEquals(1803, ttree.stream().count());
     }
     
-    /**
-     * Test of getFrequentItemsets method, of class TotalSupportTree.
-     */
     @Test(expected = Test.None.class)
     public void testKosarak() throws IOException {
         System.out.println("kosarak");
 
-        int[][] data = ItemSetTestData.read("transaction/kosarak.dat");
-        
-        long time = System.currentTimeMillis();
-        FPGrowth fpgrowth = new FPGrowth(data, 1500);
-        System.out.format("Done building FP-tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
-
-        time = System.currentTimeMillis();
-        TotalSupportTree ttree = fpgrowth.buildTotalSupportTree();
-        System.out.format("Done building total support tree: %.2f secs.%n", (System.currentTimeMillis() - time) / 1000.0);
-        
-        time = System.currentTimeMillis();
-        //long numItemsets = ttree.getFrequentItemsets(System.out);
-        //System.out.format("%d frequent item sets discovered: %.2f secs.%n", numItemsets, (System.currentTimeMillis() - time) / 1000.0);
-        
-        assertEquals(219725, ttree.getFrequentItemsets().size());
+        FPTree tree = FPTree.build(1500, () -> ItemSetTestData.read("transaction/kosarak.dat"));
+        TotalSupportTree ttree = new TotalSupportTree(tree);
+        assertEquals(219725, ttree.stream().count());
     }
 }
