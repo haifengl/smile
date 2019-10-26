@@ -141,19 +141,19 @@ public class LaplacianEigenmap {
 
         ArrayList<SparseArray> W = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
-            Collection<Edge> edges = graph.getEdges(i);
             SparseArray row = new SparseArray();
-            W.add(i, row);
+            Collection<Edge> edges = graph.getEdges(i);
             for (Edge edge : edges) {
                 int j = edge.v2;
                 if (i == j) j = edge.v1;
 
-                double w = t <= 0 ? 1.0 : Math.exp(gamma * MathEx.sqr(edge.weight));
+                double w = t <= 0 ? 1.0 : Math.exp(gamma * edge.weight * edge.weight);
                 row.set(j, w);
                 D[i] += w;
             }
 
             D[i] = 1 / Math.sqrt(D[i]);
+            W.add(i, row);
         }
 
         for (int i = 0; i < n; i++) {

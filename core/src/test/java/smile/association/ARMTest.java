@@ -16,13 +16,10 @@
  *******************************************************************************/
 package smile.association;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -30,7 +27,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import smile.math.MathEx;
 
 /**
  *
@@ -71,15 +67,11 @@ public class ARMTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class ARM.
-     */
     @Test
-    public void testLearn() {
-        System.out.println("learn");
-        ARM instance = new ARM(itemsets, 3);
-        instance.learn(0.5, System.out);
-        List<AssociationRule> rules = instance.learn(0.5);
+    public void testARM() {
+        System.out.println("ARM");
+        FPTree tree = FPTree.build(3, itemsets);
+        List<AssociationRule> rules = ARM.apply(0.5, tree).collect(Collectors.toList());
         assertEquals(9, rules.size());
         
         assertEquals(0.6, rules.get(0).support, 1E-2);
@@ -106,32 +98,21 @@ public class ARMTest {
         assertEquals(2, rules.get(8).consequent[1]);
     }
 
-    /**
-     * Test of learn method, of class ARM.
-     */
     @Test(expected = Test.None.class)
-    public void testLearnPima() throws IOException {
+    public void testPima() throws IOException {
         System.out.println("pima");
 
-        int[][] data = ItemSetTestData.read("transaction/pima.D38.N768.C2");
-        ARM instance = new ARM(data, 20);
-        long numRules = instance.learn(0.9, System.out);
-        System.out.format("%d association rules discovered%n", numRules);
-        assertEquals(6803, numRules);
-        assertEquals(6803, instance.learn(0.9).size());
+        FPTree tree = FPTree.build(20, () -> ItemSetTestData.read("transaction/pima.D38.N768.C2"));
+        Stream<AssociationRule> rules = ARM.apply(0.9, tree);
+        assertEquals(6803, rules.count());
     }
 
-    /**
-     * Test of learn method, of class ARM.
-     */
     @Test(expected = Test.None.class)
-    public void testLearnKosarak() throws IOException {
+    public void testKosarak() throws IOException {
         System.out.println("kosarak");
 
-        int[][] data = ItemSetTestData.read("transaction/kosarak.dat");
-        ARM instance = new ARM(data, 0.003);
-        long numRules = instance.learn(0.5, System.out);
-        System.out.format("%d association rules discovered%n", numRules);
-        assertEquals(17932, numRules);
+        FPTree tree = FPTree.build(0.003, ()-> ItemSetTestData.read("transaction/kosarak.dat"));
+        Stream<AssociationRule> rules = ARM.apply(0.5, tree);
+        assertEquals(17954, rules.count());
     }
 }

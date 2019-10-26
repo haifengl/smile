@@ -17,9 +17,9 @@
 
 package smile.association;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import smile.association.TotalSupportTree.Node;
 
 /**
@@ -43,99 +43,75 @@ import smile.association.TotalSupportTree.Node;
  * 
  * @author Haifeng Li
  */
-public class ARM {
+public class ARM implements Iterable<AssociationRule> {
 
     /**
-     * FP-growth algorithm object.
+     * The number transactions in the database.
      */
-    private FPGrowth fim;
+    private int size;
+    /**
+     * The confidence threshold for association rules.
+     */
+    private double confidence;
     /**
      * Compressed set enumeration tree.
      */
     private TotalSupportTree ttree;
-
     /**
-     * Constructor. This is for mining frequent item sets by scanning database twice.
-     * The user first scans the database to obtains the frequency of single items and calls
-     * this constructor. Then the user add item sets to the object by {@link #add(int[])} during the
-     * second scan of the database. In this way, we don't need load the whole database
-     * into the main memory.
-     * @param frequency the frequency of single items.
-     * @param minSupport the required minimum support of item sets in terms of frequency.
+     * The buffer to collect mining results.
      */
-    public ARM(int[] frequency, int minSupport) {
-        fim = new FPGrowth(frequency, minSupport);
-    }
+    private Queue<AssociationRule> buffer = new LinkedList<>();
 
     /**
-     * Constructor. This is a one-step construction if the database
-     * is available in main memory.
-     * @param itemsets the item set dataset. Each row is a item set,
-     * which may have different length. The item identifiers have to be in [0, n),
-     * where n is the number of items. Item set should NOT contain duplicated
-     * items.
-     * @param minSupport the required minimum support of item sets in
-     * terms of percentage.
-     */
-    public ARM(int[][] itemsets, double minSupport) {
-        fim = new FPGrowth(itemsets, minSupport);
-    }
-
-    /**
-     * Constructor. This is a one-step construction if the database
-     * is available in main memory.
-     * @param itemsets the item set database. Each row is a item set, which
-     * may have different length. The item identifiers have to be in [0, n),
-     * where n is the number of items. Item set should NOT contain duplicated
-     * items. Note that it is reordered after the call.
-     * @param minSupport the required minimum support of item sets in
-     * terms of frequency.
-     */
-    public ARM(int[][] itemsets, int minSupport) {
-        fim = new FPGrowth(itemsets, minSupport);
-    }
-
-    /**
-     * Add an item set to the database.
-     * @param itemset an item set, which should NOT contain duplicated items.
-     * Note that it is reordered after the call.
-     */
-    public void add(int[] itemset) {
-        fim.add(itemset);
-    }
-
-    /**
-     * Mines the association rules. The discovered rules will be printed out
-     * to the provided stream.
-     * @param confidence the confidence threshold for association rules.
-     * @return the number of discovered association rules.
-     */
-    public long learn(double confidence, PrintStream out) {
-        long n = 0;
-        ttree = fim.buildTotalSupportTree();
-        for (int i = 0; i < ttree.root.children.length; i++) {
-            if (ttree.root.children[i] != null) {
-                int[] itemset = {ttree.root.children[i].id};
-                n += learn(out, null, itemset, i, ttree.root.children[i], confidence);
-            }
-        }
-        return n;
-    }
-
-    /**
-     * Mines the association rules. The discovered frequent rules will be returned in a list.
+     * Constructor.
      * @param confidence the confidence threshold for association rules.
      */
-    public List<AssociationRule> learn(double confidence) {
-        List<AssociationRule> list = new ArrayList<>();
-        ttree = fim.buildTotalSupportTree();
-        for (int i = 0; i < ttree.root.children.length; i++) {
-            if (ttree.root.children[i] != null) {
-                int[] itemset = {ttree.root.children[i].id};
-                learn(null, list, itemset, i, ttree.root.children[i], confidence);
+    ARM(double confidence, TotalSupportTree ttree) {
+        this.size = ttree.size();
+        this.confidence = confidence;
+        this.ttree = ttree;
+    }
+
+    @Override
+    public Iterator<AssociationRule> iterator() {
+        return new Iterator<AssociationRule>() {
+            int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                if (buffer.isEmpty()) {
+                    for (; i < ttree.root.children.length; i++) {
+                        Node child = ttree.root.children[i];
+                        if (ttree.root.children[i] != null) {
+                            int[] itemset = {child.id};
+                            generate(itemset, i, child);
+
+                            if (!buffer.isEmpty()) {
+                                i++; // we will miss i++ in for loop once break
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                return !buffer.isEmpty();
             }
-        }
-        return list;
+
+            @Override
+            public AssociationRule next() {
+                return buffer.poll();
+            }
+        };
+    }
+
+    /**
+     * Mines the association rules.
+     * @param confidence the confidence threshold for association rules.
+     */
+    public static Stream<AssociationRule> apply(double confidence, FPTree tree) {
+        TotalSupportTree ttree = new TotalSupportTree(tree);
+        ARM arm = new ARM(confidence, ttree);
+        return StreamSupport.stream(arm.spliterator(), false);
     }
 
     /**
@@ -143,35 +119,29 @@ public class ARM {
      * @param itemset the label for a T-tree node as generated sofar.
      * @param size the size of the current array level in the T-tree.
      * @param node the current node in the T-tree.
-     * @param confidence the confidence threshold for association rules.
      */
-    private long learn(PrintStream out, List<AssociationRule> list, int[] itemset, int size, Node node, double confidence) {
-        long n = 0;
+    private void generate(int[] itemset, int size, Node node) {
         if (node.children == null) {
-            return n;
+            return;
         }
 
         for (int i = 0; i < size; i++) {
             if (node.children[i] != null) {
                 int[] newItemset = FPGrowth.insert(itemset, node.children[i].id);
                 // Generate ARs for current large itemset
-                n += learn(out, list, newItemset, node.children[i].support, confidence);
+                generate(newItemset, node.children[i].support);
                 // Continue generation process
-                n += learn(out, list, newItemset, i, node.children[i], confidence);
+                generate(newItemset, i, node.children[i]);
             }
         }
-        
-        return n;
     }
 
     /**
      * Generates all association rules for a given item set.
      * @param itemset the given frequent item set.
      * @param support the associated support value for the item set.
-     * @param confidence the confidence threshold for association rules.
      */
-    private long learn(PrintStream out, List<AssociationRule> list, int[] itemset, int support, double confidence) {
-        long n = 0;
+    private void generate(int[] itemset, int support) {
         // Determine combinations
         int[][] combinations = getPowerSet(itemset);
 
@@ -183,22 +153,12 @@ public class ARM {
             if (complement != null) {
                 double arc = getConfidence(combinations[i], support);
                 if (arc >= confidence) {
-                    double supp = (double) support / fim.size();
+                    double supp = (double) support / size;
                     AssociationRule ar = new AssociationRule(combinations[i], complement, supp, arc);
-                    n++;
-
-                    if (out != null) {
-                        out.println(ar);
-                    }
-
-                    if (list != null) {
-                        list.add(ar);
-                    }
+                    buffer.offer(ar);
                 }
             }
         }
-        
-        return n;
     }
 
     /**

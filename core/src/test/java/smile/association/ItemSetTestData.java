@@ -18,19 +18,7 @@ package smile.association;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import static org.junit.Assert.*;
-import smile.math.MathEx;
+import java.util.stream.Stream;
 
 /**
  *
@@ -41,31 +29,24 @@ public interface ItemSetTestData {
     /**
      * Test of learn method, of class ARM.
      */
-    static int[][] read(String path) throws IOException {
-        List<int[]> dataList = new ArrayList<>(1000);
+    static Stream<int[]> read(String path) {
+        try {
+            BufferedReader input = smile.util.Paths.getTestDataReader(path);
+            return input.lines().map(line -> line.trim())
+                    .filter(line -> !line.isEmpty())
+                    .map(line -> {
+                        String[] s = line.split(" ");
 
-        try(BufferedReader input = smile.util.Paths.getTestDataReader(path)) {
-            String line;
-            for (int nrow = 0; (line = input.readLine()) != null; nrow++) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-
-                String[] s = line.split(" ");
-
-                int[] point = new int[s.length];
-                for (int i = 0; i < s.length; i++) {
-                    point[i] = Integer.parseInt(s[i]);
-                }
-
-                dataList.add(point);
-            }
+                        int[] basket = new int[s.length];
+                        for (int i = 0; i < s.length; i++) {
+                            basket[i] = Integer.parseInt(s[i]);
+                        }
+                        return basket;
+                    });
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
 
-        int[][] data = dataList.toArray(new int[dataList.size()][]);
-
-        int n = MathEx.max(data);
-        System.out.format("%s: %d transactions, %d items%n", path, data.length, n);
-        return data;
+        return Stream.empty();
     }
 }
