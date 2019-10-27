@@ -77,7 +77,7 @@ public class MLPTest {
 
             return model;
         });
-        double rmse = RMSE.apply(y, prediction);
+        double rmse = RMSE.of(y, prediction);
 
         System.out.format("10-CV RMSE = %.4f%n", rmse);
         assertEquals(expected, rmse, 1E-4);

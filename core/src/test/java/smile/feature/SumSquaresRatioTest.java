@@ -57,7 +57,7 @@ public class SumSquaresRatioTest {
     @Test
     public void test() {
         System.out.println("SumSquaresRatio");
-        double[] ratio = SumSquaresRatio.apply(Iris.x, Iris.y);
+        double[] ratio = SumSquaresRatio.of(Iris.x, Iris.y);
         assertEquals(4, ratio.length);
         assertEquals( 1.6226463, ratio[0], 1E-6);
         assertEquals( 0.6444144, ratio[1], 1E-6);
@@ -74,7 +74,7 @@ public class SumSquaresRatioTest {
         double[][] testx = USPS.testx;
         int[] testy = USPS.testy;
 
-        double[] score = SumSquaresRatio.apply(x, y);
+        double[] score = SumSquaresRatio.of(x, y);
         int[] index = QuickSort.sort(score);
 
         int p = 135;

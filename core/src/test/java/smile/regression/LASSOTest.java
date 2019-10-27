@@ -77,7 +77,7 @@ public class LASSOTest {
         System.out.println(model);
 
         double[] prediction = Validation.test(model, df);
-        double rmse = RMSE.apply(y, prediction);
+        double rmse = RMSE.of(y, prediction);
         System.out.println("RMSE = " + rmse);
         
         assertEquals(5.0259443688265355, model.intercept(), 1E-7);
@@ -95,7 +95,7 @@ public class LASSOTest {
         System.out.println(model);
 
         double[] prediction = LOOCV.regression(Longley.data, (x) -> LASSO.fit(Longley.formula, x, 0.1));
-        double rmse = RMSE.apply(Longley.y, prediction);
+        double rmse = RMSE.of(Longley.y, prediction);
         System.out.println("LOOCV RMSE = " + rmse);
         assertEquals(1.4146564289679233, rmse, 1E-4);
     }
@@ -110,7 +110,7 @@ public class LASSOTest {
         System.out.println(model);
 
         double[] prediction = CrossValidation.regression(10, CPU.data, (x) -> LASSO.fit(CPU.formula, x, 0.1));
-        double rmse = RMSE.apply(CPU.y, prediction);
+        double rmse = RMSE.of(CPU.y, prediction);
         System.out.println("10-CV RMSE = " + rmse);
         assertEquals(55.27298388642968, rmse, 1E-4);
     }

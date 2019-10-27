@@ -29,11 +29,11 @@ public class RMSE implements RegressionMeasure {
 
     @Override
     public double measure(double[] truth, double[] prediction) {
-        return apply(truth, prediction);
+        return of(truth, prediction);
     }
 
     /** Calculates the root mean squared error. */
-    public static double apply(double[] truth, double[] prediction) {
+    public static double of(double[] truth, double[] prediction) {
         if (truth.length != prediction.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
         }

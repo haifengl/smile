@@ -121,7 +121,7 @@ object USPS {
         net.update(scaledX(i), y(i))
       )
       val prediction = Validation.test(net, scaledTestX)
-      println("Accuracy = %.2f%%" format (100.0 * Accuracy.apply(testy, prediction)))
+      println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, prediction)))
     })
   }
 }
