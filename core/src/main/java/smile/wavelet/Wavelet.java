@@ -52,7 +52,6 @@ public class Wavelet {
      */
     private double[] workspace = new double[1024];
 
-
     /**
      * Constructor. Create a wavelet with given coefficients.
      */
