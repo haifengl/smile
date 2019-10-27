@@ -27,12 +27,10 @@ public class ConfusionMatrixTest {
         int[] truth = {0,1,2,3,4,5,0,1,2,3,4,5};
         int[] prediction = {0,1,2,4,5,2,1,2,4,5,4,1};
 
-        ConfusionMatrix cmGen = new ConfusionMatrix(truth, prediction);
+        ConfusionMatrix confusion = ConfusionMatrix.of(truth, prediction);
+        System.out.println(confusion.toString());
 
-        int[][] matrix = cmGen.getMatrix();
-
-        System.out.println(cmGen.toString());
-
+        int[][] matrix = confusion.matrix;
         int[] expected = {1,1,1,0,1,0};
 
         for(int i = 0; i < expected.length; i++){

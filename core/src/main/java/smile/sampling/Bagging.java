@@ -17,7 +17,9 @@
 
 package smile.sampling;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import smile.classification.ClassLabel;
 import smile.math.MathEx;
 
 /**
@@ -28,91 +30,105 @@ import smile.math.MathEx;
  */
 public class Bagging {
 
-    /** The number of samples in this bag. */
-    public int size;
     /**
-     * Samples. The first column is the sample index while the second
-     * column is the number of samples.
+     * The samples.
      */
-    public int[][] samples;
+    public final int[] samples;
+
+    /**
+     * Constructor.
+     * @param samples the samples.
+     */
+    public Bagging(int[] samples) {
+        this.samples = samples;
+    }
+
+    @Override
+    public String toString() {
+        return Arrays.stream(samples).mapToObj(String::valueOf).collect(Collectors.joining(", ", "Bagging(", ")"));
+    }
+
+    /**
+     * Random sampling.
+     *
+     * @param n the size of samples.
+     * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
+     */
+    public static Bagging random(int n, double subsample) {
+        if (subsample == 1.0) {
+            // draw with replacement.
+            int[] samples = new int[n];
+            for (int i = 0; i < n; i++) {
+                samples[i] = MathEx.randomInt(n);
+            }
+            return new Bagging(samples);
+        } else {
+            // draw without replacement.
+            int size = (int) Math.round(subsample * n);
+            int[] samples = MathEx.permutate(n);
+            return new Bagging(Arrays.copyOf(samples, size));
+        }
+    }
 
     /**
      * Stratified sampling.
      *
-     * @param k the number of classes.
-     * @param y class labels.
-     * @param classWeight Priors of the classes. The weight of each class
-     *                    is roughly the ratio of samples in each class.
-     *                    For example, if
-     *                    there are 400 positive samples and 100 negative
-     *                    samples, the classWeight should be [1, 4]
-     *                    (assuming label 0 is of negative, label 1 is of
-     *                    positive).
+     * @param strata strata labels.
      * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
      */
-    public Bagging(int k, int[] y, int[] classWeight, double subsample) {
+    public static Bagging strateify(int[] strata, double subsample) {
+        ClassLabel.Result codec = ClassLabel.fit(strata);
+        int k = codec.k;
+        int[] y = codec.y;
+
         int n = y.length;
-        int[] sampling = new int[n];
 
-        // Stratified sampling in case class is unbalanced.
-        // That is, we sample each class separately.
+        // # of samples in each strata
+        int[] count = new int[k];
+        for (int i = 0; i < n; i++) {
+            count[y[i]]++;
+        }
+        // samples in each strata
+        int[][] yi = new int[k][];
+        for (int i = 0; i < k; i++) {
+            yi[i] = new int[count[i]];
+        }
+        int[] idx = new int[k];
+        for (int i = 0; i < n; i++) {
+            int j = y[i];
+            yi[j][idx[j]++] = i;
+        }
+
         if (subsample == 1.0) {
-            // Training samples draw with replacement.
-            for (int l = 0; l < k; l++) {
-                int nj = 0;
-                ArrayList<Integer> cj = new ArrayList<>();
-                for (int i = 0; i < n; i++) {
-                    if (y[i] == l) {
-                        cj.add(i);
-                        nj++;
-                    }
-                }
-
-                // We used to do up sampling.
-                // But we switch to down sampling, which seems has better performance.
-                int size = nj / classWeight[l];
-                for (int i = 0; i < size; i++) {
-                    int xi = MathEx.randomInt(nj);
-                    sampling[cj.get(xi)] += 1;
+            // draw with replacement.
+            int[] samples = new int[n];
+            int l = 0;
+            for (int i = 0; i < k; i++) {
+                int ni = count[i];
+                int[] yj = yi[i];
+                for (int j = 0; j < ni; j++) {
+                    samples[l++] = yj[MathEx.randomInt(ni)];
                 }
             }
+            return new Bagging(samples);
         } else {
-            // Training samples draw without replacement.
-            int[] perm = MathEx.permutate(n);
-
-            int[] nc = new int[k];
-            for (int i = 0; i < n; i++) {
-                nc[y[i]]++;
+            // draw without replacement.
+            int size = 0;
+            for (int i = 0; i < k; i++) {
+                size += (int) Math.round(subsample * count[i]);
             }
 
-            for (int l = 0; l < k; l++) {
-                int subj = (int) Math.round(nc[l] * subsample / classWeight[l]);
-                int count = 0;
-                for (int i = 0; i < n && count < subj; i++) {
-                    int xi = perm[i];
-                    if (y[xi] == l) {
-                        sampling[xi] += 1;
-                        count++;
-                    }
+            int[] samples = new int[size];
+            int l = 0;
+            for (int i = 0; i < k; i++) {
+                int ni = (int) Math.round(subsample * count[i]);
+                int[] yj = yi[i];
+                int[] permutation = MathEx.permutate(count[i]);
+                for (int j = 0; j < ni; j++) {
+                    samples[l++] = yj[permutation[j]];
                 }
             }
-        }
-
-        int m = 0;
-        for (int s : sampling) {
-            if (s != 0) {
-                m++;
-                size += s;
-            }
-        }
-
-        this.samples = new int[m][2];
-        for (int i = 0, l = 0; i < n; i++) {
-            if (sampling[i] > 0) {
-                samples[l][0] = i;
-                samples[l][1] = sampling[i];
-                l++;
-            }
+            return new Bagging(samples);
         }
     }
 }

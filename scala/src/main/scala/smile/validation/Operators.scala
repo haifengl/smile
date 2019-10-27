@@ -20,7 +20,7 @@ package smile.validation
 import smile.classification.{Classifier, DataFrameClassifier, SoftClassifier}
 import smile.data.{DataFrame, Tuple}
 import smile.data.formula.Formula
-import smile.regression.{Regression, DataFrameRegression}
+import smile.regression.Regression
 import smile.util.{time, toJavaBiFunction, toJavaFunction}
 
 /** Model validation.
@@ -30,7 +30,7 @@ import smile.util.{time, toJavaBiFunction, toJavaFunction}
 trait Operators {
 
   /** Computes the confusion matrix. */
-  def confusion(truth: Array[Int], prediction: Array[Int]): ConfusionMatrix = new ConfusionMatrix(truth, prediction)
+  def confusion(truth: Array[Int], prediction: Array[Int]): ConfusionMatrix = ConfusionMatrix.of(truth, prediction)
   /** The accuracy is the proportion of true results (both true positives and
     * true negatives) in the population.
     */
@@ -140,7 +140,7 @@ trait Operators {
     }
 
     println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
-    println("Confusion Matrix: " + new ConfusionMatrix(testy, pred))
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, pred))
 
     classifier
   }
@@ -166,7 +166,7 @@ trait Operators {
 
     val testy = formula.y(test).toIntArray
     println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
-    println("Confusion Matrix: " + new ConfusionMatrix(testy, pred))
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, pred))
 
     classifier
   }
@@ -201,7 +201,7 @@ trait Operators {
     println("F1-Score = %.2f%%" format (100.0 * new FMeasure().measure(testy, pred)))
     println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, pred)))
     println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, pred)))
-    println("Confusion Matrix: " + new ConfusionMatrix(testy, pred))
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, pred))
 
     classifier
   }
@@ -234,7 +234,7 @@ trait Operators {
     println("F1-Score = %.2f%%" format (100.0 * new FMeasure().measure(testy, pred)))
     println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, pred)))
     println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, pred)))
-    println("Confusion Matrix: " + new ConfusionMatrix(testy, pred))
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, pred))
 
     classifier
   }
@@ -276,7 +276,7 @@ trait Operators {
     println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, prediction)))
     println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, prediction)))
     println("AUC = %.2f%%" format (100.0 * AUC.apply(testy, probability)))
-    println("Confusion Matrix: " + new ConfusionMatrix(testy, prediction))
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, prediction))
 
     classifier
   }
@@ -318,7 +318,7 @@ trait Operators {
     println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, prediction)))
     println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, prediction)))
     println("AUC = %.2f%%" format (100.0 * AUC.apply(testy, probability)))
-    println("Confusion Matrix: " + new ConfusionMatrix(testy, prediction))
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, prediction))
 
     classifier
   }
@@ -347,12 +347,11 @@ trait Operators {
     * @return measure results.
     */
   def loocv[T <: Object](x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
-    val predictions = LOOCV.classification(x, y, trainer)
-
-    println("Confusion Matrix: " + new ConfusionMatrix(y, predictions))
+    val prediction = LOOCV.classification(x, y, trainer)
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
 
     measuresOrAccuracy(measures).map { measure =>
-      val result = measure.measure(y, predictions)
+      val result = measure.measure(y, prediction)
       println(f"$measure%s: ${100*result}%.2f%%")
       result
     }.toArray
@@ -367,13 +366,12 @@ trait Operators {
     * @return measure results.
     */
   def loocv(formula: Formula, data: DataFrame, measures: ClassificationMeasure*)(trainer: DataFrame => DataFrameClassifier): Array[Double] = {
-    val predictions = LOOCV.classification(data, trainer)
+    val prediction = LOOCV.classification(data, trainer)
     val y = formula.y(data).toIntArray
-
-    println("Confusion Matrix: " + new ConfusionMatrix(y, predictions))
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
 
     measuresOrAccuracy(measures).map { measure =>
-      val result = measure.measure(y, predictions)
+      val result = measure.measure(y, prediction)
       println(f"$measure%s: ${100*result}%.2f%%")
       result
     }.toArray
@@ -388,10 +386,10 @@ trait Operators {
     * @return measure results.
     */
   def loocv[T <: Object](x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
-    val predictions = LOOCV.regression(x, y, trainer)
+    val prediction = LOOCV.regression(x, y, trainer)
 
     measuresOrRMSE(measures).map { measure =>
-      val result = measure.measure(y, predictions)
+      val result = measure.measure(y, prediction)
       println(f"$measure%s: $result%.4f")
       result
     }.toArray
@@ -417,12 +415,11 @@ trait Operators {
     * @return measure results.
     */
   def cv[T <: Object](k: Int, x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
-    val predictions = CrossValidation.classification(k, x, y, trainer)
-
-    println("Confusion Matrix: " + new ConfusionMatrix(y, predictions))
+    val prediction = CrossValidation.classification(k, x, y, trainer)
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
 
     measuresOrAccuracy(measures).map { measure =>
-      val result = measure.measure(y, predictions)
+      val result = measure.measure(y, prediction)
       println(f"$measure%s: ${100*result}%.2f%%")
       result
     }.toArray
@@ -438,13 +435,12 @@ trait Operators {
     * @return measure results.
     */
   def cv(k: Int, formula: Formula, data: DataFrame, measures: ClassificationMeasure*)(trainer: DataFrame => DataFrameClassifier): Array[Double] = {
-    val predictions = CrossValidation.classification(k, data, trainer)
+    val prediction = CrossValidation.classification(k, data, trainer)
     val y = formula.y(data).toIntArray
-
-    println("Confusion Matrix: " + new ConfusionMatrix(y, predictions))
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
 
     measuresOrAccuracy(measures).map { measure =>
-      val result = measure.measure(y, predictions)
+      val result = measure.measure(y, prediction)
       println(f"$measure%s: ${100*result}%.2f%%")
       result
     }.toArray
@@ -460,10 +456,10 @@ trait Operators {
     * @return measure results.
     */
   def cv[T <: Object](k: Int, x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
-    val predictions = CrossValidation.regression(k, x, y, trainer)
+    val prediction = CrossValidation.regression(k, x, y, trainer)
 
     measuresOrRMSE(measures).map { measure =>
-      val result = measure.measure(y, predictions)
+      val result = measure.measure(y, prediction)
       println(f"$measure%s: $result%.4f")
       result
     }.toArray
