@@ -29,12 +29,12 @@ public interface Chromosome extends Comparable<Chromosome> {
     /**
      * Returns the fitness of chromosome.
      */
-    public double fitness();
+    double fitness();
 
     /**
      * Returns a new random instance.
      */
-    public Chromosome newInstance();
+    Chromosome newInstance();
 
     /**
      * Returns a pair of offsprings by crossovering this one with another one
@@ -42,7 +42,7 @@ public interface Chromosome extends Comparable<Chromosome> {
      * crossover performed. If there is no crossover, offspring is exact copy of
      * parents. Various crossover strategies can be employed.
      */
-    public Chromosome[] crossover(Chromosome another);
+    Chromosome[] crossover(Chromosome another);
 
     /**
      * For genetic algorithms, this method mutates the chromosome randomly.
@@ -50,5 +50,5 @@ public interface Chromosome extends Comparable<Chromosome> {
      * very low. For Lamarckian algorithms, this method actually does the local
      * search such as such as hill-climbing.
      */
-    public void mutate();
+    void mutate();
 }

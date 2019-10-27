@@ -68,7 +68,7 @@ public class ARMTest {
     }
 
     @Test
-    public void testARM() {
+    public void test() {
         System.out.println("ARM");
         FPTree tree = FPTree.build(3, itemsets);
         List<AssociationRule> rules = ARM.apply(0.5, tree).collect(Collectors.toList());

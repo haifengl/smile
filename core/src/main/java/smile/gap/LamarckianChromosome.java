@@ -31,5 +31,5 @@ public interface LamarckianChromosome extends Chromosome {
     /**
      * Performs a step of (hill-climbing) local search to evolve this chromosome.
      */
-    public void evolve();
+    void evolve();
 }

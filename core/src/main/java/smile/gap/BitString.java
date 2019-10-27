@@ -48,39 +48,13 @@ import smile.math.MathEx;
 public class BitString implements Chromosome {
 
     /**
-     * The types of crossover operation.
-     */
-    public enum Crossover {
-
-        /**
-         * Single point crossover - one crossover point is selected, binary
-         * string from beginning of chromosome to the crossover point is copied
-         * from one parent, the rest is copied from the second parent.
-         */
-        SINGLE_POINT,
-        /**
-         * Two point crossover - two crossover point are selected, binary string
-         * from beginning of chromosome to the first crossover point is copied
-         * from one parent, the part from the first to the second crossover
-         * point is copied from the second parent and the rest is copied from
-         * the first parent.
-         */
-        TWO_POINT,
-        /**
-         * Uniform crossover - bits are randomly copied from the first or from
-         * the second parent.
-         */
-        UNIFORM,
-    }
-
-    /**
      * The length of chromosome.
      */
     public final int length;
     /**
      * Binary encoding of chromosome.
      */
-    private int[] bits;
+    private byte[] bits;
     /**
      * Mutation rate.
      */
@@ -108,17 +82,7 @@ public class BitString implements Chromosome {
      * @param measure the fitness measure.
      */
     public BitString(int length, FitnessMeasure<BitString> measure) {
-        if (length <= 0) {
-            throw new IllegalArgumentException("Invalid bit string length: " + length);
-        }
-        
-        this.length = length;
-        this.measure = measure;
-
-        bits = new int[length];
-        for (int i = 0; i < length; i++) {
-            bits[i] = MathEx.random() > 0.5 ? 1 : 0;
-        }        
+        this(length, measure, Crossover.TWO_POINT, 0.9, 0.01);
     }
     
     /**
@@ -130,28 +94,7 @@ public class BitString implements Chromosome {
      * @param mutationRate the mutation rate.
      */
     public BitString(int length, FitnessMeasure<BitString> measure, Crossover crossover, double crossoverRate, double mutationRate) {
-        if (length <= 0) {
-            throw new IllegalArgumentException("Invalid bit string length: " + length);
-        }
-        
-        if (crossoverRate < 0.0 || crossoverRate > 1.0) {
-            throw new IllegalArgumentException("Invalid crossover rate: " + crossoverRate);
-        }
-        
-        if (mutationRate < 0.0 || mutationRate > 1.0) {
-            throw new IllegalArgumentException("Invalid mutation rate: " + mutationRate);
-        }
-        
-        this.length = length;
-        this.measure = measure;
-        this.crossoverRate = crossoverRate;
-        this.mutationRate = mutationRate;
-        this.crossover = crossover;
-
-        bits = new int[length];
-        for (int i = 0; i < length; i++) {
-            bits[i] = MathEx.random() > 0.5 ? 1 : 0;
-        }
+        this(bits(length), measure, crossover, crossoverRate, mutationRate);
     }
 
     /**
@@ -159,10 +102,8 @@ public class BitString implements Chromosome {
      * @param bits the bit string of chromosome.
      * @param measure the fitness measure.
      */
-    public BitString(int[] bits, FitnessMeasure<BitString> measure) {
-        this.bits = bits;
-        this.length = bits.length;
-        this.measure = measure;
+    public BitString(byte[] bits, FitnessMeasure<BitString> measure) {
+        this(bits, measure, Crossover.TWO_POINT, 0.9, 0.01);
     }
 
     /**
@@ -173,7 +114,15 @@ public class BitString implements Chromosome {
      * @param crossoverRate the crossover rate.
      * @param mutationRate the mutation rate.
      */
-    public BitString(int[] bits, FitnessMeasure<BitString> measure, Crossover crossover, double crossoverRate, double mutationRate) {
+    public BitString(byte[] bits, FitnessMeasure<BitString> measure, Crossover crossover, double crossoverRate, double mutationRate) {
+        if (crossoverRate < 0.0 || crossoverRate > 1.0) {
+            throw new IllegalArgumentException("Invalid crossover rate: " + crossoverRate);
+        }
+
+        if (mutationRate < 0.0 || mutationRate > 1.0) {
+            throw new IllegalArgumentException("Invalid mutation rate: " + mutationRate);
+        }
+
         this.bits = bits;
         this.length = bits.length;
         this.measure = measure;
@@ -182,10 +131,29 @@ public class BitString implements Chromosome {
         this.crossover = crossover;
     }
 
+    /** Generate a random bit string. */
+    private static byte[] bits(int length) {
+        if (length <= 0) {
+            throw new IllegalArgumentException("Invalid bit string length: " + length);
+        }
+
+        byte[] bits = new byte[length];
+        for (int i = 0; i < length; i++) {
+            bits[i] = (byte) (MathEx.random() > 0.5 ? 1 : 0);
+        }
+
+        return bits;
+    }
+
+    /** Returns the length of bit string. */
+    public int length() {
+        return length;
+    }
+
     /**
      * Returns the bit string of chromosome.
      */
-    public int[] bits() {
+    public byte[] bits() {
         return bits;
     }
 
@@ -208,108 +176,25 @@ public class BitString implements Chromosome {
         return new BitString(length, measure, crossover, crossoverRate, mutationRate);
     }
 
+    /** Creates a new instance with given bits. */
+    public BitString newInstance(byte[] bits) {
+        return new BitString(bits, measure, crossover, crossoverRate, mutationRate);
+    }
+
     @Override
     public BitString[] crossover(Chromosome another) {
         if (!(another instanceof BitString)) {
-            throw new IllegalArgumentException("The input parent is NOT bit string chromosome.");
+            throw new IllegalArgumentException("NOT a BitString chromosome.");
         }
 
         BitString mother = (BitString) another;
-        BitString[] offsprings = new BitString[2];
+
         if (MathEx.random() < crossoverRate) {
-            switch (crossover) {
-                case SINGLE_POINT:
-                    singlePointCrossover(this, mother, offsprings);
-                    break;
-                case TWO_POINT:
-                    twoPointCrossover(this, mother, offsprings);
-                    break;
-                case UNIFORM:
-                    uniformCrossover(this, mother, offsprings);
-                    break;
-            }
+            return crossover.apply(this, mother);
         } else {
-            offsprings[0] = this;
-            offsprings[1] = mother;
+            BitString[] offsprings = {this, mother};
+            return offsprings;
         }
-
-        return offsprings;
-    }
-
-    /**
-     * Single point crossover.
-     */
-    private void singlePointCrossover(BitString father, BitString mother, BitString[] offsprings) {
-        int point = 0; // crossover point
-        while (point == 0) {
-            point = MathEx.randomInt(length);
-        }
-
-        int[] son = new int[length];
-        System.arraycopy(father.bits, 0, son, 0, point);
-        System.arraycopy(mother.bits, point, son, point, length - point);
-
-        int[] daughter = new int[length];
-        System.arraycopy(mother.bits, 0, daughter, 0, point);
-        System.arraycopy(father.bits, point, daughter, point, length - point);
-
-        offsprings[0] = new BitString(son, measure, crossover, crossoverRate, mutationRate);
-        offsprings[1] = new BitString(daughter, measure, crossover, crossoverRate, mutationRate);
-    }
-
-    /**
-     * Two point crossover.
-     */
-    private void twoPointCrossover(BitString father, BitString mother, BitString[] offsprings) {
-        int point1 = 0; // first crossover point
-        while (point1 == 0 || point1 == length - 1) {
-            point1 = MathEx.randomInt(length);
-        }
-
-        int point2 = 0; // second crossover point
-        while (point2 == point1 || point2 == 0 || point2 == length - 1) {
-            point2 = MathEx.randomInt(length);
-        }
-        
-        if (point2 < point1) {
-            int p = point1;
-            point1 = point2;
-            point2 = p;
-        }
-
-        int[] son = new int[length];
-        System.arraycopy(father.bits, 0, son, 0, point1);
-        System.arraycopy(mother.bits, point1, son, point1, point2 - point1);
-        System.arraycopy(father.bits, point2, son, point2, length - point2);
-
-        int[] daughter = new int[length];
-        System.arraycopy(mother.bits, 0, daughter, 0, point1);
-        System.arraycopy(father.bits, point1, daughter, point1, point2 - point1);
-        System.arraycopy(mother.bits, point2, daughter, point2, length - point2);
-        
-        offsprings[0] = new BitString(son, measure, crossover, crossoverRate, mutationRate);
-        offsprings[1] = new BitString(daughter, measure, crossover, crossoverRate, mutationRate);
-    }
-
-    /**
-     * Uniform crossover.
-     */
-    private void uniformCrossover(BitString father, BitString mother, BitString[] offsprings) {
-        int[] son = new int[length];
-        int[] daughter = new int[length];
-
-        for (int i = 0; i < length; i++) {
-            if (MathEx.random() < 0.5) {
-                son[i] = father.bits[i];
-                daughter[i] = mother.bits[i];
-            } else {
-                son[i] = mother.bits[i];
-                daughter[i] = father.bits[i];
-            }
-        }
-
-        offsprings[0] = new BitString(son, measure, crossover, crossoverRate, mutationRate);
-        offsprings[1] = new BitString(daughter, measure, crossover, crossoverRate, mutationRate);
     }
 
     @Override
@@ -319,5 +204,14 @@ public class BitString implements Chromosome {
                 bits[i] ^= 1;
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bits) {
+            sb.append(b);
+        }
+        return sb.toString();
     }
 }

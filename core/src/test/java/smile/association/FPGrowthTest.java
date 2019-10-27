@@ -73,7 +73,7 @@ public class FPGrowthTest {
     }
 
     @Test
-    public void testFPGrowth() {
+    public void test() {
         System.out.println("FP-Growth");
         FPTree tree = FPTree.build(3, itemsets);
         List<ItemSet> results = FPGrowth.apply(tree).collect(Collectors.toList());

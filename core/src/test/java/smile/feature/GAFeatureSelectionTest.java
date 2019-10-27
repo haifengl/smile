@@ -56,8 +56,8 @@ public class GAFeatureSelectionTest {
     }
 
     @Test
-    public void testLearn() {
-        System.out.println("learn");
+    public void test() {
+        System.out.println("GAFE");
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
@@ -66,14 +66,10 @@ public class GAFeatureSelectionTest {
         ClassificationMeasure measure = new Accuracy();
 
         GAFeatureSelection gap = new GAFeatureSelection();
-        BitString[] result = gap.learn(size, generation, USPS.x, USPS.y, USPS.testx, USPS.testy, measure, (x, y) -> LDA.fit(x, y));
+        BitString[] result = gap.classification(size, generation, USPS.x, USPS.y, USPS.testx, USPS.testy, measure, (x, y) -> LDA.fit(x, y));
             
         for (BitString bits : result) {
-            System.out.format("%.2f%% %d ", 100*bits.fitness(), MathEx.sum(bits.bits()));
-            for (int i = 0; i < USPS.x[0].length; i++) {
-                System.out.print(bits.bits()[i] + " ");
-            }
-            System.out.println();
+            System.out.format("%.2f%% %s%n", 100*bits.fitness(), bits);
         }
 
         assertEquals(0.8859, result[result.length-1].fitness(), 1E-4);
