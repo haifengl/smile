@@ -22,6 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
+
 import static org.junit.Assert.*;
 
 /**
@@ -49,19 +51,19 @@ public class BitStringTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of newInstance method, of class BitString.
-     */
     @Test
     public void testNewInstance() {
         System.out.println("newInstance");
-        int[] father = {1,1,1,0,1,0,0,1,0,0,0};
-        BitString instance = new BitString(father, null, BitString.Crossover.SINGLE_POINT, 1.0, 0.0);
+
+        byte[] father = {1,1,1,0,1,0,0,1,0,0,0};
+        int length = father.length;
+        BitString instance = new BitString(father, null, Crossover.SINGLE_POINT, 1.0, 0.0);
         BitString result = instance.newInstance();
-        assertEquals(father.length, result.length);
-        assertEquals(father.length, result.bits().length);
+
+        assertEquals(length, result.length());
+
         boolean same = true;
-        for (int i = 0; i < father.length; i++) {
+        for (int i = 0; i < length; i++) {
             if (father[i] != result.bits()[i]) {
                 same = false;
             }
@@ -69,97 +71,19 @@ public class BitStringTest {
         assertFalse(same);
     }
 
-    /**
-     * Test of crossover method, of class BitString.
-     */
-    @Test
-    public void testCrossoverOne() {
-        System.out.println("crossover one point");
-        int[] father = {1,1,1,0,1,0,0,1,0,0,0};
-        int[] mother = {0,0,0,0,1,0,1,0,1,0,1};
-        BitString instance = new BitString(father, null, BitString.Crossover.SINGLE_POINT, 1.0, 0.0);
-        BitString another = new BitString(mother, null, BitString.Crossover.SINGLE_POINT, 1.0, 0.0);
-        int[] son = {1,1,1,0,1,0,1,0,1,0,1};
-        int[] daughter = {0,0,0,0,1,0,0,1,0,0,0};
-        BitString[] result = instance.crossover(another);
-        assertEquals(son.length, result[0].bits().length);
-        assertEquals(daughter.length, result[1].bits().length);
-        for (int i = 0; i< son.length; i++) {
-            //assertEquals(son[i], result[0].bits()[i]);
-            //assertEquals(daughter[i], result[1].bits()[i]);
-            assertTrue((father[i] == result[0].bits()[i] && mother[i] == result[1].bits()[i])
-                    || (father[i] == result[1].bits()[i] && mother[i] == result[0].bits()[i]));
-        }
-    }
-
-    /**
-     * Test of crossover method, of class BitString.
-     */
-    @Test
-    public void testCrossoverTwo() {
-        System.out.println("crossover two point");
-        int[] father = {1,1,1,0,1,0,0,1,0,0,0};
-        int[] mother = {0,0,0,0,1,0,1,0,1,0,1};
-        BitString instance = new BitString(father, null, BitString.Crossover.TWO_POINT, 1.0, 0.0);
-        BitString another = new BitString(mother, null, BitString.Crossover.TWO_POINT, 1.0, 0.0);
-        int[] son = {1,1,0,0,1,0,1,1,0,0,0};
-        int[] daughter = {0,0,1,0,1,0,0,0,1,0,1};
-        BitString[] result = instance.crossover(another);
-        assertEquals(son.length, result[0].bits().length);
-        assertEquals(daughter.length, result[1].bits().length);
-        for (int i = 0; i< son.length; i++) {
-            //assertEquals(son[i], result[0].bits()[i]);
-            //assertEquals(daughter[i], result[1].bits()[i]);
-            assertTrue((father[i] == result[0].bits()[i] && mother[i] == result[1].bits()[i])
-                    || (father[i] == result[1].bits()[i] && mother[i] == result[0].bits()[i]));
-        }
-    }
-
-    /**
-     * Test of crossover method, of class BitString.
-     */
-    @Test
-    public void testCrossoverUniform() {
-        System.out.println("crossover uniform");
-        int[] father = {1,1,1,0,1,0,0,1,0,0,0};
-        int[] mother = {0,0,0,0,1,0,1,0,1,0,1};
-        BitString instance = new BitString(father, null, BitString.Crossover.UNIFORM, 1.0, 0.0);
-        BitString another = new BitString(mother, null, BitString.Crossover.UNIFORM, 1.0, 0.0);
-        BitString[] result = instance.crossover(another);
-        assertEquals(father.length, result[0].bits().length);
-        assertEquals(mother.length, result[1].bits().length);
-
-        boolean same = true;
-        for (int i = 0; i< father.length; i++) {
-            assertTrue((father[i] == result[0].bits()[i] && mother[i] == result[1].bits()[i])
-                    || (father[i] == result[1].bits()[i] && mother[i] == result[0].bits()[i]));
-
-            if (father[i] != result[0].bits()[i]) {
-                same = false;
-            }
-        }
-
-        assertFalse(same);
-    }
-
-    /**
-     * Test of mutate method, of class BitString.
-     */
     @Test
     public void testMutate() {
         System.out.println("mutate");
-        int[] father = {1,1,1,0,1,0,0,1,0,0,0};
-        BitString instance = new BitString(father.clone(), null, BitString.Crossover.SINGLE_POINT, 1.0, 1.0);
-        instance.mutate();
-        assertEquals(father.length, instance.length);
-        assertEquals(father.length, instance.bits().length);
-        boolean same = true;
-        for (int i = 0; i < father.length; i++) {
-            if (father[i] != instance.bits()[i]) {
-                same = false;
-            }
-        }
-        assertFalse(same);
-    }
 
+        MathEx.setSeed(19650218); // to get repeatable results.
+
+        byte[] father = {1,1,1,0,1,0,0,1,0,0,0};
+        BitString instance = new BitString(father.clone(), null, Crossover.SINGLE_POINT, 1.0, 0.1);
+        instance.mutate();
+
+        byte[] mutant = {1,1,1,1,1,0,0,1,0,1,0};
+        for (int i = 0; i < father.length; i++) {
+            assertEquals(mutant[i], instance.bits()[i]);
+        }
+    }
 }

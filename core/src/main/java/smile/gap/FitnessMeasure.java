@@ -28,5 +28,5 @@ public interface FitnessMeasure <T extends Chromosome> {
      * Returns the non-negative fitness value of a chromosome. Large values
      * indicate better fitness.
      */
-    public double fit(T chromosome);
+    double fit(T chromosome);
 }

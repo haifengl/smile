@@ -68,7 +68,7 @@ public class TotalSupportTreeTest {
     }
 
     @Test
-    public void testTTree() {
+    public void test() {
         System.out.println("T-Tree");
 
         FPTree tree = FPTree.build(3, itemsets);

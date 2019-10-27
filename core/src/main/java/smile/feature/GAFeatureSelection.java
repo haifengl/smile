@@ -19,9 +19,7 @@ package smile.feature;
 
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
-import smile.gap.BitString;
-import smile.gap.FitnessMeasure;
-import smile.gap.GeneticAlgorithm;
+import smile.gap.*;
 import smile.regression.Regression;
 import smile.validation.*;
 
@@ -48,25 +46,35 @@ public class GAFeatureSelection {
     /**
      * Selection strategy.
      */
-    private GeneticAlgorithm.Selection selection = GeneticAlgorithm.Selection.TOURNAMENT;
+    private Selection selection;
     /**
-     * Mutation rate.
-     * The mutation parameters are set higher than usual to prevent premature convergence. 
+     * The number of best chromosomes to copy to new population. When creating
+     * new population by crossover and mutation, we have a big chance, that we
+     * will loose the best chromosome. Elitism first copies the best chromosome
+     * (or a few best chromosomes) to new population. The rest is done in
+     * classical way. Elitism can very rapidly increase performance of GA,
+     * because it prevents losing the best found solution.
      */
-    private double mutationRate = 0.01;
+    private int elitism;
     /**
      * Crossover strategy.
      */
-    private BitString.Crossover crossover = BitString.Crossover.UNIFORM;
+    private Crossover crossover;
     /**
      * Crossover rate.
      */
-    private double crossoverRate = 1.0;
+    private double crossoverRate;
+    /**
+     * Mutation rate.
+     * The mutation parameters are set higher than usual to prevent premature convergence.
+     */
+    private double mutationRate;
 
     /**
      * Constructor.
      */
     public GAFeatureSelection() {
+        this(Selection.Tournament(3, 0.95), 1, Crossover.UNIFORM, 1.0, 0.01);
     }
 
     /**
@@ -76,16 +84,9 @@ public class GAFeatureSelection {
      * @param crossoverRate the crossover rate.
      * @param mutationRate the mutation rate.
      */
-    public GAFeatureSelection(GeneticAlgorithm.Selection selection, BitString.Crossover crossover, double crossoverRate, double mutationRate) {
-        if (crossoverRate < 0.0 || crossoverRate > 1.0) {
-            throw new IllegalArgumentException("Invalid crossover rate: " + crossoverRate);
-        }
-        
-        if (mutationRate < 0.0 || mutationRate > 1.0) {
-            throw new IllegalArgumentException("Invalid mutation rate: " + mutationRate);
-        }
-        
+    public GAFeatureSelection(Selection selection, int elitism, Crossover crossover, double crossoverRate, double mutationRate) {
         this.selection = selection;
+        this.elitism = elitism;
         this.crossover = crossover;
         this.crossoverRate = crossoverRate;
         this.mutationRate = mutationRate;
@@ -102,7 +103,7 @@ public class GAFeatureSelection {
      * @param k k-fold cross validation for the evaluation.
      * @return bit strings of last generation.
      */
-    public BitString[] learn(int size, int generation, double[][] x, int[] y, int k, ClassificationMeasure measure, BiFunction<double[][], int[], Classifier<double[]>> trainer) {
+    public BitString[] classification(int size, int generation, double[][] x, int[] y, int k, ClassificationMeasure measure, BiFunction<double[][], int[], Classifier<double[]>> trainer) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid population size: " + size);
         }
@@ -123,7 +124,7 @@ public class GAFeatureSelection {
             seeds[i] = new BitString(p, fitness, crossover, crossoverRate, mutationRate);
         }
 
-        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, selection);
+        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, selection, elitism);
         ga.evolve(generation);       
         
         return seeds;
@@ -141,7 +142,7 @@ public class GAFeatureSelection {
      * @param testy testing instance labels.
      * @return bit strings of last generation.
      */
-    public BitString[] learn(int size, int generation, double[][] x, int[] y, double[][] testx, int[] testy, ClassificationMeasure measure, BiFunction<double[][], int[], Classifier<double[]>> trainer) {
+    public BitString[] classification(int size, int generation, double[][] x, int[] y, double[][] testx, int[] testy, ClassificationMeasure measure, BiFunction<double[][], int[], Classifier<double[]>> trainer) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid population size: " + size);
         }
@@ -166,7 +167,7 @@ public class GAFeatureSelection {
             seeds[i] = new BitString(p, fitness, crossover, crossoverRate, mutationRate);
         }
 
-        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, selection);
+        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, selection, elitism);
         ga.evolve(generation);       
         
         return seeds;        
@@ -232,7 +233,7 @@ public class GAFeatureSelection {
         @Override
         public double fit(BitString chromosome) {
             int p = 0;
-            int[] bits = chromosome.bits();
+            byte[] bits = chromosome.bits();
             for (int b : bits) {
                 p += b;
             }
@@ -278,7 +279,8 @@ public class GAFeatureSelection {
                 return measure.measure(testy, prediction);                
             }
         }
-    };
+    }
+
     /**
      * Genetic algorithm based feature selection for regression.
      * @param size the population size of Genetic Algorithm.
@@ -290,7 +292,7 @@ public class GAFeatureSelection {
      * @param k k-fold cross validation for the evaluation.
      * @return bit strings of last generation.
      */
-    public BitString[] learn(int size, int generation, double[][] x, double[] y, int k, RegressionMeasure measure, BiFunction<double[][], double[], Regression<double[]>> trainer) {
+    public BitString[] regression(int size, int generation, double[][] x, double[] y, int k, RegressionMeasure measure, BiFunction<double[][], double[], Regression<double[]>> trainer) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid population size: " + size);
         }
@@ -311,7 +313,7 @@ public class GAFeatureSelection {
             seeds[i] = new BitString(p, fitness, crossover, crossoverRate, mutationRate);
         }
 
-        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, selection);
+        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, selection, elitism);
         ga.evolve(generation);       
         
         return seeds;
@@ -329,7 +331,7 @@ public class GAFeatureSelection {
      * @param testy testing instance labels.
      * @return bit strings of last generation.
      */
-    public BitString[] learn(int size, int generation, double[][] x, double[] y, double[][] testx, double[] testy, RegressionMeasure measure, BiFunction<double[][], double[], Regression<double[]>> trainer) {
+    public BitString[] regression(int size, int generation, double[][] x, double[] y, double[][] testx, double[] testy, RegressionMeasure measure, BiFunction<double[][], double[], Regression<double[]>> trainer) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid population size: " + size);
         }
@@ -354,7 +356,7 @@ public class GAFeatureSelection {
             seeds[i] = new BitString(p, fitness, crossover, crossoverRate, mutationRate);
         }
 
-        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, selection);
+        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, selection, elitism);
         ga.evolve(generation);       
         
         return seeds;        
@@ -420,7 +422,7 @@ public class GAFeatureSelection {
         @Override
         public double fit(BitString chromosome) {
             int p = 0;
-            int[] bits = chromosome.bits();
+            byte[] bits = chromosome.bits();
             for (int b : bits) {
                 p += b;
             }
