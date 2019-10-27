@@ -61,9 +61,7 @@ public class ConfusionMatrix {
     
     @Override
     public String toString() {
-
         StringBuilder sb = new StringBuilder();
-
         sb.append("ROW=truth and COL=predicted\n");
 
         for(int i = 0; i < matrix.length; i++){

@@ -29,6 +29,6 @@ public interface ClusterMeasure {
      * @param y1 the cluster labels.
      * @param y2 the alternative cluster labels.
      */
-    public double measure(int[] y1, int[] y2);
+    double measure(int[] y1, int[] y2);
 
 }
