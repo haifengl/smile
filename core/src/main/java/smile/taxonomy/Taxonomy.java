@@ -41,21 +41,13 @@ public class Taxonomy {
 
     /**
      * Constructor.
-     */
-    public Taxonomy() {
-        root = new Concept();
-        root.taxonomy = this;
-    }
-
-    /**
-     * Constructor.
      *
      * @param rootConcept the keyword of root concept.
      */
-    public Taxonomy(String rootConcept) {
+    public Taxonomy(String... rootConcept) {
         root = new Concept();
         root.taxonomy = this;
-        root.addKeyword(rootConcept);
+        root.addKeywords(rootConcept);
     }
 
     /**
@@ -82,7 +74,7 @@ public class Taxonomy {
     }
 
     /**
-     * Returns all named concepts from this taxonomy
+     * Returns all named sub-concepts from this taxonomy
      */
     private List<String> getConcepts(Concept c) {
         List<String> keywords = new ArrayList<>();

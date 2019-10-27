@@ -56,62 +56,12 @@ public class Concept {
     }
 
     /**
-     * Constructor. Create a concept with an empty set of synonyms.
-     *
-     * @param parent the parent concept
-     */
-    public Concept(Concept parent) {
-        if (parent == null) {
-            throw new NullPointerException("Parent concept cannot be null.");
-        }
-
-        this.parent = parent;
-
-        if (parent.children == null) {
-            parent.children = new ArrayList<>();
-        }
-
-        parent.children.add(this);
-        taxonomy = parent.taxonomy;
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param keyword a keyword of this concept
-     * @param parent the parent concept
-     */
-    public Concept(Concept parent, String keyword) {
-        if (parent == null) {
-            throw new NullPointerException("Parent concept cannot be null.");
-        }
-
-        this.parent = parent;
-
-        synset = new TreeSet<>();
-        synset.add(keyword);
-
-        if (parent.children == null) {
-            parent.children = new ArrayList<>();
-        }
-
-        parent.children.add(this);
-        taxonomy = parent.taxonomy;
-
-        if (taxonomy.concepts.containsKey(keyword)) {
-            throw new IllegalArgumentException(String.format("Concept %s already exists.", keyword));
-        }
-
-        taxonomy.concepts.put(keyword, this);
-    }
-
-    /**
      * Constructor.
      *
      * @param keywords a list of keywords of this concept
      * @param parent the parent concept
      */
-    public Concept(Concept parent, String[] keywords) {
+    public Concept(Concept parent, String... keywords) {
         if (parent == null) {
             throw new NullPointerException("Parent concept cannot be null.");
         }
@@ -129,40 +79,6 @@ public class Concept {
 
         parent.children.add(this);
 
-        taxonomy = parent.taxonomy;
-        for (String keyword : keywords) {
-            if (taxonomy.concepts.containsKey(keyword)) {
-                throw new IllegalArgumentException(String.format("Concept %s already exists.", keyword));
-            }
-        }
-
-        for (String keyword : keywords) {
-            taxonomy.concepts.put(keyword, this);
-        }
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param keywords a list of keywords of this concept
-     * @param parent the parent concept
-     */
-    public Concept(Concept parent, List<String> keywords) {
-        if (parent == null) {
-            throw new NullPointerException("Parent concept cannot be null.");
-        }
-
-        this.parent = parent;
-
-        synset = new TreeSet<>();
-        synset.addAll(keywords);
-
-        if (parent.children == null) {
-            parent.children = new ArrayList<>();
-        }
-
-        parent.children.add(this);
-        
         taxonomy = parent.taxonomy;
         for (String keyword : keywords) {
             if (taxonomy.concepts.containsKey(keyword)) {
@@ -192,26 +108,9 @@ public class Concept {
     }
 
     /**
-     * Add a keyword to the concept synset.
-     */
-    public void addKeyword(String keyword) {
-        if (taxonomy.concepts.containsKey(keyword)) {
-            throw new IllegalArgumentException(String.format("Concept %s already exists.", keyword));
-        }
-
-        taxonomy.concepts.put(keyword, this);
-
-        if (synset == null) {
-            synset = new TreeSet<>();
-        }
-
-        synset.add(keyword);
-    }
-
-    /**
      * Add a list of synomym to the concept synset.
      */
-    public void addKeywords(String[] keywords) {
+    public void addKeywords(String... keywords) {
         for (String keyword : keywords) {
             if (taxonomy.concepts.containsKey(keyword)) {
                 throw new IllegalArgumentException(String.format("Concept %s already exists.", keyword));
@@ -229,27 +128,6 @@ public class Concept {
         for (String keyword : keywords) {
             synset.add(keyword);
         }
-    }
-
-    /**
-     * Add a list of synomym to the concept synset.
-     */
-    public void addKeywords(List<String> keywords) {
-        for (String keyword : keywords) {
-            if (taxonomy.concepts.containsKey(keyword)) {
-                throw new IllegalArgumentException(String.format("Concept %s already exists.", keyword));
-            }
-        }
-
-        for (String keyword : keywords) {
-            taxonomy.concepts.put(keyword, this);
-        }
-
-        if (synset == null) {
-            synset = new TreeSet<>();
-        }
-
-        synset.addAll(keywords);
     }
 
     /**
