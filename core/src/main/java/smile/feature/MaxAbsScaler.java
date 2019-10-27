@@ -19,7 +19,6 @@ package smile.feature;
 
 import smile.data.DataFrame;
 import smile.data.Tuple;
-import smile.data.type.DataType;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;

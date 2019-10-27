@@ -18,6 +18,8 @@
 package smile.feature;
 
 import java.util.Arrays;
+
+import smile.classification.ClassLabel;
 import smile.math.MathEx;
 
 /**
@@ -37,33 +39,18 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class SumSquaresRatio  implements FeatureRanking {
+public class SumSquaresRatio implements FeatureRanking {
 
     @Override
-    public double[] rank(double[][] x, int[] y) {
+    public double[] apply(double[][] x, int[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        // class label set.
-        int[] labels = MathEx.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + labels[i-1]+1);
-            }
-        }
+        ClassLabel.Result codec = ClassLabel.fit(y);
+        int k = codec.k;
+        y = codec.y;
 
-        int k = labels.length;
-        if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
-        }
-        
         int n = x.length;
         int p = x[0].length;
         int[] nc = new int[k];

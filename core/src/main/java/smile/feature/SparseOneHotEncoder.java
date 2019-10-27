@@ -17,17 +17,9 @@
 
 package smile.feature;
 
-import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
-import java.util.stream.Collectors;
-
-import smile.data.measure.NominalScale;
-import smile.data.type.DataType;
-import smile.data.type.StructField;
-import smile.data.vector.BaseVector;
-import smile.data.vector.DoubleVector;
-import smile.math.MathEx;
 import smile.data.DataFrame;
+import smile.data.measure.NominalScale;
+import smile.data.type.StructField;
 import smile.data.Tuple;
 import smile.data.type.StructType;
 
@@ -82,5 +74,13 @@ public class SparseOneHotEncoder {
         }
 
         return features;
+    }
+
+    /**
+     * Generates the compact representation of sparse binary features for a data frame.
+     * @param data a data frame.
+     */
+    public int[][] apply(DataFrame data) {
+        return data.stream().map(this::apply).toArray(int[][]::new);
     }
 }

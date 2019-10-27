@@ -17,6 +17,7 @@
 
 package smile.feature;
 
+import smile.classification.ClassLabel;
 import smile.math.MathEx;
 
 /**
@@ -38,9 +39,16 @@ import smile.math.MathEx;
 public class SignalNoiseRatio implements FeatureRanking {
 
     @Override
-    public double[] rank(double[][] x, int[] y) {
+    public double[] apply(double[][] x, int[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
+        }
+
+        ClassLabel.Result codec = ClassLabel.fit(y);
+        y = codec.y;
+
+        if (codec.k != 2) {
+            throw new IllegalArgumentException("SignalNoiseRatio is applicable only to binary class.");
         }
 
         int n1 = 0;

@@ -27,12 +27,12 @@ public interface FeatureRanking {
     /**
      * Univariate feature ranking. Note that this method actually does NOT rank
      * the features. It just returns the metric values of each feature. The
-     * caller can then rank and select features.
+     * use can then rank and select features.
      * 
      * @param x a n-by-p matrix of n instances with p features.
-     * @param y class labels in [0, k), where k is the number of classes.
-     * @return the metric values of each feature.
+     * @param y class labels.
+     * @return the metric values of each feature, in the ascending order of unique labels.
      */
-    double[] rank(double[][] x, int[] y);
+    double[] apply(double[][] x, int[] y);
     
 }

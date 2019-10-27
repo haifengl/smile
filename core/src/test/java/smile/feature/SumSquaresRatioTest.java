@@ -61,7 +61,7 @@ public class SumSquaresRatioTest {
     public void testRank() {
         System.out.println("rank");
         SumSquaresRatio ssr = new SumSquaresRatio();
-        double[] ratio = ssr.rank(Iris.x, Iris.y);
+        double[] ratio = ssr.apply(Iris.x, Iris.y);
         assertEquals(4, ratio.length);
         assertEquals( 1.6226463, ratio[0], 1E-6);
         assertEquals( 0.6444144, ratio[1], 1E-6);
@@ -82,7 +82,7 @@ public class SumSquaresRatioTest {
         int[] testy = USPS.testy;
 
         SumSquaresRatio ssr = new SumSquaresRatio();
-        double[] score = ssr.rank(x, y);
+        double[] score = ssr.apply(x, y);
         int[] index = QuickSort.sort(score);
 
         int p = 135;
