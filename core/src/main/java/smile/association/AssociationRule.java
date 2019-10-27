@@ -61,6 +61,23 @@ public class AssociationRule {
      * that these transactions also contain the LHS.
      */
     public final double confidence;
+    /**
+     * Lift is a measure of the performance of a targeting model
+     * (association rule) at predicting or classifying cases as having
+     * an enhanced response (with respect to the population as a whole),
+     * measured against a random choice targeting model. A targeting model
+     * is doing a good job if the response within the target is much better
+     * than the average for the population as a whole.
+     *
+     * Lift is simply the ratio of these values: target response divided by
+     * average response.
+     *
+     * For an association rule X ==> Y, if the lift is equal to 1,
+     * it means that X and Y are independent. If the lift is higher than 1,
+     * it means that X and Y are positively correlated.
+     * If the lift is lower than 1, it means that X and Y are negatively correlated.
+     */
+    public final double lift;
 
     /**
      * Constructor.
@@ -69,11 +86,12 @@ public class AssociationRule {
      * @param support    the associated support value.
      * @param confidence the associated confidence value.
      */
-    public AssociationRule(int[] antecedent, int[] consequent, double support, double confidence) {
+    public AssociationRule(int[] antecedent, int[] consequent, double support, double confidence, double lift) {
         this.antecedent = antecedent;
         this.consequent = consequent;
         this.support = support;
         this.confidence = confidence;
+        this.lift = lift;
     }
 
     @Override

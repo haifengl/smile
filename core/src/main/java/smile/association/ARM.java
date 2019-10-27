@@ -154,7 +154,8 @@ public class ARM implements Iterable<AssociationRule> {
                 double arc = getConfidence(combinations[i], support);
                 if (arc >= confidence) {
                     double supp = (double) support / size;
-                    AssociationRule ar = new AssociationRule(combinations[i], complement, supp, arc);
+                    double lift = getLift(combinations[i], complement, support);
+                    AssociationRule ar = new AssociationRule(combinations[i], complement, supp, arc, lift);
                     buffer.offer(ar);
                 }
             }
@@ -169,6 +170,17 @@ public class ARM implements Iterable<AssociationRule> {
      */
     private double getConfidence(int[] antecedent, double support) {
         return support / ttree.getSupport(antecedent);
+    }
+
+    /**
+     * Returns the lift for a rule given the antecedent item set and
+     * the support for the whole item set.
+     * @param antecedent the antecedent (LHS) of the AR.
+     * @param consequent the consequent (RHS) of the AR.
+     * @param support the support for the whole item set.
+     */
+    private double getLift(int[] antecedent, int[] consequent, double support) {
+        return support / (ttree.getSupport(antecedent) * ttree.getSupport(consequent));
     }
 
     /**
