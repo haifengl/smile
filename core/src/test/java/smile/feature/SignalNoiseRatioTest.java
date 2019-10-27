@@ -60,7 +60,7 @@ public class SignalNoiseRatioTest {
             else y[i] = 1;
         }
 
-        double[] ratio = SignalNoiseRatio.apply(Iris.x, y);
+        double[] ratio = SignalNoiseRatio.of(Iris.x, y);
         assertEquals(4, ratio.length);
         assertEquals(0.8743107, ratio[0], 1E-7);
         assertEquals(0.1502717, ratio[1], 1E-7);

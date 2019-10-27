@@ -115,7 +115,7 @@ public class OLSTest {
         System.out.println(model);
 
         double[] prediction = CrossValidation.regression(10, CPU.data, (x) -> OLS.fit(CPU.formula, x));
-        double rmse = RMSE.apply(CPU.y, prediction);
+        double rmse = RMSE.of(CPU.y, prediction);
         System.out.println("CPU 10-CV RMSE = " + rmse);
         assertEquals(55.272997, rmse, 1E-4);
     }
@@ -131,7 +131,7 @@ public class OLSTest {
         System.out.println(model);
 
         double[] prediction = Validation.test(model, Prostate.test);
-        double rmse = RMSE.apply(Prostate.testy, prediction);
+        double rmse = RMSE.of(Prostate.testy, prediction);
         System.out.println("RMSE on test data = " + rmse);
         assertEquals(0.721993, rmse, 1E-4);
     }

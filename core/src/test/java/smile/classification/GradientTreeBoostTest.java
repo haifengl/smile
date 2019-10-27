@@ -137,7 +137,7 @@ public class GradientTreeBoostTest {
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(Segment.test);
         for (int i = 0; i < test.length; i++) {
-            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.apply(Segment.testy, test[i]));
+            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.of(Segment.testy, test[i]));
         }
     }
 
@@ -162,7 +162,7 @@ public class GradientTreeBoostTest {
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(USPS.test);
         for (int i = 0; i < test.length; i++) {
-            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.apply(USPS.testy, test[i]));
+            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.of(USPS.testy, test[i]));
         }
     }
 }

@@ -41,7 +41,7 @@ public class SignalNoiseRatio implements FeatureRanking {
 
     @Override
     public double[] rank(double[][] x, int[] y) {
-        return apply(x, y);
+        return of(x, y);
     }
 
     /**
@@ -53,7 +53,7 @@ public class SignalNoiseRatio implements FeatureRanking {
      * @param y class labels.
      * @return the signal noise ratio for each feature.
      */
-    public static double[] apply(double[][] x, int[] y) {
+    public static double[] of(double[][] x, int[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }

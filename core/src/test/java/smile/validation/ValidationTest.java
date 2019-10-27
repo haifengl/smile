@@ -59,7 +59,7 @@ public class ValidationTest {
         System.out.println("USPS");
         DecisionTree model = DecisionTree.fit(USPS.formula, USPS.train);
         int[] prediction = Validation.test(model, USPS.test);
-        double accuracy = Accuracy.apply(USPS.testy, prediction);
+        double accuracy = Accuracy.of(USPS.testy, prediction);
         System.out.println("accuracy = " + accuracy);
         assertEquals(0.4957648231190832, accuracy, 1E-4);
     }
@@ -69,8 +69,8 @@ public class ValidationTest {
         System.out.println("Abalone");
         RegressionTree model = RegressionTree.fit(Abalone.formula, Abalone.train);
         double[] prediction = Validation.test(model, Abalone.test);
-        double rmse = RMSE.apply(Abalone.testy, prediction);
-        double mad = MeanAbsoluteDeviation.apply(Abalone.testy, prediction);
+        double rmse = RMSE.of(Abalone.testy, prediction);
+        double mad = MeanAbsoluteDeviation.of(Abalone.testy, prediction);
         System.out.println("RMSE = " + rmse);
         System.out.println("MAD = " + mad);
         assertEquals(2.4075306506295813, rmse, 1E-4);

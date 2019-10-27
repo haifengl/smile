@@ -27,11 +27,11 @@ public class Error implements ClassificationMeasure {
 
     @Override
     public double measure(int[] truth, int[] prediction) {
-        return apply(truth, prediction);
+        return of(truth, prediction);
     }
 
     /** Calculates the number of errors. */
-    public static int apply(int[] truth, int[] prediction) {
+    public static int of(int[] truth, int[] prediction) {
         if (truth.length != prediction.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
         }
