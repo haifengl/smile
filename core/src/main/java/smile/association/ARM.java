@@ -151,36 +151,18 @@ public class ARM implements Iterable<AssociationRule> {
             int[] complement = getComplement(combinations[i], itemset);
             // If complement is not empty generate rule
             if (complement != null) {
-                double arc = getConfidence(combinations[i], support);
+                double antecedentSupport = ttree.getSupport(combinations[i]);
+                double arc = support / antecedentSupport;
                 if (arc >= confidence) {
                     double supp = (double) support / size;
-                    double lift = getLift(combinations[i], complement, support);
-                    AssociationRule ar = new AssociationRule(combinations[i], complement, supp, arc, lift);
+                    double consequentSupport = ttree.getSupport(complement);
+                    double lift = support / (antecedentSupport * consequentSupport / size);
+                    double leverage = supp - (antecedentSupport / size) * (consequentSupport / size);
+                    AssociationRule ar = new AssociationRule(combinations[i], complement, supp, arc, lift, leverage);
                     buffer.offer(ar);
                 }
             }
         }
-    }
-
-    /**
-     * Returns the confidence for a rule given the antecedent item set and
-     * the support for the whole item set.
-     * @param antecedent the antecedent (LHS) of the AR.
-     * @param support the support for the whole item set.
-     */
-    private double getConfidence(int[] antecedent, double support) {
-        return support / ttree.getSupport(antecedent);
-    }
-
-    /**
-     * Returns the lift for a rule given the antecedent item set and
-     * the support for the whole item set.
-     * @param antecedent the antecedent (LHS) of the AR.
-     * @param consequent the consequent (RHS) of the AR.
-     * @param support the support for the whole item set.
-     */
-    private double getLift(int[] antecedent, int[] consequent, double support) {
-        return support / (ttree.getSupport(antecedent) * ttree.getSupport(consequent));
     }
 
     /**
