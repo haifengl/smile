@@ -33,6 +33,6 @@ public interface FeatureRanking {
      * @param y class labels.
      * @return the metric values of each feature, in the ascending order of unique labels.
      */
-    double[] apply(double[][] x, int[] y);
+    double[] rank(double[][] x, int[] y);
     
 }

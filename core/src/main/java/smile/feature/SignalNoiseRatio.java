@@ -37,9 +37,23 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class SignalNoiseRatio implements FeatureRanking {
+    public static final SignalNoiseRatio instance = new SignalNoiseRatio();
 
     @Override
-    public double[] apply(double[][] x, int[] y) {
+    public double[] rank(double[][] x, int[] y) {
+        return apply(x, y);
+    }
+
+    /**
+     * Univariate feature ranking. Note that this method actually does NOT rank
+     * the features. It just returns the metric values of each feature. The
+     * use can then rank and select features.
+     *
+     * @param x a n-by-p matrix of n instances with p features.
+     * @param y class labels.
+     * @return the signal noise ratio for each feature.
+     */
+    public static double[] apply(double[][] x, int[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }

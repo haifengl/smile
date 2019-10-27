@@ -17,11 +17,7 @@
 
 package smile.association
 
-import java.io.PrintStream
-import scala.io.Source
-import scala.collection.mutable.Buffer
-import scala.jdk.CollectionConverters._
-import smile.util._
+import java.util.stream.Stream
 
 /** High level association rule operators.
   *
@@ -61,106 +57,9 @@ trait Operators {
     *                   of frequency.
     * @return the list of frequent item sets.
     */
-  def fpgrowth(itemsets: Array[Array[Int]], minSupport: Int): Buffer[ItemSet] = time("FP-growth") {
-    val fim = new FPGrowth(itemsets, minSupport)
-    fim.learn.asScala
-  }
-
-  /** Frequent item set mining based on the FP-growth (frequent pattern growth)
-    * algorithm. Usually the algorithm generates too many data to fit
-    * in the memory. This alternative prints the results to a stream directly without
-    * storing them in the memory.
-    *
-    * @param itemsets the item set database. Each row is a item set, which
-    *                 may have different length. The item identifiers have to be in [0, n),
-    *                 where n is the number of items. Item set should NOT contain duplicated
-    *                 items. Note that it is reordered after the call.
-    * @param minSupport the required minimum support of item sets in terms
-    *                   of frequency.
-    * @param output a print stream for output of frequent item sets.
-    * @return the number of discovered frequent item sets.
-    */
-  def fpgrowth(itemsets: Array[Array[Int]], minSupport: Int, output: PrintStream): Long = time("FP-growth") {
-    val fim = new FPGrowth(itemsets, minSupport)
-    fim.learn(output)
-  }
-
-  /** Frequent item set mining based on the FP-growth (frequent pattern growth)
-    * algorithm. Usually the algorithm generates too many data to fit
-    * in the memory. This alternative prints the results to a stream directly without
-    * storing them in the memory.
-    *
-    * @param itemsets the item set database. Each row is a item set, which
-    *                 may have different length. The item identifiers have to be in [0, n),
-    *                 where n is the number of items. Item set should NOT contain duplicated
-    *                 items. Note that it is reordered after the call.
-    * @param minSupport the required minimum support of item sets in terms
-    *                   of frequency.
-    * @param output the output file.
-    * @return the number of discovered frequent item sets.
-    */
-  def fpgrowth(itemsets: Array[Array[Int]], minSupport: Int, output: String): Long = time("FP-growth") {
-    val fim = new FPGrowth(itemsets, minSupport)
-    fim.learn(new PrintStream(output))
-  }
-
-  /** Frequent item set mining based on the FP-growth (frequent pattern growth)
-    * algorithm. This is for mining frequent item sets by scanning data
-    * twice. We first scan the database to obtains the frequency of
-    * single items. Then we scan the data again to construct the FP-Tree, which
-    * is a compressed form of data.
-    * In this way, we don't need load the whole database into the main memory.
-    * In the data, the item identifiers have to be in [0, n), where n is
-    * the number of items.
-    *
-    * @param file the input file of item sets. Each row is a item set, which
-    *                 may have different length. The item identifiers have to be in [0, n),
-    *                 where n is the number of items.
-    * @param minSupport the required minimum support of item sets in terms
-    *                   of frequency.
-    * @param output a print stream for output of frequent item sets.
-    * @return the number of discovered frequent item sets.
-    */
-  def fpgrowth(file: String, minSupport: Int, output: PrintStream): Long = time("FP-growth") {
-    val items = collection.mutable.Map[Int, Int]().withDefaultValue(0)
-    Source.fromFile(file).getLines.foreach { line =>
-      line.trim.split("\\s+").foreach { item =>
-        val i = item.toInt
-        items(i) = items(i) + 1
-      }
-    }
-
-    val n = items.keySet.foldLeft(0)(Math.max) + 1
-    val frequency = new Array[Int](n)
-    items.toSeq.foreach { case (item, count) => frequency(item) = count }
-
-    val fim = new FPGrowth(frequency, minSupport)
-    Source.fromFile(file).getLines.foreach { line =>
-      fim.add(line.trim.split("\\s+").map(_.toInt).toArray)
-    }
-
-    fim.learn(output)
-  }
-
-  /** Frequent item set mining based on the FP-growth (frequent pattern growth)
-    * algorithm. This is for mining frequent item sets by scanning data
-    * twice. We first scan the database to obtains the frequency of
-    * single items. Then we scan the data again to construct the FP-Tree, which
-    * is a compressed form of data.
-    * In this way, we don't need load the whole database into the main memory.
-    * In the data, the item identifiers have to be in [0, n), where n is
-    * the number of items.
-    *
-    * @param file the input file of item sets. Each row is a item set, which
-    *                 may have different length. The item identifiers have to be in [0, n),
-    *                 where n is the number of items.
-    * @param minSupport the required minimum support of item sets in terms
-    *                   of frequency.
-    * @param output the output file.
-    * @return the number of discovered frequent item sets.
-    */
-  def fpgrowth(file: String, minSupport: Int, output: String): Long = time("FP-growth") {
-    fpgrowth(file, minSupport, new PrintStream(output))
+  def fpgrowth(minSupport: Int, itemsets: Array[Array[Int]]): Stream[ItemSet] = {
+    val tree = FPTree.build(minSupport, itemsets)
+    FPGrowth.apply(tree)
   }
 
   /** Association Rule Mining.
@@ -190,108 +89,8 @@ trait Operators {
     * @param confidence the confidence threshold for association rules.
     * @return the number of discovered association rules.
     */
-  def arm(itemsets: Array[Array[Int]], minSupport: Int, confidence: Double): Buffer[AssociationRule] = time("Association rule mining") {
-    val rule = new ARM(itemsets, minSupport)
-    rule.learn(confidence).asScala
-  }
-
-  /** Association Rule Mining.
-    * Usually the algorithm generates too many data to fit
-    * in the memory. This alternative prints the results to a stream directly without
-    * storing them in the memory.
-    *
-    * @param itemsets the item set database. Each row is a item set, which
-    *                 may have different length. The item identifiers have to be in [0, n),
-    *                 where n is the number of items. Item set should NOT contain duplicated
-    *                 items. Note that it is reordered after the call.
-    * @param minSupport the required minimum support of item sets in terms
-    *                   of frequency.
-    * @param confidence the confidence threshold for association rules.
-    * @param output a print stream for output of association rules.
-    * @return the number of discovered association rules.
-    */
-  def arm(itemsets: Array[Array[Int]], minSupport: Int, confidence: Double, output: PrintStream): Long = time("Association rule mining") {
-    val rule = new ARM(itemsets, minSupport)
-    rule.learn(confidence, output)
-  }
-
-  /** Association Rule Mining.
-    * Usually the algorithm generates too many data to fit
-    * in the memory. This alternative prints the results to a stream directly without
-    * storing them in the memory.
-    *
-    * @param itemsets the item set database. Each row is a item set, which
-    *                 may have different length. The item identifiers have to be in [0, n),
-    *                 where n is the number of items. Item set should NOT contain duplicated
-    *                 items. Note that it is reordered after the call.
-    * @param minSupport the required minimum support of item sets in terms
-    *                   of frequency.
-    * @param confidence the confidence threshold for association rules.
-    * @param output the output file.
-    * @return the number of discovered association rules.
-    */
-  def arm(itemsets: Array[Array[Int]], minSupport: Int, confidence: Double, output: String): Long = time("Association rule mining") {
-    val rule = new ARM(itemsets, minSupport)
-    rule.learn(confidence, new PrintStream(output))
-  }
-
-  /** Association Rule Mining. This method scans data
-    * twice. We first scan the database to obtains the frequency of
-    * single items. Then we scan the data again to construct the FP-Tree, which
-    * is a compressed form of data.
-    * In this way, we don't need load the whole database into the main memory.
-    * In the data, the item identifiers have to be in [0, n), where n is
-    * the number of items.
-    *
-    * @param file the input file. Each row is a item set, which
-    *             may have different length. The item identifiers have to be in [0, n),
-    *             where n is the number of items. Item set should NOT contain duplicated
-    *             items. Note that it is reordered after the call.
-    * @param minSupport the required minimum support of item sets in terms
-    *                   of frequency.
-    * @param confidence the confidence threshold for association rules.
-    * @param output a print stream for output of association rules.
-    * @return the number of discovered association rules.
-    */
-  def arm(file: String, minSupport: Int, confidence: Double, output: PrintStream): Long = time("Association rule mining") {
-    val items = collection.mutable.Map[Int, Int]().withDefaultValue(0)
-    Source.fromFile(file).getLines.foreach { line =>
-      line.trim.split("\\s+").foreach { item =>
-        val i = item.toInt
-        items(i) = items(i) + 1
-      }
-    }
-
-    val n = items.keySet.foldLeft(0)(Math.max) + 1
-    val frequency = new Array[Int](n)
-    items.toSeq.foreach { case (item, count) => frequency(item) = count }
-
-    val rule = new ARM(frequency, minSupport)
-    Source.fromFile(file).getLines.foreach { line =>
-      rule.add(line.trim.split("\\s+").map(_.toInt))
-    }
-
-    rule.learn(confidence, new PrintStream(output))
-  }
-
-  /** Association Rule Mining. This method scans data
-    * twice. We first scan the database to obtains the frequency of
-    * single items. Then we scan the data again to construct the FP-Tree, which
-    * is a compressed form of data.
-    * In this way, we don't need load the whole database into the main memory.
-    * In the data, the item identifiers have to be in [0, n), where n is
-    * the number of items.
-    *
-    * @param file the input file of item sets. Each row is a item set, which
-    *                 may have different length. The item identifiers have to be in [0, n),
-    *                 where n is the number of items.
-    * @param minSupport the required minimum support of item sets in terms
-    *                   of frequency.
-    * @param confidence the confidence threshold for association rules.
-    * @param output the output file.
-    * @return the number of discovered association rules.
-    */
-  def arm(file: String, minSupport: Int, confidence: Double, output: String): Long = time("Association rule mining") {
-    arm(file, minSupport, confidence, new PrintStream(output))
+  def arm(minSupport: Int, confidence: Double, itemsets: Array[Array[Int]]): Stream[AssociationRule] = {
+    val tree = FPTree.build(minSupport, itemsets)
+    ARM.apply(confidence, tree)
   }
 }
