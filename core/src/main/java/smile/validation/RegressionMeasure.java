@@ -29,5 +29,5 @@ public interface RegressionMeasure {
      * @param truth the true response values.
      * @param prediction the predicted response values.
      */
-    public double measure(double[] truth, double[] prediction);
+    double measure(double[] truth, double[] prediction);
 }

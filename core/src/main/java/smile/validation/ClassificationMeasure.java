@@ -29,5 +29,5 @@ public interface ClassificationMeasure {
      * @param truth the true class labels.
      * @param prediction the predicted class labels.
      */
-    public double measure(int[] truth, int[] prediction);
+    double measure(int[] truth, int[] prediction);
 }
