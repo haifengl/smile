@@ -27,10 +27,15 @@ import java.util.Set;
 public class ConfusionMatrix {
 
     /** Confusion matrix. */
-    private int[][] matrix;
+    public final int[][] matrix;
 
     /** Constructor. */
-    public ConfusionMatrix(int[] truth, int[] prediction) {
+    public ConfusionMatrix(int[][] matrix) {
+        this.matrix = matrix;
+    }
+
+    /** Creates the confusion matrix. */
+    public static ConfusionMatrix of(int[] truth, int[] prediction) {
         if (truth.length != prediction.length) {
              throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
         }
@@ -47,18 +52,15 @@ public class ConfusionMatrix {
         for (int c : y) {
             if (k < c) k = c;
         }
-        matrix = new int[k+1][k+1];
 
+        int[][] matrix = new int[k+1][k+1];
         for (int i = 0; i < truth.length; i++) {
             matrix[truth[i]][prediction[i]] += 1;
         }
+
+        return new ConfusionMatrix(matrix);
     }
 
-    /** Returns the confusion matrix. */
-    public int[][] getMatrix() {
-        return matrix;
-    }
-    
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

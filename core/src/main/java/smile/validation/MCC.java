@@ -39,11 +39,11 @@ public class MCC implements ClassificationMeasure {
         if (truth.length != prediction.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
         }
-        ConfusionMatrix confusionMatrix = new ConfusionMatrix(truth, prediction);
-        int[][] matrix = confusionMatrix.getMatrix();
+        ConfusionMatrix confusion = ConfusionMatrix.of(truth, prediction);
+        int[][] matrix = confusion.matrix;
 
         if (matrix.length != 2 || matrix[0].length != 2) {
-            throw new IllegalArgumentException("MCC can only be applied to binary classification: " + confusionMatrix.toString());
+            throw new IllegalArgumentException("MCC can only be applied to binary classification: " + confusion.toString());
         }
 
         int tp = matrix[0][0];
@@ -59,7 +59,7 @@ public class MCC implements ClassificationMeasure {
         }
 
         if ( denominator == 0) {
-            throw new IllegalArgumentException("MCC can not be applied, denominator is 0 " + confusionMatrix.toString());
+            throw new IllegalArgumentException("MCC can not be applied, denominator is 0 " + confusion.toString());
         }
 
         return numerator / denominator;
