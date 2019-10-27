@@ -24,7 +24,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.BreastCancer;
 import smile.data.Iris;
-import smile.data.PenDigits;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
 import smile.validation.Error;

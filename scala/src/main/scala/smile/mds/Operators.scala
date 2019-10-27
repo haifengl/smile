@@ -37,7 +37,7 @@ trait Operators {
     *                  symmetric. For pairwise distances matrix, it should be just the plain
     *                  distance, not squared.
     * @param k the dimension of the projection.
-    * @param add true to estimate an appropriate constant to be added
+    * @param positive if true, estimate an appropriate constant to be added
     *            to all the dissimilarities, apart from the self-dissimilarities, that
     *            makes the learning matrix positive semi-definite. The other formulation of
     *            the additive constant problem is as follows. If the proximity is
@@ -48,8 +48,8 @@ trait Operators {
     *            to minimize the dimensionality of the Euclidean space required for
     *            representing the objects.
     */
-  def mds(proximity: Array[Array[Double]], k: Int, add: Boolean = false): MDS = time("MDS") {
-    new MDS(proximity, k, add)
+  def mds(proximity: Array[Array[Double]], k: Int, positive: Boolean = false): MDS = time("MDS") {
+    MDS.of(proximity, k, positive)
   }
 
   /** Kruskal's nonmetric MDS. In non-metric MDS, only the rank order of entries
@@ -67,7 +67,7 @@ trait Operators {
     * @param maxIter maximum number of iterations.
     */
   def isomds(proximity: Array[Array[Double]], k: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS = time("Kruskal's nonmetric MDS") {
-    new IsotonicMDS(proximity, k, tol, maxIter)
+    IsotonicMDS.of(proximity, k, tol, maxIter)
   }
 
   /** The Sammon's mapping is an iterative technique for making interpoint
@@ -100,12 +100,13 @@ trait Operators {
     *
     * @param proximity the nonnegative proximity matrix of dissimilarities. The
     *                  diagonal should be zero and all other elements should be positive and symmetric.
-    * @param k the dimension of the projection.
-    * @param lambda initial value of the step size constant in diagonal Newton method.
-    * @param tol tolerance for stopping iterations.
-    * @param maxIter maximum number of iterations.
+    * @param k         the dimension of the projection.
+    * @param lambda    initial value of the step size constant in diagonal Newton method.
+    * @param tol       tolerance for stopping iterations.
+    * @param stepTol   tolerance on step size.
+    * @param maxIter   maximum number of iterations.
     */
-  def sammon(proximity: Array[Array[Double]], k: Int, lambda: Double = 0.2, tol: Double = 0.0001, maxIter: Int = 100): SammonMapping = time("Sammon's Mapping") {
-    new SammonMapping(proximity, k, lambda, tol, maxIter)
+  def sammon(proximity: Array[Array[Double]], k: Int, lambda: Double = 0.2, tol: Double = 0.0001, stepTol: Double = 0.001, maxIter: Int = 100): SammonMapping = time("Sammon's Mapping") {
+    SammonMapping.of(proximity, k, lambda, tol, stepTol, maxIter)
   }
 }
