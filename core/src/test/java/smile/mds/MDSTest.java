@@ -106,16 +106,8 @@ public class MDSTest {
             {  911.230500,   205.93020}
         };
 
-        MDS mds = new MDS(eurodist);
-        for (int i = 0; i < eigs.length; i++) {
-                System.out.print(eigs[i] + " ");
-        }
-        System.out.println("==============");
-        for (int i = 0; i < mds.getEigenValues().length; i++) {
-                System.out.print(mds.getEigenValues()[i] + " ");
-        }
-        System.out.println();
-        assertTrue(MathEx.equals(eigs, mds.getEigenValues(), 1E-4));
+        MDS mds = MDS.of(eurodist);
+        assertTrue(MathEx.equals(eigs, mds.getScores(), 1E-4));
 
         double[][] coords = mds.getCoordinates();
         for (int i = 0; i < points.length; i++) {
@@ -157,8 +149,8 @@ public class MDSTest {
             { 1319.918808,   295.010834}
         };
 
-        MDS mds = new MDS(eurodist, 2, true);
-        assertTrue(MathEx.equals(eigs, mds.getEigenValues(), 1E-1));
+        MDS mds = MDS.of(eurodist, 2, true);
+        assertTrue(MathEx.equals(eigs, mds.getScores(), 1E-1));
 
         double[][] coords = mds.getCoordinates();
         for (int i = 0; i < points.length; i++) {
