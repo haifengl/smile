@@ -17,8 +17,6 @@
 
 package smile.feature;
 
-import java.util.Arrays;
-
 import smile.classification.ClassLabel;
 import smile.math.MathEx;
 
@@ -40,9 +38,23 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class SumSquaresRatio implements FeatureRanking {
+    public static final SumSquaresRatio instance = new SumSquaresRatio();
 
     @Override
-    public double[] apply(double[][] x, int[] y) {
+    public double[] rank(double[][] x, int[] y) {
+        return apply(x, y);
+    }
+
+    /**
+     * Univariate feature ranking. Note that this method actually does NOT rank
+     * the features. It just returns the metric values of each feature. The
+     * use can then rank and select features.
+     *
+     * @param x a n-by-p matrix of n instances with p features.
+     * @param y class labels.
+     * @return the sum of squares ratio of between-groups to within-groups.
+     */
+    public static double[] apply(double[][] x, int[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
