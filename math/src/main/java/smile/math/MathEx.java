@@ -1508,6 +1508,19 @@ public class MathEx {
     /**
      * Returns the sum of an array.
      */
+    public static int sum(byte[] x) {
+        int sum = 0;
+
+        for (int n : x) {
+            sum += n;
+        }
+
+        return sum;
+    }
+
+    /**
+     * Returns the sum of an array.
+     */
     public static int sum(int[] x) {
         double sum = 0.0;
 
