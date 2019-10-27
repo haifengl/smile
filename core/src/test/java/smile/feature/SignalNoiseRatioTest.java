@@ -64,7 +64,7 @@ public class SignalNoiseRatioTest {
         }
 
         SignalNoiseRatio s2n = new SignalNoiseRatio();
-        double[] ratio = s2n.rank(Iris.x, y);
+        double[] ratio = s2n.apply(Iris.x, y);
         assertEquals(4, ratio.length);
         assertEquals(0.8743107, ratio[0], 1E-7);
         assertEquals(0.1502717, ratio[1], 1E-7);

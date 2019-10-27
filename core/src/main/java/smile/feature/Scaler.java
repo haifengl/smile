@@ -17,14 +17,9 @@
 
 package smile.feature;
 
-import java.util.Optional;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.Collectors;
-
-import smile.data.measure.Measure;
-import smile.data.measure.NominalScale;
-import smile.data.type.DataType;
 import smile.data.type.StructField;
 import smile.data.vector.BaseVector;
 import smile.data.vector.DoubleVector;

@@ -17,6 +17,8 @@
 
 package smile.feature;
 
+import smile.data.DataFrame;
+import smile.data.Tuple;
 import smile.math.MathEx;
 
 /**
@@ -29,7 +31,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class Normalizer {
+public class Normalizer implements FeatureTransform {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -51,7 +53,7 @@ public class Normalizer {
     }
 
     /** The type of norm .*/
-    private Norm norm = Norm.L2;
+    private Norm norm;
 
     /** Default constructor with L2 norm. */
     public Normalizer() {
@@ -66,6 +68,7 @@ public class Normalizer {
         this.norm = norm;
     }
 
+    @Override
     public double[] transform(double[] x) {
         double scale;
 
@@ -85,9 +88,7 @@ public class Normalizer {
 
         double[] y = new double[x.length];
         if (MathEx.isZero(scale)) {
-            if (y != x) {
-                System.arraycopy(x, 0, y, 0, x.length);
-            }
+            System.arraycopy(x, 0, y, 0, x.length);
         } else {
             for (int i = 0; i < x.length; i++) {
                 y[i] = x[i] / scale;
@@ -95,6 +96,17 @@ public class Normalizer {
         }
 
         return y;
+    }
+
+    @Override
+    public Tuple transform(Tuple x) {
+        double[] y = transform(x.toArray());
+        return Tuple.of(y, x.schema());
+    }
+
+    @Override
+    public DataFrame transform(DataFrame data) {
+        return DataFrame.of(data.stream().map(this::transform));
     }
 
     @Override

@@ -77,11 +77,11 @@ public class SparseOneHotEncoderTest {
 
         DataFrame data = WeatherNominal.formula.x(WeatherNominal.data);
         SparseOneHotEncoder n2sb = new SparseOneHotEncoder(data.schema());
+        int[][] onehot = n2sb.apply(data);
+
         for (int i = 0; i < data.size(); i++) {
-            int[] y = n2sb.apply(data.get(i));
-            assertEquals(result[i].length, y.length);
-            for (int j = 0; j < y.length; j++) {
-                assertEquals(result[i][j], y[j]);
+            for (int j = 0; j < result[i].length; j++) {
+                assertEquals(result[i][j], onehot[i][j]);
             }
         }
     }

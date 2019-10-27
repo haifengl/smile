@@ -482,6 +482,26 @@ public interface Tuple extends Serializable {
         };
     }
 
+    /** Returns a double array based tuple. */
+    static Tuple of(double[] row, StructType schema) {
+        return new AbstractTuple() {
+            @Override
+            public Object get(int i) {
+                return row[i];
+            }
+
+            @Override
+            public double getDouble(int i) {
+                return row[i];
+            }
+
+            @Override
+            public StructType schema() {
+                return schema;
+            }
+        };
+    }
+
     /** Returns the current row of a JDBC ResultSet as a tuple. */
     static Tuple of(ResultSet rs, StructType schema) throws SQLException {
         final Object[] row = new Object[rs.getMetaData().getColumnCount()];
