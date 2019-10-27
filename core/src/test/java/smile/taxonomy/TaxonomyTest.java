@@ -36,7 +36,7 @@ public class TaxonomyTest {
     Concept a, b, c, d, e, f, ad;
 
     public TaxonomyTest() {
-        instance = new Taxonomy("MyTaxo");
+        instance = new Taxonomy();
     }
 
     @BeforeClass
