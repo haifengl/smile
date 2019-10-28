@@ -20,24 +20,14 @@ package smile.manifold;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.IntStream;
-
 import smile.data.SparseDataset;
-import smile.graph.AdjacencyList;
 import smile.graph.Graph;
 import smile.graph.Graph.Edge;
-import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
-import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
 import smile.netlib.ARPACK;
 import smile.util.SparseArray;
-import smile.neighbor.CoverTree;
-import smile.neighbor.KDTree;
-import smile.neighbor.KNNSearch;
-import smile.neighbor.Neighbor;
-import smile.util.Strings;
 
 /**
  * Laplacian Eigenmap. Using the notion of the Laplacian of the nearest

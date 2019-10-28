@@ -1,6 +1,6 @@
 // Toy example
 
-val data = read.arff(Paths.getTestData("weka/iris.arff").toString)
+val data = read.arff(Paths.getTestData("weka/iris.arff"))
 println(data)
 
 val formula = "class" ~
