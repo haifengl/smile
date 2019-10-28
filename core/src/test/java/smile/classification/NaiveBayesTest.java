@@ -82,7 +82,7 @@ public class NaiveBayesTest {
 
             return new NaiveBayes(priori, condprob);
         });
-        int error = Error.apply(Iris.y, prediction);
+        int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(8, error);
     }
@@ -110,7 +110,7 @@ public class NaiveBayesTest {
 
             return new NaiveBayes(priori, condprob);
         });
-        int error = Error.apply(WeatherNominal.y, prediction);
+        int error = Error.of(WeatherNominal.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(3, error);
     }

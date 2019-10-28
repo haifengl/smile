@@ -97,7 +97,7 @@ public class SVMTest {
         SVM<double[]> model = SVM.fit(x, y, kernel, 100, 1E-3);
 
         int[] prediction = Validation.test(model, testx);
-        int error = Error.apply(testy, prediction);
+        int error = Error.of(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
         assertEquals(131, error);
     }
@@ -141,7 +141,7 @@ public class SVMTest {
         Classifier<int[]> model = SVM.fit(x, y, kernel, 100, 1E-3);
 
         int[] prediction = Validation.test(model, testx);
-        int error = Error.apply(testy, prediction);
+        int error = Error.of(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
         assertEquals(2451, error);
     }
@@ -160,7 +160,7 @@ public class SVMTest {
         OneVersusOne<double[]> model = OneVersusOne.fit(x, Segment.y, (xi, y) -> SVM.fit(xi, y, kernel, 100, 1E-3));
 
         int[] prediction = Validation.test(model, testx);
-        int error = Error.apply(Segment.testy, prediction);
+        int error = Error.of(Segment.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / Segment.testx.length);
         assertEquals(33, error);
     }
@@ -175,7 +175,7 @@ public class SVMTest {
         OneVersusRest<double[]> model = OneVersusRest.fit(USPS.x, USPS.y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3));
 
         int[] prediction = Validation.test(model, USPS.testx);
-        int error = Error.apply(USPS.testy, prediction);
+        int error = Error.of(USPS.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / USPS.testx.length);
         assertEquals(87, error);
     }
