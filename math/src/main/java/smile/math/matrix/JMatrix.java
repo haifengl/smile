@@ -139,7 +139,7 @@ public class JMatrix implements DenseMatrix {
 
     @Override
     public String toString() {
-        return toString(false);
+        return toString(7, 7);
     }
 
     @Override
