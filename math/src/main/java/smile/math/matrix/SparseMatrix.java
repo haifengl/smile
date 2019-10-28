@@ -21,13 +21,14 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Scanner;
-import smile.math.MathEx;
-import java.util.Spliterator;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import static java.util.Spliterator.*;
+import smile.math.MathEx;
+import smile.util.SparseArray;
+import smile.util.Strings;
 
 /**
  * A sparse matrix is a matrix populated primarily with zeros. Conceptually,
@@ -83,7 +84,7 @@ import java.util.stream.StreamSupport;
  *
  * @author Haifeng Li
  */
-public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, SparseMatrix> {
+public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, SparseMatrix>, Iterable<SparseMatrix.Entry> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseMatrix.class);
     private static final long serialVersionUID = 1L;
 
@@ -111,6 +112,49 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      * True if the matrix is symmetric.
      */
     private boolean symmetric = false;
+
+    /**
+     * Encapsulates an entry in a matrix for use in streaming. As typical stream object,
+     * this object is immutable. But we can update the corresponding value in the matrix
+     * through <code>update</code> method. This provides an efficient way to update the
+     * non-zero entries of a sparse matrix.
+     */
+    public class Entry {
+        // these fields are exposed for direct access to simplify in-lining by the JVM
+        /** The row index. */
+        public final int i;
+        /** The column index. */
+        public final int j;
+        /** The value. */
+        public final double x;
+
+        /** The index to the internal storage. */
+        private final int index;
+
+        /**
+         * Private constructor. Only the enclosure matrix can creates
+         * the instances of entry.
+         */
+        private Entry(int i, int j, int index) {
+            this.i = i;
+            this.j = j;
+            this.x = SparseMatrix.this.x[index];
+            this.index = index;
+        }
+
+        /**
+         * Update the value of entry in the matrix. Note that the field <code>value</code>
+         * is final and thus not updated.
+         */
+        public void update(double value) {
+            SparseMatrix.this.x[index] = value;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("(%d, %d):%s", i, j, Strings.decimal(x));
+        }
+    }
 
     /**
      * Constructor.
@@ -185,6 +229,38 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
             }
         }
     }
+    /**
+     * Returns an iterator of nonzero entries.
+     * @return an iterator of nonzero entries
+     */
+    public Iterator<Entry> iterator() {
+        return iterator(0, ncols);
+    }
+
+    /**
+     * Returns an iterator of nonzero entries.
+     * @param beginColumn The beginning column, inclusive.
+     * @param endColumn   The end column, exclusive.
+     * @return an iterator of nonzero entries
+     */
+    public Iterator<Entry> iterator(int beginColumn, int endColumn) {
+        return new Iterator<Entry>() {
+            int k = colIndex[beginColumn]; // entry index
+            int j = beginColumn; // column
+
+            @Override
+            public boolean hasNext() {
+                return k < colIndex[endColumn];
+            }
+
+            @Override
+            public Entry next() {
+                int i = rowIndex[k];
+                while (k >= colIndex[j + 1]) j++;
+                return new Entry(i, j, k++);
+            }
+        };
+    }
 
     @Override
     public boolean isSymmetric() {
@@ -214,168 +290,22 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     }
 
     /**
-     * Calls a lambda with each non-zero value. This will be a bit faster than using a stream
-     * because we can avoid boxing up the coordinates of the element being processed, but it
-     * will be considerably less general.
-     * <p>
-     * Note that the action could be called on values that are either effectively or actually
-     * zero. The only guarantee is that no values that are known to be zero based on the
-     * structure of the matrix will be processed.
-     *
-     * @param action Action to perform on each non-zero, typically this is a lambda.
-     */
-    public void foreachNonzero(MatrixElementConsumer action) {
-        for (int j = 0; j < ncols; j++) {
-            for (int k = colIndex[j]; k < colIndex[j + 1]; k++) {
-                int i = rowIndex[k];
-                action.accept(i, j, x[k]);
-            }
-        }
-    }
-
-
-    /**
-     * Calls a lambda with each non-zero value. This will be a bit faster than using a stream
-     * because we can avoid boxing up the coordinates of the element being processed, but it
-     * will be considerably less general.
-     * <p>
-     * Note that the action could be called on values that are either effectively or actually
-     * zero. The only guarantee is that no values that are known to be zero based on the
-     * structure of the matrix will be processed.
-     *
-     * @param startColumn The first column to scan.
-     * @param endColumn   One past the last column to scan.
-     * @param consumer      Action to perform on each non-zero, typically this is a lambda.
-     */
-    public void foreachNonzero(int startColumn, int endColumn, MatrixElementConsumer consumer) {
-        if (startColumn < 0 || startColumn >= ncols) {
-            throw new IllegalArgumentException("Start column must be in range [0,ncols)");
-        }
-        if (endColumn < 0 || endColumn > ncols) {
-            throw new IllegalArgumentException("End column must be in range [startColumn,ncols]");
-        }
-
-        for (int j = startColumn; j < endColumn; j++) {
-            for (int k = colIndex[j]; k < colIndex[j + 1]; k++) {
-                int i = rowIndex[k];
-                consumer.accept(i, j, x[k]);
-            }
-        }
-    }
-
-    /**
      * Provides a stream over all of the non-zero elements of a sparse matrix.
      */
     public Stream<Entry> nonzeros() {
-        return StreamSupport.stream(new SparseMatrixSpliterator(0, ncols), false);
+        Spliterator<Entry> spliterator = Spliterators.spliterator(iterator(), length(), ORDERED | SIZED | IMMUTABLE);
+        return StreamSupport.stream(spliterator, false);
     }
 
     /**
      * Provides a stream over all of the non-zero elements of range of columns of a sparse matrix.
      *
-     * @param startColumn The first column to scan
-     * @param endColumn   The first column after the ones that we should scan.
+     * @param beginColumn The beginning column, inclusive.
+     * @param endColumn   The end column, exclusive.
      */
-    public Stream<Entry> nonzeros(int startColumn, int endColumn) {
-        return StreamSupport.stream(new SparseMatrixSpliterator(startColumn, endColumn), false);
-    }
-
-    /**
-     * Provides a spliterator for access to a sparse matrix in column major order.
-     * <p>
-     * This is exposed to facilitate lower level access to the stream API for a matrix.
-     */
-    private class SparseMatrixSpliterator implements Spliterator<Entry> {
-        private int col;      // current column, advanced on split or traversal
-        private int index;    // current element within column
-        private final int fence; // one past the last column to process
-
-        SparseMatrixSpliterator(int col, int fence) {
-            this.col = col;
-            this.index = colIndex[col];
-            this.fence = fence;
-        }
-
-        public void forEachRemaining(Consumer<? super Entry> action) {
-            for (; col < fence; col++) {
-                for (; index < colIndex[col + 1]; index++) {
-                    action.accept(new Entry(rowIndex[index], col, x[index], index));
-                }
-            }
-        }
-
-        public boolean tryAdvance(Consumer<? super Entry> action) {
-            if (col < fence) {
-                while (col < fence && index >= colIndex[col + 1]) {
-                    col++;
-                }
-                if (col < fence) {
-                    action.accept(new Entry(rowIndex[index], col, x[index], index));
-                    index++;
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                // cannot advance
-                return false;
-            }
-        }
-
-        public Spliterator<Entry> trySplit() {
-            int lo = col; // divide range in half, assuming roughly constant size of all columns
-            int mid = ((lo + fence) >>> 1) & ~1; // force midpoint to be even
-            if (lo < mid) { // split out left half
-                col = mid; // reset this Spliterator's origin
-                return new SparseMatrixSpliterator(lo, mid);
-            } else {
-                // too small to split
-                return null;
-            }
-        }
-
-        public long estimateSize() {
-            return (long) (colIndex[fence] - colIndex[col]);
-        }
-
-        public int characteristics() {
-            return ORDERED | SIZED | IMMUTABLE | SUBSIZED;
-        }
-    }
-
-    /**
-     * Encapsulates an entry in a matrix for use in streaming. As typical stream object,
-     * this object is immutable. But we can update the corresponding value in the matrix
-     * through <code>update</code> method. This provides an efficient way to update the
-     * non-zero entries of a sparse matrix.
-     */
-    public class Entry {
-        // these fields are exposed for direct access to simplify in-lining by the JVM
-        public final int row;
-        public final int col;
-        public final double value;
-
-        // these are hidden due to internal dependency
-        private final int index;
-
-        /**
-         * Private constructor. Only the enclosure matrix can creates
-         * the instances of entry.
-         */
-        private Entry(int row, int col, double value, int index) {
-            this.row = row;
-            this.col = col;
-            this.value = value;
-            this.index = index;
-        }
-
-        /**
-         * Update the value of entry in the matrix. Note that the field <code>value</code>
-         * is final and thus not updated.
-         */
-        public void update(double value) {
-            x[index] = value;
-        }
+    public Stream<Entry> nonzeros(int beginColumn, int endColumn) {
+        Spliterator<Entry> spliterator = Spliterators.spliterator(iterator(beginColumn, endColumn), colIndex[endColumn] - colIndex[beginColumn], ORDERED | SIZED | IMMUTABLE);
+        return StreamSupport.stream(spliterator, false);
     }
 
     @Override
