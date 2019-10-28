@@ -23,6 +23,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Properties;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -100,7 +101,7 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
         String[] labels = dataset[datasetIndex].names();
 
         long clock = System.currentTimeMillis();
-        SammonMapping sammon = new SammonMapping(data, 2);
+        SammonMapping sammon = SammonMapping.of(data, 2);
         System.out.format("Learn Sammon's Mapping (k=2) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
         PlotCanvas plot = ScatterPlot.plot(sammon.getCoordinates(), labels);
@@ -108,7 +109,7 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
         pane.add(plot);
 
         clock = System.currentTimeMillis();
-        sammon = new SammonMapping(data, 3);
+        sammon = SammonMapping.of(data, 3);
         System.out.format("Learn Sammon's Mapping (k=3) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
         plot = ScatterPlot.plot(sammon.getCoordinates(), labels);

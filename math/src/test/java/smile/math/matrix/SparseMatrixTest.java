@@ -146,42 +146,9 @@ public class SparseMatrixTest {
         }
     }
 
-    /**
-     * Load sparse matrix.
-     */
-    @SuppressWarnings("resource")
-    SparseMatrix loadMatrix(String file) {
-        int nrows, ncols;
-        int[] colIndex, rowIndex;
-        double[] data;
-
-        Scanner scanner = new Scanner(getClass().getResourceAsStream(file));
-
-        nrows = scanner.nextInt();
-        ncols = scanner.nextInt();
-        int n = scanner.nextInt();
-
-        colIndex = new int[ncols + 1];
-        rowIndex = new int[n];
-        data = new double[n];
-
-        for (int i = 0; i <= ncols; i++) {
-            colIndex[i] = scanner.nextInt() - 1;
-        }
-
-        for (int i = 0; i < n; i++) {
-            rowIndex[i] = scanner.nextInt() - 1;
-        }
-
-        for (int i = 0; i < n; i++) {
-            data[i] = scanner.nextDouble();
-        }
-
-        return new SparseMatrix(nrows, ncols, data, rowIndex, colIndex);
-    }
-
     @Test
-    public void nonZeroIterator() {
+    public void testIteration() {
+        System.out.println("iteration");
         Random rand = new Random();
         double[][] d = new double[1000][2000];
         int nonzeroCount = 10000;
@@ -203,54 +170,49 @@ public class SparseMatrixTest {
 
         // verify all values and the number of non-zeros
         AtomicInteger k = new AtomicInteger(0);
-        m.foreachNonzero((i, j, x) -> {
-            assertEquals(d[i][j], x, 0);
-            assertEquals(d[i][j], m.get(i, j), 0);
+        for (SparseMatrix.Entry e : m) {
+            assertEquals(d[e.i][e.j], e.x, 0);
+            assertEquals(d[e.i][e.j], m.get(e.i, e.j), 0);
             k.incrementAndGet();
-        });
+        }
         assertEquals(nonzeroCount, k.get());
 
         // iterate over just a few columns
         k.set(0);
-        m.foreachNonzero(100, 400, (i, j, x) -> {
-            assertTrue(j >= 100);
-            assertTrue(j < 400);
-            assertEquals(d[i][j], x, 0);
-            assertEquals(d[i][j], m.get(i, j), 0);
+        m.iterator(100, 400).forEachRemaining(e -> {
+            assertTrue(e.j >= 100);
+            assertTrue(e.j < 400);
+            assertEquals(d[e.i][e.j], e.x, 0);
+            assertEquals(d[e.i][e.j], m.get(e.i, e.j), 0);
             k.incrementAndGet();
         });
         assertEquals(limitedNonZeros, k.get());
 
         k.set(0);
-        m.nonzeros().forEach(
-                entry -> {
-                    int i = entry.row;
-                    int j = entry.col;
-                    double x = entry.value;
-
-                    assertEquals(d[i][j], x, 0);
-                    assertEquals(d[i][j], m.get(i, j), 0);
-                    k.incrementAndGet();
-                });
+        m.nonzeros().forEach(e -> {
+            assertEquals(d[e.i][e.j], e.x, 0);
+            assertEquals(d[e.i][e.j], m.get(e.i, e.j), 0);
+            k.incrementAndGet();
+        });
         assertEquals(nonzeroCount, k.get());
 
         k.set(0);
-        m.nonzeros(100, 400).forEach(
-                entry -> {
-                    int col = entry.col;
+        m.nonzeros(100, 400).forEach(e -> {
+            System.out.println(e);
+            assertTrue(e.j >= 100);
+            assertTrue(e.j < 400);
 
-                    assertTrue(col >= 100);
-                    assertTrue(col < 400);
-
-                    assertEquals(d[entry.row][col], entry.value, 0);
-                    assertEquals(d[entry.row][col], m.get(entry.row, col), 0);
-                    k.incrementAndGet();
-                });
+            assertEquals(d[e.i][e.j], e.x, 0);
+            assertEquals(d[e.i][e.j], m.get(e.i, e.j), 0);
+            k.incrementAndGet();
+        });
         assertEquals(limitedNonZeros, k.get());
     }
 
     @Test
-    public void iterationSpeed() {
+    public void benchmarkIterationSpeed() {
+        System.out.println("speed");
+
         Random rand = new Random();
         double[][] d = new double[1000][2000];
         for (int i = 0; i < 500000; i++) {
@@ -266,31 +228,28 @@ public class SparseMatrixTest {
         double t0 = System.nanoTime() / 1e9;
         double[] sum1 = new double[2000];
         for (int rep = 0; rep < 1000; rep++) {
-            m.foreachNonzero((i, j, x) -> sum1[j] += x);
+            m.iterator().forEachRemaining(e -> sum1[e.j] += e.x);
         }
         double t1 = System.nanoTime() / 1e9;
         double sum = 0;
         for (double v : sum1) {
             sum += v;
         }
-        System.out.printf("%.3f (%.2f)\n", (t1 - t0), sum);
+        System.out.printf("iterator: %.3f (%.2f)\n", (t1 - t0), sum);
 
         t0 = System.nanoTime() / 1e9;
         double[] sum2 = new double[2000];
         for (int rep = 0; rep < 1000; rep++) {
-            m.nonzeros().forEach(entry -> sum2[entry.col] += entry.value);
+            m.nonzeros().forEach(e -> sum2[e.j] += e.x);
         }
         t1 = System.nanoTime() / 1e9;
         sum = 0;
         for (double v : sum2) {
             sum += v;
         }
-        System.out.printf("%.3f (%.2f)\n", (t1 - t0), sum);
+        System.out.printf("stream: %.3f (%.2f)\n", (t1 - t0), sum);
     }
 
-    /**
-     * Test of text method, of class SparseMatrix.
-     */
     @Test(expected = Test.None.class)
     public void testText() throws Exception {
         System.out.println("text");
@@ -304,9 +263,6 @@ public class SparseMatrixTest {
         assertEquals(95.0, data.get(299, 299), 1E-7);
     }
 
-    /**
-     * Test of harwell method, of class SparseMatrix.
-     */
     @Test(expected = Test.None.class)
     public void testHarwell() throws Exception {
         System.out.println("HB exchange format");

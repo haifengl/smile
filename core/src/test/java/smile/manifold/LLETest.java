@@ -65,8 +65,8 @@ public class LLETest {
      * Test of learn method, of class LLE.
      */
     @Test(expected = Test.None.class)
-    public void testLearn() throws Exception {
-        System.out.println("learn");
+    public void test() throws Exception {
+        System.out.println("LLE");
 
         double[][] points = {
                 { 0.0099, -0.0189},
@@ -1078,7 +1078,7 @@ public class LLETest {
         double[][] data = new double[1000][];
         System.arraycopy(dat, 0, data, 0, data.length);
         
-        LLE lle = new LLE(data, 2, 7);
+        LLE lle = LLE.of(data, 7);
 
         double[][] coords = lle.getCoordinates();
         for (int i = 0; i < points.length; i++) {

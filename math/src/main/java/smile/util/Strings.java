@@ -17,8 +17,8 @@
 
 package smile.util;
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +27,10 @@ import java.util.stream.Collectors;
  * @author Haifeng Li
  */
 public interface Strings {
+
+    /** Decimal format for floating numbers. */
+    DecimalFormat decimalFormat = new DecimalFormat("#.######");
+
     /** Returns true if the string is null or empty. */
     static boolean isNullOrEmpty(String str) {
         return str == null || str.isEmpty();
@@ -88,6 +92,11 @@ public interface Strings {
         char[] chars = new char[len];
         Arrays.fill(chars, ch);
         return new String(chars);
+    }
+
+    /** Returns the decimal string representation of a floating number. */
+    static String decimal(double x) {
+        return decimalFormat.format(x);
     }
 
     /** Returns the string representation of array in format '[1, 2, 3]'." */

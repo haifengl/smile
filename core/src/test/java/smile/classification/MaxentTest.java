@@ -63,7 +63,7 @@ public class MaxentTest {
         Maxent model = Maxent.fit(Protein.p, Protein.x, Protein.y);
 
         int[] prediction = Validation.test(model, Protein.testx);
-        int error = Error.apply(prediction, Protein.testy);
+        int error = Error.of(prediction, Protein.testy);
 
         System.out.format("The error is %d of %d%n", error, Protein.testx.length);
         assertEquals(1339, error);
@@ -76,7 +76,7 @@ public class MaxentTest {
         Maxent model = Maxent.fit(Hyphen.p, Hyphen.x, Hyphen.y);
 
         int[] prediction = Validation.test(model, Hyphen.testx);
-        int error = Error.apply(prediction, Hyphen.testy);
+        int error = Error.of(prediction, Hyphen.testy);
 
         System.out.format("The error is %d of %d%n", error, Hyphen.testx.length);
         assertEquals(762, error);

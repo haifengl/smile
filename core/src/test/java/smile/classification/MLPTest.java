@@ -88,7 +88,7 @@ public class MLPTest {
             return model;
         });
 
-        int error = Error.apply(PenDigits.y, prediction);
+        int error = Error.of(PenDigits.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(137, error);
     }
@@ -122,7 +122,7 @@ public class MLPTest {
             return model;
         });
 
-        int error = Error.apply(BreastCancer.y, prediction);
+        int error = Error.of(BreastCancer.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(13, error);
     }
@@ -157,7 +157,7 @@ public class MLPTest {
             }
 
             int[] prediction = Validation.test(model, testx);
-            error = Error.apply(Segment.testy, prediction);
+            error = Error.of(Segment.testy, prediction);
             System.out.println("Test Error = " + error);
         }
         assertEquals(36, error);
@@ -191,7 +191,7 @@ public class MLPTest {
             }
 
             int[] prediction = Validation.test(model, testx);
-            error = Error.apply(Segment.testy, prediction);
+            error = Error.of(Segment.testy, prediction);
             System.out.println("Test Error = " + error);
         }
 
@@ -229,7 +229,7 @@ public class MLPTest {
             }
 
             int[] prediction = Validation.test(model, testx);
-            error = Error.apply(USPS.testy, prediction);
+            error = Error.of(USPS.testy, prediction);
             System.out.println("Test Error = " + error);
         }
 

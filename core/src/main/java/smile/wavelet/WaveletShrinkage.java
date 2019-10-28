@@ -46,7 +46,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class WaveletShrinkage {
+public interface WaveletShrinkage {
     /**
      * Adaptive hard-thresholding denoising a time series with given wavelet.
      *
@@ -54,7 +54,7 @@ public class WaveletShrinkage {
      * series of size no power of 2, 0 padding can be applied.
      * @param wavelet the wavelet to transform the time series.
      */
-    public static void denoise(double[] t, Wavelet wavelet) {
+    static void denoise(double[] t, Wavelet wavelet) {
         denoise(t, wavelet, false);
     }
 
@@ -66,7 +66,7 @@ public class WaveletShrinkage {
      * @param wavelet the wavelet to transform the time series.
      * @param soft true if apply soft thresholding.
      */
-    public static void denoise(double[] t, Wavelet wavelet, boolean soft) {
+    static void denoise(double[] t, Wavelet wavelet, boolean soft) {
         wavelet.transform(t);
 
         int n = t.length;

@@ -74,11 +74,11 @@ public class GradientTreeBoostTest {
         System.out.println("----- Progressive RMSE -----");
         double[][] test = model.test(Longley.data);
         for (int i = 0; i < test.length; i++) {
-            System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.apply(Longley.y, test[i]));
+            System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.of(Longley.y, test[i]));
         }
 
         double[] prediction = LOOCV.regression(Longley.data, x -> GradientTreeBoost.fit(Longley.formula, x));
-        double rmse = RMSE.apply(Longley.y, prediction);
+        double rmse = RMSE.of(Longley.y, prediction);
         System.out.println("LOOCV RMSE = " + rmse);
         assertEquals(3.545378550497016, rmse, 1E-4);
     }
@@ -96,7 +96,7 @@ public class GradientTreeBoostTest {
         }
 
         double[] prediction = CrossValidation.regression(10, data, x -> GradientTreeBoost.fit(formula, x, loss, 100, 6, 5, 0.05, 0.7));
-        double rmse = RMSE.apply(formula.y(data).toDoubleArray(), prediction);
+        double rmse = RMSE.of(formula.y(data).toDoubleArray(), prediction);
         System.out.format("10-CV RMSE = %.4f%n", rmse);
         assertEquals(expected, rmse, 1E-4);
     }

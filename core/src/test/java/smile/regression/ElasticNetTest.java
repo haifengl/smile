@@ -75,7 +75,7 @@ public class ElasticNetTest {
         System.out.println(model);
 
         double[] prediction = Validation.test(model, df);
-        double rmse = RMSE.apply(y, prediction);
+        double rmse = RMSE.of(y, prediction);
         System.out.println("RMSE = " + rmse);
 
         assertEquals(5.1486, model.intercept(), 1E-4);
@@ -93,7 +93,7 @@ public class ElasticNetTest {
         System.out.println(model);
 
         double[] prediction = LOOCV.regression(Longley.data, (x) -> ElasticNet.fit(Longley.formula, x, 0.1, 0.1));
-        double rmse = RMSE.apply(Longley.y, prediction);
+        double rmse = RMSE.of(Longley.y, prediction);
 
         System.out.println("LOOCV RMSE = " + rmse);
         assertEquals(4.2299495472273, rmse, 1E-4);
@@ -106,7 +106,7 @@ public class ElasticNetTest {
         System.out.println(model);
 
         double[] prediction = CrossValidation.regression(10, CPU.data, (x) -> ElasticNet.fit(CPU.formula, x, 0.8, 0.2));
-        double rmse = RMSE.apply(CPU.y, prediction);
+        double rmse = RMSE.of(CPU.y, prediction);
 
         System.out.println("10-CV RMSE = " + rmse);
         assertEquals(55.313225659429634, rmse, 1E-4);
@@ -119,7 +119,7 @@ public class ElasticNetTest {
         System.out.println(model);
 
         double[] prediction = Validation.test(model, Prostate.test);
-        double rmse = RMSE.apply(Prostate.testy, prediction);
+        double rmse = RMSE.of(Prostate.testy, prediction);
         System.out.println("Test RMSE = " + rmse);
         assertEquals(0.7076752687983124, rmse, 1E-4);
     }
@@ -131,7 +131,7 @@ public class ElasticNetTest {
         System.out.println(model);
 
         double[] prediction = Validation.test(model, Abalone.test);
-        double rmse = RMSE.apply(Abalone.testy, prediction);
+        double rmse = RMSE.of(Abalone.testy, prediction);
         System.out.println("Test RMSE = " + rmse);
         assertEquals(2.1395194279255536, rmse, 1E-4);
     }
@@ -143,7 +143,7 @@ public class ElasticNetTest {
         System.out.println(model);
 
         double[] prediction = CrossValidation.regression(10, Diabetes.data, (x) -> ElasticNet.fit(Diabetes.formula, x, 0.8, 0.2));
-        double rmse = RMSE.apply(Diabetes.y, prediction);
+        double rmse = RMSE.of(Diabetes.y, prediction);
 
         System.out.println("Diabetes 10-CV RMSE = " + rmse);
         assertEquals(61.397635703350886, rmse, 1E-4);

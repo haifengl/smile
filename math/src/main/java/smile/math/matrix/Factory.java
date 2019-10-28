@@ -42,6 +42,7 @@ class Factory {
     static {
         try {
             nlmatrix = Class.forName("smile.netlib.NLMatrix");
+            logger.info("smile-netlib module is available.");
 
             try {
                 nlmatrixArray2D = nlmatrix.getConstructor(double[][].class);
@@ -67,11 +68,12 @@ class Factory {
                 logger.error("NLMatrix(int, int, double) does not exist");
             }
         } catch (ClassNotFoundException e) {
-            logger.info("smile-netlib module is not available in the classpath. Pure Java matrix library will be employed.");
+
         }
 
         try {
             ndmatrix = Class.forName("smile.nd4j.NDMatrix");
+            logger.info("smile-nd4j module is available.");
 
             try {
                 ndmatrixArray2D = ndmatrix.getConstructor(double[][].class);
@@ -97,7 +99,7 @@ class Factory {
                 logger.error("NDMatrix(int, int, double) does not exist");
             }
         } catch (ClassNotFoundException e) {
-            logger.info("smile-nd4j module is not available in the classpath. Pure Java matrix library will be employed.");
+
         }
     }
 

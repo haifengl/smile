@@ -159,20 +159,20 @@ public class HexmapDemo extends JPanel {
                 }
             }
             
-            MDS mds = new MDS(proximity, 3);
+            MDS mds = MDS.of(proximity, 3);
             double[][] coords = mds.getCoordinates();
             double[][][] mdsgrid = new double[m][n][];
             for (int i = 0; i < m*n; i++) {
                 mdsgrid[i/n][i%n] = mds.getCoordinates()[i];
             }            
             
-            SammonMapping sammon = new SammonMapping(proximity, coords);
+            SammonMapping sammon = SammonMapping.of(proximity, coords, 0.2, 1E-4, 1E-3, 100);
             double[][][] sammongrid = new double[m][n][];
             for (int i = 0; i < m*n; i++) {
                 sammongrid[i/n][i%n] = sammon.getCoordinates()[i];
             }
             
-            IsotonicMDS isomds = new IsotonicMDS(proximity, coords);
+            IsotonicMDS isomds = IsotonicMDS.of(proximity, coords, 1E-4, 200);
             double[][][] isomdsgrid = new double[m][n][];
             for (int i = 0; i < m*n; i++) {
                 isomdsgrid[i/n][i%n] = isomds.getCoordinates()[i];

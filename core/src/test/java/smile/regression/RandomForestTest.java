@@ -113,11 +113,11 @@ public class RandomForestTest {
         System.out.println("----- Progressive RMSE -----");
         double[][] test = model.test(Longley.data);
         for (int i = 0; i < test.length; i++) {
-            System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.apply(Longley.y, test[i]));
+            System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.of(Longley.y, test[i]));
         }
 
         double[] prediction = LOOCV.regression(Longley.data, x -> RandomForest.fit(Longley.formula, x, 100, 3, 10, 3, 1.0, Optional.of(Arrays.stream(seeds))));
-        double rmse = RMSE.apply(Longley.y, prediction);
+        double rmse = RMSE.of(Longley.y, prediction);
 
         System.out.println("LOOCV RMSE = " + rmse);
         assertEquals(2.710121445970332, rmse, 1E-4);
@@ -128,7 +128,7 @@ public class RandomForestTest {
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
         double[] prediction = CrossValidation.regression(3, data, x -> RandomForest.fit(formula, x, 100, 3, 100, 5, 1.0, Optional.of(Arrays.stream(seeds))));
-        double rmse = RMSE.apply(formula.y(data).toDoubleArray(), prediction);
+        double rmse = RMSE.of(formula.y(data).toDoubleArray(), prediction);
         System.out.format("10-CV RMSE = %.4f%n", rmse);
         assertEquals(expected, rmse, 1E-4);
 
@@ -160,9 +160,9 @@ public class RandomForestTest {
         RandomForest forest1 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 100, 5, 1.0, Optional.of(Arrays.stream(seeds)));
         RandomForest forest2 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 100, 5, 1.0, Optional.of(Arrays.stream(seeds).skip(50)));
         RandomForest forest = forest1.merge(forest2);
-        double rmse1 = RMSE.apply(Abalone.testy, Validation.test(forest1, Abalone.test));
-        double rmse2 = RMSE.apply(Abalone.testy, Validation.test(forest2, Abalone.test));
-        double rmse  = RMSE.apply(Abalone.testy, Validation.test(forest,  Abalone.test));
+        double rmse1 = RMSE.of(Abalone.testy, Validation.test(forest1, Abalone.test));
+        double rmse2 = RMSE.of(Abalone.testy, Validation.test(forest2, Abalone.test));
+        double rmse  = RMSE.of(Abalone.testy, Validation.test(forest,  Abalone.test));
         System.out.format("Forest 1 RMSE = %.4f%n", rmse1);
         System.out.format("Forest 2 RMSE = %.4f%n", rmse2);
         System.out.format("Merged   RMSE = %.4f%n", rmse);

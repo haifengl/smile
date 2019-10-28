@@ -64,8 +64,8 @@ trait Operators {
     * @param k k-nearest neighbor.
     * @param CIsomap C-Isomap algorithm if true, otherwise standard algorithm.
     */
-  def isomap(data: Array[Array[Double]], d: Int, k: Int, CIsomap: Boolean = true): IsoMap = time("IsoMap") {
-    new IsoMap(data, d, k, CIsomap)
+  def isomap(data: Array[Array[Double]], k: Int, d: Int = 2, CIsomap: Boolean = true): IsoMap = time("IsoMap") {
+    IsoMap.of(data, k, d, CIsomap)
   }
 
   /** Locally Linear Embedding. It has several advantages over Isomap, including
@@ -87,8 +87,8 @@ trait Operators {
     * @param d the dimension of the manifold.
     * @param k k-nearest neighbor.
     */
-  def lle(data: Array[Array[Double]], d: Int, k: Int): LLE = time("LLE") {
-    new LLE(data, d, k)
+  def lle(data: Array[Array[Double]], k: Int, d: Int = 2): LLE = time("LLE") {
+    LLE.of(data, k, d)
   }
 
   /** Laplacian Eigenmap. Using the notion of the Laplacian of the nearest
@@ -111,8 +111,8 @@ trait Operators {
     * @param t the smooth/width parameter of heat kernel e<sup>-||x-y||<sup>2</sup> / t</sup>.
     *          Non-positive value means discrete weights.
     */
-  def laplacian(data: Array[Array[Double]], d: Int, k: Int, t: Double = -1): LaplacianEigenmap = time("Laplacian Eigen Map") {
-    new LaplacianEigenmap(data, d, k, t)
+  def laplacian(data: Array[Array[Double]], k: Int, d: Int = 2, t: Double = -1): LaplacianEigenmap = time("Laplacian Eigen Map") {
+    LaplacianEigenmap.of(data, k, d, t)
   }
 
   /** t-distributed stochastic neighbor embedding. t-SNE is a nonlinear

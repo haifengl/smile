@@ -106,7 +106,7 @@ public class Bootstrap {
 
             Classifier<T> model = trainer.apply(trainx, trainy);
             int[] prediction = model.predict(testx);
-            error[i] = 1 - Accuracy.apply(testy, prediction);
+            error[i] = 1 - Accuracy.of(testy, prediction);
         }
 
         return error;
@@ -126,7 +126,7 @@ public class Bootstrap {
             int[] prediction = model.predict(oob);
             int[] testy = model.formula().y(oob).toIntArray();
 
-            error[i] = 1 - Accuracy.apply(testy, prediction);
+            error[i] = 1 - Accuracy.of(testy, prediction);
         }
 
         return error;
@@ -147,7 +147,7 @@ public class Bootstrap {
 
             Regression<T> model = trainer.apply(trainx, trainy);
             double[] prediction = model.predict(testx);
-            rmse[i] = RMSE.apply(testy, prediction);
+            rmse[i] = RMSE.of(testy, prediction);
         }
 
         return rmse;
@@ -166,7 +166,7 @@ public class Bootstrap {
             double[] prediction = model.predict(oob);
             double[] testy = model.formula().y(oob).toDoubleArray();
 
-            rmse[i] = RMSE.apply(testy, prediction);
+            rmse[i] = RMSE.of(testy, prediction);
         }
 
         return rmse;

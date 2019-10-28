@@ -158,7 +158,7 @@ public class SammonMappingTest {
             {7.93068432504942, 33.5679481082113}
         };
 
-        SammonMapping sammon = new SammonMapping(swiss);
+        SammonMapping sammon = SammonMapping.of(swiss);
         assertEquals(0.00383, sammon.getStress(), 1E-5);
 
         double[][] coords = sammon.getCoordinates();

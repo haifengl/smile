@@ -16,21 +16,21 @@ sbt clean
 sbt universal:packageBin
 check_error "Packaging .tgz"
 
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    sbt docker:publishLocal 
-    check_error "Packaging .tgz"
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-    sbt universal:packageOsxDmg
-    check_error "Packaging .dmg"
-elif [[ "$OSTYPE" == "cygwin" ]]; then
-    sbt windows:packageBin
-    check_error "Packaging .msi"
-elif [[ "$OSTYPE" == "msys" ]]; then
-    sbt windows:packageBin
-    check_error "Packaging .msi"
-else
-    echo "Unsupported OS: $OSTYPE"
-fi
+#if [[ "$OSTYPE" == "linux-gnu" ]]; then
+#    sbt docker:publishLocal 
+#    check_error "Packaging .tgz"
+#elif [[ "$OSTYPE" == "darwin"* ]]; then
+#    sbt universal:packageOsxDmg
+#    check_error "Packaging .dmg"
+#elif [[ "$OSTYPE" == "cygwin" ]]; then
+#    sbt windows:packageBin
+#    check_error "Packaging .msi"
+#elif [[ "$OSTYPE" == "msys" ]]; then
+#    sbt windows:packageBin
+#    check_error "Packaging .msi"
+#else
+#    echo "Unsupported OS: $OSTYPE"
+#fi
 
 #sbt publishSigned
 #sbt ++2.12.10 scala/publishSigned

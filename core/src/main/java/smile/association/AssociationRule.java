@@ -61,19 +61,51 @@ public class AssociationRule {
      * that these transactions also contain the LHS.
      */
     public final double confidence;
+    /**
+     * How many times more often antecedent and consequent occur together
+     * than expected if they were statistically independent.
+     * Lift is a measure of the performance of a targeting model
+     * (association rule) at predicting or classifying cases as having
+     * an enhanced response (with respect to the population as a whole),
+     * measured against a random choice targeting model. A targeting model
+     * is doing a good job if the response within the target is much better
+     * than the average for the population as a whole.
+     *
+     * Lift is simply the ratio of these values: target response divided by
+     * average response.
+     *
+     * For an association rule X ==> Y, if the lift is equal to 1,
+     * it means that X and Y are independent. If the lift is higher than 1,
+     * it means that X and Y are positively correlated.
+     * If the lift is lower than 1, it means that X and Y are negatively correlated.
+     */
+    public final double lift;
+    /**
+     * The difference between the probability of the rule and the expected
+     * probability if the items were statistically independent.
+     */
+    public final double leverage;
 
     /**
      * Constructor.
      * @param antecedent the antecedent itemset (LHS) of the association rule.
      * @param consequent the consequent itemset (RHS) of the association rule.
-     * @param support    the associated support value.
-     * @param confidence the associated confidence value.
+     * @param support    the proportion of instances in the dataset that contain an itemset.
+     * @param confidence the percentage of instances that contain the consequent
+     *                   and antecedent together over the number of instances that
+     *                   only contain the antecedent.
+     * @param lift       how many times more often antecedent and consequent occur together
+     *                   than expected if they were statistically independent.
+     * @param leverage   the difference between the probability of the rule and the expected
+     *                   probability if the items were statistically independent.
      */
-    public AssociationRule(int[] antecedent, int[] consequent, double support, double confidence) {
+    public AssociationRule(int[] antecedent, int[] consequent, double support, double confidence, double lift, double leverage) {
         this.antecedent = antecedent;
         this.consequent = consequent;
         this.support = support;
         this.confidence = confidence;
+        this.lift = lift;
+        this.leverage = leverage;
     }
 
     @Override
@@ -143,7 +175,7 @@ public class AssociationRule {
             sb.append(consequent[i]);
         }
 
-        sb.append(String.format(")\tsupport = %.2f%%\tconfidence = %.2f%%", 100*support, 100*confidence));
+        sb.append(String.format(") support = %.2f%% confidence = %.2f%% lift = %.2f leverage = %.4f", 100*support, 100*confidence, lift, leverage));
 
         return sb.toString();
     }

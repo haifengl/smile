@@ -23,6 +23,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Properties;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -100,7 +101,7 @@ public class MDSDemo extends JPanel implements Runnable, ActionListener {
         String[] labels = dataset[datasetIndex].names();
 
         long clock = System.currentTimeMillis();
-        MDS mds = new MDS(data, 2);
+        MDS mds = MDS.of(data, 2);
         System.out.format("Learn MDS (k=2) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
         PlotCanvas plot = ScatterPlot.plot(mds.getCoordinates(), labels);
@@ -108,7 +109,7 @@ public class MDSDemo extends JPanel implements Runnable, ActionListener {
         pane.add(plot);
 
         clock = System.currentTimeMillis();
-        mds = new MDS(data, 3);
+        mds = MDS.of(data, 3);
         System.out.format("Learn MDS (k=3) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
         plot = ScatterPlot.plot(mds.getCoordinates(), labels);

@@ -68,13 +68,13 @@ public class RLSTest {
         DataFrame online = Longley.data.of(IntStream.range(n/2, n).toArray());
         LinearModel model = OLS.fit(Longley.formula, batch);
         double[] prediction = Validation.test(model, online);
-        double rmse = RMSE.apply(Longley.formula.y(online).toDoubleArray(), prediction);
+        double rmse = RMSE.of(Longley.formula.y(online).toDoubleArray(), prediction);
         System.out.println("Batch RMSE = " + rmse);
         assertEquals(6.229663, rmse, 1E-4);
 
         model.update(online);
         prediction = Validation.test(model, online);
-        rmse = RMSE.apply(Longley.formula.y(online).toDoubleArray(), prediction);
+        rmse = RMSE.of(Longley.formula.y(online).toDoubleArray(), prediction);
         System.out.println("Online RMSE = " + rmse);
         assertEquals(0.973663, rmse, 1E-4);
     }
@@ -90,13 +90,13 @@ public class RLSTest {
         System.out.println(model);
 
         double[] prediction = Validation.test(model, Prostate.test);
-        double rmse = RMSE.apply(Prostate.testy, prediction);
+        double rmse = RMSE.of(Prostate.testy, prediction);
         System.out.println("RMSE on test data = " + rmse);
         assertEquals(0.721993, rmse, 1E-4);
 
         model.update(Prostate.test);
         prediction = Validation.test(model, Prostate.test);
-        rmse = RMSE.apply(Prostate.testy, prediction);
+        rmse = RMSE.of(Prostate.testy, prediction);
         System.out.println("RMSE after online = " + rmse);
         assertEquals(0.643182, rmse, 1E-4);
     }
@@ -115,7 +115,7 @@ public class RLSTest {
             model.update(online);
             return model;
         });
-        double rmse = RMSE.apply(formula.y(data).toDoubleArray(), prediction);
+        double rmse = RMSE.of(formula.y(data).toDoubleArray(), prediction);
         System.out.format("10-CV RMSE = %.4f%n", rmse);
     }
     

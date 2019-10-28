@@ -64,7 +64,7 @@ public class MCCTest {
         };
 
         double expResult = 0.83068;
-        double result = MCC.apply(truth, prediction);
+        double result = MCC.of(truth, prediction);
         assertEquals(expResult, result, 1E-5);
     }
 
@@ -84,7 +84,7 @@ public class MCCTest {
         };
 
         double expResult = 0;
-        double result = MCC.apply(truth, prediction);
+        double result = MCC.of(truth, prediction);
         assertEquals(expResult, result, 1E-5);
     }
 

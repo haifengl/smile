@@ -52,7 +52,7 @@ public class IsoMapDemo extends ManifoldDemo {
         }
 
         long clock = System.currentTimeMillis();
-        IsoMap isomap = new IsoMap(data, 2, k);
+        IsoMap isomap = IsoMap.of(data,k);
         System.out.format("Learn IsoMap from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
         double[][] y = isomap.getCoordinates();

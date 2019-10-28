@@ -68,7 +68,7 @@ public class GradientTreeBoostTest {
         }
 
         int[] prediction = LOOCV.classification(WeatherNominal.data, x -> GradientTreeBoost.fit(WeatherNominal.formula, x, 100, 6, 5, 0.05, 0.7));
-        int error = Error.apply(WeatherNominal.y, prediction);
+        int error = Error.of(WeatherNominal.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(6, error);
@@ -87,7 +87,7 @@ public class GradientTreeBoostTest {
         }
 
         int[] prediction = LOOCV.classification(Iris.data, x -> GradientTreeBoost.fit(Iris.formula, x, 100, 6, 5, 0.05, 0.7));
-        int error = Error.apply(Iris.y, prediction);
+        int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(8, error);
     }
@@ -98,7 +98,7 @@ public class GradientTreeBoostTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> GradientTreeBoost.fit(PenDigits.formula, x, 100, 6, 5, 0.05, 0.7));
-        int error = Error.apply(PenDigits.y, prediction);
+        int error = Error.of(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(143, error);
@@ -110,7 +110,7 @@ public class GradientTreeBoostTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> GradientTreeBoost.fit(BreastCancer.formula, x, 100, 6, 5, 0.05, 0.7));
-        int error = Error.apply(BreastCancer.y, prediction);
+        int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(21, error);
@@ -129,7 +129,7 @@ public class GradientTreeBoostTest {
         }
 
         int[] prediction = Validation.test(model, Segment.test);
-        int error = Error.apply(Segment.testy, prediction);
+        int error = Error.of(Segment.testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(20, error);
@@ -137,7 +137,7 @@ public class GradientTreeBoostTest {
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(Segment.test);
         for (int i = 0; i < test.length; i++) {
-            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.apply(Segment.testy, test[i]));
+            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.of(Segment.testy, test[i]));
         }
     }
 
@@ -154,7 +154,7 @@ public class GradientTreeBoostTest {
         }
 
         int[] prediction = Validation.test(model, USPS.test);
-        int error = Error.apply(USPS.testy, prediction);
+        int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(147, error);
@@ -162,7 +162,7 @@ public class GradientTreeBoostTest {
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(USPS.test);
         for (int i = 0; i < test.length; i++) {
-            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.apply(USPS.testy, test[i]));
+            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.of(USPS.testy, test[i]));
         }
     }
 }
