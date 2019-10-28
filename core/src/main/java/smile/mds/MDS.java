@@ -17,6 +17,7 @@
 
 package smile.mds;
 
+import java.util.Properties;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
@@ -26,7 +27,7 @@ import smile.math.matrix.EVD;
  * Classical multidimensional scaling, also known as principal coordinates
  * analysis. Given a matrix of dissimilarities (e.g. pairwise distances), MDS
  * finds a set of points in low dimensional space that well-approximates the
- * dissimilarities in A. We are not restricted to using a Euclidean
+ * dissimilarities. We are not restricted to using an Euclidean
  * distance metric. However, when Euclidean distances are used MDS is
  * equivalent to PCA.
  *
@@ -39,11 +40,11 @@ public class MDS {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MDS.class);
 
     /**
-     * Component scores.
+     * The component scores.
      */
-    private double[] eigenvalues;
+    private double[] scores;
     /**
-     * Coordinate matrix.
+     * The principal coordinates.
      */
     private double[][] coordinates;
     /**
@@ -52,10 +53,23 @@ public class MDS {
     private double[] proportion;
 
     /**
+     * Constructor.
+     *
+     * @param scores the component scores.
+     * @param proportion the proportion of variance contained in each principal component.
+     * @param coordinates the principal coordinates
+     */
+    public MDS(double[] scores, double[] proportion, double[][] coordinates) {
+        this.scores = scores;
+        this.proportion = proportion;
+        this.coordinates = coordinates;
+    }
+
+    /**
      * Returns the component scores, ordered from largest to smallest.
      */
-    public double[] getEigenValues() {
-        return eigenvalues;
+    public double[] getScores() {
+        return scores;
     }
 
     /**
@@ -74,37 +88,51 @@ public class MDS {
     }
 
     /**
-     * Constructor. Learn the classical multidimensional scaling.
+     * Fits the classical multidimensional scaling.
      * Map original data into 2-dimensional Euclidean space.
      * @param proximity the nonnegative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and
      * symmetric. For pairwise distances matrix, it should be just the plain
      * distance, not squared.
      */
-    public MDS(double[][] proximity) {
-        this(proximity, 2);
+    public static MDS of(double[][] proximity) {
+        return of(proximity, new Properties());
     }
 
     /**
-     * Constructor. Learn the classical multidimensional scaling.
+     * Fits the classical multidimensional scaling.
      * @param proximity the nonnegative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and
      * symmetric. For pairwise distances matrix, it should be just the plain
      * distance, not squared.
      * @param k the dimension of the projection.
      */
-    public MDS(double[][] proximity, int k) {
-        this(proximity, k, false);
+    public static MDS of(double[][] proximity, int k) {
+        return of(proximity, k, false);
     }
 
     /**
-     * Constructor. Learn the classical multidimensional scaling.
+     * Fits the classical multidimensional scaling.
+     *
+     * @param proximity the nonnegative proximity matrix of dissimilarities. The
+     * diagonal should be zero and all other elements should be positive and
+     * symmetric. For pairwise distances matrix, it should be just the plain
+     * distance, not squared.
+     */
+    public static MDS of(double[][] proximity, Properties prop) {
+        int k = Integer.valueOf(prop.getProperty("smile.mds.k", "2"));
+        boolean positive = Boolean.valueOf(prop.getProperty("smile.mds.positive.semidefinite", "false"));
+        return of(proximity, k, positive);
+    }
+
+    /**
+     * Fits the classical multidimensional scaling.
      * @param proximity the nonnegative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and
      * symmetric. For pairwise distances matrix, it should be just the plain
      * distance, not squared.
      * @param k the dimension of the projection.
-     * @param add true to estimate an appropriate constant to be added
+     * @param positive if true, estimate an appropriate constant to be added
      * to all the dissimilarities, apart from the self-dissimilarities, that
      * makes the learning matrix positive semi-definite. The other formulation of
      * the additive constant problem is as follows. If the proximity is
@@ -115,7 +143,7 @@ public class MDS {
      * to minimize the dimensionality of the Euclidean space required for
      * representing the objects.
      */
-    public MDS(double[][] proximity, int k, boolean add) {
+    public static MDS of(double[][] proximity, int k, boolean positive) {
         int m = proximity.length;
         int n = proximity[0].length;
 
@@ -149,7 +177,7 @@ public class MDS {
             }
         }
 
-        if (add) {
+        if (positive) {
             DenseMatrix Z = Matrix.zeros(2 * n, 2 * n);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
@@ -190,7 +218,7 @@ public class MDS {
             k = eigen.getEigenValues().length;
         }
 
-        coordinates = new double[n][k];
+        double[][] coordinates = new double[n][k];
         for (int j = 0; j < k; j++) {
             if (eigen.getEigenValues()[j] < 0) {
                 throw new IllegalArgumentException(String.format("Some of the first %d eigenvalues are < 0.", k));
@@ -202,8 +230,10 @@ public class MDS {
             }
         }
 
-        eigenvalues = eigen.getEigenValues();
-        proportion = eigenvalues.clone();
+        double[] eigenvalues = eigen.getEigenValues();
+        double[] proportion = eigenvalues.clone();
         MathEx.unitize1(proportion);
+
+        return new MDS(eigenvalues, proportion, coordinates);
     }
 }

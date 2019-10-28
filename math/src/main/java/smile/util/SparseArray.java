@@ -25,6 +25,8 @@ import java.util.OptionalInt;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
 import smile.sort.QuickSort;
 
 /**
@@ -35,46 +37,53 @@ import smile.sort.QuickSort;
 public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
     private static final long serialVersionUID = 2L;
 
+    // Entry as an object has too much overhead and not CPU cache friendly.
+    // Use two continuous array lists for index and value correspondingly.
+    /** The index of nonzero entries. */
+    private IntArrayList index;
+    /** The value of nonzero entries. */
+    private DoubleArrayList value;
+
     /**
      * The entry in a sparse array of double values.
      */
-    public static class Entry implements Serializable {
-        private static final long serialVersionUID = 1L;
-        /** Format for toString. */
-        private static DecimalFormat format = new DecimalFormat("#.######");
-
+    public class Entry {
         /**
          * The index of entry.
          */
-        public int i;
+        public final int i;
         /**
          * The value of entry.
          */
-        public double x;
+        public final double x;
+        /**
+         * The index to internal storage.
+         */
+        private final int index;
 
         /**
          * Constructor.
-         * @param i the index of entry.
-         * @param x the value of entry.
          */
-        public Entry(int i, double x) {
-            this.i = i;
-            this.x = x;
+        private Entry(int index) {
+            this.i = SparseArray.this.index.get(index);
+            this.x = value.get(index);
+            this.index = index;
+        }
+
+        /**
+         * Update the value of entry in the array.
+         * Note that the field <code>x</code> is final and thus not updated.
+         */
+        public void update(double x) {
+            value.set(index, x);
         }
 
         @Override
         public String toString() {
-            return String.format("%d:%s", i, format.format(x));
+            return String.format("%d:%s", i, Strings.decimal(x));
         }
     }
 
-    /**
-     * Entry as an object has too much overhead and not CPU cache friendly.
-     * Use two continuous array lists for index and value correspondingly.
-     */
-    private IntArrayList index;
-    private DoubleArrayList value;
-    
     /**
      * Constructor.
      */
@@ -146,16 +155,14 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
 
             @Override
             public Entry next() {
-                Entry e = new Entry(index.get(i), value.get(i));
-                i += 1;
-                return e;
+                return new Entry(i++);
             }
         };
     }
 
     /** Returns the stream of nonzero entries. */
     public Stream<Entry> stream() {
-        return IntStream.range(0, size()).mapToObj(i -> new Entry(index.get(i), value.get(i)));
+        return IntStream.range(0, size()).mapToObj(i -> new Entry(i));
     }
 
     /** Sorts the array elements such that the indices are in ascending order. */

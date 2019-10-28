@@ -34,7 +34,7 @@ trait Operators {
     * ====References:====
     *  - M. Shipp, et al. Diffuse large B-cell lymphoma outcome prediction by gene-expression profiling and supervised machine learning. Nature Medicine, 2002.
     */
-  def s2n(x: Array[Array[Double]], y: Array[Int]): Array[Double] = SignalNoiseRatio.apply(x, y)
+  def s2n(x: Array[Array[Double]], y: Array[Int]): Array[Double] = SignalNoiseRatio.of(x, y)
 
   /** The ratio of between-groups to within-groups sum of squares is a univariate
     * feature ranking metric, which can be used as a feature selection criterion
@@ -48,5 +48,5 @@ trait Operators {
     * ====References:====
     *  - S. Dudoit, J. Fridlyand and T. Speed. Comparison of discrimination methods for the classification of tumors using gene expression data. J Am Stat Assoc, 97:77-87, 2002.
     */
-  def ssr(x: Array[Array[Double]], y: Array[Int]): Array[Double] = SumSquaresRatio.apply(x, y)
+  def ssr(x: Array[Array[Double]], y: Array[Int]): Array[Double] = SumSquaresRatio.of(x, y)
 }

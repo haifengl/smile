@@ -32,11 +32,11 @@ public class Fallout implements ClassificationMeasure {
 
     @Override
     public double measure(int[] truth, int[] prediction) {
-        return apply(truth, prediction);
+        return of(truth, prediction);
     }
 
     /** Calculates the false alarm rate. */
-    public static double apply(int[] truth, int[] prediction) {
+    public static double of(int[] truth, int[] prediction) {
         if (truth.length != prediction.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
         }

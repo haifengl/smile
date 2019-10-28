@@ -23,6 +23,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Properties;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -100,7 +101,7 @@ public class IsotonicMDSDemo extends JPanel implements Runnable, ActionListener 
         String[] labels = dataset[datasetIndex].names();
 
         long clock = System.currentTimeMillis();
-        IsotonicMDS isomds = new IsotonicMDS(data, 2);
+        IsotonicMDS isomds = IsotonicMDS.of(data, 2);
         System.out.format("Learn Kruskal's Nonmetric MDS (k=2) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
         PlotCanvas plot = ScatterPlot.plot(isomds.getCoordinates(), labels);
@@ -108,7 +109,7 @@ public class IsotonicMDSDemo extends JPanel implements Runnable, ActionListener 
         pane.add(plot);
 
         clock = System.currentTimeMillis();
-        isomds = new IsotonicMDS(data, 3);
+        isomds = IsotonicMDS.of(data, 3);
         System.out.format("Learn Kruskal's Nonmetric MDS (k=3) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
         plot = ScatterPlot.plot(isomds.getCoordinates(), labels);

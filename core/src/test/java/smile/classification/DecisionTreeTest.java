@@ -70,7 +70,7 @@ public class DecisionTreeTest {
         }
 
         int[] prediction = LOOCV.classification(WeatherNominal.data, x -> DecisionTree.fit(WeatherNominal.formula, x));
-        int error = Error.apply(WeatherNominal.y, prediction);
+        int error = Error.of(WeatherNominal.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(5, error);
     }
@@ -88,7 +88,7 @@ public class DecisionTreeTest {
         }
 
         int[] prediction = LOOCV.classification(Iris.data, x -> DecisionTree.fit(Iris.formula, x));
-        int error = Error.apply(Iris.y, prediction);
+        int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(9, error);
     }
@@ -99,7 +99,7 @@ public class DecisionTreeTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> DecisionTree.fit(PenDigits.formula, x, SplitRule.GINI, 100, 5));
-        int error = Error.apply(PenDigits.y, prediction);
+        int error = Error.of(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(351, error);
@@ -111,7 +111,7 @@ public class DecisionTreeTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> DecisionTree.fit(BreastCancer.formula, x, SplitRule.GINI, 100, 5));
-        int error = Error.apply(BreastCancer.y, prediction);
+        int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(42, error);
@@ -130,7 +130,7 @@ public class DecisionTreeTest {
         }
 
         int[] prediction = Validation.test(model, Segment.test);
-        int error = Error.apply(Segment.testy, prediction);
+        int error = Error.of(Segment.testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(43, error);
@@ -149,7 +149,7 @@ public class DecisionTreeTest {
         }
 
         int[] prediction = Validation.test(model, USPS.test);
-        int error = Error.apply(USPS.testy, prediction);
+        int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(331, error);
@@ -169,7 +169,7 @@ public class DecisionTreeTest {
         }
 
         int[] prediction = Validation.test(model, USPS.test);
-        int error = Error.apply(USPS.testy, prediction);
+        int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(897, model.size());
@@ -185,14 +185,14 @@ public class DecisionTreeTest {
 
         // The old model should not be modified.
         prediction = Validation.test(model, USPS.test);
-        error = Error.apply(USPS.testy, prediction);
+        error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of old model after pruning = " + error);
         assertEquals(897, model.size());
         assertEquals(324, error);
 
         prediction = Validation.test(lean, USPS.test);
-        error = Error.apply(USPS.testy, prediction);
+        error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of pruned model after pruning = " + error);
         assertEquals(743, lean.size());

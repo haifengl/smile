@@ -59,7 +59,7 @@ public class LogisticRegressionTest {
         System.out.println("Iris");
 
         int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> LogisticRegression.fit(x, y));
-        int error = Error.apply(Iris.y, prediction);
+        int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(5, error);
     }
@@ -69,7 +69,7 @@ public class LogisticRegressionTest {
         System.out.println("Weather");
 
         int[] prediction = LOOCV.classification(WeatherNominal.x, WeatherNominal.y, (x, y) -> LogisticRegression.fit(x, y));
-        int error = Error.apply(WeatherNominal.y, prediction);
+        int error = Error.of(WeatherNominal.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(8, error);
     }
@@ -80,7 +80,7 @@ public class LogisticRegressionTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         int[] prediction = CrossValidation.classification(10, PenDigits.x, PenDigits.y, (x, y) -> LogisticRegression.fit(x, y));
-        int error = Error.apply(PenDigits.y, prediction);
+        int error = Error.of(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(339, error);
@@ -92,7 +92,7 @@ public class LogisticRegressionTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         int[] prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (x, y) -> LogisticRegression.fit(x, y));
-        int error = Error.apply(BreastCancer.y, prediction);
+        int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(28, error);
@@ -105,7 +105,7 @@ public class LogisticRegressionTest {
         LogisticRegression model = LogisticRegression.fit(Segment.x, Segment.y, 0.05, 1E-3, 1000);
 
         int[] prediction = Validation.test(model, Segment.testx);
-        int error = Error.apply(Segment.testy, prediction);
+        int error = Error.of(Segment.testy, prediction);
         System.out.println("Error = " + error);
         assertEquals(50, error);
 
@@ -122,7 +122,7 @@ public class LogisticRegressionTest {
         }
 
         prediction = Validation.test(model, Segment.testx);
-        error = Error.apply(Segment.testy, prediction);
+        error = Error.of(Segment.testy, prediction);
         System.out.println("Error after online update = " + error);
         assertEquals(39, error);
     }
@@ -134,7 +134,7 @@ public class LogisticRegressionTest {
         LogisticRegression model = LogisticRegression.fit(USPS.x, USPS.y, 0.3, 1E-3, 1000);
 
         int[] prediction = Validation.test(model, USPS.testx);
-        int error = Error.apply(USPS.testy, prediction);
+        int error = Error.of(USPS.testy, prediction);
         System.out.println("Error = " + error);
         assertEquals(185, error);
 
@@ -151,7 +151,7 @@ public class LogisticRegressionTest {
         }
 
         prediction = Validation.test(model, USPS.testx);
-        error = Error.apply(USPS.testy, prediction);
+        error = Error.of(USPS.testy, prediction);
         System.out.println("Error after online update = " + error);
         assertEquals(184, error);
     }

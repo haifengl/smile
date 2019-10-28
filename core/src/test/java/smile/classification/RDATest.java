@@ -66,7 +66,7 @@ public class RDATest {
         for (int i = 0; i <= 10; i++) {
             double alpha = i * 0.1;
             int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> RDA.fit(x, y, alpha));
-            int error = Error.apply(Iris.y, prediction);
+            int error = Error.of(Iris.y, prediction);
             System.out.format("alpha = %.1f, error = %d%n", alpha, error);
             assertEquals(expected[i], error);
         }
@@ -78,7 +78,7 @@ public class RDATest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         int[] prediction = CrossValidation.classification(10, PenDigits.x, PenDigits.y, (x, y) -> RDA.fit(x, y, 0.9));
-        int error = Error.apply(PenDigits.y, prediction);
+        int error = Error.of(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(103, error);
@@ -90,7 +90,7 @@ public class RDATest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         int[] prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (x, y) -> RDA.fit(x, y, 0.9));
-        int error = Error.apply(BreastCancer.y, prediction);
+        int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(31, error);
@@ -103,7 +103,7 @@ public class RDATest {
         RDA model = RDA.fit(USPS.x, USPS.y, 0.7);
 
         int[] prediction = Validation.test(model, USPS.testx);
-        int error = Error.apply(USPS.testy, prediction);
+        int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(235, error);

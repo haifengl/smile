@@ -69,7 +69,7 @@ public class FMeasure implements ClassificationMeasure {
     }
 
     /** Calculates the F1 score. */
-    public static double apply(int[] truth, int[] prediction) {
+    public static double of(int[] truth, int[] prediction) {
         return instance.measure(truth, prediction);
     }
 }

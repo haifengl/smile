@@ -18,7 +18,7 @@
 package smile
 
 import java.io._
-import java.nio.file.Paths
+import java.nio.file.{Path, Paths}
 import java.sql.ResultSet
 import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
@@ -32,17 +32,23 @@ import smile.util.SparseArray
 /** Output operators. */
 object write {
   /** Serializes a `Serializable` object/model to a file. */
-  def apply[T <: Serializable](x: T, file: String): Unit = {
-    val oos = new ObjectOutputStream(new FileOutputStream(file))
+  def apply[T <: Serializable](x: T, file: String): Unit = apply(x, Paths.get(file))
+
+  /** Serializes a `Serializable` object/model to a file. */
+  def apply[T <: Serializable](x: T, file: Path): Unit = {
+    val oos = new ObjectOutputStream(new FileOutputStream(file.toFile))
     oos.writeObject(x)
     oos.close
   }
 
   /** Serializes an object/model to a file by XStream. */
-  def xstream[T <: Object](x: T, file: String): Unit = {
+  def xstream[T <: Object](x: T, file: String): Unit = xstream(x, Paths.get(file))
+
+  /** Serializes an object/model to a file by XStream. */
+  def xstream[T <: Object](x: T, file: Path): Unit = {
     val xstream = new XStream
     val xml = xstream.toXML(x)
-    new PrintWriter(file) {
+    new PrintWriter(file.toFile) {
       write(xml)
       close
     }
@@ -53,26 +59,46 @@ object write {
     * @param data an array.
     * @param file the file path
     */
-  def apply[T](data: Array[T], file: String): Unit = {
-    val writer = new PrintWriter(new File(file))
+  def apply[T](data: Array[T], file: String): Unit = apply(data, Paths.get(file))
+
+  /** Writes an array to a text file line by line.
+    *
+    * @param data an array.
+    * @param file the file path
+    */
+  def apply[T](data: Array[T], file: Path): Unit = {
+    val writer = new PrintWriter(file.toFile)
     data.foreach(writer.println(_))
     writer.close
   }
 
   /** Writes a data frame to an Apache Arrow file. */
-  def arrow(data: DataFrame, file: String): Unit = DatasetWriter.arrow(data, Paths.get(file))
+  def arrow(data: DataFrame, file: String): Unit = arrow(data, Paths.get(file))
+
+  /** Writes a data frame to an Apache Arrow file. */
+  def arrow(data: DataFrame, file: Path): Unit = DatasetWriter.arrow(data, file)
 
   /** Writes a data frame to an ARFF file. */
-  def arff(data: DataFrame, file: String, relation: String): Unit = DatasetWriter.arff(data, Paths.get(file), relation)
+  def arff(data: DataFrame, file: String, relation: String): Unit = arff(data, Paths.get(file), relation)
+
+  /** Writes a data frame to an ARFF file. */
+  def arff(data: DataFrame, file: Path, relation: String): Unit = DatasetWriter.arff(data, file, relation)
 
   /** Writes an AttributeDataset to a delimited text file.
     *
     * @param data an attribute dataset.
     * @param file the file path
     */
-  def csv(data: DataFrame, file: String, delimiter: Char = ','): Unit = {
+  def csv(data: DataFrame, file: String, delimiter: Char = ','): Unit = csv(data, Paths.get(file), delimiter)
+
+  /** Writes an AttributeDataset to a delimited text file.
+    *
+    * @param data an attribute dataset.
+    * @param file the file path
+    */
+  def csv(data: DataFrame, file: Path, delimiter: Char): Unit = {
     val format = CSVFormat.DEFAULT.withDelimiter(delimiter)
-    DatasetWriter.csv(data, Paths.get(file), format)
+    DatasetWriter.csv(data, file, format)
   }
 
   /** Writes a two-dimensional array to a delimited text file.
@@ -81,8 +107,16 @@ object write {
     * @param file the file path
     * @param delimiter delimiter string
     */
-  def table[T](data: Array[Array[T]], file: String, delimiter: Char = ','): Unit = {
-    val writer = new PrintWriter(new File(file))
+  def table[T](data: Array[Array[T]], file: String, delimiter: Char = ','): Unit = table(data, Paths.get(file), delimiter)
+
+  /** Writes a two-dimensional array to a delimited text file.
+    *
+    * @param data a two-dimensional array.
+    * @param file the file path
+    * @param delimiter delimiter string
+    */
+  def table[T](data: Array[Array[T]], file: Path, delimiter: Char): Unit = {
+    val writer = new PrintWriter(file.toFile)
     val sb = new StringBuilder
     val del = sb.append(delimiter).toString
 
@@ -97,16 +131,22 @@ object write {
 /** Input operators. */
 object read {
   /** Reads a `Serializable` object/model. */
-  def apply(file: String): AnyRef = {
-    val ois = new ObjectInputStream(new FileInputStream(file))
+  def apply(file: String): AnyRef = apply(Paths.get(file))
+
+  /** Reads a `Serializable` object/model. */
+  def apply(file: Path): AnyRef = {
+    val ois = new ObjectInputStream(new FileInputStream(file.toFile))
     val o = ois.readObject
     ois.close
     o
   }
 
   /** Reads an object/model that was serialized by XStream. */
-  def xstream(file: String): AnyRef = {
-    val xml = Source.fromFile(file).mkString
+  def xstream(file: String): AnyRef = xstream(Paths.get(file))
+
+  /** Reads an object/model that was serialized by XStream. */
+  def xstream(file: Path): AnyRef = {
+    val xml = Source.fromFile(file.toFile).mkString
     val xstream = new XStream
     xstream.fromXML(xml)
   }
@@ -117,55 +157,72 @@ object read {
   }
 
   /** Reads a CSV file. */
-  def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame = {
+  def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame =
+    csv(Paths.get(file), delimiter, header, quote, escape, schema)
+
+  /** Reads a CSV file. */
+  def csv(file: Path, delimiter: Char, header: Boolean, quote: Char, escape: Char, schema: StructType): DataFrame = {
     var format = CSVFormat.DEFAULT.withDelimiter(delimiter).withQuote(quote).withEscape(escape)
     if (header) format = format.withFirstRecordAsHeader
-    DatasetReader.csv(Paths.get(file), format, schema)
+    DatasetReader.csv(file, format, schema)
   }
 
   /** Reads a CSV file. */
-  def csv(file: String, format: CSVFormat, schema: StructType): DataFrame = DatasetReader.csv(Paths.get(file), format, schema)
+  def csv(file: String, format: CSVFormat, schema: StructType): DataFrame = csv(Paths.get(file), format, schema)
+
+  /** Reads a CSV file. */
+  def csv(file: Path, format: CSVFormat, schema: StructType): DataFrame = DatasetReader.csv(file, format, schema)
 
   /** Reads a JSON file. */
-  def json(file: String): DataFrame = DatasetReader.json(Paths.get(file))
+  def json(file: String): DataFrame = json(Paths.get(file))
 
   /** Reads a JSON file. */
-  def json(file: String, mode: JSON.Mode, schema: StructType): DataFrame = DatasetReader.json(Paths.get(file), mode, schema)
+  def json(file: Path): DataFrame = DatasetReader.json(file)
+
+  /** Reads a JSON file. */
+  def json(file: String, mode: JSON.Mode, schema: StructType): DataFrame = json(Paths.get(file), mode, schema)
+
+  /** Reads a JSON file. */
+  def json(file: Path, mode: JSON.Mode, schema: StructType): DataFrame = DatasetReader.json(file, mode, schema)
 
   /** Reads an ARFF file. */
-  def arff(file: String): DataFrame = DatasetReader.arff(Paths.get(file))
+  def arff(file: String): DataFrame = arff(Paths.get(file))
 
-  /**
-    * Reads a SAS7BDAT file.
-    *
-    * @param file the input file path.
-    */
-  def sas(file: String): DataFrame = DatasetReader.sas(Paths.get(file))
+  /** Reads an ARFF file. */
+  def arff(file: Path): DataFrame = DatasetReader.arff(file)
 
-  /**
-    * Reads an Apache Arrow file.
-    *
-    * @param file the input file path.
-    */
-  def arrow(file: String): DataFrame = DatasetReader.arrow(Paths.get(file))
+  /** Reads a SAS7BDAT file. */
+  def sas(file: String): DataFrame = sas(Paths.get(file))
 
-  /**
-    * Reads an Apache Avro file.
-    *
-    * @param file the input file path.
-    */
-  def avro(file: String, schema: org.apache.avro.Schema): DataFrame = DatasetReader.avro(Paths.get(file), schema)
+  /** Reads a SAS7BDAT file. */
+  def sas(file: Path): DataFrame = DatasetReader.sas(file)
 
-  /**
-    * Reads an Apache Parquet file.
-    *
-    * @param file the input file path.
-    */
-  def parquet(file: String): DataFrame = DatasetReader.parquet(Paths.get(file))
+  /** Reads an Apache Arrow file. */
+  def arrow(file: String): DataFrame = arrow(Paths.get(file))
 
+  /** Reads an Apache Arrow file. */
+  def arrow(file: Path): DataFrame = DatasetReader.arrow(file)
+
+  /** Reads an Apache Avro file. */
+  def avro(file: String, schema: org.apache.avro.Schema): DataFrame = avro(Paths.get(file), schema)
+
+  /** Reads an Apache Avro file. */
+  def avro(file: Path, schema: org.apache.avro.Schema): DataFrame = DatasetReader.avro(file, schema)
+
+  /** Reads an Apache Parquet file. */
+  def parquet(file: String): DataFrame = parquet(file)
+
+  /** Reads an Apache Parquet file. */
+  def parquet(file: Path): DataFrame = DatasetReader.parquet(file)
 
   /** Reads a LivSVM file. */
-  def libsvm(file: String): Dataset[Instance[SparseArray]] = DatasetReader.libsvm(Paths.get(file))
+  def libsvm(file: String): Dataset[Instance[SparseArray]] = libsvm(file)
+
+  /** Reads a LivSVM file. */
+  def libsvm(file: Path): Dataset[Instance[SparseArray]] = DatasetReader.libsvm(file)
+
+  /** Reads a Wavefront OBJ file. */
+  def wavefront(file: String): (Array[Array[Double]], Array[Array[Int]]) = wavefront(Paths.get(file))
 
   /** Reads a Wavefront OBJ file. The OBJ file format is a simple format of 3D geometry including
     * the position of each vertex, the UV position of each texture coordinate vertex,
@@ -179,11 +236,11 @@ object read {
     * @param file the file path
     * @return a tuple of vertex array and edge array.
     */
-  def wavefront(file: String): (Array[Array[Double]], Array[Array[Int]]) = {
+  def wavefront(file: Path): (Array[Array[Double]], Array[Array[Int]]) = {
     val vertices = new ArrayBuffer[Array[Double]]
     val edges = new ArrayBuffer[Array[Int]]
 
-    Source.fromFile(file).getLines foreach { line =>
+    Source.fromFile(file.toFile).getLines foreach { line =>
       val tokens = line.split("\\s+")
 
       if (tokens.size > 1) {

@@ -97,7 +97,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
             sum = Math.sqrt(sum);
 
             for (SparseArray.Entry e : x) {
-                e.x /= sum;
+                e.update(e.x / sum);
             }
         });
     }
@@ -114,7 +114,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
             }
 
             for (SparseArray.Entry e : x) {
-                e.x /= sum;
+                e.update(e.x / sum);
             }
         });
     }

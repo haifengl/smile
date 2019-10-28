@@ -105,7 +105,7 @@ public class RandomForestTest {
         }
 
         int[] prediction = LOOCV.classification(WeatherNominal.data, x -> RandomForest.fit(WeatherNominal.formula, x, 100, 2, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
-        int error = Error.apply(WeatherNominal.y, prediction);
+        int error = Error.of(WeatherNominal.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(5, error);
@@ -124,7 +124,7 @@ public class RandomForestTest {
         }
 
         int[] prediction = LOOCV.classification(Iris.data, x -> RandomForest.fit(Iris.formula, x, 100, 3, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
-        int error = Error.apply(Iris.y, prediction);
+        int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(8, error);
     }
@@ -135,7 +135,7 @@ public class RandomForestTest {
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
         int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> RandomForest.fit(PenDigits.formula, x, 100, 4, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
-        int error = Error.apply(PenDigits.y, prediction);
+        int error = Error.of(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(195, error);
@@ -147,7 +147,7 @@ public class RandomForestTest {
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
         int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> RandomForest.fit(BreastCancer.formula, x, 100, 5, SplitRule.GINI, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
-        int error = Error.apply(BreastCancer.y, prediction);
+        int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(27, error);
@@ -165,7 +165,7 @@ public class RandomForestTest {
         }
 
         int[] prediction = Validation.test(model, Segment.test);
-        int error = Error.apply(Segment.testy, prediction);
+        int error = Error.of(Segment.testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(34, error);
@@ -173,7 +173,7 @@ public class RandomForestTest {
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(Segment.test);
         for (int i = 0; i < test.length; i++) {
-            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.apply(Segment.testy, test[i]));
+            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.of(Segment.testy, test[i]));
         }
     }
 
@@ -189,7 +189,7 @@ public class RandomForestTest {
         }
 
         int[] prediction = Validation.test(model, USPS.test);
-        int error = Error.apply(USPS.testy, prediction);
+        int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(152, error);
@@ -197,7 +197,7 @@ public class RandomForestTest {
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(USPS.test);
         for (int i = 0; i < test.length; i++) {
-            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.apply(USPS.testy, test[i]));
+            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.of(USPS.testy, test[i]));
         }
     }
 
@@ -214,7 +214,7 @@ public class RandomForestTest {
         }
 
         int[] prediction = Validation.test(model, USPS.test);
-        int error = Error.apply(USPS.testy, prediction);
+        int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(118, error);
@@ -228,13 +228,13 @@ public class RandomForestTest {
 
         // The old model should not be modified.
         prediction = Validation.test(model, USPS.test);
-        error = Error.apply(USPS.testy, prediction);
+        error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of old model after pruning = " + error);
         assertEquals(118, error);
 
         prediction = Validation.test(lean, USPS.test);
-        error = Error.apply(USPS.testy, prediction);
+        error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of pruned model after pruning = " + error);
         assertEquals(86, error);

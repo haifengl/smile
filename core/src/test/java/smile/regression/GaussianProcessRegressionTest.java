@@ -75,7 +75,7 @@ public class GaussianProcessRegressionTest {
         System.out.println(model);
 
         double[] prediction = LOOCV.regression(longley, Longley.y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(8.0), 0.2));
-        double rmse = RMSE.apply(Longley.y, prediction);
+        double rmse = RMSE.of(Longley.y, prediction);
 
         System.out.println("RMSE = " + rmse);
         assertEquals(3.978109808216234, rmse, 1E-4);
@@ -121,9 +121,9 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        double rmse = RMSE.apply(CPU.y, prediction);
-        double sparseRMSE = RMSE.apply(CPU.y, sparsePrediction);
-        double nystromRMSE = RMSE.apply(CPU.y, nystromPrediction);
+        double rmse = RMSE.of(CPU.y, prediction);
+        double sparseRMSE = RMSE.of(CPU.y, sparsePrediction);
+        double nystromRMSE = RMSE.of(CPU.y, nystromPrediction);
 
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
@@ -185,9 +185,9 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        double rmse = RMSE.apply(datay, prediction);
-        double sparseRMSE = RMSE.apply(datay, sparsePrediction);
-        double nystromRMSE = RMSE.apply(datay, nystromPrediction);
+        double rmse = RMSE.of(datay, prediction);
+        double sparseRMSE = RMSE.of(datay, sparsePrediction);
+        double nystromRMSE = RMSE.of(datay, nystromPrediction);
 
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
@@ -253,9 +253,9 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        double rmse = RMSE.apply(datay, prediction);
-        double sparseRMSE = RMSE.apply(datay, sparsePrediction);
-        double nystromRMSE = RMSE.apply(datay, nystromPrediction);
+        double rmse = RMSE.of(datay, prediction);
+        double sparseRMSE = RMSE.of(datay, sparsePrediction);
+        double nystromRMSE = RMSE.of(datay, nystromPrediction);
 
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
@@ -318,9 +318,9 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        double rmse = RMSE.apply(datay, prediction);
-        double sparseRMSE = RMSE.apply(datay, sparsePrediction);
-        double nystromRMSE = RMSE.apply(datay, nystromPrediction);
+        double rmse = RMSE.of(datay, prediction);
+        double sparseRMSE = RMSE.of(datay, sparsePrediction);
+        double nystromRMSE = RMSE.of(datay, nystromPrediction);
 
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
@@ -382,9 +382,9 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        double rmse = RMSE.apply(datay, prediction);
-        double sparseRMSE = RMSE.apply(datay, sparsePrediction);
-        double nystromRMSE = RMSE.apply(datay, nystromPrediction);
+        double rmse = RMSE.of(datay, prediction);
+        double sparseRMSE = RMSE.of(datay, sparsePrediction);
+        double nystromRMSE = RMSE.of(datay, nystromPrediction);
 
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
@@ -445,9 +445,9 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        double rmse = RMSE.apply(datay, prediction);
-        double sparseRMSE = RMSE.apply(datay, sparsePrediction);
-        double nystromRMSE = RMSE.apply(datay, nystromPrediction);
+        double rmse = RMSE.of(datay, prediction);
+        double sparseRMSE = RMSE.of(datay, sparsePrediction);
+        double nystromRMSE = RMSE.of(datay, nystromPrediction);
 
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);

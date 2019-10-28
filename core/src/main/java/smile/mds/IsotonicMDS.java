@@ -17,6 +17,9 @@
 
 package smile.mds;
 
+import java.util.Properties;
+
+import smile.data.vector.DoubleVector;
 import smile.math.BFGS;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
@@ -41,9 +44,20 @@ public class IsotonicMDS {
      */
     private double stress;
     /**
-     * Coordinate matrix.
+     * The coordinates.
      */
     private double[][] coordinates;
+
+    /**
+     * Constructor.
+     *
+     * @param stress the objective function value.
+     * @param coordinates the principal coordinates
+     */
+    public IsotonicMDS(double stress, double[][] coordinates) {
+        this.stress = stress;
+        this.coordinates = coordinates;
+    }
 
     /**
      * Returns the final stress achieved.
@@ -60,52 +74,55 @@ public class IsotonicMDS {
     }
 
     /**
-     * Constructor. Learn a 2-dimensional Kruskal's non-metric MDS with default
-     * tolerance = 1E-4 and maxIter = 200.
+     * Fits Kruskal's non-metric MDS with default k = 2, tolerance = 1E-4 and maxIter = 200.
      * @param proximity the nonnegative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      */
-    public IsotonicMDS(double[][] proximity) {
-        this(proximity, 2);
+    public static IsotonicMDS of(double[][] proximity) {
+        return of(proximity, new Properties());
     }
 
     /**
-     * Constructor. Learn Kruskal's non-metric MDS with default
-     * tolerance = 1E-4 and maxIter = 200.
+     * Fits Kruskal's non-metric MDS.
      * @param proximity the nonnegative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @param k the dimension of the projection.
      */
-    public IsotonicMDS(double[][] proximity, int k) {
-        this(proximity, k, 1E-4, 200);
+    public static IsotonicMDS of(double[][] proximity, int k) {
+        return of(proximity, k, 1E-4, 200);
     }
 
     /**
-     * Constructor. Learn Kruskal's non-metric MDS with default
-     * tolerance = 1E-4 and maxIter = 100.
+     * Fits Kruskal's non-metric MDS.
+     *
      * @param proximity the nonnegative proximity matrix of dissimilarities. The
-     * diagonal should be zero and all other elements should be positive and symmetric.
-     * @param coordinates the initial projected coordinates, of which the column
-     * size is the projection dimension.
+     * diagonal should be zero and all other elements should be positive and
+     * symmetric. For pairwise distances matrix, it should be just the plain
+     * distance, not squared.
      */
-    public IsotonicMDS(double[][] proximity, double[][] coordinates) {
-        this(proximity, coordinates, 1E-4, 200);
+    public static IsotonicMDS of(double[][] proximity, Properties prop) {
+        int k = Integer.valueOf(prop.getProperty("smile.isotonic.mds.k", "2"));
+        double tol = Double.valueOf(prop.getProperty("smile.isotonic.mds.tolerance", "1E-4"));
+        int maxIter = Integer.valueOf(prop.getProperty("smile.isotonic.mds.max.iterations", "200"));
+        return of(proximity, k, tol, maxIter);
     }
 
     /**
-     * Constructor. Learn Kruskal's non-metric MDS.
+     * Fits Kruskal's non-metric MDS.
      * @param proximity the nonnegative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @param k the dimension of the projection.
      * @param tol tolerance for stopping iterations.
      * @param maxIter maximum number of iterations.
      */
-    public IsotonicMDS(double[][] proximity, int k, double tol, int maxIter) {
-        this(proximity, new MDS(proximity, k).getCoordinates(), tol, maxIter);
+    public static IsotonicMDS of(double[][] proximity, int k, double tol, int maxIter) {
+        Properties prop = new Properties();
+        prop.setProperty("smile.mds.k", String.valueOf(k));
+        return of(proximity, MDS.of(proximity, prop).getCoordinates(), tol, maxIter);
     }
 
     /**
-     * Constructor. Learn Kruskal's non-metric MDS.
+     * Fits Kruskal's non-metric MDS.
      * @param proximity the nonnegative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @param init the initial projected coordinates, of which the column
@@ -113,7 +130,7 @@ public class IsotonicMDS {
      * @param tol tolerance for stopping iterations.
      * @param maxIter maximum number of iterations.
      */
-    public IsotonicMDS(double[][] proximity, double[][] init, double tol, int maxIter) {
+    public static IsotonicMDS of(double[][] proximity, double[][] init, double tol, int maxIter) {
         if (proximity.length != proximity[0].length) {
             throw new IllegalArgumentException("The proximity matrix is not square.");
         }
@@ -122,9 +139,8 @@ public class IsotonicMDS {
             throw new IllegalArgumentException("The proximity matrix and the initial coordinates are of different size.");
         }
 
-        coordinates = MathEx.clone(init);
         int nr = proximity.length;
-        int nc = coordinates[0].length;
+        int nc = init[0].length;
 
         int n = nr * (nr - 1) / 2;
         double[] d = new double[n];
@@ -137,7 +153,7 @@ public class IsotonicMDS {
         double[] x = new double[nr * nc];
         for (int i = 0, l = 0; i < nr; i++) {
             for (int j = 0; j < nc; j++, l++) {
-                x[l] = coordinates[i][j];
+                x[l] = init[i][j];
             }
         }
 
@@ -146,7 +162,7 @@ public class IsotonicMDS {
 
         ObjectiveFunction func = new ObjectiveFunction(nr, nc, d, ord, ord2);
 
-        stress = 0.0;
+        double stress = 0.0;
         BFGS bfgs = new BFGS(tol, maxIter);
         try {
             stress = bfgs.minimize(func, 5, x);
@@ -167,12 +183,14 @@ public class IsotonicMDS {
             logger.info(String.format("Isotonic MDS: error = %.1f%%. The fit may be poor.", 100 * stress));
         }
 
-        coordinates = new double[nr][nc];
+        double[][] coordinates = new double[nr][nc];
         for (int i = 0, l = 0; i < nr; i++) {
             for (int j = 0; j < nc; j++, l++) {
                 coordinates[i][j] = x[l];
             }
         }
+
+        return new IsotonicMDS(stress, coordinates);
     }
 
     /**

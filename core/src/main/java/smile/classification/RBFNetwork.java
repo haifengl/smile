@@ -191,7 +191,7 @@ public class RBFNetwork<T> implements Classifier<T> {
         QR qr = G.qr();
         qr.solve(b);
 
-        return new RBFNetwork<>(k, rbf, b.submat(0, 0, m, k-1), normalized, codec.labels);
+        return new RBFNetwork<>(k, rbf, b.submat(0, 0, m+1, k), normalized, codec.labels);
     }
 
     /** Returns true if the model is  normalized. */

@@ -42,7 +42,7 @@ public class SumSquaresRatio implements FeatureRanking {
 
     @Override
     public double[] rank(double[][] x, int[] y) {
-        return apply(x, y);
+        return of(x, y);
     }
 
     /**
@@ -54,7 +54,7 @@ public class SumSquaresRatio implements FeatureRanking {
      * @param y class labels.
      * @return the sum of squares ratio of between-groups to within-groups.
      */
-    public static double[] apply(double[][] x, int[] y) {
+    public static double[] of(double[][] x, int[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
