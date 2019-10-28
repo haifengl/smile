@@ -52,7 +52,7 @@ public class LLEDemo extends ManifoldDemo {
         }
 
         long clock = System.currentTimeMillis();
-        LLE lle = new LLE(data, 2, k);
+        LLE lle = LLE.of(data, k);
         System.out.format("Learn LLE from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
         double[][] y = lle.getCoordinates();

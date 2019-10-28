@@ -78,7 +78,7 @@ lazy val graph = project.in(file("graph")).settings(commonSettings: _*).dependsO
 
 lazy val interpolation = project.in(file("interpolation")).settings(commonSettings: _*).dependsOn(math)
 
-lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph, io % "test", netlib % "test")
+lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph, netlib, io % "test")
 
 lazy val nlp = project.in(file("nlp")).settings(commonSettings: _*).dependsOn(core)
 

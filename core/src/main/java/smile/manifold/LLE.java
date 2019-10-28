@@ -18,7 +18,10 @@
 package smile.manifold;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.Optional;
+
 import smile.graph.AdjacencyList;
 import smile.graph.Graph;
 import smile.math.MathEx;
@@ -32,6 +35,7 @@ import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
 import smile.neighbor.KNNSearch;
 import smile.neighbor.Neighbor;
+import smile.netlib.ARPACK;
 
 /**
  * Locally Linear Embedding. It has several advantages over Isomap, including
@@ -74,12 +78,32 @@ public class LLE {
 
     /**
      * Constructor.
+     * @param index the original sample index.
+     * @param coordinates the coordinates.
+     * @param graph the nearest neighbor graph.
+     */
+    public LLE(int[] index, double[][] coordinates, Graph graph) {
+        this.index = index;
+        this.coordinates = coordinates;
+        this.graph = graph;
+    }
+
+    /**
+     * Runs the LLE algorithm.
+     * @param data the dataset.
+     * @param k k-nearest neighbor.
+     */
+    public static LLE of(double[][] data, int k) {
+        return of(data, k, 2);
+    }
+
+    /**
+     * Runs the LLE algorithm.
      * @param data the dataset.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
      */
-    public LLE(double[][] data, int d, int k) {
-        int n = data.length;
+    public static LLE of(double[][] data, int k, int d) {
         int D = data[0].length;
 
         double tol = 0.0;
@@ -88,58 +112,28 @@ public class LLE {
             tol = 1E-3;
         }
 
-        KNNSearch<double[], double[]> knn = null;
-        if (D < 10) {
-            knn = new KDTree<>(data, data);
-        } else {
-            knn = new CoverTree<>(data, new EuclideanDistance());
-        }
+        // Use largest connected component of nearest neighbor graph.
+        int[][] N = new int[data.length][k];
+        Graph graph = NearestNeighborGraph.of(data, k, Optional.of((v1, v2, weight, j) -> {
+            N[v1][j] = v2;
+        }));
+        NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 
-        Comparator<Neighbor<double[], double[]>> comparator = new Comparator<Neighbor<double[], double[]>>() {
+        int[] index = nng.index;
+        int n = index.length;
+        graph = nng.graph;
 
-            @Override
-            public int compare(Neighbor<double[], double[]> o1, Neighbor<double[], double[]> o2) {
-                return o1.index - o2.index;
-            }
-        };
-
-        int[][] N = new int[n][k];
-        graph = new AdjacencyList(n);
-        for (int i = 0; i < n; i++) {
-            Neighbor<double[], double[]>[] neighbors = knn.knn(data[i], k);
-            Arrays.sort(neighbors, comparator);
-
-            for (int j = 0; j < k; j++) {
-                graph.setWeight(i, neighbors[j].index, neighbors[j].distance);
-                N[i][j] = neighbors[j].index;
-            }
-        }
-
-        // Use largest connected component.
-        int[][] cc = graph.bfs();
-        int[] newIndex = new int[n];
-        if (cc.length == 1) {
-            index = new int[n];
+        // The reverse index maps the original data to the largest connected component
+        // in case that the graph is disconnected.
+        int[] reverseIndex = new int[n];
+        if (index.length == n) {
             for (int i = 0; i < n; i++) {
-                index[i] = i;
-                newIndex[i] = i;
+                reverseIndex[i] = i;
             }
         } else {
-            n = 0;
-            int component = 0;
-            for (int i = 0; i < cc.length; i++) {
-                if (cc[i].length > n) {
-                    component = i;
-                    n = cc[i].length;
-                }
-            }
-
-            logger.info("LLE: {} connected components, largest one has {} samples.", cc.length, n);
-
-            index = cc[component];
-            graph = graph.subgraph(index);
+            n = index.length;
             for (int i = 0; i < index.length; i++) {
-                newIndex[index[i]] = i;
+                reverseIndex[index[i]] = i;
             }
         }
 
@@ -157,11 +151,14 @@ public class LLE {
         int m = 0;
         for (int i : index) {
             double trace = 0.0;
+            double[] xi = data[i];
             for (int p = 0; p < k; p++) {
+                double[] xip = data[N[i][p]];
                 for (int q = 0; q < k; q++) {
+                    double[] xiq = data[N[i][q]];
                     C.set(p, q, 0.0);
                     for (int l = 0; l < D; l++) {
-                        C.add(p, q, (data[i][l] - data[N[i][p]][l]) * (data[i][l] - data[N[i][q]][l]));
+                        C.add(p, q, (xi[l] - xip[l]) * (xi[l] - xiq[l]));
                     }
                 }
                 trace += C.get(p, p);
@@ -179,9 +176,10 @@ public class LLE {
             lu.solve(b);
 
             double sum = MathEx.sum(b);
+            int[] ni = N[i];
             for (int p = 0; p < k; p++) {
                 w[m * k + p] = b[p] / sum;
-                rowIndex[m * k + p] = newIndex[N[i][p]];
+                rowIndex[m * k + p] = reverseIndex[ni[p]];
             }
 
             m++;
@@ -189,20 +187,22 @@ public class LLE {
 
         // This is the transpose of W in the paper.
         SparseMatrix Wt = new SparseMatrix(n, n, w, rowIndex, colIndex);
-        IM im = new IM(Wt);
 
         // ARPACK may not find all needed eigen values for k = d + 1.
         // Set it to 10 * (d + 1) as a hack to NCV parameter of DSAUPD.
         // Our Lanczos class has no such issue.
-        EVD eigen = im.eigen(Math.min(10*(d + 1), n - 1));
+        EVD eigen = ARPACK.eigen(new M(Wt), Math.min(10*(d+1), n-1), "SM");
 
         DenseMatrix V = eigen.getEigenVectors();
-        coordinates = new double[n][d];
-        for (int j = 0; j < d; j++) {
+        double[][] coordinates = new double[n][d];
+        for (int j = d; --j >= 0; ) {
+            int c = V.ncols() - j - 2;
             for (int i = 0; i < n; i++) {
-                coordinates[i][j] = V.get(i, j + 1);
+                coordinates[i][j] = V.get(i, c);
             }
         }
+
+        return new LLE(index, coordinates, graph);
     }
 
     /**
@@ -229,19 +229,17 @@ public class LLE {
     }
 
     /**
-     * Instead of computing smallest eigen values of M, we
-     * computing the largest eigen values of I - M.
-     * Since M = t(I - W) * (I - W), t() as the transpose,
-     * we have (I - M)v = Wv + t(W)(v - Wv). As W is sparse and we can
+     * M = t(I - W) * (I - W) , t() as the transpose.
+     * we have Mv = v - Wv - t(W)v + t(W)Wv. As W is sparse and we can
      * compute only Wv and t(W)v efficiently.
      */
-    private static class IM implements Matrix {
+    private static class M implements Matrix {
 
         Matrix Wt;
         double[] Wx;
         double[] Wtx;
 
-        public IM(Matrix Wt) {
+        public M(Matrix Wt) {
             this.Wt = Wt;
 
             Wx = new double[Wt.nrows()];
@@ -264,32 +262,29 @@ public class LLE {
         }
 
         @Override
-        public IM transpose() {
+        public M transpose() {
             return this;
         }
 
         @Override
-        public IM ata() {
+        public M ata() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public IM aat() {
+        public M aat() {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public double[] ax(double[] x, double[] y) {
             Wt.atx(x, Wx);
+            Wt.ax(x, Wtx);
+            Wt.ax(Wx, y);
 
             int n = Wt.nrows();
             for (int i = 0; i < n; i++) {
-                Wtx[i] = x[i] - Wx[i];
-            }
-
-            Wt.ax(Wtx, y);
-            for (int i = 0; i < n; i++) {
-                y[i] += Wx[i];
+                y[i] = y[i] + x[i] - Wx[i] - Wtx[i];
             }
 
             return y;
@@ -329,5 +324,5 @@ public class LLE {
         public double[] atxpy(double[] x, double[] y, double b) {
             throw new UnsupportedOperationException();
         }
-    };
+    }
 }

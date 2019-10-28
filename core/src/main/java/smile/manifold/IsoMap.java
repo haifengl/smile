@@ -29,6 +29,10 @@ import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
 import smile.neighbor.KNNSearch;
 import smile.neighbor.Neighbor;
+import smile.util.SparseArray;
+
+import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Isometric feature mapping. Isomap is a widely used low-dimensional embedding methods,
@@ -81,85 +85,70 @@ public class IsoMap {
      */
     private int[] index;
     /**
-     * Coordinate matrix.
+     * The coordinates.
      */
     private double[][] coordinates;
     /**
-     * Nearest neighbor graph.
+     * The nearest neighbor graph.
      */
     private Graph graph;
 
     /**
-     * Constructor. C-Isomap algorithm by default.
+     * Constructor.
+     * @param index the original sample index.
+     * @param coordinates the coordinates.
+     * @param graph the nearest neighbor graph.
+     */
+    public IsoMap(int[] index, double[][] coordinates, Graph graph) {
+        this.index = index;
+        this.coordinates = coordinates;
+        this.graph = graph;
+    }
+
+    /**
+     * Runs the C-Isomap algorithm.
      * @param data the dataset.
-     * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
      */
-    public IsoMap(double[][] data, int d, int k) {
-        this(data, d, k, true);
+    public static IsoMap of(double[][] data, int k) {
+        return of(data, k, 2, true);
     }
     
     /**
-     * Constructor.
+     * Runs the Isomap algorithm.
      * @param data the dataset.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
-     * @param CIsomap C-Isomap algorithm if true, otherwise standard algorithm.
+     * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
      */
-    public IsoMap(double[][] data, int d, int k, boolean CIsomap) {
-        int n = data.length;
-
-        KNNSearch<double[], double[]> knn = null;
-        if (data[0].length < 10) {
-            knn = new KDTree<>(data, data);
+    public static IsoMap of(double[][] data, int k, int d, boolean conformal) {
+        Graph graph;
+        if (!conformal) {
+            graph = NearestNeighborGraph.of(data, k, Optional.empty());
         } else {
-            knn = new CoverTree<>(data, new EuclideanDistance());
-        }
+            int n = data.length;
+            double[] M = new double[n];
+            graph = NearestNeighborGraph.of(data, k, Optional.of((v1, v2, weight, j) -> {
+                M[v1] += weight;
+            }));
 
-        graph = new AdjacencyList(n);
-        double[] M = new double[n];
-        for (int i = 0; i < n; i++) {
-            Neighbor<double[], double[]>[] neighbors = knn.knn(data[i], k);
-
-            for (int j = 0; j < neighbors.length; j++) {
-                graph.setWeight(i, neighbors[j].index, neighbors[j].distance);
-                M[i] += neighbors[j].distance;
+            for (int i = 0; i < n; i++) {
+                M[i] = Math.sqrt(M[i] / k);
             }
-            M[i] = Math.sqrt(M[i] / neighbors.length);
-        }
 
-        // C-Isomap
-        if (CIsomap) {
             for (Edge edge : graph.getEdges()) {
                 edge.weight /= (M[edge.v1] * M[edge.v2]);
             }
         }
-        
-        // Use largest connected component.
-        int[][] cc = graph.bfs();
-        if (cc.length == 1) {
-            index = new int[n];
-            for (int i = 0; i < n; i++) {
-                index[i] = i;
-            }
-        } else {
-            n = 0;
-            int component = 0;
-            for (int i = 0; i < cc.length; i++) {
-                if (cc[i].length > n) {
-                    component = i;
-                    n = cc[i].length;
-                }
-            }
 
-            logger.info("IsoMap: {} connected components, largest one has {} samples.", cc.length, n);
+        // Use largest connected component of nearest neighbor graph.
+        NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 
-            index = cc[component];
-            graph = graph.subgraph(index);
-        }
+        int[] index = nng.index;
+        int n = index.length;
+        graph = nng.graph;
 
         double[][] D = graph.dijkstra();
-
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
                 D[i][j] = -0.5 * D[i][j] * D[i][j];
@@ -189,7 +178,7 @@ public class IsoMap {
         }
 
         DenseMatrix V = eigen.getEigenVectors();
-        coordinates = new double[n][d];
+        double[][] coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
             if (eigen.getEigenValues()[j] < 0) {
                 throw new IllegalArgumentException(String.format("Some of the first %d eigenvalues are < 0.", d));
@@ -199,7 +188,9 @@ public class IsoMap {
             for (int i = 0; i < n; i++) {
                 coordinates[i][j] = V.get(i, j) * scale;
             }
-        }        
+        }
+
+        return new IsoMap(index, coordinates, graph);
     }
 
     /**

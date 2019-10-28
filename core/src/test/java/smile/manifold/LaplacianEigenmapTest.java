@@ -58,8 +58,8 @@ public class LaplacianEigenmapTest {
      * Test of learn method, of class LaplacianEigenmap.
      */
     @Test(expected = Test.None.class)
-    public void testLearn() throws Exception {
-        System.out.println("learn");
+    public void test() throws Exception {
+        System.out.println("Laplacian Eigenmap");
 
         double[][] points = {
                 { 0.0150,  0.0125},
@@ -1071,7 +1071,7 @@ public class LaplacianEigenmapTest {
         double[][] data = new double[1000][];
         System.arraycopy(dat, 0, data, 0, data.length);
 
-        LaplacianEigenmap laplacianEigenmap = new LaplacianEigenmap(data, 2, 7);
+        LaplacianEigenmap laplacianEigenmap = LaplacianEigenmap.of(data, 7);
 
         double[][] coords = laplacianEigenmap.getCoordinates();
         for (int i = 0; i < points.length; i++) {
