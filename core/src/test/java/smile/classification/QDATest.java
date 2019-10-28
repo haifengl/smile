@@ -61,7 +61,7 @@ public class QDATest {
         System.out.println("Iris");
 
         int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> QDA.fit(x, y));
-        int error = Error.apply(Iris.y, prediction);
+        int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(4, error);
     }
@@ -72,7 +72,7 @@ public class QDATest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         int[] prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (x, y) -> QDA.fit(x, y));
-        int error = Error.apply(BreastCancer.y, prediction);
+        int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(24, error);

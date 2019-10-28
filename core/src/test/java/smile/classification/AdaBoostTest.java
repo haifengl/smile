@@ -67,7 +67,7 @@ public class AdaBoostTest {
         }
 
         int[] prediction = LOOCV.classification(WeatherNominal.data, x -> AdaBoost.fit(WeatherNominal.formula, x, 200, 4, 1));
-        int error = Error.apply(WeatherNominal.y, prediction);
+        int error = Error.of(WeatherNominal.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(6, error);
@@ -86,7 +86,7 @@ public class AdaBoostTest {
         }
 
         int[] prediction = LOOCV.classification(Iris.data, x -> AdaBoost.fit(Iris.formula, x, 200, 4, 1));
-        int error = Error.apply(Iris.y, prediction);
+        int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(7, error);
     }
@@ -97,7 +97,7 @@ public class AdaBoostTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> AdaBoost.fit(PenDigits.formula, x, 200, 4, 1));
-        int error = Error.apply(PenDigits.y, prediction);
+        int error = Error.of(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(356, error);
@@ -109,7 +109,7 @@ public class AdaBoostTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> AdaBoost.fit(BreastCancer.formula, x, 200, 4, 1));
-        int error = Error.apply(BreastCancer.y, prediction);
+        int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(19, error);
@@ -128,7 +128,7 @@ public class AdaBoostTest {
         }
 
         int[] prediction = Validation.test(model, Segment.test);
-        int error = Error.apply(Segment.testy, prediction);
+        int error = Error.of(Segment.testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(30, error);
@@ -153,7 +153,7 @@ public class AdaBoostTest {
         }
 
         int[] prediction = Validation.test(model, USPS.test);
-        int error = Error.apply(USPS.testy, prediction);
+        int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(152, error);
