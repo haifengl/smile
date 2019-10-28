@@ -140,11 +140,11 @@ public class TSNE {
             }
         }
 
-        learn(iterations);
+        update(iterations);
     }
 
-    /** Continue to learn additional iterations. */
-    public void learn(int iterations) {
+    /** Continue additional iterations. */
+    public void update(int iterations) {
         double[][] Y = coordinates;
         int n = Y.length;
         int d = Y[0].length;

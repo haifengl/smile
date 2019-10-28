@@ -58,8 +58,8 @@ public class IsoMapTest {
      * Test of learn method, of class IsoMap.
      */
     @Test(expected = Test.None.class)
-    public void testLearn() throws Exception {
-        System.out.println("learn");
+    public void test() throws Exception {
+        System.out.println("IsoMap");
 
         double[][] points = {
             {-10.656995169781643, 8.724767075729131},
@@ -1071,7 +1071,7 @@ public class IsoMapTest {
         double[][] data = new double[1000][];
         System.arraycopy(dat, 0, data, 0, data.length);
         
-        IsoMap isomap = new IsoMap(data, 2, 7, false);
+        IsoMap isomap = IsoMap.of(data, 7, 2, false);
 
         double[][] coords = isomap.getCoordinates();
         for (int i = 0; i < points.length; i++) {
