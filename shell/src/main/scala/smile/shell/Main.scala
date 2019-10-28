@@ -65,6 +65,7 @@ object Main extends App {
   val imports =
     s"""
        |import scala.language.postfixOps
+       |import org.apache.commons.csv.CSVFormat
        |import smile._
        |import smile.util._
        |import smile.math._

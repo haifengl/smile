@@ -99,7 +99,7 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
             plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
         }
 
-        plot.setTitle("tSNE");
+        plot.setTitle("t-SNE");
         pane.add(plot);
 
         return pane;
