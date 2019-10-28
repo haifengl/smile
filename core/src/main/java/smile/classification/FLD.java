@@ -253,7 +253,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
 
         DenseMatrix StInvSb = U.abmm(UB);
         StInvSb.setSymmetric(true);
-        DenseMatrix scaling = StInvSb.eigen().getEigenVectors().submat(0, 0, p-1, L-1);
+        DenseMatrix scaling = StInvSb.eigen().getEigenVectors().submat(0, 0, p, L);
 
         return scaling;
     }
@@ -309,7 +309,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         }
 
         DenseMatrix StInvM = U.abmm(UTM);
-        DenseMatrix U2 = U.atbmm(StInvM.svd(true).getU().submat(0, 0, p, L-1));
+        DenseMatrix U2 = U.atbmm(StInvM.svd(true).getU().submat(0, 0, p+1, L));
 
         for (int i = 0; i < n; i++) {
             // Since the rank of St is only n - k, there are some singular values of 0.
