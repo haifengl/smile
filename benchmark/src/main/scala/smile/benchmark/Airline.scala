@@ -109,9 +109,22 @@ object Airline {
     val classWeight = Array(4, 1)
 
     // Random Forest
-    println("Training Random Forest of 500 trees...")
+    // Train fewer but deeper trees
+    val ntrees = dataSize match {
+      case "0.1m" => 500
+      case "1m" => 300
+      case "10m" => 100
+      case _ => 100
+    }
+    val maxNodes = dataSize match {
+      case "0.1m" => 500
+      case "1m" => 3000
+      case "10m" => 10000
+      case _ => 100
+    }
+    println(s"Training Random Forest of $ntrees trees...")
     val forest = test2soft(formula, train, test) { (formula, data) =>
-      randomForest(formula, data, 500, 2, SplitRule.GINI, 150, 5, 1.0, classWeight)
+      randomForest(formula, data, ntrees, 2, SplitRule.GINI, maxNodes, 5, 1.0, classWeight)
     }
 
     val depth = forest.trees.map(_.root.depth.toDouble)
