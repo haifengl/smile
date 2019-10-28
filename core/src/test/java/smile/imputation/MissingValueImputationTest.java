@@ -26,6 +26,7 @@ import smile.data.Movement;
 import smile.data.Segment;
 import smile.data.SyntheticControl;
 import smile.math.MathEx;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -52,7 +53,8 @@ public class MissingValueImputationTest {
     public void tearDown() {
     }
 
-    private double impute(double[][] data, MissingValueImputation imputation, double rate) throws Exception {
+    private void impute(double[][] data, MissingValueImputation imputation, double rate, double expected) throws Exception {
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         int n = 0;
         double[][] dat = new double[data.length][data[0].length];
@@ -69,80 +71,65 @@ public class MissingValueImputationTest {
 
         imputation.impute(dat);
 
-        double rmse = 0.0;
+        double error = 0.0;
         for (int i = 0; i < dat.length; i++) {
             for (int j = 0; j < dat[i].length; j++) {
-                double d = (data[i][j] - dat[i][j]);
-                rmse += d * d;
+                error += Math.abs(data[i][j] - dat[i][j]) / data[i][j];
             }
         }
 
-        rmse = Math.sqrt(rmse / n);
-        return rmse;
+        error = 100 * error / n;
+        System.out.format("The error of %d%% missing values = %.2f%n", (int) (100 * rate),  error);
+        assertEquals(expected, error, 1E-2);
     }
 
-    void impute(String name, double[][] data) throws Exception {
+    @Test(expected = Test.None.class)
+    public void testSyntheticControl() throws Exception {
+        double[][] data = SyntheticControl.x;
         int p = data[0].length;
-        System.out.println("----------- " + name + " ----------------");
+        System.out.println("----------- Synthetic Control ----------------");
         System.out.println("----------- " + data.length + " x " + p + " ----------------");
-        System.out.println("MeanImputation");
+        System.out.println("AverageImputation");
         MissingValueImputation instance = new AverageImputation();
-        System.out.println("RMSE of 1% missing values = " + impute(data, instance, 0.01));
-        System.out.println("RMSE of 5% missing values = " + impute(data, instance, 0.05));
-        System.out.println("RMSE of 10% missing values = " + impute(data, instance, 0.10));
-        System.out.println("RMSE of 15% missing values = " + impute(data, instance, 0.15));
-        System.out.println("RMSE of 20% missing values = " + impute(data, instance, 0.20));
-        System.out.println("RMSE of 25% missing values = " + impute(data, instance, 0.25));
+        impute(data, instance, 0.01, 25.91);
+        impute(data, instance, 0.05, 31.17);
+        impute(data, instance, 0.10, 29.31);
+        impute(data, instance, 0.15, 29.21);
+        impute(data, instance, 0.20, 27.81);
+        impute(data, instance, 0.25, 29.38);
 
         System.out.println("KMeansImputation");
-        instance = new KMeansImputation(10, 5);
-        System.out.println("RMSE of 1% missing values = " + impute(data, instance, 0.01));
-        System.out.println("RMSE of 5% missing values = " + impute(data, instance, 0.05));
-        System.out.println("RMSE of 10% missing values = " + impute(data, instance, 0.10));
-        System.out.println("RMSE of 15% missing values = " + impute(data, instance, 0.15));
-        System.out.println("RMSE of 20% missing values = " + impute(data, instance, 0.20));
-        System.out.println("RMSE of 25% missing values = " + impute(data, instance, 0.25));
+        instance = new KMeansImputation(10, 8);
+        impute(data, instance, 0.01, 15.50);
+        impute(data, instance, 0.05, 17.14);
+        impute(data, instance, 0.10, 17.05);
+        impute(data, instance, 0.15, 16.82);
+        impute(data, instance, 0.20, 16.01);
+        impute(data, instance, 0.25, 16.33);
 
         System.out.println("KNNImputation");
         instance = new KNNImputation(10);
-        System.out.println("RMSE of 1% missing values = " + impute(data, instance, 0.01));
-        System.out.println("RMSE of 5% missing values = " + impute(data, instance, 0.05));
-        System.out.println("RMSE of 10% missing values = " + impute(data, instance, 0.10));
-        System.out.println("RMSE of 15% missing values = " + impute(data, instance, 0.15));
-        System.out.println("RMSE of 20% missing values = " + impute(data, instance, 0.20));
-        System.out.println("RMSE of 25% missing values = " + impute(data, instance, 0.25));
+        impute(data, instance, 0.01, 14.66);
+        impute(data, instance, 0.05, 16.35);
+        impute(data, instance, 0.10, 15.50);
+        impute(data, instance, 0.15, 15.55);
+        impute(data, instance, 0.20, 15.26);
+        impute(data, instance, 0.25, 15.86);
 
-        if (p > 15) {
-            System.out.println("SVDImputation");
-            instance = new SVDImputation(p / 5);
-            System.out.println("RMSE of 1% missing values = " + impute(data, instance, 0.01));
-            System.out.println("RMSE of 5% missing values = " + impute(data, instance, 0.05));
-            System.out.println("RMSE of 10% missing values = " + impute(data, instance, 0.10));
-            // Matrix will be rank deficient.
-            // System.out.println("RMSE of 15% missing values = " + impute(data, instance, 0.15));
-            // System.out.println("RMSE of 20% missing values = " + impute(data, instance, 0.20));
-            // System.out.println("RMSE of 25% missing values = " + impute(data, instance, 0.25));
-        }
+        System.out.println("SVDImputation");
+        instance = new SVDImputation(p / 5);
+        impute(data, instance, 0.01, 13.50);
+        impute(data, instance, 0.05, 15.84);
+        impute(data, instance, 0.10, 14.94);
+        // Matrix will be rank deficient with higher missing rate.
 
-        if (p > 15) {
-            System.out.println("LLSImputation");
-            instance = new LLSImputation(10);
-            System.out.println("RMSE of 1% missing values = " + impute(data, instance, 0.01));
-            System.out.println("RMSE of 5% missing values = " + impute(data, instance, 0.05));
-            System.out.println("RMSE of 10% missing values = " + impute(data, instance, 0.10));
-            System.out.println("RMSE of 15% missing values = " + impute(data, instance, 0.15));
-            System.out.println("RMSE of 20% missing values = " + impute(data, instance, 0.20));
-            System.out.println("RMSE of 25% missing values = " + impute(data, instance, 0.25));
-        }
-    }
-
-    /**
-     * Test of impute method.
-     */
-    @Test
-    public void testImpute() throws Exception {
-        impute("Segment", Segment.x);
-        impute("Movement", Movement.x);
-        impute("Synthetic Control", SyntheticControl.x);
+        System.out.println("LLSImputation");
+        instance = new LLSImputation(10);
+        impute(data, instance, 0.01, 14.66);
+        impute(data, instance, 0.05, 16.35);
+        impute(data, instance, 0.10, 15.50);
+        impute(data, instance, 0.15, 15.55);
+        impute(data, instance, 0.20, 15.26);
+        impute(data, instance, 0.25, 15.86);
     }
 }

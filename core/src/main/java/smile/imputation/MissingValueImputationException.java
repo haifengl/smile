@@ -23,7 +23,7 @@ package smile.imputation;
  * @author Haifeng Li
  */
 public class MissingValueImputationException extends Exception {
-    private static final long serialVersionUID = -4517157687017284522L;
+    private static final long serialVersionUID = 2L;
     
     /**
      * Constructor.
