@@ -105,7 +105,7 @@ public class SVDImputation implements MissingValueImputation {
             full[i] = data[i].clone();
         }
 
-        KMeansImputation.columnAverageImpute(full);
+        MissingValueImputation.imputeWithColumnAverage(full);
 
         for (int iter = 0; iter < maxIter; iter++) {
             svdImpute(data, full);

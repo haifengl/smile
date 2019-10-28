@@ -42,7 +42,7 @@ public class KMeansImputation implements MissingValueImputation {
      * @param k the number of clusters in K-Means clustering.
      */
     public KMeansImputation(int k) {
-        this(k, 4);
+        this(k, 8);
     }
 
     /**
@@ -97,43 +97,11 @@ public class KMeansImputation implements MissingValueImputation {
                     }
                 }
 
-                columnAverageImpute(d);
+                MissingValueImputation.imputeWithColumnAverage(d);
             }
         }
 
         // In case of some clusters miss all values in some columns.
-        columnAverageImpute(data);
-    }
-
-    /**
-     * Impute the missing values with column averages.
-     * @param data data with missing values.
-     * @throws smile.imputation.MissingValueImputationException
-     */
-    static void columnAverageImpute(double[][] data) throws MissingValueImputationException {
-        for (int j = 0; j < data[0].length; j++) {
-            int n = 0;
-            double sum = 0.0;
-
-            for (int i = 0; i < data.length; i++) {
-                if (!Double.isNaN(data[i][j])) {
-                    n++;
-                    sum += data[i][j];
-                }
-            }
-
-            if (n == 0) {
-                continue;
-            }
-
-            if (n < data.length) {
-                double avg = sum / n;
-                for (int i = 0; i < data.length; i++) {
-                    if (Double.isNaN(data[i][j])) {
-                        data[i][j] = avg;
-                    }
-                }
-            }
-        }
+        MissingValueImputation.imputeWithColumnAverage(data);
     }
 }

@@ -18,15 +18,46 @@
 package smile.imputation;
 
 /**
- * Interface to impute missing values in the dataset.
+ * Interface to impute missing values in the data.
  *
  * @author Haifeng
  */
 public interface MissingValueImputation {
     /**
-     * Impute missing values in the dataset.
+     * Impute missing values in the data.
      * @param data a data set with missing values (represented as Double.NaN).
      * On output, missing values are filled with estimated values.
      */
-    public void impute(double[][] data) throws MissingValueImputationException;
+    void impute(double[][] data) throws MissingValueImputationException;
+
+    /**
+     * Impute the missing values with column averages.
+     * @param data data with missing values.
+     */
+    static void imputeWithColumnAverage(double[][] data) {
+        for (int j = 0; j < data[0].length; j++) {
+            int n = 0;
+            double sum = 0.0;
+
+            for (int i = 0; i < data.length; i++) {
+                if (!Double.isNaN(data[i][j])) {
+                    n++;
+                    sum += data[i][j];
+                }
+            }
+
+            if (n == 0) {
+                continue;
+            }
+
+            if (n < data.length) {
+                double avg = sum / n;
+                for (int i = 0; i < data.length; i++) {
+                    if (Double.isNaN(data[i][j])) {
+                        data[i][j] = avg;
+                    }
+                }
+            }
+        }
+    }
 }
