@@ -23,12 +23,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
-
 import smile.base.rbf.RBF;
 import smile.classification.RBFNetwork;
-import smile.math.distance.EuclideanDistance;
-import smile.math.rbf.RadialBasisFunction;
-import smile.util.SmileUtils;
 
 /**
  *
