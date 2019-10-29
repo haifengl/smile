@@ -64,8 +64,8 @@ trait Operators {
     * @param k the number of clusters.
     * @param runs the number of runs of K-Means algorithm.
     */
-  def impute(data: Array[Array[Double]], k: Int, runs: Int = 1): Unit = time("Missing value imputation by k-means") {
-    new KMeansImputation(k, Math.max(runs, MulticoreExecutor.getThreadPoolSize)).impute(data)
+  def impute(data: Array[Array[Double]], k: Int, runs: Int = 8): Unit = time("Missing value imputation by k-means") {
+    new KMeansImputation(k, runs).impute(data)
   }
 
   /** Local least squares missing value imputation. The local least squares
