@@ -30,6 +30,17 @@ package object data {
 
   implicit def pimpDataset(data: DataFrame): DataFrameOps = DataFrameOps(data)
 
+  def summary(x: Array[Int]): Unit = {
+    println("min\tq1\tmedian\tmean\tq3\tmax")
+    val min = MathEx.min(x)
+    val q1 = MathEx.q1(x)
+    val median = MathEx.median(x)
+    val mean = MathEx.mean(x)
+    val q3 = MathEx.q3(x)
+    val max = MathEx.max(x)
+    println(f"$min%d\t$q1%d\t$median%d\t$mean%d\t$q3%d\t$max%d")
+  }
+
   def summary(x: Array[Double]): Unit = {
     println("min\t\tq1\t\tmedian\t\tmean\t\tq3\t\tmax")
     val min = MathEx.min(x)

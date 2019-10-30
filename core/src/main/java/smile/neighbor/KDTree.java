@@ -18,6 +18,7 @@
 package smile.neighbor;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 
 import smile.math.MathEx;
@@ -259,19 +260,20 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
      * @param node the root of subtree.
      * @param neighbor the current nearest neighbor.
      */
-    private void search(double[] q, Node node, Neighbor<double[], E> neighbor) {
+    private void search(double[] q, Node node, NeighborBuilder<double[], E> neighbor) {
         if (node.isLeaf()) {
             // look at all the instances in this leaf
             for (int idx = node.index; idx < node.index + node.count; idx++) {
-                if (q == keys[index[idx]] && identicalExcluded) {
+                int i = index[idx];
+                if (q == keys[i] && identicalExcluded) {
                     continue;
                 }
 
-                double distance = MathEx.squaredDistance(q, keys[index[idx]]);
+                double distance = MathEx.distance(q, keys[i]);
                 if (distance < neighbor.distance) {
-                    neighbor.key = keys[index[idx]];
-                    neighbor.value = data[index[idx]];
-                    neighbor.index = index[idx];
+                    neighbor.key = keys[i];
+                    neighbor.value = data[i];
+                    neighbor.index = i;
                     neighbor.distance = distance;
                 }
             }
@@ -289,7 +291,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             search(q, nearer, neighbor);
 
             // now look in further half
-            if (neighbor.distance >= diff * diff) {
+            if (neighbor.distance >= diff) {
                 search(q, further, neighbor);
             }
         }
@@ -304,21 +306,22 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
      * @param node the root of subtree.
      * @param heap the heap object to store/update the kNNs found during the search.
      */
-    private void search(double[] q, Node node, HeapSelect<Neighbor<double[], E>> heap) {
+    private void search(double[] q, Node node, HeapSelect<NeighborBuilder<double[], E>> heap) {
         if (node.isLeaf()) {
             // look at all the instances in this leaf
             for (int idx = node.index; idx < node.index + node.count; idx++) {
-                if (q == keys[index[idx]] && identicalExcluded) {
+                int i = index[idx];
+                if (q == keys[i] && identicalExcluded) {
                     continue;
                 }
 
-                double distance = MathEx.squaredDistance(q, keys[index[idx]]);
-                Neighbor<double[], E> datum = heap.peek();
+                double distance = MathEx.distance(q, keys[i]);
+                NeighborBuilder<double[], E> datum = heap.peek();
                 if (distance < datum.distance) {
                     datum.distance = distance;
-                    datum.index = index[idx];
-                    datum.key = keys[index[idx]];
-                    datum.value = data[index[idx]];
+                    datum.index = i;
+                    datum.key = keys[i];
+                    datum.value = data[i];
                     heap.heapify();
                 }
             }
@@ -336,7 +339,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             search(q, nearer, heap);
 
             // now look in further half
-            if (heap.peek().distance >= diff * diff) {
+            if (heap.peek().distance >= diff) {
                 search(q, further, heap);
             }
         }
@@ -355,13 +358,14 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
         if (node.isLeaf()) {
             // look at all the instances in this leaf
             for (int idx = node.index; idx < node.index + node.count; idx++) {
-                if (q == keys[index[idx]] && identicalExcluded) {
+                int i = index[idx];
+                if (q == keys[i] && identicalExcluded) {
                     continue;
                 }
 
-                double distance = MathEx.distance(q, keys[index[idx]]);
+                double distance = MathEx.distance(q, keys[i]);
                 if (distance <= radius) {
-                    neighbors.add(new Neighbor<>(keys[index[idx]], data[index[idx]], index[idx], distance));
+                    neighbors.add(new Neighbor<>(keys[i], data[i], i, distance));
                 }
             }
         } else {
@@ -386,13 +390,13 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
 
     @Override
     public Neighbor<double[], E> nearest(double[] q) {
-        Neighbor<double[], E> neighbor = new Neighbor<>(null, null, 0, Double.MAX_VALUE);
+        NeighborBuilder<double[], E> neighbor = new NeighborBuilder<>();
         search(q, root, neighbor);
-        neighbor.distance = Math.sqrt(neighbor.distance);
-        return neighbor;
+        return neighbor.toNeighbor();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Neighbor<double[], E>[] knn(double[] q, int k) {
         if (k <= 0) {
             throw new IllegalArgumentException("Invalid k: " + k);
@@ -402,22 +406,15 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             throw new IllegalArgumentException("Neighbor array length is larger than the dataset size");
         }
 
-        Neighbor<double[], E> neighbor = new Neighbor<>(null, null, 0, Double.MAX_VALUE);
-        @SuppressWarnings("unchecked")
-        Neighbor<double[], E>[] neighbors = (Neighbor<double[], E>[]) java.lang.reflect.Array.newInstance(neighbor.getClass(), k);
-        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<>(neighbors);
+        HeapSelect<NeighborBuilder<double[], E>> heap = new HeapSelect<>(k);
         for (int i = 0; i < k; i++) {
-            heap.add(neighbor);
-            neighbor = new Neighbor<>(null, null, 0, Double.MAX_VALUE);
+            heap.add(new NeighborBuilder<>());
         }
 
         search(q, root, heap);
         heap.sort();
-        for (int i = 0; i < neighbors.length; i++) {
-            neighbors[i].distance = Math.sqrt(neighbors[i].distance);
-        }
 
-        return neighbors;
+        return Arrays.stream(heap.toArray()).map(NeighborBuilder::toNeighbor).toArray(Neighbor[]::new);
     }
 
     @Override

@@ -17,55 +17,61 @@
 
 package smile.neighbor;
 
-import smile.util.Strings;
-
 /**
- * The immutable object encapsulates the results of nearest neighbor search.
- * A returned neighbor for nearest neighbor search contains the key of object
- * (e.g. the weight vector of a neuron) and the object itself (e.g. a neuron,
- * which also contains other information beyond weight vector), an index of
- * object in the dataset, which is often useful, and the distance between
- * the query key to the object key.
+ * The mutable object as a template to create a Neighbor object.
  *
  * @param <K> the type of keys.
  * @param <V> the type of associated objects.
- * 
+ *
  * @author Haifeng Li
  */
-public class Neighbor<K, V> implements Comparable<Neighbor<K,V>> {
+class NeighborBuilder<K, V> implements Comparable<NeighborBuilder<K,V>> {
     /**
      * The key of neighbor.
      */
-    public final K key;
+    K key;
     /**
      * The data object of neighbor. It may be same as the key object.
      */
-    public final V value;
+    V value;
     /**
      * The index of neighbor object in the dataset.
      */
-    public final int index;
+    int index;
     /**
      * The distance between the query and the neighbor.
      */
-    public final double distance;
+    double distance;
+
+    /**
+     * Constructor.
+     */
+    public NeighborBuilder() {
+        this.index = -1;
+        this.distance = Double.MAX_VALUE;
+    }
 
     /**
      * Constructor.
      * @param key the key of neighbor.
-     * @param object the value of neighbor.
+     * @param value the value of neighbor.
      * @param index the index of neighbor object in the dataset.
      * @param distance the distance between the query and the neighbor.
      */
-    public Neighbor(K key, V object, int index, double distance) {
+    public NeighborBuilder(K key, V value, int index, double distance) {
         this.key = key;
-        this.value = object;
+        this.value = value;
         this.index = index;
         this.distance = distance;
     }
 
+    /** Creates a neighbor object. */
+    public Neighbor<K, V> toNeighbor() {
+        return new Neighbor<>(key, value, index, distance);
+    }
+
     @Override
-    public int compareTo(Neighbor<K,V> o) {
+    public int compareTo(NeighborBuilder<K,V> o) {
         int d = (int) Math.signum(distance - o.distance);
         // Sometime, the dataset contains duplicate samples.
         // If the distances are same, we sort by the sample index.
@@ -73,15 +79,5 @@ public class Neighbor<K, V> implements Comparable<Neighbor<K,V>> {
             return index - o.index;
         else
             return d;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s(%d):%s", key, index, Strings.decimal(distance));
-    }
-
-    /** Creates a neighbor object, of which key and object are the same. */
-    public static <T> Neighbor<T, T> of(T key, int index, double distance) {
-        return new Neighbor<>(key, key, index, distance);
     }
 }

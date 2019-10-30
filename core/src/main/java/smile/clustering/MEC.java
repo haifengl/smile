@@ -125,7 +125,6 @@ public class MEC <T> extends PartitionClustering<T> {
         CoverTree<T> cover = new CoverTree<>(data, distance);
         cover.setIdenticalExcluded(false);
 
-
         // Initialize clusters with KMeans/CLARANS.
         if (data[0] instanceof double[] && distance instanceof EuclideanDistance) {
             KMeans kmeans = new KMeans((double[][]) data, k, 10, Math.max(1, MulticoreExecutor.getThreadPoolSize()));

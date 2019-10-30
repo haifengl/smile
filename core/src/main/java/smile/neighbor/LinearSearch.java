@@ -17,6 +17,7 @@
 
 package smile.neighbor;
 
+import java.util.Arrays;
 import java.util.List;
 
 import smile.math.distance.Distance;
@@ -92,29 +93,25 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
     }
 
     @Override
-    public Neighbor<T,T> nearest(T q) {
-        T neighbor = null;
+    public Neighbor<T, T> nearest(T q) {
+        // avoid Stream.reduce as we will create a lot of temporary Neighbor objects.
+        double[] dist = Arrays.stream(data).parallel().mapToDouble(x -> distance.d(q, x)).toArray();
+
         int index = -1;
-        double dist = Double.MAX_VALUE;
-        for (int i = 0; i < data.length; i++) {
-            if (q == data[i] && identicalExcluded) {
-                continue;
-            }
-
-            double d = distance.d(q, data[i]);
-
-            if (d < dist) {
-                neighbor = data[i];
+        double nearest = Double.MAX_VALUE;
+        for (int i = 0; i < dist.length; i++) {
+            if (dist[i] < nearest && q != data[i]) {
                 index = i;
-                dist = d;
+                nearest = dist[i];
             }
         }
 
-        return new SimpleNeighbor<>(neighbor, index, dist);
+        return Neighbor.of(data[index], index, nearest);
     }
 
     @Override
-    public Neighbor<T,T>[] knn(T q, int k) {
+    @SuppressWarnings("unchecked")
+    public Neighbor<T, T>[] knn(T q, int k) {
         if (k <= 0) {
             throw new IllegalArgumentException("Invalid k: " + k);
         }
@@ -123,24 +120,16 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
             throw new IllegalArgumentException("Neighbor array length is larger than the dataset size");
         }
 
-        SimpleNeighbor<T> neighbor = new SimpleNeighbor<>(null, 0, Double.MAX_VALUE);
-        @SuppressWarnings("unchecked")
-        SimpleNeighbor<T>[] neighbors = (SimpleNeighbor<T>[]) java.lang.reflect.Array.newInstance(neighbor.getClass(), k);
-        HeapSelect<Neighbor<T,T>> heap = new HeapSelect<>(neighbors);
+        double[] dist = Arrays.stream(data).parallel().mapToDouble(x -> distance.d(q, x)).toArray();
+        HeapSelect<NeighborBuilder<T,T>> heap = new HeapSelect<>(k);
         for (int i = 0; i < k; i++) {
-            heap.add(neighbor);
-            neighbor = new SimpleNeighbor<>(null, 0, Double.MAX_VALUE);
+            heap.add(new NeighborBuilder<>());
         }
 
-        for (int i = 0; i < data.length; i++) {
-            if (q == data[i] && identicalExcluded) {
-                continue;
-            }
-
-            double dist = distance.d(q, data[i]);
-            Neighbor<T,T> datum = heap.peek();
-            if (dist < datum.distance) {
-                datum.distance = dist;
+        for (int i = 0; i < dist.length; i++) {
+            NeighborBuilder<T,T> datum = heap.peek();
+            if (dist[i] < datum.distance && q != data[i]) {
+                datum.distance = dist[i];
                 datum.index = i;
                 datum.key = data[i];
                 datum.value = data[i];
@@ -149,24 +138,19 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
         }
 
         heap.sort();
-        return neighbors;
+        return Arrays.stream(heap.toArray()).map(NeighborBuilder::toNeighbor).toArray(Neighbor[]::new);
     }
 
     @Override
-    public void range(T q, double radius, List<Neighbor<T,T>> neighbors) {
+    public void range(T q, double radius, List<Neighbor<T, T>> neighbors) {
         if (radius <= 0.0) {
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
 
+        double[] dist = Arrays.stream(data).parallel().mapToDouble(x -> distance.d(q, x)).toArray();
         for (int i = 0; i < data.length; i++) {
-            if (q == data[i] && identicalExcluded) {
-                continue;
-            }
-
-            double d = distance.d(q, data[i]);
-
-            if (d <= radius) {
-                neighbors.add(new SimpleNeighbor<>(data[i], i, d));
+            if (dist[i] <= radius && q != data[i]) {
+                neighbors.add(Neighbor.of(data[i], i, dist[i]));
             }
         }
     }

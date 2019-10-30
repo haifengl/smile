@@ -15,23 +15,27 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.neighbor;
+package smile.data;
+
+import org.apache.commons.csv.CSVFormat;
+import smile.io.CSV;
+import smile.util.Paths;
 
 /**
- * The simple neighbor object, in which key and object are the same.
  *
- * @param <T> the type of key/object.
- *
- * @author Haifeng Li
+ * @author Haifeng
  */
-public class SimpleNeighbor<T> extends Neighbor<T,T> {
-    /**
-     * Constructor.
-     * @param key the neighbor object.
-     * @param index the index of neighbor object in the dataset.
-     * @param distance the distance between the query and the neighbor.
-     */
-    public SimpleNeighbor(T key, int index, double distance) {
-        super(key, key, index, distance);
+public class SwissRoll {
+
+    public static double[][] data;
+
+    static {
+        try {
+            CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter('\t'));
+            data = csv.read(Paths.getTestData("manifold/swissroll.txt")).toArray();
+        } catch (Exception ex) {
+            System.err.println("Failed to load 'index.noun': " + ex);
+            System.exit(-1);
+        }
     }
 }

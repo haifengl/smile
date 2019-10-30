@@ -102,6 +102,9 @@ public class ElasticNetTest {
     @Test
     public void testCPU() {
         System.out.println("CPU");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+
         LinearModel model = ElasticNet.fit(CPU.formula, CPU.data, 0.8, 0.2);
         System.out.println(model);
 
@@ -115,6 +118,7 @@ public class ElasticNetTest {
     @Test
     public void tesProstate() {
         System.out.println("Prostate");
+
         LinearModel model = ElasticNet.fit(Prostate.formula, Prostate.train, 0.8, 0.2);
         System.out.println(model);
 
@@ -127,6 +131,7 @@ public class ElasticNetTest {
     @Test
     public void tesAbalone() {
         System.out.println("Abalone");
+
         LinearModel model = ElasticNet.fit(Abalone.formula, Abalone.train, 0.8, 0.2);
         System.out.println(model);
 
@@ -139,6 +144,9 @@ public class ElasticNetTest {
     @Test
     public void tesDiabetes() {
         System.out.println("Diabetes");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+
         LinearModel model = ElasticNet.fit(Diabetes.formula, Diabetes.data, 0.8, 0.2);
         System.out.println(model);
 
@@ -146,6 +154,6 @@ public class ElasticNetTest {
         double rmse = RMSE.of(Diabetes.y, prediction);
 
         System.out.println("Diabetes 10-CV RMSE = " + rmse);
-        assertEquals(61.397635703350886, rmse, 1E-4);
+        assertEquals(59.59568301421299, rmse, 1E-4);
     }
 }

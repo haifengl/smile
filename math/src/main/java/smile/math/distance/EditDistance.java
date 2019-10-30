@@ -60,15 +60,16 @@ public class EditDistance implements Metric<String> {
 
     /**
      * Cost matrix. Because Java automatically initialize arrays, it
-     * is very time consuming to declare this cost matrix every time
-     * before calculate edit distance. Therefore, we create this
-     * cost matrix here. Note that methods using this cost matrix
-     * is not multi-thread safe.
+     * takes O(mn) to declare this cost matrix every time before
+     * calculate edit distance. But the whole point of Berghel & Roach
+     * algorithm is to calculate fewer cells than O(mn). Therefore,
+     * we create this cost matrix here. Therefore, the methods using
+     * this cost matrix is not multi-thread safe.
      */
     private IntArray2D FKP;
 
     /**
-     * The object to calculate FKP array.
+     * The lambda to calculate FKP array.
      */
     private BRF brf;
 
@@ -106,12 +107,9 @@ public class EditDistance implements Metric<String> {
      *                instead of plain Levenshtein distance.
      */
     public EditDistance(int maxStringLength, boolean damerau) {
-        FKP = new IntArray2D(2*maxStringLength+1, maxStringLength+2);
         this.damerau = damerau;
-        if (damerau)
-            brf = new DamerauBRF();
-        else
-            brf = new LevenshteinBRF();
+        FKP = new IntArray2D(2*maxStringLength+1, maxStringLength+2);
+        brf = damerau ? new DamerauBRF() : new LevenshteinBRF();
     }
 
     /**
@@ -409,8 +407,9 @@ public class EditDistance implements Metric<String> {
         @Override
         public void f(char[] x, char[] y, IntArray2D FKP, int ZERO_K, int k, int p) {
             int t = MathEx.max(FKP.get(k + ZERO_K, p) + 1, FKP.get(k - 1 + ZERO_K, p), FKP.get(k + 1 + ZERO_K, p) + 1);
+            int mnk = Math.min(x.length, y.length - k);
 
-            while (t < Math.min(x.length, y.length - k) && x[t] == y[t + k]) {
+            while (t < mnk && x[t] == y[t + k]) {
                 t++;
             }
 
@@ -420,8 +419,9 @@ public class EditDistance implements Metric<String> {
         @Override
         public void f(String x, String y, IntArray2D FKP, int ZERO_K, int k, int p) {
             int t = MathEx.max(FKP.get(k + ZERO_K, p) + 1, FKP.get(k - 1 + ZERO_K, p), FKP.get(k + 1 + ZERO_K, p) + 1);
+            int mnk = Math.min(x.length(), y.length() - k);
 
-            while (t < Math.min(x.length(), y.length() - k) && x.charAt(t) == y.charAt(t + k)) {
+            while (t < mnk && x.charAt(t) == y.charAt(t + k)) {
                 t++;
             }
 
@@ -436,8 +436,9 @@ public class EditDistance implements Metric<String> {
         @Override
         public void f(char[] x, char[] y, IntArray2D FKP, int ZERO_K, int k, int p) {
             int t = FKP.get(k + ZERO_K, p) + 1;
+            int mnk = Math.min(x.length, y.length - k);
 
-            if (t > 1 && k + t > 1 && t < Math.min(x.length, y.length - k)) {
+            if (t > 1 && k + t > 1 && t < mnk) {
                 if (x[t - 1] == y[k + t] && x[t] == y[k + t - 1]) {
                     t++;
                 }
@@ -445,7 +446,7 @@ public class EditDistance implements Metric<String> {
 
             t = MathEx.max(FKP.get(k - 1 + ZERO_K, p), FKP.get(k + 1 + ZERO_K, p) + 1, t);
 
-            while (t < Math.min(x.length, y.length - k) && x[t] == y[t + k]) {
+            while (t < mnk && x[t] == y[t + k]) {
                 t++;
             }
 
@@ -455,8 +456,9 @@ public class EditDistance implements Metric<String> {
         @Override
         public void f(String x, String y, IntArray2D FKP, int ZERO_K, int k, int p) {
             int t = FKP.get(k + ZERO_K, p) + 1;
+            int mnk = Math.min(x.length(), y.length() - k);
 
-            if (t > 1 && k + t > 1 && t < Math.min(x.length(), y.length() - k)) {
+            if (t > 1 && k + t > 1 && t < mnk) {
                 if (x.charAt(t - 1) == y.charAt(k + t) && x.charAt(t) == y.charAt(k + t - 1)) {
                     t++;
                 }
@@ -464,7 +466,7 @@ public class EditDistance implements Metric<String> {
 
             t = MathEx.max(FKP.get(k - 1 + ZERO_K, p), FKP.get(k + 1 + ZERO_K, p) + 1, t);
 
-            while (t < Math.min(x.length(), y.length() - k) && x.charAt(t) == y.charAt(t + k)) {
+            while (t < mnk && x.charAt(t) == y.charAt(t + k)) {
                 t++;
             }
 

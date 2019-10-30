@@ -26,8 +26,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+
+import smile.data.GaussianMixture;
+import smile.data.USPS;
 import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
+import smile.math.matrix.Matrix;
 
 /**
  *
@@ -35,20 +39,8 @@ import smile.math.distance.EuclideanDistance;
  */
 public class KDTreeTest {
 
-    double[][] data = null;
-    KDTree<double[]> kdtree = null;
-    LinearSearch<double[]> naive = null;
-
     public KDTreeTest() {
-        data = new double[10000][];
-        for (int i = 0; i < data.length; i++) {
-            data[i] = new double[10];
-            for (int j = 0; j < data[i].length; j++)
-                data[i][j] = MathEx.random();
-        }
 
-        kdtree = new KDTree<>(data, data);
-        naive = new LinearSearch<>(data, new EuclideanDistance());
     }
 
     @BeforeClass
@@ -67,12 +59,14 @@ public class KDTreeTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of nearest method, of class KDTree.
-     */
     @Test
     public void testNearest() {
         System.out.println("nearest");
+
+        double[][] data = Matrix.randn(1000, 10).toArray();
+        KDTree<double[]> kdtree = new KDTree<>(data, data);
+        LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
+
         for (int i = 0; i < data.length; i++) {
             Neighbor<double[], double[]> n1 = kdtree.nearest(data[i]);
             Neighbor<double[], double[]> n2 = naive.nearest(data[i]);
@@ -82,12 +76,14 @@ public class KDTreeTest {
         }
     }
 
-    /**
-     * Test of knn method, of class KDTree.
-     */
     @Test
     public void testKnn() {
         System.out.println("knn");
+
+        double[][] data = Matrix.randn(1000, 10).toArray();
+        KDTree<double[]> kdtree = new KDTree<>(data, data);
+        LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
+
         for (int i = 0; i < data.length; i++) {
             Neighbor<double[], double[]> [] n1 = kdtree.knn(data[i], 10);
             Neighbor<double[], double[]> [] n2 = naive.knn(data[i], 10);
@@ -99,12 +95,14 @@ public class KDTreeTest {
         }
     }
 
-    /**
-     * Test of range method, of class KDTree.
-     */
     @Test
     public void testRange() {
         System.out.println("range 0.5");
+
+        double[][] data = Matrix.randn(1000, 10).toArray();
+        KDTree<double[]> kdtree = new KDTree<>(data, data);
+        LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
+
         List<Neighbor<double[], double[]>> n1 = new ArrayList<>();
         List<Neighbor<double[], double[]>> n2 = new ArrayList<>();
         for (int i = 0; i < data.length; i++) {
@@ -121,16 +119,8 @@ public class KDTreeTest {
             n1.clear();
             n2.clear();
         }
-    }
 
-    /**
-     * Test of range method, of class KDTree.
-     */
-    @Test
-    public void testRange2() {
         System.out.println("range 1.5");
-        List<Neighbor<double[], double[]>> n1 = new ArrayList<>();
-        List<Neighbor<double[], double[]>> n2 = new ArrayList<>();
         for (int i = 0; i < data.length; i++) {
             kdtree.range(data[i], 1.5, n1);
             naive.range(data[i], 1.5, n2);
@@ -145,5 +135,76 @@ public class KDTreeTest {
             n1.clear();
             n2.clear();
         }
+    }
+
+    @Test
+    public void testGaussianMixture() {
+        System.out.println("----- Gaussian Mixture -----");
+
+        double[][] data = GaussianMixture.data;
+
+        long start = System.currentTimeMillis();
+        KDTree<double[]> kdtree = new KDTree<>(data, data);
+        double time = (System.currentTimeMillis() - start) / 1000.0;
+        System.out.format("Building KD-tree: %.2fs%n", time);
+
+        start = System.currentTimeMillis();
+        for (int i = 0; i < 1000; i++) {
+            kdtree.nearest(data[MathEx.randomInt(data.length)]);
+        }
+        time = (System.currentTimeMillis() - start) / 1000.0;
+        System.out.format("NN: %.2fs%n", time);
+
+        start = System.currentTimeMillis();
+        for (int i = 0; i < 1000; i++) {
+            kdtree.knn(data[MathEx.randomInt(data.length)], 10);
+        }
+        time = (System.currentTimeMillis() - start) / 1000.0;
+        System.out.format("10-NN: %.2fs%n", time);
+
+        start = System.currentTimeMillis();
+        List<Neighbor<double[], double[]>> n = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            kdtree.range(data[MathEx.randomInt(data.length)], 1.0, n);
+            n.clear();
+        }
+        time = (System.currentTimeMillis() - start) / 1000.0;
+        System.out.format("Range: %.2fs%n", time);
+    }
+
+    @Test(expected = Test.None.class)
+    public void testUSPS() throws Exception {
+        System.out.println("----- USPS -----");
+
+        double[][] x = USPS.x;
+        double[][] testx = USPS.testx;
+
+        long start = System.currentTimeMillis();
+        KDTree<double[]> kdtree = new KDTree<>(x, x);
+        double time = (System.currentTimeMillis() - start) / 1000.0;
+        System.out.format("Building KD-tree: %.2fs%n", time);
+
+        start = System.currentTimeMillis();
+        for (int i = 0; i < testx.length; i++) {
+            kdtree.nearest(testx[i]);
+        }
+        time = (System.currentTimeMillis() - start) / 1000.0;
+        System.out.format("NN: %.2fs%n", time);
+
+        start = System.currentTimeMillis();
+        for (int i = 0; i < testx.length; i++) {
+            kdtree.knn(testx[i], 10);
+        }
+        time = (System.currentTimeMillis() - start) / 1000.0;
+        System.out.format("10-NN: %.2fs%n", time);
+
+        start = System.currentTimeMillis();
+        List<Neighbor<double[], double[]>> n = new ArrayList<>();
+        for (int i = 0; i < testx.length; i++) {
+            kdtree.range(testx[i], 8.0, n);
+            n.clear();
+        }
+        time = (System.currentTimeMillis() - start) / 1000.0;
+        System.out.format("Range: %.2fs%n", time);
     }
 }
