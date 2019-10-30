@@ -29,13 +29,11 @@ import java.util.BitSet;
  *
  * @author Haifeng Li
  */
-public class HammingDistance<T> implements Metric<T[]> {
-    private static final long serialVersionUID = 1L;
+public class HammingDistance implements Distance<BitSet> {
 
-    /**
-     * Constructor.
-     */
-    private HammingDistance() {
+    /** Constructor. */
+    public HammingDistance() {
+
     }
 
     @Override
@@ -43,17 +41,14 @@ public class HammingDistance<T> implements Metric<T[]> {
         return "Hamming Distance";
     }
 
-    /**
-     * Returns Hamming distance between the two arrays.
-     */
     @Override
-    public double d(T[] x, T[] y) {
-        if (x.length != y.length)
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+    public double d(BitSet x, BitSet y) {
+        if (x.size() != y.size())
+            throw new IllegalArgumentException(String.format("BitSets have different length: x[%d], y[%d]", x.size(), y.size()));
 
         int dist = 0;
-        for (int i = 0; i < x.length; i++) {
-            if (!x[i].equals(y[i]))
+        for (int i = 0; i < x.size(); i++) {
+            if (x.get(i) != y.get(i))
                 dist++;
         }
 
@@ -148,22 +143,6 @@ public class HammingDistance<T> implements Metric<T[]> {
         int dist = 0;
         for (int i = 0; i < x.length; i++) {
             if (x[i] != y[i])
-                dist++;
-        }
-
-        return dist;
-    }
-
-    /**
-     * Returns Hamming distance between the two BitSets.
-     */
-    public static int d(BitSet x, BitSet y) {
-        if (x.size() != y.size())
-            throw new IllegalArgumentException(String.format("BitSets have different length: x[%d], y[%d]", x.size(), y.size()));
-
-        int dist = 0;
-        for (int i = 0; i < x.size(); i++) {
-            if (x.get(i) != y.get(i))
                 dist++;
         }
 

@@ -20,23 +20,23 @@ package smile.util;
 import java.util.Arrays;
 
 /**
- * 2-dimensional array of doubles. Java doesn't have real multidimensional
+ * 2-dimensional array of integers. Java doesn't have real multidimensional
  * arrays. They are just array of arrays, which are not friendly to modern
  * CPU due to frequent cache miss. The extra (multiple times) array index
  * checking also significantly reduces the performance. This class solves
- * these pain points by storing data in a single 1D array of doubles in
+ * these pain points by storing data in a single 1D array of int in
  * row major order. Note that this class is simple by design, as a replacement
- * of double[][] in case of row by row access. For advanced matrix computation,
+ * of int[][] in case of row by row access. For advanced matrix computation,
  * please use <code>Matrix</code>.
  *
  * @see smile.math.matrix.Matrix
  */
-public class Array2D {
+public class IntArray2D {
 
     /**
      * The array storage.
      */
-    private double[] A;
+    private int[] A;
     /**
      * The number of rows.
      */
@@ -50,10 +50,10 @@ public class Array2D {
      * Constructor.
      * @param A the array of matrix.
      */
-    public Array2D(double[][] A) {
+    public IntArray2D(int[][] A) {
         this.nrows = A.length;
         this.ncols = A[0].length;
-        this.A = new double[nrows*ncols];
+        this.A = new int[nrows*ncols];
 
         int pos = 0;
         for (int i = 0; i < nrows; i++) {
@@ -65,16 +65,16 @@ public class Array2D {
     /**
      * Constructor of all-zero matrix.
      */
-    public Array2D(int rows, int cols) {
+    public IntArray2D(int rows, int cols) {
         this.nrows = rows;
         this.ncols = cols;
-        A = new double[rows*cols];
+        A = new int[rows*cols];
     }
 
     /**
      * Constructor. Fill the matrix with given value.
      */
-    public Array2D(int rows, int cols, double value) {
+    public IntArray2D(int rows, int cols, int value) {
         this(rows, cols);
         if (value != 0.0)
             Arrays.fill(A, value);
@@ -84,7 +84,7 @@ public class Array2D {
      * Constructor.
      * @param value the array of matrix values arranged in row major format
      */
-    public Array2D(int rows, int cols, double[] value) {
+    public IntArray2D(int rows, int cols, int[] value) {
         this.nrows = rows;
         this.ncols = cols;
         this.A = value;
@@ -99,37 +99,37 @@ public class Array2D {
     }
 
     /** Returns A(i, j). Useful in Scala. */
-    public double apply(int i, int j) {
+    public int apply(int i, int j) {
         return A[i*ncols + j];
     }
 
     /** Returns A(i, j). */
-    public double get(int i, int j) {
+    public int get(int i, int j) {
         return A[i*ncols + j];
     }
 
     /** Sets A(i, j). */
-    public double set(int i, int j, double x) {
+    public int set(int i, int j, int x) {
         return A[i*ncols + j] = x;
     }
 
-    public double add(int i, int j, double x) {
+    public int add(int i, int j, int x) {
         return A[i*ncols + j] += x;
     }
 
-    public double sub(int i, int j, double x) {
+    public int sub(int i, int j, int x) {
         return A[i*ncols + j] -= x;
     }
 
-    public double mul(int i, int j, double x) {
+    public int mul(int i, int j, int x) {
         return A[i*ncols + j] *= x;
     }
 
-    public double div(int i, int j, double x) {
+    public int div(int i, int j, int x) {
         return A[i*ncols + j] /= x;
     }
 
-    public Array2D add(Array2D b) {
+    public IntArray2D add(IntArray2D b) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -140,7 +140,7 @@ public class Array2D {
         return this;
     }
 
-    public Array2D sub(Array2D b) {
+    public IntArray2D sub(IntArray2D b) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -151,7 +151,7 @@ public class Array2D {
         return this;
     }
 
-    public Array2D mul(Array2D b) {
+    public IntArray2D mul(IntArray2D b) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -162,7 +162,7 @@ public class Array2D {
         return this;
     }
 
-    public Array2D div(Array2D b) {
+    public IntArray2D div(IntArray2D b) {
         if (nrows() != b.nrows() || ncols() != b.ncols()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -173,7 +173,7 @@ public class Array2D {
         return this;
     }
 
-    public Array2D add(double x) {
+    public IntArray2D add(int x) {
         for (int i = 0; i < A.length; i++) {
             A[i] += x;
         }
@@ -181,7 +181,7 @@ public class Array2D {
         return this;
     }
 
-    public Array2D sub(double x) {
+    public IntArray2D sub(int x) {
         for (int i = 0; i < A.length; i++) {
             A[i] -= x;
         }
@@ -189,7 +189,7 @@ public class Array2D {
         return this;
     }
 
-    public Array2D mul(double x) {
+    public IntArray2D mul(int x) {
         for (int i = 0; i < A.length; i++) {
             A[i] *= x;
         }
@@ -197,7 +197,7 @@ public class Array2D {
         return this;
     }
 
-    public Array2D div(double x) {
+    public IntArray2D div(int x) {
         for (int i = 0; i < A.length; i++) {
             A[i] /= x;
         }
@@ -205,18 +205,8 @@ public class Array2D {
         return this;
     }
 
-    public Array2D replaceNaN(double x) {
-        for (int i = 0; i < A.length; i++) {
-            if (Double.isNaN(A[i])) {
-                A[i] = x;
-            }
-        }
-
-        return this;
-    }
-
-    public double sum() {
-        double s = 0.0;
+    public long sum() {
+        long s = 0;
         for (int i = 0; i < A.length; i++) {
             s += A[i];
         }
@@ -252,7 +242,7 @@ public class Array2D {
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
-                sb.append(String.format("%8.4f  ", get(i, j)));
+                sb.append(String.format("%d  ", get(i, j)));
             }
             sb.append(newline);
         }

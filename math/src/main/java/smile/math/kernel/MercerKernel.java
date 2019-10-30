@@ -40,4 +40,12 @@ public interface MercerKernel<T> extends Serializable {
      * Kernel function.
      */
     double k(T x, T y);
+
+    /**
+     * Kernel function.
+     * This is simply for Scala convenience.
+     */
+    default double apply(T x, T y) {
+        return k(x, y);
+    }
 }
