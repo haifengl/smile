@@ -91,6 +91,7 @@ public class HammingDistanceTest {
         y.set(4);
         y.set(7);
 
-        assertEquals(2, HammingDistance.d(x, y), 1E-9);
+        HammingDistance hamming = new HammingDistance();
+        assertEquals(2, hamming.d(x, y), 1E-9);
     }
 }

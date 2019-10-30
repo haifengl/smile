@@ -47,6 +47,15 @@ public class HeapSelect<T extends Comparable<? super T>> {
 
     /**
      * Constructor.
+     * @param k the size of heap.
+     */
+    @SuppressWarnings("unchecked")
+    public HeapSelect(int k) {
+        this((T[]) new Comparable[k]);
+    }
+
+    /**
+     * Constructor.
      * @param heap the array to store smallest values to track.
      */
     public HeapSelect(T[] heap) {
@@ -54,6 +63,11 @@ public class HeapSelect<T extends Comparable<? super T>> {
         k = heap.length;
         n = 0;
         sorted = false;
+    }
+
+    /** Returns the array back the heap. */
+    public T[] toArray() {
+        return heap;
     }
 
     /**

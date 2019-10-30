@@ -178,6 +178,15 @@ public interface Matrix extends Serializable {
 
     /**
      * Returns the string representation of matrix.
+     * @param full Print the full matrix if true. Otherwise,
+     *             print only top left 7 x 7 submatrix.
+     */
+    default String toString(boolean full) {
+        return full ? toString(nrows(), ncols()) : toString(7, 7);
+    }
+
+    /**
+     * Returns the string representation of matrix.
      * @param m the number of rows to print.
      * @param n the number of columns to print.
      */

@@ -51,20 +51,13 @@ public class EditDistanceTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of distance method, of class EditDistance.
-     */
     @Test
-    public void testDistance() {
-        System.out.println("distance");
+    public void testStaticMethods() {
+        System.out.println("static methods");
 
         String x = "Levenshtein";
         String y = "Laeveshxtin";
         String z = "Laeveshetin";
-
-        for (int i = 0; i < 100000; i++)
-            EditDistance.levenshtein(x, y);
-        //    EditDistance.levenshtein("abcdefghi", "jklmnopqrst");
 
         assertEquals(0, EditDistance.levenshtein(x, x));
         assertEquals(4, EditDistance.levenshtein(x, y));
@@ -107,21 +100,15 @@ public class EditDistanceTest {
         assertEquals(2, EditDistance.damerau("ramey", "ramfrey"));
     }
 
-    /**
-     * Test of distance method, of class EditDistance.
-     */
     @Test
-    public void testDistance2() {
-        System.out.println("distance");
+    public void testUnitCost() {
+        System.out.println("unit cost");
 
         String x = "Levenshtein";
         String y = "Laeveshxtin";
         String z = "Laeveshetin";
 
         EditDistance edit = new EditDistance(20, false);
-        for (int i = 0; i < 100000; i++)
-            edit.d(x, y);
-        //    edit.d("abcdefghi", "jklmnopqrst");
 
         assertEquals(0, edit.d(x, x), 1E-7);
         assertEquals(4, edit.d(x, y), 1E-7);
@@ -165,43 +152,37 @@ public class EditDistanceTest {
         assertEquals(2, edit.d("ramey", "ramfrey"), 1E-7);
     }
 
-    /**
-     * Test of distance method, of class EditDistance.
-     */
     @Test
-    public void testDistance3() {
-        System.out.println("distance");
-        System.out.println(EditDistance.levenshtein(H1N1, H1N5));
+    public void testPlainLevenshteinSpeedTest() {
+        System.out.println("Levenshtein speed test");
+        for (int i = 0; i < 100; i++) {
+            EditDistance.levenshtein(H1N1, H1N5);
+        }
     }
 
-    EditDistance ed = new EditDistance(Math.max(H1N1.length(), H1N5.length()));
-
-    /**
-     * Test of distance method, of class EditDistance.
-     */
     @Test
-    public void testDistance4() {
-        System.out.println("distance");
-        System.out.println(ed.d(H1N1, H1N5));
+    public void testLevenshteinSpeedTest() {
+        System.out.println("Advanced Levenshtein speed test");
+        EditDistance edit = new EditDistance(Math.max(H1N1.length(), H1N5.length()));
+        for (int i = 0; i < 100; i++) {
+            edit.d(H1N1, H1N5);
+        }
     }
 
-    /**
-     * Test of distance method, of class EditDistance.
-     */
     @Test
-    public void testDistance5() {
-        System.out.println("distance");
-        System.out.println(EditDistance.damerau(H1N1, H1N5));
+    public void testPlainDamerauSpeedTest() {
+        System.out.println("Plain Damerau speed test");
+        for (int i = 0; i < 100; i++) {
+            EditDistance.damerau(H1N1, H1N5);
+        }
     }
 
-    EditDistance ed2 = new EditDistance(Math.max(H1N1.length(), H1N5.length()), true);
-
-    /**
-     * Test of distance method, of class EditDistance.
-     */
     @Test
-    public void testDistance6() {
-        System.out.println("distance");
-        System.out.println(ed2.d(H1N1, H1N5));
+    public void testDamerauSpeedTest() {
+        System.out.println("Advanced Damerau speed test");
+        EditDistance edit = new EditDistance(Math.max(H1N1.length(), H1N5.length()), true);
+        for (int i = 0; i < 100; i++) {
+            edit.d(H1N1, H1N5);
+        }
     }
 }

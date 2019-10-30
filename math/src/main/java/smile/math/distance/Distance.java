@@ -37,4 +37,12 @@ public interface Distance<T> extends Serializable {
      * Returns the distance measure between two objects.
      */
     double d(T x, T y);
+
+    /**
+     * Returns the distance measure between two objects.
+     * This is simply for Scala convenience.
+     */
+    default double apply(T x, T y) {
+        return d(x, y);
+    }
 }

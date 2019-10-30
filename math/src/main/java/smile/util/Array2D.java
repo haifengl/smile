@@ -223,4 +223,44 @@ public class Array2D {
 
         return s;
     }
+
+    @Override
+    public String toString() {
+        return toString(false);
+    }
+
+    /**
+     * Returns the string representation of matrix.
+     * @param full Print the full matrix if true. Otherwise,
+     *             print only top left 7 x 7 submatrix.
+     */
+    public String toString(boolean full) {
+        return full ? toString(nrows(), ncols()) : toString(7, 7);
+    }
+
+    /**
+     * Returns the string representation of matrix.
+     * @param m the number of rows to print.
+     * @param n the number of columns to print.
+     */
+    public String toString(int m, int n) {
+        StringBuilder sb = new StringBuilder();
+        m = Math.min(m, nrows());
+        n = Math.min(n, ncols());
+
+        String newline = n < ncols() ? "...\n" : "\n";
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                sb.append(String.format("%8.4f  ", get(i, j)));
+            }
+            sb.append(newline);
+        }
+
+        if (m < nrows()) {
+            sb.append("  ...\n");
+        }
+
+        return sb.toString();
+    }
 }
