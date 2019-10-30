@@ -925,29 +925,30 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
             }
         }
         
-        Neighbor<double[], E> neighbor = new Neighbor<>(null, null, -1, Double.MAX_VALUE);
+        double[] key = null;
+        int index = -1;
+        double nearest = Double.MAX_VALUE;
 
         int[] cand = candidates.toArray();
         Arrays.sort(cand);
         int prev = -1;
-        for (int index : cand) {
-            if (index == prev) {
+        for (int i : cand) {
+            if (i == prev) {
                 continue;
             } else {
-                prev = index;
+                prev = i;
             }
 
-            double[] key = keys.get(index);
-            double distance = MathEx.distance(q, key);
-            if (distance < neighbor.distance) {
-                neighbor.index = index;
-                neighbor.distance = distance;
-                neighbor.key = key;
-                neighbor.value = data.get(index);
+            double[] x = keys.get(i);
+            double distance = MathEx.distance(q, x);
+            if (distance < nearest) {
+                index = i;
+                nearest = distance;
+                key = x;
             }
         }
 
-        return neighbor;
+        return index == -1 ? null : new Neighbor<>(key, data.get(index), index, nearest);
     }
 
     @Override

@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.DataFrame;
+import smile.data.SwissRoll;
 import smile.data.formula.Formula;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
@@ -1071,12 +1072,8 @@ public class LLETest {
                 {-0.0504,  0.0330}
         };
 
-        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter('\t'));
-        DataFrame swissroll = csv.read(Paths.getTestData("manifold/swissroll.txt"));
-
-        double[][] dat = swissroll.toArray();
         double[][] data = new double[1000][];
-        System.arraycopy(dat, 0, data, 0, data.length);
+        System.arraycopy(SwissRoll.data, 0, data, 0, data.length);
         
         LLE lle = LLE.of(data, 7);
 

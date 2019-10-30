@@ -79,7 +79,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
      */
     private double base = 1.3;
     /**
-     * if we have base 2 then this can be viewed as 1/ln(2), which can be
+     * If we have base 2 then this can be viewed as 1/ln(2), which can be
      * used later on to do invLogBase*ln(d) instead of ln(d)/ln(2), to get log2(d),
      * in getScale method.
      */
@@ -158,13 +158,6 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
          * (all potential ancestors).
          */
         ArrayList<Double> dist;
-
-        /**
-         * Constructor.
-         */
-        DistanceSet() {
-            dist = new ArrayList<>();
-        }
 
         /**
          * Constructor.

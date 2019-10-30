@@ -38,5 +38,5 @@ public interface RNNSearch<K, V> {
      * @param radius the radius of search range from target.
      * @param neighbors the list to store found neighbors in the given range on output.
      */
-    public void range(K q, double radius, List<Neighbor<K,V>> neighbors);
+    void range(K q, double radius, List<Neighbor<K,V>> neighbors);
 }

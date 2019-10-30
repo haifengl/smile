@@ -125,6 +125,7 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
             bands[i].put(bandKey, bucket);
         }
     }
+
     @SuppressWarnings("unchecked")
     public Neighbor<AbstractSentence, E>[] knn(AbstractSentence q, int k) {
         if(k < 1) {
@@ -180,7 +181,7 @@ public class SNLSH<E> implements NearestNeighborSearch<SNLSH.AbstractSentence, E
         long fpq = simhash64(q.tokens);
         Set<Integer> candidates = obtainCandidates(q.tokens);
         for (int index : candidates) {
-            double distance = HammingDistance.d(fpq, signs.get(index));
+            int distance = HammingDistance.d(fpq, signs.get(index));
             if (distance <= radius) {
                 if (keys.get(index).line != q.line || !identicalExcluded) {
                     neighbors.add(new Neighbor<>(keys.get(index), data.get(index), index, distance));

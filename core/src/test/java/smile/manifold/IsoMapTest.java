@@ -17,15 +17,12 @@
 
 package smile.manifold;
 
-import org.apache.commons.csv.CSVFormat;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.DataFrame;
-import smile.io.CSV;
-import smile.util.Paths;
+import smile.data.SwissRoll;
 
 import static org.junit.Assert.*;
 
@@ -1064,12 +1061,8 @@ public class IsoMapTest {
             {48.55222793362178, -20.44857359581157}
         };
 
-        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter('\t'));
-        DataFrame swissroll = csv.read(Paths.getTestData("manifold/swissroll.txt"));
-
-        double[][] dat = swissroll.toArray();
         double[][] data = new double[1000][];
-        System.arraycopy(dat, 0, data, 0, data.length);
+        System.arraycopy(SwissRoll.data, 0, data, 0, data.length);
         
         IsoMap isomap = IsoMap.of(data, 7, 2, false);
 

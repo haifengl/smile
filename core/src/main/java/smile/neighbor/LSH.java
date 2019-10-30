@@ -64,7 +64,7 @@ import smile.stat.distribution.GaussianDistribution;
  * @author Haifeng Li
  */
 public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<double[], E>, RNNSearch<double[], E>, Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     /**
      * A bucket is a container for points that all have the same value for hash
      * function g (function g is a vector of k LSH functions). A bucket is specified by a vector in integers of length k.
@@ -498,23 +498,24 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
 
     @Override
     public Neighbor<double[], E> nearest(double[] q) {
+        double[] key = null;
+        int index = -1;
+        double nearest = Double.MAX_VALUE;
+
         Set<Integer> candidates = obtainCandidates(q);
-        Neighbor<double[], E> neighbor = new Neighbor<>(null, null, -1, Double.MAX_VALUE);
-        for (int index : candidates) {
-            double[] key = keys.get(index);
-            if (q == key && identicalExcluded) {
-                continue;
-            }
-            double distance = MathEx.distance(q, key);
-            if (distance < neighbor.distance) {
-                neighbor.index = index;
-                neighbor.distance = distance;
-                neighbor.key = key;
-                neighbor.value = data.get(index);
+        for (int i : candidates) {
+            double[] x = keys.get(i);
+            if (q == x) continue;
+
+            double distance = MathEx.distance(q, x);
+            if (distance < nearest) {
+                index = i;
+                nearest = distance;
+                key = x;
             }
         }
         
-        return neighbor;
+        return index == -1 ? null : new Neighbor<>(key, data.get(index), index, nearest);
     }
 
     @Override
