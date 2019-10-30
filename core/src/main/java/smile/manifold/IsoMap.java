@@ -17,22 +17,13 @@
 
 package smile.manifold;
 
-import smile.graph.AdjacencyList;
+import java.util.Optional;
 import smile.graph.Graph;
 import smile.graph.Graph.Edge;
-import smile.math.distance.EuclideanDistance;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
-import smile.neighbor.CoverTree;
-import smile.neighbor.KDTree;
-import smile.neighbor.KNNSearch;
-import smile.neighbor.Neighbor;
-import smile.util.SparseArray;
-
-import java.util.Collection;
-import java.util.Optional;
 
 /**
  * Isometric feature mapping. Isomap is a widely used low-dimensional embedding methods,

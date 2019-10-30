@@ -18,23 +18,14 @@
 package smile.manifold;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.Optional;
-
-import smile.graph.AdjacencyList;
 import smile.graph.Graph;
 import smile.math.MathEx;
-import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.SparseMatrix;
 import smile.math.matrix.LU;
 import smile.math.matrix.EVD;
-import smile.neighbor.CoverTree;
-import smile.neighbor.KDTree;
-import smile.neighbor.KNNSearch;
-import smile.neighbor.Neighbor;
 import smile.netlib.ARPACK;
 
 /**
