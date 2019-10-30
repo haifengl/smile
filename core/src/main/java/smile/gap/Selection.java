@@ -144,8 +144,8 @@ public interface Selection {
      */
     static Selection Tournament(int size, double probability) {
         return new Selection() {
-            @SuppressWarnings("unchecked")
             @Override
+            @SuppressWarnings("unchecked")
             public <T extends Chromosome> T apply(T[] population) {
                 Chromosome[] pool = new Chromosome[size];
                 for (int i = 0; i < size; i++) {
