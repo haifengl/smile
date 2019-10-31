@@ -105,6 +105,11 @@ public abstract class InternalNode implements Node {
     }
 
     @Override
+    public int leafs() {
+        return trueChild.leafs() + falseChild.leafs();
+    }
+
+    @Override
     public double deviance() {
         return deviance;
     }

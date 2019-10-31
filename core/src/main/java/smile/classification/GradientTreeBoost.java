@@ -206,7 +206,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     }
 
     /**
-     * Learns a gradient tree boosting for classification.
+     * Fits a gradient tree boosting for classification.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data    the data frame of the explanatory and response variables.
@@ -216,43 +216,37 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     }
 
     /**
-     * Learns a gradient tree boosting for classification.
+     * Fits a gradient tree boosting for classification.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data    the data frame of the explanatory and response variables.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data, Properties prop) {
         int ntrees = Integer.valueOf(prop.getProperty("smile.gbt.trees", "500"));
+        int maxDepth = Integer.valueOf(prop.getProperty("smile.gbt.max.depth", "20"));
         int maxNodes = Integer.valueOf(prop.getProperty("smile.gbt.max.nodes", "6"));
         int nodeSize = Integer.valueOf(prop.getProperty("smile.gbt.node.size", "5"));
         double shrinkage = Double.valueOf(prop.getProperty("smile.gbt.shrinkage", "0.05"));
         double subsample = Double.valueOf(prop.getProperty("smile.gbt.sample.rate", "0.7"));
-        return fit(formula, data, ntrees, maxNodes, nodeSize, shrinkage, subsample);
+        return fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
     }
 
     /**
-     * Constructor. Learns a gradient tree boosting for classification.
+     * Fits a gradient tree boosting for classification.
      *
      * @param formula   a symbolic description of the model to be fitted.
      * @param data      the data frame of the explanatory and response variables.
      * @param ntrees    the number of iterations (trees).
-     * @param maxNodes  the number of leaves in each tree.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize  the number of instances in a node below which the tree will
      *                  not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
      */
-    public static GradientTreeBoost fit(Formula formula, DataFrame data, int ntrees, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+    public static GradientTreeBoost fit(Formula formula, DataFrame data, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-        }
-
-        if (maxNodes < 2) {
-            throw new IllegalArgumentException("Invalid maximum leaves: " + maxNodes);
-        }
-
-        if (nodeSize < 1) {
-            throw new IllegalArgumentException("Invalid minimum size of leaves: " + nodeSize);
         }
 
         if (shrinkage <= 0 || shrinkage > 1) {
@@ -270,9 +264,9 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
         ClassLabel.Result codec = ClassLabel.fit(y);
 
         if (codec.k == 2) {
-            return train2(formula, x, codec, order, ntrees, maxNodes, nodeSize, shrinkage, subsample);
+            return train2(formula, x, codec, order, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
         } else {
-            return traink(formula, x, codec, order, ntrees, maxNodes, nodeSize, shrinkage, subsample);
+            return traink(formula, x, codec, order, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
         }
     }
 
@@ -305,7 +299,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     /**
      * Train L2 tree boost.
      */
-    private static GradientTreeBoost train2(Formula formula, DataFrame x, ClassLabel.Result codec, int[][] order, int ntrees, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+    private static GradientTreeBoost train2(Formula formula, DataFrame x, ClassLabel.Result codec, int[][] order, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
         int n = x.nrows();
         int k = codec.k;
         int[] y = codec.y;
@@ -338,7 +332,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
             }
 
             logger.info("Training {} tree", Strings.ordinal(t+1));
-            trees[t] = new RegressionTree(x, response, field, maxNodes, nodeSize, x.ncols(), samples, order, output);
+            trees[t] = new RegressionTree(x, response, field, maxDepth, maxNodes, nodeSize, x.ncols(), samples, order, output);
 
             for (int i = 0; i < n; i++) {
                 h[i] += shrinkage * trees[t].predict(x.get(i));
@@ -359,7 +353,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     /**
      * Train L-k tree boost.
      */
-    private static GradientTreeBoost traink(Formula formula, DataFrame x, ClassLabel.Result codec, int[][] order, int ntrees, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+    private static GradientTreeBoost traink(Formula formula, DataFrame x, ClassLabel.Result codec, int[][] order, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
         int n = x.nrows();
         int k = codec.k;
         int[] y = codec.y;
@@ -410,7 +404,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
 
                 sampling(samples, permutation, nc, y, subsample);
 
-                forest[j][t] = new RegressionTree(x, response[j], field, maxNodes, nodeSize, x.ncols(), samples, order, output[j]);
+                forest[j][t] = new RegressionTree(x, response[j], field, maxDepth, maxNodes, nodeSize, x.ncols(), samples, order, output[j]);
 
                 for (int i = 0; i < n; i++) {
                     h[j][i] += shrinkage * forest[j][t].predict(x.get(i));

@@ -95,7 +95,7 @@ public class GradientTreeBoostTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        double[] prediction = CrossValidation.regression(10, data, x -> GradientTreeBoost.fit(formula, x, loss, 100, 6, 5, 0.05, 0.7));
+        double[] prediction = CrossValidation.regression(10, data, x -> GradientTreeBoost.fit(formula, x, loss, 100, 20, 6, 5, 0.05, 0.7));
         double rmse = RMSE.of(formula.y(data).toDoubleArray(), prediction);
         System.out.format("10-CV RMSE = %.4f%n", rmse);
         assertEquals(expected, rmse, 1E-4);

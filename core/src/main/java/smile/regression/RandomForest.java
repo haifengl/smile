@@ -135,10 +135,11 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
     public static RandomForest fit(Formula formula, DataFrame data, Properties prop) {
         int ntrees = Integer.valueOf(prop.getProperty("smile.random.forest.trees", "500"));
         int mtry = Integer.valueOf(prop.getProperty("smile.random.forest.mtry", "-1"));
-        int maxNodes = Integer.valueOf(prop.getProperty("smile.random.forest.max.nodes", "100"));
+        int maxDepth = Integer.valueOf(prop.getProperty("smile.random.forest.max.depth", "20"));
+        int maxNodes = Integer.valueOf(prop.getProperty("smile.random.forest.max.nodes", String.valueOf(data.size() / 5)));
         int nodeSize = Integer.valueOf(prop.getProperty("smile.random.forest.node.size", "5"));
         double subsample = Double.valueOf(prop.getProperty("smile.random.forest.sample.rate", "1.0"));
-        return fit(formula, data, ntrees, mtry, maxNodes, nodeSize, subsample);
+        return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample);
     }
 
     /**
@@ -150,14 +151,15 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
      * @param mtry the number of input variables to be used to determine the decision
      * at a node of the tree. p/3 seems to give generally good performance,
      * where p is the number of variables.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the number of instances in a node below which the tree will
      * not split, setting nodeSize = 5 generally gives good results.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
      *                  sampling without replacement.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxNodes, int nodeSize, double subsample) {
-        return fit(formula, data, ntrees, mtry, maxNodes, nodeSize, subsample, Optional.empty());
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample) {
+        return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, Optional.empty());
     }
 
     /**
@@ -169,15 +171,16 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
      * @param mtry the number of input variables to be used to determine the decision
      * at a node of the tree. p/3 seems to give generally good performance,
      * where p is the number of variables.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the number of instances in a node below which the tree will
      * not split, setting nodeSize = 5 generally gives good results.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
      *                  sampling without replacement.
      * @param seedGenerator RNG seed generator.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxNodes, int nodeSize, double subsample, LongSupplier seedGenerator) {
-        return fit(formula, data, ntrees, mtry, maxNodes, nodeSize, subsample, Optional.of(LongStream.generate(seedGenerator)));
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, LongSupplier seedGenerator) {
+        return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, Optional.of(LongStream.generate(seedGenerator)));
     }
 
     /**
@@ -189,24 +192,17 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
      * @param mtry the number of input variables to be used to determine the decision
      * at a node of the tree. p/3 seems to give generally good performance,
      * where p is the number of variables.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the number of instances in a node below which the tree will
      * not split, setting nodeSize = 5 generally gives good results.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
      *                  sampling without replacement.
      * @param seeds optional RNG seeds for each regression tree.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxNodes, int nodeSize, double subsample, Optional<LongStream> seeds) {
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, Optional<LongStream> seeds) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-        }
-
-        if (nodeSize < 2) {
-            throw new IllegalArgumentException("Invalid minimum size of leaves: " + nodeSize);
-        }
-
-        if (maxNodes < 2) {
-            throw new IllegalArgumentException("Invalid maximum number of leaves: " + maxNodes);
         }
 
         if (subsample <= 0 || subsample > 1) {
@@ -257,7 +253,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
                 }
             }
 
-            RegressionTree tree = new RegressionTree(x, y, field, maxNodes, nodeSize, mtryFinal, samples, order, output);
+            RegressionTree tree = new RegressionTree(x, y, field, maxDepth, maxNodes, nodeSize, mtryFinal, samples, order, output);
 
             IntStream.range(0, n).filter(i -> samples[i] == 0).forEach(i -> {
                 double pred = tree.predict(x.get(i));

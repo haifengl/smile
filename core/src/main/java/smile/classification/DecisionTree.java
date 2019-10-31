@@ -244,8 +244,9 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
      * @param y the response variables.
      * @param response the metadata of response variable.
      * @param k the number of classes.
-     * @param nodeSize the minimum size of leaf nodes.
+     * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize the minimum size of leaf nodes.
      * @param mtry the number of input variables to pick to split on at each
      *             node. It seems that sqrt(p) give generally good performance,
      *             where p is the number of variables.
@@ -255,8 +256,8 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
      * @param order the index of training values in ascending order. Note
      *              that only numeric attributes need be sorted.
      */
-    public DecisionTree(DataFrame x, int[] y, StructField response, int k, SplitRule rule, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
-        super(x, response, maxNodes, nodeSize, mtry, samples, order);
+    public DecisionTree(DataFrame x, int[] y, StructField response, int k, SplitRule rule, int maxDepth, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
+        super(x, response, maxDepth, maxNodes, nodeSize, mtry, samples, order);
         this.k = k;
         this.y = y;
         this.rule = rule;
@@ -314,9 +315,10 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
      */
     public static DecisionTree fit(Formula formula, DataFrame data, Properties prop) {
         SplitRule rule = SplitRule.valueOf(prop.getProperty("smile.cart.split.rule", "GINI"));
-        int nodeSize = Integer.parseInt(prop.getProperty("smile.cart.node.size", "5"));
-        int maxNodes = Integer.parseInt(prop.getProperty("smile.cart.max.nodes", "6"));
-        return fit(formula, data, rule, maxNodes, nodeSize);
+        int maxDepth = Integer.valueOf(prop.getProperty("smile.cart.max.depth", "20"));
+        int maxNodes = Integer.valueOf(prop.getProperty("smile.cart.max.nodes", String.valueOf(data.size() / 5)));
+        int nodeSize = Integer.valueOf(prop.getProperty("smile.cart.node.size", "5"));
+        return fit(formula, data, rule, maxDepth, maxNodes, nodeSize);
     }
 
     /**
@@ -324,15 +326,16 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param rule the splitting rule.
-     * @param nodeSize the minimum size of leaf nodes.
+     * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize the minimum size of leaf nodes.
      */
-    public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxNodes, int nodeSize) {
+    public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxDepth, int maxNodes, int nodeSize) {
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
         ClassLabel.Result codec = ClassLabel.fit(y);
 
-        DecisionTree tree = new DecisionTree(x, codec.y, codec.field.get(), codec.k, rule, maxNodes, nodeSize, -1, null, null);
+        DecisionTree tree = new DecisionTree(x, codec.y, codec.field.get(), codec.k, rule, maxDepth, maxNodes, nodeSize, -1, null, null);
         tree.formula = Optional.of(formula);
         tree.labels = Optional.of(codec.labels);
         return tree;

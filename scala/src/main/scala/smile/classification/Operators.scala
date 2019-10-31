@@ -482,12 +482,14 @@ trait Operators {
     *
     * @param formula a symbolic description of the model to be fitted.
     * @param data the data frame of the explanatory and response variables.
+    * @param maxDepth the maximum depth of the tree.
     * @param maxNodes the maximum number of leaf nodes in the tree.
+    * @param nodeSize the minimum size of leaf nodes.
     * @param splitRule the splitting rule.
     * @return Decision tree model.
     */
-  def cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI, maxNodes: Int = 100, nodeSize: Int = 5): DecisionTree = time("Decision Tree") {
-    DecisionTree.fit(formula, data, splitRule, maxNodes, nodeSize)
+  def cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): DecisionTree = time("Decision Tree") {
+    DecisionTree.fit(formula, data, splitRule, maxDepth, if (maxNodes > 0) maxNodes else data.size / nodeSize, nodeSize)
   }
 
   /** Random forest for classification. Random forest is an ensemble classifier
@@ -532,16 +534,16 @@ trait Operators {
     * @param mtry the number of random selected features to be used to determine
     *             the decision at a node of the tree. floor(sqrt(dim)) seems to give
     *             generally good performance, where dim is the number of variables.
-    * @param nodeSize number of instances in a node below which the tree will not split.
-    * @param maxNodes maximum number of leaf nodes.
+    * @param maxDepth the maximum depth of the tree.
+    * @param maxNodes the maximum number of leaf nodes in the tree.
+    * @param nodeSize the minimum size of leaf nodes.
     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
     *                  sampling without replacement.
     * @param splitRule Decision tree node split rule.
-    *
     * @return Random forest classification model.
     */
-  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = -1, splitRule: SplitRule = SplitRule.GINI, maxNodes: Int = 100, nodeSize: Int = 1, subsample: Double = 1.0, classWeight: Array[Int] = null, seeds: LongStream = null): RandomForest = time("Random Forest") {
-    RandomForest.fit(formula, data, ntrees, if (mtry > 0) mtry else Math.sqrt(data.ncols).asInstanceOf[Int], splitRule, maxNodes, nodeSize, subsample, Optional.ofNullable(classWeight), Optional.ofNullable(seeds))
+  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 1, subsample: Double = 1.0, classWeight: Array[Int] = null, seeds: LongStream = null): RandomForest = time("Random Forest") {
+    RandomForest.fit(formula, data, ntrees, if (mtry > 0) mtry else Math.sqrt(data.ncols).asInstanceOf[Int], splitRule, maxDepth, if (maxNodes > 0) maxNodes else data.size / nodeSize, nodeSize, subsample, Optional.ofNullable(classWeight), Optional.ofNullable(seeds))
   }
 
   /** Gradient boosted classification trees.
@@ -611,15 +613,16 @@ trait Operators {
     * @param formula a symbolic description of the model to be fitted.
     * @param data the data frame of the explanatory and response variables.
     * @param ntrees the number of iterations (trees).
-    * @param maxNodes the number of leaves in each tree.
-    * @param nodeSize number of instances in a node below which the tree will not split.
+    * @param maxDepth the maximum depth of the tree.
+    * @param maxNodes the maximum number of leaf nodes in the tree.
+    * @param nodeSize the minimum size of leaf nodes.
     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
     * @param subsample the sampling fraction for stochastic tree boosting.
     *
     * @return Gradient boosted trees.
     */
-  def gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boosting") {
-    GradientTreeBoost.fit(formula, data, ntrees, maxNodes, nodeSize, shrinkage, subsample)
+  def gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boosting") {
+    GradientTreeBoost.fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
   }
 
   /** AdaBoost (Adaptive Boosting) classifier with decision trees. In principle,
@@ -651,13 +654,14 @@ trait Operators {
     * @param formula a symbolic description of the model to be fitted.
     * @param data the data frame of the explanatory and response variables.
     * @param ntrees the number of trees.
-    * @param maxNodes the maximum number of leaf nodes in the trees.
-    * @param nodeSize number of instances in a node below which the tree will not split.
+    * @param maxDepth the maximum depth of the tree.
+    * @param maxNodes the maximum number of leaf nodes in the tree.
+    * @param nodeSize the minimum size of leaf nodes.
     *
     * @return AdaBoost model.
     */
-  def adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost = time("AdaBoost") {
-    AdaBoost.fit(formula, data, ntrees, maxNodes, nodeSize)
+  def adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost = time("AdaBoost") {
+    AdaBoost.fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize)
   }
 
   /** Fisher's linear discriminant. Fisher defined the separation between two

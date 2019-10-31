@@ -232,8 +232,9 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      * @param x the data frame of the explanatory variable.
      * @param y the response variables.
      * @param response the metadata of response variable.
-     * @param nodeSize the minimum size of leaf nodes.
+     * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize the minimum size of leaf nodes.
      * @param mtry the number of input variables to pick to split on at each
      *             node. It seems that sqrt(p) give generally good performance,
      *             where p is the number of variables.
@@ -243,8 +244,8 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      *              that only numeric attributes need be sorted.
      * @param output a lambda to calculate node output.
      */
-    public RegressionTree(DataFrame x, double[] y, StructField response, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order, RegressionNodeOutput output) {
-        super(x, response, maxNodes, nodeSize, mtry, samples, order);
+    public RegressionTree(DataFrame x, double[] y, StructField response, int maxDepth, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order, RegressionNodeOutput output) {
+        super(x, response, maxDepth, maxNodes, nodeSize, mtry, samples, order);
 
         this.y = y;
         this.output = output == null ? new LeastSquaresNodeOutput(y) : output;
@@ -294,22 +295,24 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      * @param prop Training algorithm hyper-parameters and properties.
      */
     public static RegressionTree fit(Formula formula, DataFrame data, Properties prop) {
-        int nodeSize = Integer.parseInt(prop.getProperty("smile.cart.node.size", "5"));
-        int maxNodes = Integer.parseInt(prop.getProperty("smile.cart.max.nodes", "6"));
-        return fit(formula, data, maxNodes, nodeSize);
+        int maxDepth = Integer.valueOf(prop.getProperty("smile.cart.max.depth", "20"));
+        int maxNodes = Integer.valueOf(prop.getProperty("smile.cart.max.nodes", String.valueOf(data.size() / 5)));
+        int nodeSize = Integer.valueOf(prop.getProperty("smile.cart.node.size", "5"));
+        return fit(formula, data, maxDepth, maxNodes, nodeSize);
     }
 
     /**
      * Learns a regression tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param nodeSize the minimum size of leaf nodes.
+     * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize the minimum size of leaf nodes.
      */
-    public static RegressionTree fit(Formula formula, DataFrame data, int maxNodes, int nodeSize) {
+    public static RegressionTree fit(Formula formula, DataFrame data, int maxDepth, int maxNodes, int nodeSize) {
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
-        RegressionTree tree = new RegressionTree(x, y.toDoubleArray(), y.field(), maxNodes, nodeSize, -1, null, null, null);
+        RegressionTree tree = new RegressionTree(x, y.toDoubleArray(), y.field(), maxDepth, maxNodes, nodeSize, -1, null, null, null);
         tree.formula = Optional.of(formula);
         return tree;
     }

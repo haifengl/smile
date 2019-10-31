@@ -98,7 +98,7 @@ public class DecisionTreeTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> DecisionTree.fit(PenDigits.formula, x, SplitRule.GINI, 100, 5));
+        int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> DecisionTree.fit(PenDigits.formula, x, SplitRule.GINI, 20, 100, 5));
         int error = Error.of(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
@@ -110,7 +110,7 @@ public class DecisionTreeTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> DecisionTree.fit(BreastCancer.formula, x, SplitRule.GINI, 100, 5));
+        int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> DecisionTree.fit(BreastCancer.formula, x, SplitRule.GINI, 20, 100, 5));
         int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
@@ -121,7 +121,7 @@ public class DecisionTreeTest {
     public void testSegment() {
         System.out.println("Segment");
 
-        DecisionTree model = DecisionTree.fit(Segment.formula, Segment.train, SplitRule.ENTROPY, 100, 5);
+        DecisionTree model = DecisionTree.fit(Segment.formula, Segment.train, SplitRule.ENTROPY, 20, 100, 5);
         System.out.println(model);
 
         double[] importance = model.importance();
@@ -140,7 +140,7 @@ public class DecisionTreeTest {
     public void testUSPS() {
         System.out.println("USPS");
 
-        DecisionTree model = DecisionTree.fit(USPS.formula, USPS.train, SplitRule.ENTROPY, 500, 5);
+        DecisionTree model = DecisionTree.fit(USPS.formula, USPS.train, SplitRule.ENTROPY, 20, 500, 5);
         System.out.println(model);
 
         double[] importance = model.importance();
@@ -160,7 +160,7 @@ public class DecisionTreeTest {
         System.out.println("USPS");
 
         // Overfitting with very large maxNodes and small nodeSize
-        DecisionTree model = DecisionTree.fit(USPS.formula, USPS.train, SplitRule.ENTROPY, 3000, 1);
+        DecisionTree model = DecisionTree.fit(USPS.formula, USPS.train, SplitRule.ENTROPY, 20, 3000, 1);
         System.out.println(model);
 
         double[] importance = model.importance();

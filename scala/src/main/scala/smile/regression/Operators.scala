@@ -237,11 +237,13 @@ trait Operators {
     *
     * @param formula a symbolic description of the model to be fitted.
     * @param data the data frame of the explanatory and response variables.
+    * @param maxDepth the maximum depth of the tree.
     * @param maxNodes the maximum number of leaf nodes in the tree.
+    * @param nodeSize the minimum size of leaf nodes.
     * @return Regression tree model.
     */
-  def cart(formula: Formula, data: DataFrame, maxNodes: Int = 100, nodeSize: Int = 5): RegressionTree = time("Regression Tree") {
-    RegressionTree.fit(formula, data, maxNodes, nodeSize)
+  def cart(formula: Formula, data: DataFrame, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): RegressionTree = time("Regression Tree") {
+    RegressionTree.fit(formula, data, maxDepth, if (maxNodes > 0) maxNodes else data.size / nodeSize, nodeSize)
   }
 
   /** Random forest for regression. Random forest is an ensemble classifier
@@ -286,16 +288,16 @@ trait Operators {
     * @param mtry the number of input variables to be used to determine the decision
     *             at a node of the tree. dim/3 seems to give generally good performance,
     *             where dim is the number of variables.
-    * @param nodeSize the number of instances in a node below which the tree will
-    *          not split, setting nodeSize = 5 generally gives good results.
-    * @param maxNodes maximum number of leaf nodes.
+    * @param maxDepth the maximum depth of the tree.
+    * @param maxNodes the maximum number of leaf nodes in the tree.
+    * @param nodeSize the minimum size of leaf nodes.
     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
     *                  sampling without replacement.
     *
     * @return Random forest regression model.
     */
-  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = -1, maxNodes: Int = -1, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest = time("Random Forest") {
-    RandomForest.fit(formula, data, ntrees, mtry, maxNodes, nodeSize, subsample)
+  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest = time("Random Forest") {
+    RandomForest.fit(formula, data, ntrees, mtry, maxDepth, if (maxNodes > 0) maxNodes else data.size / nodeSize, nodeSize, subsample)
   }
 
   /** Gradient boosted regression trees.
@@ -367,14 +369,16 @@ trait Operators {
     * @param loss loss function for regression. By default, least absolute
     *             deviation is employed for robust regression.
     * @param ntrees the number of iterations (trees).
-    * @param maxNodes the number of leaves in each tree.
+    * @param maxDepth the maximum depth of the tree.
+    * @param maxNodes the maximum number of leaf nodes in the tree.
+    * @param nodeSize the minimum size of leaf nodes.
     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
     * @param subsample the sampling fraction for stochastic tree boosting.
     *
     * @return Gradient boosted trees.
     */
-  def gbm(formula: Formula, data: DataFrame, loss: Loss, ntrees: Int = 500, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boost") {
-    GradientTreeBoost.fit(formula, data, loss, ntrees, maxNodes, nodeSize, shrinkage, subsample)
+  def gbm(formula: Formula, data: DataFrame, loss: Loss, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boost") {
+    GradientTreeBoost.fit(formula, data, loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
   }
 
   /** Gaussian Process for Regression. */
