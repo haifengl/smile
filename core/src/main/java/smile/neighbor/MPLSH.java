@@ -41,21 +41,7 @@ import smile.stat.distribution.GaussianDistribution;
  * contain query results in a hash table.
  * <p>
  * By default, the query object (reference equality) is excluded from the neighborhood.
- * You may change this behavior with <code>setIdenticalExcluded</code>. Note that
- * you may observe weird behavior with String objects. JVM will pool the string literal
- * objects. So the below variables
- * <code>
- *     String a = "ABC";
- *     String b = "ABC";
- *     String c = "AB" + "C";
- * </code>
- * are actually equal in reference test <code>a == b == c</code>. With toy data that you
- * type explicitly in the code, this will cause problems. Fortunately, the data would be
- * read from secondary storage in production.
- * </p>
  *
- * TODO: not efficient. better not use it right now.
- * 
  * <h2>References</h2>
  * <ol>
  * <li> Qin Lv, William Josephson, Zhe Wang, Moses Charikar, and Kai Li. Multi-probe LSH: efficient indexing for high-dimensional similarity search. VLDB, 2007. </li>
@@ -736,10 +722,6 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
      */
     int P = 2147483647;
     /**
-     * Whether to exclude query object self from the neighborhood.
-     */
-    boolean identicalExcluded = true;
-    /**
      * Pre-computed posteriori lookup table to generate multiple probes.
      */
     private List<PosterioriModel> model;
@@ -812,21 +794,6 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
     @Override
     public String toString() {
         return String.format("Multi-Probe LSH (L=%d, k=%d, H=%d, w=%.4f)", hash.size(), k, H, r);
-    }
-
-    /**
-     * Get whether if query object self be excluded from the neighborhood.
-     */
-    public boolean isIdenticalExcluded() {
-        return identicalExcluded;
-    }
-
-    /**
-     * Set if exclude query object self from the neighborhood.
-     */
-    public MPLSH<E> setIdenticalExcluded(boolean excluded) {
-        identicalExcluded = excluded;
-        return this;
     }
 
     /**
@@ -915,10 +882,8 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
                 ArrayList<HashEntry> bin = hash.get(i).table[bucket % H];
                 if (bin != null) {
                     for (HashEntry e : bin) {
-                        if (e.bucket == bucket) {
-                            if (q != e.key || !identicalExcluded) {
-                                candidates.add(e.index);
-                            }
+                        if (e.bucket == bucket && q != e.key) {
+                            candidates.add(e.index);
                         }
                     }
                 }
@@ -985,10 +950,8 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
                 ArrayList<HashEntry> bin = hash.get(i).table[bucket % H];
                 if (bin != null) {
                     for (HashEntry e : bin) {
-                        if (e.bucket == bucket) {
-                            if (q != e.key || identicalExcluded) {
-                                candidates.add(e.index);
-                            }
+                        if (e.bucket == bucket && q != e.key) {
+                            candidates.add(e.index);
                         }
                     }
                 }
@@ -1070,11 +1033,7 @@ public class MPLSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<
                 ArrayList<HashEntry> bin = hash.get(i).table[bucket % H];
                 if (bin != null) {
                     for (HashEntry e : bin) {
-                        if (e.bucket == bucket) {
-                            if (q == e.key && identicalExcluded) {
-                                continue;
-                            }
-
+                        if (e.bucket == bucket && q != e.key) {
                             double distance = MathEx.distance(q, e.key);
                             if (distance <= radius) {
                                 boolean existed = false;

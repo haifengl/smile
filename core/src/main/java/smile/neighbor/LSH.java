@@ -38,18 +38,6 @@ import smile.stat.distribution.GaussianDistribution;
  * than the universe of possible input items).
  * <p>
  * By default, the query object (reference equality) is excluded from the neighborhood.
- * You may change this behavior with <code>setIdenticalExcluded</code>. Note that
- * you may observe weird behavior with String objects. JVM will pool the string literal
- * objects. So the below variables
- * <code>
- *     String a = "ABC";
- *     String b = "ABC";
- *     String c = "AB" + "C";
- * </code>
- * are actually equal in reference test <code>a == b == c</code>. With toy data that you
- * type explicitly in the code, this will cause problems. Fortunately, the data would be
- * read from secondary storage in production.
- * </p>
  *
  * <h2>References</h2>
  * <ol>
@@ -334,10 +322,6 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
      * The random integer used for universal hashing for control values.
      */
     int[] r2;
-    /**
-     * Whether to exclude query object self from the neighborhood.
-     */
-    boolean identicalExcluded = true;
 
     /**
      * Constructor.
@@ -470,21 +454,6 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
     }
 
     /**
-     * Get whether if query object self be excluded from the neighborhood.
-     */
-    public boolean isIdenticalExcluded() {
-        return identicalExcluded;
-    }
-
-    /**
-     * Set if exclude query object self from the neighborhood.
-     */
-    public LSH<E> setIdenticalExcluded(boolean excluded) {
-        identicalExcluded = excluded;
-        return this;
-    }
-
-    /**
      * Insert an item into the hash table.
      */
     public void put(double[] key, E value) {
@@ -535,14 +504,12 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
         int hit = 0;
         for (int index : candidates) {
             double[] key = keys.get(index);
-            if (q == key && identicalExcluded) {
-                continue;
-            }
-
-            double distance = MathEx.distance(q, key);
-            if (distance < heap.peek().distance) {
-                heap.add(new Neighbor<>(key, data.get(index), index, distance));
-                hit++;
+            if (q != key) {
+                double distance = MathEx.distance(q, key);
+                if (distance < heap.peek().distance) {
+                    heap.add(new Neighbor<>(key, data.get(index), index, distance));
+                    hit++;
+                }
             }
         }
         
@@ -569,13 +536,11 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
         Set<Integer> candidates = obtainCandidates(q);
         for (int index : candidates) {
             double[] key = keys.get(index);
-            if (q == key && identicalExcluded) {
-                continue;
-            }
-
-            double distance = MathEx.distance(q, key);
-            if (distance <= radius) {
-                neighbors.add(new Neighbor<>(key, data.get(index), index, distance));
+            if (q != key) {
+                double distance = MathEx.distance(q, key);
+                if (distance <= radius) {
+                    neighbors.add(new Neighbor<>(key, data.get(index), index, distance));
+                }
             }
         }
     }

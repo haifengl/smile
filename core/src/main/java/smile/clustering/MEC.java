@@ -91,7 +91,6 @@ public class MEC <T> extends PartitionClustering<T> {
         }
 
         LinearSearch<T> naive = new LinearSearch<>(data, distance);
-        naive.setIdenticalExcluded(false);
 
         // Initialize clusters with KMeans/CLARANS.
         if (data[0] instanceof double[] && distance instanceof EuclideanDistance) {
@@ -123,7 +122,6 @@ public class MEC <T> extends PartitionClustering<T> {
         }
 
         CoverTree<T> cover = new CoverTree<>(data, distance);
-        cover.setIdenticalExcluded(false);
 
         // Initialize clusters with KMeans/CLARANS.
         if (data[0] instanceof double[] && distance instanceof EuclideanDistance) {
@@ -197,6 +195,10 @@ public class MEC <T> extends PartitionClustering<T> {
 
         for (int i = 0; i < n; i++) {
             ArrayList<Neighbor<T,T>> list = new ArrayList<>();
+            // Add the point itself to the neighborhood
+            // This is important to estimate posterior probablity
+            // and also avoid empty neighborhood.
+            list.add(Neighbor.of(data[i], i, 0.0));
             nns.range(data[i], radius, list);
             ArrayList<Integer> neighbor = new ArrayList<>(list.size());
             neighbors.add(neighbor);

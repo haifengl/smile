@@ -32,9 +32,8 @@ import smile.sort.HeapSelect;
  * partitioning approaches (e.g. K-D trees) on higher dimensional spaces.
  * <p>
  * By default, the query object (reference equality) is excluded from the neighborhood.
- * You may change this behavior with <code>setIdenticalExcluded</code>. Note that
- * you may observe weird behavior with String objects. JVM will pool the string literal
- * objects. So the below variables
+ * Note that you may observe weird behavior with String objects. JVM will pool the string
+ * literal objects. So the below variables
  * <code>
  *     String a = "ABC";
  *     String b = "ABC";
@@ -59,10 +58,6 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
      * The distance function used to determine nearest neighbors.
      */
     private Distance<T> distance;
-    /**
-     * Whether to exclude query object self from the neighborhood.
-     */
-    private boolean identicalExcluded = true;
 
     /**
      * Constructor. By default, query object self will be excluded from search.
@@ -75,21 +70,6 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
     @Override
     public String toString() {
         return String.format("Linear Search (%s)", distance);
-    }
-
-    /**
-     * Set if exclude query object self from the neighborhood.
-     */
-    public LinearSearch<T> setIdenticalExcluded(boolean excluded) {
-        identicalExcluded = excluded;
-        return this;
-    }
-
-    /**
-     * Get whether if query object self be excluded from the neighborhood.
-     */
-    public boolean isIdenticalExcluded() {
-        return identicalExcluded;
     }
 
     @Override

@@ -84,10 +84,6 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
      * in getScale method.
      */
     private double invLogBase = 1.0 / Math.log(base);
-    /**
-     * Whether to exclude query object self from the neighborhood.
-     */
-    private boolean identicalExcluded = true;
 
     /**
      * Node in the cover tree.
@@ -233,21 +229,6 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
     @Override
     public String toString() {
         return String.format("Cover Tree (%s)", distance);
-    }
-
-    /**
-     * Set if exclude query object self from the neighborhood.
-     */
-    public CoverTree<E> setIdenticalExcluded(boolean excluded) {
-        identicalExcluded = excluded;
-        return this;
-    }
-
-    /**
-     * Get whether if query object self be excluded from the neighborhood.
-     */
-    public boolean isIdenticalExcluded() {
-        return identicalExcluded;
     }
 
     /**
@@ -527,7 +508,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
         heap.add(Double.MAX_VALUE);
 
         boolean emptyHeap = true;
-        if (!identicalExcluded || root.getObject() != q) {
+        if (root.getObject() != q) {
             heap.add(d);
             emptyHeap = false;
         }
@@ -548,7 +529,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
                     double upperBound = emptyHeap ? Double.POSITIVE_INFINITY : heap.peek();
                     if (d <= (upperBound + child.maxDist)) {
                         if (c > 0 && d < upperBound) {
-                            if (!identicalExcluded || child.getObject() != q) {
+                            if (child.getObject() != q) {
                                 heap.add(d);
                             }
                         }
@@ -569,7 +550,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
         for (int i = 0; i < zeroSet.size(); i++) {
             DistanceNode ds = zeroSet.get(i);
             if (ds.dist <= upperBound) {
-                if (!identicalExcluded || ds.node.getObject() != q) {
+                if (ds.node.getObject() != q) {
                     e = ds.node.getObject();
                     list.add(new Neighbor<>(e, e, ds.node.idx, ds.dist));
                 }
@@ -631,7 +612,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
 
         for (int i = 0; i < zeroSet.size(); i++) {
             DistanceNode ds = zeroSet.get(i);
-            if (!identicalExcluded || ds.node.getObject() != q) {
+            if (ds.node.getObject() != q) {
                 neighbors.add(new Neighbor<>(ds.node.getObject(), ds.node.getObject(), ds.node.idx, ds.dist));
             }
         }
