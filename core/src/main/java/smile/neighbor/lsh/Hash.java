@@ -19,7 +19,8 @@ package smile.neighbor.lsh;
 
 import java.io.Serializable;
 import smile.math.MathEx;
-import smile.stat.distribution.GaussianDistribution;
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 
 /**
  * The hash function for Euclidean spaces.
@@ -30,52 +31,49 @@ public class Hash implements Serializable {
     private static final long serialVersionUID = 2L;
 
     /**
-     * The prime number in universal bucket hashing.
-     */
-    private final int P = 2147483647;
-    /**
      * The range of universal hashing random integers [0, 2^29).
      */
-    private final int MAX_HASH_RND = 536870912;
+    final int MAX_HASH_RND = 536870912;
+    /**
+     * The prime number in universal bucket hashing.
+     */
+    final int P = 2147483647;
     /**
      * The size of hash table.
      */
-    private int H;
+    int H;
     /**
      * The dimensionality of data.
      */
-    private int d;
+    int d;
     /**
      * The number of random projections per hash value.
      */
-    private int k;
+    int k;
     /**
      * The width of projection. The hash function is defined as floor((a * x + b) / w). The value
      * of w determines the bucket interval.
      */
-    private double w;
+    double w;
     /**
      * The random integer used for universal bucket hashing.
      */
-    private int[] r1;
-    /**
-     * The random integer used for universal hashing for control values.
-     */
-    private int[] r2;
+    int[] c;
 
     /**
      * The random vectors with entries chosen independently from a Gaussian
      * distribution.
      */
-    private double[][] a;
+    DenseMatrix a;
     /**
      * Real numbers chosen uniformly from the range [0, w].
      */
-    private double[] b;
+    double[] b;
+
     /**
      * Hash table.
      */
-    private HashEntry[] table;
+    private Bucket[] table;
 
     /**
      * Constructor.
@@ -86,10 +84,8 @@ public class Hash implements Serializable {
      *          from 0. But we should not choose an w value that is too large,
      *          which will increase the query time.
      * @param H the size of universal hash tables.
-     * @param r1 the random integer used for universal bucket hashing.
-     * @param r2 the random integer used for universal hashing for control values.
      */
-    public Hash(int d, int k, double w, int H, int[] r1, int[] r2) {
+    public Hash(int d, int k, double w, int H) {
         if (d < 2) {
             throw new IllegalArgumentException("Invalid input space dimension: " + d);
         }
@@ -110,96 +106,74 @@ public class Hash implements Serializable {
         this.k = k;
         this.w = w;
         this.H = H;
-        this.r1 = r1;
-        this.r2 = r2;
 
-        a = new double[k][d];
+        a = Matrix.randn(k, d);
         b = new double[k];
 
-        GaussianDistribution gaussian = GaussianDistribution.getInstance();
         for (int i = 0; i < k; i++) {
-            for (int j = 0; j < d; j++) {
-                a[i][j] = gaussian.rand();
-            }
-
             b[i] = MathEx.random(0, w);
         }
 
-        table = new HashEntry[H];
+        c = new int[k];
+        for (int i = 0; i < k; i++) {
+            c[i] = MathEx.randomInt(MAX_HASH_RND);
+        }
+
+        table = new Bucket[H];
     }
 
     /**
-     * Returns the hash value of given vector x.
+     * Returns the raw hash value of given vector x.
+     *
      * @param x the vector to be hashed.
-     * @param m the m-<i>th</i> hash function to be employed.
-     * @return the hash value.
+     * @param i the i-th hash function to be employed.
+     * @return the raw hash value.
      */
-    private int hash(double[] x, int m) {
-        double g = b[m];
+    double hash(double[] x, int i) {
+        double g = b[i];
         for (int j = 0; j < d; j++) {
-            g += a[m][j] * x[j];
+            g += a.get(i, j) * x[j];
         }
-
-        int h = (int) Math.floor(g / w);
-        if (h < 0) {
-            h += 2147483647;
-        }
-
-        return h;
+        return g / w;
     }
 
     /**
      * Apply hash functions on given vector x.
-     * @param r universal hashing random integers.
      * @param x the vector to be hashed.
      * @return the bucket of hash table for given vector x.
      */
-    private int hash(int[] r, double[] x) {
+    int hash(double[] x) {
+        double[] h = new double[k];
+        a.ax(x, h);
+
         long g = 0;
         for (int i = 0; i < k; i++) {
-            g += r[i] * hash(x, i);
+            int hi = (int) Math.floor((h[i] + b[i]) / w);
+            g += c[i] * hi;
         }
 
-        int h = (int) (g % P);
-        if (h < 0) {
-            h += P;
-        }
-
-        return h;
+        int gint = (int) (g % P);
+        return gint >= 0 ? gint : gint + P;
     }
 
     /**
      * Insert an item into the hash table.
      */
     public void add(int index, double[] x) {
-        int bucket = hash(r2, x);
-        int i = hash(r1, x) % H;
+        int bucket = hash(x);
+        int i = bucket % H;
 
         if (table[i] == null) {
-            table[i] = new HashEntry();
+            table[i] = new Bucket(bucket);
         }
 
-        table[i].add(bucket, index);
+        table[i].add(index);
     }
 
     /**
      * Returns the bucket entry for the given point.
      */
     public Bucket get(double[] x) {
-        int bucket = hash(r2, x);
-        int i = hash(r1, x) % H;
-
-        HashEntry he = table[i];
-        if (he == null) {
-            return null;
-        }
-
-        for (Bucket be : he.buckets()) {
-            if (bucket == be.bucket) {
-                return be;
-            }
-        }
-
-        return null;
+        return table[hash(x) % H];
     }
 }
