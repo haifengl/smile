@@ -203,7 +203,7 @@ public class BKTree<E> implements RNNSearch<E, E>, Serializable {
 
     @Override
     public void range(E q, double radius, List<Neighbor<E, E>> neighbors) {
-        if (radius != (int) radius) {
+        if (radius <= 0 || radius != (int) radius) {
             throw new IllegalArgumentException("The parameter radius has to be an integer: " + radius);
         }
         
