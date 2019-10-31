@@ -21,9 +21,7 @@ import java.util.Optional;
 import smile.graph.AdjacencyList;
 import smile.graph.Graph;
 import smile.math.distance.EuclideanDistance;
-import smile.neighbor.CoverTree;
-import smile.neighbor.KDTree;
-import smile.neighbor.KNNSearch;
+import smile.neighbor.LinearSearch;
 import smile.neighbor.Neighbor;
 
 class NearestNeighborGraph {
@@ -68,14 +66,10 @@ class NearestNeighborGraph {
      * @param sideEffect an optional lambda to perform some side effect operations.
      */
     public static Graph of(double[][] data, int k, Optional<EdgeConsumer> sideEffect) {
-        int n = data.length;
-        KNNSearch<double[], double[]> knn;
-        if (data[0].length < 10) {
-            knn = new KDTree<>(data, data);
-        } else {
-            knn = new CoverTree<>(data, new EuclideanDistance());
-        }
+        // This is actually faster on many core systems.
+        LinearSearch<double[]> knn = new LinearSearch<>(data, new EuclideanDistance());
 
+        int n = data.length;
         Graph graph = new AdjacencyList(n);
 
         if (sideEffect.isPresent()) {
