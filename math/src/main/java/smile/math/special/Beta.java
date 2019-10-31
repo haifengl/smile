@@ -59,23 +59,22 @@ public class Beta {
             throw new IllegalArgumentException("Invalid x: " + x);
         }
 
-        double ibeta = 0.0;
         if (Math.abs(x - 0.0) < EPS) {
-            ibeta = 0.0;
+            return 0.0;
+        }
+
+        if (Math.abs(x - 1.0) < EPS) {
+            return 1.0;
+        }
+
+        // Term before continued fraction
+        double ibeta = Math.exp(Gamma.lgamma(alpha + beta) - Gamma.lgamma(alpha) - Gamma.lgamma(beta) + alpha * Math.log(x) + beta * Math.log(1.0D - x));
+        // Continued fraction
+        if (x < (alpha + 1.0) / (alpha + beta + 2.0)) {
+            ibeta = ibeta * incompleteFractionSummation(alpha, beta, x) / alpha;
         } else {
-            if (Math.abs(x - 1.0) < EPS) {
-                ibeta = 1.0;
-            } else {
-                // Term before continued fraction
-                ibeta = Math.exp(Gamma.lgamma(alpha + beta) - Gamma.lgamma(alpha) - Gamma.lgamma(beta) + alpha * Math.log(x) + beta * Math.log(1.0D - x));
-                // Continued fraction
-                if (x < (alpha + 1.0) / (alpha + beta + 2.0)) {
-                    ibeta = ibeta * incompleteFractionSummation(alpha, beta, x) / alpha;
-                } else {
-                    // Use symmetry relationship
-                    ibeta = 1.0 - ibeta * incompleteFractionSummation(beta, alpha, 1.0 - x) / beta;
-                }
-            }
+            // Use symmetry relationship
+            ibeta = 1.0 - ibeta * incompleteFractionSummation(beta, alpha, 1.0 - x) / beta;
         }
         return ibeta;
     }
