@@ -41,7 +41,7 @@ public class Bucket implements Serializable {
     /**
      * The indices of points that all have the same value for hash function g.
      */
-    private IntArrayList entry = new IntArrayList();
+    public final IntArrayList entry = new IntArrayList();
 
     /**
      * Constructor.

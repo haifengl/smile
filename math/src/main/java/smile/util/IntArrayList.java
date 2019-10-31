@@ -137,6 +137,17 @@ public final class IntArrayList implements Serializable {
      *
      * @param vals an array to be appended to this list.
      */
+    public void add(IntArrayList vals) {
+        ensureCapacity(size + vals.size);
+        System.arraycopy(vals.data, 0, data, size, vals.size);
+        size += vals.size;
+    }
+
+    /**
+     * Appends an array to the end of this list.
+     *
+     * @param vals an array to be appended to this list.
+     */
     public void add(int[] vals) {
         ensureCapacity(size + vals.length);
         System.arraycopy(vals, 0, data, size, vals.length);

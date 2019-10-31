@@ -191,7 +191,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         for (int i = 0; i < train.length; i++) {
             train[i] = data[perm[i]];
         }
-        mplsh.learn(kdtree, train, 1.5 * radius);
+        mplsh.fit(kdtree, train, 1.5 * radius);
         int mplshBuild = (int) (System.currentTimeMillis() - time);
 
         double mplshRecall = 0.0;

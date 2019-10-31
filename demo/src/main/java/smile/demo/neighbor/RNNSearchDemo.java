@@ -166,7 +166,7 @@ public class RNNSearchDemo extends JPanel implements Runnable, ActionListener {
         for (int i = 0; i < train.length; i++) {
             train[i] = data[perm[i]];
         }
-        mplsh.learn(kdtree, train, radius);
+        mplsh.fit(kdtree, train, radius);
         int mplshBuild = (int) (System.currentTimeMillis() - time);
 
         System.out.println("Perform 1000 searches...");
