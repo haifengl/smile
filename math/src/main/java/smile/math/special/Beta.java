@@ -54,15 +54,16 @@ public class Beta {
      * Continued Fraction approximation (see Numerical recipies for details)
      */
     public static double regularizedIncompleteBetaFunction(double alpha, double beta, double x) {
-        if (x < 0.0 || x > 1.0) {
+        double EPS = 1e-8;
+        if (x + EPS < 0.0 || x - EPS > 1.0) {
             throw new IllegalArgumentException("Invalid x: " + x);
         }
 
         double ibeta = 0.0;
-        if (x == 0.0) {
+        if (Math.abs(x - 0.0) < EPS) {
             ibeta = 0.0;
         } else {
-            if (x == 1.0) {
+            if (Math.abs(x - 1.0) < EPS) {
                 ibeta = 1.0;
             } else {
                 // Term before continued fraction
