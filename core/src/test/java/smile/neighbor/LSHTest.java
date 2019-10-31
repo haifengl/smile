@@ -44,7 +44,7 @@ public class LSHTest {
 
     public LSHTest() throws IOException {
         MathEx.setSeed(19650218); // to get repeatable results.
-        lsh = new LSH<>(x, x);
+        lsh = new LSH<>(x, x, 4.0, 1017881);
     }
 
     @BeforeClass
@@ -85,9 +85,9 @@ public class LSHTest {
 
         error /= testx.length;
 
-        assertEquals(1106, recall);
+        assertEquals(1154, recall);
         assertEquals(2007, hit);
-        assertEquals(0.0567, error, 1E-4);
+        assertEquals(0.0555, error, 1E-4);
         System.out.format("recall is %.2f%%%n", 100.0 * recall / testx.length);
         System.out.format("error is %.2f%%%n", 100.0 * error);
         System.out.format("null rate is %.2f%%%n", 100.0 - 100.0 * hit / testx.length);

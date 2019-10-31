@@ -21,9 +21,9 @@ import java.io.Serializable;
 import smile.util.IntArrayList;
 
 /**
- * LSH hashes the input items so that similar items are mapped to the same
- * buckets with high probability (the number of buckets being much smaller
- * than the universe of possible input items).
+ * A bucket is a container for points that all have the same value for hash
+ * function g (function g is a vector of k LSH functions). A bucket is specified
+ * by a vector in integers of length k.
  *
  * @author Haifeng Li
  */
@@ -49,6 +49,11 @@ public class Bucket implements Serializable {
      */
     public Bucket(int bucket) {
         this.bucket = bucket;
+    }
+
+    /** Returns the points in the bucket. */
+    public IntArrayList points() {
+        return entry;
     }
 
     /**
