@@ -65,9 +65,20 @@ public class HeapSelect<T extends Comparable<? super T>> {
         sorted = false;
     }
 
+    /** Returns the number of objects that have been added into heap. */
+    public int size() {
+        return n;
+    }
+
     /** Returns the array back the heap. */
     public T[] toArray() {
         return heap;
+    }
+
+    /** Returns the array back the heap. */
+    public T[] toArray(T[] a) {
+        System.arraycopy(heap, 0, a, 0, k);
+        return a;
     }
 
     /**

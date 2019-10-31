@@ -29,17 +29,17 @@ public class IntDoubleHashMap {
     private static final double NO_VALUE = Double.NaN;
 
     /**
-     * Keys and values
+     * Keys and values.
      */
     private int[] keys;
     private double[] values;
 
     /**
-     * The load factor, must be between (0 and 1)
+     * The load factor, must be between (0 and 1).
      */
     private final float loadFactor;
     /**
-     * We will resize a map once it reaches this size
+     * We will resize a map once it reaches this size.
      */
     private int threshold;
     /**
@@ -48,7 +48,7 @@ public class IntDoubleHashMap {
     private int size;
 
     /**
-     * Mask to calculate the original position
+     * Mask to calculate the original position.
      */
     private int mask;
 
@@ -63,8 +63,8 @@ public class IntDoubleHashMap {
     /**
      * Constructor.
      *
-     * @param initialCapacity the initial capacity
-     * @param loadFactor the load factor
+     * @param initialCapacity the initial capacity.
+     * @param loadFactor the load factor.
      */
     public IntDoubleHashMap(int initialCapacity, float loadFactor) {
         if (loadFactor <= 0 || loadFactor >= 1) {
@@ -171,6 +171,7 @@ public class IntDoubleHashMap {
         double[] oldValues = values;
 
         keys = new int[newCapacity];
+        Arrays.fill(keys, FREE_KEY);
         values = new double[newCapacity];
 
         for (int i = 0; i < oldCapacity; i++) {
