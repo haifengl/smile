@@ -118,7 +118,7 @@ object Airline {
     }
     println(s"Training Random Forest of $ntrees trees...")
     val forest = test2soft(formula, train, test) { (formula, data) =>
-      randomForest(formula, data, ntrees, subsample = 0.632, classWeight =classWeight)
+      randomForest(formula, data, ntrees, subsample = 0.632, classWeight = classWeight)
     }
 
     val depth = forest.trees.map(_.root.depth.toDouble)

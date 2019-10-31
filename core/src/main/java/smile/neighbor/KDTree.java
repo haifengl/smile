@@ -48,18 +48,6 @@ import smile.sort.HeapSelect;
  * instead.
  * <p>
  * By default, the query object (reference equality) is excluded from the neighborhood.
- * You may change this behavior with <code>setIdenticalExcluded</code>. Note that
- * you may observe weird behavior with String objects. JVM will pool the string literal
- * objects. So the below variables
- * <code>
- *     String a = "ABC";
- *     String b = "ABC";
- *     String c = "AB" + "C";
- * </code>
- * are actually equal in reference test <code>a == b == c</code>. With toy data that you
- * type explicitly in the code, this will cause problems. Fortunately, the data would be
- * read from secondary storage in production.
- * </p>
  *
  * @param <E> the type of data objects in the tree.
  *
@@ -121,10 +109,6 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
      * The index of objects in each nodes.
      */
     private int[] index;
-    /**
-     * Whether to exclude query object self from the neighborhood.
-     */
-    private boolean identicalExcluded = true;
 
     /**
      * Constructor.
@@ -238,21 +222,6 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
     }
 
     /**
-     * Set if exclude query object self from the neighborhood.
-     */
-    public KDTree<E> setIdenticalExcluded(boolean excluded) {
-        identicalExcluded = excluded;
-        return this;
-    }
-
-    /**
-     * Get whether if query object self be excluded from the neighborhood.
-     */
-    public boolean isIdenticalExcluded() {
-        return identicalExcluded;
-    }
-
-    /**
      * Returns the nearest neighbors of the given target starting from the give
      * tree node.
      *
@@ -265,16 +234,12 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             // look at all the instances in this leaf
             for (int idx = node.index; idx < node.index + node.count; idx++) {
                 int i = index[idx];
-                if (q == keys[i] && identicalExcluded) {
-                    continue;
-                }
-
-                double distance = MathEx.distance(q, keys[i]);
-                if (distance < neighbor.distance) {
-                    neighbor.key = keys[i];
-                    neighbor.value = data[i];
-                    neighbor.index = i;
-                    neighbor.distance = distance;
+                if (q != keys[i]) {
+                    double distance = MathEx.distance(q, keys[i]);
+                    if (distance < neighbor.distance) {
+                        neighbor.index = i;
+                        neighbor.distance = distance;
+                    }
                 }
             }
         } else {
@@ -311,18 +276,14 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             // look at all the instances in this leaf
             for (int idx = node.index; idx < node.index + node.count; idx++) {
                 int i = index[idx];
-                if (q == keys[i] && identicalExcluded) {
-                    continue;
-                }
-
-                double distance = MathEx.distance(q, keys[i]);
-                NeighborBuilder<double[], E> datum = heap.peek();
-                if (distance < datum.distance) {
-                    datum.distance = distance;
-                    datum.index = i;
-                    datum.key = keys[i];
-                    datum.value = data[i];
-                    heap.heapify();
+                if (q != keys[i]) {
+                    double distance = MathEx.distance(q, keys[i]);
+                    NeighborBuilder<double[], E> datum = heap.peek();
+                    if (distance < datum.distance) {
+                        datum.distance = distance;
+                        datum.index = i;
+                        heap.heapify();
+                    }
                 }
             }
         } else {
@@ -359,13 +320,11 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             // look at all the instances in this leaf
             for (int idx = node.index; idx < node.index + node.count; idx++) {
                 int i = index[idx];
-                if (q == keys[i] && identicalExcluded) {
-                    continue;
-                }
-
-                double distance = MathEx.distance(q, keys[i]);
-                if (distance <= radius) {
-                    neighbors.add(new Neighbor<>(keys[i], data[i], i, distance));
+                if (q != keys[i]) {
+                    double distance = MathEx.distance(q, keys[i]);
+                    if (distance <= radius) {
+                        neighbors.add(new Neighbor<>(keys[i], data[i], i, distance));
+                    }
                 }
             }
         } else {
@@ -392,6 +351,8 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
     public Neighbor<double[], E> nearest(double[] q) {
         NeighborBuilder<double[], E> neighbor = new NeighborBuilder<>();
         search(q, root, neighbor);
+        neighbor.key = keys[neighbor.index];
+        neighbor.value = data[neighbor.index];
         return neighbor.toNeighbor();
     }
 
@@ -414,7 +375,12 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
         search(q, root, heap);
         heap.sort();
 
-        return Arrays.stream(heap.toArray()).map(NeighborBuilder::toNeighbor).toArray(Neighbor[]::new);
+        return Arrays.stream(heap.toArray())
+                .map(neighbor -> {
+                    neighbor.key = keys[neighbor.index];
+                    neighbor.value = data[neighbor.index];
+                    return neighbor.toNeighbor();
+                }).toArray(Neighbor[]::new);
     }
 
     @Override
