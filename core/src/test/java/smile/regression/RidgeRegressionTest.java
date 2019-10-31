@@ -185,4 +185,27 @@ public class RidgeRegressionTest {
              System.err.println(ex);
         }
     }
+
+    @Test
+    public void testFloatingPointComparisonError() {
+        // These inputs result in Beta#regularizedIncompleteBetaFunction
+        // being provided with x-value of 1.000000000000001.
+        // Beta.regularizedIncompleteBetaFunction(0.5 * 5, 0.5 * 2, 5 / (5 + 2 * -2.6928402123470195E-15));
+        double[][] xValues = {
+                { -1.6186802663701534E7, 1.5394863704190075E9 },
+                { 1.8990838567327976E8, 1.4302105368610876E9 },
+                { 3.96003574010262E8, 1.3209347033031676E9 },
+                { 6.020987623472443E8, 1.2116588697452476E9 },
+                { 8.081939506842256E8, 1.1023830361873276E9 },
+                { 1.0142891390212078E9, 9.931072026294076E8 },
+                { 1.22038432735819E9, 8.838313690714877E8 },
+                { 1.4264795156951709E9, 7.745555355135677E8 },
+        };
+        double[] yValues =
+                { -1.9367312273661723E9, -2.0487128915354834E9, -2.124363122479608E9, -2.162488870865301E9,
+                        -2.162488870865301E9, -2.1243631224796085E9, -2.0487128915354834E9, -1.9367312273661723E9 };
+
+        // Just test that this doesn't result in an error
+        new RidgeRegression(xValues, yValues, 3.0);
+    }
 }
