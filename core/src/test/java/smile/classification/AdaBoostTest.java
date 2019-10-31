@@ -59,14 +59,14 @@ public class AdaBoostTest {
         System.out.println("Weather");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        AdaBoost model = AdaBoost.fit(WeatherNominal.formula, WeatherNominal.data, 200, 4, 1);
+        AdaBoost model = AdaBoost.fit(WeatherNominal.formula, WeatherNominal.data, 200, 20, 4, 1);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(WeatherNominal.data, x -> AdaBoost.fit(WeatherNominal.formula, x, 200, 4, 1));
+        int[] prediction = LOOCV.classification(WeatherNominal.data, x -> AdaBoost.fit(WeatherNominal.formula, x, 200, 20, 4, 1));
         int error = Error.of(WeatherNominal.y, prediction);
 
         System.out.println("Error = " + error);
@@ -78,14 +78,14 @@ public class AdaBoostTest {
         System.out.println("Iris");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        AdaBoost model = AdaBoost.fit(Iris.formula, Iris.data, 200, 4, 5);
+        AdaBoost model = AdaBoost.fit(Iris.formula, Iris.data, 200, 20, 4, 5);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(Iris.data, x -> AdaBoost.fit(Iris.formula, x, 200, 4, 1));
+        int[] prediction = LOOCV.classification(Iris.data, x -> AdaBoost.fit(Iris.formula, x, 200, 20, 4, 1));
         int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(7, error);
@@ -96,7 +96,7 @@ public class AdaBoostTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> AdaBoost.fit(PenDigits.formula, x, 200, 4, 1));
+        int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> AdaBoost.fit(PenDigits.formula, x, 200, 20, 4, 1));
         int error = Error.of(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
@@ -108,7 +108,7 @@ public class AdaBoostTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> AdaBoost.fit(BreastCancer.formula, x, 200, 4, 1));
+        int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> AdaBoost.fit(BreastCancer.formula, x, 200, 20, 4, 1));
         int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
@@ -120,7 +120,7 @@ public class AdaBoostTest {
         System.out.println("Segment");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        AdaBoost model = AdaBoost.fit(Segment.formula, Segment.train, 200, 6, 1);
+        AdaBoost model = AdaBoost.fit(Segment.formula, Segment.train, 200, 20, 6, 1);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
@@ -145,7 +145,7 @@ public class AdaBoostTest {
         System.out.println("USPS");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        AdaBoost model = AdaBoost.fit(USPS.formula, USPS.train, 200, 64, 1);
+        AdaBoost model = AdaBoost.fit(USPS.formula, USPS.train, 200, 20, 64, 1);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {

@@ -35,7 +35,7 @@ package object data {
     val min = MathEx.min(x)
     val q1 = MathEx.q1(x)
     val median = MathEx.median(x)
-    val mean = MathEx.mean(x)
+    val mean = Math.round(MathEx.mean(x)).toInt
     val q3 = MathEx.q3(x)
     val max = MathEx.max(x)
     println(f"$min%d\t$q1%d\t$median%d\t$mean%d\t$q3%d\t$max%d")

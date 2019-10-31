@@ -77,6 +77,9 @@ public abstract class Split {
      */
     boolean[] unsplittable;
 
+    /** The depth of node in the tree. */
+    int depth = 1;
+
     /** Constructor. */
     public Split(LeafNode leaf, int feature, double score, int lo, int hi, int trueCount, int falseCount) {
         this.leaf = leaf;
@@ -107,7 +110,8 @@ public abstract class Split {
                 "lo: " + lo,
                 "hi: " + hi,
                 "true: " + trueCount,
-                "false: " + falseCount
+                "false: " + falseCount,
+                "depth: " + depth
         };
 
         return Arrays.stream(fields).collect(Collectors.joining(",\n", "{\n", "\n}"));

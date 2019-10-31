@@ -48,14 +48,18 @@ public abstract class CART {
     /** The root of decision tree. */
     protected Node root;
     /**
-     * The number of instances in a node below which the tree will
-     * not split, setting nodeSize = 5 generally gives good results.
+     * The maximum depth of the tree.
      */
-    protected int nodeSize = 5;
+    protected int maxDepth = 20;
     /**
      * The maximum number of leaf nodes in the tree.
      */
     protected int maxNodes = 6;
+    /**
+     * The number of instances in a node below which the tree will
+     * not split, setting nodeSize = 5 generally gives good results.
+     */
+    protected int nodeSize = 5;
     /**
      * The number of input variables to be used to determine the decision
      * at a node of the tree.
@@ -114,8 +118,9 @@ public abstract class CART {
      * Constructor.
      * @param x the data frame of the explanatory variable.
      * @param y the response variables.
-     * @param nodeSize the minimum size of leaf nodes.
+     * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize the minimum size of leaf nodes.
      * @param mtry the number of input variables to pick to split on at each
      *             node. It seems that sqrt(p) give generally good performance,
      *             where p is the number of variables.
@@ -124,13 +129,14 @@ public abstract class CART {
      * @param order the index of training values in ascending order. Note
      *              that only numeric attributes need be sorted.
      */
-    public CART(DataFrame x, StructField y, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
+    public CART(DataFrame x, StructField y, int maxDepth, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
         this.x = x;
         this.response = y;
         this.schema = x.schema();
         this.importance = new double[x.ncols()];
-        this.nodeSize = nodeSize;
+        this.maxDepth = maxDepth;
         this.maxNodes = maxNodes;
+        this.nodeSize = nodeSize;
         this.mtry = mtry;
 
         int n = x.size();
@@ -139,6 +145,10 @@ public abstract class CART {
         if (mtry < 1 || mtry > p) {
             logger.debug("Invalid mtry. Use all features.");
             this.mtry = schema.length();
+        }
+
+        if (maxDepth < 1) {
+            throw new IllegalArgumentException("Invalid maximum depth: " + maxDepth);
         }
 
         if (maxNodes < 2) {
@@ -225,6 +235,11 @@ public abstract class CART {
             throw new IllegalStateException("Split a node with invalid feature.");
         }
 
+        if (split.depth >= maxDepth) {
+            logger.debug("Reach maximum depth");
+            return false;
+        }
+
         if (split.trueCount < nodeSize || split.falseCount < nodeSize) {
             // We should not reach here as findBestSplit filters this situation out.
             logger.debug("Node size is too small after splitting");
@@ -265,8 +280,8 @@ public abstract class CART {
         }
 
         importance[node.feature] += node.score;
-        trueSplit.ifPresent(s -> s.parent = node);
-        falseSplit.ifPresent(s -> s.parent = node);
+        trueSplit.ifPresent(s -> {s.parent = node; s.depth = split.depth + 1;});
+        falseSplit.ifPresent(s -> {s.parent = node; s.depth = split.depth + 1;});
 
         if (queue == null) {
             // deep first split

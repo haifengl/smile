@@ -163,7 +163,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
     }
 
     /**
-     * Learns a random forest for classification.
+     * Fits a random forest for classification.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -173,7 +173,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
     }
 
     /**
-     * Learns a random forest for classification.
+     * Fits a random forest for classification.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -182,15 +182,16 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
         int ntrees = Integer.valueOf(prop.getProperty("smile.random.forest.trees", "500"));
         int mtry = Integer.valueOf(prop.getProperty("smile.random.forest.mtry", "-1"));
         SplitRule rule = SplitRule.valueOf(prop.getProperty("smile.random.forest.split.rule", "GINI"));
-        int maxNodes = Integer.valueOf(prop.getProperty("smile.random.forest.max.nodes", "100"));
+        int maxDepth = Integer.valueOf(prop.getProperty("smile.random.forest.max.depth", "20"));
+        int maxNodes = Integer.valueOf(prop.getProperty("smile.random.forest.max.nodes", String.valueOf(data.size() / 5)));
         int nodeSize = Integer.valueOf(prop.getProperty("smile.random.forest.node.size", "5"));
         double subsample = Double.valueOf(prop.getProperty("smile.random.forest.sample.rate", "1.0"));
         Optional<int[]> classWeight = Optional.ofNullable(Strings.parseIntArray(prop.getProperty("smile.random.forest.class.weight")));
-        return fit(formula, data, ntrees, mtry, rule, maxNodes, nodeSize, subsample, classWeight, Optional.empty());
+        return fit(formula, data, ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, classWeight, Optional.empty());
     }
 
     /**
-     * Learns a random forest for classification.
+     * Fits a random forest for classification.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -198,18 +199,19 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      * @param mtry the number of input variables to be used to determine the decision
      * at a node of the tree. p/3 seems to give generally good performance,
      * where p is the number of variables.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the number of instances in a node below which the tree will
      * not split, setting nodeSize = 5 generally gives good results.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
      *                  sampling without replacement.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxNodes, int nodeSize, double subsample) {
-        return fit(formula, data, ntrees, mtry, rule, maxNodes, nodeSize, subsample, Optional.empty());
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample) {
+        return fit(formula, data, ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, Optional.empty());
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -217,9 +219,10 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      * @param mtry the number of input variables to be used to determine the decision
      * at a node of the tree. p/3 seems to give generally good performance,
      * where p is the number of variables.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the number of instances in a node below which the tree will
      * not split, setting nodeSize = 5 generally gives good results.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
      *                  sampling without replacement.
      * @param classWeight Priors of the classes. The weight of each class
@@ -229,12 +232,12 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      *                    be [1, 4] (assuming label 0 is of negative, label 1 is of
      *                    positive).
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxNodes, int nodeSize, double subsample, Optional<int[]> classWeight) {
-        return fit(formula, data, ntrees, mtry, rule, maxNodes, nodeSize, subsample, classWeight, Optional.empty());
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample, Optional<int[]> classWeight) {
+        return fit(formula, data, ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, classWeight, Optional.empty());
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -242,9 +245,10 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      * @param mtry the number of input variables to be used to determine the decision
      * at a node of the tree. p/3 seems to give generally good performance,
      * where p is the number of variables.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the number of instances in a node below which the tree will
      * not split, setting nodeSize = 5 generally gives good results.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
      *                  sampling without replacement.
      * @param classWeight Priors of the classes. The weight of each class
@@ -255,12 +259,12 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      *                    positive).
      * @param seedGenerator RNG seed generator.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxNodes, int nodeSize, double subsample, Optional<int[]> classWeight, LongSupplier seedGenerator) {
-        return fit(formula, data, ntrees, mtry, rule, maxNodes, nodeSize, subsample, classWeight, Optional.of(LongStream.generate(seedGenerator)));
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample, Optional<int[]> classWeight, LongSupplier seedGenerator) {
+        return fit(formula, data, ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, classWeight, Optional.of(LongStream.generate(seedGenerator)));
     }
 
     /**
-     * Learns a random forest for classification.
+     * Fits a random forest for classification.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -268,8 +272,9 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      * @param mtry the number of random selected features to be used to determine
      * the decision at a node of the tree. floor(sqrt(dim)) seems to give
      * generally good performance, where dim is the number of variables.
-     * @param nodeSize the minimum size of leaf nodes.
+     * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize the minimum size of leaf nodes.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
      *                  sampling without replacement.
      * @param rule Decision tree split rule.
@@ -281,17 +286,9 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      *                    positive).
      * @param seeds optional RNG seeds for each regression tree.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxNodes, int nodeSize, double subsample, Optional<int[]> classWeight, Optional<LongStream> seeds) {
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample, Optional<int[]> classWeight, Optional<LongStream> seeds) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-        }
-
-        if (maxNodes < 2) {
-            throw new IllegalArgumentException("Invalid maximum number of leaves: " + maxNodes);
-        }
-
-        if (nodeSize < 1) {
-            throw new IllegalArgumentException("Invalid minimum size of leaves: " + nodeSize);
         }
 
         if (subsample <= 0 || subsample > 1) {
@@ -371,7 +368,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
                 }
             }
 
-            DecisionTree tree = new DecisionTree(x, codec.y, codec.field.get(), k, rule, maxNodes, nodeSize, mtry, samples, order);
+            DecisionTree tree = new DecisionTree(x, codec.y, codec.field.get(), k, rule, maxDepth, maxNodes, nodeSize, mtry, samples, order);
 
             // estimate OOB error
             int oob = 0;

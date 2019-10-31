@@ -153,7 +153,7 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
     }
 
     /**
-     * Learns a gradient tree boosting for regression.
+     * Fits a gradient tree boosting for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -163,7 +163,7 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
     }
 
     /**
-     * Learns a gradient tree boosting for regression.
+     * Fits a gradient tree boosting for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -171,38 +171,32 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
     public static GradientTreeBoost fit(Formula formula, DataFrame data, Properties prop) {
         int ntrees = Integer.valueOf(prop.getProperty("smile.gbt.trees", "500"));
         Loss loss = Loss.valueOf(prop.getProperty("smile.gbt.loss", "LeastAbsoluteDeviation"));
+        int maxDepth = Integer.valueOf(prop.getProperty("smile.gbt.max.depth", "20"));
         int maxNodes = Integer.valueOf(prop.getProperty("smile.gbt.max.nodes", "6"));
         int nodeSize = Integer.valueOf(prop.getProperty("smile.gbt.node.size", "5"));
         double shrinkage = Double.valueOf(prop.getProperty("smile.gbt.shrinkage", "0.05"));
         double subsample = Double.valueOf(prop.getProperty("smile.gbt.sample.rate", "0.7"));
-        return fit(formula, data, loss, ntrees, maxNodes, nodeSize, shrinkage, subsample);
+        return fit(formula, data, loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
     }
 
     /**
-     * Learns a gradient tree boosting for regression.
+     * Fits a gradient tree boosting for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param loss loss function for regression. By default, least absolute
      * deviation is employed for robust regression.
      * @param ntrees the number of iterations (trees).
-     * @param maxNodes the number of leaves in each tree.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the number of instances in a node below which the tree will
      *                 not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
      */
-    public static GradientTreeBoost fit(Formula formula, DataFrame data, Loss loss, int ntrees, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+    public static GradientTreeBoost fit(Formula formula, DataFrame data, Loss loss, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-        }
-
-        if (maxNodes < 2) {
-            throw new IllegalArgumentException("Invalid maximum number of leaves: " + maxNodes);
-        }
-
-        if (nodeSize < 1) {
-            throw new IllegalArgumentException("Invalid minimum size of leaves: " + nodeSize);
         }
 
         if (shrinkage <= 0 || shrinkage > 1) {
@@ -283,7 +277,7 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
             }
 
             logger.info("Training {} tree", Strings.ordinal(t+1));
-            trees[t] = new RegressionTree(x, response, field, maxNodes, nodeSize, x.ncols(), samples, order, output);
+            trees[t] = new RegressionTree(x, response, field, maxDepth, maxNodes, nodeSize, x.ncols(), samples, order, output);
 
             for (int i = 0; i < n; i++) {
                 residual[i] -= shrinkage * trees[t].predict(x.get(i));

@@ -62,12 +62,16 @@ println(test)
 val classWeight = Array(4, 1)
 
 // Random Forest
-println("Training Random Forest of 100 trees...")
+println("Training Random Forest of 500 trees...")
 val forest = test2soft(formula, train, test) { (formula, data) =>
-  randomForest(formula, data, 100, 2, SplitRule.GINI, 3000, 5, 1.0, classWeight)
+  randomForest(formula, data, 500, subsample = 0.632, classWeight = classWeight)
 }
 
-val depth = forest.trees.map(_.root.depth.toDouble)
+val leafs = forest.trees.map(_.root.leafs)
+println("Tree Leaf Nodes:")
+summary(leafs)
+
+val depth = forest.trees.map(_.root.depth)
 println("Tree Depth:")
 summary(depth)
 
@@ -76,11 +80,11 @@ println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
 // Gradient Tree Boost
 println("Training Gradient Tree Boost of 300 trees...")
 test2soft(formula, train, test) { (formula, data) =>
-  gbm(formula, train, 300, 6, 5, 0.1, 0.5)
+  gbm(formula, train, 300, shrinkage = 0.1, subsample = 0.632)
 }
 
 // AdaBoost
 println("Training AdaBoost of 300 trees...")
 test2soft(formula, train, test) { (formula, data) =>
-  adaboost(formula, train, 300, 6, 5)
+  adaboost(formula, train, 300)
 }

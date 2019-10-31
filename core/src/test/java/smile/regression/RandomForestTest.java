@@ -95,7 +95,7 @@ public class RandomForestTest {
         System.out.println("longley");
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        RandomForest model = RandomForest.fit(Longley.formula, Longley.data, 100, 3, 10, 3, 1.0, Optional.of(Arrays.stream(seeds)));
+        RandomForest model = RandomForest.fit(Longley.formula, Longley.data, 100, 3, 20, 10, 3, 1.0, Optional.of(Arrays.stream(seeds)));
 
         double[] importance = model.importance();
         System.out.println("----- importance -----");
@@ -116,7 +116,7 @@ public class RandomForestTest {
             System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.of(Longley.y, test[i]));
         }
 
-        double[] prediction = LOOCV.regression(Longley.data, x -> RandomForest.fit(Longley.formula, x, 100, 3, 10, 3, 1.0, Optional.of(Arrays.stream(seeds))));
+        double[] prediction = LOOCV.regression(Longley.data, x -> RandomForest.fit(Longley.formula, x, 100, 3, 20, 10, 3, 1.0, Optional.of(Arrays.stream(seeds))));
         double rmse = RMSE.of(Longley.y, prediction);
 
         System.out.println("LOOCV RMSE = " + rmse);
@@ -127,7 +127,7 @@ public class RandomForestTest {
         System.out.println(name);
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        double[] prediction = CrossValidation.regression(3, data, x -> RandomForest.fit(formula, x, 100, 3, 100, 5, 1.0, Optional.of(Arrays.stream(seeds))));
+        double[] prediction = CrossValidation.regression(3, data, x -> RandomForest.fit(formula, x, 100, 3, 20, 100, 5, 1.0, Optional.of(Arrays.stream(seeds))));
         double rmse = RMSE.of(formula.y(data).toDoubleArray(), prediction);
         System.out.format("10-CV RMSE = %.4f%n", rmse);
         assertEquals(expected, rmse, 1E-4);
@@ -149,7 +149,7 @@ public class RandomForestTest {
         test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.0978);
         test("autoMPG", AutoMPG.formula, AutoMPG.data, 2.8868);
         test("cal_housing", CalHousing.formula, CalHousing.data, 58552.3225);
-        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3148);
+        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3149);
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1704);
     }
 
@@ -157,8 +157,8 @@ public class RandomForestTest {
     public void testRandomForestMerging() throws Exception {
         System.out.println("Random forest merging");
 
-        RandomForest forest1 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 100, 5, 1.0, Optional.of(Arrays.stream(seeds)));
-        RandomForest forest2 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 100, 5, 1.0, Optional.of(Arrays.stream(seeds).skip(50)));
+        RandomForest forest1 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Optional.of(Arrays.stream(seeds)));
+        RandomForest forest2 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Optional.of(Arrays.stream(seeds).skip(50)));
         RandomForest forest = forest1.merge(forest2);
         double rmse1 = RMSE.of(Abalone.testy, Validation.test(forest1, Abalone.test));
         double rmse2 = RMSE.of(Abalone.testy, Validation.test(forest2, Abalone.test));

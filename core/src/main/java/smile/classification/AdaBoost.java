@@ -134,7 +134,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
     }
 
     /**
-     * Learns a gradient tree boosting for regression.
+     * Fits a AdaBoost model.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -144,39 +144,33 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
     }
 
     /**
-     * Learns a gradient tree boosting for regression.
+     * Fits a AdaBoost model.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      */
     public static AdaBoost fit(Formula formula, DataFrame data, Properties prop) {
         int ntrees = Integer.valueOf(prop.getProperty("smile.adaboost.trees", "500"));
+        int maxDepth = Integer.valueOf(prop.getProperty("smile.adaboost.max.depth", "20"));
         int maxNodes = Integer.valueOf(prop.getProperty("smile.adaboost.max.nodes", "6"));
         int nodeSize = Integer.valueOf(prop.getProperty("smile.adaboost.node.size", "1"));
-        return fit(formula, data, ntrees, maxNodes, nodeSize);
+        return fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize);
     }
 
     /**
-     * Constructor.
+     * Fits a AdaBoost model.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param ntrees the number of trees.
-     * @param maxNodes the maximum number of leaf nodes in the trees.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the number of instances in a node below which the tree will
      *                 not split, setting nodeSize = 5 generally gives good results.
      */
-    public static AdaBoost fit(Formula formula, DataFrame data, int ntrees, int maxNodes, int nodeSize) {
+    public static AdaBoost fit(Formula formula, DataFrame data, int ntrees, int maxDepth, int maxNodes, int nodeSize) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-        }
-
-        if (maxNodes < 2) {
-            throw new IllegalArgumentException("Invalid maximum number of leaves: " + maxNodes);
-        }
-
-        if (nodeSize < 1) {
-            throw new IllegalArgumentException("Invalid minimum size of leaves: " + nodeSize);
         }
 
         DataFrame x = formula.x(data);
@@ -214,7 +208,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
             }
 
             logger.info("Training {} tree", Strings.ordinal(t+1));
-            trees[t] = new DecisionTree(x, codec.y, codec.field.get(), k, SplitRule.GINI, maxNodes, nodeSize, -1, samples, order);
+            trees[t] = new DecisionTree(x, codec.y, codec.field.get(), k, SplitRule.GINI, maxDepth, maxNodes, nodeSize, -1, samples, order);
             
             for (int i = 0; i < n; i++) {
                 err[i] = trees[t].predict(x.get(i)) != y.getInt(i);

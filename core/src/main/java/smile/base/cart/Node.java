@@ -45,6 +45,9 @@ public interface Node extends Serializable {
     /** Returns the number of samples in the node. */
     int size();
 
+    /** Returns the number of leaf nodes in the subtree. */
+    int leafs();
+
     /**
      * Returns the maximum depth of the tree -- the number of
      * nodes along the longest path from this node

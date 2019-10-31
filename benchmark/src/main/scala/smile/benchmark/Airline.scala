@@ -116,15 +116,9 @@ object Airline {
       case "10m" => 100
       case _ => 100
     }
-    val maxNodes = dataSize match {
-      case "0.1m" => 500
-      case "1m" => 3000
-      case "10m" => 10000
-      case _ => 100
-    }
     println(s"Training Random Forest of $ntrees trees...")
     val forest = test2soft(formula, train, test) { (formula, data) =>
-      randomForest(formula, data, ntrees, 2, SplitRule.GINI, maxNodes, 5, 1.0, classWeight)
+      randomForest(formula, data, ntrees, subsample = 0.632, classWeight =classWeight)
     }
 
     val depth = forest.trees.map(_.root.depth.toDouble)
@@ -136,13 +130,13 @@ object Airline {
     // Gradient Tree Boost
     println("Training Gradient Tree Boost of 300 trees...")
     test2soft(formula, train, test) { (formula, data) =>
-      gbm(formula, train, 300, 6, 5, 0.1, 0.5)
+      gbm(formula, train, 300, shrinkage = 0.1, subsample = 0.632)
     }
 
     // AdaBoost
     println("Training AdaBoost of 300 trees...")
     test2soft(formula, train, test) { (formula, data) =>
-      adaboost(formula, train, 300, 6, 5)
+      adaboost(formula, train, 300)
     }
   }
 }

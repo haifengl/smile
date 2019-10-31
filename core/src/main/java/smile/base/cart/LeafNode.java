@@ -40,6 +40,11 @@ public abstract class LeafNode implements Node {
     }
 
     @Override
+    public int leafs() {
+        return 1;
+    }
+
+    @Override
     public LeafNode predict(Tuple x) {
         return this;
     }
