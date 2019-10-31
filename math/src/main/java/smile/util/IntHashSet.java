@@ -20,30 +20,27 @@ package smile.util;
 import java.util.Arrays;
 
 /**
- * HashMap<int, double> for primitive types.
+ * HashSet<int> for primitive types.
  * Integer.MIN_VALUE (0x80000000) is not allowed as key.
  */
-public class IntDoubleHashMap {
+public class IntHashSet {
     private static final int FREE_KEY = Integer.MIN_VALUE;
 
-    private static final double NO_VALUE = Double.NaN;
-
     /**
-     * Keys and values.
+     * Keys.
      */
     private int[] keys;
-    private double[] values;
 
     /**
      * The load factor, must be between (0 and 1).
      */
     private final float loadFactor;
     /**
-     * We will resize a map once it reaches this size.
+     * We will resize a set once it reaches this size.
      */
     private int threshold;
     /**
-     * The number of map entries.
+     * The number of set entries.
      */
     private int size;
 
@@ -53,10 +50,10 @@ public class IntDoubleHashMap {
     private int mask;
 
     /**
-     * Constructs an empty HashMap with the default initial
+     * Constructs an empty HashSet with the default initial
      * capacity (16) and the default load factor (0.75).
      */
-    public IntDoubleHashMap() {
+    public IntHashSet() {
         this(16, 0.75f);
     }
 
@@ -66,7 +63,7 @@ public class IntDoubleHashMap {
      * @param initialCapacity the initial capacity.
      * @param loadFactor the load factor.
      */
-    public IntDoubleHashMap(int initialCapacity, float loadFactor) {
+    public IntHashSet(int initialCapacity, float loadFactor) {
         if (loadFactor <= 0 || loadFactor >= 1) {
             throw new IllegalArgumentException("Invalid fill factor: " + loadFactor);
         }
@@ -81,15 +78,13 @@ public class IntDoubleHashMap {
 
         keys = new int[capacity];
         Arrays.fill(keys, FREE_KEY);
-        values = new double[capacity];
         threshold = (int) (capacity * loadFactor);
     }
 
     /**
-     * Returns the value to which the specified key is mapped,
-     * or Double.NaN if this map contains no mapping for the key.
+     * Returns true if this set contains the specified element.
      */
-    public double get(int key) {
+    public boolean contains(int key) {
         if (key == FREE_KEY) {
             throw new IllegalArgumentException("key cannot be 0x80000000");
         }
@@ -98,14 +93,18 @@ public class IntDoubleHashMap {
 
         do {
             int k = keys[ptr];
-            if (k == FREE_KEY) return NO_VALUE;
-            if (k == key) return values[ptr];
+            if (k == FREE_KEY) return false;
+            if (k == key) return true;
             ptr = (ptr + 1) & mask; // next index
         } while (true);
     }
 
-    /** Associates the specified value with the specified key in this map. */
-    public double put(int key, double value) {
+    /**
+     * Adds the specified element to this set if it is not already present.
+     * If this set already contains the element, the call leaves the set unchanged
+     * and returns false.
+     */
+    public boolean add(int key) {
         if (key == FREE_KEY) {
             throw new IllegalArgumentException("key cannot be 0x80000000");
         }
@@ -115,26 +114,27 @@ public class IntDoubleHashMap {
             int k = keys[ptr];
             if (k == FREE_KEY) {
                 keys[ptr] = key;
-                values[ptr] = value;
                 if (++size >= threshold) {
                     rehash(keys.length * 2);
                 }
 
-                return NO_VALUE;
+                return true;
             }
 
             if (k == key) {
-                double ret = values[ptr];
-                values[ptr] = value;
-                return ret;
+                return false;
             }
 
             ptr = (ptr + 1) & mask;
         } while (true);
     }
 
-    /** Removes the mapping for the specified key from this map if present. */
-    public double remove(int key) {
+    /**
+     * Removes the specified element from this set if it is present.
+     * Returns true if this set contained the element (or equivalently,
+     * if this set changed as a result of the call).
+     */
+    public boolean remove(int key) {
         if (key == FREE_KEY) {
             throw new IllegalArgumentException("key cannot be 0x80000000");
         }
@@ -143,22 +143,32 @@ public class IntDoubleHashMap {
         do {
             int k = keys[ptr];
             if (k == FREE_KEY) {
-                return NO_VALUE;
+                return false;
             }
 
             if (k == key) {
-                double ret = values[ptr];
                 keys[ptr] = FREE_KEY;
-                return ret;
+                return true;
             }
 
             ptr = (ptr + 1) & mask;
         } while (true);
     }
 
-    /** Returns the number of key-value mappings in this map. */
+    /** Returns the number of elements in this set. */
     public int size() {
         return size;
+    }
+
+    /** Returns the elements as an array. */
+    public int[] toArray() {
+        int[] a = new int[size];
+        int i = 0;
+        for (int k : keys) {
+            if (k != FREE_KEY)
+                a[i++] = k;
+        }
+        return a;
     }
 
     /** Resize the hash table. */
@@ -168,16 +178,14 @@ public class IntDoubleHashMap {
 
         int oldCapacity = keys.length;
         int[] oldKeys = keys;
-        double[] oldValues = values;
 
         keys = new int[newCapacity];
         Arrays.fill(keys, FREE_KEY);
-        values = new double[newCapacity];
 
         for (int i = 0; i < oldCapacity; i++) {
             int oldKey = oldKeys[i];
             if (oldKey != FREE_KEY) {
-                put(oldKey, oldValues[i]);
+                add(oldKey);
             }
         }
     }
