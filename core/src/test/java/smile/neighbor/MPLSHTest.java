@@ -56,7 +56,7 @@ public class MPLSHTest {
         for (int i = 0; i < train.length; i++) {
             train[i] = x[index[i]];
         }
-        lsh.learn(naive, train, 8.0);
+        lsh.fit(naive, train, 8.0);
     }
 
     @BeforeClass
@@ -88,20 +88,21 @@ public class MPLSHTest {
                 hit++;
 
                 Neighbor truth = naive.nearest(testx[i]);
-                error += Math.abs(neighbor.distance - truth.distance) / truth.distance;
                 if (neighbor.index == truth.index) {
                     recall++;
+                } else {
+                    error += Math.abs(neighbor.distance - truth.distance) / truth.distance;
                 }
             }
         }
 
-        error /= testx.length;
+        error /= (hit - recall);
 
-        assertEquals(1734, recall);
+        assertEquals(1722, recall);
         assertEquals(2007, hit);
-        assertEquals(0.0089, error, 1E-4);
+        assertEquals(0.0687, error, 1E-4);
         System.out.format("recall is %.2f%%%n", 100.0 * recall / testx.length);
-        System.out.format("error is %.2f%%%n", 100.0 * error);
+        System.out.format("error when miss is %.2f%%%n", 100.0 * error);
         System.out.format("null rate is %.2f%%%n", 100.0 - 100.0 * hit / testx.length);
     }
 

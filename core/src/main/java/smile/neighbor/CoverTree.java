@@ -526,7 +526,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
                         d = distance.d(child.getObject(), q);
                     }
 
-                    double upperBound = emptyHeap ? Double.POSITIVE_INFINITY : heap.peek();
+                    double upperBound = emptyHeap ? Double.MAX_VALUE : heap.peek();
                     if (d <= (upperBound + child.maxDist)) {
                         if (c > 0 && d < upperBound) {
                             if (child.getObject() != q) {

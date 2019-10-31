@@ -73,7 +73,7 @@ public class Hash implements Serializable {
     /**
      * Hash table.
      */
-    private Bucket[] table;
+    Bucket[] table;
 
     /**
      * Constructor.
@@ -168,6 +168,13 @@ public class Hash implements Serializable {
         }
 
         table[i].add(index);
+    }
+
+    /**
+     * Returns the bucket entry for the given hash value.
+     */
+    public Bucket get(int i) {
+        return table[i % H];
     }
 
     /**

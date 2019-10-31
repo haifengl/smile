@@ -169,6 +169,11 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
         keys = new ArrayList<>();
         data = new ArrayList<>();
 
+        initHashTable(d, L, k, w, H);
+    }
+
+    /** Initialize the hash tables. */
+    protected void initHashTable(int d, int L, int k, double w, int H) {
         hash = new ArrayList<>(L);
         for (int i = 0; i < L; i++) {
             hash.add(new Hash(d, k, w, H));

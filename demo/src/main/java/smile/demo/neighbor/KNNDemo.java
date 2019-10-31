@@ -192,7 +192,7 @@ public class KNNDemo extends JPanel implements Runnable, ActionListener {
         for (int i = 0; i < train.length; i++) {
             train[i] = data[perm[i]];
         }
-        mplsh.learn(kdtree, train, 1.5 * radius);
+        mplsh.fit(kdtree, train, 1.5 * radius);
         int mplshBuild = (int) (System.currentTimeMillis() - time);
 
         double lshRecall = 0.0;
