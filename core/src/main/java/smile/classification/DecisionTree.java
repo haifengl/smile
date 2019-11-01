@@ -158,7 +158,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
             }
 
             for (int l : scale.values()) {
-                int tc = MathEx.sum(trueCount[l]);
+                int tc = (int) MathEx.sum(trueCount[l]);
                 int fc = node.size() - tc;
 
                 // If either side is too small, skip this value.
@@ -203,7 +203,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
                 double xij = xj.getDouble(o);
 
                 if (yi != prevy && xij != prevx) {
-                    tc = MathEx.sum(trueCount);
+                    tc = (int) MathEx.sum(trueCount);
                     fc = node.size() - tc;
                 }
 

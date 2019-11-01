@@ -45,7 +45,7 @@ public class DecisionNode extends LeafNode {
      * @param count the number of node samples in each class.
      */
     public DecisionNode(int[] count) {
-        super(MathEx.sum(count));
+        super((int) MathEx.sum(count));
         this.output = MathEx.whichMax(count);
         this.count = count;
     }

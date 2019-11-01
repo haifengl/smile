@@ -132,8 +132,8 @@ public class HexmapDemo extends JPanel {
                         }
                     }
                     
-                    int sum = MathEx.sum(count);
-                    if (sum == 0.0) {
+                    long sum = MathEx.sum(count);
+                    if (sum == 0) {
                         labels[i][j] = "no samples";
                     } else {
                         labels[i][j] = String.format("<table border=\"1\"><tr><td>Total</td><td align=\"right\">%d</td></tr>", sum);
