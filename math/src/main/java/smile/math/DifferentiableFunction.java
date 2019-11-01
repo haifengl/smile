@@ -28,4 +28,11 @@ public interface DifferentiableFunction extends Function {
      * Computes the gradient/derivative at x.
      */
     double g(double x);
+
+    /**
+     * Compute the second-order derivative at x.
+     */
+    default double g2(double x) {
+        throw new UnsupportedOperationException();
+    }
 }
