@@ -42,7 +42,7 @@ public class BKTreeTest {
 
     public BKTreeTest() {
         long start = System.currentTimeMillis();
-        bktree = new BKTree<>(new EditDistance(true));
+        bktree = new BKTree<>(new EditDistance(50, true));
         bktree.add(words);
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Building BK-tree: %.2fs%n", time);

@@ -438,7 +438,7 @@ public class EditDistance implements Metric<String> {
             int t = FKP.get(k + ZERO_K, p) + 1;
             int mnk = Math.min(x.length, y.length - k);
 
-            if (t > 1 && k + t > 1 && t < mnk) {
+            if (t >= 1 && k + t >= 1 && t < mnk) {
                 if (x[t - 1] == y[k + t] && x[t] == y[k + t - 1]) {
                     t++;
                 }
@@ -458,7 +458,7 @@ public class EditDistance implements Metric<String> {
             int t = FKP.get(k + ZERO_K, p) + 1;
             int mnk = Math.min(x.length(), y.length() - k);
 
-            if (t > 1 && k + t > 1 && t < mnk) {
+            if (t >= 1 && k + t >= 1 && t < mnk) {
                 if (x.charAt(t - 1) == y.charAt(k + t) && x.charAt(t) == y.charAt(k + t - 1)) {
                     t++;
                 }
