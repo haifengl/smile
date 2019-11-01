@@ -1045,6 +1045,27 @@ public class MathEx {
     }
 
     /**
+     * minimum of 4 integers
+     */
+    public static int min(int a, int b, int c, int d) {
+        return Math.min(Math.min(Math.min(a, b), c), d);
+    }
+
+    /**
+     * minimum of 4 floats
+     */
+    public static double min(float a, float b, float c, float d) {
+        return Math.min(Math.min(Math.min(a, b), c), d);
+    }
+
+    /**
+     * minimum of 4 doubles
+     */
+    public static double min(double a, double b, double c, double d) {
+        return Math.min(Math.min(Math.min(a, b), c), d);
+    }
+
+    /**
      * maximum of 3 integers
      */
     public static int max(int a, int b, int c) {
@@ -1063,6 +1084,27 @@ public class MathEx {
      */
     public static double max(double a, double b, double c) {
         return Math.max(Math.max(a, b), c);
+    }
+
+    /**
+     * maximum of 4 integers
+     */
+    public static int max(int a, int b, int c, int d) {
+        return Math.max(Math.max(Math.max(a, b), c), d);
+    }
+
+    /**
+     * maximum of 4 floats
+     */
+    public static float max(float a, float b, float c, float d) {
+        return Math.max(Math.max(Math.max(a, b), c), d);
+    }
+
+    /**
+     * maximum of 4 doubles
+     */
+    public static double max(double a, double b, double c, double d) {
+        return Math.max(Math.max(Math.max(a, b), c), d);
     }
 
     /**
