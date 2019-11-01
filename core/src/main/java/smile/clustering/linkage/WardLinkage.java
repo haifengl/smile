@@ -17,6 +17,8 @@
 
 package smile.clustering.linkage;
 
+import smile.math.distance.Distance;
+
 /**
  * Ward's linkage. Ward's linkage follows the analysis of variance approach
  * The dissimilarity between two clusters is computed as the
@@ -44,10 +46,13 @@ public class WardLinkage extends Linkage {
     }
 
     /**
-     * Constructor.
+     * Constructor. Initialize the linkage with the lower triangular proximity matrix.
      * @param size the data size.
      * @param proximity column-wise linearized proximity matrix that stores
-     *                  only the lower half without diagonal elements.
+     *                  only the lower half. The length of proximity should be
+     *                  size * (size+1) / 2.
+     *                  To save space, Linkage will use this argument directly
+     *                  without copy. The elements may be modified.
      */
     public WardLinkage(int size, float[] proximity) {
         super(size, proximity);
@@ -64,6 +69,16 @@ public class WardLinkage extends Linkage {
         for (int i = 0; i < proximity.length; i++) {
             proximity[i] *= proximity[i];
         }
+    }
+
+    /** Given a set of data, computes the proximity and then the linkage. */
+    public static WardLinkage of(double[][] data) {
+        return new WardLinkage(data.length, proximity(data));
+    }
+
+    /** Given a set of data, computes the proximity and then the linkage. */
+    public static <T> WardLinkage of(T[] data, Distance<T> distance) {
+        return new WardLinkage(data.length, proximity(data, distance));
     }
 
     @Override

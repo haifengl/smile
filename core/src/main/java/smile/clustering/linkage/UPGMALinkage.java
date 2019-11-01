@@ -17,6 +17,8 @@
 
 package smile.clustering.linkage;
 
+import smile.math.distance.Distance;
+
 /**
  * Unweighted Pair Group Method with Arithmetic mean (also known as average linkage).
  * The distance between two clusters is the mean distance between all possible
@@ -47,10 +49,13 @@ public class UPGMALinkage extends Linkage {
     }
 
     /**
-     * Constructor.
+     * Constructor. Initialize the linkage with the lower triangular proximity matrix.
      * @param size the data size.
      * @param proximity column-wise linearized proximity matrix that stores
-     *                  only the lower half without diagonal elements.
+     *                  only the lower half. The length of proximity should be
+     *                  size * (size+1) / 2.
+     *                  To save space, Linkage will use this argument directly
+     *                  without copy. The elements may be modified.
      */
     public UPGMALinkage(int size, float[] proximity) {
         super(size, proximity);
@@ -63,6 +68,16 @@ public class UPGMALinkage extends Linkage {
         for (int i = 0; i < size; i++) {
             n[i] = 1;
         }
+    }
+
+    /** Given a set of data, computes the proximity and then the linkage. */
+    public static UPGMALinkage of(double[][] data) {
+        return new UPGMALinkage(data.length, proximity(data));
+    }
+
+    /** Given a set of data, computes the proximity and then the linkage. */
+    public static <T> UPGMALinkage of(T[] data, Distance<T> distance) {
+        return new UPGMALinkage(data.length, proximity(data, distance));
     }
 
     @Override

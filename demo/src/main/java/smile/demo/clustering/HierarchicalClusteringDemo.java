@@ -27,13 +27,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import smile.clustering.HierarchicalClustering;
-import smile.clustering.linkage.CompleteLinkage;
-import smile.clustering.linkage.SingleLinkage;
-import smile.clustering.linkage.UPGMALinkage;
-import smile.clustering.linkage.UPGMCLinkage;
-import smile.clustering.linkage.WPGMALinkage;
-import smile.clustering.linkage.WPGMCLinkage;
-import smile.clustering.linkage.WardLinkage;
+import smile.clustering.linkage.*;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.math.MathEx;
@@ -67,39 +61,34 @@ public class HierarchicalClusteringDemo extends ClusteringDemo {
     public JComponent learn() {
         long clock = System.currentTimeMillis();
         double[][] data = dataset[datasetIndex];
-        int n = data.length;
-        double[][] proximity = new double[n][];
-        for (int i = 0; i < n; i++) {
-            proximity[i] = new double[i+1];
-            for (int j = 0; j < i; j++)
-                proximity[i][j] = MathEx.distance(data[i], data[j]);
-        }
-        HierarchicalClustering hac = null;
+        Linkage linkage;
         switch (linkageBox.getSelectedIndex()) {
             case 0:
-                hac = new HierarchicalClustering(new SingleLinkage(proximity));
+                linkage = SingleLinkage.of(data);
                 break;
             case 1:
-                hac = new HierarchicalClustering(new CompleteLinkage(proximity));
+                linkage = CompleteLinkage.of(data);
                 break;
             case 2:
-                hac = new HierarchicalClustering(new UPGMALinkage(proximity));
+                linkage = UPGMALinkage.of(data);
                 break;
             case 3:
-                hac = new HierarchicalClustering(new WPGMALinkage(proximity));
+                linkage = WPGMALinkage.of(data);
                 break;
             case 4:
-                hac = new HierarchicalClustering(new UPGMCLinkage(proximity));
+                linkage = UPGMCLinkage.of(data);
                 break;
             case 5:
-                hac = new HierarchicalClustering(new WPGMCLinkage(proximity));
+                linkage = WPGMCLinkage.of(data);
                 break;
             case 6:
-                hac = new HierarchicalClustering(new WardLinkage(proximity));
+                linkage = WardLinkage.of(data);
                 break;
             default:
                 throw new IllegalStateException("Unsupported Linkage");
         }
+
+        HierarchicalClustering hac = HierarchicalClustering.fit(linkage);
         System.out.format("Hierarchical clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
         int[] membership = hac.partition(clusterNumber);

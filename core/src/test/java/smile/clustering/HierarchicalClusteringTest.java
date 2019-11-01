@@ -17,13 +17,7 @@
 
 package smile.clustering;
 
-import smile.clustering.linkage.SingleLinkage;
-import smile.clustering.linkage.WPGMCLinkage;
-import smile.clustering.linkage.WardLinkage;
-import smile.clustering.linkage.UPGMCLinkage;
-import smile.clustering.linkage.WPGMALinkage;
-import smile.clustering.linkage.UPGMALinkage;
-import smile.clustering.linkage.CompleteLinkage;
+import smile.clustering.linkage.*;
 import smile.data.USPS;
 import smile.math.MathEx;
 import smile.validation.RandIndex;
@@ -71,66 +65,63 @@ public class HierarchicalClusteringTest {
         double[][] x = USPS.x;
         int[] y = USPS.y;
 
-        int n = x.length;
-        double[][] proximity = new double[n][];
-        for (int i = 0; i < n; i++) {
-            proximity[i] = new double[i + 1];
-            for (int j = 0; j < i; j++) {
-                proximity[i][j] = MathEx.distance(x[i], x[j]);
-            }
-        }
-
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
             
-        HierarchicalClustering hc = new HierarchicalClustering(new SingleLinkage(proximity));
+        HierarchicalClustering hc = HierarchicalClustering.fit(SingleLinkage.of(x));
         int[] label = hc.partition(10);
         double r = rand.measure(y, label);
         double r2 = ari.measure(y, label);
         System.out.format("SingleLinkage rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.1);
-            
-        hc = new HierarchicalClustering(new CompleteLinkage(proximity));
+        assertEquals(0.1091, r, 1E-4);
+        assertEquals(0.0000, r2, 1E-4);
+
+        hc = HierarchicalClustering.fit(CompleteLinkage.of(x));
         label = hc.partition(10);
         r = rand.measure(y, label);
         r2 = ari.measure(y, label);
         System.out.format("CompleteLinkage rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.75);
+        assertEquals(0.8346, r, 1E-4);
+        assertEquals(0.2930, r2, 1E-4);
             
-        hc = new HierarchicalClustering(new UPGMALinkage(proximity));
+        hc = HierarchicalClustering.fit(UPGMALinkage.of(x));
         label = hc.partition(10);
         r = rand.measure(y, label);
         r2 = ari.measure(y, label);
         System.out.format("UPGMA rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.1);
+        assertEquals(0.2395, r, 1E-4);
+        assertEquals(0.0068, r2, 1E-4);
             
-        hc = new HierarchicalClustering(new WPGMALinkage(proximity));
+        hc = HierarchicalClustering.fit(WPGMALinkage.of(x));
         label = hc.partition(10);
         r = rand.measure(y, label);
         r2 = ari.measure(y, label);
         System.out.format("WPGMA rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.2);
+        assertEquals(0.7832, r, 1E-4);
+        assertEquals(0.2561, r2, 1E-4);
             
-        hc = new HierarchicalClustering(new UPGMCLinkage(proximity));
+        hc = HierarchicalClustering.fit(UPGMCLinkage.of(x));
         label = hc.partition(10);
         r = rand.measure(y, label);
         r2 = ari.measure(y, label);
         System.out.format("UPGMC rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.1);
+        assertEquals(0.1093, r, 1E-4);
+        assertEquals(0.0000, r2, 1E-4);
             
-        hc = new HierarchicalClustering(new WPGMCLinkage(proximity));
+        hc = HierarchicalClustering.fit(WPGMCLinkage.of(x));
         label = hc.partition(10);
         r = rand.measure(y, label);
         r2 = ari.measure(y, label);
         System.out.format("WPGMC rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.1);
+        assertEquals(0.1091, r, 1E-4);
+        assertEquals(0.0000, r2, 1E-4);
             
-        hc = new HierarchicalClustering(new WardLinkage(proximity));
+        hc = HierarchicalClustering.fit(WardLinkage.of(x));
         label = hc.partition(10);
         r = rand.measure(y, label);
         r2 = ari.measure(y, label);
         System.out.format("Ward rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.9);
-        assertTrue(r2 > 0.5);
+        assertEquals(0.9254, r, 1E-4);
+        assertEquals(0.6204, r2, 1E-4);
     }
 }

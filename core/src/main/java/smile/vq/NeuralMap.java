@@ -579,16 +579,13 @@ public class NeuralMap implements Clustering<double[]> {
             }
         }
         
-        double[][] proximity = new double[data.size()][];
-        for (int i = 0; i < data.size(); i++) {
-            proximity[i] = new double[i + 1];
-            for (int j = 0; j < i; j++) {
-                proximity[i][j] = MathEx.distance(data.get(i).w, data.get(j).w);
-            }
+        double[][] x = new double[data.size()][];
+        for (int i = 0; i < x.length; i++) {
+            x[i] = data.get(i).w;
         }
 
-        Linkage linkage = new UPGMALinkage(proximity);
-        HierarchicalClustering hc = new HierarchicalClustering(linkage);
+        Linkage linkage = UPGMALinkage.of(x);
+        HierarchicalClustering hc = HierarchicalClustering.fit(linkage);
         int[] y = hc.partition(k);
 
         for (int i = 0; i < data.size(); i++) {

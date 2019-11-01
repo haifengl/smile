@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Queue;
 import smile.clustering.linkage.Linkage;
@@ -52,8 +53,8 @@ import smile.sort.IntHeapSelect;
  * 
  * @author Haifeng Li
  */
-public class HierarchicalClustering {
-    private static final long serialVersionUID = 1L;
+public class HierarchicalClustering implements Serializable {
+    private static final long serialVersionUID = 2L;
 
     /**
      * An n-1 by 2 matrix of which row i describes the merging of clusters at
@@ -71,17 +72,27 @@ public class HierarchicalClustering {
 
     /**
      * Constructor.
-     * Learn the Agglomerative Hierarchical Clustering with given linkage
+     * @param tree an n-1 by 2 matrix of which row i describes the merging
+     *             of clusters at step i of the clustering.
+     * @param height the clustering height.
+     */
+    public HierarchicalClustering(int[][] tree, double[] height) {
+        this.merge = tree;
+        this.height = height;
+    }
+
+    /**
+     * Fits the Agglomerative Hierarchical Clustering with given linkage
      * method, which includes proximity matrix.
      * @param linkage a linkage method to merge clusters. The linkage object
      * includes the proximity matrix of data.
      */
-    public HierarchicalClustering(Linkage linkage) {
+    public static HierarchicalClustering fit(Linkage linkage) {
         int n = linkage.size();
 
-        merge = new int[n - 1][2];
+        int[][] merge = new int[n - 1][2];
         int[] id = new int[n];
-        height = new double[n - 1];
+        double[] height = new double[n - 1];
 
         int[] points = new int[n];
         for (int i = 0; i < n; i++) {
@@ -108,6 +119,8 @@ public class HierarchicalClustering {
                 height[i] = Math.sqrt(height[i]);
             }
         }
+
+        return new HierarchicalClustering(merge, height);
     }
 
     /**

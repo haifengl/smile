@@ -17,6 +17,8 @@
 
 package smile.clustering.linkage;
 
+import smile.math.distance.Distance;
+
 /**
  * Single linkage. The distance between groups is defined as the distance
  * between the closest pair of objects, one from each group.
@@ -44,13 +46,26 @@ public class SingleLinkage extends Linkage {
     }
 
     /**
-     * Constructor.
+     * Constructor. Initialize the linkage with the lower triangular proximity matrix.
      * @param size the data size.
      * @param proximity column-wise linearized proximity matrix that stores
-     *                  only the lower half without diagonal elements.
+     *                  only the lower half. The length of proximity should be
+     *                  size * (size+1) / 2.
+     *                  To save space, Linkage will use this argument directly
+     *                  without copy. The elements may be modified.
      */
     public SingleLinkage(int size, float[] proximity) {
         super(size, proximity);
+    }
+
+    /** Given a set of data, computes the proximity and then the linkage. */
+    public static SingleLinkage of(double[][] data) {
+        return new SingleLinkage(data.length, proximity(data));
+    }
+
+    /** Given a set of data, computes the proximity and then the linkage. */
+    public static <T> SingleLinkage of(T[] data, Distance<T> distance) {
+        return new SingleLinkage(data.length, proximity(data, distance));
     }
 
     @Override

@@ -17,6 +17,8 @@
 
 package smile.clustering.linkage;
 
+import smile.math.distance.Distance;
+
 /**
  * Weighted Pair Group Method with Arithmetic mean. WPGMA down-weights the
  * largest group by giving equal weights to the two branches of the dendrogram
@@ -40,13 +42,26 @@ public class WPGMALinkage extends Linkage {
     }
 
     /**
-     * Constructor.
+     * Constructor. Initialize the linkage with the lower triangular proximity matrix.
      * @param size the data size.
      * @param proximity column-wise linearized proximity matrix that stores
-     *                  only the lower half without diagonal elements.
+     *                  only the lower half. The length of proximity should be
+     *                  size * (size+1) / 2.
+     *                  To save space, Linkage will use this argument directly
+     *                  without copy. The elements may be modified.
      */
     public WPGMALinkage(int size, float[] proximity) {
         super(size, proximity);
+    }
+
+    /** Given a set of data, computes the proximity and then the linkage. */
+    public static WPGMALinkage of(double[][] data) {
+        return new WPGMALinkage(data.length, proximity(data));
+    }
+
+    /** Given a set of data, computes the proximity and then the linkage. */
+    public static <T> WPGMALinkage of(T[] data, Distance<T> distance) {
+        return new WPGMALinkage(data.length, proximity(data, distance));
     }
 
     @Override
