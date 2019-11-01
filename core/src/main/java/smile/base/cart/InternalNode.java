@@ -176,7 +176,7 @@ public abstract class InternalNode implements Node {
             for (int i = 0; i < k; i++) {
                 count[i] = c1[i] + c2[i];
             }
-            size = MathEx.sum(count);
+            size = (int) MathEx.sum(count);
         }
 
         StringBuilder line = new StringBuilder();

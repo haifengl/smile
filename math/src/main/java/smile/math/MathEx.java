@@ -1387,6 +1387,45 @@ public class MathEx {
     /**
      * Returns the row minimum for a matrix.
      */
+    public static int[] rowMin(int[][] data) {
+        int[] x = new int[data.length];
+
+        for (int i = 0; i < x.length; i++) {
+            x[i] = min(data[i]);
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the row maximum for a matrix.
+     */
+    public static int[] rowMax(int[][] data) {
+        int[] x = new int[data.length];
+
+        for (int i = 0; i < x.length; i++) {
+            x[i] = max(data[i]);
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the row sums for a matrix.
+     */
+    public static long[] rowSums(int[][] data) {
+        long[] x = new long[data.length];
+
+        for (int i = 0; i < x.length; i++) {
+            x[i] = sum(data[i]);
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the row minimum for a matrix.
+     */
     public static double[] rowMin(double[][] data) {
         double[] x = new double[data.length];
 
@@ -1452,11 +1491,60 @@ public class MathEx {
     /**
      * Returns the column minimum for a matrix.
      */
+    public static int[] colMin(int[][] data) {
+        int[] x = new int[data[0].length];
+        Arrays.fill(x, Integer.MAX_VALUE);
+
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < x.length; j++) {
+                if (x[j] > data[i][j]) {
+                    x[j] = data[i][j];
+                }
+            }
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the column maximum for a matrix.
+     */
+    public static int[] colMax(int[][] data) {
+        int[] x = new int[data[0].length];
+        Arrays.fill(x, Integer.MIN_VALUE);
+
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < x.length; j++) {
+                if (x[j] < data[i][j]) {
+                    x[j] = data[i][j];
+                }
+            }
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the column sums for a matrix.
+     */
+    public static long[] colSums(int[][] data) {
+        long[] x = new long[data[0].length];
+
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < x.length; j++) {
+                x[j] += data[i][j];
+            }
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the column minimum for a matrix.
+     */
     public static double[] colMin(double[][] data) {
         double[] x = new double[data[0].length];
-        for (int i = 0; i < x.length; i++) {
-            x[i] = Double.POSITIVE_INFINITY;
-        }
+        Arrays.fill(x, Double.POSITIVE_INFINITY);
 
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < x.length; j++) {
@@ -1474,9 +1562,7 @@ public class MathEx {
      */
     public static double[] colMax(double[][] data) {
         double[] x = new double[data[0].length];
-        for (int i = 0; i < x.length; i++) {
-            x[i] = Double.NEGATIVE_INFINITY;
-        }
+        Arrays.fill(x, Double.NEGATIVE_INFINITY);
 
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < x.length; j++) {
@@ -1563,17 +1649,13 @@ public class MathEx {
     /**
      * Returns the sum of an array.
      */
-    public static int sum(int[] x) {
+    public static long sum(int[] x) {
         long sum = 0;
 
         for (int n : x) {
             sum += n;
         }
 
-        if (sum > Integer.MAX_VALUE || sum < Integer.MIN_VALUE) {
-            throw new ArithmeticException("Sum overflow: " + sum);
-        }
-        
         return (int) sum;
     }
 
