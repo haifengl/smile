@@ -23,14 +23,13 @@ package smile.math.matrix
   */
 object matrix {
   /** Creates a matrix filled with given value. */
-  def apply(nrows: Int, ncols: Int, value: Double) = Matrix.of(nrows, ncols, value)
+  def apply(nrows: Int, ncols: Int, value: Double = 0.0) = Matrix.of(nrows, ncols, value)
 
   /** Creates a Matrix instance. */
   def apply(A: Array[Array[Double]]) = Matrix.of(A)
 
   /** Creates a Matrix instance. */
   def apply(A: Array[Double]*) = Matrix.of(A.toArray)
-
 
   /** Creates a single column matrix. */
   def apply(A: Array[Double]) = Matrix.of(A)

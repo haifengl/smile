@@ -40,7 +40,9 @@ public class NDMatrix implements DenseMatrix {
         // (float). Here we set the order globally to double precision.
         // Alternatively, we can set the property when launching the JVM:
         // -Ddtype=double
-        Nd4j.setDataType(org.nd4j.linalg.api.buffer.DataBuffer.Type.DOUBLE);
+
+        // since beta4
+        Nd4j.setDefaultDataTypes(org.nd4j.linalg.api.buffer.DataType.DOUBLE, org.nd4j.linalg.api.buffer.DataType.DOUBLE);
     }
 
     /**
