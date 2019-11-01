@@ -676,7 +676,12 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
 
     @Override
     public int predict(double[] x) {
-        return predict(x, null);
+        if (k == 2) {
+            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
+            return labels.label(f < 0.5 ? 0 : 1);
+        } else {
+            return predict(x, new double[k]);
+        }
     }
 
     @Override
@@ -685,24 +690,18 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        if (posteriori != null && posteriori.length != k) {
+        if (posteriori.length != k) {
             throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
         }
 
         if (k == 2) {
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
 
-            if (posteriori != null) {
-                posteriori[0] = 1.0 - f;
-                posteriori[1] = f;
-            }
+            posteriori[0] = 1.0 - f;
+            posteriori[1] = f;
 
             return labels.label(f < 0.5 ? 0 : 1);
         } else {
-            if (posteriori == null) {
-                posteriori = new double[k];
-            }
-
             posteriori[k-1] = 0.0;
             for (int i = 0; i < k-1; i++) {
                 posteriori[i] = dot(x, W[i]);
