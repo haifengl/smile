@@ -49,28 +49,67 @@ trait Operators {
     * <h2>References</h2>
     *  - David Eppstein. Fast hierarchical clustering and other applications of dynamic closest pairs. SODA 1998.
     *
-    * @param proximity The proximity matrix to store the distance measure of
-    *                  dissimilarity. To save space, we only need the lower half of matrix.
+    * @param data The data set.
     * @param method the agglomeration method to merge clusters. This should be one of
     *                "single", "complete", "upgma", "upgmc", "wpgma", "wpgmc", and "ward".
     */
-  def hclust(proximity: Array[Array[Double]], method: String): HierarchicalClustering = {
+  def hclust(data: Array[Array[Double]], method: String): HierarchicalClustering = {
     val linkage = method match {
-      case "single" => new SingleLinkage(proximity)
-      case "complete" => new CompleteLinkage(proximity)
-      case "upgma" | "average" => new UPGMALinkage(proximity)
-      case "upgmc" | "centroid" => new UPGMCLinkage(proximity)
-      case "wpgma" => new WPGMALinkage(proximity)
-      case "wpgmc" | "median" => new WPGMCLinkage(proximity)
-      case "ward" => new WardLinkage(proximity)
+      case "single" => SingleLinkage.of(data)
+      case "complete" => CompleteLinkage.of(data)
+      case "upgma" | "average" => UPGMALinkage.of(data)
+      case "upgmc" | "centroid" => UPGMCLinkage.of(data)
+      case "wpgma" => WPGMALinkage.of(data)
+      case "wpgmc" | "median" => WPGMCLinkage.of(data)
+      case "ward" => WardLinkage.of(data)
       case _ => throw new IllegalArgumentException(s"Unknown agglomeration method: $method")
     }
 
     time("Hierarchical clustering") {
-      new HierarchicalClustering(linkage)
+      HierarchicalClustering.fit(linkage)
     }
   }
 
+  /** Agglomerative Hierarchical Clustering. This method
+    * seeks to build a hierarchy of clusters in a bottom up approach: each
+    * observation starts in its own cluster, and pairs of clusters are merged as
+    * one moves up the hierarchy. The results of hierarchical clustering are
+    * usually presented in a dendrogram.
+    *
+    * In general, the merges are determined in a greedy manner. In order to decide
+    * which clusters should be combined, a measure of dissimilarity between sets
+    * of observations is required. In most methods of hierarchical clustering,
+    * this is achieved by use of an appropriate metric, and a linkage criteria
+    * which specifies the dissimilarity of sets as a function of the pairwise
+    * distances of observations in the sets.
+    *
+    * Hierarchical clustering has the distinct advantage that any valid measure
+    * of distance can be used. In fact, the observations themselves are not
+    * required: all that is used is a matrix of distances.
+    *
+    * <h2>References</h2>
+    *  - David Eppstein. Fast hierarchical clustering and other applications of dynamic closest pairs. SODA 1998.
+    *
+    * @param data The data set.
+    * @param method the agglomeration method to merge clusters. This should be one of
+    *                "single", "complete", "upgma", "upgmc", "wpgma", "wpgmc", and "ward".
+    */
+  def hclust[T <: Object](data: Array[T], distance: Distance[T], method: String): HierarchicalClustering = {
+    val linkage = method match {
+      case "single" => SingleLinkage.of(data, distance)
+      case "complete" => CompleteLinkage.of(data, distance)
+      case "upgma" | "average" => UPGMALinkage.of(data, distance)
+      case "upgmc" | "centroid" => UPGMCLinkage.of(data, distance)
+      case "wpgma" => WPGMALinkage.of(data, distance)
+      case "wpgmc" | "median" => WPGMCLinkage.of(data, distance)
+      case "ward" => WardLinkage.of(data, distance)
+      case _ => throw new IllegalArgumentException(s"Unknown agglomeration method: $method")
+    }
+
+    time("Hierarchical clustering") {
+      HierarchicalClustering.fit(linkage)
+    }
+  }
   /** K-Means clustering. The algorithm partitions n observations into k clusters in which
     * each observation belongs to the cluster with the nearest mean.
     * Although finding an exact solution to the k-means problem for arbitrary

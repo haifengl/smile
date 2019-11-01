@@ -427,16 +427,8 @@ public class SOM implements Clustering<double[]> {
             }
         }
 
-        double[][] proximity = new double[n][];
-        for (int i = 0; i < n; i++) {
-            proximity[i] = new double[i + 1];
-            for (int j = 0; j < i; j++) {
-                proximity[i][j] = MathEx.distance(units[i], units[j]);
-            }
-        }
-
-        Linkage linkage = new UPGMALinkage(proximity);
-        HierarchicalClustering hc = new HierarchicalClustering(linkage);
+        Linkage linkage = UPGMALinkage.of(units);
+        HierarchicalClustering hc = HierarchicalClustering.fit(linkage);
         y = hc.partition(k);
 
         int[] cluster = new int[bmu.length];

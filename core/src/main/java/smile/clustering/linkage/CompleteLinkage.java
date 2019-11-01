@@ -17,6 +17,10 @@
 
 package smile.clustering.linkage;
 
+import smile.math.distance.Distance;
+
+import java.util.Comparator;
+
 /**
  * Complete linkage. This is the opposite of single linkage. Distance between
  * groups is now defined as the distance between the most distant pair of
@@ -35,13 +39,26 @@ public class CompleteLinkage extends Linkage {
     }
 
     /**
-     * Constructor.
+     * Constructor. Initialize the linkage with the lower triangular proximity matrix.
      * @param size the data size.
      * @param proximity column-wise linearized proximity matrix that stores
-     *                  only the lower half without diagonal elements.
+     *                  only the lower half. The length of proximity should be
+     *                  size * (size+1) / 2.
+     *                  To save space, Linkage will use this argument directly
+     *                  without copy. The elements may be modified.
      */
     public CompleteLinkage(int size, float[] proximity) {
         super(size, proximity);
+    }
+
+    /** Given a set of data, computes the proximity and then the linkage. */
+    public static CompleteLinkage of(double[][] data) {
+        return new CompleteLinkage(data.length, proximity(data));
+    }
+
+    /** Given a set of data, computes the proximity and then the linkage. */
+    public static <T> CompleteLinkage of(T[] data, Distance<T> distance) {
+        return new CompleteLinkage(data.length, proximity(data, distance));
     }
 
     @Override

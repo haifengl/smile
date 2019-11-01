@@ -378,20 +378,13 @@ public class GrowingNeuralGas implements Clustering<double[]> {
      * @param k the number of clusters.
      */
     public void partition(int k) {
-        double[][] reps = new double[nodes.size()][];
-        int i = 0;
-        for (Node neuron : nodes)
-            reps[i++] = neuron.w;
-
-        double[][] proximity = new double[nodes.size()][];
-        for (i = 0; i < nodes.size(); i++) {
-            proximity[i] = new double[i+1];
-            for (int j = 0; j < i; j++)
-                proximity[i][j] = MathEx.distance(reps[i], reps[j]);
+        double[][] x = new double[nodes.size()][];
+        for (int i = 0; i < x.length; i++) {
+            x[i] = nodes.get(i).w;
         }
-        
-        Linkage linkage = new UPGMALinkage(proximity);
-        HierarchicalClustering hc = new HierarchicalClustering(linkage);
+
+        Linkage linkage = UPGMALinkage.of(x);
+        HierarchicalClustering hc = HierarchicalClustering.fit(linkage);
         y = hc.partition(k);
     }
 

@@ -17,6 +17,9 @@
 
 package smile.clustering.linkage;
 
+import smile.math.MathEx;
+import smile.math.distance.Distance;
+
 /**
  * A measure of dissimilarity between clusters (i.e. sets of observations).
  * 
@@ -45,7 +48,7 @@ public abstract class Linkage {
 
     /** Initialize the linkage with the lower triangular proximity matrix. */
     public Linkage(double[][] proximity) {
-        size = proximity.length;
+        this.size = proximity.length;
         this.proximity = new float[size * (size+1) / 2];
 
         // row wise
@@ -71,7 +74,7 @@ public abstract class Linkage {
      * @param size the data size.
      * @param proximity column-wise linearized proximity matrix that stores
      *                  only the lower half. The length of proximity should be
-     *                  size * (size+1) / 2;
+     *                  size * (size+1) / 2.
      *                  To save space, Linkage will use this argument directly
      *                  without copy. The elements may be modified.
      */
@@ -110,4 +113,36 @@ public abstract class Linkage {
      * @param j cluster id.
      */
     public abstract void merge(int i, int j);
+
+    /** Calculate the proximity matrix (linearized in column major) with Euclidean distance. */
+    public static float[] proximity(double[][] data) {
+        int n = data.length;
+        int length = n * (n+1) / 2;
+
+        float[] proximity = new float[length];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                int k = length - (n-j)*(n-j+1)/2 + i - j;
+                proximity[k] = (float) MathEx.distance(data[i], data[j]);
+            }
+        }
+
+        return proximity;
+    }
+
+    /** Calculate the proximity matrix (linearized in column major). */
+    public static <T> float[] proximity(T[] data, Distance<T> distance) {
+        int n = data.length;
+        int length = n * (n+1) / 2;
+
+        float[] proximity = new float[length];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                int k = length - (n-j)*(n-j+1)/2 + i - j;
+                proximity[k] = (float) distance.d(data[i], data[j]);
+            }
+        }
+
+        return proximity;
+    }
 }

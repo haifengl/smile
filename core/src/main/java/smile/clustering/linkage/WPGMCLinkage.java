@@ -17,6 +17,8 @@
 
 package smile.clustering.linkage;
 
+import smile.math.distance.Distance;
+
 /**
  * Weighted Pair Group Method using Centroids (also known as median linkage).
  * The distance between two clusters is the Euclidean distance between their
@@ -34,11 +36,15 @@ public class WPGMCLinkage extends Linkage {
         super(proximity);
         init();
     }
+
     /**
-     * Constructor.
+     * Constructor. Initialize the linkage with the lower triangular proximity matrix.
      * @param size the data size.
      * @param proximity column-wise linearized proximity matrix that stores
-     *                  only the lower half without diagonal elements.
+     *                  only the lower half. The length of proximity should be
+     *                  size * (size+1) / 2.
+     *                  To save space, Linkage will use this argument directly
+     *                  without copy. The elements may be modified.
      */
     public WPGMCLinkage(int size, float[] proximity) {
         super(size, proximity);
@@ -50,6 +56,16 @@ public class WPGMCLinkage extends Linkage {
         for (int i = 0; i < proximity.length; i++) {
             proximity[i] *= proximity[i];
         }
+    }
+
+    /** Given a set of data, computes the proximity and then the linkage. */
+    public static WPGMCLinkage of(double[][] data) {
+        return new WPGMCLinkage(data.length, proximity(data));
+    }
+
+    /** Given a set of data, computes the proximity and then the linkage. */
+    public static <T> WPGMCLinkage of(T[] data, Distance<T> distance) {
+        return new WPGMCLinkage(data.length, proximity(data, distance));
     }
 
     @Override

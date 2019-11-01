@@ -421,16 +421,8 @@ public class BIRCH implements Clustering<double[]> {
         centroids = centers.toArray(new double[n][]);
 
         if (n > k) {
-            double[][] proximity = new double[n][];
-            for (int i = 0; i < n; i++) {
-                proximity[i] = new double[i + 1];
-                for (int j = 0; j < i; j++) {
-                    proximity[i][j] = MathEx.distance(centroids[i], centroids[j]);
-                }
-            }
-
-            Linkage linkage = new WardLinkage(proximity);
-            HierarchicalClustering hc = new HierarchicalClustering(linkage);
+            Linkage linkage = WardLinkage.of(centroids);
+            HierarchicalClustering hc = HierarchicalClustering.fit(linkage);
 
             int[] y = hc.partition(k);
 
