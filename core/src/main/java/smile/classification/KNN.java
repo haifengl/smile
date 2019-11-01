@@ -171,7 +171,17 @@ public class KNN<T> implements SoftClassifier<T> {
 
     @Override
     public int predict(T x) {
-        return predict(x, null);
+        Neighbor<T,T>[] neighbors = knn.knn(x, k);
+        if (k == 1) {
+            return y[neighbors[0].index];
+        }
+
+        int[] count = new int[labels.size()];
+        for (int i = 0; i < k; i++) {
+            count[labels.id(y[neighbors[i].index])]++;
+        }
+
+        return labels.label(MathEx.whichMax(count));
     }
 
     @Override
@@ -186,10 +196,8 @@ public class KNN<T> implements SoftClassifier<T> {
             count[labels.id(y[neighbors[i].index])]++;
         }
 
-        if (posteriori != null) {
-            for (int i = 0; i < count.length; i++) {
-                posteriori[i] = (double) count[i] / k;
-            }
+        for (int i = 0; i < count.length; i++) {
+            posteriori[i] = (double) count[i] / k;
         }
 
         return labels.label(MathEx.whichMax(count));

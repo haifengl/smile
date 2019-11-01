@@ -218,17 +218,13 @@ public class QDA implements SoftClassifier<double[]> {
 
     @Override
     public int predict(double[] x) {
-        return predict(x, null);
+        return predict(x, new double[k]);
     }
 
     @Override
     public int predict(double[] x, double[] posteriori) {
         if (x.length != p) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
-        }
-
-        if (posteriori == null) {
-            posteriori = new double[k];
         }
 
         double[] d = new double[p];
