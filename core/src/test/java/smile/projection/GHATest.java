@@ -115,12 +115,9 @@ public class GHATest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class GHA.
-     */
     @Test
-    public void testLearn() {
-        System.out.println("learn");
+    public void test() {
+        System.out.println("GHA");
 
         int k = 3;
         double[] mu = MathEx.colMeans(USArrests);
@@ -134,7 +131,7 @@ public class GHATest {
         for (int iter = 1, t = 0; iter <= 1000; iter++) {
             double error = 0.0;
             for (int i = 0; i < USArrests.length; i++, t++) {
-                error += gha.learn(USArrests[i]);
+                error += gha.update(USArrests[i]);
             }
             error /= USArrests.length;
 

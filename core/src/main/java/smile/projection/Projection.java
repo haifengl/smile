@@ -30,10 +30,10 @@ public interface Projection<T> {
     /**
      * Project a data point to the feature space.
      */
-    public double[] project(T x);
+    double[] project(T x);
 
     /**
-     * Project a set of data toe the feature space.
+     * Project a set of data to the feature space.
      */
-    public double[][] project(T[] x);
+    double[][] project(T[] x);
 }

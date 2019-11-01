@@ -63,7 +63,7 @@ trait Operators {
     * @param cor true if use correlation matrix instead of covariance matrix if ture.
     */
   def pca(data: Array[Array[Double]], cor: Boolean = false): PCA = time("PCA") {
-    new PCA(data, cor)
+    if (cor) PCA.cor(data) else PCA.fit(data)
   }
 
   /** Probabilistic principal component analysis. PPCA is a simplified factor analysis
@@ -84,7 +84,7 @@ trait Operators {
     * @param k the number of principal component to learn.
     */
   def ppca(data: Array[Array[Double]], k: Int): PPCA = time("Probabilistic PCA") {
-    new PPCA(data, k)
+    PPCA.fit(data, k)
   }
 
   /** Kernel principal component analysis. Kernel PCA is an extension of
@@ -115,7 +115,7 @@ trait Operators {
     *                  the given threshold will be kept.
     */
   def kpca[T <: Object](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T] = time("Kernel PCA") {
-    new KPCA[T](data, kernel, k, threshold)
+    KPCA.fit(data, kernel, k, threshold)
   }
 
   /** Generalized Hebbian Algorithm. GHA is a linear feed-forward neural
@@ -151,7 +151,7 @@ trait Operators {
     */
   def gha(data: Array[Array[Double]], w: Array[Array[Double]], r: Double): GHA = time("Generalized Hebbian Algorithm") {
     val model = new GHA(w, r)
-    data.foreach(model.learn(_))
+    data.foreach(model.update(_))
     model
   }
 
@@ -163,7 +163,7 @@ trait Operators {
     */
   def gha(data: Array[Array[Double]], k: Int, r: Double): GHA = time("Generalized Hebbian Algorithm") {
     val model = new GHA(data(0).length, k, r)
-    data.foreach(model.learn(_))
+    data.foreach(model.update(_))
     model
   }
 }

@@ -25,13 +25,14 @@ import smile.math.matrix.Cholesky;
 import smile.math.matrix.EVD;
 
 /**
- * Probabilistic principal component analysis. PPCA is a simplified factor analysis
- * that employs a latent variable model with linear relationship:
+ * Probabilistic principal component analysis. Probabilistic PCA is
+ * a simplified factor analysis that employs a latent variable model
+ * with linear relationship:
  * <pre>
  *     y &sim; W * x + &mu; + &epsilon;
  * </pre>
  * where latent variables x &sim; N(0, I), error (or noise) &epsilon; &sim; N(0, &Psi;),
- * and &mu; is the location term (mean). In PPCA, an isotropic noise model is used,
+ * and &mu; is the location term (mean). In probabilistic PCA, an isotropic noise model is used,
  * i.e., noise variances constrained to be equal (&Psi;<sub>i</sub> = &sigma;<sup>2</sup>).
  * A close form of estimation of above parameters can be obtained
  * by maximum likelihood method.
@@ -45,7 +46,7 @@ import smile.math.matrix.EVD;
  *
  * @author Haifeng Li
  */
-public class PPCA implements Projection<double[]>, Serializable {
+public class PPCA implements LinearProjection, Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -61,13 +62,30 @@ public class PPCA implements Projection<double[]>, Serializable {
      */
     private double noise;
     /**
-     * Loading matrix.
+     * The loading matrix.
      */
     private DenseMatrix loading;
     /**
-     * Projection matrix.
+     * The projection matrix.
      */
     private DenseMatrix projection;
+
+    /**
+     * Constructor.
+     * @param noise the variance of noise.
+     * @param mu the mean of samples.
+     * @param loading the loading matrix.
+     * @param projection the projection matrix.
+     */
+    public PPCA(double noise, double[] mu, DenseMatrix loading, DenseMatrix projection) {
+        this.noise = noise;
+        this.mu = mu;
+        this.loading = loading;
+        this.projection = projection;
+
+        pmu = new double[projection.nrows()];
+        projection.ax(mu, pmu);
+    }
 
     /**
      * Returns the variable loading matrix, ordered from largest to smallest
@@ -95,6 +113,7 @@ public class PPCA implements Projection<double[]>, Serializable {
      * Returns the projection matrix. Note that this is not the matrix W in the
      * latent model.
      */
+    @Override
     public DenseMatrix getProjection() {
         return projection;
     }
@@ -126,15 +145,15 @@ public class PPCA implements Projection<double[]>, Serializable {
     }
 
     /**
-     * Constructor. Learn probabilistic principal component analysis.
+     * Fits probabilistic principal component analysis.
      * @param data training data of which each row is a sample.
      * @param k the number of principal component to learn.
      */
-    public PPCA(double[][] data, int k) {
+    public static PPCA fit(double[][] data, int k) {
         int m = data.length;
         int n = data[0].length;
 
-        mu = MathEx.colMeans(data);
+        double[] mu = MathEx.colMeans(data);
         DenseMatrix cov = Matrix.zeros(n, n);
         for (int l = 0; l < m; l++) {
             for (int i = 0; i < n; i++) {
@@ -156,13 +175,13 @@ public class PPCA implements Projection<double[]>, Serializable {
         double[] evalues = eigen.getEigenValues();
         DenseMatrix evectors = eigen.getEigenVectors();
 
-        noise = 0.0;
+        double noise = 0.0;
         for (int i = k; i < n; i++) {
             noise += evalues[i];
         }
         noise /= (n - k);
 
-        loading = Matrix.zeros(n, k);
+        DenseMatrix loading = Matrix.zeros(n, k);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < k; j++) {
                 loading.set(i, j, evectors.get(i, j) * Math.sqrt(evalues[j] - noise));
@@ -176,9 +195,8 @@ public class PPCA implements Projection<double[]>, Serializable {
 
         Cholesky chol = M.cholesky();
         DenseMatrix Mi = chol.inverse();
-        projection = Mi.abtmm(loading);
+        DenseMatrix projection = Mi.abtmm(loading);
 
-        pmu = new double[projection.nrows()];
-        projection.ax(mu, pmu);
+        return new PPCA(noise, mu, loading, projection);
     }
 }

@@ -52,7 +52,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
         JPanel pane = new JPanel(new GridLayout(2, 2));
 
         long clock = System.currentTimeMillis();
-        PCA pca = new PCA(data, true);
+        PCA pca = PCA.cor(data);
         System.out.format("Learn PCA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
         pca.setProjection(2);
@@ -89,7 +89,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
         plot.setTitle("PCA");
         pane.add(plot);
 
-        RandomProjection rp = new RandomProjection(data[0].length, 2, sparseBox.isSelected());
+        RandomProjection rp = sparseBox.isSelected() ? RandomProjection.sparse(data[0].length, 0) : RandomProjection.of(data[0].length, 2);
         System.out.format("%d x %d Random Projection:\n", data[0].length, 3);
         DenseMatrix projection = rp.getProjection();
         for (int i = 0; i < projection.nrows(); i++) {
@@ -114,7 +114,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
         plot.setTitle("Random Projection");
         pane.add(plot);
 
-        rp = new RandomProjection(data[0].length, 3, sparseBox.isSelected());
+        rp = sparseBox.isSelected() ?  RandomProjection.sparse(data[0].length, 3) : RandomProjection.of(data[0].length, 3);
         System.out.format("%d x %d Random Projection:\n", data[0].length, 3);
         projection = rp.getProjection();
         for (int i = 0; i < projection.nrows(); i++) {

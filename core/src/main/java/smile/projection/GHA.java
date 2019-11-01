@@ -56,7 +56,7 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class GHA implements Projection<double[]>, Serializable {
+public class GHA implements LinearProjection, Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -133,6 +133,7 @@ public class GHA implements Projection<double[]>, Serializable {
      * matrix are the first p eigenvectors of covariance matrix, ordered by decreasing
      * eigenvalues. The dimension reduced data can be obtained by y = W * x.
      */
+    @Override
     public DenseMatrix getProjection() {
         return projection;
     }
@@ -152,36 +153,12 @@ public class GHA implements Projection<double[]>, Serializable {
         return this;
     }
 
-    @Override
-    public double[] project(double[] x) {
-        if (x.length != n) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, n));
-        }
-
-        double[] wx = new double[p];
-        projection.ax(x, wx);
-        return wx;
-    }
-
-    @Override
-    public double[][] project(double[][] x) {
-        if (x[0].length != n) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x[0].length, n));
-        }
-
-        double[][] wx = new double[x.length][p];
-        for (int i = 0; i < x.length; i++) {
-            projection.ax(x[i], wx[i]);
-        }
-        return wx;
-    }
-
     /**
      * Update the model with a new sample.
      * @param x the centered learning sample whose E(x) = 0.
      * @return the approximation error for input sample.
      */
-    public double learn(double[] x) {
+    public double update(double[] x) {
         if (x.length != n) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, n));
         }

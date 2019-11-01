@@ -52,24 +52,26 @@ public class RandomProjectionTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of getProjection method, of class RandomProjection.
-     */
     @Test
     public void testRandomProjection() {
-        System.out.println("getProjection");
-        RandomProjection instance = new RandomProjection(128, 40);
+        System.out.println("regular random projection");
+        RandomProjection instance = RandomProjection.of(128, 40);
 
         DenseMatrix p = instance.getProjection();
         DenseMatrix t = p.aat();
 
-        for (int i = 0; i < t.nrows(); i++) {
-            for (int j = 0; j < t.ncols(); j++) {
-                System.out.format("% .4f ", t.get(i, j));
-            }
-            System.out.println();
-        }
-
+        System.out.println(p.toString(true));
         assertTrue(MathEx.equals(Matrix.eye(40).data(), t.data(), 1E-10));
+    }
+
+    @Test
+    public void testSparseRandomProjection() {
+        System.out.println("sparse random projection");
+        RandomProjection instance = RandomProjection.sparse(128, 40);
+
+        DenseMatrix p = instance.getProjection();
+        DenseMatrix t = p.aat();
+
+        System.out.println(p.toString(true));
     }
 }
