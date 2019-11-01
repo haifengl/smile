@@ -15,24 +15,28 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.math;
+package smile.projection.ica;
+
+import smile.math.DifferentiableFunction;
 
 /**
- * A differentiable function is a function whose derivative exists at each point
- * in its domain.
- *
- * @author Haifeng Li
+ * This function is justified on statistical grounds only for
+ * estimating sub-Gaussian independent components when there are no outliers.
  */
-public interface DifferentiableFunction extends Function {
-    /**
-     * Computes the gradient/derivative at x.
-     */
-    double g(double x);
+public class Kurtosis implements DifferentiableFunction {
 
-    /**
-     * Compute the second-order derivative at x.
-     */
-    default double g2(double x) {
-        throw new UnsupportedOperationException();
+    @Override
+    public double f(double x) {
+        return 0.25 * x * x * x * x;
+    }
+
+    @Override
+    public double g(double x) {
+        return x * x * x;
+    }
+
+    @Override
+    public double g2(double x) {
+        return 3 * x * x;
     }
 }

@@ -15,24 +15,28 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.math;
+package smile.projection.ica;
+
+import smile.math.DifferentiableFunction;
 
 /**
- * A differentiable function is a function whose derivative exists at each point
- * in its domain.
- *
- * @author Haifeng Li
+ * A good general-purpose function for ICA.
  */
-public interface DifferentiableFunction extends Function {
-    /**
-     * Computes the gradient/derivative at x.
-     */
-    double g(double x);
+public class LogCosh implements DifferentiableFunction {
 
-    /**
-     * Compute the second-order derivative at x.
-     */
-    default double g2(double x) {
-        throw new UnsupportedOperationException();
+    @Override
+    public double f(double x) {
+        return Math.log(Math.cosh(x));
+    }
+
+    @Override
+    public double g(double x) {
+        return Math.tanh(x);
+    }
+
+    @Override
+    public double g2(double x) {
+        double tanh = Math.tanh(x);
+        return 1 - tanh * tanh;
     }
 }
