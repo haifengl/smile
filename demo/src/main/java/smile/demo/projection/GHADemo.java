@@ -46,7 +46,7 @@ public class GHADemo extends ProjectionDemo {
         JPanel pane = new JPanel(new GridLayout(2, 2));
 
         long clock = System.currentTimeMillis();
-        PCA pca = new PCA(data, true);
+        PCA pca = PCA.cor(data);
         System.out.format("Learn PCA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
         pca.setProjection(2);
@@ -88,7 +88,7 @@ public class GHADemo extends ProjectionDemo {
         for (int iter = 1; iter <= 500; iter++) {
             double error = 0.0;
             for (int i = 0; i < data.length; i++) {
-                error += gha.learn(data[i]);
+                error += gha.update(data[i]);
             }
             error /= data.length;
 
@@ -117,7 +117,7 @@ public class GHADemo extends ProjectionDemo {
         for (int iter = 1; iter <= 500; iter++) {
             double error = 0.0;
             for (int i = 0; i < data.length; i++) {
-                error += gha.learn(data[i]);
+                error += gha.update(data[i]);
             }
             error /= data.length;
 

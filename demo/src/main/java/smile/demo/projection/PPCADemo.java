@@ -46,7 +46,7 @@ public class PPCADemo extends ProjectionDemo {
         JPanel pane = new JPanel(new GridLayout(2, 2));
 
         long clock = System.currentTimeMillis();
-        PCA pca = new PCA(data, true);
+        PCA pca = PCA.cor(data);
         System.out.format("Learn PCA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
         pca.setProjection(2);
@@ -83,7 +83,7 @@ public class PPCADemo extends ProjectionDemo {
         plot.setTitle("PCA");
         pane.add(plot);
 
-        PPCA ppca = new PPCA(data, 2);
+        PPCA ppca = PPCA.fit(data, 2);
         y = ppca.project(data);
         plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
@@ -100,7 +100,7 @@ public class PPCADemo extends ProjectionDemo {
         pane.add(plot);
 
         clock = System.currentTimeMillis();
-        ppca = new PPCA(data, 3);
+        ppca = PPCA.fit(data, 3);
         System.out.format("Learn PPCA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
         y = ppca.project(data);
         plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));

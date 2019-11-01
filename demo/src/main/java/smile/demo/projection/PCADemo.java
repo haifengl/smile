@@ -55,7 +55,7 @@ public class PCADemo extends ProjectionDemo {
         boolean cor = corBox.getSelectedIndex() != 0;
 
         long clock = System.currentTimeMillis();
-        PCA pca = new PCA(data, cor);
+        PCA pca = cor ? PCA.cor(data) : PCA.fit(data);
         System.out.format("Learn PCA from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
         JPanel pane = new JPanel(new GridLayout(1, 2));

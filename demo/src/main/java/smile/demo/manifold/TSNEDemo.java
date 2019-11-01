@@ -84,7 +84,7 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
     public JComponent learn() {
         JPanel pane = new JPanel(new GridLayout(1, 2));
 
-        PCA pca = new PCA(data);
+        PCA pca = PCA.fit(data);
         pca.setProjection(50);
         double[][] X = pca.project(data);
         long clock = System.currentTimeMillis();

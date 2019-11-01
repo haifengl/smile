@@ -79,7 +79,7 @@ public class KPCADemo extends ProjectionDemo {
         gammaNumberField.setText(String.format("%.4f", gamma[datasetIndex]));
 
         long clock = System.currentTimeMillis();
-        PCA pca = new PCA(data, true);
+        PCA pca = PCA.cor(data);
         System.out.format("Learn PCA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
         pca.setProjection(2);
@@ -116,7 +116,7 @@ public class KPCADemo extends ProjectionDemo {
         plot.setTitle("PCA");
         pane.add(plot);
 
-        KPCA<double[]> kpca = new KPCA<>(data, new GaussianKernel(gamma[datasetIndex]), 2);
+        KPCA<double[]> kpca = KPCA.fit(data, new GaussianKernel(gamma[datasetIndex]), 2);
 
         y = kpca.getCoordinates();
         plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
@@ -134,7 +134,7 @@ public class KPCADemo extends ProjectionDemo {
         pane.add(plot);
 
         clock = System.currentTimeMillis();
-        kpca = new KPCA<>(data, new GaussianKernel(gamma[datasetIndex]), 3);
+        kpca = KPCA.fit(data, new GaussianKernel(gamma[datasetIndex]), 3);
         System.out.format("Learn KPCA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
         y = kpca.getCoordinates();
