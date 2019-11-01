@@ -52,6 +52,19 @@ public class Beta {
      * Continued Fraction approximation (see Numerical recipies for details)
      */
     public static double regularizedIncompleteBetaFunction(double alpha, double beta, double x) {
+        // This function is often used to calculate p-value of model fitting.
+        // Due to floating error, the model may provide a x that could be slightly
+        // greater than 1 or less than 0. We allow tiny slack here to avoid brute exception.
+        final double EPS = 1E-8;
+
+        if (Math.abs(x) < EPS) {
+            return 0.0;
+        }
+
+        if (Math.abs(x - 1.0) < EPS) {
+            return 1.0;
+        }
+
         if (x < 0.0 || x > 1.0) {
             throw new IllegalArgumentException("Invalid x: " + x);
         }
