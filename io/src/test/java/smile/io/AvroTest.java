@@ -29,6 +29,9 @@ import smile.data.type.StructField;
 import smile.math.matrix.DenseMatrix;
 import smile.util.Paths;
 
+import java.io.InputStream;
+import java.nio.file.Files;
+
 import static org.junit.Assert.*;
 
 /**
@@ -41,7 +44,8 @@ public class AvroTest {
 
     public AvroTest() {
         try {
-            Schema schema = new Schema.Parser().parse(Paths.getTestData("avro/userdata.avsc").toFile());
+            InputStream stream = Files.newInputStream(Paths.getTestData("avro/userdata.avsc"));
+            Schema schema = new Schema.Parser().parse(stream);
             Avro avro = new Avro(schema);
             df = avro.read(Paths.getTestData("avro/userdata1.avro"));
         } catch (Exception ex) {

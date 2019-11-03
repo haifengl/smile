@@ -18,22 +18,20 @@
 package smile.io;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.avro.Schema;
-import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.util.Utf8;
 import smile.data.DataFrame;
 import smile.data.Tuple;
-import smile.data.measure.DiscreteMeasure;
-import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
@@ -73,7 +71,7 @@ public class Avro {
      * @param schemaFile Avro schema file path.
      */
     public Avro(Path schemaFile) throws IOException {
-        schema = new Schema.Parser().parse(schemaFile.toFile());
+        schema = new Schema.Parser().parse(Files.newInputStream(schemaFile));
         if (schema.getType() != Schema.Type.RECORD) {
             throw new IllegalArgumentException("The type of schema is not Record");
         }
@@ -95,8 +93,8 @@ public class Avro {
      * @param limit reads a limited number of records.
      */
     public DataFrame read(Path path, int limit) throws IOException {
-        DatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>(schema);
-        try (DataFileReader<GenericRecord> dataFileReader = new DataFileReader<GenericRecord>(path.toFile(), datumReader)) {
+        DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
+        try (DataFileStream<GenericRecord> dataFileReader = new DataFileStream<>(Files.newInputStream(path), datumReader)) {
             StructType struct = toSmileSchema(schema);
 
             List<Tuple> rows = new ArrayList<>();

@@ -31,14 +31,11 @@ import org.apache.parquet.io.SeekableInputStream;
  * Adapted from https://github.com/tideworks/arvo2parquet
  */
 public class LocalInputFile implements InputFile {
-    /** Local file path. */
-    private final Path path;
     /** Local file object. */
     private final RandomAccessFile input;
 
     /** Constructor. */
     public LocalInputFile(Path path) throws FileNotFoundException {
-        this.path = path;
         input = new RandomAccessFile(path.toFile(), "r");
     }
 

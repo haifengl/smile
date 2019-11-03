@@ -17,11 +17,12 @@
 
 package smile.io;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.*;
 import java.util.Arrays;
@@ -31,8 +32,8 @@ import java.util.stream.Collectors;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
-import org.apache.arrow.vector.ipc.ArrowFileReader;
-import org.apache.arrow.vector.ipc.ArrowFileWriter;
+import org.apache.arrow.vector.ipc.ArrowStreamReader;
+import org.apache.arrow.vector.ipc.ArrowStreamWriter;
 import org.apache.arrow.vector.ipc.message.ArrowBlock;
 import org.apache.arrow.vector.types.DateUnit;
 import org.apache.arrow.vector.types.FloatingPointPrecision;
@@ -130,26 +131,16 @@ public class Arrow {
             allocate(Long.MAX_VALUE);
         }
 
-        try (FileInputStream input = new FileInputStream(path.toFile());
-             ArrowFileReader reader = new ArrowFileReader(input.getChannel(), allocator)) {
+        try (InputStream input = Files.newInputStream(path);
+             ArrowStreamReader reader = new ArrowStreamReader(input, allocator)) {
 
             // The holder for a set of vectors to be loaded/unloaded.
             VectorSchemaRoot root = reader.getVectorSchemaRoot();
-            List<ArrowBlock> blocks = reader.getRecordBlocks();
-            if (blocks.isEmpty()) {
-                throw new IOException("No data blocks in Arrow file");
-            }
-
-            DataFrame[] frames = new DataFrame[blocks.size()];
+            List<DataFrame> frames = new ArrayList<>();
             int size = 0;
-            for (int i = 0; i < frames.length && size < limit; i++) {
-                ArrowBlock block = blocks.get(i);
-                if (!reader.loadRecordBatch(block)) {
-                    throw new IOException("Failed to load record batch: " + block);
-                }
-
+            while (reader.loadNextBatch() && size < limit) {
                 List<FieldVector> fieldVectors = root.getFieldVectors();
-                logger.info("read {} rows and {} columns from block {}", root.getRowCount(), fieldVectors.size(), block);
+                logger.info("read {} rows and {} columns", root.getRowCount(), fieldVectors.size());
 
                 smile.data.vector.BaseVector[] vectors = new smile.data.vector.BaseVector[fieldVectors.size()];
                 for (int j = 0; j < fieldVectors.size(); j++) {
@@ -218,15 +209,18 @@ public class Arrow {
                     }
                 }
 
-                frames[i] = DataFrame.of(vectors);
-                size += frames[i].size();
+                DataFrame frame = DataFrame.of(vectors);
+                frames.add(frame);
+                size += frames.size();
             }
 
-            if (frames.length == 1) {
-                return frames[0];
+            if (frames.isEmpty()) {
+                throw new IllegalStateException("No record batch");
+            } else if (frames.size() == 1) {
+                return frames.get(0);
             } else {
-                DataFrame df = frames[0];
-                return df.union(Arrays.copyOfRange(frames, 1, frames.length));
+                DataFrame df = frames.get(0);
+                return df.union(frames.subList(1, frames.size()).toArray(new DataFrame[frames.size() - 1]));
             }
         }
     }
@@ -251,8 +245,8 @@ public class Arrow {
          */
         DictionaryProvider provider = new DictionaryProvider.MapDictionaryProvider();
         try (VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator);
-             FileOutputStream output = new FileOutputStream(path.toFile());
-             ArrowFileWriter writer = new ArrowFileWriter(root, provider, output.getChannel())) {
+             OutputStream output = Files.newOutputStream(path);
+             ArrowStreamWriter writer = new ArrowStreamWriter(root, provider, output)) {
 
             writer.start();
             final int size = df.size();

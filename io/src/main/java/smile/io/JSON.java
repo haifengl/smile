@@ -115,7 +115,7 @@ public class JSON {
         ObjectMapper objectMapper = new ObjectMapper();
 
         if (mode == Mode.MULTI_LINE) {
-            List<Map<String, String>> maps = objectMapper.readValue(path.toFile(), new TypeReference<List<Map<String, String>>>(){});
+            List<Map<String, String>> maps = objectMapper.readValue(Files.newBufferedReader(path), new TypeReference<List<Map<String, String>>>(){});
             for (Map<String, String> map : maps) {
                 rows.add(toTuple(map, parser));
                 if (rows.size() >= limit) break;
@@ -159,7 +159,7 @@ public class JSON {
         ObjectMapper objectMapper = new ObjectMapper();
 
         if (mode == Mode.MULTI_LINE) {
-            List<Map<String, String>> maps = objectMapper.readValue(path.toFile(), new TypeReference<List<Map<String, String>>>(){});
+            List<Map<String, String>> maps = objectMapper.readValue(Files.newBufferedReader(path), new TypeReference<List<Map<String, String>>>(){});
             for (Map<String, String> map : maps) {
                 rows.add(map);
                 if (rows.size() >= limit) break;
