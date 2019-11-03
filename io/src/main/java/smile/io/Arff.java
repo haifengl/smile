@@ -458,7 +458,7 @@ public class Arff implements AutoCloseable {
      * @param relation the relation name of ARFF.
      */
     public static void write(DataFrame df, Path path, String relation) throws IOException {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(path.toFile()))) {
+        try (PrintWriter writer = new PrintWriter(Files.newOutputStream(path))) {
 
             writer.print("@RELATION ");
             writer.println(relation);
