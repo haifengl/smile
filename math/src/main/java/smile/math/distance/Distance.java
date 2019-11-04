@@ -18,6 +18,7 @@
 package smile.math.distance;
 
 import java.io.Serializable;
+import java.util.function.ToDoubleBiFunction;
 
 /**
  * An interface to calculate a distance measure between two objects. A distance
@@ -32,7 +33,7 @@ import java.io.Serializable;
  *
  * @author Haifeng Li
  */
-public interface Distance<T> extends Serializable {
+public interface Distance<T> extends ToDoubleBiFunction<T,T>, Serializable {
     /**
      * Returns the distance measure between two objects.
      */
@@ -43,6 +44,11 @@ public interface Distance<T> extends Serializable {
      * This is simply for Scala convenience.
      */
     default double apply(T x, T y) {
+        return d(x, y);
+    }
+
+    @Override
+    default double applyAsDouble(T x, T y) {
         return d(x, y);
     }
 }
