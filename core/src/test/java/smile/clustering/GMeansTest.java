@@ -18,6 +18,7 @@
 package smile.clustering;
 
 import smile.data.USPS;
+import smile.math.MathEx;
 import smile.validation.RandIndex;
 import smile.validation.AdjustedRandIndex;
 import org.junit.After;
@@ -56,6 +57,8 @@ public class GMeansTest {
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 
+        MathEx.setSeed(19650218); // to get repeatable results.
+
         double[][] x = USPS.x;
         int[] y = USPS.y;
         double[][] testx = USPS.testx;
@@ -67,10 +70,10 @@ public class GMeansTest {
             
         double r = rand.measure(y, gmeans.y);
         double r2 = ari.measure(y, gmeans.y);
-        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.85);
-        assertTrue(r2 > 0.4);
-            
+        System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertEquals(0.9137, r, 1E-4);
+        assertEquals(0.5485, r2, 1E-4);
+
         int[] p = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
             p[i] = gmeans.predict(testx[i]);
@@ -78,8 +81,8 @@ public class GMeansTest {
             
         r = rand.measure(testy, p);
         r2 = ari.measure(testy, p);
-        System.out.format("Testing rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.85);
-        assertTrue(r2 > 0.4);
+        System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertEquals(0.9012, r, 1E-4);
+        assertEquals(0.4822, r2, 1E-4);
     }
 }

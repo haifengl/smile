@@ -134,7 +134,7 @@ public class GMeans extends CentroidClustering<double[], double[]> {
                 MathEx.standardize(x);
 
                 score[i] = AndersonDarling(x);
-                logger.info(String.format("Cluster %3d\tAnderson-Darling adjusted test statistic: %3.4f", i, score[i]));
+                logger.info(String.format("Cluster %d Anderson-Darling adjusted test statistic: %7.4f", i, score[i]));
             }
 
             int[] index = QuickSort.sort(score);
@@ -143,7 +143,7 @@ public class GMeans extends CentroidClustering<double[], double[]> {
                     centers.add(centroids[index[i]]);
                 }
             }
-            
+
             int m = centers.size();
             for (int i = k; --i >= 0;) {
                 if (score[i] > 1.8692) {
@@ -168,7 +168,7 @@ public class GMeans extends CentroidClustering<double[], double[]> {
                 distortion = wcss;
             }
 
-            logger.info(String.format("G-Means distortion with %d clusters: %.5f%n", k, distortion));
+            logger.info(String.format("Distortion with %d clusters: %.5f%n", k, distortion));
         }
 
         return new GMeans(distortion, centroids, y);

@@ -117,7 +117,7 @@ public class SpectralClustering extends PartitionClustering implements Serializa
 
     /**
      * Spectral clustering the data.
-     * @param data the dataset for clustering.
+     * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
      * @param sigma the smooth/width parameter of Gaussian kernel, which is
      *              a somewhat sensitive parameter. To search for the best
@@ -130,7 +130,7 @@ public class SpectralClustering extends PartitionClustering implements Serializa
 
     /**
      * Spectral clustering the data.
-     * @param data the dataset for clustering.
+     * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
      * @param sigma the smooth/width parameter of Gaussian kernel, which is
      *              a somewhat sensitive parameter. To search for the best
@@ -165,9 +165,9 @@ public class SpectralClustering extends PartitionClustering implements Serializa
 
     /**
      * Spectral clustering with Nystrom approximation.
-     * @param data the dataset for clustering.
-     * @param l the number of random samples for Nystrom approximation.
+     * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
+     * @param l the number of random samples for Nystrom approximation.
      * @param sigma the smooth/width parameter of Gaussian kernel, which is
      *              a somewhat sensitive parameter. To search for the best
      *              setting, one may pick the value that gives the tightest
@@ -179,9 +179,9 @@ public class SpectralClustering extends PartitionClustering implements Serializa
 
     /**
      * Spectral clustering with Nystrom approximation.
-     * @param data the dataset for clustering.
-     * @param l the number of random samples for Nystrom approximation.
+     * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
+     * @param l the number of random samples for Nystrom approximation.
      * @param sigma the smooth/width parameter of Gaussian kernel, which is
      *              a somewhat sensitive parameter. To search for the best
      *              setting, one may pick the value that gives the tightest

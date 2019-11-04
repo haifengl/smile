@@ -59,6 +59,7 @@ import smile.util.MulticoreExecutor;
  */
 public class CLARANS<T> extends CentroidClustering<T, T> {
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CLARANS.class);
 
     /**
      * Constructor.
@@ -135,6 +136,7 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
         for (int neighborCount = 1; neighborCount <= maxNeighbor; neighborCount++) {
             double randomNeighborDistortion = getRandomNeighbor(data, newMedoids, newY, newD, distance);
             if (randomNeighborDistortion < distortion) {
+                logger.info(String.format("Distortion reduces to %.4f after %3d random neighbors", distortion, neighborCount));
                 neighborCount = 0;
                 distortion = randomNeighborDistortion;
                 System.arraycopy(newMedoids, 0, medoids, 0, k);
@@ -146,6 +148,8 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
                 System.arraycopy(d, 0, newD, 0, n);
             }
         }
+
+        logger.info(String.format("Final distortion: %.4f", distortion));
 
         return new CLARANS<>(distortion, medoids, y, distance);
     }

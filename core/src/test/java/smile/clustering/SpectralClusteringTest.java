@@ -18,6 +18,7 @@
 package smile.clustering;
 
 import smile.data.USPS;
+import smile.math.MathEx;
 import smile.validation.RandIndex;
 import smile.validation.AdjustedRandIndex;
 import org.junit.After;
@@ -53,12 +54,10 @@ public class SpectralClusteringTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class SpectralClustering.
-     */
     @Test(expected = Test.None.class)
     public void testUSPS() throws Exception {
         System.out.println("USPS");
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = USPS.x;
         int[] y = USPS.y;
@@ -70,16 +69,15 @@ public class SpectralClusteringTest {
         double r = rand.measure(y, spectral.y);
         double r2 = ari.measure(y, spectral.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.85);
-        assertTrue(r2 > 0.45);
+        assertEquals(0.9128, r, 1E-4);
+        assertEquals(0.5371, r2, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class SpectralClustering.
-     */
     @Test(expected = Test.None.class)
     public void testUSPSNystrom() throws Exception {
         System.out.println("USPS Nystrom approximation");
+        MathEx.setSeed(19650218); // to get repeatable results.
+
         double[][] x = USPS.x;
         int[] y = USPS.y;
 
@@ -90,7 +88,7 @@ public class SpectralClusteringTest {
         double r = rand.measure(y, spectral.y);
         double r2 = ari.measure(y, spectral.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.8);
-        assertTrue(r2 > 0.35);
+        assertEquals(0.8995, r, 1E-4);
+        assertEquals(0.4757, r2, 1E-4);
     }
 }

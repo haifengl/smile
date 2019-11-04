@@ -26,8 +26,8 @@ import static org.junit.Assert.*;
 
 import smile.data.Dataset;
 import smile.data.Instance;
-import smile.data.SparseDataset;
 import smile.io.DatasetReader;
+import smile.math.MathEx;
 import smile.util.SparseArray;
 import smile.validation.AdjustedRandIndex;
 import smile.validation.RandIndex;
@@ -63,6 +63,9 @@ public class SIBTest {
     @Test(expected = Test.None.class)
     public void testParseNG20() throws Exception {
         System.out.println("NG20");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+
         Dataset<Instance<SparseArray>> train = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
         Dataset<Instance<SparseArray>> test = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
 
@@ -77,10 +80,10 @@ public class SIBTest {
         RandIndex rand = new RandIndex();
         double r = rand.measure(y, sib.y);
         double r2 = ari.measure(y, sib.y);
-        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.85);
-        assertTrue(r2 > 0.2);
-            
+        System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertEquals(0.8842, r, 1E-4);
+        assertEquals(0.2327, r2, 1E-4);
+
         int[] p = new int[test.size()];
         for (int i = 0; i < test.size(); i++) {
             p[i] = sib.predict(test.get(i).x());
@@ -88,8 +91,8 @@ public class SIBTest {
             
         r = rand.measure(testy, p);
         r2 = ari.measure(testy, p);
-        System.out.format("Testing rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.85);
-        assertTrue(r2 > 0.2);
+        System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertEquals(0.8782, r, 1E-4);
+        assertEquals(0.2287, r2, 1E-4);
     }
 }

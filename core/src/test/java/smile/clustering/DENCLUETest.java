@@ -67,7 +67,7 @@ public class DENCLUETest {
         double r = rand.measure(label, denclue.y);
         double r2 = ari.measure(label, denclue.y);
         System.out.println("The number of clusters: " + denclue.k);
-        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertTrue(r > 0.54);
         assertTrue(r2 > 0.2);
     }
