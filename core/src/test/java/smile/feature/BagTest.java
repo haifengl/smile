@@ -54,9 +54,6 @@ public class BagTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of the uniqueness of features in the class Bag
-     */
     @Test(expected = IllegalArgumentException.class)
     public void testUniquenessOfFeatures() {
         System.out.println("unique features");
@@ -64,14 +61,14 @@ public class BagTest {
         Bag bag = new Bag(features);
     }
 
-    /**
-     * Test of feature method, of class Bag.
-     */
     @Test(expected = Test.None.class)
     public void testFeature() throws IOException {
         System.out.println("feature");
-        Stream<String> lines = Files.lines(smile.util.Paths.getTestData("text/movie.txt"));
-        String[][] text = lines.map(line -> line.trim().split("\\s+")).toArray(String[][]::new);
+        String[][] text = smile.util.Paths.getTestDataLines("text/movie.txt")
+                .map(String::trim)
+                .filter(line -> !line.isEmpty())
+                .map(line -> line.split("\\s+"))
+                .toArray(String[][]::new);
 
         String[] feature = {
             "outstanding", "wonderfully", "wasted", "lame", "awful", "poorly",

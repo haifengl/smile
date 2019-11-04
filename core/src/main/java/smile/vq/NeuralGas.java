@@ -19,7 +19,9 @@ package smile.vq;
 
 import java.util.Arrays;
 
+import smile.clustering.CentroidClustering;
 import smile.clustering.ClusteringDistance;
+import smile.clustering.KMeans;
 import smile.clustering.PartitionClustering;
 import smile.math.MathEx;
 
@@ -59,20 +61,11 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class NeuralGas extends PartitionClustering<double[]> {
-    /**
-     * The total distortion.
-     */
-    double distortion;
-    /**
-     * The centroids of each cluster.
-     */
-    double[][] centroids;
-
+public class NeuralGas extends CentroidClustering<double[], double[]> {
     /**
      * A class representing a node for all neural gas algorithms.
      */
-    class Neuron implements Comparable<Neuron> {
+    static class Neuron implements Comparable<Neuron> {
         /**
          * Reference vector.
          */
@@ -91,8 +84,18 @@ public class NeuralGas extends PartitionClustering<double[]> {
 
         @Override
         public int compareTo(Neuron o) {
-            return (int) Math.signum(dist - o.dist);
+            return Double.compare(dist, o.dist);
         }
+    }
+
+    /**
+     * Constructor.
+     * @param distortion the total distortion.
+     * @param centroids the centroids of each cluster.
+     * @param y the cluster labels.
+     */
+    public NeuralGas(double distortion, double[][] centroids, int[] y) {
+        super(distortion, centroids, y, MathEx::squaredDistance);
     }
 
     /**
@@ -100,8 +103,8 @@ public class NeuralGas extends PartitionClustering<double[]> {
      * @param k the number of units in the neural gas. It is also the number
      * of clusters.
      */
-    public NeuralGas(double[][] data, int k) {
-        this(data, k, Math.min(10, Math.max(1, k/2)), 0.01, 0.5, 0.005, 25);
+    public static NeuralGas fit(double[][] data, int k) {
+        return fit(data, k, Math.min(10, Math.max(1, k/2)), 0.01, 0.5, 0.005, 25);
     }
 
     /**
@@ -118,7 +121,7 @@ public class NeuralGas extends PartitionClustering<double[]> {
      * @param steps the number of iterations. Note that for one iteration, we
      * mean that the learning process goes through the whole dataset.
      */
-    public NeuralGas(double[][] data, int k, double lambda_i, double lambda_f, double eps_i, double eps_f, int steps) {
+    public static NeuralGas fit(double[][] data, int k, double lambda_i, double lambda_f, double eps_i, double eps_f, int steps) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid number of clusters: " + k);
         }
@@ -149,28 +152,15 @@ public class NeuralGas extends PartitionClustering<double[]> {
         
         int n = data.length;
         int d = data[0].length;
-        this.k = k;
 
-        // We use k-means++ seeding method to initialize neurons.
-        y = seed(data, k, ClusteringDistance.EUCLIDEAN);
+        double[][] medoids = new double[k][];
+        int[] y = new int[n];
+        double[] dist = new double[n];
+        seed(data, medoids, y, dist, MathEx::squaredDistance);
 
-        size = new int[k];
-        for (int i = 0; i < n; i++) {
-            size[y[i]]++;
-        }
-
-        centroids = new double[k][d];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < d; j++) {
-                centroids[y[i]][j] += data[i][j];
-            }
-        }
-
-        for (int i = 0; i < k; i++) {
-            for (int j = 0; j < d; j++) {
-                centroids[i][j] /= size[i];
-            }
-        }
+        int[] size = new int[k];
+        double[][] centroids = new double[k][d];
+        KMeans.updateCentroids(centroids, data, y, size);
 
         Neuron[] nodes = new Neuron[k];
         for (int i = 0; i < k; i++) {
@@ -200,79 +190,7 @@ public class NeuralGas extends PartitionClustering<double[]> {
             }
         }
 
-        distortion = 0.0;
-        for (int i = 0; i < n; i++) {
-            double nearest = Double.MAX_VALUE;
-            for (int j = 0; j < k; j++) {
-                double dist = MathEx.squaredDistance(data[i], centroids[j]);
-                if (nearest > dist) {
-                    y[i] = j;
-                    nearest = dist;
-                }
-            }
-            distortion += nearest;
-        }
-
-        Arrays.fill(size, 0);
-
-        for (int i = 0; i < data.length; i++) {
-            size[y[i]]++;
-        }
-    }
-
-    /**
-     * Returns the distortion.
-     */
-    public double distortion() {
-        return distortion;
-    }
-
-    /**
-     * Returns the centroids/neurons.
-     */
-    public double[][] centroids() {
-        return centroids;
-    }
-
-    /**
-     * Returns the centroids/neurons.
-     */
-    public double[][] neurons() {
-        return centroids;
-    }
-
-    /**
-     * Cluster a new instance.
-     * @param x a new instance.
-     * @return the cluster label, which is the index of nearest centroid.
-     */
-    @Override
-    public int predict(double[] x) {
-        double minDist = Double.MAX_VALUE;
-        int bestCluster = 0;
-
-        for (int i = 0; i < k; i++) {
-            double dist = MathEx.squaredDistance(x, centroids[i]);
-            if (dist < minDist) {
-                minDist = dist;
-                bestCluster = i;
-            }
-        }
-
-        return bestCluster;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append(String.format("Neural Gas distortion: %.5f%n", distortion));
-        sb.append(String.format("Clusters of %d data points of dimension %d:%n", y.length, centroids[0].length));
-        for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
-            sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
-        }
-        
-        return sb.toString();
+        double distortion = assign(y, data, centroids, MathEx::squaredDistance);
+        return new NeuralGas(distortion, centroids, y);
     }
 }

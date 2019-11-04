@@ -22,6 +22,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.UUID;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -39,15 +41,11 @@ public class SimpleCorpusTest {
     SimpleCorpus corpus = new SimpleCorpus();
 
     public SimpleCorpusTest() {
-        try (BufferedReader input = new BufferedReader(new FileReader(smile.util.Paths.getTestData("text/quote.tok.gt9.5000").toFile()))) {
-            String line = null;
-            int id = 0;
-            while ((line = input.readLine()) != null) {
-                line = line.trim();
-                if (!line.isEmpty()) {
-                    corpus.add(String.valueOf(id++), null, line);
-                }
-            }
+        try {
+            smile.util.Paths.getTestDataLines("text/quote.tok.gt9.5000")
+                    .map(String::trim)
+                    .filter(line -> !line.isEmpty())
+                    .forEach(line -> corpus.add(UUID.randomUUID().toString(), null, line));
         } catch (IOException ex) {
         }
     }

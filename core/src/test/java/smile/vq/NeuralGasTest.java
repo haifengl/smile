@@ -76,12 +76,12 @@ public class NeuralGasTest {
         double[][] testx = USPS.testx;
         int[] testy = USPS.testy;
 
-        NeuralGas gas = new NeuralGas(x, 10);
+        NeuralGas gas = NeuralGas.fit(x, 10);
             
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        double r = rand.measure(y, gas.getClusterLabel());
-        double r2 = ari.measure(y, gas.getClusterLabel());
+        double r = rand.measure(y, gas.y);
+        double r2 = ari.measure(y, gas.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertTrue(r > 0.88);
         assertTrue(r2 > 0.45);

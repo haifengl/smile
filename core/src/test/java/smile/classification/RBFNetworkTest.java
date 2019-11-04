@@ -141,20 +141,20 @@ public class RBFNetworkTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        KMeans kmeans = new KMeans(USPS.x, 200, 10);
+        KMeans kmeans = KMeans.fit(USPS.x, 200);
         EuclideanDistance distance = new EuclideanDistance();
-        RBF<double[]>[] neurons = RBF.of(kmeans.centroids(), new GaussianRadialBasis(8.0), distance);
+        RBF<double[]>[] neurons = RBF.of(kmeans.centroids, new GaussianRadialBasis(8.0), distance);
 
         RBFNetwork<double[]> model = RBFNetwork.fit(USPS.x, USPS.y, neurons);
         int[] prediction = Validation.test(model, USPS.testx);
         int error = Error.of(USPS.testy, prediction);
         System.out.println("RBF Network Error = " + error);
-        assertEquals(139, error);
+        assertEquals(142, error);
 
         model = RBFNetwork.fit(USPS.x, USPS.y, neurons, true);
         prediction = Validation.test(model, USPS.testx);
         error = Error.of(USPS.testy, prediction);
         System.out.println("Normalized RBF Network Error = " + error);
-        assertEquals(142, error);
+        assertEquals(143, error);
     }
 }

@@ -20,6 +20,7 @@ package smile.nlp.collocation;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -60,16 +61,11 @@ public class AprioriPhraseExtractorTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of extract method, of class AprioriPhraseExtractorTest.
-     */
     @Test
     public void testExtract() throws IOException {
         System.out.println("extract");
-        Scanner scanner = new Scanner(smile.util.Paths.getTestData("text/turing.txt"));
-        String text = scanner.useDelimiter("\\Z").next();
-        scanner.close();
-        
+        String text = new String(Files.readAllBytes(smile.util.Paths.getTestData("text/turing.txt")));
+
         PorterStemmer stemmer = new PorterStemmer();
         SimpleTokenizer tokenizer = new SimpleTokenizer();
         ArrayList<String[]> sentences = new ArrayList<>();

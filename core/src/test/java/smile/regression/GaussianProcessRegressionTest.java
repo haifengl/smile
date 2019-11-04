@@ -94,8 +94,8 @@ public class GaussianProcessRegressionTest {
         double[] prediction = cv.regression(x, CPU.y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(47.02), 0.1));
 
         double[] sparsePrediction = cv.regression(10, x, CPU.y, (xi, yi) -> {
-            KMeans kmeans = new KMeans(xi, 30, 10);
-            double[][] centers = kmeans.centroids();
+            KMeans kmeans = KMeans.fit(xi, 30);
+            double[][] centers = kmeans.centroids;
             double r0 = 0.0;
             for (int l = 0; l < centers.length; l++) {
                 for (int j = 0; j < l; j++) {
@@ -108,8 +108,8 @@ public class GaussianProcessRegressionTest {
         });
 
         double[] nystromPrediction = cv.regression(x, CPU.y, (xi, yi) -> {
-            KMeans kmeans = new KMeans(xi, 30, 10);
-            double[][] centers = kmeans.centroids();
+            KMeans kmeans = KMeans.fit(xi, 30);
+            double[][] centers = kmeans.centroids;
             double r0 = 0.0;
             for (int l = 0; l < centers.length; l++) {
                 for (int j = 0; j < l; j++) {
@@ -158,8 +158,8 @@ public class GaussianProcessRegressionTest {
         double[] prediction = cv.regression(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(34.866), 0.1));
 
         double[] sparsePrediction = cv.regression(10, datax, datay, (xi, yi) -> {
-            KMeans kmeans = new KMeans(xi, 30, 10);
-            double[][] centers = kmeans.centroids();
+            KMeans kmeans = KMeans.fit(xi, 30);
+            double[][] centers = kmeans.centroids;
             double r0 = 0.0;
             for (int l = 0; l < centers.length; l++) {
                 for (int j = 0; j < l; j++) {
@@ -172,8 +172,8 @@ public class GaussianProcessRegressionTest {
         });
 
         double[] nystromPrediction = cv.regression(datax, datay, (xi, yi) -> {
-            KMeans kmeans = new KMeans(xi, 30, 10);
-            double[][] centers = kmeans.centroids();
+            KMeans kmeans = KMeans.fit(xi, 30);
+            double[][] centers = kmeans.centroids;
             double r0 = 0.0;
             for (int l = 0; l < centers.length; l++) {
                 for (int j = 0; j < l; j++) {
@@ -192,9 +192,9 @@ public class GaussianProcessRegressionTest {
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
-        assertEquals(2.3985559673428205, rmse, 1E-4);
-        assertEquals(2.1732938822317425, sparseRMSE, 1E-4);
-        assertEquals(2.1007790802910025, nystromRMSE, 1E-4);
+        assertEquals(2.398555967342820, rmse, 1E-4);
+        assertEquals(2.176467597770095, sparseRMSE, 1E-4);
+        assertEquals(2.109326738693354, nystromRMSE, 1E-4);
     }
 
     /**
@@ -226,8 +226,8 @@ public class GaussianProcessRegressionTest {
         double[] prediction = cv.regression(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(183.96), 0.1));
 
         double[] sparsePrediction = cv.regression(10, datax, datay, (xi, yi) -> {
-            KMeans kmeans = new KMeans(xi, 30, 10);
-            double[][] centers = kmeans.centroids();
+            KMeans kmeans = KMeans.fit(xi, 30);
+            double[][] centers = kmeans.centroids;
             double r0 = 0.0;
             for (int l = 0; l < centers.length; l++) {
                 for (int j = 0; j < l; j++) {
@@ -240,8 +240,8 @@ public class GaussianProcessRegressionTest {
         });
 
         double[] nystromPrediction = cv.regression(datax, datay, (xi, yi) -> {
-            KMeans kmeans = new KMeans(xi, 30, 10);
-            double[][] centers = kmeans.centroids();
+            KMeans kmeans = KMeans.fit(xi, 30);
+            double[][] centers = kmeans.centroids;
             double r0 = 0.0;
             for (int l = 0; l < centers.length; l++) {
                 for (int j = 0; j < l; j++) {
@@ -260,9 +260,9 @@ public class GaussianProcessRegressionTest {
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
-        assertEquals(2.1630417680910705, rmse, 1E-4);
-        assertEquals(2.284741162884998, sparseRMSE, 1E-4);
-        assertEquals(2.211486804681902, nystromRMSE, 1E-4);
+        assertEquals(2.163041768091070, rmse, 1E-4);
+        assertEquals(2.287503841914310, sparseRMSE, 1E-4);
+        assertEquals(2.210658612900254, nystromRMSE, 1E-4);
     }
 
     /**
@@ -291,8 +291,8 @@ public class GaussianProcessRegressionTest {
         double[] prediction = cv.regression(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(55.3), 0.1));
 
         double[] sparsePrediction = cv.regression(10, datax, datay, (xi, yi) -> {
-            KMeans kmeans = new KMeans(xi, 30, 10);
-            double[][] centers = kmeans.centroids();
+            KMeans kmeans = KMeans.fit(xi, 30);
+            double[][] centers = kmeans.centroids;
             double r0 = 0.0;
             for (int l = 0; l < centers.length; l++) {
                 for (int j = 0; j < l; j++) {
@@ -305,8 +305,8 @@ public class GaussianProcessRegressionTest {
         });
 
         double[] nystromPrediction = cv.regression(datax, datay, (xi, yi) -> {
-            KMeans kmeans = new KMeans(xi, 30, 10);
-            double[][] centers = kmeans.centroids();
+            KMeans kmeans = KMeans.fit(xi, 30);
+            double[][] centers = kmeans.centroids;
             double r0 = 0.0;
             for (int l = 0; l < centers.length; l++) {
                 for (int j = 0; j < l; j++) {
@@ -327,7 +327,7 @@ public class GaussianProcessRegressionTest {
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
         assertEquals(0.08434491755621974, rmse, 1E-4);
         assertEquals(0.08494071211767774, sparseRMSE, 1E-4);
-        assertEquals(0.3040638473541609, nystromRMSE, 1E-4);
+        assertEquals(0.346626208923527, nystromRMSE, 1E-4);
     }
 
     /**
@@ -355,8 +355,8 @@ public class GaussianProcessRegressionTest {
         double[] prediction = cv.regression(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(38.63), 0.1));
 
         double[] sparsePrediction = cv.regression(10, datax, datay, (xi, yi) -> {
-            KMeans kmeans = new KMeans(xi, 30, 10);
-            double[][] centers = kmeans.centroids();
+            KMeans kmeans = KMeans.fit(xi, 30);
+            double[][] centers = kmeans.centroids;
             double r0 = 0.0;
             for (int l = 0; l < centers.length; l++) {
                 for (int j = 0; j < l; j++) {
@@ -369,8 +369,8 @@ public class GaussianProcessRegressionTest {
         });
 
         double[] nystromPrediction = cv.regression(datax, datay, (xi, yi) -> {
-            KMeans kmeans = new KMeans(xi, 30, 10);
-            double[][] centers = kmeans.centroids();
+            KMeans kmeans = KMeans.fit(xi, 30);
+            double[][] centers = kmeans.centroids;
             double r0 = 0.0;
             for (int l = 0; l < centers.length; l++) {
                 for (int j = 0; j < l; j++) {
@@ -390,8 +390,8 @@ public class GaussianProcessRegressionTest {
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
         assertEquals(4.441587058240469, rmse, 1E-4);
-        assertEquals(4.4196278530280395, sparseRMSE, 1E-4);
-        assertEquals(4.415740245175906, nystromRMSE, 1E-4);
+        assertEquals(4.421052805028641, sparseRMSE, 1E-4);
+        assertEquals(4.414595386286706, nystromRMSE, 1E-4);
     }
 
     /**
@@ -418,8 +418,8 @@ public class GaussianProcessRegressionTest {
         double[] prediction = cv.regression(datax, datay, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(34.97), 0.1));
 
         double[] sparsePrediction = cv.regression(10, datax, datay, (xi, yi) -> {
-            KMeans kmeans = new KMeans(xi, 30, 10);
-            double[][] centers = kmeans.centroids();
+            KMeans kmeans = KMeans.fit(xi, 30);
+            double[][] centers = kmeans.centroids;
             double r0 = 0.0;
             for (int l = 0; l < centers.length; l++) {
                 for (int j = 0; j < l; j++) {
@@ -432,8 +432,8 @@ public class GaussianProcessRegressionTest {
         });
 
         double[] nystromPrediction = cv.regression(datax, datay, (xi, yi) -> {
-            KMeans kmeans = new KMeans(xi, 30, 10);
-            double[][] centers = kmeans.centroids();
+            KMeans kmeans = KMeans.fit(xi, 30);
+            double[][] centers = kmeans.centroids;
             double r0 = 0.0;
             for (int l = 0; l < centers.length; l++) {
                 for (int j = 0; j < l; j++) {
@@ -453,7 +453,7 @@ public class GaussianProcessRegressionTest {
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
         assertEquals(0.20205594684848896, rmse, 1E-4);
-        assertEquals(0.19798437197387753, sparseRMSE, 1E-4);
-        assertEquals(0.19547732694330078, nystromRMSE, 1E-4);
+        assertEquals(0.19819268891978126, sparseRMSE, 1E-4);
+        assertEquals(0.19562556001290177, nystromRMSE, 1E-4);
     }
 }

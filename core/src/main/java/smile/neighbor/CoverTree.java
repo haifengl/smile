@@ -194,7 +194,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
 
         @Override
         public int compareTo(DistanceNode o) {
-            return (int) Math.signum(dist - o.dist);
+            return Double.compare(dist, o.dist);
         }
     }
 

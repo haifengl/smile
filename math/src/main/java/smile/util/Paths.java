@@ -18,10 +18,9 @@
 package smile.util;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 /**
  * Static methods that return a Path by converting a path string or URI.
@@ -38,8 +37,12 @@ public interface Paths {
     }
 
     /** Returns a reader of test data. */
-    static BufferedReader getTestDataReader(String... path) throws FileNotFoundException {
-        FileInputStream stream = new FileInputStream(getTestData(path).toFile());
-        return new BufferedReader(new InputStreamReader(stream));
+    static BufferedReader getTestDataReader(String... path) throws IOException {
+        return java.nio.file.Files.newBufferedReader(getTestData(path));
+    }
+
+    /** Returns a reader of test data. */
+    static Stream<String> getTestDataLines(String... path) throws IOException {
+        return java.nio.file.Files.lines(getTestData(path));
     }
 }

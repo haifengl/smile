@@ -159,7 +159,7 @@ public class BitString implements Chromosome {
 
     @Override
     public int compareTo(Chromosome o) {
-        return (int) Math.signum(fitness - o.fitness());
+        return Double.compare(fitness, o.fitness());
     }
     
     @Override

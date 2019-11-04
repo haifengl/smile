@@ -63,6 +63,6 @@ public class Relevance implements Comparable<Relevance> {
 
     @Override
     public int compareTo(Relevance o) {
-        return (int) Math.signum(score - o.score);
+        return Double.compare(score, o.score);
     }
 }

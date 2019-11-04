@@ -179,7 +179,7 @@ public class FPTree {
         public int compareTo(HeaderTableItem o) {
             // Since we want to sort into descending order, we return the
             // reversed signum here.
-            return o.count - count;
+            return Integer.compare(o.count, count);
         }
     }
 

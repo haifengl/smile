@@ -65,7 +65,7 @@ public class Parquet {
      * @param path an Apache Parquet file path.
      */
     public static DataFrame read(Path path) throws IOException {
-        return read(new LocalInputFile(path));
+        return read(path, Integer.MAX_VALUE);
     }
 
     /**
@@ -93,7 +93,6 @@ public class Parquet {
      * @param limit reads a limited number of records.
      */
     public static DataFrame read(InputFile file, int limit) throws IOException {
-
         try (ParquetFileReader reader = ParquetFileReader.open(file)) {
             ParquetMetadata footer = reader.getFooter();
             MessageType schema = footer.getFileMetaData().getSchema();

@@ -131,7 +131,8 @@ public class PerfectHash implements Serializable {
 
         @Override
         public int compareTo(Key b) {
-            return Integer.signum(b.kfreq - kfreq);
+            // sort in descending order
+            return Integer.compare(b.kfreq, kfreq);
         }
     }
 

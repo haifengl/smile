@@ -43,7 +43,7 @@ public class PrH implements Comparable<PrH>, Serializable {
     @Override
     public int compareTo(PrH o) {
         // to sort PrH in decreasing order.
-        return (int) Math.signum(o.pr - pr);
+        return Double.compare(o.pr, pr);
     }
 }
 
