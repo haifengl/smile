@@ -60,6 +60,7 @@ import smile.stat.distribution.GaussianDistribution;
  */
 public class ICA implements Serializable {
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ICA.class);
 
     /**
      * The independent components (row-wise).
@@ -161,7 +162,7 @@ public class ICA implements Serializable {
             double[] w = W[i];
 
             double diff = Double.MAX_VALUE;
-            for (int iter = 0; diff > tol && iter < maxIter; iter++) {
+            for (int iter = 0; iter < maxIter && diff > tol; iter++) {
                 System.arraycopy(w, 0, wold, 0, n);
 
                 // Calculate derivative of projection
@@ -213,7 +214,7 @@ public class ICA implements Serializable {
             }
 
             if (diff > tol) {
-                throw new IllegalStateException(String.format("Component %d did not converge in %d iterations.", i, maxIter));
+                logger.warn(String.format("Component %d did not converge in %d iterations.", i, maxIter));
             }
         }
 
