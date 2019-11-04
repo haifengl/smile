@@ -61,7 +61,7 @@ public class ValidationTest {
         int[] prediction = Validation.test(model, USPS.test);
         double accuracy = Accuracy.of(USPS.testy, prediction);
         System.out.println("accuracy = " + accuracy);
-        assertEquals(0.4957648231190832, accuracy, 1E-4);
+        assertEquals(0.8340, accuracy, 1E-4);
     }
 
     @Test
@@ -73,7 +73,7 @@ public class ValidationTest {
         double mad = MeanAbsoluteDeviation.of(Abalone.testy, prediction);
         System.out.println("RMSE = " + rmse);
         System.out.println("MAD = " + mad);
-        assertEquals(2.4075306506295813, rmse, 1E-4);
-        assertEquals(1.7988965614843198, mad, 1E-4);
+        assertEquals(2.5567, rmse, 1E-4);
+        assertEquals(1.8666, mad, 1E-4);
     }
 }

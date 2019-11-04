@@ -26,13 +26,10 @@ import java.util.stream.Stream;
  */
 public interface ItemSetTestData {
 
-    /**
-     * Test of learn method, of class ARM.
-     */
     static Stream<int[]> read(String path) {
         try {
-            BufferedReader input = smile.util.Paths.getTestDataReader(path);
-            return input.lines().map(line -> line.trim())
+            return smile.util.Paths.getTestDataLines(path)
+                    .map(String::trim)
                     .filter(line -> !line.isEmpty())
                     .map(line -> {
                         String[] s = line.split(" ");

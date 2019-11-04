@@ -41,7 +41,7 @@ public class Movie {
     public static final int[] y = new int[doc.length];
 
     static {
-        try(BufferedReader input = smile.util.Paths.getTestDataReader("text/movie.txt")) {
+        try (BufferedReader input = smile.util.Paths.getTestDataReader("text/movie.txt")) {
             for (int i = 0; i < x.length; i++) {
                 String[] words = input.readLine().trim().split("\\s+");
 

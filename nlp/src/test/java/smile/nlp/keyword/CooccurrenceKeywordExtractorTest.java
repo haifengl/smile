@@ -18,6 +18,7 @@
 package smile.nlp.keyword;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -55,15 +56,10 @@ public class CooccurrenceKeywordExtractorTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of extract method, of class KeywordExtractorTest.
-     */
     @Test
     public void testExtract() throws IOException {
         System.out.println("extract");
-        Scanner scanner = new Scanner(smile.util.Paths.getTestData("text/turing.txt"));
-        String text = scanner.useDelimiter("\\Z").next();
-        scanner.close();
+        String text = new String(Files.readAllBytes(smile.util.Paths.getTestData("text/turing.txt")));
 
         CooccurrenceKeywordExtractor instance = new CooccurrenceKeywordExtractor();
         ArrayList<NGram> result = instance.extract(text);

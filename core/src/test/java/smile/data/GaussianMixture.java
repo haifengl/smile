@@ -27,6 +27,7 @@ import smile.stat.distribution.MultivariateGaussianDistribution;
 public class GaussianMixture {
 
     public static double[][] data = new double[10000][];
+    public static int[] label = new int[10000];
 
     static {
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -43,21 +44,25 @@ public class GaussianMixture {
         MultivariateGaussianDistribution g1 = new MultivariateGaussianDistribution(mu1, sigma1);
         for (int i = 0; i < 2000; i++) {
             data[i] = g1.rand();
+            label[i] = 0;
         }
 
         MultivariateGaussianDistribution g2 = new MultivariateGaussianDistribution(mu2, sigma2);
         for (int i = 0; i < 3000; i++) {
             data[2000 + i] = g2.rand();
+            label[i] = 1;
         }
 
         MultivariateGaussianDistribution g3 = new MultivariateGaussianDistribution(mu3, sigma3);
         for (int i = 0; i < 3000; i++) {
             data[5000 + i] = g3.rand();
+            label[i] = 2;
         }
 
         MultivariateGaussianDistribution g4 = new MultivariateGaussianDistribution(mu4, sigma4);
         for (int i = 0; i < 2000; i++) {
             data[8000 + i] = g4.rand();
+            label[i] = 3;
         }
     }
 }

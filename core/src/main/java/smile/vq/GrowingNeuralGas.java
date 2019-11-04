@@ -138,7 +138,7 @@ public class GrowingNeuralGas implements Clustering<double[]> {
 
         @Override
         public int compareTo(Node o) {
-            return (int) Math.signum(dist - o.dist);
+            return Double.compare(dist, o.dist);
         }
     }
 

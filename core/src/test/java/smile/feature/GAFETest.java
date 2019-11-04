@@ -91,7 +91,7 @@ public class GAFETest {
             System.out.format("%.2f%% %s%n", 100*bits.fitness(), bits);
         }
 
-        assertEquals(0.8049, result[result.length-1].fitness(), 1E-4);
+        assertEquals(0.9654, result[result.length-1].fitness(), 1E-4);
     }
 
     @Test
@@ -108,6 +108,6 @@ public class GAFETest {
             System.out.format("%.4f %s%n", -bits.fitness(), bits);
         }
 
-        assertEquals(2.4075, -result[result.length-1].fitness(), 1E-4);
+        assertEquals(2.3840, -result[result.length-1].fitness(), 1E-4);
     }
 }

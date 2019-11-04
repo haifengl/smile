@@ -88,6 +88,6 @@ public class NGram implements Comparable<NGram> {
 
     @Override
     public int compareTo(NGram o) {
-        return freq - o.freq;
+        return Integer.compare(freq, o.freq);
     }
 }

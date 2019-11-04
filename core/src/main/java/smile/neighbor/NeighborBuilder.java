@@ -72,12 +72,9 @@ class NeighborBuilder<K, V> implements Comparable<NeighborBuilder<K,V>> {
 
     @Override
     public int compareTo(NeighborBuilder<K,V> o) {
-        int d = (int) Math.signum(distance - o.distance);
+        int d = Double.compare(distance, o.distance);
         // Sometime, the dataset contains duplicate samples.
         // If the distances are same, we sort by the sample index.
-        if (d == 0)
-            return index - o.index;
-        else
-            return d;
+        return d == 0 ? index - o.index : d;
     }
 }

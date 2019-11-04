@@ -17,6 +17,8 @@
 
 package smile.nlp.collocation;
 
+import java.util.Objects;
+
 /**
  * Collocations are expressions of multiple words which commonly co-occur.
  * A bigram collocation is a pair of words w1 w2 that appear together with
@@ -100,24 +102,16 @@ public class BigramCollocation implements Comparable<BigramCollocation> {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         final BigramCollocation other = (BigramCollocation) obj;
-        if ((this.w1 == null) ? (other.w1 != null) : !this.w1.equals(other.w1)) {
-            return false;
-        }
-        if ((this.w2 == null) ? (other.w2 != null) : !this.w2.equals(other.w2)) {
-            return false;
-        }
-        return true;
+        return Objects.equals(this.w1, other.w1) && Objects.equals(this.w2, other.w2);
     }
 
     @Override
     public int compareTo(BigramCollocation o) {
-        return (int) Math.signum(score - o.score);
+        return Double.compare(score, o.score);
     }
 }

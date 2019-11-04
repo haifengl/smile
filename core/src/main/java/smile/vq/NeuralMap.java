@@ -102,7 +102,7 @@ public class NeuralMap implements Clustering<double[]> {
 
         @Override
         public int compareTo(Neighbor o) {
-            return (int) Math.signum(distance - o.distance);
+            return Double.compare(distance, o.distance);
         }
     }
 

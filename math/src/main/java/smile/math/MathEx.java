@@ -2190,6 +2190,31 @@ public class MathEx {
     }
 
     /**
+     * The squared Euclidean distance with handling missing values (represented as NaN).
+     */
+    public static double squaredDistanceWithMissingValues(double[] x, double[] y) {
+        int n = x.length;
+        int m = 0;
+        double dist = 0.0;
+
+        for (int i = 0; i < n; i++) {
+            if (!Double.isNaN(x[i]) && !Double.isNaN(y[i])) {
+                m++;
+                double d = x[i] - y[i];
+                dist += d * d;
+            }
+        }
+
+        if (m == 0) {
+            dist = Double.MAX_VALUE;
+        } else {
+            dist = n * dist / m;
+        }
+
+        return dist;
+    }
+
+    /**
      * Kullback-Leibler divergence. The Kullback-Leibler divergence (also
      * information divergence, information gain, relative entropy, or KLIC)
      * is a non-symmetric measure of the difference between two probability

@@ -18,6 +18,7 @@
 package smile.imputation;
 
 import smile.clustering.KMeans;
+import smile.clustering.PartitionClustering;
 
 /**
  * Missing value imputation by K-Means clustering. First cluster data by K-Means
@@ -86,13 +87,13 @@ public class KMeansImputation implements MissingValueImputation {
             }
         }
 
-        KMeans kmeans = KMeans.lloyd(data, k, Integer.MAX_VALUE, runs);
+        KMeans kmeans = PartitionClustering.run(runs, () -> KMeans.lloyd(data, k));
 
         for (int i = 0; i < k; i++) {
-            if (kmeans.getClusterSize()[i] > 0) {
-                double[][] d = new double[kmeans.getClusterSize()[i]][];
+            if (kmeans.size[i] > 0) {
+                double[][] d = new double[kmeans.size[i]][];
                 for (int j = 0, m = 0; j < data.length; j++) {
-                    if (kmeans.getClusterLabel()[j] == i) {
+                    if (kmeans.y[j] == i) {
                         d[m++] = data[j];
                     }
                 }

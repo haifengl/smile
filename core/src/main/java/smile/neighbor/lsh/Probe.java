@@ -111,7 +111,7 @@ public class Probe implements Comparable<Probe> {
 
     @Override
     public int compareTo(Probe o) {
-        return (int) Math.signum(prob - o.prob);
+        return Double.compare(prob, o.prob);
     }
 
     /**
