@@ -59,7 +59,7 @@ import smile.util.IntArrayList;
  * @author Qiyang Zuo
  */
 public class SNLSH<K, V> implements RNNSearch<K, V>, Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /** Hash function mask. */
     private final long mask;

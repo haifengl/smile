@@ -17,20 +17,17 @@
 
 package smile.base.cart;
 
+import java.math.BigInteger;
+import java.util.List;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.math.MathEx;
-
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * A leaf node in regression tree.
  */
 public class RegressionNode extends LeafNode {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /** The mean of response variable. */
     private double mean;

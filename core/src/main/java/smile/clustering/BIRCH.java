@@ -58,7 +58,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class BIRCH implements Clustering<double[]> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * Branching factor. Maximum number of children nodes.
@@ -85,7 +85,7 @@ public class BIRCH implements Clustering<double[]> {
      * Internal node of CF tree.
      */
     class Node implements Serializable {
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 2L;
 
         /**
          * The number of observations

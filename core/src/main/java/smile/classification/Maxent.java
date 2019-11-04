@@ -168,7 +168,7 @@ public class Maxent implements SoftClassifier<int[]>, OnlineClassifier<int[]> {
      * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
      * weights which often has superior generalization performance, especially
      * when the dimensionality is high.
-     * @param tol tolerance for stopping iterations.
+     * @param tol the tolerance for stopping iterations.
      * @param maxIter maximum number of iterations.
      */
     public static Maxent fit(int p, int[][] x, int[] y, double lambda, double tol, int maxIter) {

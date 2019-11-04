@@ -135,8 +135,8 @@ public class SammonMapping {
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @param k the dimension of the projection.
      * @param lambda initial value of the step size constant in diagonal Newton method.
-     * @param tol tolerance on objective function for stopping iterations.
-     * @param stepTol tolerance on step size.
+     * @param tol the tolerance on objective function for stopping iterations.
+     * @param stepTol the tolerance on step size.
      * @param maxIter maximum number of iterations.
      */
     public static SammonMapping of(double[][] proximity, int k, double lambda, double tol, double stepTol, int maxIter) {
@@ -152,8 +152,8 @@ public class SammonMapping {
      * @param init the initial projected coordinates, of which the column
      * size is the projection dimension. It will be modified.
      * @param lambda initial value of the step size constant in diagonal Newton method.
-     * @param tol tolerance for stopping iterations.
-     * @param stepTol tolerance on step size.
+     * @param tol the tolerance for stopping iterations.
+     * @param stepTol the tolerance on step size.
      * @param maxIter maximum number of iterations.
      */
     public static SammonMapping of(double[][] proximity, double[][] init, double lambda, double tol, double stepTol, int maxIter) {

@@ -17,17 +17,12 @@
 
 package smile.clustering;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.stream.IntStream;
-
 import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.PowerIteration;
-import smile.util.MulticoreExecutor;
 
 /**
  * Deterministic annealing clustering. Deterministic annealing extends
@@ -50,7 +45,7 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class DeterministicAnnealing extends CentroidClustering<double[], double[]> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DeterministicAnnealing.class);
 
     /**
@@ -65,7 +60,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
 
     /**
      * Constructor. Clustering data into k clusters.
-     * @param data the input data of which each row is a sample.
+     * @param data the input data of which each row is an observation.
      * @param Kmax the maximum number of clusters.
      */
     public static DeterministicAnnealing fit(double[][] data, int Kmax) {
@@ -74,7 +69,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
 
     /**
      * Constructor. Clustering data into k clusters.
-     * @param data the input data of which each row is a sample.
+     * @param data the input data of which each row is an observation.
      * @param Kmax the maximum number of clusters.
      * @param alpha the temperature T is decreasing as T = T * alpha. alpha has
      * to be in (0, 1).

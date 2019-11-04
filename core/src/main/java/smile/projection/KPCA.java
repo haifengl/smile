@@ -60,7 +60,7 @@ import smile.math.matrix.EVD;
  * @author Haifeng Li
  */
 public class KPCA<T> implements Projection<T>, Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The dimension of feature space.

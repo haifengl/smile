@@ -51,7 +51,7 @@ import smile.math.rbf.GaussianRadialBasis;
  * @author Haifeng Li
  */
 public class RBF<T> implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /** The center of neuron. */
     private T center;

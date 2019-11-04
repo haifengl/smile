@@ -57,7 +57,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class GHA implements LinearProjection, Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The dimension of feature space.
