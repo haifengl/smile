@@ -185,7 +185,7 @@ public class GAFE {
         return chromosome -> {
             byte[] bits = chromosome.bits();
             int[] features = indexOfOnes(bits);
-            if (features == null) return 0.0;
+            if (features == null) return Double.NEGATIVE_INFINITY;
 
             double[][] xx = select(x, features);
             double[][] testxx = select(testx, features);
@@ -254,7 +254,7 @@ public class GAFE {
         return chromosome -> {
             byte[] bits = chromosome.bits();
             String[] features = selectedFeatures(bits, names, y);
-            if (features == null) return 0.0;
+            if (features == null) return Double.NEGATIVE_INFINITY;
 
             Formula formula = Formula.of(y, features);
             DataFrameRegression model = trainer.apply(formula, train);
