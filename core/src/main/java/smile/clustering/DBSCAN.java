@@ -94,11 +94,11 @@ public class DBSCAN<T> extends PartitionClustering {
     /**
      * The minimum number of points required to form a cluster
      */
-    private double minPts;
+    public final double minPts;
     /**
      * The neighborhood radius.
      */
-    private double radius;
+    public final double radius;
     /**
      * Data structure for neighborhood search.
      */
@@ -123,7 +123,7 @@ public class DBSCAN<T> extends PartitionClustering {
      * Clustering the data with KD-tree. DBSCAN is generally applied on
      * low-dimensional data. Therefore, KD-tree can speed up the nearest
      * neighbor search a lot.
-     * @param data the dataset for clustering.
+     * @param data the observations.
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
      */
@@ -133,7 +133,7 @@ public class DBSCAN<T> extends PartitionClustering {
 
     /**
      * Clustering the data.
-     * @param data the dataset for clustering.
+     * @param data the observations.
      * @param distance the distance measure for neighborhood search.
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
@@ -144,7 +144,7 @@ public class DBSCAN<T> extends PartitionClustering {
 
     /**
      * Clustering the data.
-     * @param data the dataset for clustering.
+     * @param data the observations.
      * @param nns the data structure for neighborhood search.
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.

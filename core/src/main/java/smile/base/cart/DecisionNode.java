@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  * A leaf node in decision tree.
  */
 public class DecisionNode extends LeafNode {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /** The predicted output. */
     private int output;

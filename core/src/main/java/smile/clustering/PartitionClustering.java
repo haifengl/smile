@@ -76,7 +76,7 @@ public abstract class PartitionClustering implements Serializable {
         sb.append(String.format("Cluster size of %d data points:%n", y.length));
         for (int i = 0; i < k; i++) {
             double r = 100.0 * size[i] / y.length;
-            sb.append(String.format("Cluster %4d %6d (%4.1f%%)%n", i, size[i], r));
+            sb.append(String.format("Cluster %4d %6d (%4.1f%%)%n", i+1, size[i], r));
         }
 
         if (size[k] != 0) {

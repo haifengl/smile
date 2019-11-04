@@ -17,16 +17,9 @@
 
 package smile.clustering;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
-
 import smile.math.MathEx;
-import smile.math.distance.Distance;
-import smile.util.MulticoreExecutor;
 
 /**
  * Clustering Large Applications based upon RANdomized Search. CLARANS is an
@@ -78,7 +71,7 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
      * random search is set to 1.25% * k * (n - k), where n is the number of
      * data and k is the number clusters.
      *
-     * @param data     the dataset for clustering.
+     * @param data     the observations.
      * @param k        the number of clusters.
      * @param distance the lambda of distance measure.
      */
@@ -89,7 +82,7 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
     /**
      * Constructor. Clustering data into k clusters.
      *
-     * @param data        the dataset for clustering.
+     * @param data        the observations.
      * @param k           the number of clusters.
      * @param maxNeighbor the maximum number of neighbors examined during
      *                    the random search of local minima.

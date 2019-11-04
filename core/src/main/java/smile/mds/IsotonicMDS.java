@@ -112,7 +112,7 @@ public class IsotonicMDS {
      * @param proximity the nonnegative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @param k the dimension of the projection.
-     * @param tol tolerance for stopping iterations.
+     * @param tol the tolerance for stopping iterations.
      * @param maxIter maximum number of iterations.
      */
     public static IsotonicMDS of(double[][] proximity, int k, double tol, int maxIter) {
@@ -127,7 +127,7 @@ public class IsotonicMDS {
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @param init the initial projected coordinates, of which the column
      * size is the projection dimension.
-     * @param tol tolerance for stopping iterations.
+     * @param tol the tolerance for stopping iterations.
      * @param maxIter maximum number of iterations.
      */
     public static IsotonicMDS of(double[][] proximity, double[][] init, double tol, int maxIter) {

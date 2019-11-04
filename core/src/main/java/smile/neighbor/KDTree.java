@@ -54,7 +54,7 @@ import smile.sort.HeapSelect;
  * @author Haifeng Li
  */
 public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch<double[], E>, RNNSearch<double[], E>, Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The root in the KD-tree.

@@ -19,12 +19,8 @@ package smile.clustering;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.stream.IntStream;
-
 import smile.math.MathEx;
-import smile.util.MulticoreExecutor;
 
 /**
  * DENsity CLUstering. The DENCLUE algorithm employs a cluster model based on
@@ -46,7 +42,7 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class DENCLUE extends PartitionClustering {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DENCLUE.class);
 
     /**
@@ -89,7 +85,7 @@ public class DENCLUE extends PartitionClustering {
 
     /**
      * Clustering data.
-     * @param data the dataset for clustering.
+     * @param data the input data of which each row is an observation.
      * @param sigma the smooth parameter in the Gaussian kernel. The user can
      * choose sigma such that number of density attractors is constant for a
      * long interval of sigma.
