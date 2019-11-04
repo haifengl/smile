@@ -203,7 +203,7 @@ public class FormulaTest {
                 new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
                 new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong"))
         );
-        assertEquals(" ~ (water + sowing_density + wind)^2", formula.toString());
+        assertEquals(" ~ (water x sowing_density x wind)^2", formula.toString());
 
         StructType outputSchema = formula.bind(inputSchema);
         StructType schema = DataTypes.struct(
