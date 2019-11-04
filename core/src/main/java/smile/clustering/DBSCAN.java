@@ -21,12 +21,11 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import smile.neighbor.Neighbor;
-import smile.neighbor.RNNSearch;
+import smile.neighbor.KDTree;
 import smile.neighbor.LinearSearch;
-import smile.neighbor.CoverTree;
+import smile.neighbor.RNNSearch;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
-import smile.math.distance.Metric;
 
 /**
  * Density-Based Spatial Clustering of Applications with Noise.
@@ -121,8 +120,19 @@ public class DBSCAN<T> extends PartitionClustering {
     }
 
     /**
-     * Clustering the data. Note that this one could be very
-     * slow because of brute force nearest neighbor search.
+     * Clustering the data with KD-tree. DBSCAN is generally applied on
+     * low-dimensional data. Therefore, KD-tree can speed up the nearest
+     * neighbor search a lot.
+     * @param data the dataset for clustering.
+     * @param minPts the minimum number of neighbors for a core data point.
+     * @param radius the neighborhood radius.
+     */
+    public static DBSCAN<double[]> fit(double[][] data, int minPts, double radius) {
+        return fit(data, new KDTree<>(data, data), minPts, radius);
+    }
+
+    /**
+     * Clustering the data.
      * @param data the dataset for clustering.
      * @param distance the distance measure for neighborhood search.
      * @param minPts the minimum number of neighbors for a core data point.
@@ -152,7 +162,6 @@ public class DBSCAN<T> extends PartitionClustering {
         final int QUEUED = -2;
         // The label for unclassified data samples.
         final int UNDEFINED = -1;
-
 
         int k = 0;
         int n = data.length;

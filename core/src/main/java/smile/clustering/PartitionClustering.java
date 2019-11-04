@@ -26,8 +26,8 @@ import java.util.stream.IntStream;
 import smile.math.MathEx;
 
 /**
- * Abstract class of partition clustering. Partition methods break
- * the observations into distinct non-overlapping groups.
+ * Partition clustering. Partition methods classify the observations
+ * into distinct non-overlapping groups.
  * 
  * @author Haifeng Li
  */
@@ -76,19 +76,19 @@ public abstract class PartitionClustering implements Serializable {
         sb.append(String.format("Cluster size of %d data points:%n", y.length));
         for (int i = 0; i < k; i++) {
             double r = 100.0 * size[i] / y.length;
-            sb.append(String.format("Cluster %4d %6d (%.1f%%)%n", i, size[i], r));
+            sb.append(String.format("Cluster %4d %6d (%4.1f%%)%n", i, size[i], r));
         }
 
         if (size[k] != 0) {
             double r = 100.0 * size[k] / y.length;
-            sb.append(String.format("Outliers     %6d (%.1f%%)%n", size[k], r));
+            sb.append(String.format("Outliers     %6d (%4.1f%%)%n", size[k], r));
         }
 
         return sb.toString();
     }
 
     /**
-     * Initialize cluster membership of input objects with KMeans++ algorithm.
+     * Initialize cluster membership of input objects with K-Means++ algorithm.
      * Many clustering methods, e.g. k-means, need a initial clustering
      * configuration as a seed.
      * <p>

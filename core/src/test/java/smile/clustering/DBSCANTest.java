@@ -19,7 +19,9 @@ package smile.clustering;
 
 import smile.data.GaussianMixture;
 import smile.math.MathEx;
+import smile.math.distance.EuclideanDistance;
 import smile.neighbor.KDTree;
+import smile.neighbor.LinearSearch;
 import smile.stat.distribution.MultivariateGaussianDistribution;
 import smile.validation.RandIndex;
 import smile.validation.AdjustedRandIndex;
@@ -62,7 +64,7 @@ public class DBSCANTest {
         double[][] data = GaussianMixture.data;
         int[] label = GaussianMixture.label;
 
-        DBSCAN<double[]> dbscan = DBSCAN.fit(data, new KDTree<>(data, data), 200, 0.8);
+        DBSCAN<double[]> dbscan = DBSCAN.fit(data,200, 0.8);
         System.out.println(dbscan);
         
         int[] size = dbscan.size;
@@ -84,9 +86,8 @@ public class DBSCANTest {
         RandIndex rand = new RandIndex();
         double r = rand.measure(y1, y2);
         double r2 = ari.measure(y1, y2);
-        System.out.println("The number of clusters: " + dbscan.k);
-        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.40);
-        assertTrue(r2 > 0.15);
+        System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertEquals(0.5474, r, 1E-4);
+        assertEquals(0.1696, r2, 1E-4);
     }
 }

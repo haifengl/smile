@@ -87,6 +87,16 @@ public class KMeans extends CentroidClustering<double[], double[]> {
      * @param distortion the total distortion.
      * @param centroids the centroids of each cluster.
      * @param y the cluster labels.
+     */
+    public KMeans(double distortion, double[][] centroids, int[] y) {
+        this(distortion, centroids, y, MathEx::squaredDistance);
+    }
+
+    /**
+     * Constructor.
+     * @param distortion the total distortion.
+     * @param centroids the centroids of each cluster.
+     * @param y the cluster labels.
      * @param distance the lambda of distance measure.
      */
     public KMeans(double distortion, double[][] centroids, int[] y, ToDoubleBiFunction<double[], double[]> distance) {
@@ -138,7 +148,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
         double[][] medoids = new double[k][];
 
         double distortion = seed(data, medoids, y, dist, MathEx::squaredDistance);
-        logger.info(String.format("distortion after initialization: %.4f", distortion));
+        logger.info(String.format("Distortion after initialization: %.4f", distortion));
 
         // Initialize the centroids
         int[] size = new int[k];
@@ -150,7 +160,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
         for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
             double wcss = bbd.clustering(centroids, sum, size, y);
 
-            logger.info(String.format("distortion after %3d iterations: %.4f", iter, wcss));
+            logger.info(String.format("Distortion after %3d iterations: %.4f", iter, wcss));
             diff = distortion - wcss;
             distortion = wcss;
         }
@@ -194,7 +204,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
         double[][] medoids = new double[k][];
 
         double distortion = seed(data, medoids, y, dist, MathEx::squaredDistanceWithMissingValues);
-        logger.info(String.format("distortion after initialization: %.4f", distortion));
+        logger.info(String.format("Distortion after initialization: %.4f", distortion));
 
         int[] size = new int[k];
         double[][] centroids = new double[k][d];
@@ -206,7 +216,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
             updateCentroidsWithMissingValues(centroids, data, y, size, notNaN);
 
             double wcss = assign(y, data, centroids, MathEx::squaredDistanceWithMissingValues);
-            logger.info(String.format("distortion after %3d iterations: %.4f", iter, wcss));
+            logger.info(String.format("Distortion after %3d iterations: %.4f", iter, wcss));
 
             diff = distortion - wcss;
             distortion = wcss;
