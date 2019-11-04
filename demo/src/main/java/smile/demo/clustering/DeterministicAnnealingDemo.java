@@ -60,15 +60,15 @@ public class DeterministicAnnealingDemo extends ClusteringDemo {
         }
 
         long clock = System.currentTimeMillis();
-        DeterministicAnnealing annealing = new DeterministicAnnealing(dataset[datasetIndex], clusterNumber, alpha);
+        DeterministicAnnealing annealing = DeterministicAnnealing.fit(dataset[datasetIndex], clusterNumber, alpha);
         System.out.format("Deterministic Annealing clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(annealing.centroids(), '@');
+        PlotCanvas plot = ScatterPlot.plot(annealing.centroids, '@');
         for (int k = 0; k < clusterNumber; k++) {
-            if (annealing.getClusterSize()[k] > 0) {
-                double[][] cluster = new double[annealing.getClusterSize()[k]][];
+            if (annealing.size[k] > 0) {
+                double[][] cluster = new double[annealing.size[k]][];
                 for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (annealing.getClusterLabel()[i] == k) {
+                    if (annealing.y[i] == k) {
                         cluster[j++] = dataset[datasetIndex][i];
                     }
                 }
@@ -76,7 +76,7 @@ public class DeterministicAnnealingDemo extends ClusteringDemo {
                 plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
             }
         }
-        plot.points(annealing.centroids(), '@');
+        plot.points(annealing.centroids, '@');
         return plot;
     }
 

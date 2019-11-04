@@ -97,16 +97,12 @@ public class ApproximateStringSearchDemo extends JPanel implements Runnable, Act
             List<String> words = new ArrayList<>();
 
             try {
-                FileInputStream stream = new FileInputStream(smile.util.Paths.getTestData("neighbor/index.noun").toFile());
-                BufferedReader input = new BufferedReader(new InputStreamReader(stream));
-                String line = input.readLine();
-                while (line != null) {
-                    if (!line.startsWith(" ")) {
-                        String[] w = line.split("\\s");
-                        words.add(w[0].replace('_', ' '));
-                    }
-                    line = input.readLine();
-                }
+                smile.util.Paths.getTestDataLines("neighbor/index.noun")
+                        .filter(line -> !line.startsWith(" "))
+                        .forEach(line -> {
+                            String[] w = line.split("\\s");
+                            words.add(w[0].replace('_', ' '));
+                        });
             } catch (Exception e) {
                 System.err.println(e);
             }

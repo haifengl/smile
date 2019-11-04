@@ -19,107 +19,105 @@ package smile.clustering
 
 import scala.util.Random
 import scala.util.control.Breaks._
-import smile.math.distance.{Distance, Hamming}
+import smile.math.distance.{Distance, Hamming, HammingDistance}
 
-/** K-Modes clustering. K-Modes is the binary equivalent for K-Means.
-  * The mean update for centroids is replace by the mode one which is
-  * a majority vote among element of each cluster.
-  *
-  * Complexity is O(k.t.n) with Hamming distance, quadratic with other metrics.
-  *
-  * <h2>References</h2>
-  *  - Joshua Zhexue Huang. Clustering Categorical Data with k-Modes.
-  *    http://www.irma-international.org/viewtitle/10828/
-  *  - Antara Prakash, et al. Review on K-Mode Clustering.
-  *    https://www.ijecs.in/index.php/ijecs/article/download/3058/2834/
-  *  - Python implementations of the k-modes and k-prototypes clustering algorithms for clustering categorical data.
-  *    https://pypi.python.org/pypi/kmodes/
-  *
-  * @param data the dataset
-  * @param k number of clusters
-  * @param epsilon distance between ancient modes and update modes under which we consider than the algorithm have converged, if and only if all every mode have converged
-  * @param maxIter number maximal of iteration
-  * @param metric the dissimilarity measure used
+/** K-Modes clustering.
   *
   * @author Beck Gaël
   */
-class KModes(data: Array[Array[Int]], k: Int, epsilon: Double, maxIter: Int = 100, metric: Distance[Array[Int]] = new Hamming()) extends PartitionClustering[Array[Int]] with Serializable {
+class KModes() {//extends CentroidClustering[Array[Int], Array[Int]] {
 
-  /** Dimension */
-  val p = data.head.size
+}
 
-  /**
-    * The modes of each cluster.
+/** K-Modes clustering.
+  *
+  * @author Beck Gaël
+  */
+object KModes {
+
+  /** K-Modes clustering. K-Modes is the binary equivalent for K-Means.
+    * The mean update for centroids is replace by the mode one which is
+    * a majority vote among element of each cluster.
+    *
+    * Complexity is O(k.t.n) with Hamming distance, quadratic with other metrics.
+    *
+    * <h2>References</h2>
+    *  - Joshua Zhexue Huang. Clustering Categorical Data with k-Modes.
+    *    http://www.irma-international.org/viewtitle/10828/
+    *  - Antara Prakash, et al. Review on K-Mode Clustering.
+    *    https://www.ijecs.in/index.php/ijecs/article/download/3058/2834/
+    *  - Python implementations of the k-modes and k-prototypes clustering algorithms for clustering categorical data.
+    *    https://pypi.python.org/pypi/kmodes/
+    *
+    * @param data the dataset
+    * @param k number of clusters
+    * @param epsilon distance between ancient modes and update modes under which we consider than the algorithm have converged, if and only if all every mode have converged
+    * @param maxIter number maximal of iteration
+    * @param metric the dissimilarity measure used
+    *
+    * @author Beck Gaël
     */
-  val modes = Array.fill(k) {
-    Array.fill(p) { Random.nextInt(2) }
-  }
+  def apply(data: Array[Array[Int]], k: Int, epsilon: Double, maxIter: Int = 100, metric: Distance[Array[Int]] = new Hamming) : KModes = {
+    val n = data.length
+    val p = data.head.size
 
-  /**
-    * The cluster labels of data.
-    */
-  y = Array.ofDim[Int](data.length)
-
-  private var distortion: Double = Double.MaxValue
-
-  /**
-    * The distance between data and mode.
-    */
-  private val dist: Array[Double] = Array.ofDim[Double](data.length)
-
-  /** The size of each cluster. */
-  size = Array.ofDim[Int](k)
-
-  breakable { for (iter <- 0 until maxIter) {
-    var wcss = 0.0
-
-    for (i <- 0 until data.length) {
-      val (d, c) = nearest(data(i))
-      y(i) = c
-      dist(i) = d
-      wcss += d
+    val modes = Array.fill(k) {
+      Array.fill(p) { Random.nextInt(2) }
     }
 
-    modes.foreach { mode => java.util.Arrays.fill(mode, 0) }
-    java.util.Arrays.fill(size, 0)
+    val y = Array.ofDim[Int](n)
+    val size = Array.ofDim[Int](k)
+    val dist = Array.ofDim[Double](n)
 
-	  // Fast way if we use Hamming distance
-    if (metric.isInstanceOf[Hamming]) {
-      for (i <- 0 until data.length) {
-        for (j <- 0 until p) modes(y(i))(j) += data(i)(j)
-        size(y(i)) += 1
-      }
-      
-      for (i <- 0 until modes.length) {
-        val mode = modes(i)
-        for (j <- 0 until mode.length) {
-          if (mode(j) * 2 >= size(i)) mode(j) = 1 else mode(j) = 0
+    var distortion = Double.MaxValue
+
+    breakable {
+      for (iter <- 0 until maxIter) {
+        var wcss = 0.0
+
+        for (i <- 0 until n) {
+          val (d, c) = nearest(data(i), modes)
+          y(i) = c
+          dist(i) = d
+          wcss += d
         }
-      }
-    } else {
-      // search mode that is the data point closest to centroid
-      dist.zipWithIndex.zip(y).groupBy{ case (_, cluster) => cluster }.foreach { case (cluster, aggregates) =>
-        import Ordering.Double.TotalOrdering
-        val mode = aggregates.minBy(_._1)._2
-        modes(cluster) = data(mode)
+
+        modes.foreach { mode => java.util.Arrays.fill(mode, 0) }
+        java.util.Arrays.fill(size, 0)
+
+        // Fast way if we use Hamming distance
+        if (metric.isInstanceOf[Hamming]) {
+          for (i <- 0 until data.length) {
+            for (j <- 0 until p) modes(y(i))(j) += data(i)(j)
+            size(y(i)) += 1
+          }
+
+          for (i <- 0 until modes.length) {
+            val mode = modes(i)
+            for (j <- 0 until mode.length) {
+              if (mode(j) * 2 >= size(i)) mode(j) = 1 else mode(j) = 0
+            }
+          }
+        } else {
+          // search mode that is the data point closest to centroid
+          dist.zipWithIndex.zip(y).groupBy { case (_, cluster) => cluster }.foreach { case (cluster, aggregates) =>
+            import Ordering.Double.TotalOrdering
+            val mode = aggregates.minBy(_._1)._2
+            modes(cluster) = data(mode)
+          }
+        }
+
+        if (distortion <= wcss) break else distortion = wcss
       }
     }
 
-    if (distortion <= wcss) break else distortion = wcss
-  } }
+    return new KModes()
+  }
 
   /**
     * Return the nearest mode and distance for a specific point.
-    **/
-  private def nearest(x: Array[Int]): (Double, Int) = {
-    import Ordering.Double.TotalOrdering
-    modes.map { mode => metric.d(mode, x) }.zipWithIndex.minBy(_._1)
-  }
-
-	/**
-    * Return the nearest mode for a specific point.
-    **/
-  override def predict(x: Array[Int]): Int = {
-    nearest(x)._2
+    */
+  def nearest(x: Array[Int], modes: Array[Array[Int]]): (Int, Int) = {
+    modes.map { mode => HammingDistance.d(mode, x) }.zipWithIndex.minBy(_._1)
   }
 }

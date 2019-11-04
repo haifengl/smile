@@ -64,12 +64,12 @@ public class DeterministicAnnealingTest {
         double[][] testx = USPS.testx;
         int[] testy = USPS.testy;
 
-        DeterministicAnnealing annealing = new DeterministicAnnealing(x, 10, 0.8);
+        DeterministicAnnealing annealing = DeterministicAnnealing.fit(x, 10, 0.8);
             
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        double r = rand.measure(y, annealing.getClusterLabel());
-        double r2 = ari.measure(y, annealing.getClusterLabel());
+        double r = rand.measure(y, annealing.y);
+        double r2 = ari.measure(y, annealing.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertTrue(r > 0.75);
         assertTrue(r2 > 0.25);

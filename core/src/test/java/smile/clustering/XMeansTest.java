@@ -67,10 +67,10 @@ public class XMeansTest {
             
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        XMeans xmeans = new XMeans(x, 10);
+        XMeans xmeans = XMeans.fit(x, 10);
             
-        double r = rand.measure(y, xmeans.getClusterLabel());
-        double r2 = ari.measure(y, xmeans.getClusterLabel());
+        double r = rand.measure(y, xmeans.y);
+        double r2 = ari.measure(y, xmeans.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertTrue(r > 0.85);
         assertTrue(r2 > 0.4);

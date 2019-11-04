@@ -18,6 +18,7 @@
 package smile.clustering;
 
 import smile.data.USPS;
+import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 import smile.validation.RandIndex;
 import smile.validation.AdjustedRandIndex;
@@ -67,10 +68,10 @@ public class CLARANSTest {
 
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        CLARANS<double[]> clarans = new CLARANS<>(x, new EuclideanDistance(), 10, 50, 8);
+        CLARANS<double[]> clarans = CLARANS.fit(x,10, MathEx::distance);
 
-        double r = rand.measure(y, clarans.getClusterLabel());
-        double r2 = ari.measure(y, clarans.getClusterLabel());
+        double r = rand.measure(y, clarans.y);
+        double r2 = ari.measure(y, clarans.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertTrue(r > 0.8);
         assertTrue(r2 > 0.28);

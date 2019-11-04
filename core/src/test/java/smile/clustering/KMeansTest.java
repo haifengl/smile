@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.USPS;
+import smile.math.MathEx;
 import smile.stat.distribution.MultivariateGaussianDistribution;
 import smile.validation.AdjustedRandIndex;
 import smile.validation.RandIndex;
@@ -45,6 +46,8 @@ public class KMeansTest {
     int[] label = new int[100000];
 
     public KMeansTest() {
+        MathEx.setSeed(19650218); // to get repeatable results.
+
         MultivariateGaussianDistribution g1 = new MultivariateGaussianDistribution(mu1, sigma1);
         for (int i = 0; i < 20000; i++) {
             data[i] = g1.rand();
@@ -86,80 +89,70 @@ public class KMeansTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class KMeans.
-     */
     @Test
     public void testBBD4() {
         System.out.println("BBD 4");
-        KMeans kmeans = new KMeans(data, 4, 100);
+        MathEx.setSeed(19650218); // to get repeatable results.
+        KMeans kmeans = KMeans.fit(data, 4);
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        double r = rand.measure(label, kmeans.getClusterLabel());
-        double r2 = ari.measure(label, kmeans.getClusterLabel());
+        double r = rand.measure(label, kmeans.y);
+        double r2 = ari.measure(label, kmeans.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
     }
 
-    /**
-     * Test of lloyd method, of class KMeans.
-     */
     @Test
     public void testLloyd4() {
         System.out.println("Lloyd 4");
-        KMeans kmeans = KMeans.lloyd(data, 4, 100);
+        MathEx.setSeed(19650218); // to get repeatable results.
+        KMeans kmeans = KMeans.lloyd(data, 4);
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        double r = rand.measure(label, kmeans.getClusterLabel());
-        double r2 = ari.measure(label, kmeans.getClusterLabel());
+        double r = rand.measure(label, kmeans.y);
+        double r2 = ari.measure(label, kmeans.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
     }
 
-    /**
-     * Test of learn method, of class KMeans.
-     */
     @Test
     public void testBBD64() {
         System.out.println("BBD 64");
-        KMeans kmeans = new KMeans(data, 64, 100);
+        MathEx.setSeed(19650218); // to get repeatable results.
+        KMeans kmeans = KMeans.fit(data, 64);
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        double r = rand.measure(label, kmeans.getClusterLabel());
-        double r2 = ari.measure(label, kmeans.getClusterLabel());
+        double r = rand.measure(label, kmeans.y);
+        double r2 = ari.measure(label, kmeans.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
     }
 
-    /**
-     * Test of lloyd method, of class KMeans.
-     */
     @Test
     public void testLloyd64() {
         System.out.println("Lloyd 64");
-        KMeans kmeans = KMeans.lloyd(data, 64, 100);
+        MathEx.setSeed(19650218); // to get repeatable results.
+        KMeans kmeans = KMeans.lloyd(data, 64);
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        double r = rand.measure(label, kmeans.getClusterLabel());
-        double r2 = ari.measure(label, kmeans.getClusterLabel());
+        double r = rand.measure(label, kmeans.y);
+        double r2 = ari.measure(label, kmeans.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
     }
 
-    /**
-     * Test of learn method, of class KMeans.
-     */
     @Test(expected = Test.None.class)
     public void testUSPS() throws Exception {
         System.out.println("USPS");
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = USPS.x;
         int[] y = USPS.y;
         double[][] testx = USPS.testx;
         int[] testy = USPS.testy;
 
-        KMeans kmeans = new KMeans(x, 10, 100, 4);
+        KMeans kmeans = KMeans.fit(x, 10, 100, 4);
             
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        double r = rand.measure(y, kmeans.getClusterLabel());
-        double r2 = ari.measure(y, kmeans.getClusterLabel());
+        double r = rand.measure(y, kmeans.y);
+        double r2 = ari.measure(y, kmeans.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertTrue(r > 0.85);
         assertTrue(r2 > 0.45);

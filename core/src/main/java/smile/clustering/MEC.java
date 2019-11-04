@@ -57,31 +57,51 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class MEC <T> extends PartitionClustering<T> {
-    private static final long serialVersionUID = 1L;
+public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
+    private static final long serialVersionUID = 2L;
 
+    /**
+     * The conditional entropy as the objective function.
+     */
+    public final double entropy;
     /**
      * The range of neighborhood.
      */
     private double radius;
-    /**
-     * The conditional entropy as the objective function.
-     */
-    private double entropy;
     /**
      * The neighborhood search data structure.
      */
     private RNNSearch<T,T> nns;
 
     /**
-     * Constructor. Clustering the data.
+     * Constructor.
+     * @param entropy the conditional entropy of clusters.
+     * @param radius the neighborhood radius.
+     * @param nns the data structure for neighborhood search.
+     * @param k the number of clusters.
+     * @param y the cluster labels.
+     */
+    public MEC(double entropy, double radius, RNNSearch<T,T> nns, int k, int[] y) {
+        super(k, y);
+        this.entropy = entropy;
+        this.radius = radius;
+        this.nns = nns;
+    }
+
+    @Override
+    public int compareTo(MEC<T> o) {
+        return Double.compare(entropy, o.entropy);
+    }
+
+    /**
+     * Clustering the data.
      * @param data the dataset for clustering.
      * @param distance the distance measure for neighborhood search.
      * @param k the number of clusters. Note that this is just a hint. The final
      * number of clusters may be less.
      * @param radius the neighborhood radius.
      */
-    public MEC(T[] data, Distance<T> distance, int k, double radius) {
+    public static <T> MEC<T> fit(T[] data, Distance<T> distance, int k, double radius) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k: " + k);
         }
@@ -93,50 +113,20 @@ public class MEC <T> extends PartitionClustering<T> {
         LinearSearch<T> naive = new LinearSearch<>(data, distance);
 
         // Initialize clusters with KMeans/CLARANS.
-        if (data[0] instanceof double[] && distance instanceof EuclideanDistance) {
-            KMeans kmeans = new KMeans((double[][]) data, k, 10, Math.max(1, MulticoreExecutor.getThreadPoolSize()));
-            y = kmeans.getClusterLabel();
+        int[] y;
+        if (data instanceof double[][] && distance instanceof EuclideanDistance) {
+            KMeans kmeans = KMeans.fit((double[][]) data, k);
+            y = kmeans.y;
         } else {
-            CLARANS<T> clarans = new CLARANS<>(data, distance, k, Math.min(100, (int) Math.round(0.01 * k * (data.length - k))), Math.max(1, MulticoreExecutor.getThreadPoolSize()));
-            y = clarans.getClusterLabel();
+            CLARANS<T> clarans = CLARANS.fit(data, k, distance::d);
+            y = clarans.y;
         }
 
-        learn(data, naive, k, radius, y);
+        return fit(data, new LinearSearch<>(data, distance), k, radius, y);
     }
 
     /**
-     * Constructor. Clustering the data.
-     * @param data the dataset for clustering.
-     * @param distance the distance measure for neighborhood search.
-     * @param k the number of clusters. Note that this is just a hint. The final
-     * number of clusters may be less.
-     * @param radius the neighborhood radius.
-     */
-    public MEC(T[] data, Metric<T> distance, int k, double radius) {
-        if (k < 2) {
-            throw new IllegalArgumentException("Invalid k: " + k);
-        }
-
-        if (radius <= 0.0) {
-            throw new IllegalArgumentException("Invalid radius: " + radius);
-        }
-
-        CoverTree<T> cover = new CoverTree<>(data, distance);
-
-        // Initialize clusters with KMeans/CLARANS.
-        if (data[0] instanceof double[] && distance instanceof EuclideanDistance) {
-            KMeans kmeans = new KMeans((double[][]) data, k, 10, Math.max(1, MulticoreExecutor.getThreadPoolSize()));
-            y = kmeans.getClusterLabel();
-        } else {
-            CLARANS<T> clarans = new CLARANS<>(data, distance, k, Math.min(100, (int) Math.round(0.01 * k * (data.length - k))), Math.max(1, MulticoreExecutor.getThreadPoolSize()));
-            y = clarans.getClusterLabel();
-        }
-
-        learn(data, cover, k, radius, y);
-    }
-
-    /**
-     * Constructor. Clustering the data.
+     * Clustering the data.
      * @param data the dataset for clustering.
      * @param nns the neighborhood search data structure.
      * @param k the number of clusters. Note that this is just a hint. The final
@@ -145,7 +135,7 @@ public class MEC <T> extends PartitionClustering<T> {
      * @param y the initial clustering labels, which could be produced by any
      * other clustering methods.
      */
-    public MEC(T[] data, RNNSearch<T,T> nns, int k, double radius, int[] y) {
+    public  static <T> MEC<T> fit(T[] data, RNNSearch<T,T> nns, int k, double radius, int[] y) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid k: " + k);
         }
@@ -154,33 +144,7 @@ public class MEC <T> extends PartitionClustering<T> {
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
 
-        learn(data, nns, k, radius, y.clone());
-    }
-
-    /**
-     * Clustering the data.
-     * @param data the dataset for clustering.
-     * @param y the initial clustering labels, which could be produced by any
-     * other clustering methods.
-     * @param nns the data structure for neighborhood search.
-     * @param k the number of clusters. Note that this is just a hint. The final
-     * number of clusters may be less.
-     * @param radius the radius for neighbor range search.
-     */
-    private void learn(T[] data, RNNSearch<T,T> nns, int k, double radius, int[] y) {
-        if (k < 2) {
-            throw new IllegalArgumentException("Invalid k: " + k);
-        }
-
-        if (radius <= 0.0) {
-            throw new IllegalArgumentException("Invalid radius: " + radius);
-        }
-
-        this.k = k;
-        this.nns = nns;
-        this.radius = radius;
-        this.y = y;
-        this.size = new int[k];
+        int[] size = new int[k];
 
         int n = data.length;
         for (int i = 0; i < n; i++) {
@@ -232,7 +196,7 @@ public class MEC <T> extends PartitionClustering<T> {
         }
 
         // The number of samples with nonzero conditional entropy.
-        entropy = 0.0;
+        double entropy = 0.0;
         for (int i = 0; i < n; i++) {
             if (!neighbors.get(i).isEmpty()) {
                 int ni = neighbors.get(i).size();
@@ -318,17 +282,11 @@ public class MEC <T> extends PartitionClustering<T> {
         }
 
         // Collapse clusters by removing clusters with no samples.
-        int nk = 0;
-        for (int i = 0; i < k; i++) {
-            if (size[i] > 0) {
-                nk++;
-            }
-        }
-
-        int[] count = new int[nk];
+        // Reuse size as the index of new cluster id.
+        int K = 0;
         for (int i = 0, j = 0; i < k; i++) {
             if (size[i] > 0) {
-                count[j] = size[i];
+                K++;
                 size[i] = j++;
             }
         }
@@ -337,8 +295,7 @@ public class MEC <T> extends PartitionClustering<T> {
             y[i] = size[y[i]];
         }
 
-        this.k = nk;
-        size = count;
+        return new MEC<>(entropy, radius, nns, K, y);
     }
 
     /**
@@ -360,7 +317,6 @@ public class MEC <T> extends PartitionClustering<T> {
      * @param x a new instance.
      * @return the cluster label. Note that it may be {@link #OUTLIER}.
      */
-    @Override
     public int predict(T x) {
         List<Neighbor<T,T>> neighbors = new ArrayList<>();
         nns.range(x, radius, neighbors);
@@ -380,15 +336,6 @@ public class MEC <T> extends PartitionClustering<T> {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(String.format("MEC cluster conditional entropy: %.5f%n", entropy));
-        sb.append(String.format("Clusters of %d data points:%n", y.length));
-        for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
-            sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
-        }
-
-        return sb.toString();
+        return String.format("Cluster entropy: %.5f%n", entropy) + super.toString();
     }
 }

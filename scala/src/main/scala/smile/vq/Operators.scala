@@ -129,7 +129,7 @@ trait Operators {
     *              mean that the learning process goes through the whole dataset.
     */
   def neuralgas(data: Array[Array[Double]], k: Int, lambda_i: Double, lambda_f: Double = 0.01, eps_i: Double = 0.5, eps_f: Double = 0.005, steps: Int = 25): NeuralGas = time("Neural Gas") {
-      new NeuralGas(data, k, lambda_i, lambda_f, eps_i, eps_f, steps)
+    NeuralGas.fit(data, k, lambda_i, lambda_f, eps_i, eps_f, steps)
   }
 
   /** Growing Neural Gas. As an extension of Neural Gas, Growing Neural Gas

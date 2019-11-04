@@ -17,6 +17,8 @@
 
 package smile.clustering;
 
+import smile.data.GaussianMixture;
+import smile.math.MathEx;
 import smile.neighbor.KDTree;
 import smile.stat.distribution.MultivariateGaussianDistribution;
 import smile.validation.RandIndex;
@@ -53,52 +55,17 @@ public class DBSCANTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class DBSCAN.
-     */
     @Test
-    public void testToy() {
-        System.out.println("Toy");
+    public void testGaussianMixture() {
+        System.out.println("Gaussian Mixture");
 
-        double[] mu1 = {1.0, 1.0, 1.0};
-        double[][] sigma1 = {{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}};
-        double[] mu2 = {-2.0, -2.0, -2.0};
-        double[][] sigma2 = {{1.0, 0.3, 0.8}, {0.3, 1.0, 0.5}, {0.8, 0.5, 1.0}};
-        double[] mu3 = {4.0, 2.0, 3.0};
-        double[][] sigma3 = {{1.0, 0.8, 0.3}, {0.8, 1.0, 0.5}, {0.3, 0.5, 1.0}};
-        double[] mu4 = {3.0, 5.0, 1.0};
-        double[][] sigma4 = {{1.0, 0.5, 0.5}, {0.5, 1.0, 0.5}, {0.5, 0.5, 1.0}};
-        double[][] data = new double[10000][];
-        int[] label = new int[10000];
+        double[][] data = GaussianMixture.data;
+        int[] label = GaussianMixture.label;
 
-        MultivariateGaussianDistribution g1 = new MultivariateGaussianDistribution(mu1, sigma1);
-        for (int i = 0; i < 2000; i++) {
-            data[i] = g1.rand();
-            label[i] = 0;
-        }
-
-        MultivariateGaussianDistribution g2 = new MultivariateGaussianDistribution(mu2, sigma2);
-        for (int i = 0; i < 3000; i++) {
-            data[2000 + i] = g2.rand();
-            label[i] = 1;
-        }
-
-        MultivariateGaussianDistribution g3 = new MultivariateGaussianDistribution(mu3, sigma3);
-        for (int i = 0; i < 3000; i++) {
-            data[5000 + i] = g3.rand();
-            label[i] = 2;
-        }
-
-        MultivariateGaussianDistribution g4 = new MultivariateGaussianDistribution(mu4, sigma4);
-        for (int i = 0; i < 2000; i++) {
-            data[8000 + i] = g4.rand();
-            label[i] = 3;
-        }
-        
-        DBSCAN<double[]> dbscan = new DBSCAN<>(data, new KDTree<>(data, data), 200, 0.8);
+        DBSCAN<double[]> dbscan = DBSCAN.fit(data, new KDTree<>(data, data), 200, 0.8);
         System.out.println(dbscan);
         
-        int[] size = dbscan.getClusterSize();
+        int[] size = dbscan.size;
         int n = 0;
         for (int i = 0; i < size.length-1; i++) {
             n += size[i];
@@ -107,9 +74,9 @@ public class DBSCANTest {
         int[] y1 = new int[n];
         int[] y2 = new int[n];
         for (int i = 0, j = 0; i < data.length; i++) {
-            if (dbscan.getClusterLabel()[i] != Clustering.OUTLIER) {
+            if (dbscan.y[i] != Clustering.OUTLIER) {
                 y1[j] = label[i];                
-                y2[j++] = dbscan.getClusterLabel()[i];
+                y2[j++] = dbscan.y[i];
             }
         }
         
@@ -117,7 +84,7 @@ public class DBSCANTest {
         RandIndex rand = new RandIndex();
         double r = rand.measure(y1, y2);
         double r2 = ari.measure(y1, y2);
-        System.out.println("The number of clusters: " + dbscan.getNumClusters());
+        System.out.println("The number of clusters: " + dbscan.k);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertTrue(r > 0.40);
         assertTrue(r2 > 0.15);

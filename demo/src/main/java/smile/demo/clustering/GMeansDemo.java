@@ -63,15 +63,15 @@ public class GMeansDemo extends ClusteringDemo {
         }
 
         long clock = System.currentTimeMillis();
-        GMeans gmeans = new GMeans(dataset[datasetIndex], maxClusterNumber);
+        GMeans gmeans = GMeans.fit(dataset[datasetIndex], maxClusterNumber);
         System.out.format("G-Means clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(gmeans.centroids(), '@');
-        for (int k = 0; k < gmeans.getNumClusters(); k++) {
-            if (gmeans.getClusterSize()[k] > 0) {
-                double[][] cluster = new double[gmeans.getClusterSize()[k]][];
+        PlotCanvas plot = ScatterPlot.plot(gmeans.centroids, '@');
+        for (int k = 0; k < gmeans.k; k++) {
+            if (gmeans.size[k] > 0) {
+                double[][] cluster = new double[gmeans.size[k]][];
                 for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (gmeans.getClusterLabel()[i] == k) {
+                    if (gmeans.y[i] == k) {
                         cluster[j++] = dataset[datasetIndex][i];
                     }
                 }
@@ -79,7 +79,7 @@ public class GMeansDemo extends ClusteringDemo {
                 plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
             }
         }
-        plot.points(gmeans.centroids(), '@');
+        plot.points(gmeans.centroids, '@');
         return plot;
     }
 

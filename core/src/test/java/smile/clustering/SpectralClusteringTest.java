@@ -63,12 +63,12 @@ public class SpectralClusteringTest {
         double[][] x = USPS.x;
         int[] y = USPS.y;
 
-        SpectralClustering spectral = new SpectralClustering(x, 10, 8.0);
+        SpectralClustering spectral = SpectralClustering.fit(x, 10, 8.0);
             
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        double r = rand.measure(y, spectral.getClusterLabel());
-        double r2 = ari.measure(y, spectral.getClusterLabel());
+        double r = rand.measure(y, spectral.y);
+        double r2 = ari.measure(y, spectral.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertTrue(r > 0.85);
         assertTrue(r2 > 0.45);
@@ -83,12 +83,12 @@ public class SpectralClusteringTest {
         double[][] x = USPS.x;
         int[] y = USPS.y;
 
-        SpectralClustering spectral = new SpectralClustering(x, 10, 100, 8.0);
+        SpectralClustering spectral = SpectralClustering.fit(x, 10, 100, 8.0);
             
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        double r = rand.measure(y, spectral.getClusterLabel());
-        double r2 = ari.measure(y, spectral.getClusterLabel());
+        double r = rand.measure(y, spectral.y);
+        double r2 = ari.measure(y, spectral.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertTrue(r > 0.8);
         assertTrue(r2 > 0.35);

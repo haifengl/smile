@@ -83,15 +83,15 @@ public class DBSCANDemo extends ClusteringDemo {
         }
 
         long clock = System.currentTimeMillis();
-        DBSCAN<double[]> dbscan = new DBSCAN<>(dataset[datasetIndex], new EuclideanDistance(), minPts, range);
+        DBSCAN<double[]> dbscan = DBSCAN.fit(dataset[datasetIndex], new EuclideanDistance(), minPts, range);
         System.out.format("DBSCAN clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
         JPanel pane = new JPanel(new GridLayout(1, 2));
         PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        for (int k = 0; k < dbscan.getNumClusters(); k++) {
-                double[][] cluster = new double[dbscan.getClusterSize()[k]][];
+        for (int k = 0; k < dbscan.k; k++) {
+                double[][] cluster = new double[dbscan.size[k]][];
                 for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (dbscan.getClusterLabel()[i] == k) {
+                    if (dbscan.y[i] == k) {
                         cluster[j++] = dataset[datasetIndex][i];
                     }
                 }

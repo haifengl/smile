@@ -40,15 +40,15 @@ public class NeuralGasDemo extends ClusteringDemo {
     public JComponent learn() {
 
         long clock = System.currentTimeMillis();
-        NeuralGas gas = new NeuralGas(dataset[datasetIndex], clusterNumber);
+        NeuralGas gas = NeuralGas.fit(dataset[datasetIndex], clusterNumber);
         System.out.format("Neural Gas clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(gas.centroids(), '@');
+        PlotCanvas plot = ScatterPlot.plot(gas.centroids, '@');
         for (int k = 0; k < clusterNumber; k++) {
-            if (gas.getClusterSize()[k] > 0) {
-                double[][] cluster = new double[gas.getClusterSize()[k]][];
+            if (gas.size[k] > 0) {
+                double[][] cluster = new double[gas.size[k]][];
                 for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (gas.getClusterLabel()[i] == k) {
+                    if (gas.y[i] == k) {
                         cluster[j++] = dataset[datasetIndex][i];
                     }
                 }
@@ -56,7 +56,7 @@ public class NeuralGasDemo extends ClusteringDemo {
                 plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
             }
         }
-        plot.points(gas.centroids(), '@');
+        plot.points(gas.centroids, '@');
         return plot;
     }
 

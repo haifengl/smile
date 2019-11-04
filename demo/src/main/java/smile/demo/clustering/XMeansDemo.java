@@ -64,15 +64,15 @@ public class XMeansDemo extends ClusteringDemo {
         }
 
         long clock = System.currentTimeMillis();
-        XMeans xmeans = new XMeans(dataset[datasetIndex], maxClusterNumber);
+        XMeans xmeans = XMeans.fit(dataset[datasetIndex], maxClusterNumber);
         System.out.format("X-Means clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(xmeans.centroids(), '@');
-        for (int k = 0; k < xmeans.getNumClusters(); k++) {
-            if (xmeans.getClusterSize()[k] > 0) {
-                double[][] cluster = new double[xmeans.getClusterSize()[k]][];
+        PlotCanvas plot = ScatterPlot.plot(xmeans.centroids, '@');
+        for (int k = 0; k < xmeans.k; k++) {
+            if (xmeans.size[k] > 0) {
+                double[][] cluster = new double[xmeans.size[k]][];
                 for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (xmeans.getClusterLabel()[i] == k) {
+                    if (xmeans.y[i] == k) {
                         cluster[j++] = dataset[datasetIndex][i];
                     }
                 }
@@ -80,7 +80,7 @@ public class XMeansDemo extends ClusteringDemo {
                 plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
             }
         }
-        plot.points(xmeans.centroids(), '@');
+        plot.points(xmeans.centroids, '@');
         return plot;
     }
 

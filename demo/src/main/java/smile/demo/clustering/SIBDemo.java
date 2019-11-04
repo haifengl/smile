@@ -37,7 +37,8 @@ import javax.swing.JTextField;
 
 import smile.clustering.SIB;
 import smile.data.SparseDataset;
-import smile.math.matrix.SparseMatrix;
+import smile.data.Instance;
+import smile.util.SparseArray;
 
 /**
  *
@@ -140,11 +141,12 @@ public class SIBDemo extends JPanel implements Runnable, ActionListener {
         System.out.println("The dataset " + datasetName[datasetIndex] + " has " + dataset[datasetIndex].size() + " documents and " + dataset[datasetIndex].ncols() + " words.");
 
         long clock = System.currentTimeMillis();
-        SIB sib = new SIB(dataset[datasetIndex], clusterNumber, 20);
+        SparseArray[] data = dataset[datasetIndex].stream().toArray(SparseArray[]::new);
+        SIB sib = SIB.fit(data, clusterNumber, 20);
         outputArea.setText("");
         for (int j = 0; j < dataset[datasetIndex].ncols(); j++) {
             for (int i = 0; i < clusterNumber; i++) {
-                outputArea.append(String.format("%.5f\t", sib.centroids()[i][j]));
+                outputArea.append(String.format("%.5f\t", sib.centroids[i][j]));
             }
             outputArea.append("\n");
         }
