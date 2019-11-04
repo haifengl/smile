@@ -498,9 +498,10 @@ trait Operators {
     * @param k the number of clusters. Note that this is just a hint. The final
     *          number of clusters may be less.
     * @param radius the neighborhood radius.
+    * @param tol the tolerance of convergence test.
     */
-  def mec[T <: Object](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int]): MEC[T] = time("MEC") {
-    MEC.fit(data, nns, k, radius, y)
+  def mec[T <: Object](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int], tol: Double = 1E-4): MEC[T] = time("MEC") {
+    MEC.fit(data, nns, k, radius, y, tol)
   }
 
   /** Spectral Clustering. Given a set of data points, the similarity matrix may

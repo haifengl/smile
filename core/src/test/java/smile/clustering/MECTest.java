@@ -18,6 +18,7 @@
 package smile.clustering;
 
 import smile.data.USPS;
+import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 import smile.validation.RandIndex;
 import smile.validation.AdjustedRandIndex;
@@ -59,6 +60,7 @@ public class MECTest {
     @Test(expected = Test.None.class)
     public void testUSPS() throws Exception {
         System.out.println("USPS");
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = USPS.x;
         int[] y = USPS.y;
@@ -68,12 +70,13 @@ public class MECTest {
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
         MEC<double[]> mec = MEC.fit(x, new EuclideanDistance(), 10, 8.0);
+        System.out.println(mec);
             
         double r = rand.measure(y, mec.y);
         double r2 = ari.measure(y, mec.y);
-        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.85);
-        assertTrue(r2 > 0.35);
+        System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertEquals(0.9068, r, 1E-4);
+        assertEquals(0.5253, r2, 1E-4);
             
         int[] p = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
@@ -82,8 +85,8 @@ public class MECTest {
             
         r = rand.measure(testy, p);
         r2 = ari.measure(testy, p);
-        System.out.format("Testing rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.85);
-        assertTrue(r2 > 0.35);
+        System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertEquals(0.8690, r, 1E-4);
+        assertEquals(0.3820, r2, 1E-4);
     }
 }
