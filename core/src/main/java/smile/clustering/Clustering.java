@@ -26,7 +26,7 @@ import java.io.Serializable;
  * 
  * @author Haifeng Li
  */
-public interface Clustering <T> extends Serializable {
+public interface Clustering<T> extends Serializable {
     /**
      * Cluster label for outliers or noises.
      */

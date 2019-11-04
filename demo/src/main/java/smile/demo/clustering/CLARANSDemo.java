@@ -25,6 +25,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
+import smile.math.MathEx;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.clustering.CLARANS;
@@ -77,15 +78,15 @@ public class CLARANSDemo extends ClusteringDemo {
         }
 
         long clock = System.currentTimeMillis();
-        CLARANS<double[]> clarans = new CLARANS<>(dataset[datasetIndex], new EuclideanDistance(), clusterNumber, maxNeighbor, numLocal);
+        CLARANS<double[]> clarans = CLARANS.fit(dataset[datasetIndex], clusterNumber, maxNeighbor, MathEx::distance);
         System.out.format("CLARANS clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(clarans.medoids(), '@');
+        PlotCanvas plot = ScatterPlot.plot(clarans.centroids, '@');
         for (int k = 0; k < clusterNumber; k++) {
-            if (clarans.getClusterSize()[k] > 0) {
-                double[][] cluster = new double[clarans.getClusterSize()[k]][];
+            if (clarans.size[k] > 0) {
+                double[][] cluster = new double[clarans.size[k]][];
                 for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (clarans.getClusterLabel()[i] == k) {
+                    if (clarans.y[i] == k) {
                         cluster[j++] = dataset[datasetIndex][i];
                     }
                 }
@@ -93,7 +94,7 @@ public class CLARANSDemo extends ClusteringDemo {
                 plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
             }
         }
-        plot.points(clarans.medoids(), '@');
+        plot.points(clarans.centroids, '@');
         return plot;
     }
 

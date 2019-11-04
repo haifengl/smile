@@ -80,15 +80,15 @@ public class DENCLUEDemo  extends ClusteringDemo {
         }
 
         long clock = System.currentTimeMillis();
-        DENCLUE denclue = new DENCLUE(dataset[datasetIndex], sigma, k);
+        DENCLUE denclue = DENCLUE.fit(dataset[datasetIndex], sigma, k);
         System.out.format("DENCLUE clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
         JPanel pane = new JPanel(new GridLayout(1, 2));
         PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        for (int l = 0; l < denclue.getNumClusters(); l++) {
-                double[][] cluster = new double[denclue.getClusterSize()[l]][];
+        for (int l = 0; l < denclue.k; l++) {
+                double[][] cluster = new double[denclue.size[l]][];
                 for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (denclue.getClusterLabel()[i] == l) {
+                    if (denclue.y[i] == l) {
                         cluster[j++] = dataset[datasetIndex][i];
                     }
                 }

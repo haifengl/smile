@@ -67,10 +67,10 @@ public class MECTest {
 
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        MEC<double[]> mec = new MEC<>(x, new EuclideanDistance(), 10, 8.0);
+        MEC<double[]> mec = MEC.fit(x, new EuclideanDistance(), 10, 8.0);
             
-        double r = rand.measure(y, mec.getClusterLabel());
-        double r2 = ari.measure(y, mec.getClusterLabel());
+        double r = rand.measure(y, mec.y);
+        double r2 = ari.measure(y, mec.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertTrue(r > 0.85);
         assertTrue(r2 > 0.35);

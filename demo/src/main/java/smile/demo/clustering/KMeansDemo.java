@@ -39,11 +39,11 @@ public class KMeansDemo extends ClusteringDemo {
     @Override
     public JComponent learn() {
         long clock = System.currentTimeMillis();
-        KMeans kmeans = new KMeans(dataset[datasetIndex], clusterNumber, 100, 4);
+        KMeans kmeans = KMeans.fit(dataset[datasetIndex], clusterNumber, 100, 4);
         System.out.format("K-Means clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], kmeans.getClusterLabel(), pointLegend, Palette.COLORS);
-        plot.points(kmeans.centroids(), '@');
+        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], kmeans.y, pointLegend, Palette.COLORS);
+        plot.points(kmeans.centroids, '@');
         return plot;
     }
 

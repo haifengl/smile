@@ -27,7 +27,7 @@ import smile.math.MathEx;
  * <p>
  * The structure works as follows:
  * <ul>
- * <li> All data data are placed into a tree where we choose child nodes by
+ * <li> All data are placed into a tree where we choose child nodes by
  *      partitioning all data data along a plane parallel to the axis.
  * <li> We maintain for each node, the bounding box of all data data stored
  *      at that node.
@@ -55,7 +55,7 @@ public class BBDTree {
         /**
          * The number of data stored in this node.
          */
-        int count;
+        int size;
         /**
          * The smallest point index stored in this node.
          */
@@ -130,7 +130,7 @@ public class BBDTree {
         Node node = new Node(d);
 
         // Fill in basic info
-        node.count = end - begin;
+        node.size = end - begin;
         node.index = begin;
 
         // Calculate the bounding box
@@ -184,7 +184,7 @@ public class BBDTree {
 
         // Partition the data around the midpoint in this dimension. The
         // partitioning is done in-place by iterating from left-to-right and
-        // right-to-left in the same way that partioning is done in quicksort.
+        // right-to-left in the same way that partitioning is done in quicksort.
         double splitCutoff = node.center[splitIndex];
         int i1 = begin, i2 = end - 1, size = 0;
         while (i1 <= i2) {
@@ -219,7 +219,7 @@ public class BBDTree {
 
         double[] mean = new double[d];
         for (int i = 0; i < d; i++) {
-            mean[i] = node.sum[i] / node.count;
+            mean[i] = node.sum[i] / node.size;
         }
 
         node.cost = getNodeCost(node.lower, mean) + getNodeCost(node.upper, mean);
@@ -244,10 +244,10 @@ public class BBDTree {
         int d = center.length;
         double scatter = 0.0;
         for (int i = 0; i < d; i++) {
-            double x = (node.sum[i] / node.count) - center[i];
+            double x = (node.sum[i] / node.size) - center[i];
             scatter += x * x;
         }
-        return node.cost + node.count * scatter;
+        return node.cost + node.size * scatter;
     }
 
     /**
@@ -256,19 +256,35 @@ public class BBDTree {
      * will hold the sum of data for each cluster. The parameter counts hold
      * the number of data of each cluster. If membership is
      * not null, it should be an array of size n that will be filled with the
-     * index of the cluster [0 - k) that each data point is assigned to.
+     * index of the cluster [0, k) that each data point is assigned to.
+     *
+     * @param centroids the current centroids of clusters.
+     * @param sum the workspace storing the sum of data in each cluster.
+     * @param size the number of samples in each cluster.
+     * @param y the class labels.
      */
-    public double clustering(double[][] centroids, double[][] sums, int[] counts, int[] membership) {
+    public double clustering(double[][] centroids, double[][] sum, int[] size, int[] y) {
         int k = centroids.length;
 
-        Arrays.fill(counts, 0);
+        Arrays.fill(size, 0);
         int[] candidates = new int[k];
         for (int i = 0; i < k; i++) {
             candidates[i] = i;
-            Arrays.fill(sums[i], 0.0);
+            Arrays.fill(sum[i], 0.0);
         }
 
-        return filter(root, centroids, candidates, k, sums, counts, membership);
+        double wcss = filter(root, centroids, candidates, k, sum, size, y);
+
+        int d = centroids[0].length;
+        for (int i = 0; i < k; i++) {
+            if (size[i] > 0) {
+                for (int j = 0; j < d; j++) {
+                    centroids[i][j] = sum[i][j] / size[i];
+                }
+            }
+        }
+
+        return wcss;
     }
 
     /**
@@ -277,7 +293,7 @@ public class BBDTree {
      * accordingly. Candidates maintains the set of cluster indices which
      * could possibly be the closest clusters for data in this subtree.
      */
-    private double filter(Node node, double[][] centroids, int[] candidates, int k, double[][] sums, int[] counts, int[] membership) {
+    private double filter(Node node, double[][] centroids, int[] candidates, int k, double[][] sum, int[] size, int[] y) {
         int d = centroids[0].length;
 
         // Determine which mean the node mean is closest to
@@ -305,7 +321,7 @@ public class BBDTree {
 
             // Recurse if there's at least two
             if (newk > 1) {
-                double result = filter(node.lower, centroids, newCandidates, newk, sums, counts, membership) + filter(node.upper, centroids, newCandidates, newk, sums, counts, membership);
+                double result = filter(node.lower, centroids, newCandidates, newk, sum, size, y) + filter(node.upper, centroids, newCandidates, newk, sum, size, y);
 
                 return result;
             }
@@ -313,16 +329,14 @@ public class BBDTree {
 
         // Assigns all data within this node to a single mean
         for (int i = 0; i < d; i++) {
-            sums[closest][i] += node.sum[i];
+            sum[closest][i] += node.sum[i];
         }
 
-        counts[closest] += node.count;
+        size[closest] += node.size;
 
-        if (membership != null) {
-            int last = node.index + node.count;
-            for (int i = node.index; i < last; i++) {
-                membership[index[i]] = closest;
-            }
+        int last = node.index + node.size;
+        for (int i = node.index; i < last; i++) {
+            y[index[i]] = closest;
         }
 
         return getNodeCost(node, centroids[closest]);

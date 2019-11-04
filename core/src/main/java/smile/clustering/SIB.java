@@ -17,14 +17,10 @@
 
 package smile.clustering;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.stream.IntStream;
 import smile.math.MathEx;
 import smile.util.SparseArray;
-import smile.data.SparseDataset;
-import smile.util.MulticoreExecutor;
 
 /**
  * The Sequential Information Bottleneck algorithm. SIB clusters co-occurrence
@@ -60,36 +56,35 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class SIB extends PartitionClustering<double[]> {
-    private static final long serialVersionUID = 1L;
+public class SIB extends CentroidClustering<double[], SparseArray> {
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SIB.class);
 
     /**
-     * The total distortion.
+     * Constructor.
      */
-    private double distortion;
-    /**
-     * The centroids of each cluster.
-     */
-    private double[][] centroids;
-
-    /**
-     * Constructor. Clustering data into k clusters up to 100 iterations.
-     * @param data the normalized co-occurrence input data of which each row
-     * is a sample with sum 1.
-     * @param k the number of clusters.
-     */
-    public SIB(double[][] data, int k) {
-        this(data, k, 100);
+    public SIB(double distortion, double[][] centroids, int[] y) {
+        super(distortion, centroids, y, MathEx::JensenShannonDivergence);
     }
 
     /**
-     * Constructor. Clustering data into k clusters.
-     * @param data the input data of which each row is a sample.
+     * Clustering data into k clusters up to 100 iterations.
+     * @param data the sparse normalized co-occurrence dataset of which each
+     *             row is an observation of which the sum is 1.
+     * @param k the number of clusters.
+     */
+    public static SIB fit(SparseArray[] data, int k) {
+        return fit(data, k, 100);
+    }
+
+    /**
+     * Clustering data into k clusters.
+     * @param data the sparse normalized co-occurrence dataset of which each
+     *             row is an observation of which the sum is 1.
      * @param k the number of clusters.
      * @param maxIter the maximum number of iterations.
      */
-    public SIB(double[][] data, int k, int maxIter) {
+    public static SIB fit(SparseArray[] data, int k, int maxIter) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid parameter k = " + k);
         }
@@ -99,236 +94,43 @@ public class SIB extends PartitionClustering<double[]> {
         }
 
         int n = data.length;
-        int d = data[0].length;
-
-        this.k = k;
-        size = new int[k];
-        centroids = new double[k][d];
-        y = seed(data, k, ClusteringDistance.JENSEN_SHANNON_DIVERGENCE);
-
-        for (int i = 0; i < n; i++) {
-            size[y[i]]++;
-            for (int j = 0; j < d; j++) {
-                centroids[y[i]][j] += data[i][j];
-            }
-        }
-
-        for (int i = 0; i < k; i++) {
-            for (int j = 0; j < d; j++) {
-                centroids[i][j] /= size[i];
-            }
-        }
-        
-        for (int iter = 1, reassignment = n; iter <= maxIter && reassignment > 0; iter++) {
-            reassignment = 0;
-            
-            for (int i = 0; i < n; i++) {
-                double nearest = Double.MAX_VALUE;
-                int c = -1;
-                for (int j = 0; j < k; j++) {
-                    double dist = MathEx.JensenShannonDivergence(data[i], centroids[j]);
-                    if (nearest > dist) {
-                        nearest = dist;
-                        c = j;
-                    }
-                }
-
-                if (c != y[i]) {
-                    int o = y[i];
-                    if (size[o] > 1) {
-                        int m = size[o] - 1;
-                        for (int j = 0; j < d; j++) {
-                            centroids[o][j] = (centroids[o][j] * size[o] - data[i][j]) / m;
-                            if (centroids[o][j] < 0) {
-                                centroids[o][j] = 0;
-                            }
-                        }
-                    } else {
-                        Arrays.fill(centroids[o], 0.0);
-                    }
-
-                    int m = size[c] + 1;
-                    for (int j = 0; j < d; j++) {
-                        centroids[c][j] = (centroids[c][j] * size[c] + data[i][j]) / m;
-                    }
-
-                    size[o]--;
-                    size[c]++;
-
-                    y[i] = c;
-                    reassignment++;
-                }
-            }
-        }
-
-        distortion = 0;
-        for (int i = 0; i < n; i++) {
-            distortion += MathEx.JensenShannonDivergence(data[i], centroids[y[i]]);
-        }            
-    }
-
-    /**
-     * Constructor. Run SIB clustering algorithm multiple times and return the best one.
-     * @param data the input data of which each row is a sample.
-     * @param k the number of clusters.
-     * @param maxIter the maximum number of iterations.
-     * @param runs the number of runs of SIB algorithm.
-     */
-    public SIB(double[][] data, int k, int maxIter, int runs) {
-        if (k < 2) {
-            throw new IllegalArgumentException("Invalid number of clusters: " + k);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
-        if (runs <= 0) {
-            throw new IllegalArgumentException("Invalid number of runs: " + runs);
-        }
-
-        List<SIBThread> tasks = new ArrayList<>();
-        for (int i = 0; i < runs; i++) {
-            tasks.add(new SIBThread(data, k, maxIter));
-        }
-
-        SIB best = null;
-
-        try {
-            List<SIB> clusters = MulticoreExecutor.run(tasks);
-            best = clusters.get(0);
-            for (int i = 1; i < runs; i++) {
-                SIB sib = clusters.get(i);
-                if (sib.distortion < best.distortion) {
-                    best = sib;
-                }
-            }
-        } catch (Exception ex) {
-            logger.error("Failed to run Sequential Information Bottleneck on multi-core", ex);
-
-            best = new SIB(data, k, maxIter);
-            for (int i = 1; i < runs; i++) {
-                SIB sib = new SIB(data, k, maxIter);
-                if (sib.distortion < best.distortion) {
-                    best = sib;
-                }
-            }            
-        }
-
-        this.k = best.k;
-        this.distortion = best.distortion;
-        this.centroids = best.centroids;
-        this.y = best.y;
-        this.size = best.size;
-    }
-
-    /**
-     * Initialize clusters with KMeans++ algorithm.
-     */
-    private static int[] seed(SparseDataset data, int k) {
-        int n = data.size();
+        int d = 1 + Arrays.stream(data).flatMap(s -> s.stream()).mapToInt(e -> e.i).max().orElse(0);
 
         int[] y = new int[n];
-        SparseArray centroid = data.get(MathEx.randomInt(n));
+        double[] dist = new double[n];
+        SparseArray[] medoids = new SparseArray[k];
 
-        double[] D = new double[n];
-        for (int i = 0; i < n; i++) {
-            D[i] = Double.MAX_VALUE;
-        }
+        double distortion = seed(data, medoids, y, dist, MathEx::JensenShannonDivergence);
+        logger.info("distortion after initialization: %.4f", distortion);
 
-        // pick the next center
-        for (int i = 1; i < k; i++) {
-            for (int j = 0; j < n; j++) {
-                double dist = MathEx.JensenShannonDivergence(data.get(j), centroid);
-                if (dist < D[j]) {
-                    D[j] = dist;
-                    y[j] = i - 1;
+        int[] size = new int[k];
+        double[][] centroids = new double[k][d];
+
+        IntStream.range(0, k).parallel().forEach(cluster -> {
+            for (int i = 0; i < n; i++) {
+                if (y[i] == cluster) {
+                    size[cluster]++;
+                    for (SparseArray.Entry e : data[i]) {
+                        centroids[cluster][e.i] += e.x;
+                    }
                 }
             }
 
-            double cutoff = MathEx.random() * MathEx.sum(D);
-            double cost = 0.0;
-            int index = 0;
-            for (; index < n; index++) {
-                cost += D[index];
-                if (cost >= cutoff) {
-                    break;
-                }
-            }
-
-            centroid = data.get(index);
-        }
-
-        for (int j = 0; j < n; j++) {
-            // compute the distance between this sample and the current center
-            double dist = MathEx.JensenShannonDivergence(data.get(j), centroid);
-            if (dist < D[j]) {
-                D[j] = dist;
-                y[j] = k - 1;
-            }
-        }
-
-        return y;
-    }
-
-    /**
-     * Constructor. Clustering data into k clusters up to 100 iterations.
-     * @param data the sparse normalized co-occurrence dataset of which each row
-     * is a sample with sum 1.
-     * @param k the number of clusters.
-     */
-    public SIB(SparseDataset data, int k) {
-        this(data, k, 100);
-    }
-
-    /**
-     * Constructor. Clustering data into k clusters.
-     * @param data the sparse normalized co-occurrence dataset of which each row
-     * is a sample with sum 1.
-     * @param k the number of clusters.
-     * @param maxIter the maximum number of iterations.
-     */
-    public SIB(SparseDataset data, int k, int maxIter) {
-        if (k < 2) {
-            throw new IllegalArgumentException("Invalid parameter k = " + k);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
-        int n = data.size();
-        int d = data.ncols();
-
-        this.k = k;
-        distortion = Double.MAX_VALUE;
-        size = new int[k];
-        centroids = new double[k][d];
-        y = seed(data, k);
-
-        for (int i = 0; i < n; i++) {
-            size[y[i]]++;
-            for (SparseArray.Entry e : data.get(i)) {
-                centroids[y[i]][e.i] += e.x;
-            }
-        }
-
-        for (int i = 0; i < k; i++) {
             for (int j = 0; j < d; j++) {
-                centroids[i][j] /= size[i];
+                centroids[cluster][j] /= size[cluster];
             }
-        }
-        
+        });
+
         for (int iter = 1, reassignment = n; iter <= maxIter && reassignment > 0; iter++) {
             reassignment = 0;
-            
+
             for (int i = 0; i < n; i++) {
+                int c = y[i];
                 double nearest = Double.MAX_VALUE;
-                int c = -1;
                 for (int j = 0; j < k; j++) {
-                    double dist = MathEx.JensenShannonDivergence(data.get(i), centroids[j]);
-                    if (nearest > dist) {
-                        nearest = dist;
+                    double divergence = MathEx.JensenShannonDivergence(data[i], centroids[j]);
+                    if (nearest > divergence) {
+                        nearest = divergence;
                         c = j;
                     }
                 }
@@ -340,7 +142,7 @@ public class SIB extends PartitionClustering<double[]> {
                         centroids[o][j] *= size[o];
                     }
 
-                    for (SparseArray.Entry e : data.get(i)) {
+                    for (SparseArray.Entry e : data[i]) {
                         int j = e.i;
                         double p = e.x;
                         centroids[c][j] += p;
@@ -369,165 +171,10 @@ public class SIB extends PartitionClustering<double[]> {
             }
         }
 
-        distortion = 0;
-        for (int i = 0; i < n; i++) {
-            distortion += MathEx.JensenShannonDivergence(data.get(i), centroids[y[i]]);
-        }            
-    }
+        distortion = IntStream.range(0, n).parallel()
+                .mapToDouble(i -> MathEx.JensenShannonDivergence(data[i], centroids[y[i]]))
+                .sum();
 
-    /**
-     * Constructor. Run SIB clustering algorithm multiple times and return the best one.
-     * @param data the sparse normalized co-occurrence dataset of which each row
-     * is a sample with sum 1.
-     * @param k the number of clusters.
-     * @param maxIter the maximum number of iterations.
-     * @param runs the number of runs of SIB algorithm.
-     */
-    public SIB(SparseDataset data, int k, int maxIter, int runs) {
-        if (k < 2) {
-            throw new IllegalArgumentException("Invalid number of clusters: " + k);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
-        if (runs <= 0) {
-            throw new IllegalArgumentException("Invalid number of runs: " + runs);
-        }
-
-        List<SIBThread> tasks = new ArrayList<>();
-        for (int i = 0; i < runs; i++) {
-            tasks.add(new SIBThread(data, k, maxIter));
-        }
-
-        SIB best = null;
-
-        try {
-            List<SIB> clusters = MulticoreExecutor.run(tasks);
-            best = clusters.get(0);
-            for (int i = 1; i < runs; i++) {
-                SIB sib = clusters.get(i);
-                if (sib.distortion < best.distortion) {
-                    best = sib;
-                }
-            }
-        } catch (Exception ex) {
-            logger.error("Failed to run Sequential Information Bottleneck on multi-core", ex);
-
-            best = new SIB(data, k, maxIter);
-            for (int i = 1; i < runs; i++) {
-                SIB sib = new SIB(data, k, maxIter);
-                if (sib.distortion < best.distortion) {
-                    best = sib;
-                }
-            }            
-        }
-
-        this.k = best.k;
-        this.distortion = best.distortion;
-        this.centroids = best.centroids;
-        this.y = best.y;
-        this.size = best.size;
-    }
-    
-    /**
-     * Adapter for running SIB algorithm in thread pool.
-     */
-    static class SIBThread implements Callable<SIB> {
-        double[][] data = null;
-        SparseDataset sparse = null;
-        final int k;
-        final int maxIter;
-
-        SIBThread(double[][] data, int k, int maxIter) {
-            this.data = data;
-            this.k = k;
-            this.maxIter = maxIter;
-        }
-
-        SIBThread(SparseDataset sparse, int k, int maxIter) {
-            this.sparse = sparse;
-            this.k = k;
-            this.maxIter = maxIter;
-        }
-
-        @Override
-        public SIB call() {
-            if (data != null) {
-                return new SIB(data, k, maxIter);
-            } else {
-                return new SIB(sparse, k, maxIter);
-            }
-        }
-    }
-
-    /**
-     * Cluster a new instance.
-     * @param x a new instance.
-     * @return the cluster label.
-     */
-    @Override
-    public int predict(double[] x) {
-        double minDist = Double.MAX_VALUE;
-        int bestCluster = 0;
-
-        for (int i = 0; i < k; i++) {
-            double dist = MathEx.JensenShannonDivergence(x, centroids[i]);
-            if (dist < minDist) {
-                minDist = dist;
-                bestCluster = i;
-            }
-        }
-
-        return bestCluster;
-    }
-
-    /**
-     * Cluster a new instance.
-     * @param x a new instance.
-     * @return the cluster label.
-     */
-    public int predict(SparseArray x) {
-        double minDist = Double.MAX_VALUE;
-        int bestCluster = 0;
-
-        for (int i = 0; i < k; i++) {
-            double dist = MathEx.JensenShannonDivergence(x, centroids[i]);
-            if (dist < minDist) {
-                minDist = dist;
-                bestCluster = i;
-            }
-        }
-
-        return bestCluster;
-    }
-
-    /**
-     * Returns the distortion.
-     */
-    public double distortion() {
-        return distortion;
-    }
-
-    /**
-     * Returns the centroids.
-     */
-    public double[][] centroids() {
-        return centroids;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append(String.format("Sequential Information Bottleneck distortion: %.5f%n", distortion));
-        sb.append(String.format("Clusters of %d data points of dimension %d:%n", y.length, centroids[0].length));
-        for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
-            sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
-        }
-        
-        return sb.toString();
+        return new SIB(distortion, centroids, y);
     }
 }

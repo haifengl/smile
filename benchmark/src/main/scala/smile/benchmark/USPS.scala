@@ -87,7 +87,7 @@ object USPS {
 
     // RBF Network
     println("Training RBF Network...")
-    val kmeans = new KMeans(x, 200, 10)
+    val kmeans = KMeans.fit(x, 200)
     val distance = new EuclideanDistance
     val neurons = RBF.of(kmeans.centroids, new GaussianRadialBasis(8.0), distance)
     test(x, y, testx, testy) { (x, y) =>

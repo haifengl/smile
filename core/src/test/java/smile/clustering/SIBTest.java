@@ -66,17 +66,17 @@ public class SIBTest {
         Dataset<Instance<SparseArray>> train = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
         Dataset<Instance<SparseArray>> test = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
 
-        SparseDataset trainx = SparseDataset.of(train);
+        SparseArray[] trainx = train.stream().map(Instance<SparseArray>::x).toArray(SparseArray[]::new);
         int[] y = train.stream().mapToInt(i -> i.label()).toArray();
         int[] testy = test.stream().mapToInt(i -> i.label()).toArray();
             
-        SIB sib = new SIB(trainx, 20, 100, 8);
+        SIB sib = SIB.fit(trainx, 20);
         System.out.println(sib);
             
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        double r = rand.measure(y, sib.getClusterLabel());
-        double r2 = ari.measure(y, sib.getClusterLabel());
+        double r = rand.measure(y, sib.y);
+        double r2 = ari.measure(y, sib.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertTrue(r > 0.85);
         assertTrue(r2 > 0.2);

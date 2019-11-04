@@ -60,14 +60,14 @@ public class MECDemo extends ClusteringDemo {
         }
 
         long clock = System.currentTimeMillis();
-        MEC<double[]> mec = new MEC<>(dataset[datasetIndex], new EuclideanDistance(), clusterNumber, range);
+        MEC<double[]> mec = MEC.fit(dataset[datasetIndex], new EuclideanDistance(), clusterNumber, range);
         System.out.format("MEC clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
         PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        for (int k = 0; k < mec.getNumClusters(); k++) {
-                double[][] cluster = new double[mec.getClusterSize()[k]][];
+        for (int k = 0; k < mec.k; k++) {
+                double[][] cluster = new double[mec.size[k]][];
                 for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (mec.getClusterLabel()[i] == k) {
+                    if (mec.y[i] == k) {
                         cluster[j++] = dataset[datasetIndex][i];
                     }
                 }

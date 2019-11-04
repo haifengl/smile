@@ -59,14 +59,14 @@ public class SpectralClusteringDemo extends ClusteringDemo {
         }
 
         long clock = System.currentTimeMillis();
-        SpectralClustering spectral = new SpectralClustering(dataset[datasetIndex], clusterNumber, gaussianWidth);
+        SpectralClustering spectral = SpectralClustering.fit(dataset[datasetIndex], clusterNumber, gaussianWidth);
         System.out.format("Spectral Clustering clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
         PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        for (int k = 0; k < spectral.getNumClusters(); k++) {
-                double[][] cluster = new double[spectral.getClusterSize()[k]][];
+        for (int k = 0; k < spectral.k; k++) {
+                double[][] cluster = new double[spectral.size[k]][];
                 for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (spectral.getClusterLabel()[i] == k) {
+                    if (spectral.y[i] == k) {
                         cluster[j++] = dataset[datasetIndex][i];
                     }
                 }

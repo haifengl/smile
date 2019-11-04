@@ -52,9 +52,6 @@ public class GMeansTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class GMeans.
-     */
     @Test(expected = Test.None.class)
     public void testUSPS() throws Exception {
         System.out.println("USPS");
@@ -66,10 +63,10 @@ public class GMeansTest {
 
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        GMeans gmeans = new GMeans(x, 10);
+        GMeans gmeans = GMeans.fit(x, 10);
             
-        double r = rand.measure(y, gmeans.getClusterLabel());
-        double r2 = ari.measure(y, gmeans.getClusterLabel());
+        double r = rand.measure(y, gmeans.y);
+        double r2 = ari.measure(y, gmeans.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertTrue(r > 0.85);
         assertTrue(r2 > 0.4);
