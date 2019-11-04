@@ -73,8 +73,8 @@ public class XMeans extends CentroidClustering<double[], double[]> {
      * determined by X-Means algorithm automatically.
      * @param data the input data of which each row is an observation.
      * @param kmax the maximum number of clusters.
-     * @param maxIter the maximum number of iterations for each running.
-     * @param tol the tolerance of convergence test.
+     * @param maxIter the maximum number of iterations for k-means.
+     * @param tol the tolerance of k-means convergence test.
      */
     public static XMeans fit(double[][] data, int kmax, int maxIter, double tol) {
         if (kmax < 2) {

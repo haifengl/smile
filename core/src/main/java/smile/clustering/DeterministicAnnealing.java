@@ -59,22 +59,25 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
     }
 
     /**
-     * Constructor. Clustering data into k clusters.
+     * Clustering data into k clusters.
      * @param data the input data of which each row is an observation.
      * @param Kmax the maximum number of clusters.
      */
     public static DeterministicAnnealing fit(double[][] data, int Kmax) {
-        return fit(data, Kmax, 0.9);
+        return fit(data, Kmax, 0.9, 100, 1E-4, 1E-2);
     }
 
     /**
-     * Constructor. Clustering data into k clusters.
+     * Clustering data into k clusters.
      * @param data the input data of which each row is an observation.
      * @param Kmax the maximum number of clusters.
-     * @param alpha the temperature T is decreasing as T = T * alpha. alpha has
-     * to be in (0, 1).
+     * @param alpha the temperature T is decreasing as T = T * alpha.
+     *              alpha has to be in (0, 1).
+     * @param maxIter the maximum number of iterations at each temperature.
+     * @param tol the tolerance of convergence test.
+     * @param splitTol the tolerance to split a cluster.
      */
-    public static DeterministicAnnealing fit(double[][] data, int Kmax, double alpha) {
+    public static DeterministicAnnealing fit(double[][] data, int Kmax, double alpha, int maxIter, double tol, double splitTol) {
         if (alpha <= 0 || alpha >= 1.0) {
             throw new IllegalArgumentException("Invalid alpha: " + alpha);
         }
@@ -86,14 +89,8 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
         double[][] posteriori = new double[n][2 * Kmax];
         double[] priori = new double[2 * Kmax];
 
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < d; j++) {
-                centroids[0][j] += data[i][j];
-            }
-        }
-
+        centroids[0] = MathEx.colMeans(data);
         for (int i = 0; i < d; i++) {
-            centroids[0][i] /= n;
             centroids[1][i] = centroids[0][i] * 1.01;
         }
 
@@ -110,7 +107,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
         boolean stop = false;
         boolean split = false;
         while (!stop) {
-            update(data, T, k, centroids, posteriori, priori);
+            update(data, T, k, centroids, posteriori, priori, maxIter, tol);
 
             if (k >= 2 * Kmax && split) {
                 stop = true;
@@ -124,7 +121,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
                     norm += diff * diff;
                 }
 
-                if (norm > 1E-2) {
+                if (norm > splitTol) {
                     if (k < 2 * Kmax) {
                         // split the cluster to two.
                         for (int j = 0; j < d; j++) {
@@ -177,19 +174,13 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
         // Finish the annealing process and run the system at T = 0, i.e.
         // hard clustering.
         k = k / 2;
-        int[] y = new int[n];
-        double distortion = 0.0;
-        for (int i = 0; i < n; i++) {
-            double nearest = Double.MAX_VALUE;
-            for (int j = 0; j < k; j += 2) {
-                double dist = MathEx.squaredDistance(data[i], centroids[j]);
-                if (nearest > dist) {
-                    y[i] = j / 2;
-                    nearest = dist;
-                }
-            }
-            distortion += nearest;
+        double[][] centers = new double[k][];
+        for (int i = 0; i < k; i++) {
+            centers[i] = centroids[2*i];
         }
+
+        int[] y = new int[n];
+        double distortion = assign(y, data, centers, MathEx::squaredDistance);
 
         int[] size = new int[k];
         centroids = new double[k][d];
@@ -212,46 +203,51 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
     /**
      *  Update the system at a given temperature until convergence.
      */
-    private static double update(double[][] data, double T, int k, double[][] centroids, double[][] posteriori, double[] priori) {
+    private static double update(double[][] data, double T, int k, double[][] centroids, double[][] posteriori, double[] priori, int maxIter, double tol) {
         int n = data.length;
         int d = data[0].length;
 
-        double D = 0.0;
-        double H = 0.0;
+        double distortion = Double.MAX_VALUE;
+        double diff = Double.MAX_VALUE;
+        for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
 
-        int iter = 0;
-        double currentDistortion = Double.MAX_VALUE;
-        double newDistortion = Double.MAX_VALUE / 2;
-        while (iter < 100 && currentDistortion > newDistortion) {
-            currentDistortion = newDistortion;
-
-            D = 0.0;
-            H = 0.0;
-            double[] dist = new double[k];
-
-            for (int i = 0; i < n; i++) {
-                double p = 0.0;
+            double D = IntStream.range(0, n).parallel().mapToDouble(i -> {
+                double Z = 0.0;
+                double[] p = posteriori[i];
+                double[] dist = new double[k];
 
                 for (int j = 0; j < k; j++) {
                     dist[j] = MathEx.squaredDistance(data[i], centroids[j]);
-                    posteriori[i][j] = priori[j] * Math.exp(-dist[j] / T);
-                    p += posteriori[i][j];
+                    p[j] = priori[j] * Math.exp(-dist[j] / T);
+                    Z += p[j];
                 }
 
-                double r = 0.0;
+                double sum = 0.0;
                 for (int j = 0; j < k; j++) {
-                    posteriori[i][j] /= p;
-                    D += posteriori[i][j] * dist[j];
-                    r += -posteriori[i][j] * Math.log(posteriori[i][j]);
+                    p[j] /= Z;
+                    sum += p[j] * dist[j];
                 }
-                H += r;
+                return sum;
+            }).sum();
+
+            double H = IntStream.range(0, n).parallel().mapToDouble(i -> {
+                double[] p = posteriori[i];
+                double sum = 0.0;
+                for (int j = 0; j < k; j++) {
+                    sum += -p[j] * Math.log(p[j]);
+                }
+                return sum;
+            }).sum();
+
+            Arrays.fill(priori, 0.0);
+            for (int i = 0; i < n; i++) {
+                double[] p = posteriori[i];
+                for (int j = 0; j < k; j++) {
+                    priori[j] += p[j];
+                }
             }
-            
+
             for (int i = 0; i < k; i++) {
-                priori[i] = 0;
-                for (int j = 0; j < n; j++) {
-                    priori[i] += posteriori[j][i];
-                }
                 priori[i] /= n;
             }
 
@@ -265,12 +261,13 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
                 }
             });
 
-            newDistortion = D - T * H;
-            iter++;
+            double DTH = D - T * H;
+            diff = distortion - DTH;
+            distortion = DTH;
+
+            logger.info(String.format("Entropy after %3d iterations at temperature %.4f and k = %d: %.4f (soft distortion = %.4f)", iter, T, k / 2, H, D));
         }
 
-        logger.info(String.format("Deterministic Annealing clustering entropy after %3d iterations at temperature %.4f and k = %d: %.5f (soft distortion = %.5f )%n", iter, T, k / 2, H, D));
-
-        return currentDistortion;
+        return distortion;
     }
 }

@@ -153,16 +153,16 @@ public class PowerIteration {
 
             double eps = Math.abs(lambda - l);
             if (iter % 10 == 0) {
-                logger.trace(String.format("Largest eigenvalue after %3d power iterations: %.5f\n", iter, lambda + p));
+                logger.trace(String.format("Largest eigenvalue after %3d power iterations: %.4f", iter, lambda + p));
             }
 
             if (eps < tol) {
-                logger.info(String.format("Largest eigenvalue after %3d power iterations: %.5f\n", iter, lambda + p));
+                logger.info(String.format("Largest eigenvalue after %3d power iterations: %.4f", iter, lambda + p));
                 return lambda + p;
             }
         }
 
-        logger.info(String.format("Largest eigenvalue after %3d power iterations: %.5f\n", maxIter, lambda + p));
+        logger.info(String.format("Largest eigenvalue after %3d power iterations: %.4f", maxIter, lambda + p));
         logger.error("Power iteration exceeded the maximum number of iterations.");
         return lambda + p;
     }
