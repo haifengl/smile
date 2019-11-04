@@ -18,6 +18,7 @@
 package smile.math.kernel;
 
 import java.io.Serializable;
+import java.util.function.ToDoubleBiFunction;
 
 /**
  * A Mercer Kernel is a kernel that is positive semi-definite. When a kernel
@@ -34,7 +35,7 @@ import java.io.Serializable;
  * 
  * @author Haifeng Li
  */
-public interface MercerKernel<T> extends Serializable {
+public interface MercerKernel<T> extends ToDoubleBiFunction<T,T>, Serializable {
 
     /**
      * Kernel function.
@@ -46,6 +47,11 @@ public interface MercerKernel<T> extends Serializable {
      * This is simply for Scala convenience.
      */
     default double apply(T x, T y) {
+        return k(x, y);
+    }
+
+    @Override
+    default double applyAsDouble(T x, T y) {
         return k(x, y);
     }
 }
