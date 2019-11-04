@@ -97,7 +97,6 @@ public class XMeans extends CentroidClustering<double[], double[]> {
         double distortion = Arrays.stream(data).parallel().mapToDouble(x -> MathEx.squaredDistance(x, mean)).sum();
         double[] distortions = new double[kmax];
         distortions[0] = distortion;
-        logger.info(String.format("distortion after initialization: %.4f", distortion));
 
         BBDTree bbd = new BBDTree(data);
         KMeans[] kmeans = new KMeans[kmax];
@@ -156,7 +155,7 @@ public class XMeans extends CentroidClustering<double[], double[]> {
             centroids = centers.toArray(new double[k][]);
 
             double diff = Double.MAX_VALUE;
-            for (int iter = 1; iter <= maxIter && diff < tol; iter++) {
+            for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
                 double wcss = bbd.clustering(centroids, sum, size, y);
 
                 diff = distortion - wcss;
