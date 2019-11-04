@@ -66,13 +66,13 @@ public class CLARANSTest {
 
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
-        CLARANS<double[]> clarans = CLARANS.fit(x,10, MathEx::distance);
+        CLARANS<double[]> clarans = CLARANS.fit(x,10, MathEx::squaredDistance);
 
         double r = rand.measure(y, clarans.y);
         double r2 = ari.measure(y, clarans.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.8818, r, 1E-4);
-        assertEquals(0.3861, r2, 1E-4);
+        assertEquals(0.8935, r, 1E-4);
+        assertEquals(0.4610, r2, 1E-4);
             
         int[] p = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
@@ -82,7 +82,7 @@ public class CLARANSTest {
         r = rand.measure(testy, p);
         r2 = ari.measure(testy, p);
         System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.8759, r, 1E-4);
-        assertEquals(0.3557, r2, 1E-4);
+        assertEquals(0.8807, r, 1E-4);
+        assertEquals(0.4016, r2, 1E-4);
     }
 }

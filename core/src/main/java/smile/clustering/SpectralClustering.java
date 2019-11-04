@@ -78,8 +78,8 @@ public class SpectralClustering extends PartitionClustering implements Serializa
      * Spectral graph clustering.
      * @param W the adjacency matrix of graph, which will be modified.
      * @param k the number of clusters.
-     * @param maxIter the maximum number of iterations for each running.
-     * @param tol the tolerance of convergence test.
+     * @param maxIter the maximum number of iterations for k-means.
+     * @param tol the tolerance of k-means convergence test.
      */
     public static SpectralClustering fit(DenseMatrix W, int k, int maxIter, double tol) {
         if (k < 2) {
@@ -136,8 +136,8 @@ public class SpectralClustering extends PartitionClustering implements Serializa
      *              a somewhat sensitive parameter. To search for the best
      *              setting, one may pick the value that gives the tightest
      *              clusters (smallest distortion) in feature space.
-     * @param maxIter the maximum number of iterations for each running.
-     * @param tol the tolerance of convergence test.
+     * @param maxIter the maximum number of iterations for k-means.
+     * @param tol the tolerance of k-means convergence test.
      */
     public static SpectralClustering fit(double[][] data, int k, double sigma, int maxIter, double tol) {
         if (k < 2) {
@@ -186,8 +186,8 @@ public class SpectralClustering extends PartitionClustering implements Serializa
      *              a somewhat sensitive parameter. To search for the best
      *              setting, one may pick the value that gives the tightest
      *              clusters (smallest distortion) in feature space.
-     * @param maxIter the maximum number of iterations for each running.
-     * @param tol the tolerance of convergence test.
+     * @param maxIter the maximum number of iterations for k-means.
+     * @param tol the tolerance of k-means convergence test.
      */
     public static SpectralClustering fit(double[][] data, int k, int l, double sigma, int maxIter, double tol) {
         if (l < k || l >= data.length) {

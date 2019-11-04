@@ -116,7 +116,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
      * Partitions data into k clusters up to 100 iterations.
      * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
-     * @param maxIter the maximum number of iterations for each running.
+     * @param maxIter the maximum number of iterations.
      * @param tol the tolerance of convergence test.
      */
     public static KMeans fit(double[][] data, int k, int maxIter, double tol) {
@@ -128,7 +128,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
      * @param bbd the BBD-tree of data for fast clustering.
      * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
-     * @param maxIter the maximum number of iterations for each running.
+     * @param maxIter the maximum number of iterations.
      * @param tol the tolerance of convergence test.
      */
     public static KMeans fit(BBDTree bbd, double[][] data, int k, int maxIter, double tol) {
@@ -184,7 +184,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
      * contain missing values (i.e. Double.NaN).
      * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
-     * @param maxIter the maximum number of iterations for each running.
+     * @param maxIter the maximum number of iterations.
      * @param tol the tolerance of convergence test.
      */
     private static KMeans lloyd(double[][] data, int k, int maxIter, double tol) {

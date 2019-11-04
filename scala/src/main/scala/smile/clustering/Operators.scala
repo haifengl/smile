@@ -250,9 +250,11 @@ trait Operators {
     * @param k the maximum number of clusters.
     * @param alpha the temperature T is decreasing as T = T * alpha. alpha has
     *              to be in (0, 1).
+    * @param tol   the tolerance of convergence test.
+    * @param splitTol the tolerance to split a cluster.
     */
-  def dac(data: Array[Array[Double]], k: Int, alpha: Double = 0.9): DeterministicAnnealing = time("Deterministic annealing clustering") {
-    DeterministicAnnealing.fit(data, k, alpha)
+  def dac(data: Array[Array[Double]], k: Int, alpha: Double = 0.9, maxIter: Int = 100, tol: Double = 1E-4, splitTol: Double = 1E-2): DeterministicAnnealing = time("Deterministic annealing clustering") {
+    DeterministicAnnealing.fit(data, k, alpha, maxIter, tol, splitTol)
   }
 
   /** Clustering Large Applications based upon RANdomized Search. CLARANS is an
