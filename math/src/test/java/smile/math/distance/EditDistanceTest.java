@@ -64,6 +64,7 @@ public class EditDistanceTest {
         assertEquals(4, EditDistance.levenshtein(x, z));
 
         assertEquals(2, EditDistance.levenshtein("act", "cat"));
+        assertEquals(2, EditDistance.levenshtein("pat", "pta"));
         assertEquals(5, EditDistance.levenshtein("adcroft", "addessi"));
         assertEquals(3, EditDistance.levenshtein("baird", "baisden"));
         assertEquals(2, EditDistance.levenshtein("boggan", "boggs"));
@@ -85,6 +86,7 @@ public class EditDistanceTest {
         assertEquals(3, EditDistance.damerau(x, z));
 
         assertEquals(1, EditDistance.damerau("act", "cat"));
+        assertEquals(1, EditDistance.damerau("pat", "pta"));
         assertEquals(5, EditDistance.damerau("adcroft", "addessi"));
         assertEquals(3, EditDistance.damerau("baird", "baisden"));
         assertEquals(2, EditDistance.damerau("boggan", "boggs"));

@@ -17,9 +17,7 @@
 
 package smile.clustering;
 
-import java.util.Arrays;
 import java.util.function.ToDoubleBiFunction;
-import java.util.stream.IntStream;
 import smile.math.MathEx;
 
 /**
@@ -187,7 +185,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
      * @param maxIter the maximum number of iterations.
      * @param tol the tolerance of convergence test.
      */
-    private static KMeans lloyd(double[][] data, int k, int maxIter, double tol) {
+    public static KMeans lloyd(double[][] data, int k, int maxIter, double tol) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid number of clusters: " + k);
         }
@@ -223,7 +221,9 @@ public class KMeans extends CentroidClustering<double[], double[]> {
         }
 
         // In case of early stop, we should recalculate centroids.
-        updateCentroidsWithMissingValues(centroids, data, y, size, notNaN);
+        if (diff > tol) {
+            updateCentroidsWithMissingValues(centroids, data, y, size, notNaN);
+        }
 
         return new KMeans(distortion, centroids, y, MathEx::squaredDistanceWithMissingValues);
     }
