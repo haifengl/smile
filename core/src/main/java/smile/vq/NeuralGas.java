@@ -20,9 +20,6 @@ package smile.vq;
 import java.util.Arrays;
 
 import smile.clustering.CentroidClustering;
-import smile.clustering.ClusteringDistance;
-import smile.clustering.KMeans;
-import smile.clustering.PartitionClustering;
 import smile.math.MathEx;
 
 /**
@@ -160,7 +157,7 @@ public class NeuralGas extends CentroidClustering<double[], double[]> {
 
         int[] size = new int[k];
         double[][] centroids = new double[k][d];
-        KMeans.updateCentroids(centroids, data, y, size);
+        updateCentroids(centroids, data, y, size);
 
         Neuron[] nodes = new Neuron[k];
         for (int i = 0; i < k; i++) {

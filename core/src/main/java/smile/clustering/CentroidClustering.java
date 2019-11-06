@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.util.Arrays;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 
@@ -110,7 +111,7 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
     /**
      * Assigns each observation to the nearest centroid.
      */
-    public static <T> double assign(int[] y, T[] data, T[] centroids, ToDoubleBiFunction<T, T> distance) {
+    protected static <T> double assign(int[] y, T[] data, T[] centroids, ToDoubleBiFunction<T, T> distance) {
         int k = centroids.length;
         double wcss = IntStream.range(0, data.length).parallel().mapToDouble(i -> {
             double nearest = Double.MAX_VALUE;
@@ -125,5 +126,61 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
         }).sum();
 
         return wcss;
+    }
+
+    /**
+     * Calculates the new centroids in the new clusters.
+     */
+    protected static void updateCentroids(double[][] centroids, double[][] data, int[] y, int[] size) {
+        int n = data.length;
+        int k = centroids.length;
+        int d = centroids[0].length;
+
+        Arrays.fill(size, 0);
+        IntStream.range(0, k).parallel().forEach(cluster -> {
+            Arrays.fill(centroids[cluster], 0.0);
+            for (int i = 0; i < n; i++) {
+                if (y[i] == cluster) {
+                    size[cluster]++;
+                    for (int j = 0; j < d; j++) {
+                        centroids[cluster][j] += data[i][j];
+                    }
+                }
+            }
+
+            for (int j = 0; j < d; j++) {
+                centroids[cluster][j] /= size[cluster];
+            }
+        });
+    }
+
+    /**
+     * Calculates the new centroids in the new clusters with missing values.
+     * @param notNaN the number of non-missing values per cluster per variable.
+     */
+    protected static void updateCentroidsWithMissingValues(double[][] centroids, double[][] data, int[] y, int[] size, int[][] notNaN) {
+        int n = data.length;
+        int k = centroids.length;
+        int d = centroids[0].length;
+
+        IntStream.range(0, k).parallel().forEach(cluster -> {
+            Arrays.fill(centroids[cluster], 0);
+            Arrays.fill(notNaN[cluster], 0);
+            for (int i = 0; i < n; i++) {
+                if (y[i] == cluster) {
+                    size[cluster]++;
+                    for (int j = 0; j < d; j++) {
+                        if (!Double.isNaN(data[i][j])) {
+                            centroids[cluster][j] += data[i][j];
+                            notNaN[cluster][j]++;
+                        }
+                    }
+                }
+            }
+
+            for (int j = 0; j < d; j++) {
+                centroids[cluster][j] /= notNaN[cluster][j];
+            }
+        });
     }
 }

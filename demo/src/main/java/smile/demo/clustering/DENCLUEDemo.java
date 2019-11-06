@@ -82,6 +82,7 @@ public class DENCLUEDemo  extends ClusteringDemo {
         long clock = System.currentTimeMillis();
         DENCLUE denclue = DENCLUE.fit(dataset[datasetIndex], sigma, k);
         System.out.format("DENCLUE clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
+        System.out.println(denclue);
 
         JPanel pane = new JPanel(new GridLayout(1, 2));
         PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
@@ -95,7 +96,7 @@ public class DENCLUEDemo  extends ClusteringDemo {
 
                 plot.points(cluster, pointLegend, Palette.COLORS[l % Palette.COLORS.length]);
         }
-        plot.points(denclue.getDensityAttractors(), '@');
+        plot.points(denclue.attractors, '@');
         pane.add(plot);
 
         return pane;

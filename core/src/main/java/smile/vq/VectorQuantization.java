@@ -15,6 +15,10 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
+package smile.vq;
+
+import java.io.Serializable;
+
 /**
  * Originally used for data compression, Vector quantization (VQ)
  * allows the modeling of probability density functions by
@@ -26,10 +30,19 @@
  * Vector quantization is is based on the competitive learning paradigm,
  * and also closely related to sparse coding models
  * used in deep learning algorithms such as autoencoder.
- * <p>
- * Algorithms in this package also support the <code>partition</code>
- * method for clustering purpose.
  *
  * @author Haifeng Li
  */
-package smile.vq;
+public interface VectorQuantization extends Serializable {
+    /**
+     * Cluster label for outliers or noises.
+     */
+    int OUTLIER = Integer.MAX_VALUE;
+
+    /**
+     * Classifies a new observation.
+     * @param x a new observation.
+     * @return the cluster label.
+     */
+    int predict(double[] x);
+}

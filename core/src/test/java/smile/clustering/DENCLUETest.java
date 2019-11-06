@@ -57,18 +57,21 @@ public class DENCLUETest {
     @Test
     public void testGaussianMixture() {
         System.out.println("Gaussian Mixture");
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] data = GaussianMixture.data;
         int[] label = GaussianMixture.label;
 
-        DENCLUE denclue = DENCLUE.fit(data, 0.8, 50);
+        DENCLUE denclue = DENCLUE.fit(data, 0.8, 200);
+        System.out.println(denclue);
+
         AdjustedRandIndex ari = new AdjustedRandIndex();
         RandIndex rand = new RandIndex();
         double r = rand.measure(label, denclue.y);
         double r2 = ari.measure(label, denclue.y);
         System.out.println("The number of clusters: " + denclue.k);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.54);
-        assertTrue(r2 > 0.2);
+        assertEquals(0.6058, r, 1E-4);
+        assertEquals(0.2416, r2, 1E-4);
     }
 }

@@ -33,8 +33,8 @@ public interface Clustering<T> extends Serializable {
     int OUTLIER = Integer.MAX_VALUE;
     
     /**
-     * Cluster a new instance.
-     * @param x a new instance.
+     * Classifies a new observation.
+     * @param x a new observation.
      * @return the cluster label.
      */
     int predict(T x);
