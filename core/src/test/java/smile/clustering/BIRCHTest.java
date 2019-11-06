@@ -56,6 +56,7 @@ public class BIRCHTest {
     @Test(expected = Test.None.class)
     public void testUSPS() throws Exception {
         System.out.println("USPS");
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = USPS.x;
         int[] y = USPS.y;

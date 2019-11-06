@@ -49,12 +49,9 @@ public class FalloutTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of measure method, of class Fallout.
-     */
     @Test
     public void testMeasure() {
-        System.out.println("measure");
+        System.out.println("fallout");
         int[] truth = {
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

@@ -49,12 +49,9 @@ public class SensitivityTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of measure method, of class Sensitivity.
-     */
     @Test
     public void testMeasure() {
-        System.out.println("measure");
+        System.out.println("sensitivity");
         int[] truth = {
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

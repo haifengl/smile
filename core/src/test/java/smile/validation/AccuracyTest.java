@@ -49,12 +49,9 @@ public class AccuracyTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of measure method, of class Accuracy.
-     */
     @Test
-    public void testMeasure() {
-        System.out.println("measure");
+    public void test() {
+        System.out.println("accuracy");
         int[] truth = {
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

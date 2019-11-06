@@ -49,10 +49,6 @@ public class CrossValidationTest {
     public void tearDown() {
     }
 
-
-    /**
-     * Test if the train and test dataset are complete, of class CrossValidation.
-     */
     @Test
     public void testComplete() {
         System.out.println("Complete");
@@ -83,9 +79,6 @@ public class CrossValidationTest {
         }
     }
 
-    /**
-     * Test if different dataset are different, of class CrossValidation.
-     */
     @Test
     public void testOrthogonal() {
         System.out.println("Orthogonal");

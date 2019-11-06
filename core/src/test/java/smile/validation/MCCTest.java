@@ -46,12 +46,9 @@ public class MCCTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of measure method, of class MCCMeasure.
-     */
     @Test
     public void testMeasure() {
-        System.out.println("measure");
+        System.out.println("MCC");
         int[] truth = {
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -68,12 +65,9 @@ public class MCCTest {
         assertEquals(expResult, result, 1E-5);
     }
 
-    /**
-     * Test of measure method, of class MCCMeasure in case of the mcc numerator is 0.
-     */
     @Test
     public void testMeasureRandom(){
-        System.out.println("measure random");
+        System.out.println("numerator = 0");
         int[] truth = {
                 0, 0, 0, 0,
                 1, 1, 1, 1

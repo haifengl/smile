@@ -49,12 +49,9 @@ public class FDRTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of measure method, of class FDR.
-     */
     @Test
     public void testMeasure() {
-        System.out.println("measure");
+        System.out.println("FDR");
         int[] truth = {
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

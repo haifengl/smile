@@ -19,8 +19,7 @@ package smile.clustering;
 
 import smile.clustering.linkage.*;
 import smile.data.USPS;
-import smile.validation.RandIndex;
-import smile.validation.AdjustedRandIndex;
+import smile.validation.*;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -64,60 +63,109 @@ public class HierarchicalClusteringTest {
         double[][] x = USPS.x;
         int[] y = USPS.y;
 
-        HierarchicalClustering hc = HierarchicalClustering.fit(SingleLinkage.of(x));
-        int[] label = hc.partition(10);
+        HierarchicalClustering model = HierarchicalClustering.fit(SingleLinkage.of(x));
+        int[] label = model.partition(10);
         double r = RandIndex.of(y, label);
         double r2 = AdjustedRandIndex.of(y, label);
         System.out.format("SingleLinkage rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.1091, r, 1E-4);
         assertEquals(0.0000, r2, 1E-4);
 
-        hc = HierarchicalClustering.fit(CompleteLinkage.of(x));
-        label = hc.partition(10);
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, label));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, label));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, label));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, label));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, label));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, label));
+
+        model = HierarchicalClustering.fit(CompleteLinkage.of(x));
+        label = model.partition(10);
         r = RandIndex.of(y, label);
         r2 = AdjustedRandIndex.of(y, label);
         System.out.format("CompleteLinkage rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.8346, r, 1E-4);
         assertEquals(0.2930, r2, 1E-4);
-            
-        hc = HierarchicalClustering.fit(UPGMALinkage.of(x));
-        label = hc.partition(10);
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, label));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, label));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, label));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, label));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, label));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, label));
+
+        model = HierarchicalClustering.fit(UPGMALinkage.of(x));
+        label = model.partition(10);
         r = RandIndex.of(y, label);
         r2 = AdjustedRandIndex.of(y, label);
         System.out.format("UPGMA rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.2395, r, 1E-4);
         assertEquals(0.0068, r2, 1E-4);
-            
-        hc = HierarchicalClustering.fit(WPGMALinkage.of(x));
-        label = hc.partition(10);
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, label));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, label));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, label));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, label));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, label));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, label));
+
+        model = HierarchicalClustering.fit(WPGMALinkage.of(x));
+        label = model.partition(10);
         r = RandIndex.of(y, label);
         r2 = AdjustedRandIndex.of(y, label);
         System.out.format("WPGMA rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.7832, r, 1E-4);
         assertEquals(0.2561, r2, 1E-4);
-            
-        hc = HierarchicalClustering.fit(UPGMCLinkage.of(x));
-        label = hc.partition(10);
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, label));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, label));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, label));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, label));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, label));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, label));
+
+        model = HierarchicalClustering.fit(UPGMCLinkage.of(x));
+        label = model.partition(10);
         r = RandIndex.of(y, label);
         r2 = AdjustedRandIndex.of(y, label);
         System.out.format("UPGMC rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.1093, r, 1E-4);
         assertEquals(0.0000, r2, 1E-4);
-            
-        hc = HierarchicalClustering.fit(WPGMCLinkage.of(x));
-        label = hc.partition(10);
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, label));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, label));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, label));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, label));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, label));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, label));
+
+        model = HierarchicalClustering.fit(WPGMCLinkage.of(x));
+        label = model.partition(10);
         r = RandIndex.of(y, label);
         r2 = AdjustedRandIndex.of(y, label);
         System.out.format("WPGMC rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.1091, r, 1E-4);
         assertEquals(0.0000, r2, 1E-4);
-            
-        hc = HierarchicalClustering.fit(WardLinkage.of(x));
-        label = hc.partition(10);
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, label));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, label));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, label));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, label));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, label));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, label));
+
+        model = HierarchicalClustering.fit(WardLinkage.of(x));
+        label = model.partition(10);
         r = RandIndex.of(y, label);
         r2 = AdjustedRandIndex.of(y, label);
         System.out.format("Ward rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.9254, r, 1E-4);
         assertEquals(0.6204, r2, 1E-4);
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, label));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, label));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, label));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, label));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, label));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, label));
     }
 }

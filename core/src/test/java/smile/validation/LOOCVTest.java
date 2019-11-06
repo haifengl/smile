@@ -49,9 +49,6 @@ public class LOOCVTest {
     public void tearDown() {
     }
 
-    /**
-     * Test if the train and test dataset are complete, of class LeaveOneOut.
-     */
     @Test
     public void testComplete() {
         System.out.println("Complete");
@@ -79,9 +76,6 @@ public class LOOCVTest {
         }
     }
 
-    /**
-     * Test if different dataset are different, of class LeaveOneOut.
-     */
     @Test
     public void testOrthogonal() {
         System.out.println("Orthogonal");
