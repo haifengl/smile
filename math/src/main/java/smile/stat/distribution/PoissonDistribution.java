@@ -130,7 +130,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
         if (k < 0) {
             return Double.NEGATIVE_INFINITY;
         } else {
-            return k * Math.log(lambda) - lambda - MathEx.logFactorial(k);
+            return k * Math.log(lambda) - lambda - MathEx.lfactorial(k);
         }
     }
 
@@ -270,7 +270,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
             upperBound = (int) Math.floor(lambda + 0.5 + 7.0 * (Math.sqrt(lambda + lambda + 1.) + 1.5));
 
             // probability of x=mode
-            f0Mode = Math.exp(mode * Math.log(lambda) - lambda - MathEx.logFactorial(mode));
+            f0Mode = Math.exp(mode * Math.log(lambda) - lambda - MathEx.lfactorial(mode));
         }
 
         /**
@@ -361,7 +361,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
 
             // Poisson constants, necessary for computing function values f(k)
             l_my = Math.log(lambda);
-            c_pm = mode * l_my - MathEx.logFactorial(mode);
+            c_pm = mode * l_my - MathEx.lfactorial(mode);
 
             // function values f(k) = p(k)/p(mode) at k = k2, k4, k1, k5
             f2 = f(k2, l_my, c_pm);
@@ -485,7 +485,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
                 // acceptance-rejection test of candidate X from the original area
                 // test, whether  W <= f(k),    with  W = U*h(x)  and  U -- U(0, 1)
                 // log f(X) = (X - mode)*log(L) - log X! + log mode!
-                if (Math.log(W) <= X * l_my - MathEx.logFactorial(X) - c_pm) {
+                if (Math.log(W) <= X * l_my - MathEx.lfactorial(X) - c_pm) {
                     return X;
                 }
             }
@@ -495,7 +495,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
          * used by Patchwork
          */
         private double f(int k, double l_nu, double c_pm) {
-            return Math.exp(k * l_nu - MathEx.logFactorial(k) - c_pm);
+            return Math.exp(k * l_nu - MathEx.lfactorial(k) - c_pm);
         }
     }
 

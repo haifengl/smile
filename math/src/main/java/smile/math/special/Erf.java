@@ -17,7 +17,10 @@
 
 package smile.math.special;
 
-import smile.math.MathEx;
+import static java.lang.Math.abs;
+import static java.lang.Math.exp;
+import static java.lang.Math.log;
+import static java.lang.Math.sqrt;
 
 /**
  * The error function (also called the Gauss error function) is a special
@@ -75,9 +78,9 @@ public class Erf {
      * than 1.2 &times; 10<sup>-7</sup>. This concise routine is faster than erfc.
      */
     public static double erfcc(double x) {
-        double z = Math.abs(x);
+        double z = abs(x);
         double t = 2.0 / (2.0 + z);
-        double ans = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 +
+        double ans = t * exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 +
                 t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 +
                 t * (-0.82215223 + t * 0.17087277)))))))));
 
@@ -96,7 +99,7 @@ public class Erf {
             d = ty * d - dd + cof[j];
             dd = tmp;
         }
-        return t * Math.exp(-z * z + 0.5 * (cof[0] + ty * d) - dd);
+        return t * exp(-z * z + 0.5 * (cof[0] + ty * d) - dd);
     }
 
     /**
@@ -111,11 +114,11 @@ public class Erf {
             return 100.;
         }
         pp = (p < 1.0) ? p : 2. - p;
-        t = Math.sqrt(-2. * Math.log(pp / 2.));
+        t = sqrt(-2. * log(pp / 2.));
         x = -0.70711 * ((2.30753 + t * 0.27061) / (1. + t * (0.99229 + t * 0.04481)) - t);
         for (int j = 0; j < 2; j++) {
             err = erfc(x) - pp;
-            x += err / (1.12837916709551257 * Math.exp(-x * x) - x * err);
+            x += err / (1.12837916709551257 * exp(-x * x) - x * err);
         }
         return (p < 1.0 ? x : -x);
     }

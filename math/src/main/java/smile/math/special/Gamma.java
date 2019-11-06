@@ -17,7 +17,19 @@
 
 package smile.math.special;
 
-import smile.math.MathEx;
+import static java.lang.Math.PI;
+import static java.lang.Math.abs;
+import static java.lang.Math.exp;
+import static java.lang.Math.floor;
+import static java.lang.Math.log;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.pow;
+import static java.lang.Math.sin;
+import static java.lang.Math.sqrt;
+import static java.lang.Math.tan;
+import static smile.math.MathEx.factorial;
+import static smile.math.MathEx.lfactorial;
 
 /**
  * The gamma, digamma, and incomplete gamma functions.
@@ -68,22 +80,22 @@ public class Gamma {
 
         if (x >= 0.0) {
             if (x >= 1.0 && x - (int) x == 0.0) {
-                fg = MathEx.factorial((int) x - 1);
+                fg = factorial((int) x - 1);
             } else {
-                first = Math.pow(first, x + 0.5) * Math.exp(-first);
+                first = pow(first, x + 0.5) * exp(-first);
                 for (int i = 1; i <= LANCZOS_N; i++) {
                     second += LANCZOS_COEFF[i] / ++xcopy;
                 }
-                fg = first * Math.sqrt(2.0 * Math.PI) * second / x;
+                fg = first * sqrt(2.0 * PI) * second / x;
             }
         } else {
-            fg = -Math.PI / (x * gamma(-x) * Math.sin(Math.PI * x));
+            fg = -PI / (x * gamma(-x) * sin(PI * x));
         }
         return fg;
     }
 
     /**
-     * log of the Gamma function. Lanczos approximation (6 terms)
+     * The log of the Gamma function. Lanczos approximation (6 terms)
      */
     public static double lgamma(double x) {
         double xcopy = x;
@@ -93,22 +105,22 @@ public class Gamma {
 
         if (x >= 0.0) {
             if (x >= 1.0 && x - (int) x == 0.0) {
-                fg = MathEx.logFactorial((int) x - 1);
+                fg = lfactorial((int) x - 1);
             } else {
-                first -= (x + 0.5) * Math.log(first);
+                first -= (x + 0.5) * log(first);
                 for (int i = 1; i <= LANCZOS_N; i++) {
                     second += LANCZOS_COEFF[i] / ++xcopy;
                 }
-                fg = Math.log(Math.sqrt(2.0 * Math.PI) * second / x) - first;
+                fg = log(sqrt(2.0 * PI) * second / x) - first;
             }
         } else {
-            fg = Math.PI / (gamma(1.0 - x) * Math.sin(Math.PI * x));
+            fg = PI / (gamma(1.0 - x) * sin(PI * x));
 
             if (fg != 1.0 / 0.0 && fg != -1.0 / 0.0) {
                 if (fg < 0) {
                     throw new IllegalArgumentException("The gamma function is negative: " + fg);
                 } else {
-                    fg = Math.log(fg);
+                    fg = log(fg);
                 }
             }
         }
@@ -195,13 +207,13 @@ public class Gamma {
             ++a;
             incr *= x / a;
             sum += incr;
-            if (Math.abs(incr) < Math.abs(sum) * INCOMPLETE_GAMMA_EPSILON) {
-                igf = sum * Math.exp(-x + acopy * Math.log(x) - loggamma);
+            if (abs(incr) < abs(sum) * INCOMPLETE_GAMMA_EPSILON) {
+                igf = sum * exp(-x + acopy * log(x) - loggamma);
                 check = false;
             }
             if (i >= INCOMPLETE_GAMMA_MAX_ITERATIONS) {
                 check = false;
-                igf = sum * Math.exp(-x + acopy * Math.log(x) - loggamma);
+                igf = sum * exp(-x + acopy * log(x) - loggamma);
                 logger.error("Gamma.regularizedIncompleteGammaSeries: Maximum number of iterations wes exceeded");
             }
         }
@@ -237,17 +249,17 @@ public class Gamma {
             numer = -ii * (ii - a);
             denom += 2.0D;
             first = numer * first + denom;
-            if (Math.abs(first) < FPMIN) {
+            if (abs(first) < FPMIN) {
                 first = FPMIN;
             }
             term = denom + numer / term;
-            if (Math.abs(term) < FPMIN) {
+            if (abs(term) < FPMIN) {
                 term = FPMIN;
             }
             first = 1.0D / first;
             incr = first * term;
             prod *= incr;
-            if (Math.abs(incr - 1.0D) < INCOMPLETE_GAMMA_EPSILON) {
+            if (abs(incr - 1.0D) < INCOMPLETE_GAMMA_EPSILON) {
                 check = false;
             }
             if (i >= INCOMPLETE_GAMMA_MAX_ITERATIONS) {
@@ -255,7 +267,7 @@ public class Gamma {
                 logger.error("Gamma.regularizedIncompleteGammaFraction: Maximum number of iterations wes exceeded");
             }
         }
-        igf = 1.0 - Math.exp(-x + a * Math.log(x) - loggamma) * prod;
+        igf = 1.0 - exp(-x + a * log(x) - loggamma) * prod;
         return igf;
     }
 
@@ -301,7 +313,7 @@ public class Gamma {
                 prodPj = prodPj * x2 + C4[0][j];
                 prodQj = prodQj * x2 + C4[1][j];
             }
-            digX = Math.log(x) - (0.5 / x) + (prodPj / prodQj);
+            digX = log(x) - (0.5 / x) + (prodPj / prodQj);
 
         } else if (x >= 0.5) {
             final double X0 = 1.46163214496836234126;
@@ -312,8 +324,8 @@ public class Gamma {
             digX = (x - X0) * (prodPj / prodQj);
 
         } else {
-            double f = (1.0 - x) - Math.floor(1.0 - x);
-            digX = digamma(1.0 - x) + Math.PI / Math.tan(Math.PI * f);
+            double f = (1.0 - x) - floor(1.0 - x);
+            digX = digamma(1.0 - x) + PI / tan(PI * f);
         }
 
         return digX;
@@ -335,7 +347,7 @@ public class Gamma {
         double a1 = a - 1;
         double gln = lgamma(a);
         if (p >= 1.) {
-            return Math.max(100., a + 100. * Math.sqrt(a));
+            return max(100., a + 100. * sqrt(a));
         }
 
         if (p <= 0.0) {
@@ -343,21 +355,21 @@ public class Gamma {
         }
 
         if (a > 1.0) {
-            lna1 = Math.log(a1);
-            afac = Math.exp(a1 * (lna1 - 1.) - gln);
+            lna1 = log(a1);
+            afac = exp(a1 * (lna1 - 1.) - gln);
             pp = (p < 0.5) ? p : 1. - p;
-            t = Math.sqrt(-2. * Math.log(pp));
+            t = sqrt(-2. * log(pp));
             x = (2.30753 + t * 0.27061) / (1. + t * (0.99229 + t * 0.04481)) - t;
             if (p < 0.5) {
                 x = -x;
             }
-            x = Math.max(1.e-3, a * Math.pow(1. - 1. / (9. * a) - x / (3. * Math.sqrt(a)), 3));
+            x = max(1.e-3, a * pow(1. - 1. / (9. * a) - x / (3. * sqrt(a)), 3));
         } else {
             t = 1.0 - a * (0.253 + a * 0.12);
             if (p < t) {
-                x = Math.pow(p / t, 1. / a);
+                x = pow(p / t, 1. / a);
             } else {
-                x = 1. - Math.log(1. - (p - t) / (1. - t));
+                x = 1. - log(1. - (p - t) / (1. - t));
             }
         }
         for (int j = 0; j < 12; j++) {
@@ -366,16 +378,16 @@ public class Gamma {
             }
             err = regularizedIncompleteGamma(a, x) - p;
             if (a > 1.) {
-                t = afac * Math.exp(-(x - a1) + a1 * (Math.log(x) - lna1));
+                t = afac * exp(-(x - a1) + a1 * (log(x) - lna1));
             } else {
-                t = Math.exp(-x + a1 * Math.log(x) - gln);
+                t = exp(-x + a1 * log(x) - gln);
             }
             u = err / t;
-            x -= (t = u / (1. - 0.5 * Math.min(1., u * ((a - 1.) / x - 1))));
+            x -= (t = u / (1. - 0.5 * min(1., u * ((a - 1.) / x - 1))));
             if (x <= 0.) {
                 x = 0.5 * (x + t);
             }
-            if (Math.abs(t) < EPS * x) {
+            if (abs(t) < EPS * x) {
                 break;
             }
         }
