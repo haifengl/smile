@@ -17,7 +17,8 @@
 
 package smile.stat.distribution;
 
-import smile.math.MathEx;
+import static smile.math.MathEx.lchoose;
+import static smile.math.MathEx.lfactorial;
 
 /**
  * The hypergeometric distribution is a discrete probability distribution that
@@ -116,7 +117,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
         if (k < Math.max(0, m + n - N) || k > Math.min(m, n)) {
             return Double.NEGATIVE_INFINITY;
         } else {
-            return MathEx.logChoose(m, k) + MathEx.logChoose(N - m, n - k) - MathEx.logChoose(N, n);
+            return lchoose(m, k) + lchoose(N - m, n - k) - lchoose(N, n);
         }
     }
 
@@ -454,7 +455,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
          *  subfunction used by random number generator.
          */
         private double lnpk(int k, int L, int m, int n) {
-            return MathEx.logFactorial(k) + MathEx.logFactorial(m - k) + MathEx.logFactorial(n - k) + MathEx.logFactorial(L + k);
+            return lfactorial(k) + lfactorial(m - k) + lfactorial(n - k) + lfactorial(L + k);
         }
     }
 
@@ -485,15 +486,15 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
 
             // mode probability, using log factorial function
             // (may read directly from fac_table if N < FAK_LEN)
-            fm = Math.exp(MathEx.logFactorial(N - m)
-                    - MathEx.logFactorial(L + mode)
-                    - MathEx.logFactorial(n - mode)
-                    + MathEx.logFactorial(m)
-                    - MathEx.logFactorial(m - mode)
-                    - MathEx.logFactorial(mode)
-                    - MathEx.logFactorial(N)
-                    + MathEx.logFactorial(N - n)
-                    + MathEx.logFactorial(n));
+            fm = Math.exp(lfactorial(N - m)
+                    - lfactorial(L + mode)
+                    - lfactorial(n - mode)
+                    + lfactorial(m)
+                    - lfactorial(m - mode)
+                    - lfactorial(mode)
+                    - lfactorial(N)
+                    + lfactorial(N - n)
+                    + lfactorial(n));
 
             // safety bound - guarantees at least 17 significant decimal digits
             // bound = min(nn, (int)(modef + k*c'))

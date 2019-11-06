@@ -17,9 +17,11 @@
 
 package smile.stat.distribution;
 
-import smile.math.special.Beta;
-import smile.math.special.Gamma;
-import smile.math.MathEx;
+import static smile.math.MathEx.factorial;
+import static smile.math.MathEx.lfactorial;
+import static smile.math.special.Beta.regularizedIncompleteBetaFunction;
+import static smile.math.special.Gamma.gamma;
+import static smile.math.special.Gamma.lgamma;
 
 /**
  * Negative binomial distribution arises as the probability distribution of
@@ -127,7 +129,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
         if (k < 0) {
             return 0.0;
         } else {
-            return Gamma.gamma(r + k) / (MathEx.factorial(k) * Gamma.gamma(r)) * Math.pow(p, r) * Math.pow(1 - p, k);
+            return gamma(r + k) / (factorial(k) * gamma(r)) * Math.pow(p, r) * Math.pow(1 - p, k);
         }
     }
 
@@ -136,7 +138,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
         if (k < 0) {
             return Double.NEGATIVE_INFINITY;
         } else {
-            return Gamma.lgamma(r + k) - MathEx.logFactorial(k) - Gamma.lgamma(r) + r * Math.log(p) + k * Math.log(1 - p);
+            return lgamma(r + k) - lfactorial(k) - lgamma(r) + r * Math.log(p) + k * Math.log(1 - p);
         }
     }
 
@@ -145,7 +147,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
         if (k < 0) {
             return 0.0;
         } else {
-            return Beta.regularizedIncompleteBetaFunction(r, k + 1, p);
+            return regularizedIncompleteBetaFunction(r, k + 1, p);
         }
     }
 

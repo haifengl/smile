@@ -126,11 +126,11 @@ public class MathExTest {
     @Test
     public void testLogFactorial() {
         System.out.println("logFactorial");
-        assertEquals(0.0, MathEx.logFactorial(0), 1E-7);
-        assertEquals(0.0, MathEx.logFactorial(1), 1E-7);
-        assertEquals(Math.log(2.0), MathEx.logFactorial(2), 1E-7);
-        assertEquals(Math.log(6.0), MathEx.logFactorial(3), 1E-7);
-        assertEquals(Math.log(24.0), MathEx.logFactorial(4), 1E-7);
+        assertEquals(0.0, MathEx.lfactorial(0), 1E-7);
+        assertEquals(0.0, MathEx.lfactorial(1), 1E-7);
+        assertEquals(Math.log(2.0), MathEx.lfactorial(2), 1E-7);
+        assertEquals(Math.log(6.0), MathEx.lfactorial(3), 1E-7);
+        assertEquals(Math.log(24.0), MathEx.lfactorial(4), 1E-7);
     }
 
     /**
@@ -152,11 +152,11 @@ public class MathExTest {
     @Test
     public void testLogChoose() {
         System.out.println("logChoose");
-        assertEquals(0.0, MathEx.logChoose(10, 0), 1E-6);
-        assertEquals(2.302585, MathEx.logChoose(10, 1), 1E-6);
-        assertEquals(3.806662, MathEx.logChoose(10, 2), 1E-6);
-        assertEquals(4.787492, MathEx.logChoose(10, 3), 1E-6);
-        assertEquals(5.347108, MathEx.logChoose(10, 4), 1E-6);
+        assertEquals(0.0, MathEx.lchoose(10, 0), 1E-6);
+        assertEquals(2.302585, MathEx.lchoose(10, 1), 1E-6);
+        assertEquals(3.806662, MathEx.lchoose(10, 2), 1E-6);
+        assertEquals(4.787492, MathEx.lchoose(10, 3), 1E-6);
+        assertEquals(5.347108, MathEx.lchoose(10, 4), 1E-6);
     }
 
     /**
