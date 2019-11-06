@@ -98,21 +98,33 @@ trait Operators {
     *                "single", "complete", "upgma", "upgmc", "wpgma", "wpgmc", and "ward".
     */
   def hclust[T <: Object](data: Array[T], distance: Distance[T], method: String): HierarchicalClustering = {
-    val linkage = method match {
-      case "single" => SingleLinkage.of(data, distance)
-      case "complete" => CompleteLinkage.of(data, distance)
-      case "upgma" | "average" => UPGMALinkage.of(data, distance)
-      case "upgmc" | "centroid" => UPGMCLinkage.of(data, distance)
-      case "wpgma" => WPGMALinkage.of(data, distance)
-      case "wpgmc" | "median" => WPGMCLinkage.of(data, distance)
-      case "ward" => WardLinkage.of(data, distance)
-      case _ => throw new IllegalArgumentException(s"Unknown agglomeration method: $method")
+    val linkage = time(s"$method linkage") {
+      method match {
+        case "single" => SingleLinkage.of(data, distance)
+        case "complete" => CompleteLinkage.of(data, distance)
+        case "upgma" | "average" => UPGMALinkage.of(data, distance)
+        case "upgmc" | "centroid" => UPGMCLinkage.of(data, distance)
+        case "wpgma" => WPGMALinkage.of(data, distance)
+        case "wpgmc" | "median" => WPGMCLinkage.of(data, distance)
+        case "ward" => WardLinkage.of(data, distance)
+        case _ => throw new IllegalArgumentException(s"Unknown agglomeration method: $method")
+      }
     }
 
     time("Hierarchical clustering") {
       HierarchicalClustering.fit(linkage)
     }
   }
+
+  /**
+    * K-Modes clustering. K-Modes is the binary equivalent for K-Means.
+    * The mean update for centroids is replace by the mode one which is
+    * a majority vote among element of each cluster.
+    */
+  def kmodes(data: Array[Array[Int]], k: Int, maxIter: Int = 100, runs: Int = 10): KModes = time("K-Modes") {
+    PartitionClustering.run(runs, () => KModes.fit(data, k, maxIter))
+  }
+
   /** K-Means clustering. The algorithm partitions n observations into k clusters in which
     * each observation belongs to the cluster with the nearest mean.
     * Although finding an exact solution to the k-means problem for arbitrary
@@ -154,7 +166,7 @@ trait Operators {
     * @param tol tol the tolerance of convergence test.
     * @param runs the number of runs of K-Means algorithm.
     */
-  def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans = time("K-means") {
+  def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans = time("K-Means") {
     PartitionClustering.run(runs, () => KMeans.fit(data, k, maxIter, tol))
   }
 
@@ -172,7 +184,7 @@ trait Operators {
     * @param data the data set.
     * @param k the maximum number of clusters.
     */
-  def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans = time("X-means") {
+  def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans = time("X-Means") {
     XMeans.fit(data, k)
   }
 
@@ -189,7 +201,7 @@ trait Operators {
     * @param data the data set.
     * @param k the maximum number of clusters.
     */
-  def gmeans(data: Array[Array[Double]], k: Int = 100): GMeans = time("G-means") {
+  def gmeans(data: Array[Array[Double]], k: Int = 100): GMeans = time("G-Means") {
     GMeans.fit(data, k)
   }
 
