@@ -25,8 +25,8 @@ import org.junit.Test;
 import smile.data.GaussianMixture;
 import smile.data.USPS;
 import smile.math.MathEx;
-import smile.validation.AdjustedRandIndex;
-import smile.validation.RandIndex;
+import smile.validation.*;
+
 import static org.junit.Assert.*;
 
 /**
@@ -61,48 +61,84 @@ public class KMeansTest {
     public void testBBD4() {
         System.out.println("BBD 4");
         MathEx.setSeed(19650218); // to get repeatable results.
-        KMeans kmeans = KMeans.fit(x, 4);
-        double r = RandIndex.of(y, kmeans.y);
-        double r2 = AdjustedRandIndex.of(y, kmeans.y);
+        KMeans model = KMeans.fit(x, 4);
+        System.out.println(model);
+
+        double r = RandIndex.of(y, model.y);
+        double r2 = AdjustedRandIndex.of(y, model.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.6111, r, 1E-4);
         assertEquals(0.2475, r2, 1E-4);
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
     }
 
     @Test
     public void testLloyd4() {
         System.out.println("Lloyd 4");
         MathEx.setSeed(19650218); // to get repeatable results.
-        KMeans kmeans = KMeans.lloyd(x, 4);
-        double r = RandIndex.of(y, kmeans.y);
-        double r2 = AdjustedRandIndex.of(y, kmeans.y);
+        KMeans model = KMeans.lloyd(x, 4);
+        System.out.println(model);
+
+        double r = RandIndex.of(y, model.y);
+        double r2 = AdjustedRandIndex.of(y, model.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.6111, r, 1E-4);
         assertEquals(0.2475, r2, 1E-4);
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
     }
 
     @Test
     public void testBBD64() {
         System.out.println("BBD 64");
         MathEx.setSeed(19650218); // to get repeatable results.
-        KMeans kmeans = KMeans.fit(x, 64);
-        double r = RandIndex.of(y, kmeans.y);
-        double r2 = AdjustedRandIndex.of(y, kmeans.y);
+        KMeans model = KMeans.fit(x, 64);
+        System.out.println(model);
+
+        double r = RandIndex.of(y, model.y);
+        double r2 = AdjustedRandIndex.of(y, model.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.4714, r, 1E-4);
         assertEquals(0.0185, r2, 1E-4);
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
     }
 
     @Test
     public void testLloyd64() {
         System.out.println("Lloyd 64");
         MathEx.setSeed(19650218); // to get repeatable results.
-        KMeans kmeans = KMeans.lloyd(x, 64);
-        double r = RandIndex.of(y, kmeans.y);
-        double r2 = AdjustedRandIndex.of(y, kmeans.y);
+        KMeans model = KMeans.lloyd(x, 64);
+        System.out.println(model);
+
+        double r = RandIndex.of(y, model.y);
+        double r2 = AdjustedRandIndex.of(y, model.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.4714, r, 1E-4);
         assertEquals(0.0185, r2, 1E-4);
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
     }
 
     @Test(expected = Test.None.class)
@@ -115,17 +151,25 @@ public class KMeansTest {
         double[][] testx = USPS.testx;
         int[] testy = USPS.testy;
 
-        KMeans kmeans = KMeans.fit(x, 10, 100, 4);
+        KMeans model = KMeans.fit(x, 10, 100, 4);
+        System.out.println(model);
 
-        double r = RandIndex.of(y, kmeans.y);
-        double r2 = AdjustedRandIndex.of(y, kmeans.y);
+        double r = RandIndex.of(y, model.y);
+        double r2 = AdjustedRandIndex.of(y, model.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.9063, r, 1E-4);
         assertEquals(0.5148, r2, 1E-4);
-            
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
+
         int[] p = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
-            p[i] = kmeans.predict(testx[i]);
+            p[i] = model.predict(testx[i]);
         }
             
         r = RandIndex.of(testy, p);

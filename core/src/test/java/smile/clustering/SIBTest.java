@@ -29,8 +29,7 @@ import smile.data.Instance;
 import smile.io.DatasetReader;
 import smile.math.MathEx;
 import smile.util.SparseArray;
-import smile.validation.AdjustedRandIndex;
-import smile.validation.RandIndex;
+import smile.validation.*;
 
 /**
  *
@@ -70,18 +69,25 @@ public class SIBTest {
         int[] y = train.stream().mapToInt(i -> i.label()).toArray();
         int[] testy = test.stream().mapToInt(i -> i.label()).toArray();
             
-        SIB sib = SIB.fit(trainx, 20);
-        System.out.println(sib);
+        SIB model = SIB.fit(trainx, 20);
+        System.out.println(model);
 
-        double r = RandIndex.of(y, sib.y);
-        double r2 = AdjustedRandIndex.of(y, sib.y);
+        double r = RandIndex.of(y, model.y);
+        double r2 = AdjustedRandIndex.of(y, model.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.8842, r, 1E-4);
         assertEquals(0.2327, r2, 1E-4);
 
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
+
         int[] p = new int[test.size()];
         for (int i = 0; i < test.size(); i++) {
-            p[i] = sib.predict(test.get(i).x());
+            p[i] = model.predict(test.get(i).x());
         }
             
         r = RandIndex.of(testy, p);

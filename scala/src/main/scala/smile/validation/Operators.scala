@@ -105,7 +105,7 @@ trait Operators {
     * the Rand index between two random partitions is not a constant. This problem
     * is corrected by the adjusted Rand index.
     */
-  def randIndex(truth: Array[Int], prediction: Array[Int]): Double = RandIndex.of(truth, prediction)
+  def randIndex(y1: Array[Int], y2: Array[Int]): Double = RandIndex.of(y1, y2)
   /** Adjusted Rand Index. Adjusted Rand Index assumes the generalized
     * hyper-geometric distribution as the model of randomness. The adjusted Rand
     * index has the maximum value 1, and its expected value is 0 in the case
@@ -113,9 +113,9 @@ trait Operators {
     * between two partitions. The adjusted Rand index is recommended for measuring
     * agreement even when the partitions compared have different numbers of clusters.
     */
-  def adjustedRandIndex(truth: Array[Int], prediction: Array[Int]): Double = AdjustedRandIndex.of(truth, prediction)
-  /** Normalized mutual information score between two clusters. */
-  def mis(truth: Array[Int], prediction: Array[Int]): Double = MutualInformationScore(truth, prediction)._1
+  def adjustedRandIndex(y1: Array[Int], y2: Array[Int]): Double = AdjustedRandIndex.of(y1, y2)
+  /** Normalized mutual information (normalized by max(H(y1), H(y2)) between two clusterings. */
+  def nmi(y1: Array[Int], y2: Array[Int]): Double = NormalizedMutualInformation.max(y1, y2)
 
   /** Test a generic classifier.
     * The accuracy will be measured and printed out on standard output.

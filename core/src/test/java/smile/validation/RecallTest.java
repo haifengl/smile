@@ -49,12 +49,9 @@ public class RecallTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of measure method, of class Recall.
-     */
     @Test
-    public void testMeasure() {
-        System.out.println("measure");
+    public void test() {
+        System.out.println("recall");
         int[] truth = {
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

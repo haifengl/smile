@@ -39,74 +39,42 @@ public class RandIndex implements ClusterMeasure {
     public final static RandIndex instance = new RandIndex();
 
     @Override
-    public double measure(int[] truth, int[] prediction) {
-        return of(truth, prediction);
+    public double measure(int[] y1, int[] y2) {
+        return of(y1, y2);
     }
 
     /** Calculates the rand index. */
     public static double of(int[] y1, int[] y2) {
-        if (y1.length != y2.length) {
-            throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", y1.length, y2.length));
-        }
-
-        // Get # of non-zero classes in each solution
-        int n = y1.length;
-
-        int[] label1 = MathEx.unique(y1);
-        int n1 = label1.length;
-        
-        int[] label2 = MathEx.unique(y2);
-        int n2 = label2.length;
-
-        // Calculate N contingency matrix
-        int[][] count = new int[n1][n2];
-        for (int i = 0; i < n1; i++) {
-            for (int j = 0; j < n2; j++) {
-                int match = 0;
-
-                for (int k = 0; k < n; k++) {
-                    if (y1[k] == label1[i] && y2[k] == label2[j]) {
-                        match++;
-                    }
-                }
-
-                count[i][j] = match;
-            }
-        }
-
-        // Marginals
-        int[] count1 = new int[n1];
-        int[] count2 = new int[n2];
-
-        for (int i = 0; i < n1; i++) {
-            for (int j = 0; j < n2; j++) {
-                count1[i] += count[i][j];
-                count2[j] += count[i][j];
-            }
-        }
+        ContingencyTable contingency = new ContingencyTable(y1, y2);
+        int n = contingency.n;
+        int n1 = contingency.n1;
+        int n2 = contingency.n2;
+        int[] a = contingency.a;
+        int[] b = contingency.b;
+        int[][] count = contingency.table;
 
         // Calculate RAND - Non-adjusted
-        double rand_T = 0.0;
+        double randT = 0.0;
         for (int i = 0; i < n1; i++) {
             for (int j = 0; j < n2; j++) {
-                rand_T += MathEx.sqr(count[i][j]);
+                randT += MathEx.sqr(count[i][j]);
             }
         }
-        rand_T -= n;
+        randT -= n;
 
-        double rand_P = 0.0;
+        double randP = 0.0;
         for (int i = 0; i < n1; i++) {
-            rand_P += MathEx.sqr(count1[i]);
+            randP += MathEx.sqr(a[i]);
         }
-        rand_P -= n;
+        randP -= n;
 
-        double rand_Q = 0.0;
+        double randQ = 0.0;
         for (int j = 0; j < n2; j++) {
-            rand_Q += MathEx.sqr(count2[j]);
+            randQ += MathEx.sqr(b[j]);
         }
-        rand_Q -= n;
+        randQ -= n;
 
-        double rand = (rand_T - 0.5 * rand_P - 0.5 * rand_Q + MathEx.choose(n, 2)) / MathEx.choose(n, 2);
+        double rand = (randT - 0.5 * randP - 0.5 * randQ + MathEx.choose(n, 2)) / MathEx.choose(n, 2);
         return rand;
     }
 

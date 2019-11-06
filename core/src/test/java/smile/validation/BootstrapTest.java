@@ -55,10 +55,6 @@ public class BootstrapTest {
     public void tearDown() {
     }
 
-
-    /**
-     * Test if the train and test dataset are complete, of class CrossValidation.
-     */
     @Test
     public void testComplete() {
         System.out.println("Complete");

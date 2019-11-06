@@ -18,6 +18,7 @@
 package smile.vq;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * Originally used for data compression, Vector quantization (VQ)
@@ -35,14 +36,20 @@ import java.io.Serializable;
  */
 public interface VectorQuantization extends Serializable {
     /**
-     * Cluster label for outliers or noises.
+     *  The label for outliers or noises.
      */
     int OUTLIER = Integer.MAX_VALUE;
 
     /**
-     * Classifies a new observation.
+     * Quantize a new observation. Returns Optional.empty
+     * if the observation is noise.
      * @param x a new observation.
-     * @return the cluster label.
      */
-    int predict(double[] x);
+    Optional<double[]> quantize(double[] x);
+
+    /**
+     * Returns the index of nearest centroid in the code book.
+     * @param x a new observation.
+     */
+    int code(double[] x);
 }

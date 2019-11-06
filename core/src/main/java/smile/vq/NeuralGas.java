@@ -96,7 +96,7 @@ public class NeuralGas extends CentroidClustering<double[], double[]> {
     }
 
     /**
-     * Constructor. Learn the Neural Gas with k neurons.
+     * Fits the Neural Gas with k neurons.
      * @param k the number of units in the neural gas. It is also the number
      * of clusters.
      */
@@ -105,7 +105,7 @@ public class NeuralGas extends CentroidClustering<double[], double[]> {
     }
 
     /**
-     * Constructor. Learn the Neural Gas with k neurons.
+     * Fits the Neural Gas with k neurons.
      * @param k the number of units in the neural gas.
      * @param lambda_i the initial value of lambda. lambda_i and lambda_f are
      * used to set the soft learning radius/rate, i.e. determining the number

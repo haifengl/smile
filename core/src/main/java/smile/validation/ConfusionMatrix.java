@@ -21,7 +21,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Generates the confusion matrix based on truth and prediction vectors
+ * The confusion matrix of truth and predictions.
+ *
  * @author owlmsj
  */
 public class ConfusionMatrix {

@@ -23,8 +23,7 @@ import smile.math.distance.EuclideanDistance;
 import smile.neighbor.KDTree;
 import smile.neighbor.LinearSearch;
 import smile.stat.distribution.MultivariateGaussianDistribution;
-import smile.validation.RandIndex;
-import smile.validation.AdjustedRandIndex;
+import smile.validation.*;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -64,28 +63,26 @@ public class DBSCANTest {
         double[][] x = GaussianMixture.x;
         int[] y = GaussianMixture.y;
 
-        DBSCAN<double[]> dbscan = DBSCAN.fit(x,200, 0.8);
-        System.out.println(dbscan);
+        DBSCAN<double[]> model = DBSCAN.fit(x,200, 0.8);
+        System.out.println(model);
         
-        int[] size = dbscan.size;
+        int[] size = model.size;
         int n = 0;
         for (int i = 0; i < size.length-1; i++) {
             n += size[i];
         }
         
-        int[] y1 = new int[n];
-        int[] y2 = new int[n];
-        for (int i = 0, j = 0; i < x.length; i++) {
-            if (dbscan.y[i] != PartitionClustering.OUTLIER) {
-                y1[j] = y[i];
-                y2[j++] = dbscan.y[i];
-            }
-        }
-
-        double r = RandIndex.of(y1, y2);
-        double r2 = AdjustedRandIndex.of(y1, y2);
+        double r = RandIndex.of(y, model.y);
+        double r2 = AdjustedRandIndex.of(y, model.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.5474, r, 1E-4);
-        assertEquals(0.1696, r2, 1E-4);
+        assertEquals(0.5424, r, 1E-4);
+        assertEquals(0.1215, r2, 1E-4);
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
     }
 }

@@ -19,8 +19,7 @@ package smile.clustering;
 
 import smile.data.USPS;
 import smile.math.MathEx;
-import smile.validation.RandIndex;
-import smile.validation.AdjustedRandIndex;
+import smile.validation.*;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -64,17 +63,25 @@ public class GMeansTest {
         double[][] testx = USPS.testx;
         int[] testy = USPS.testy;
 
-        GMeans gmeans = GMeans.fit(x, 10);
+        GMeans model = GMeans.fit(x, 10);
+        System.out.println(model);
 
-        double r = RandIndex.of(y, gmeans.y);
-        double r2 = AdjustedRandIndex.of(y, gmeans.y);
+        double r = RandIndex.of(y, model.y);
+        double r2 = AdjustedRandIndex.of(y, model.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.9137, r, 1E-4);
         assertEquals(0.5485, r2, 1E-4);
 
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
+
         int[] p = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
-            p[i] = gmeans.predict(testx[i]);
+            p[i] = model.predict(testx[i]);
         }
             
         r = RandIndex.of(testy, p);

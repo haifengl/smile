@@ -49,12 +49,9 @@ public class MSETest {
     public void tearDown() {
     }
 
-    /**
-     * Test of measure method, of class MSE.
-     */
     @Test
-    public void testMeasure() {
-        System.out.println("measure");
+    public void test() {
+        System.out.println("MSE");
         double[] truth = {
             83.0,  88.5,  88.2,  89.5,  96.2,  98.1,  99.0, 100.0, 101.2,
             104.6, 108.4, 110.8, 112.6, 114.2, 115.7, 116.9
