@@ -61,10 +61,10 @@ public class DBSCANTest {
     public void testGaussianMixture() {
         System.out.println("Gaussian Mixture");
 
-        double[][] data = GaussianMixture.data;
-        int[] label = GaussianMixture.label;
+        double[][] x = GaussianMixture.x;
+        int[] y = GaussianMixture.y;
 
-        DBSCAN<double[]> dbscan = DBSCAN.fit(data,200, 0.8);
+        DBSCAN<double[]> dbscan = DBSCAN.fit(x,200, 0.8);
         System.out.println(dbscan);
         
         int[] size = dbscan.size;
@@ -75,17 +75,15 @@ public class DBSCANTest {
         
         int[] y1 = new int[n];
         int[] y2 = new int[n];
-        for (int i = 0, j = 0; i < data.length; i++) {
+        for (int i = 0, j = 0; i < x.length; i++) {
             if (dbscan.y[i] != PartitionClustering.OUTLIER) {
-                y1[j] = label[i];                
+                y1[j] = y[i];
                 y2[j++] = dbscan.y[i];
             }
         }
-        
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
-        double r = rand.measure(y1, y2);
-        double r2 = ari.measure(y1, y2);
+
+        double r = RandIndex.of(y1, y2);
+        double r2 = AdjustedRandIndex.of(y1, y2);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.5474, r, 1E-4);
         assertEquals(0.1696, r2, 1E-4);

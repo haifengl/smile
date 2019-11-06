@@ -57,9 +57,6 @@ public class SIBTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of parse method, of class SIB.
-     */
     @Test(expected = Test.None.class)
     public void testParseNG20() throws Exception {
         System.out.println("NG20");
@@ -75,11 +72,9 @@ public class SIBTest {
             
         SIB sib = SIB.fit(trainx, 20);
         System.out.println(sib);
-            
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
-        double r = rand.measure(y, sib.y);
-        double r2 = ari.measure(y, sib.y);
+
+        double r = RandIndex.of(y, sib.y);
+        double r2 = AdjustedRandIndex.of(y, sib.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.8842, r, 1E-4);
         assertEquals(0.2327, r2, 1E-4);
@@ -89,8 +84,8 @@ public class SIBTest {
             p[i] = sib.predict(test.get(i).x());
         }
             
-        r = rand.measure(testy, p);
-        r2 = ari.measure(testy, p);
+        r = RandIndex.of(testy, p);
+        r2 = AdjustedRandIndex.of(testy, p);
         System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.8782, r, 1E-4);
         assertEquals(0.2287, r2, 1E-4);

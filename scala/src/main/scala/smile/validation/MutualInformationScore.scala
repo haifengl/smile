@@ -19,21 +19,21 @@ package smile.validation
 
 import scala.math.{max, log, sqrt}
 
- /**
-   * Mutual Information score between two clusterings with optional normalization.
-   * Normalized Mutual Information is an normalization of the Mutual Information
-	 * score to scale the results between 0 (no mutual information) and 1 (perfect correlation).
-   *
-   * Note that this measure is not adjusted for chance. This metric is independent of the
-	 * absolute values of the labels: a permutation of the class or cluster label values
-	 * won’t change the score value in any way.
-	 *
-   * @param normalization "sqrt" normalized by sqrt(H(labels_true) * H(labels_pred))
-   *                      "max"  normalized by max(H(labels_true) * H(labels_pred))
-   *                      ""     no normalization
-   *
-	 * @author Beck Gaël
-   */
+/**
+ * Mutual Information score between two clusterings with optional normalization.
+ * Normalized Mutual Information is an normalization of the Mutual Information
+ * score to scale the results between 0 (no mutual information) and 1 (perfect correlation).
+ *
+ * Note that this measure is not adjusted for chance. This metric is independent of the
+ * absolute values of the labels: a permutation of the class or cluster label values
+ * won’t change the score value in any way.
+ *
+ * @param normalization "sqrt" normalized by sqrt(H(labels_true) * H(labels_pred))
+ *                      "max"  normalized by max(H(labels_true) * H(labels_pred))
+ *                      ""     no normalization
+ *
+ * @author Beck Gaël
+ */
 class MutualInformationScore(normalization: String = "sqrt") extends ClusterMeasure {
 	override def measure(x: Array[Int], y: Array[Int]) = {
 		val (mi, hu, hv) = MutualInformationScore(x, y)

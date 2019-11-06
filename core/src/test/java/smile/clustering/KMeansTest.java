@@ -34,8 +34,8 @@ import static org.junit.Assert.*;
  * @author Haifeng Li
  */
 public class KMeansTest {
-    double[][] data = GaussianMixture.data;
-    int[] label = GaussianMixture.label;
+    double[][] x = GaussianMixture.x;
+    int[] y = GaussianMixture.y;
 
     public KMeansTest() {
 
@@ -61,11 +61,9 @@ public class KMeansTest {
     public void testBBD4() {
         System.out.println("BBD 4");
         MathEx.setSeed(19650218); // to get repeatable results.
-        KMeans kmeans = KMeans.fit(data, 4);
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
-        double r = rand.measure(label, kmeans.y);
-        double r2 = ari.measure(label, kmeans.y);
+        KMeans kmeans = KMeans.fit(x, 4);
+        double r = RandIndex.of(y, kmeans.y);
+        double r2 = AdjustedRandIndex.of(y, kmeans.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.6111, r, 1E-4);
         assertEquals(0.2475, r2, 1E-4);
@@ -75,11 +73,9 @@ public class KMeansTest {
     public void testLloyd4() {
         System.out.println("Lloyd 4");
         MathEx.setSeed(19650218); // to get repeatable results.
-        KMeans kmeans = KMeans.lloyd(data, 4);
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
-        double r = rand.measure(label, kmeans.y);
-        double r2 = ari.measure(label, kmeans.y);
+        KMeans kmeans = KMeans.lloyd(x, 4);
+        double r = RandIndex.of(y, kmeans.y);
+        double r2 = AdjustedRandIndex.of(y, kmeans.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.6111, r, 1E-4);
         assertEquals(0.2475, r2, 1E-4);
@@ -89,11 +85,9 @@ public class KMeansTest {
     public void testBBD64() {
         System.out.println("BBD 64");
         MathEx.setSeed(19650218); // to get repeatable results.
-        KMeans kmeans = KMeans.fit(data, 64);
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
-        double r = rand.measure(label, kmeans.y);
-        double r2 = ari.measure(label, kmeans.y);
+        KMeans kmeans = KMeans.fit(x, 64);
+        double r = RandIndex.of(y, kmeans.y);
+        double r2 = AdjustedRandIndex.of(y, kmeans.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.4714, r, 1E-4);
         assertEquals(0.0185, r2, 1E-4);
@@ -103,11 +97,9 @@ public class KMeansTest {
     public void testLloyd64() {
         System.out.println("Lloyd 64");
         MathEx.setSeed(19650218); // to get repeatable results.
-        KMeans kmeans = KMeans.lloyd(data, 64);
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
-        double r = rand.measure(label, kmeans.y);
-        double r2 = ari.measure(label, kmeans.y);
+        KMeans kmeans = KMeans.lloyd(x, 64);
+        double r = RandIndex.of(y, kmeans.y);
+        double r2 = AdjustedRandIndex.of(y, kmeans.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.4714, r, 1E-4);
         assertEquals(0.0185, r2, 1E-4);
@@ -124,11 +116,9 @@ public class KMeansTest {
         int[] testy = USPS.testy;
 
         KMeans kmeans = KMeans.fit(x, 10, 100, 4);
-            
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
-        double r = rand.measure(y, kmeans.y);
-        double r2 = ari.measure(y, kmeans.y);
+
+        double r = RandIndex.of(y, kmeans.y);
+        double r2 = AdjustedRandIndex.of(y, kmeans.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.9063, r, 1E-4);
         assertEquals(0.5148, r2, 1E-4);
@@ -138,8 +128,8 @@ public class KMeansTest {
             p[i] = kmeans.predict(testx[i]);
         }
             
-        r = rand.measure(testy, p);
-        r2 = ari.measure(testy, p);
+        r = RandIndex.of(testy, p);
+        r2 = AdjustedRandIndex.of(testy, p);
         System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.8942, r, 1E-4);
         assertEquals(0.4540, r2, 1E-4);

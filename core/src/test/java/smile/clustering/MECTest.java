@@ -67,13 +67,11 @@ public class MECTest {
         double[][] testx = USPS.testx;
         int[] testy = USPS.testy;
 
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
         MEC<double[]> mec = MEC.fit(x, new EuclideanDistance(), 10, 8.0);
         System.out.println(mec);
-            
-        double r = rand.measure(y, mec.y);
-        double r2 = ari.measure(y, mec.y);
+
+        double r = RandIndex.of(y, mec.y);
+        double r2 = AdjustedRandIndex.of(y, mec.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.9068, r, 1E-4);
         assertEquals(0.5253, r2, 1E-4);
@@ -83,8 +81,8 @@ public class MECTest {
             p[i] = mec.predict(testx[i]);
         }
             
-        r = rand.measure(testy, p);
-        r2 = ari.measure(testy, p);
+        r = RandIndex.of(testy, p);
+        r2 = AdjustedRandIndex.of(testy, p);
         System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.8690, r, 1E-4);
         assertEquals(0.3820, r2, 1E-4);

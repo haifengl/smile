@@ -64,12 +64,10 @@ public class GMeansTest {
         double[][] testx = USPS.testx;
         int[] testy = USPS.testy;
 
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
         GMeans gmeans = GMeans.fit(x, 10);
-            
-        double r = rand.measure(y, gmeans.y);
-        double r2 = ari.measure(y, gmeans.y);
+
+        double r = RandIndex.of(y, gmeans.y);
+        double r2 = AdjustedRandIndex.of(y, gmeans.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.9137, r, 1E-4);
         assertEquals(0.5485, r2, 1E-4);
@@ -79,8 +77,8 @@ public class GMeansTest {
             p[i] = gmeans.predict(testx[i]);
         }
             
-        r = rand.measure(testy, p);
-        r2 = ari.measure(testy, p);
+        r = RandIndex.of(testy, p);
+        r2 = AdjustedRandIndex.of(testy, p);
         System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.9012, r, 1E-4);
         assertEquals(0.4822, r2, 1E-4);

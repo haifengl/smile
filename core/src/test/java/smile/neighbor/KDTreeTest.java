@@ -141,7 +141,7 @@ public class KDTreeTest {
     public void testGaussianMixture() {
         System.out.println("----- Gaussian Mixture -----");
 
-        double[][] data = GaussianMixture.data;
+        double[][] data = GaussianMixture.x;
 
         long start = System.currentTimeMillis();
         KDTree<double[]> kdtree = new KDTree<>(data, data);

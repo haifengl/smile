@@ -172,7 +172,7 @@ public class LinearSearchTest {
     public void testGaussianMixture() {
         System.out.println("----- Gaussian Mixture -----");
 
-        double[][] data = GaussianMixture.data;
+        double[][] data = GaussianMixture.x;
         LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
 
         long start = System.currentTimeMillis();
