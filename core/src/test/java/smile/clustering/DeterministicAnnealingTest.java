@@ -67,11 +67,9 @@ public class DeterministicAnnealingTest {
         int[] testy = USPS.testy;
 
         DeterministicAnnealing annealing = DeterministicAnnealing.fit(x, 10, 0.8, 100, 1E-4, 1E-2);
-            
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
-        double r = rand.measure(y, annealing.y);
-        double r2 = ari.measure(y, annealing.y);
+
+        double r = RandIndex.of(y, annealing.y);
+        double r2 = AdjustedRandIndex.of(y, annealing.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.8975, r, 1E-4);
         assertEquals(0.4701, r2, 1E-4);
@@ -81,8 +79,8 @@ public class DeterministicAnnealingTest {
             p[i] = annealing.predict(testx[i]);
         }
             
-        r = rand.measure(testy, p);
-        r2 = ari.measure(testy, p);
+        r = RandIndex.of(testy, p);
+        r2 = AdjustedRandIndex.of(testy, p);
         System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.8995, r, 1E-4);
         assertEquals(0.4745, r2, 1E-4);

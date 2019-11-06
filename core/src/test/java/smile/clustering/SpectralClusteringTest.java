@@ -63,11 +63,9 @@ public class SpectralClusteringTest {
         int[] y = USPS.y;
 
         SpectralClustering spectral = SpectralClustering.fit(x, 10, 8.0);
-            
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
-        double r = rand.measure(y, spectral.y);
-        double r2 = ari.measure(y, spectral.y);
+
+        double r = RandIndex.of(y, spectral.y);
+        double r2 = AdjustedRandIndex.of(y, spectral.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.9128, r, 1E-4);
         assertEquals(0.5371, r2, 1E-4);
@@ -82,11 +80,9 @@ public class SpectralClusteringTest {
         int[] y = USPS.y;
 
         SpectralClustering spectral = SpectralClustering.fit(x, 10, 100, 8.0);
-            
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
-        double r = rand.measure(y, spectral.y);
-        double r2 = ari.measure(y, spectral.y);
+
+        double r = RandIndex.of(y, spectral.y);
+        double r2 = AdjustedRandIndex.of(y, spectral.y);
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.8995, r, 1E-4);
         assertEquals(0.4757, r2, 1E-4);

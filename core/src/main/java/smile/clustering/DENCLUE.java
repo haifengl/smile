@@ -17,11 +17,8 @@
 
 package smile.clustering;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
-
-import smile.classification.ClassLabel;
 import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 import smile.neighbor.LinearSearch;
@@ -47,6 +44,7 @@ import smile.neighbor.LinearSearch;
  */
 public class DENCLUE extends PartitionClustering {
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DENCLUE.class);
 
     /**
      * The tolerance of hill-climbing procedure.
@@ -118,8 +116,7 @@ public class DENCLUE extends PartitionClustering {
      *          large enough to capture the sufficient information of
      *          underlying distribution.
      * @param tol the tolerance of hill-climbing procedure.
-     * @param minPts an observation is classified as outlier if the probability
-     *            of its attractor is less than eps.
+     * @param minPts the minimum number of neighbors for a core attractor.
      */
     public static DENCLUE fit(double[][] data, double sigma, int m, double tol, int minPts) {
         if (sigma <= 0.0) {
@@ -130,86 +127,25 @@ public class DENCLUE extends PartitionClustering {
             throw new IllegalArgumentException("Invalid number of selected samples: " + m);
         }
 
+        logger.info("Select {} samples by k-means", m);
         KMeans kmeans = KMeans.fit(data, m);
         double[][] samples = kmeans.centroids;
 
         int n = data.length;
         int d = data[0].length;
-
         double[][] attractors = new double[n][d];
         double[][] steps = new double[n][2];
-        double[] prob = IntStream.range(0, n).parallel().mapToDouble(i -> climb(data[i], attractors[i], steps[i], samples, sigma, tol)).toArray();
+
+        logger.info("Hill-climbing of density function for each observation");
+        IntStream.range(0, n).parallel().mapToDouble(i -> climb(data[i], attractors[i], steps[i], samples, sigma, tol)).toArray();
 
         double[] radius = Arrays.stream(steps).mapToDouble(step -> step[0] + step[1]).toArray();
-        DBSCAN<double[]> dbscan = DBSCAN.fit(attractors, new LinearSearch<>(attractors, new EuclideanDistance()), minPts, MathEx.mean(radius));
+        double r = MathEx.mean(radius);
+
+        logger.info("Clustering attractors with DBSCAN (radius = {})", r);
+        DBSCAN<double[]> dbscan = DBSCAN.fit(attractors, minPts, r);
+
         return new DENCLUE(dbscan.k, attractors, radius, samples, sigma, dbscan.y, tol);
-
-        /*
-        int[] y = IntStream.range(0, n).toArray();
-
-        double[][] centroids = new double[n][];
-        double[] p = new double[n];
-        double[] r = new double[n];
-        int[] clusterSize = new int[n];
-
-        int k = 1;
-        y[0] = 0;
-        centroids[0] = attractors[0];
-        p[0] = prob[0];
-        r[0] = radius[0];
-        clusterSize[0] = 1;
-
-        for (int i = 1; i < n; i++) {
-            boolean newcluster = true;
-            for (int j = 0; j < k; j++) {
-                if (MathEx.distance(attractors[i], centroids[j]) < radius[i] + r[j]) {
-                    y[i] = j;
-                    clusterSize[j]++;
-                    newcluster = false;
-                    if (prob[i] > p[j]) {
-                        centroids[j] = attractors[i];
-                        p[j] = prob[i];
-                        r[j] = radius[i];
-                    }
-                    break;
-                }
-            }
-
-            if (newcluster) {
-                y[i] = k;
-                centroids[k] = attractors[i];
-                p[k] = prob[i];
-                r[k] = radius[i];
-                clusterSize[k] = 1;
-                k++;
-            }
-        }
-
-        // Collapse clusters by removing tiny clusters.
-        for (int j = 0; j < k; j++) {
-            if (clusterSize[j] < minPts) {
-                clusterSize[j] = 0;
-                for (int i = 0; i < n; i++) {
-                    if (y[i] == j) y[i] = OUTLIER;
-                }
-            }
-        }
-
-        // Reuse clusterSize as the index of new cluster id.
-        int K = 0;
-        for (int i = 0, j = 0; i < k; i++) {
-            if (clusterSize[i] > 0) {
-                K++;
-                clusterSize[i] = j++;
-            }
-        }
-
-        for (int i = 0; i < n; i++) {
-            if (y[i] != OUTLIER) y[i] = clusterSize[y[i]];
-        }
-
-        return new DENCLUE(K, attractors, radius, samples, sigma, y, tol);
-        */
     }
 
     /**
@@ -225,7 +161,7 @@ public class DENCLUE extends PartitionClustering {
 
         double[] attractor = new double[d];
         double[] step = new double[2];
-        double prob = climb(x, attractor, step, samples, sigma, tol);
+        climb(x, attractor, step, samples, sigma, tol);
 
         double r = step[0] + step[1];
         for (int i = 0; i < attractors.length; i++) {
