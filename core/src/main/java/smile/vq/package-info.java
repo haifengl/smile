@@ -18,10 +18,10 @@
 /**
  * Originally used for data compression, Vector quantization (VQ)
  * allows the modeling of probability density functions by
- * the distribution of prototype vectors. It works by dividing a large set of points
- * (vectors) into groups having approximately the same number of
- * points closest to them. Each group is represented by its centroid
- * point, as in K-Means and some other clustering algorithms.
+ * the distribution of prototype vectors. It works by dividing
+ * a large set of points (vectors) into groups having approximately
+ * the same number of points closest to them. Each group is represented
+ * by its centroid point, as in K-Means and some other clustering algorithms.
  * <p>
  * Vector quantization is is based on the competitive learning paradigm,
  * and also closely related to sparse coding models

@@ -28,7 +28,7 @@ import smile.math.MathEx;
 
 /**
  * Balanced Iterative Reducing and Clustering using Hierarchies. BIRCH performs
- * hierarchical clustering over particularly large datasets. An advantage of
+ * hierarchical clustering over particularly large data. An advantage of
  * BIRCH is its ability to incrementally and dynamically cluster incoming,
  * multi-dimensional metric data points in an attempt to produce the high
  * quality clustering for a given set of resources (memory and time constraints).
@@ -44,7 +44,7 @@ import smile.math.MathEx;
  * This implementation produces a clustering in three steps. First step
  * builds a CF (clustering feature) tree by a single scan of database.
  * The second step clusters the leaves of CF tree by hierarchical clustering.
- * Then the user can use the learned model to cluster input data in the final
+ * Then the user can use the learned model to classify input data in the final
  * step. In total, we scan the database twice.
  * 
  * <h2>References</h2>
@@ -357,14 +357,14 @@ public class BIRCH implements Clustering<double[]> {
     /**
      * Returns the branching factor, which is the maximum number of children nodes.
      */
-    public int getBrachingFactor() {
+    public int branch() {
         return B;
     }
 
     /**
      * Returns the maximum radius of a sub-cluster.
      */
-    public double getMaxRadius() {
+    public double radius() {
         return T;
     }
 
@@ -453,12 +453,12 @@ public class BIRCH implements Clustering<double[]> {
     }
 
     /**
-     * Cluster a new instance to the nearest CF leaf. After building the 
+     * Classifies a new observation to the nearest CF leaf. After building the
      * CF tree, the user should call {@link #partition(int)} method first
      * to clustering leaves. Then they call this method to clustering new
      * data.
      * 
-     * @param x a new instance.
+     * @param x an observation.
      * @return the cluster label, which is the label of nearest CF leaf.
      * Note that it may be {@link #OUTLIER}.
      */

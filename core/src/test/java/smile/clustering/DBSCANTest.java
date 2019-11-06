@@ -76,7 +76,7 @@ public class DBSCANTest {
         int[] y1 = new int[n];
         int[] y2 = new int[n];
         for (int i = 0, j = 0; i < data.length; i++) {
-            if (dbscan.y[i] != Clustering.OUTLIER) {
+            if (dbscan.y[i] != PartitionClustering.OUTLIER) {
                 y1[j] = label[i];                
                 y2[j++] = dbscan.y[i];
             }
