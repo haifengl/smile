@@ -18,11 +18,9 @@
 package smile.demo.clustering;
 
 import java.awt.Dimension;
-
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-
-import smile.vq.NeuralGas;
+import smile.clustering.NeuralGas;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;

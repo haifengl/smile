@@ -87,51 +87,6 @@ trait Operators {
     new SOM(data, width, height)
   }
 
-
-  /** Neural Gas soft competitive learning algorithm. The Neural Gas is inspired
-    * by the Self-Organizing Map for finding optimal data representations based on
-    * feature vectors. The algorithm was coined "Neural Gas" because of the
-    * dynamics of the feature vectors during the adaptation process, which
-    * distribute themselves like a gas within the data space. Although it is mainly
-    * applied where data compression or vector quantization is an issue,
-    * it is also used for cluster analysis as a robustly converging alternative to
-    * the k-means clustering. A prominent extension is the Growing Neural Gas.
-    *
-    * Compared to SOM, neural gas has no topology of a fixed dimensionality
-    * (in fact, no topology at all). For each input signal during learning, the
-    * neural gas algorithm sorts the neurons of the network according to the
-    * distance of their reference vectors to the input signal. Based on this
-    * "rank order", neurons are adapted based on the adaptation strength that are
-    * decreased according to a fixed schedule.
-    *
-    * The adaptation step of the Neural Gas can be interpreted as gradient descent
-    * on a cost function. By adapting not only the closest feature vector but all
-    * of them with a step size decreasing with increasing distance order,
-    * compared to k-means clustering, a much more robust convergence of the
-    * algorithm can be achieved.
-    *
-    * ====References:====
-    *  - Thomas Martinetz and Klaus Schulten. A "neural gas" network learns topologies. Artificial Neural Networks, 397-402, 1991.
-    *  - T. Martinetz, S. Berkovich, and K. Schulten. "Neural-gas" Network for Vector Quantization and its Application to Time-Series Prediction. IEEE Trans. on Neural Networks, 4(4):558-569, 1993.
-    *  - T. Martinetz and K. Schulten. Topology representing networks. Neural Networks, 7(3):507-522, 1994.
-    *
-    * @param data the data set.
-    * @param k the number of units in the neural gas.
-    * @param lambda_i the initial value of lambda. lambda_i and lambda_f are
-    *                 used to set the soft learning radius/rate, i.e. determining the number
-    *                 of neural units significantly changing their synaptic weights with
-    *                 each adaptation step.
-    * @param lambda_f The final value of lambda.
-    * @param eps_i the initial value of epsilon. epsilon_i and epsilon_f
-    *              are the initial and final learning rate respectively.
-    * @param eps_f the final value of epsilon.
-    * @param steps the number of iterations. Note that for one iteration, we
-    *              mean that the learning process goes through the whole dataset.
-    */
-  def neuralgas(data: Array[Array[Double]], k: Int, lambda_i: Double, lambda_f: Double = 0.01, eps_i: Double = 0.5, eps_f: Double = 0.005, steps: Int = 25): NeuralGas = time("Neural Gas") {
-    NeuralGas.fit(data, k, lambda_i, lambda_f, eps_i, eps_f, steps)
-  }
-
   /** Growing Neural Gas. As an extension of Neural Gas, Growing Neural Gas
     * can add and delete nodes during algorithm execution.  The growth mechanism
     * is based on growing cell structures and competitive Hebbian learning.

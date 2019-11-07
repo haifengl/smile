@@ -15,17 +15,12 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.vq;
+package smile.clustering;
 
-import org.apache.commons.csv.CSVFormat;
-import smile.data.DataFrame;
 import smile.data.USPS;
-import smile.data.formula.Formula;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
-import smile.io.CSV;
-import smile.util.Paths;
+import smile.math.MathEx;
+import smile.validation.MutualInformation;
+import smile.validation.NormalizedMutualInformation;
 import smile.validation.RandIndex;
 import smile.validation.AdjustedRandIndex;
 import org.junit.After;
@@ -33,10 +28,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.stream.IntStream;
-
 import static org.junit.Assert.*;
 
 /**
@@ -64,37 +55,40 @@ public class NeuralGasTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class NeuralGas.
-     */
     @Test(expected = Test.None.class)
     public void testUSPS() {
         System.out.println("USPS");
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = USPS.x;
         int[] y = USPS.y;
         double[][] testx = USPS.testx;
         int[] testy = USPS.testy;
 
-        NeuralGas gas = NeuralGas.fit(x, 10);
+        NeuralGas model = NeuralGas.fit(x, 10);
             
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
-        double r = rand.measure(y, gas.y);
-        double r2 = ari.measure(y, gas.y);
-        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.88);
-        assertTrue(r2 > 0.45);
-            
+        double r = RandIndex.of(y, model.y);
+        double r2 = AdjustedRandIndex.of(y, model.y);
+        System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertEquals(0.9076, r, 1E-4);
+        assertEquals(0.5138, r2, 1E-4);
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
+
         int[] p = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
-            p[i] = gas.predict(testx[i]);
+            p[i] = model.predict(testx[i]);
         }
             
-        r = rand.measure(testy, p);
-        r2 = ari.measure(testy, p);
-        System.out.format("Testing rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.88);
-        assertTrue(r2 > 0.45);
+        r = RandIndex.of(testy, p);
+        r2 = AdjustedRandIndex.of(testy, p);
+        System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertEquals(0.9002, r, 1E-4);
+        assertEquals(0.4743, r2, 1E-4);
     }
 }

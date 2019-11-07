@@ -16,19 +16,13 @@
  *******************************************************************************/
 
 /**
- * Originally used for data compression, Vector quantization (VQ)
- * allows the modeling of probability density functions by
- * the distribution of prototype vectors. It works by dividing
- * a large set of points (vectors) into groups having approximately
- * the same number of points closest to them. Each group is represented
- * by its centroid point, as in K-Means and some other clustering algorithms.
- * <p>
- * Vector quantization is is based on the competitive learning paradigm,
- * and also closely related to sparse coding models
- * used in deep learning algorithms such as autoencoder.
- * <p>
- * Algorithms in this package also support the <code>partition</code>
- * method for clustering purpose.
+ * Vector quantization is a lossy compression technique used in speech
+ * and image coding. In vector quantization, a vector is selected from
+ * a finite list of possible vectors to represent an input vector of
+ * samples. Each input vector can be viewed as a point in an n-dimensional
+ * space. The vector quantizer is defined by a partition of this space
+ * into a set of non-overlapping regions. The vector is encoded by
+ * the nearest reference vector (known as codevector) in the codebook.
  *
  * @author Haifeng Li
  */
