@@ -42,15 +42,15 @@ public class MDS {
     /**
      * The component scores.
      */
-    private double[] scores;
+    public final double[] scores;
     /**
      * The principal coordinates.
      */
-    private double[][] coordinates;
+    public final double[][] coordinates;
     /**
      * The proportion of variance contained in each principal component.
      */
-    private double[] proportion;
+    public final double[] proportion;
 
     /**
      * Constructor.
@@ -63,28 +63,6 @@ public class MDS {
         this.scores = scores;
         this.proportion = proportion;
         this.coordinates = coordinates;
-    }
-
-    /**
-     * Returns the component scores, ordered from largest to smallest.
-     */
-    public double[] getScores() {
-        return scores;
-    }
-
-    /**
-     * Returns the proportion of variance contained in each eigenvectors,
-     * ordered from largest to smallest.
-     */
-    public double[] getProportion() {
-        return proportion;
-    }
-
-    /**
-     * Returns the principal coordinates of projected data.
-     */
-    public double[][] getCoordinates() {
-        return coordinates;
     }
 
     /**

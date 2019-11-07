@@ -42,11 +42,11 @@ public class IsotonicMDS {
     /**
      * The final stress achieved.
      */
-    private double stress;
+    public final double stress;
     /**
      * The coordinates.
      */
-    private double[][] coordinates;
+    public final double[][] coordinates;
 
     /**
      * Constructor.
@@ -57,20 +57,6 @@ public class IsotonicMDS {
     public IsotonicMDS(double stress, double[][] coordinates) {
         this.stress = stress;
         this.coordinates = coordinates;
-    }
-
-    /**
-     * Returns the final stress achieved.
-     */
-    public double getStress() {
-        return stress;
-    }
-
-    /**
-     * Returns the coordinates of projected data.
-     */
-    public double[][] getCoordinates() {
-        return coordinates;
     }
 
     /**
@@ -118,7 +104,7 @@ public class IsotonicMDS {
     public static IsotonicMDS of(double[][] proximity, int k, double tol, int maxIter) {
         Properties prop = new Properties();
         prop.setProperty("smile.mds.k", String.valueOf(k));
-        return of(proximity, MDS.of(proximity, prop).getCoordinates(), tol, maxIter);
+        return of(proximity, MDS.of(proximity, prop).coordinates, tol, maxIter);
     }
 
     /**

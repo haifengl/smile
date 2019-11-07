@@ -107,9 +107,9 @@ public class MDSTest {
         };
 
         MDS mds = MDS.of(eurodist);
-        assertTrue(MathEx.equals(eigs, mds.getScores(), 1E-4));
+        assertTrue(MathEx.equals(eigs, mds.scores, 1E-4));
 
-        double[][] coords = mds.getCoordinates();
+        double[][] coords = mds.coordinates;
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
                 assertEquals(Math.abs(points[i][j]), Math.abs(coords[i][j]), 1E-2);
@@ -150,9 +150,9 @@ public class MDSTest {
         };
 
         MDS mds = MDS.of(eurodist, 2, true);
-        assertTrue(MathEx.equals(eigs, mds.getScores(), 1E-1));
+        assertTrue(MathEx.equals(eigs, mds.scores, 1E-1));
 
-        double[][] coords = mds.getCoordinates();
+        double[][] coords = mds.coordinates;
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
                 assertEquals(Math.abs(points[i][j]), Math.abs(coords[i][j]), 1E-2);

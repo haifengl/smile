@@ -104,7 +104,7 @@ public class MDSDemo extends JPanel implements Runnable, ActionListener {
         MDS mds = MDS.of(data, 2);
         System.out.format("Learn MDS (k=2) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(mds.getCoordinates(), labels);
+        PlotCanvas plot = ScatterPlot.plot(mds.coordinates, labels);
         plot.setTitle("MDS (k = 2)");
         pane.add(plot);
 
@@ -112,7 +112,7 @@ public class MDSDemo extends JPanel implements Runnable, ActionListener {
         mds = MDS.of(data, 3);
         System.out.format("Learn MDS (k=3) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        plot = ScatterPlot.plot(mds.getCoordinates(), labels);
+        plot = ScatterPlot.plot(mds.coordinates, labels);
         plot.setTitle("MDS (k = 3)");
         pane.add(plot);
 
