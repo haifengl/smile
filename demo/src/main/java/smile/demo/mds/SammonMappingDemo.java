@@ -104,7 +104,7 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
         SammonMapping sammon = SammonMapping.of(data, 2);
         System.out.format("Learn Sammon's Mapping (k=2) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(sammon.getCoordinates(), labels);
+        PlotCanvas plot = ScatterPlot.plot(sammon.coordinates, labels);
         plot.setTitle("Sammon's Mapping (k = 2)");
         pane.add(plot);
 
@@ -112,7 +112,7 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
         sammon = SammonMapping.of(data, 3);
         System.out.format("Learn Sammon's Mapping (k=3) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        plot = ScatterPlot.plot(sammon.getCoordinates(), labels);
+        plot = ScatterPlot.plot(sammon.coordinates, labels);
         plot.setTitle("Sammon's Mapping (k = 3)");
         pane.add(plot);
 

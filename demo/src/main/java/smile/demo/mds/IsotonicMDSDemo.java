@@ -104,7 +104,7 @@ public class IsotonicMDSDemo extends JPanel implements Runnable, ActionListener 
         IsotonicMDS isomds = IsotonicMDS.of(data, 2);
         System.out.format("Learn Kruskal's Nonmetric MDS (k=2) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(isomds.getCoordinates(), labels);
+        PlotCanvas plot = ScatterPlot.plot(isomds.coordinates, labels);
         plot.setTitle("Kruskal's Nonmetric MDS (k = 2)");
         pane.add(plot);
 
@@ -112,7 +112,7 @@ public class IsotonicMDSDemo extends JPanel implements Runnable, ActionListener 
         isomds = IsotonicMDS.of(data, 3);
         System.out.format("Learn Kruskal's Nonmetric MDS (k=3) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        plot = ScatterPlot.plot(isomds.getCoordinates(), labels);
+        plot = ScatterPlot.plot(isomds.coordinates, labels);
         plot.setTitle("Kruskal's Nonmetric MDS (k = 3)");
         pane.add(plot);
 

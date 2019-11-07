@@ -159,9 +159,9 @@ public class SammonMappingTest {
         };
 
         SammonMapping sammon = SammonMapping.of(swiss);
-        assertEquals(0.00383, sammon.getStress(), 1E-5);
+        assertEquals(0.00383, sammon.stress, 1E-5);
 
-        double[][] coords = sammon.getCoordinates();
+        double[][] coords = sammon.coordinates;
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
                 assertEquals(Math.abs(points[i][j]), Math.abs(coords[i][j]), 1E-2);

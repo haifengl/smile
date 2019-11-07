@@ -158,17 +158,17 @@ public class IsotonicMDSTest {
 
         IsotonicMDS mds = IsotonicMDS.of(swiss);
 
-        double sign = Math.signum(points[0][0] / mds.getCoordinates()[0][0]);
+        double sign = Math.signum(points[0][0] / mds.coordinates[0][0]);
         for (int i = 0; i < points.length; i++) {
             points[i][0] *= sign;
         }
 
-        sign = Math.signum(points[0][1] / mds.getCoordinates()[0][1]);
+        sign = Math.signum(points[0][1] / mds.coordinates[0][1]);
         for (int i = 0; i < points.length; i++) {
             points[i][1] *= sign;
         }
 
-        assertEquals(0.023190, mds.getStress(), 1E-6);
-        assertTrue(MathEx.equals(points, mds.getCoordinates(), 1E-6));
+        assertEquals(0.023190, mds.stress, 1E-6);
+        assertTrue(MathEx.equals(points, mds.coordinates, 1E-6));
     }
 }
