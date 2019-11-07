@@ -18,11 +18,12 @@
 package smile.validation;
 
 /**
- * MCC is a correlation coefficient between prediction and actual values. It is considered as a balanced measure for binary classification, even in unbalanced data sets.
- * It  varies between -1 and +1. 1 when there is perfect agreement between ground truth and prediction, -1 when there is a perfect disagreement between ground truth and predictions.
- * MCC of 0 means the model is not better then random.
- *
- * @see <a href="https://en.wikipedia.org/wiki/Matthews_correlation_coefficient">Matthews correlation coefficient</a>
+ * Matthews correlation coefficient.The MCC is in essence a correlation
+ * coefficient between the observed and predicted binary classifications
+ * It is considered as a balanced measure for binary classification,
+ * even in unbalanced data sets. It  varies between -1 (perfect
+ * disagreement) and +1 (perfect agreement). When it is 0,
+ * the model is not better then random.
  *
  * @author digital-thinking
  */
@@ -39,6 +40,7 @@ public class MCC implements ClassificationMeasure {
         if (truth.length != prediction.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
         }
+
         ConfusionMatrix confusion = ConfusionMatrix.of(truth, prediction);
         int[][] matrix = confusion.matrix;
 
@@ -53,14 +55,6 @@ public class MCC implements ClassificationMeasure {
 
         int numerator = (tp * tn - fp * fn);
         double denominator = Math.sqrt(tp + fp) * Math.sqrt(tp + fn) * Math.sqrt(tn + fp) * Math.sqrt(tn + fn);
-
-        if (numerator == 0) {
-            return 0;
-        }
-
-        if ( denominator == 0) {
-            throw new IllegalArgumentException("MCC can not be applied, denominator is 0 " + confusion.toString());
-        }
 
         return numerator / denominator;
     }

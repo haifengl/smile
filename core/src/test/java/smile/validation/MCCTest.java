@@ -47,7 +47,7 @@ public class MCCTest {
     }
 
     @Test
-    public void testMeasure() {
+    public void test() {
         System.out.println("MCC");
         int[] truth = {
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -66,16 +66,10 @@ public class MCCTest {
     }
 
     @Test
-    public void testMeasureRandom(){
+    public void test0(){
         System.out.println("numerator = 0");
-        int[] truth = {
-                0, 0, 0, 0,
-                1, 1, 1, 1
-        };
-        int[] prediction = {
-                0, 1, 0, 1,
-                0, 1, 0, 1
-        };
+        int[] truth = {0, 0, 0, 0, 1, 1, 1, 1};
+        int[] prediction = {0, 1, 0, 1, 0, 1, 0, 1};
 
         double expResult = 0;
         double result = MCC.of(truth, prediction);
