@@ -512,6 +512,43 @@ public class MathExTest {
         assertEquals(1.0, MathEx.mad(data), 1E-5);
     }
 
+    @Test
+    public void testPdist() {
+        double[][] data = {
+                {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515},
+                {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300},
+                {-3.9749544, -1.6219752, 0.9094410, 0.1106760, -0.0071785}
+        };
+
+        double[][] d = MathEx.pdist(data);
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                assertEquals(MathEx.distance(data[i], data[j]), d[i][j], 1E-10);
+            }
+        }
+    }
+
+    @Test
+    public void testPdistSquaredHalf() {
+        double[][] data = {
+                {-2.1968219, -0.9559913, -0.0431738, 1.0567679, 0.3853515},
+                {-1.7781325, -0.6659839, 0.9526148, -0.9460919, -0.3925300},
+                {-3.9749544, -1.6219752, 0.9094410, 0.1106760, -0.0071785}
+        };
+
+        double[][] d = new double[3][3];
+        MathEx.pdist(data, d, true, true);
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < i; j++) {
+                assertEquals(MathEx.squaredDistance(data[i], data[j]), d[i][j], 1E-10);
+            }
+
+            for (int j = i; j < 3; j++) {
+                assertEquals(0.0, d[i][j], 1E-10);
+            }
+        }
+    }
+
     /**
      * Test of distance method, of class Math.
      */
