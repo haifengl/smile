@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 import smile.sort.QuickSelect;
@@ -2039,36 +2040,6 @@ public class MathEx {
         return sqrt(squaredDistance(x, y));
     }
 
-    private static class PdistTask implements Callable<Void> {
-        double[][] x;
-        double[][] dist;
-        int nprocs;
-        int pid;
-        boolean half;
-        boolean squared;
-
-        PdistTask(double[][] x, double[][] dist, int nprocs, int pid, boolean squared, boolean half) {
-            this.x = x;
-            this.dist = dist;
-            this.nprocs = nprocs;
-            this.pid = pid;
-            this.squared = squared;
-            this.half = half;
-        }
-
-        @Override
-        public Void call() {
-            int n = x.length;
-            for (int i = pid; i < n; i += nprocs) {
-                for (int j = 0; j < i; j++) {
-                    double d = squared ? squaredDistance(x[i], x[j]) : distance(x[i], x[j]);
-                    dist[i][j] = d;
-                    if (!half) dist[j][i] = d;
-                }
-            }
-            return null;
-        }
-    }
     /**
      * Pairwise distance between pairs of objects.
      * @param x Rows of x correspond to observations, and columns correspond to variables.
@@ -2092,23 +2063,28 @@ public class MathEx {
      */
     public static void pdist(double[][] x, double[][] dist, boolean squared, boolean half) {
         int n = x.length;
+        int N = n * (n - 1) / 2;
 
-        if (n < 1000) {
+        if (squared) {
+            IntStream.range(0, N).parallel().forEach(k -> {
+                int j = n - 2 - (int) Math.floor(Math.sqrt(-8*k + 4*n*(n-1)-7)/2.0 - 0.5);
+                int i = k + j + 1 - n*(n-1)/2 + (n-j)*((n-j)-1)/2;
+                dist[i][j] = squaredDistance(x[i], x[j]);
+            });
+        } else {
+            IntStream.range(0, N).parallel().forEach(k -> {
+                int j = n - 2 - (int) Math.floor(Math.sqrt(-8*k + 4*n*(n-1)-7)/2.0 - 0.5);
+                int i = k + j + 1 - n*(n-1)/2 + (n-j)*((n-j)-1)/2;
+                dist[i][j] = distance(x[i], x[j]);
+            });
+        }
+
+        if (!half) {
             for (int i = 0; i < n; i++) {
-                for (int j = 0; j < i; j++) {
-                    double d = distance(x[i], x[j]);
-                    dist[i][j] = d;
-                    dist[j][i] = d;
+                for (int j = i + 1; j < n; j++) {
+                    dist[i][j] = dist[j][i];
                 }
             }
-        } else {
-            int nprocs = Runtime.getRuntime().availableProcessors();
-            List<PdistTask> tasks = new ArrayList<>();
-            for (int i = 0; i < nprocs; i++) {
-                PdistTask task = new PdistTask(x, dist, nprocs, i, squared, half);
-                tasks.add(task);
-            }
-            ForkJoinPool.commonPool().invokeAll(tasks);
         }
     }
 
