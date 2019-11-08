@@ -100,27 +100,11 @@ public class HeatmapDemo extends JPanel {
     }
 
     public static void main(String[] args) {
-        ArrayList<StructField> fields = new ArrayList<>();
-        fields.add(new StructField("class", DataTypes.ByteType));
-        IntStream.range(1, 257).forEach(i -> fields.add(new StructField("V"+i, DataTypes.DoubleType)));
-        StructType schema = DataTypes.struct(fields);
-
-        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
-        csv.schema(schema);
-        try {
-            DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
-            Formula formula = Formula.lhs("class");
-            double[][] x = formula.x(train).toArray();
-            int[] y = formula.y(train).toIntArray();
-
-            JFrame frame = new JFrame("Heatmap");
-            frame.setSize(1000, 1000);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setLocationRelativeTo(null);
-            frame.getContentPane().add(Heatmap.plot(x, Palette.jet(256)));
-            frame.setVisible(true);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        JFrame frame = new JFrame("Heatmap");
+        frame.setSize(1000, 1000);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
+        frame.getContentPane().add(new HeatmapDemo());
+        frame.setVisible(true);
     }
 }

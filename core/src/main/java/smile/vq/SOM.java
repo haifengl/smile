@@ -18,15 +18,13 @@
 package smile.vq;
 
 import java.util.Arrays;
-import smile.clustering.Clustering;
-import smile.clustering.HierarchicalClustering;
-import smile.clustering.BBDTree;
-import smile.clustering.linkage.Linkage;
-import smile.clustering.linkage.UPGMALinkage;
+import java.util.Optional;
+
+import smile.clustering.CentroidClustering;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EVD;
+import smile.mds.MDS;
+import smile.neighbor.LinearSearch;
+import smile.sort.QuickSort;
 
 /**
  * Self-Organizing Map. An SOM is a unsupervised learning method to produce
@@ -87,389 +85,214 @@ import smile.math.matrix.EVD;
  * 
  * @author Haifeng Li
  */
-public class SOM implements Clustering<double[]> {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SOM.class);
-
+public class SOM implements VectorQuantizer {
     /**
      * Self-Organizing Map Neuron.
      */
     public static class Neuron {
+        /** The weight vector. */
+        public final double[] w;
+        /** The row index of neuron in the lattice. */
+        public final int i;
+        /** The column index of neuron in the lattice. */
+        public final int j;
+
         /**
-         * Weight vector.
+         * Constructor.
+         * @param i the row index of neuron in the lattice.
+         * @param j the column index of neuron in the lattice.
+         * @param w the weight vector.
          */
-        public double[] w;
-        /**
-         * Cluster id of this neuron.
-         */
-        public int cluster;
-        /**
-         * The samples that are best matched.
-         */
-        public int[] samples;
-        /**
-         * The class label of majority, y = which.max(ni).
-         */
-        public int y;
-        /**
-         * The count of each class that best matched samples belong to.
-         */
-        public int[] ni;
-        /**
-         * The distance to neighbors.
-         */
-        public double[] distance;
+        public Neuron(int i, int j, double[] w) {
+            this.i = i;
+            this.j = j;
+            this.w = w;
+        }
+        
+        /** Constructor for BMU search. */
+        Neuron(double[] w) {
+            this(-1, -1, w);
+        }
     }
     
     /**
-     * The width of map.
+     * The number of rows in the lattice.
      */
-    private int width;
+    private int nrows;
     /**
-     * The height of map.
+     * The number of columns in the lattice.
      */
-    private int height;
+    private int ncols;
     /**
-     * The dimension of input space.
+     * The lattice of neurons.
      */
-    private int d;
+    private Neuron[][] map;
     /**
-     * The SOM map of neurons.
+     * The neurons in linear array.
      */
-    private double[][][] neurons;
+    private Neuron[] neurons;
     /**
-     * The best matched unit. This is n-by-2 matrix, of which each row is
-     * for each data point. The entry bmu[i][0] and bmu[i][1] are the row
-     * index and column index of the best matched unit for each sample,
-     * respectively.
+     * To search best matching unit.
      */
-    private int[][] bmu;
+    private LinearSearch<Neuron> search;
     /**
-     * The number of samples in each units.
+     * The learning rate function.
      */
-    private int[][] voronoi;
+    private LearningRate alpha;
     /**
-     * The cluster labels of neurons.
+     * The neighborhood function.
      */
-    private int[] y;
+    private LatticeNeighborhood theta;
     /**
-     * Unified distance matrix, or u-matrix, is a popular method of displaying
-     * SOMs. The value of umatrix is the maximum of distances between a map unit
-     * to its neighbors.
+     * The current iteration.
      */
-    private double[][] umatrix;
+    private int t = 0;
+    /**
+     * The threshold to update neuron if alpha * theta > eps.
+     */
+    private double eps = 1E-7;
 
     /**
-     * Constructor. Learn the SOM of given data.
-     * @param size the size of a squared map.
+     * Constructor.
+     * @param neurons the initial lattice of neurons.
+     * @param alpha the learning rate function.
+     * @param theta the neighborhood function.
      */
-    public SOM(double[][] data, int size) {
-        this(data, size, size);
+    public SOM(double[][][] neurons, LearningRate alpha, LatticeNeighborhood theta) {
+        this.alpha = alpha;
+        this.theta = theta;
+        this.nrows = neurons.length;
+        this.ncols = neurons[0].length;
+        
+        this.map = new Neuron[nrows][ncols];
+        this.neurons = new Neuron[nrows * ncols];
+        
+        for (int i = 0, k = 0; i < nrows; i++) {
+            for (int j = 0; j < ncols; j++, k++) {
+                Neuron neuron = new Neuron(i, j, neurons[i][j].clone());
+                map[i][j] = neuron;
+                this.neurons[k] = neuron;
+            }
+        }
+        
+        search = new LinearSearch<>(this.neurons, (Neuron x, Neuron y) -> MathEx.distance(x.w, y.w));
     }
 
     /**
-     * Constructor. Learn the SOM of given data.
-     * @param width the width of map.
-     * @param height the height of map.
+     * Creates a lattice of which the weight vectors are randomly selected from samples.
+     * @param nrows the number of rows in the lattice.
+     * @param ncols the number of columns in the lattice.
+     * @param samples the samples to draw initial weight vectors.
      */
-    public SOM(double[][] data, int width, int height) {
-        if (height <= 0 || width <= 0 || height * width == 1) {
-            throw new IllegalArgumentException("Invalide map width = " + width + " or height = " + height);
-        }
+    public static double[][][] lattice(int nrows, int ncols, double[][] samples) {
+        int k = nrows * ncols;
+        int n = samples.length;
 
-        this.width = width;
-        this.height = height;
-        this.d = data[0].length;
-        
-        int n = data.length;
+        double[][] medoids = new double[k][];
+        int[] clusters = new int[n];
+        double[] dist = new double[n];
 
-        neurons = new double[height][width][d];
-        bmu = new int[n][2];
+        CentroidClustering.seed(samples, medoids, clusters, dist, MathEx::squaredDistance);
 
-        double mpd = Math.max(0.5, height * width / (double) n);
-        int roughTrainLen = (int) Math.ceil(10 * mpd);
-        int fineTrainLen = (int) Math.ceil(40 * mpd);
-        int trainLen = roughTrainLen + fineTrainLen;
+        // Pair-wise distance matrix.
+        double[][] pdist = MathEx.pdist(medoids);
+        MDS mds = MDS.of(pdist);
+        double[][] coordinates = mds.coordinates;
 
-        double initRadius = Math.max(1.0, Math.max(height, width) / 2.0);
-        double finalRadius = Math.max(1.0, initRadius / 4.0);
+        double[] x = Arrays.stream(coordinates).mapToDouble(point -> point[0]).toArray();
+        double[] y = new double[ncols];
+        int[] row = new int[ncols];
+        int[] index = QuickSort.sort(x);
 
-        double[] radius = new double[trainLen];
-        for (int i = 0; i < roughTrainLen; i++) {
-            radius[roughTrainLen - i - 1] = finalRadius + (double) i / (roughTrainLen - 1) * (initRadius - finalRadius);
-        }
+        double[][][] neurons = new double[nrows][ncols][];
+        for (int i = 0; i < nrows; i++) {
+            for (int j = 0; j < ncols; j++) {
+                int point = index[i * ncols + j];
+                y[j] = coordinates[point][1];
+                row[j] = point;
+            }
 
-        initRadius = finalRadius - 1.0 / (fineTrainLen - 1);
-        finalRadius = 1;
-        for (int i = 0; i < fineTrainLen; i++) {
-            radius[roughTrainLen + fineTrainLen - i - 1] = finalRadius + (double) i / (fineTrainLen - 1) * (initRadius - finalRadius);
-        }
+            QuickSort.sort(y, row);
 
-        for (int i = 0; i < trainLen; i++) {
-            radius[i] = radius[i] * radius[i];
-        }
-
-        double[] mu = new double[d];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < d; j++) {
-                mu[j] += data[i][j];
+            for (int j = 0; j < ncols; j++) {
+                neurons[i][j] = medoids[row[j]];
             }
         }
 
-        for (int i = 0; i < d; i++) {
-            mu[i] /= n;
-        }
+        return neurons;
+    }
 
-        DenseMatrix D = Matrix.zeros(n, d);
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < d; j++) {
-                D.set(i, j, data[i][j] - mu[j]);
-            }
-        }
+    @Override
+    public void update(double[] x) {
+        Neuron bmu = bmu(x);
+        int i = bmu.i;
+        int j = bmu.j;
 
-        DenseMatrix V = Matrix.zeros(d, d);
-        for (int i = 0; i < d; i++) {
-            for (int j = i; j < d; j++) {
-                for (int k = 0; k < n; k++) {
-                    V.add(i, j, D.get(k, i) * D.get(k, j));
-                }
-                V.div(i, j, n);
-                V.set(j, i, V.get(i, j));
-            }
-        }
-
-        V.setSymmetric(true);
-        EVD eigen = V.eigen(2);
-
-        double[] v1 = new double[d];
-        double[] v2 = new double[d];
-        for (int i = 0; i < d; i++) {
-            v1[i] = eigen.getEigenVectors().get(i, 0);
-            v2[i] = eigen.getEigenVectors().get(i, 1);
-        }
-
-        for (int i = 0; i < height; i++) {
-            double w = (double) i / height - 0.5;
-            for (int j = 0; j < width; j++) {
-                double h = (double) j / width - 0.5;
+        int d = bmu.w.length;
+        double rate = alpha.of(t);
+        Arrays.stream(neurons).forEach(neuron -> {
+            double delta = rate * theta.of(neuron.i - i, neuron.j - j, t);
+            if (delta > eps) {
+                double[] w = neuron.w;
                 for (int k = 0; k < d; k++) {
-                    neurons[i][j][k] = mu[k] + w * v1[k] + h * v2[k];
+                    w[k] += delta * (x[k] - w[k]);
                 }
             }
-        }
-        
-        BBDTree bbd = new BBDTree(data);
-        double[][] centroids = new double[width * height][];
-        double[][] sums = new double[width * height][d];
-        int[] hit = new int[width * height];
-        int[] sy = new int[n]; // cluster label of samples.
+        });
 
-        for (int i = 0, k = 0; i < height; i++) {
-            for (int j = 0; j < width; j++, k++) {
-                centroids[k] = neurons[i][j];
-            }
-        }
-
-        for (int iter = 0; iter < trainLen; iter++) {
-            int r = (int) Math.round(Math.sqrt(radius[iter]));
-            double distortion = bbd.clustering(centroids, sums, hit, sy);
-            logger.info(String.format("SOM distortion after %3d iterations (radius = %d): %.5f", iter + 1, r, distortion));
-
-            for (int i = 0; i < height; i++) {
-                for (int j = 0; j < width; j++) {
-                    double denom = 0.0;
-                    Arrays.fill(neurons[i][j], 0.0);
-
-                    int minH = Math.max(0, i - 3 * r) + 1;
-                    int maxH = Math.min(height, i + 3 * r) - 1;
-                    int minW = Math.max(0, j - 3 * r) + 1;
-                    int maxW = Math.min(width, j + 3 * r) - 1;
-
-                    int hits = 0;
-                    while (hits == 0) {
-                        minH = Math.max(0, minH - 1);
-                        maxH = Math.min(height, maxH + 1);
-                        minW = Math.max(0, minW - 1);
-                        maxW = Math.min(width, maxW + 1);
-
-                        for (int s = minH; s < maxH; s++) {
-                            for (int t = minW; t < maxW; t++) {
-                                int pos = s * width + t;
-                                hits += hit[pos];
-                            }
-                        }
-                    }
-
-                    for (int s = minH; s < maxH; s++) {
-                        for (int t = minW; t < maxW; t++) {
-                            int pos = s * width + t;
-                            if (hit[pos] > 0) {
-                                int dx = i - s;
-                                int dy = j - t;
-                                double h = Math.exp(-(dx * dx + dy * dy) / (2 * radius[iter]));
-                                denom += h * hit[pos];
-                                for (int k = 0; k < d; k++) {
-                                    neurons[i][j][k] += h * sums[pos][k];
-                                }
-                            }
-                        }
-                    }
-
-                    for (int k = 0; k < d; k++) {
-                        neurons[i][j][k] /= denom;
-                    }
-                }
-            }
-        }
-
-        // best matched unit for each sample.
-        for (int i = 0; i < n; i++) {
-            bmu[i][0] = sy[i] / width;
-            bmu[i][1] = sy[i] % width;
-        }
-        
-        // count the number of samples in each unit.
-        voronoi = new int[height][width];
-        voronoi = new int[height][width];
-        for (int i = 0; i < bmu.length; i++) {
-            voronoi[bmu[i][0]][bmu[i][1]]++;
-        }
-        
-        // calculate u-matrix.
-        umatrix = new double[height][width];
-        for (int i = 0; i < height - 1; i++) {
-            for (int j = 0; j < width - 1; j++) {
-                double dist = Math.sqrt(MathEx.squaredDistance(neurons[i][j], neurons[i][j + 1]));
-                umatrix[i][j] = Math.max(umatrix[i][j], dist);
-                umatrix[i][j + 1] = Math.max(umatrix[i][j + 1], dist);
-                dist = Math.sqrt(MathEx.squaredDistance(neurons[i][j], neurons[i + 1][j]));
-                umatrix[i][j] = Math.max(umatrix[i][j], dist);
-                umatrix[i + 1][j] = Math.max(umatrix[i + 1][j], dist);
-            }
-        }
-
-        for (int i = 0; i < height - 1; i++) {
-            double dist = Math.sqrt(MathEx.squaredDistance(neurons[i][width - 1], neurons[i + 1][width - 1]));
-            umatrix[i][width - 1] = Math.max(umatrix[i][width - 1], dist);
-            umatrix[i + 1][width - 1] = Math.max(umatrix[i + 1][width - 1], dist);
-        }
-
-        for (int j = 0; j < width - 1; j++) {
-            double dist = Math.sqrt(MathEx.squaredDistance(neurons[height - 1][j], neurons[height - 1][j + 1]));
-            umatrix[height - 1][j] = Math.max(umatrix[height - 1][j], dist);
-            umatrix[height - 1][j + 1] = Math.max(umatrix[height - 1][j + 1], dist);
-        }
-
-        umatrix[height - 1][width - 1] = Math.max(umatrix[height - 1][width - 2], umatrix[height - 2][width - 1]);
+        t = t + 1;
     }
 
     /**
      * Returns the SOM map grid.
      */
-    public double[][][] map() {
-        return neurons;
+    public Neuron[][] neurons() {
+        return map;
     }
 
     /**
-     * Returns the U-Matrix of SOM map for visualization.
+     * Calculates the unified distance matrix (u-matrix) for visualization.
+     * U-matrix is a popular method of displaying SOMs. The value of umatrix
+     * is the maximum of distances between a map unit to its neighbors.
      */
     public double[][] umatrix() {
+        double[][] umatrix = new double[nrows][ncols];
+        for (int i = 0; i < nrows - 1; i++) {
+            for (int j = 0; j < ncols - 1; j++) {
+                double dist = Math.sqrt(MathEx.distance(map[i][j].w, map[i][j + 1].w));
+                umatrix[i][j] = Math.max(umatrix[i][j], dist);
+                umatrix[i][j + 1] = Math.max(umatrix[i][j + 1], dist);
+
+                dist = Math.sqrt(MathEx.distance(map[i][j].w, map[i + 1][j].w));
+                umatrix[i][j] = Math.max(umatrix[i][j], dist);
+                umatrix[i + 1][j] = Math.max(umatrix[i + 1][j], dist);
+            }
+        }
+
+        for (int i = 0; i < nrows - 1; i++) {
+            double dist = Math.sqrt(MathEx.distance(map[i][ncols - 1].w, map[i + 1][ncols - 1].w));
+            umatrix[i][ncols - 1] = Math.max(umatrix[i][ncols - 1], dist);
+            umatrix[i + 1][ncols - 1] = Math.max(umatrix[i + 1][ncols - 1], dist);
+        }
+
+        for (int j = 0; j < ncols - 1; j++) {
+            double dist = Math.sqrt(MathEx.distance(map[nrows - 1][j].w, map[nrows - 1][j + 1].w));
+            umatrix[nrows - 1][j] = Math.max(umatrix[nrows - 1][j], dist);
+            umatrix[nrows - 1][j + 1] = Math.max(umatrix[nrows - 1][j + 1], dist);
+        }
+
+        umatrix[nrows - 1][ncols - 1] = Math.max(umatrix[nrows - 1][ncols - 2], umatrix[nrows - 2][ncols - 1]);
+
         return umatrix;
     }
 
-    /**
-     * Returns the best matched unit for each sample.
-     * @return the best matched unit. This is n-by-2 matrix, of which each row
-     * is for each data point. The entry bmu[i][0] and bmu[i][1] are the row
-     * index and column index of the best matched unit for each sample,
-     * respectively.
-     */
-    public int[][] bmu() {
-        return bmu;
-    }
-    
-    /**
-     * Returns the number of samples in each unit.
-     */
-    public int[][] size() {
-        return voronoi;
-    }
-
-    /**
-     * Returns the cluster labels for each neuron.  If the neurons have
-     * not been clustered, throws an Illegal State Exception.
-     */
-    public int[][] getClusterLabel() {
-        if (y == null) {
-           throw new IllegalStateException("Neuron cluster labels are not available. Call partition() first.");
-        }
-
-        int[][] clusterLabels = new int[height][width];
-        for (int i = 0, l = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                clusterLabels[i][j] = y[i*width + j];
-            }
-        }
-        return clusterLabels;
-    }
-
-    /**
-     * Clustering the neurons into k groups. And then assigns the samples in
-     * each neuron to the corresponding cluster.
-     * @param k the number of clusters.
-     * @return the cluster label of samples.
-     */
-    public int[] partition(int k) {
-        int n = width * height;
-        double[][] units = new double[n][d];
-        for (int i = 0, l = 0; i < height; i++) {
-            for (int j = 0; j < width; j++, l++) {
-                units[l] = neurons[i][j];
-            }
-        }
-
-        Linkage linkage = UPGMALinkage.of(units);
-        HierarchicalClustering hc = HierarchicalClustering.fit(linkage);
-        y = hc.partition(k);
-
-        int[] cluster = new int[bmu.length];
-        for (int i = 0; i < cluster.length; i++) {
-            cluster[i] = y[bmu[i][0] * width + bmu[i][1]];
-        }
-        
-        return cluster;
-    }
-
-    /**
-     * Cluster a new instance to the nearest neuron. For clustering purpose,
-     * one should build a sufficient large map to capture the structure of
-     * data space. Then the neurons of map can be clustered into a small number
-     * of clusters. Finally the sample should be assign to the cluster of
-     * its nearest neurons.
-     * 
-     * @param x a new instance.
-     * @return the cluster label. If the method {@link #partition(int)} is
-     * called before, this is the cluster label of the nearest neuron.
-     * Otherwise, this is the index of neuron (i * width + j).
-     */
     @Override
-    public int predict(double[] x) {
-        double best = Double.MAX_VALUE;
-        int ii = -1, jj = -1;
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                double dist = MathEx.squaredDistance(neurons[i][j], x);
-                if (dist < best) {
-                    best = dist;
-                    ii = i;
-                    jj = j;
-                }
-            }
-        }
-        
-        if (y == null) {
-            return ii * width + jj;
-        } else {
-            return y[ii * width + jj];
-        }
+    public Optional<double[]> quantize(double[] x) {
+        return Optional.of(bmu(x).w);
+    }
+
+    /** Returns the best matching unit. */
+    private Neuron bmu(double[] x) {
+        return search.nearest(new Neuron(x)).key;
     }
 }

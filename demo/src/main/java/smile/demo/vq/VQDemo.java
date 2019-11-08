@@ -134,8 +134,8 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
         optionPane.add(startButton);
         optionPane.add(new JLabel("Dataset:"));
         optionPane.add(datasetBox);
-        optionPane.add(new JLabel("K:"));
-        optionPane.add(clusterNumberField);
+        //optionPane.add(new JLabel("K:"));
+        //optionPane.add(clusterNumberField);
 
         setLayout(new BorderLayout());
         add(optionPane, BorderLayout.NORTH);

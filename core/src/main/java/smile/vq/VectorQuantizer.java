@@ -47,5 +47,5 @@ public interface VectorQuantizer extends Serializable {
      * Returns the index of nearest centroid in the code book.
      * @param x a new observation.
      */
-    int code(double[] x);
+    //int code(double[] x);
 }
