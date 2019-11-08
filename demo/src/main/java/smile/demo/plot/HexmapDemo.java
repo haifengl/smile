@@ -99,105 +99,11 @@ public class HexmapDemo extends JPanel {
     }
 
     public static void main(String[] args) {
-        ArrayList<StructField> fields = new ArrayList<>();
-        fields.add(new StructField("class", DataTypes.ByteType));
-        IntStream.range(1, 257).forEach(i -> fields.add(new StructField("V"+i, DataTypes.DoubleType)));
-        StructType schema = DataTypes.struct(fields);
-
-        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
-        csv.schema(schema);
-        try {
-            DataFrame train = csv.read(Paths.getTestData("usps/zip.train"));
-            Formula formula = Formula.lhs("class");
-            double[][] x = formula.x(train).toArray();
-            int[] y = formula.y(train).toIntArray();
-            
-            int m = 20;
-            int n = 20;
-            SOM som = new SOM(x, m, n);
-            
-            String[][] labels = new String[m][n];
-            int[] neurons = new int[x.length];
-            for (int i = 0; i < x.length; i++) {
-                neurons[i] = som.predict(x[i]);
-            }
-            
-            int[] count = new int[10];
-            for (int i = 0; i < m; i++) {
-                for (int j = 0; j < n; j++) {
-                    Arrays.fill(count, 0);
-                    for (int k = 0; k < neurons.length; k++) {
-                        if (neurons[k] == i * n + j) {
-                            count[y[k]]++;
-                        }
-                    }
-                    
-                    long sum = MathEx.sum(count);
-                    if (sum == 0) {
-                        labels[i][j] = "no samples";
-                    } else {
-                        labels[i][j] = String.format("<table border=\"1\"><tr><td>Total</td><td align=\"right\">%d</td></tr>", sum);
-                        
-                        for (int l = 0; l < count.length; l++) {
-                            if (count[l] > 0) {
-                                labels[i][j] += String.format("<tr><td>class %d</td><td align=\"right\">%.1f%%</td></tr>", l, 100.0*count[l]/sum);
-                            }
-                        }
-                        
-                        labels[i][j] += "</table>";
-                    }
-                }
-            }
-            
-            double[][] umatrix = som.umatrix();
-            
-            double[][][] map = som.map();
-            double[][] proximity = new double[m*n][m*n];
-            for (int i = 0; i < m*n; i++) {
-                for (int j = 0; j < m*n; j++) {
-                    proximity[i][j] = MathEx.distance(map[i/n][i%n], map[j/n][j%n]);
-                }
-            }
-            
-            MDS mds = MDS.of(proximity, 3);
-            double[][] coords = mds.getCoordinates();
-            double[][][] mdsgrid = new double[m][n][];
-            for (int i = 0; i < m*n; i++) {
-                mdsgrid[i/n][i%n] = mds.getCoordinates()[i];
-            }            
-            
-            SammonMapping sammon = SammonMapping.of(proximity, coords, 0.2, 1E-4, 1E-3, 100);
-            double[][][] sammongrid = new double[m][n][];
-            for (int i = 0; i < m*n; i++) {
-                sammongrid[i/n][i%n] = sammon.getCoordinates()[i];
-            }
-            
-            IsotonicMDS isomds = IsotonicMDS.of(proximity, coords, 1E-4, 200);
-            double[][][] isomdsgrid = new double[m][n][];
-            for (int i = 0; i < m*n; i++) {
-                isomdsgrid[i/n][i%n] = isomds.getCoordinates()[i];
-            }
-            
-            JFrame frame = new JFrame("Hexmap");
-            frame.setSize(1000, 1000);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setLocationRelativeTo(null);
-            frame.add(Hexmap.plot(labels, umatrix));
-            
-            PlotCanvas canvas = Surface.plot(mdsgrid);
-            canvas.setTitle("MDS");
-            frame.add(canvas);
-            
-            canvas = Surface.plot(isomdsgrid);
-            canvas.setTitle("Isotonic MDS");
-            frame.add(canvas);
-            
-            canvas = Surface.plot(sammongrid);
-            canvas.setTitle("Sammon Mapping");
-            frame.add(canvas);
-            frame.setVisible(true);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        JFrame frame = new JFrame("Hexmap");
+        frame.setSize(1000, 1000);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
+        frame.getContentPane().add(new HexmapDemo());
+        frame.setVisible(true);
     }
 }

@@ -33,6 +33,8 @@ import static smile.math.MathEx.lfactorial;
  * two partitions are identical and 0 when the MI between two partitions
  * equals the value expected due to chance alone.
  *
+ * WARNING: The computation of adjustment is is really really slow.
+ *
  * <h2>References</h2>
  * <ol>
  * <li>X. Vinh, J. Epps, J. Bailey. Information Theoretic Measures for Clusterings Comparison: Variants, Properties, Normalization and Correction for Chance. JMLR, 2010.</li>

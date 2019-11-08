@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.demo.clustering;
+package smile.demo.vq;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -29,6 +29,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import smile.plot.Palette;
+import smile.vq.LatticeNeighborhood;
+import smile.vq.LearningRate;
 import smile.vq.SOM;
 import smile.math.MathEx;
 import smile.plot.Hexmap;
@@ -42,7 +44,7 @@ import smile.stat.distribution.GaussianMixture;
  * @author Haifeng Li
  */
 @SuppressWarnings("serial")
-public class SOMDemo  extends ClusteringDemo {
+public class SOMDemo  extends VQDemo {
     JTextField widthField;
     JTextField heightField;
     int width = 10;
@@ -83,81 +85,35 @@ public class SOMDemo  extends ClusteringDemo {
         }
 
         long clock = System.currentTimeMillis();
-        SOM som = new SOM(dataset[datasetIndex], width, height);
-        System.out.format("SOM clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
+        int epochs = 10;
+        double[][][] lattice = SOM.lattice(width, height, dataset[datasetIndex]);
+        SOM som = new SOM(lattice,
+                LearningRate.linear(0.85, dataset[datasetIndex].length * epochs),
+                LatticeNeighborhood.Gaussian(5, dataset[datasetIndex].length * epochs));
+        for (int i = 0; i < epochs; i++) {
+            for (int j : MathEx.permutate(dataset[datasetIndex].length)) {
+                som.update(dataset[datasetIndex][j]);
+            }
+        }
+        System.out.format("SOM %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        JPanel pane = new JPanel(new GridLayout(2, 3));
+        double[][][] map = new double[height][width][];
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                map[i][j] = som.neurons()[i][j].w;
+            }
+        }
+
+        JPanel pane = new JPanel(new GridLayout(1, 2));
         PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        plot.grid(som.map());
-        plot.setTitle("SOM Grid");
-        pane.add(plot);
-
-        int[] membership = som.partition(clusterNumber);
-        int[] clusterSize = new int[clusterNumber];
-        for (int i = 0; i < membership.length; i++) {
-            clusterSize[membership[i]]++;
-        }
-
-        plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        plot.setTitle("Hierarchical Clustering");
-        for (int k = 0; k < clusterNumber; k++) {
-                double[][] cluster = new double[clusterSize[k]][];
-                for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (membership[i] == k) {
-                        cluster[j++] = dataset[datasetIndex][i];
-                    }
-                }
-
-                plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
-        }
+        plot.grid(map);
+        plot.setTitle("SOM");
         pane.add(plot);
 
         double[][] umatrix = som.umatrix();
-
-        double[] umatrix1 = new double[umatrix.length * umatrix[0].length];
-        for (int i = 0, k = 0; i < umatrix.length; i++) {
-            for (int j = 0; j < umatrix[i].length; j++, k++)
-                umatrix1[k] = umatrix[i][j];
-        }
-
-        plot = Histogram.plot(null, umatrix1, 20);
-        plot.setTitle("U-Matrix Histogram");
-        pane.add(plot);
-
-        GaussianMixture mixture = new GaussianMixture(umatrix1);
-
-        double w = (MathEx.max(umatrix1) - MathEx.min(umatrix1)) / 24;
-        double[][] p = new double[50][2];
-        for (int i = 0; i < p.length; i++) {
-            p[i][0] = MathEx.min(umatrix1) + i * w;
-            p[i][1] = mixture.p(p[i][0]) * w;
-        }
-        plot.line(p, Color.RED);
-
         plot = Hexmap.plot(umatrix, Palette.jet(256));
         plot.setTitle("U-Matrix");
         pane.add(plot);
-/*
-        double[][] x = new double[height][width];
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                x[i][j] = som.getMap()[i][j][0];
-            }
-        }
-        plot = PlotCanvas.hexmap(x, Palette.jet(256));
-        plot.setTitle("X");
-        pane.add(plot);
-
-        double[][] y = new double[height][width];
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                y[i][j] = som.getMap()[i][j][1];
-            }
-        }
-        plot = PlotCanvas.hexmap(y, Palette.jet(256));
-        plot.setTitle("Y");
-        pane.add(plot);
-*/
         return pane;
     }
 
@@ -167,7 +123,7 @@ public class SOMDemo  extends ClusteringDemo {
     }
 
     public static void main(String argv[]) {
-        ClusteringDemo demo = new SOMDemo();
+        VQDemo demo = new SOMDemo();
         JFrame f = new JFrame("SOM");
         f.setSize(new Dimension(1000, 1000));
         f.setLocationRelativeTo(null);

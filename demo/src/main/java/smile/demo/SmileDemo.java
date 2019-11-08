@@ -57,7 +57,6 @@ import smile.demo.clustering.KMeansDemo;
 import smile.demo.clustering.MECDemo;
 import smile.demo.clustering.NeuralGasDemo;
 import smile.demo.clustering.SIBDemo;
-import smile.demo.clustering.SOMDemo;
 import smile.demo.clustering.SpectralClusteringDemo;
 import smile.demo.clustering.XMeansDemo;
 import smile.demo.manifold.TSNEDemo;
@@ -85,6 +84,7 @@ import smile.demo.mds.IsotonicMDSDemo;
 import smile.demo.vq.BIRCHDemo;
 import smile.demo.vq.GrowingNeuralGasDemo;
 import smile.demo.vq.NeuralMapDemo;
+import smile.demo.vq.SOMDemo;
 import smile.demo.mds.MDSDemo;
 import smile.demo.mds.SammonMappingDemo;
 import smile.demo.neighbor.ApproximateStringSearchDemo;
@@ -293,9 +293,6 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         algorithm = new DefaultMutableTreeNode(new DeterministicAnnealingDemo());
         category.add(algorithm);
 
-        algorithm = new DefaultMutableTreeNode(new SOMDemo());
-        category.add(algorithm);
-
         algorithm = new DefaultMutableTreeNode(new NeuralGasDemo());
         category.add(algorithm);
 
@@ -321,6 +318,9 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         top.add(category);
 
         algorithm = new DefaultMutableTreeNode(new GrowingNeuralGasDemo());
+        category.add(algorithm);
+
+        algorithm = new DefaultMutableTreeNode(new SOMDemo());
         category.add(algorithm);
 
         algorithm = new DefaultMutableTreeNode(new NeuralMapDemo());
@@ -542,24 +542,14 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
      */
     public static void createAndShowGUI(boolean exitOnClose) {
         try {
-            for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
-            try {
-                // If Nimbus is not available, try system look and feel.
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception e) {
-                System.err.println(e);
-            }
+            System.err.println(ex);
         }
 
         //Create and set up the window.
         JFrame frame = new JFrame("Smile Demo");
-        frame.setSize(new Dimension(1000, 1000));
+        frame.setSize(new Dimension(1600, 1200));
         frame.setLocationRelativeTo(null);
 
         if (exitOnClose)
