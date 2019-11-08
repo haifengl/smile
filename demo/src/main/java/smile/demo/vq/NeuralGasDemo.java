@@ -54,31 +54,49 @@ public class NeuralGasDemo extends VQDemo {
             return null;
         }
 
-        long clock = System.currentTimeMillis();
-        int epochs = 20;
         NeuralGas gas = new NeuralGas(NeuralGas.random(neuronNumber, dataset[datasetIndex]),
-                LearningRate.exp(3, dataset[datasetIndex].length * epochs / 10),
+                LearningRate.exp(learningRate, dataset[datasetIndex].length * epochs / 10),
                 LearningRate.exp(30, dataset[datasetIndex].length * epochs / 1.25),
                 LearningRate.exp(20, dataset[datasetIndex].length * epochs / -2.5));
-        for (int i = 0; i < epochs; i++) {
-            for (int j : MathEx.permutate(dataset[datasetIndex].length)) {
-                gas.update(dataset[datasetIndex][j]);
-            }
-        }
-
-        System.out.format("Train Neural Gas with %d samples for %d epochs in %dms\n", dataset[datasetIndex].length, epochs, System.currentTimeMillis()-clock);
 
         PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
 
-        double[][] neurons = gas.neurons();
-        smile.graph.Graph graph = gas.network();
-        for (int i = 0; i < neuronNumber; i++) {
-            for (smile.graph.Graph.Edge e : graph.getEdges(i)) {
-                plot.line(neurons[i], neurons[e.v2]);
-
+        int period = dataset[datasetIndex].length / 10;
+        Thread thread = new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }
-        plot.points(neurons, '@');
+
+            for (int i = 0, k = 0; i < epochs; i++) {
+                for (int j : MathEx.permutate(dataset[datasetIndex].length)) {
+                    gas.update(dataset[datasetIndex][j]);
+
+                    if (++k % period == 0) {
+                        plot.clear();
+                        plot.points(dataset[datasetIndex], pointLegend);
+
+                        double[][] neurons = gas.neurons();
+                        smile.graph.Graph graph = gas.network();
+                        for (int l = 0; l < neuronNumber; l++) {
+                            for (smile.graph.Graph.Edge e : graph.getEdges(l)) {
+                                plot.line(neurons[e.v1], neurons[e.v2]);
+                            }
+                        }
+                        plot.points(neurons, '@');
+                        plot.repaint();
+
+                        try {
+                            Thread.sleep(100);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        });
+        thread.start();
 
         return plot;
     }

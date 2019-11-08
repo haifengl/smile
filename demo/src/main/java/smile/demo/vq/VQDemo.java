@@ -93,10 +93,16 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
     static double[][][] dataset = new double[datasetName.length][][];
     static int datasetIndex = 0;
     static int clusterNumber = 2;
+    static int epochs = 20;
+    static double learningRate = 0.85;
+    static double neighborhood = 5;
 
     JPanel optionPane;
     JComponent canvas;
-    private JTextField clusterNumberField;
+    private JTextField clusterNumberField = new JTextField(Integer.toString(clusterNumber), 5);
+    private JTextField epochField = new JTextField(Integer.toString(epochs), 5);
+    private JTextField learningRateField = new JTextField(Double.toString(learningRate), 5);
+    private JTextField neighborhoodField = new JTextField(Double.toString(neighborhood), 5);
     private JButton startButton;
     private JComboBox<String> datasetBox;
     char pointLegend = '.';
@@ -120,15 +126,17 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
         datasetBox.setActionCommand("datasetBox");
         datasetBox.addActionListener(this);
 
-        clusterNumberField = new JTextField(Integer.toString(clusterNumber), 5);
-
         optionPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
         optionPane.setBorder(BorderFactory.createRaisedBevelBorder());
         optionPane.add(startButton);
         optionPane.add(new JLabel("Dataset:"));
         optionPane.add(datasetBox);
-        //optionPane.add(new JLabel("K:"));
-        //optionPane.add(clusterNumberField);
+        optionPane.add(new JLabel("Epochs:"));
+        optionPane.add(epochField);
+        optionPane.add(new JLabel("Learning Rate:"));
+        optionPane.add(learningRateField);
+        optionPane.add(new JLabel("Neighborhood:"));
+        optionPane.add(neighborhoodField);
 
         setLayout(new BorderLayout());
         add(optionPane, BorderLayout.NORTH);
@@ -179,8 +187,26 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
                     JOptionPane.showMessageDialog(this, "Too large K: " + clusterNumber, "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
+
+                epochs = Integer.parseInt(epochField.getText().trim());
+                if (epochs < 1) {
+                    JOptionPane.showMessageDialog(this, "Invalid epochs: " + epochs, "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                learningRate = Double.parseDouble(learningRateField.getText().trim());
+                if (learningRate <= 0.0) {
+                    JOptionPane.showMessageDialog(this, "Invalid learning rate: " + learningRate, "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                neighborhood = Double.parseDouble(neighborhoodField.getText().trim());
+                if (neighborhood < 1) {
+                    JOptionPane.showMessageDialog(this, "Invalid neighborhood radius: " + neighborhood, "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Invalid K: " + clusterNumberField.getText(), "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
                 return;
             }
 

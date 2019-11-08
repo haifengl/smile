@@ -81,35 +81,50 @@ public class SOMDemo  extends VQDemo {
             return null;
         }
 
-        int epochs = 20;
         double[][][] lattice = SOM.lattice(width, height, dataset[datasetIndex]);
         SOM som = new SOM(lattice,
-                LearningRate.inverse(0.85, dataset[datasetIndex].length * epochs / 10),
-                LatticeNeighborhood.Gaussian(5, dataset[datasetIndex].length * epochs / 4));
+                LearningRate.inverse(learningRate, dataset[datasetIndex].length * epochs / 10),
+                LatticeNeighborhood.Gaussian(neighborhood, dataset[datasetIndex].length * epochs / 4));
 
         JPanel pane = new JPanel(new GridLayout(1, 2));
         PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
+        plot.grid(som.neurons());
         plot.setTitle("SOM");
         pane.add(plot);
 
+        int period = dataset[datasetIndex].length / 10;
         Thread thread = new Thread(() -> {
-            long clock = System.currentTimeMillis();
-            for (int i = 0; i < epochs; i++) {
+            try {
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            for (int i = 0, k = 1; i < epochs; i++) {
                 for (int j : MathEx.permutate(dataset[datasetIndex].length)) {
                     som.update(dataset[datasetIndex][j]);
-                }
 
-                plot.clear();
-                plot.points(dataset[datasetIndex], pointLegend);
-                plot.grid(som.neurons());
-                plot.setTitle("SOM");
+                    if (++k % period == 0) {
+                        plot.clear();
+                        plot.points(dataset[datasetIndex], pointLegend);
+                        plot.grid(som.neurons());
+                        plot.setTitle("SOM");
+                        plot.repaint();
+
+                        try {
+                            Thread.sleep(100);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
             }
-            System.out.format("Train SOM with %d samples for %d epochs in %dms\n", dataset[datasetIndex].length, epochs, System.currentTimeMillis()-clock);
 
             double[][] umatrix = som.umatrix();
             PlotCanvas umatrixPlot = Hexmap.plot(umatrix, Palette.jet(256));
             umatrixPlot.setTitle("U-Matrix");
             pane.add(umatrixPlot);
+            pane.repaint();
         });
         thread.start();
 
