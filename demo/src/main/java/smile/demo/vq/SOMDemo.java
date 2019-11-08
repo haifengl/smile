@@ -81,29 +81,38 @@ public class SOMDemo  extends VQDemo {
             return null;
         }
 
-        long clock = System.currentTimeMillis();
         int epochs = 20;
         double[][][] lattice = SOM.lattice(width, height, dataset[datasetIndex]);
         SOM som = new SOM(lattice,
                 LearningRate.inverse(0.85, dataset[datasetIndex].length * epochs / 10),
                 LatticeNeighborhood.Gaussian(5, dataset[datasetIndex].length * epochs / 4));
-        for (int i = 0; i < epochs; i++) {
-            for (int j : MathEx.permutate(dataset[datasetIndex].length)) {
-                som.update(dataset[datasetIndex][j]);
-            }
-        }
-        System.out.format("Train SOM with %d samples for %d epochs in %dms\n", dataset[datasetIndex].length, epochs, System.currentTimeMillis()-clock);
 
         JPanel pane = new JPanel(new GridLayout(1, 2));
         PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        plot.grid(som.neurons());
         plot.setTitle("SOM");
         pane.add(plot);
 
-        double[][] umatrix = som.umatrix();
-        plot = Hexmap.plot(umatrix, Palette.jet(256));
-        plot.setTitle("U-Matrix");
-        pane.add(plot);
+        Thread thread = new Thread(() -> {
+            long clock = System.currentTimeMillis();
+            for (int i = 0; i < epochs; i++) {
+                for (int j : MathEx.permutate(dataset[datasetIndex].length)) {
+                    som.update(dataset[datasetIndex][j]);
+                }
+
+                plot.clear();
+                plot.points(dataset[datasetIndex], pointLegend);
+                plot.grid(som.neurons());
+                plot.setTitle("SOM");
+            }
+            System.out.format("Train SOM with %d samples for %d epochs in %dms\n", dataset[datasetIndex].length, epochs, System.currentTimeMillis()-clock);
+
+            double[][] umatrix = som.umatrix();
+            PlotCanvas umatrixPlot = Hexmap.plot(umatrix, Palette.jet(256));
+            umatrixPlot.setTitle("U-Matrix");
+            pane.add(umatrixPlot);
+        });
+        thread.start();
+
         return pane;
     }
 
