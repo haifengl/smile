@@ -19,11 +19,11 @@ package smile.vq;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import smile.clustering.CentroidClustering;
 import smile.math.MathEx;
 import smile.mds.MDS;
-import smile.neighbor.LinearSearch;
 import smile.sort.QuickSort;
 
 /**
@@ -89,7 +89,7 @@ public class SOM implements VectorQuantizer {
     /**
      * Self-Organizing Map Neuron.
      */
-    public static class Neuron {
+    private static class Neuron {
         /** The weight vector. */
         public final double[] w;
         /** The row index of neuron in the lattice. */
@@ -107,11 +107,6 @@ public class SOM implements VectorQuantizer {
             this.i = i;
             this.j = j;
             this.w = w;
-        }
-        
-        /** Constructor for BMU search. */
-        Neuron(double[] w) {
-            this(-1, -1, w);
         }
     }
     
@@ -132,9 +127,9 @@ public class SOM implements VectorQuantizer {
      */
     private Neuron[] neurons;
     /**
-     * To search best matching unit.
+     * The distance between a new observation to neurons.
      */
-    private LinearSearch<Neuron> search;
+    private double[] dist;
     /**
      * The learning rate function.
      */
@@ -166,7 +161,8 @@ public class SOM implements VectorQuantizer {
         
         this.map = new Neuron[nrows][ncols];
         this.neurons = new Neuron[nrows * ncols];
-        
+        this.dist = new double[this.neurons.length];
+
         for (int i = 0, k = 0; i < nrows; i++) {
             for (int j = 0; j < ncols; j++, k++) {
                 Neuron neuron = new Neuron(i, j, neurons[i][j].clone());
@@ -174,8 +170,6 @@ public class SOM implements VectorQuantizer {
                 this.neurons[k] = neuron;
             }
         }
-        
-        search = new LinearSearch<>(this.neurons, (Neuron x, Neuron y) -> MathEx.distance(x.w, y.w));
     }
 
     /**
@@ -230,7 +224,7 @@ public class SOM implements VectorQuantizer {
 
         int d = bmu.w.length;
         double rate = alpha.of(t);
-        Arrays.stream(neurons).forEach(neuron -> {
+        Arrays.stream(neurons).parallel().forEach(neuron -> {
             double delta = rate * theta.of(neuron.i - i, neuron.j - j, t);
             if (delta > eps) {
                 double[] w = neuron.w;
@@ -244,10 +238,16 @@ public class SOM implements VectorQuantizer {
     }
 
     /**
-     * Returns the SOM map grid.
+     * Returns the lattice of neurons.
      */
-    public Neuron[][] neurons() {
-        return map;
+    public double[][][] neurons() {
+        double[][][] lattice = new double[nrows][ncols][];
+        for (int i = 0; i < nrows; i++) {
+            for (int j = 0; j < ncols; j++) {
+                lattice[i][j] = map[i][j].w;
+            }
+        }
+        return lattice;
     }
 
     /**
@@ -293,6 +293,8 @@ public class SOM implements VectorQuantizer {
 
     /** Returns the best matching unit. */
     private Neuron bmu(double[] x) {
-        return search.nearest(new Neuron(x)).key;
+        IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
+        QuickSort.sort(dist, neurons);
+        return neurons[0];
     }
 }

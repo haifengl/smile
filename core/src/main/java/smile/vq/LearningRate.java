@@ -36,18 +36,18 @@ public interface LearningRate extends Serializable {
      * @param alpha the initial learning rate.
      * @param T the number of iterations.
      */
-    static LearningRate linear(double alpha, int T) {
-        return t -> alpha * (1.0 - (double) Math.min(t, T-1) / T);
+    static LearningRate linear(double alpha, double T) {
+        return t -> alpha * (1.0 - Math.min(t, T-1) / T);
     }
 
     /**
      * Returns the inverse learning rate lambda (alpha * C / (C + t)).
      * where C is typically a small percentage of the number of iterations
-     * T (e.g. T / 100).
+     * T (e.g. T / 10).
      * @param alpha the initial learning rate.
      * @param C a small percentage of the number of iterations.
      */
-    static LearningRate inverse(double alpha, int C) {
+    static LearningRate inverse(double alpha, double C) {
         return t -> alpha * C / (C + t);
     }
 
@@ -57,7 +57,7 @@ public interface LearningRate extends Serializable {
      * @param alpha the initial learning rate.
      * @param C a small percentage of the number of iterations.
      */
-    static LearningRate exp(double alpha, int C) {
-        return t -> alpha * Math.exp((double) -t / C);
+    static LearningRate exp(double alpha, double C) {
+        return t -> alpha * Math.exp(-t / C);
     }
 }
