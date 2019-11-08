@@ -17,7 +17,6 @@
 
 package smile.demo.vq;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 
@@ -34,10 +33,8 @@ import smile.vq.LearningRate;
 import smile.vq.SOM;
 import smile.math.MathEx;
 import smile.plot.Hexmap;
-import smile.plot.Histogram;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;
-import smile.stat.distribution.GaussianMixture;
 
 /**
  *
@@ -85,28 +82,21 @@ public class SOMDemo  extends VQDemo {
         }
 
         long clock = System.currentTimeMillis();
-        int epochs = 10;
+        int epochs = 20;
         double[][][] lattice = SOM.lattice(width, height, dataset[datasetIndex]);
         SOM som = new SOM(lattice,
-                LearningRate.linear(0.85, dataset[datasetIndex].length * epochs),
-                LatticeNeighborhood.Gaussian(5, dataset[datasetIndex].length * epochs));
+                LearningRate.inverse(0.85, dataset[datasetIndex].length * epochs / 10),
+                LatticeNeighborhood.Gaussian(5, dataset[datasetIndex].length * epochs / 4));
         for (int i = 0; i < epochs; i++) {
             for (int j : MathEx.permutate(dataset[datasetIndex].length)) {
                 som.update(dataset[datasetIndex][j]);
             }
         }
-        System.out.format("SOM %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
-
-        double[][][] map = new double[height][width][];
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                map[i][j] = som.neurons()[i][j].w;
-            }
-        }
+        System.out.format("Train SOM with %d samples for %d epochs in %dms\n", dataset[datasetIndex].length, epochs, System.currentTimeMillis()-clock);
 
         JPanel pane = new JPanel(new GridLayout(1, 2));
         PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        plot.grid(map);
+        plot.grid(som.neurons());
         plot.setTitle("SOM");
         pane.add(plot);
 

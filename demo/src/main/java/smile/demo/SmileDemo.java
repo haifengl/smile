@@ -38,7 +38,6 @@ import java.io.PrintStream;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
 import smile.demo.classification.FLDDemo;
 import smile.demo.classification.LDADemo;
 import smile.demo.classification.LogisticRegressionDemo;
@@ -55,7 +54,6 @@ import smile.demo.clustering.GMeansDemo;
 import smile.demo.clustering.HierarchicalClusteringDemo;
 import smile.demo.clustering.KMeansDemo;
 import smile.demo.clustering.MECDemo;
-import smile.demo.clustering.NeuralGasDemo;
 import smile.demo.clustering.SIBDemo;
 import smile.demo.clustering.SpectralClusteringDemo;
 import smile.demo.clustering.XMeansDemo;
@@ -82,6 +80,7 @@ import smile.demo.manifold.LLEDemo;
 import smile.demo.manifold.LaplacianEigenmapDemo;
 import smile.demo.mds.IsotonicMDSDemo;
 import smile.demo.vq.BIRCHDemo;
+import smile.demo.vq.NeuralGasDemo;
 import smile.demo.vq.GrowingNeuralGasDemo;
 import smile.demo.vq.NeuralMapDemo;
 import smile.demo.vq.SOMDemo;
@@ -293,9 +292,6 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         algorithm = new DefaultMutableTreeNode(new DeterministicAnnealingDemo());
         category.add(algorithm);
 
-        algorithm = new DefaultMutableTreeNode(new NeuralGasDemo());
-        category.add(algorithm);
-
         algorithm = new DefaultMutableTreeNode(new CLARANSDemo());
         category.add(algorithm);
 
@@ -316,6 +312,9 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
 
         category = new DefaultMutableTreeNode("Vector Quantization");
         top.add(category);
+
+        algorithm = new DefaultMutableTreeNode(new NeuralGasDemo());
+        category.add(algorithm);
 
         algorithm = new DefaultMutableTreeNode(new GrowingNeuralGasDemo());
         category.add(algorithm);

@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.clustering;
+package smile.vq;
 
 import smile.data.USPS;
 import smile.math.MathEx;
@@ -61,34 +61,37 @@ public class NeuralGasTest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = USPS.x;
-        int[] y = USPS.y;
         double[][] testx = USPS.testx;
-        int[] testy = USPS.testy;
 
-        NeuralGas model = NeuralGas.fit(x, 10);
-            
-        double r = RandIndex.of(y, model.y);
-        double r2 = AdjustedRandIndex.of(y, model.y);
-        System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.9076, r, 1E-4);
-        assertEquals(0.5138, r2, 1E-4);
+        int epochs = 20;
+        NeuralGas model = new NeuralGas(NeuralGas.random(400, x),
+                LearningRate.exp(3, x.length * epochs / 10),
+                LearningRate.exp(30, x.length * epochs / 1.25),
+                LearningRate.exp(20, x.length * epochs / -2.5));
 
-        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
-        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
-        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
-        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
-        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
-        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
-
-        int[] p = new int[testx.length];
-        for (int i = 0; i < testx.length; i++) {
-            p[i] = model.predict(testx[i]);
+        for (int i = 0; i < epochs; i++) {
+            for (int j : MathEx.permutate(x.length)) {
+                model.update(x[j]);
+            }
         }
-            
-        r = RandIndex.of(testy, p);
-        r2 = AdjustedRandIndex.of(testy, p);
-        System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.9002, r, 1E-4);
-        assertEquals(0.4743, r2, 1E-4);
+
+        double error = 0.0;
+        for (double[] xi : x) {
+            double[] yi = model.quantize(xi).get();
+            error += MathEx.distance(xi, yi);
+        }
+        error /= x.length;
+        System.out.format("Training Quantization Error = %.4f%n", error);
+        assertEquals(5.7659, error, 1E-4);
+
+        error = 0.0;
+        for (double[] xi : testx) {
+            double[] yi = model.quantize(xi).get();
+            error += MathEx.distance(xi, yi);
+        }
+        error /= testx.length;
+
+        System.out.format("Test Quantization Error = %.4f%n", error);
+        assertEquals(8.8935, error, 1E-4);
     }
 }

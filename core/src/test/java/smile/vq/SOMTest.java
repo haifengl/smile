@@ -17,25 +17,14 @@
 
 package smile.vq;
 
-import org.apache.commons.csv.CSVFormat;
-import smile.data.DataFrame;
+import smile.clustering.KMeans;
 import smile.data.USPS;
-import smile.data.formula.Formula;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
-import smile.io.CSV;
-import smile.util.Paths;
-import smile.validation.RandIndex;
-import smile.validation.AdjustedRandIndex;
+import smile.math.MathEx;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 
@@ -64,24 +53,74 @@ public class SOMTest {
     public void tearDown() {
     }
 
+
+    @Test(expected = Test.None.class)
+    public void testKMeans() {
+        System.out.println("K-Means as a benchmark");
+        MathEx.setSeed(19650218); // to get repeatable results.
+
+        double[][] x = USPS.x;
+        double[][] testx = USPS.testx;
+
+        KMeans model = KMeans.fit(x, 400);
+
+        double error = 0.0;
+        for (double[] xi : x) {
+            double[] yi = model.centroids[model.predict(xi)];
+            error += MathEx.distance(xi, yi);
+        }
+        error /= x.length;
+        System.out.format("Training Quantization Error = %.4f%n", error);
+        assertEquals(5.8408, error, 1E-4);
+
+        error = 0.0;
+        for (double[] xi : testx) {
+            double[] yi = model.centroids[model.predict(xi)];
+            error += MathEx.distance(xi, yi);
+        }
+        error /= testx.length;
+
+        System.out.format("Test Quantization Error = %.4f%n", error);
+        assertEquals(6.6368, error, 1E-4);
+    }
+
     @Test(expected = Test.None.class)
     public void testUSPS() {
         System.out.println("USPS");
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = USPS.x;
-        int[] y = USPS.y;
         double[][] testx = USPS.testx;
-        int[] testy = USPS.testy;
 
-        SOM som = null;//new SOM(x, 10, 10);
-        int[] label = null;//som.partition(10);
-            
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
-        double r = rand.measure(y, label);
-        double r2 = ari.measure(y, label);
-        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.88);
-        assertTrue(r2 > 0.45);
+        int epochs = 20;
+        double[][][] lattice = SOM.lattice(20, 20, x);
+        SOM model = new SOM(lattice,
+                LearningRate.inverse(0.85, x.length * epochs / 10),
+                LatticeNeighborhood.Gaussian(5, x.length * epochs / 4));
+
+        for (int i = 0; i < epochs; i++) {
+            for (int j : MathEx.permutate(x.length)) {
+                model.update(x[j]);
+            }
+        }
+
+        double error = 0.0;
+        for (double[] xi : x) {
+            double[] yi = model.quantize(xi).get();
+            error += MathEx.distance(xi, yi);
+        }
+        error /= x.length;
+        System.out.format("Training Quantization Error = %.4f%n", error);
+        assertEquals(5.7262, error, 1E-4);
+
+        error = 0.0;
+        for (double[] xi : testx) {
+            double[] yi = model.quantize(xi).get();
+            error += MathEx.distance(xi, yi);
+        }
+        error /= testx.length;
+
+        System.out.format("Test Quantization Error = %.4f%n", error);
+        assertEquals(6.5487, error, 1E-4);
     }
 }

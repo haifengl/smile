@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.Optional;
 
 /**
- * Online learning vector quantizer.
+ * Vector quantizer with competitive learning.
  *
  * @author Haifeng Li
  */

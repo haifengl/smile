@@ -54,7 +54,7 @@ public interface LatticeNeighborhood extends Serializable {
      * @param sigma the initial radius of neighborhood.
      * @param T the number of iterations.
      */
-    static LatticeNeighborhood Gaussian(double sigma, int T) {
+    static LatticeNeighborhood Gaussian(double sigma, double T) {
         return (i, j, t) -> {
             double s = sigma * Math.exp(-t / T);
             double gamma = -0.5 / (s * s);
