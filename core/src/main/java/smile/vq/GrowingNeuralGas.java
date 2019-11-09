@@ -34,13 +34,13 @@ import smile.math.MathEx;
  * <p>
  * Compared to Neural Gas, GNG has the following distinctions:
  * <ul>
- * <li> The system has the ability to add and delete nodes.
+ * <li> The system has the ability to add and delete nodes. </li>
  * <li> Local Error measurements are noted at each step helping it to locally
- * insert/delete nodes.
+ * insert/delete nodes.</li>
  * <li> Edges are connected between nodes, so a sufficiently old edges is
- * deleted. Such edges are intended place holders for localized data distribution.
+ * deleted. Such edges are intended place holders for localized data distribution.</li>
  * <li> Such edges also help to locate distinct clusters (those clusters are
- * not connected by edges).
+ * not connected by edges).</li>
  * </ul>
  * 
  * <h2>References</h2>

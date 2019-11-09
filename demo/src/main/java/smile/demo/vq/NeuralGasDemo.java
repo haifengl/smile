@@ -77,7 +77,16 @@ public class NeuralGasDemo extends VQDemo {
                     if (++k % period == 0) {
                         plot.clear();
                         plot.points(dataset[datasetIndex], pointLegend);
-                        plot.points(gas.neurons(), '@');
+                        double[][] neurons = gas.neurons();
+                        plot.points(neurons, '@');
+                        Graph graph = gas.network();
+                        for (int l = 0; l < numNeurons; l++) {
+                            for (Graph.Edge e : graph.getEdges(l)) {
+                                if (e.v2 > e.v1) {
+                                    plot.line(neurons[e.v1], neurons[e.v2]);
+                                }
+                            }
+                        }
                         plot.repaint();
 
                         try {
@@ -87,22 +96,8 @@ public class NeuralGasDemo extends VQDemo {
                         }
                     }
                 }
+                System.out.format("%s epoch finishes%n", smile.util.Strings.ordinal(i+1));
             }
-
-            double[][] neurons = gas.neurons();
-            plot.clear();
-            plot.points(dataset[datasetIndex], pointLegend);
-            plot.points(gas.neurons(), '@');
-
-            Graph graph = gas.network();
-            for (int l = 0; l < numNeurons; l++) {
-                for (Graph.Edge e : graph.getEdges(l)) {
-                    if (e.v2 > e.v1) {
-                        plot.line(neurons[e.v1], neurons[e.v2]);
-                    }
-                }
-            }
-            plot.repaint();
         });
         thread.start();
 
