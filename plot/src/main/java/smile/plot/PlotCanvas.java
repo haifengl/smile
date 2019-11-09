@@ -1188,7 +1188,7 @@ public class PlotCanvas extends JPanel {
         }
         
         this.margin = margin;
-        repaint();
+        //repaint();
         return this;
     }
 
@@ -1212,7 +1212,7 @@ public class PlotCanvas extends JPanel {
      */
     public PlotCanvas setTitle(String title) {
         this.title = title;
-        repaint();
+        //repaint();
         return this;
     }
 
@@ -1235,7 +1235,7 @@ public class PlotCanvas extends JPanel {
      */
     public PlotCanvas setTitleFont(Font font) {
         this.titleFont = font;
-        repaint();
+        //repaint();
         return this;
     }
 
@@ -1244,7 +1244,7 @@ public class PlotCanvas extends JPanel {
      */
     public PlotCanvas setTitleColor(Color color) {
         this.titleColor = color;
-        repaint();
+        //repaint();
         return this;
     }
 
@@ -1278,7 +1278,7 @@ public class PlotCanvas extends JPanel {
      */
     public PlotCanvas setAxisLabels(String... labels) {
         baseGrid.setAxisLabel(labels);
-        repaint();
+        //repaint();
         return this;
     }
 
@@ -1287,7 +1287,7 @@ public class PlotCanvas extends JPanel {
      */
     public PlotCanvas setAxisLabel(int axis, String label) {
         baseGrid.setAxisLabel(axis, label);
-        repaint();
+        //repaint();
         return this;
     }
 
@@ -1304,7 +1304,7 @@ public class PlotCanvas extends JPanel {
      */
     public void add(Shape p) {
         shapes.add(p);
-        repaint();
+        //repaint();
     }
 
     /**
@@ -1312,7 +1312,7 @@ public class PlotCanvas extends JPanel {
      */
     public void remove(Shape p) {
         shapes.remove(p);
-        repaint();
+        //repaint();
     }
 
     /**
@@ -1329,7 +1329,7 @@ public class PlotCanvas extends JPanel {
             }
         }
 
-        repaint();
+        //repaint();
     }
 
     /**
@@ -1345,7 +1345,7 @@ public class PlotCanvas extends JPanel {
             }
         }
 
-        repaint();
+        //repaint();
     }
 
     /**
@@ -1353,7 +1353,7 @@ public class PlotCanvas extends JPanel {
      */
     public void clear() {
         shapes.clear();
-        repaint();
+        //repaint();
     }
 
     /**
@@ -1376,7 +1376,7 @@ public class PlotCanvas extends JPanel {
     public void extendLowerBound(double[] bound) {
         base.extendLowerBound(bound);
         baseGrid.setBase(base);
-        repaint();
+        //repaint();
     }
 
     /**
@@ -1385,7 +1385,7 @@ public class PlotCanvas extends JPanel {
     public void extendUpperBound(double[] bound) {
         base.extendUpperBound(bound);
         baseGrid.setBase(base);
-        repaint();
+        //repaint();
     }
 
     /**
@@ -1394,7 +1394,7 @@ public class PlotCanvas extends JPanel {
     public void extendBound(double[] lowerBound, double[] upperBound) {
         base.extendBound(lowerBound, upperBound);
         baseGrid.setBase(base);
-        repaint();
+        //repaint();
     }
 
     /**
