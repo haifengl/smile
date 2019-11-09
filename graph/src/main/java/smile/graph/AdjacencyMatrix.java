@@ -99,10 +99,7 @@ public class AdjacencyMatrix implements Graph {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
                     if (graph[i][j] != 0.0) {
-                        Edge edge = new Edge();
-                        edge.v1 = i;
-                        edge.v2 = j;
-                        edge.weight = graph[i][j];
+                        Edge edge = new Edge(i, j, graph[i][j]);
                         set.add(edge);
                     }
                 }
@@ -111,10 +108,7 @@ public class AdjacencyMatrix implements Graph {
             for (int i = 0; i < n; i++) {
                 for (int j = i; j < n; j++) {
                     if (graph[i][j] != 0.0) {
-                        Edge edge = new Edge();
-                        edge.v1 = i;
-                        edge.v2 = j;
-                        edge.weight = graph[i][j];
+                        Edge edge = new Edge(i, j, graph[i][j]);
                         set.add(edge);
                     }
                 }
@@ -129,10 +123,7 @@ public class AdjacencyMatrix implements Graph {
         Collection<Edge> set = new LinkedList<>();
         for (int j = 0; j < n; j++) {
             if (graph[vertex][j] != 0.0) {
-                Edge edge = new Edge();
-                edge.v1 = vertex;
-                edge.v2 = j;
-                edge.weight = graph[vertex][j];
+                Edge edge = new Edge(vertex, j, graph[vertex][j]);
                 set.add(edge);
             }
         }
@@ -155,11 +146,7 @@ public class AdjacencyMatrix implements Graph {
             return null;
         }
 
-        Edge edge = new Edge();
-        edge.v1 = source;
-        edge.v2 = target;
-        edge.weight = graph[source][target];
-        return edge;
+        return new Edge(source, target, graph[source][target]);
     }
 
     @Override
