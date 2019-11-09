@@ -200,10 +200,7 @@ public class AdjacencyList implements Graph {
 
     @Override
     public void addEdge(int source, int target, double weight) {
-        Edge edge = new Edge();
-        edge.v1 = source;
-        edge.v2 = target;
-        edge.weight = weight;
+        Edge edge = new Edge(source, target, weight);
         graph[source].add(edge);
         if (!digraph && source != target) {
             graph[target].add(edge);

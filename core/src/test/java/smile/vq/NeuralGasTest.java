@@ -65,9 +65,9 @@ public class NeuralGasTest {
 
         int epochs = 20;
         NeuralGas model = new NeuralGas(NeuralGas.random(400, x),
-                LearningRate.exp(3, x.length * epochs / 10),
-                LearningRate.exp(30, x.length * epochs / 1.25),
-                LearningRate.exp(20, x.length * epochs / -2.5));
+                LearningRate.exp(0.3, x.length * epochs / 2),
+                LearningRate.exp(30, x.length * epochs / 8),
+                LearningRate.exp(20, x.length * epochs / -2));
 
         for (int i = 0; i < epochs; i++) {
             for (int j : MathEx.permutate(x.length)) {
@@ -82,7 +82,7 @@ public class NeuralGasTest {
         }
         error /= x.length;
         System.out.format("Training Quantization Error = %.4f%n", error);
-        assertEquals(5.7659, error, 1E-4);
+        assertEquals(5.7011, error, 1E-4);
 
         error = 0.0;
         for (double[] xi : testx) {
@@ -92,6 +92,6 @@ public class NeuralGasTest {
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(8.8935, error, 1E-4);
+        assertEquals(6.5534, error, 1E-4);
     }
 }

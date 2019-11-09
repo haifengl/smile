@@ -31,8 +31,7 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public interface Graph
-{
+public interface Graph {
     /**
      * Graph edge.
      */
@@ -41,16 +40,28 @@ public interface Graph
          * The id of one vertex connected by this edge. For directed graph,
          * this is the tail of arc.
          */
-        public int v1;
+        public final int v1;
         /**
          * The id of the other vertex connected by this edge. For directed graph,
          * this is the head of arc.
          */
-        public int v2;
+        public final int v2;
         /**
          * The weight of edge. For unweighted graph, this is always 1.
          */
         public double weight;
+
+        /**
+         * Constructor.
+         * @param v1 the vertex id.
+         * @param v2 the other vertex id.
+         * @param weight the weight of edge.
+         */
+        public Edge(int v1, int v2, double weight) {
+            this.v1 = v1;
+            this.v2 = v2;
+            this.weight = weight;
+        }
     }
 
     /**
