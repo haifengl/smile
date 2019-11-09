@@ -18,7 +18,6 @@
 package smile.vq;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.IntStream;
 import smile.clustering.CentroidClustering;
@@ -102,9 +101,9 @@ public class NeuralGas implements VectorQuantizer {
      */
     private LearningRate theta;
     /**
-     * The neighborhood function.
+     * The lifetime of connections.
      */
-    private LearningRate lifetime;
+    private int lifetime;
     /**
      * The distance between a new observation to neurons.
      */
@@ -123,9 +122,10 @@ public class NeuralGas implements VectorQuantizer {
      * @param neurons the initial neurons.
      * @param alpha the learning rate function.
      * @param theta the neighborhood function.
-     * @param lifetime the neuron connection lifetime function.
+     * @param lifetime the neuron connection lifetime, usually the number of
+     *                 iterations of one or two epochs.
      */
-    public NeuralGas(double[][] neurons, LearningRate alpha, LearningRate theta, LearningRate lifetime) {
+    public NeuralGas(double[][] neurons, LearningRate alpha, LearningRate theta, int lifetime) {
         this.neurons = IntStream.range(0, neurons.length).mapToObj(i -> new Neuron(i, neurons[i].clone())).toArray(Neuron[]::new);
         this.alpha = alpha;
         this.theta = theta;
@@ -139,11 +139,11 @@ public class NeuralGas implements VectorQuantizer {
      * @param k the number of neurons.
      * @param samples some samples to select initial weight vectors.
      */
-    public static double[][] random(int k, double[][] samples) {
+    public static double[][] seed(int k, double[][] samples) {
         int n = samples.length;
-        double[][] medoids = new double[k][];
         int[] y = new int[n];
         double[] dist = new double[n];
+        double[][] medoids = new double[k][];
         CentroidClustering.seed(samples, medoids, y, dist, MathEx::squaredDistance);
 
         return medoids;
@@ -161,6 +161,14 @@ public class NeuralGas implements VectorQuantizer {
      * Returns the network of neurons.
      */
     public Graph network() {
+        for (int i = 0; i < neurons.length; i++) {
+            for (Edge e : graph.getEdges(i)) {
+                if (t - e.weight > lifetime) {
+                    graph.setWeight(e.v1, e.v2, 0);
+                }
+            }
+        }
+
         return graph;
     }
 
@@ -181,15 +189,7 @@ public class NeuralGas implements VectorQuantizer {
             }
         }
 
-        int i0 = neurons[0].i;
-        int i1 = neurons[1].i;
-        double T = lifetime.of(t);
-        for (Edge e : graph.getEdges(i0)) {
-            double w = e.weight + 1;
-            if (w > T) w = 0;
-            graph.setWeight(i0, e.v2, w);
-        }
-        graph.setWeight(i0, i1, 1);
+        graph.setWeight(neurons[0].i, neurons[1].i, t);
 
         t = t + 1;
     }
