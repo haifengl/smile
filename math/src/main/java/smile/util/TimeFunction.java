@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.vq;
+package smile.util;
 
 import java.io.Serializable;
 

@@ -28,8 +28,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import smile.plot.Palette;
+import smile.util.TimeFunction;
 import smile.vq.Neighborhood;
-import smile.vq.TimeFunction;
 import smile.vq.SOM;
 import smile.math.MathEx;
 import smile.plot.Hexmap;
