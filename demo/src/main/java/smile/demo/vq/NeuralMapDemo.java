@@ -18,14 +18,16 @@
 package smile.demo.vq;
 
 import java.awt.Dimension;
-import java.util.List;
+import java.util.Arrays;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
+
+import smile.math.MathEx;
+import smile.vq.GrowingNeuralGas;
 import smile.vq.NeuralMap;
-import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;
 
@@ -58,33 +60,49 @@ public class NeuralMapDemo extends VQDemo {
             return null;
         }
 
-        long clock = System.currentTimeMillis();
-        NeuralMap cortex = new NeuralMap(2, T, 0.05, 0.0006, 5, 3);
+        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
 
-        for (int i = 0; i < 5; i++) {
-            for (double[] x : dataset[datasetIndex]) {
-                cortex.update(x);
+        int period = dataset[datasetIndex].length / 10;
+        Thread thread = new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }
 
-        cortex.purge(16);
-        System.out.format("Cortex clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis() - clock);
+            NeuralMap cortex = new NeuralMap(2, T, 0.2, 0.006, 5, 3);
 
-        List<NeuralMap.Neuron> nodes = cortex.neurons();
-        double[][] x = new double[nodes.size()][];
-        for (int i = 0; i < x.length; i++) {
-            x[i] = nodes.get(i).w;
-        }
+            for (int i = 0, k = 0; i < epochs; i++) {
+                for (int j : MathEx.permutate(dataset[datasetIndex].length)) {
+                    cortex.update(dataset[datasetIndex][j]);
 
-        PlotCanvas plot = ScatterPlot.plot(x, '@');
+                    if (++k % period == 0) {
+                        plot.clear();
+                        plot.points(dataset[datasetIndex], pointLegend);
+                        java.util.List<NeuralMap.Neuron> neurons = cortex.neurons();
+                        double[][] w = neurons.stream().map(neuron -> neuron.w).toArray(double[][]::new);
+                        plot.points(w, '@');
 
-        for (int i = 0; i < nodes.size(); i++) {
-            NeuralMap.Neuron neuron = nodes.get(i);
-            for (NeuralMap.Neuron neighbor : neuron.neighbors) {
-                plot.line(neuron.w, neighbor.w);
+                        for (NeuralMap.Neuron neuron : neurons) {
+                            for (NeuralMap.Neuron e : neuron.neighbors) {
+                                plot.line(neuron.w, e.w);
+                            }
+                        }
+                        plot.repaint();
+
+                        try {
+                            Thread.sleep(100);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    cortex.purge(16);
+                }
+                System.out.format("%s epoch finishes%n", smile.util.Strings.ordinal(i+1));
             }
-        }
-        plot.points(x, '@');
+        });
+        thread.start();
 
         return plot;
     }

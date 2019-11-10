@@ -83,7 +83,6 @@ public class BIRCH implements VectorQuantizer {
      * triple: CF = (N, LS, SS).
      */
     private class ClusteringFeature implements Serializable {
-        private static final long serialVersionUID = 2L;
         /** The number of observations. */
         private int n;
         /** The sum of observations. */
@@ -203,8 +202,6 @@ public class BIRCH implements VectorQuantizer {
 
     /** The node interface of CF tree. */
     private abstract class Node implements Serializable {
-        private static final long serialVersionUID = 2L;
-
         /**
          * The clustering feature of observations in the node.
          */

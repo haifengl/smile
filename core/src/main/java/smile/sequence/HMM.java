@@ -17,6 +17,7 @@
 
 package smile.sequence;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import smile.math.MathEx;
@@ -36,6 +37,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class HMM<O> implements SequenceLabeler<O> {
+    private static final long serialVersionUID = 2L;
 
     /**
      * The number of states.

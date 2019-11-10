@@ -42,10 +42,4 @@ public interface VectorQuantizer extends Serializable {
      * @param x a new observation.
      */
     Optional<double[]> quantize(double[] x);
-
-    /**
-     * Returns the index of nearest centroid in the code book.
-     * @param x a new observation.
-     */
-    //int code(double[] x);
 }
