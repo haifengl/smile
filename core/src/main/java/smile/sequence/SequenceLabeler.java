@@ -17,17 +17,19 @@
 
 package smile.sequence;
 
+import java.io.Serializable;
+
 /**
  * A sequence labeler assigns a class label to each position of the sequence.
  *
  * @author Haifeng Li
  */
-public interface SequenceLabeler<T> {
+public interface SequenceLabeler<T> extends Serializable {
     /**
      * Predicts the sequence labels.
      * @param x a sequence. At each position, it may be the original symbol or
      * a feature set about the symbol, its neighborhood, and/or other information.
      * @return the predicted sequence labels.
      */
-    public int[] predict(T[] x);
+    int[] predict(T[] x);
 }

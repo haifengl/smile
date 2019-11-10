@@ -17,6 +17,7 @@
 
 package smile.vq;
 
+import java.io.Serializable;
 import java.util.*;
 
 import smile.sort.HeapSelect;
@@ -50,10 +51,12 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class GrowingNeuralGas implements VectorQuantizer {
+    private static final long serialVersionUID = 2L;
+
     /**
      * The neuron vertex in the growing neural gas network.
      */
-    public static class Neuron {
+    public static class Neuron implements Serializable {
         /**
          * The reference vector.
          */
@@ -103,7 +106,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
     /**
      * Connection between neurons.
      */
-    public static class Edge {
+    public static class Edge implements Serializable {
         /**
          * The neighbor neuron.
          */
@@ -124,7 +127,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
     /**
      * An utility class for sorting.
      */
-    private class Node implements Comparable<Node> {
+    private class Node implements Comparable<Node>, Serializable {
         /**
          * The id of neuron.
          */

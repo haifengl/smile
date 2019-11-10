@@ -57,6 +57,7 @@ import smile.util.MulticoreExecutor;
  * @author Haifeng Li
  */
 public class CRF implements SequenceLabeler<double[]>, Serializable {
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CRF.class);
 
     /**

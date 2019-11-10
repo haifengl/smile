@@ -17,6 +17,7 @@
 
 package smile.vq;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -86,10 +87,12 @@ import smile.util.TimeFunction;
  * @author Haifeng Li
  */
 public class SOM implements VectorQuantizer {
+    private static final long serialVersionUID = 2L;
+
     /**
      * Self-Organizing Map Neuron.
      */
-    private static class Neuron {
+    private static class Neuron implements Serializable {
         /** The weight vector. */
         public final double[] w;
         /** The row index of neuron in the lattice. */

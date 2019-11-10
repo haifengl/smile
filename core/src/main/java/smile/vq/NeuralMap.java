@@ -17,6 +17,7 @@
 
 package smile.vq;
 
+import java.io.Serializable;
 import java.util.*;
 import smile.sort.HeapSelect;
 import smile.math.MathEx;
@@ -38,19 +39,16 @@ import smile.stat.distribution.GaussianDistribution;
  * @author Haifeng Li
  */
 public class NeuralMap implements VectorQuantizer {
-    
+    private static final long serialVersionUID = 2L;
+
     /**
      * The neurons in the network.
      */
-    public static class Neuron {
+    public static class Neuron implements Serializable {
         /**
          * The number of samples associated with this neuron.
          */
         public int n = 1;
-        /**
-         * The cluster label.
-         */
-        public int y = OUTLIER;
         /**
          * Reference vector.
          */
@@ -380,13 +378,13 @@ public class NeuralMap implements VectorQuantizer {
      */
     private double r;
     /**
-     * The fraction to update nearest neuron.
+     * The learning rate to update nearest neuron.
      */
-    private double epsBest = 0.05;
+    private double epsBest = 0.2;
     /**
-     * The fraction to update neighbors of nearest neuron.
+     * The learning to update neighbors of nearest neuron.
      */
-    private double epsNeighbor = 0.0006;
+    private double epsNeighbor = 0.006;
     /**
      * Neurons in the neural network.
      */
@@ -400,8 +398,8 @@ public class NeuralMap implements VectorQuantizer {
      * Constructor.
      * @param d the dimensionality of signals.
      * @param r the distance radius to activate a neuron for a given signal.
-     * @param epsBest the fraction to update activated neuron.
-     * @param epsNeighbor the fraction to update neighbors of activated neuron.
+     * @param epsBest the learning rate to update activated neuron.
+     * @param epsNeighbor the learning rate to update neighbors of activated neuron.
      * @param L the number of hash tables.
      * @param k the number of random projection hash functions.
      */

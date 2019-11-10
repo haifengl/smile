@@ -17,6 +17,7 @@
 
 package smile.vq;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -65,10 +66,12 @@ import smile.util.TimeFunction;
  * @author Haifeng Li
  */
 public class NeuralGas implements VectorQuantizer {
+    private static final long serialVersionUID = 2L;
+
     /**
      * Neural Gas Neuron.
      */
-    private static class Neuron {
+    private static class Neuron implements Serializable {
         /** The weight vector. */
         public final double[] w;
         /** The index of neuron. */

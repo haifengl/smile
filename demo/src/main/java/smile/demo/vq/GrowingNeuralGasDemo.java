@@ -48,7 +48,7 @@ public class GrowingNeuralGasDemo extends VQDemo {
                 e.printStackTrace();
             }
 
-            GrowingNeuralGas gas = new GrowingNeuralGas(2);//(2, 0.05, 0.0006, 88, 200,  0.5, 0.9995);
+            GrowingNeuralGas gas = new GrowingNeuralGas(2);
 
             for (int i = 0, k = 0; i < epochs; i++) {
                 for (int j : MathEx.permutate(dataset[datasetIndex].length)) {
