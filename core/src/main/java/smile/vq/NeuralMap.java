@@ -17,14 +17,7 @@
 
 package smile.vq;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import smile.clustering.Clustering;
-import smile.clustering.HierarchicalClustering;
-import smile.clustering.linkage.Linkage;
-import smile.clustering.linkage.UPGMALinkage;
+import java.util.*;
 import smile.sort.HeapSelect;
 import smile.math.MathEx;
 import smile.stat.distribution.GaussianDistribution;
@@ -40,11 +33,11 @@ import smile.stat.distribution.GaussianDistribution;
  *
  * @see NeuralGas
  * @see GrowingNeuralGas
- * @see smile.clustering.BIRCH
+ * @see BIRCH
  * 
  * @author Haifeng Li
  */
-public class NeuralMap implements Clustering<double[]> {
+public class NeuralMap implements VectorQuantizer {
     
     /**
      * The neurons in the network.
@@ -555,65 +548,19 @@ public class NeuralMap implements Clustering<double[]> {
         return neurons.size();
     }
 
-    /**
-     * Clustering neurons into k clusters.
-     * @param k the number of clusters.
-     */
-    public void partition(int k) {
-        partition(k, 0);
-    }
-    
-    /**
-     * Clustering neurons into k clusters.
-     * @param k the number of clusters.
-     * @param minPts a neuron will be treated as outlier if the number of its
-     * points is less than minPts.
-     * @return the number of non-outlier leaves.
-     */
-    public int partition(int k, int minPts) {
-        List<Neuron> data = new ArrayList<>();
-        for (Neuron neuron : neurons) {
-            neuron.y = OUTLIER;
-            if (neuron.n >= minPts) {
-                data.add(neuron);
-            }
-        }
-        
-        double[][] x = new double[data.size()][];
-        for (int i = 0; i < x.length; i++) {
-            x[i] = data.get(i).w;
-        }
-
-        Linkage linkage = UPGMALinkage.of(x);
-        HierarchicalClustering hc = HierarchicalClustering.fit(linkage);
-        int[] y = hc.partition(k);
-
-        for (int i = 0; i < data.size(); i++) {
-            data.get(i).y = y[i];
-        }
-        
-        return data.size();
-    }
-
-    /**
-     * Cluster a new instance to the nearest neuron. The method partition()
-     * should be called first.
-     * @param x a new instance.
-     * @return the cluster label of nearest neuron.
-     */
     @Override
-    public int predict(double[] x) {
+    public Optional<double[]> quantize(double[] x) {
         double minDist = Double.MAX_VALUE;
-        int bestCluster = 0;
+        double[] w = null;
 
         for (Neuron neuron : neurons) {
             double dist = MathEx.squaredDistance(x, neuron.w);
             if (dist < minDist) {
                 minDist = dist;
-                bestCluster = neuron.y;
+                w = neuron.w;
             }
         }
 
-        return bestCluster;
+        return Optional.ofNullable(w);
     }
 }
