@@ -314,13 +314,13 @@ public class BIRCH implements VectorQuantizer {
                 }
             }
 
-            Optional<Node> node = children[index].add(x);
+            Optional<Node> sister = children[index].add(x);
 
-            if (node.isPresent()) {
+            if (sister.isPresent()) {
                 if (k < B) {
-                    children[k++] = node.get();
+                    children[k++] = sister.get();
                 } else {
-                    return Optional.of(split(node.get()));
+                    return Optional.of(split(sister.get()));
                 }
             }
 
@@ -331,10 +331,10 @@ public class BIRCH implements VectorQuantizer {
         /**
          * Split the node and return a new node to add into the parent
          */
-        Node split(Node node) {
-            Node[] nodes = new Node[L+1];
-            System.arraycopy(children, 0, nodes, 0, L);
-            nodes[L] = node;
+        private Node split(Node node) {
+            Node[] nodes = new Node[B+1];
+            System.arraycopy(children, 0, nodes, 0, B);
+            nodes[B] = node;
 
             double[][] dist = pdist(nodes);
             IntPair farthest = MathEx.whichMax(dist);
@@ -342,7 +342,7 @@ public class BIRCH implements VectorQuantizer {
             k = 0;
             int n = 0;
             Node[] sister = new Node[B];
-            for (int i = 0; i <= L; i++) {
+            for (int i = 0; i <= B; i++) {
                 if (dist[i][farthest.i] < dist[i][farthest.j]) {
                     children[k++] = nodes[i];
                 } else {
@@ -350,6 +350,9 @@ public class BIRCH implements VectorQuantizer {
                 }
             }
 
+            for (int i = k; i < B; i++) {
+                this.children[i] = null;
+            }
             this.cluster = new ClusteringFeature(Arrays.stream(children).limit(k).map(child -> child.cluster).toArray(ClusteringFeature[]::new));
 
             return new InternalNode(Arrays.copyOf(sister, n));
@@ -399,13 +402,13 @@ public class BIRCH implements VectorQuantizer {
 
         @Override
         public Optional<Node> add(double[] x) {
-            ClusteringFeature entry = nearest(x);
-            Optional<ClusteringFeature> cluster = entry.add(x);
-            if (cluster.isPresent()) {
+            ClusteringFeature cluster = nearest(x);
+            Optional<ClusteringFeature> sister = cluster.add(x);
+            if (sister.isPresent()) {
                 if (k < L) {
-                    clusters[k++] = cluster.get();
+                    clusters[k++] = sister.get();
                 } else {
-                    return Optional.of(split(cluster.get()));
+                    return Optional.of(split(sister.get()));
                 }
             }
 
@@ -416,7 +419,7 @@ public class BIRCH implements VectorQuantizer {
         /**
          * Splits the node and returns a new sister node.
          */
-        public Node split(ClusteringFeature cluster) {
+        private Node split(ClusteringFeature cluster) {
             ClusteringFeature[] clusters = new ClusteringFeature[L+1];
             System.arraycopy(this.clusters, 0, clusters, 0, L);
             clusters[L] = cluster;
@@ -435,6 +438,9 @@ public class BIRCH implements VectorQuantizer {
                 }
             }
 
+            for (int i = k; i < L; i++) {
+                this.clusters[i] = null;
+            }
             this.cluster = new ClusteringFeature(Arrays.copyOf(this.clusters, k));
 
             return new Leaf(Arrays.copyOf(sister, n));
@@ -461,10 +467,9 @@ public class BIRCH implements VectorQuantizer {
         if (root == null) {
             root = new Leaf(x);
         } else {
-            Optional<Node> node = root.add(x);
-            if (node.isPresent()) {
-                Node parent = new InternalNode(root, node.get());
-                root = parent;
+            Optional<Node> sister = root.add(x);
+            if (sister.isPresent()) {
+                root = new InternalNode(root, sister.get());
             }
         }
     }
