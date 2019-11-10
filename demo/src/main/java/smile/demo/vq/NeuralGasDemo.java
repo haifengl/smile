@@ -22,7 +22,7 @@ import javax.swing.*;
 
 import smile.graph.Graph;
 import smile.math.MathEx;
-import smile.vq.TimeFunction;
+import smile.util.TimeFunction;
 import smile.vq.NeuralGas;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;

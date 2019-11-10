@@ -45,15 +45,7 @@ public class GrowingNeuralGasDemo extends VQDemo {
             }
         }
 
-        gas.partition(clusterNumber);
         System.out.format("Growing Neural Gas clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
-
-        int[] membership = new int[dataset[datasetIndex].length];
-        int[] clusterSize = new int[clusterNumber];
-        for (int i = 0; i < dataset[datasetIndex].length; i++) {
-            membership[i] = gas.predict(dataset[datasetIndex][i]);
-            clusterSize[membership[i]]++;
-        }
 
         GrowingNeuralGas.Neuron[] neurons = gas.neurons();
         double[][] x = new double[neurons.length][];
@@ -61,18 +53,6 @@ public class GrowingNeuralGasDemo extends VQDemo {
             x[i] = neurons[i].w;
 
         PlotCanvas plot = ScatterPlot.plot(x, '@');
-        for (int k = 0; k < clusterNumber; k++) {
-            if (clusterSize[k] > 0) {
-                double[][] cluster = new double[clusterSize[k]][];
-                for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (membership[i] == k) {
-                        cluster[j++] = dataset[datasetIndex][i];
-                    }
-                }
-
-                plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
-            }
-        }
 
         for (int i = 0; i < neurons.length; i++) {
             for (int j = 0; j < neurons[i].neighbors.length; j++) {

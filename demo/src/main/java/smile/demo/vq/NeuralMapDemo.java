@@ -24,7 +24,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
-import smile.clustering.Clustering;
 import smile.vq.NeuralMap;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
@@ -69,17 +68,7 @@ public class NeuralMapDemo extends VQDemo {
         }
 
         cortex.purge(16);
-        cortex.partition(clusterNumber, 16);
         System.out.format("Cortex clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis() - clock);
-
-        int[] y = new int[dataset[datasetIndex].length];
-        int[] clusterSize = new int[clusterNumber];
-        for (int i = 0; i < dataset[datasetIndex].length; i++) {
-            y[i] = cortex.predict(dataset[datasetIndex][i]);
-            if (y[i] != Clustering.OUTLIER) {
-                clusterSize[y[i]]++;
-            }
-        }
 
         List<NeuralMap.Neuron> nodes = cortex.neurons();
         double[][] x = new double[nodes.size()][];
@@ -88,18 +77,6 @@ public class NeuralMapDemo extends VQDemo {
         }
 
         PlotCanvas plot = ScatterPlot.plot(x, '@');
-        for (int k = 0; k < clusterNumber; k++) {
-            if (clusterSize[k] > 0) {
-                double[][] cluster = new double[clusterSize[k]][];
-                for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (y[i] == k) {
-                        cluster[j++] = dataset[datasetIndex][i];
-                    }
-                }
-
-                plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
-            }
-        }
 
         for (int i = 0; i < nodes.size(); i++) {
             NeuralMap.Neuron neuron = nodes.get(i);
