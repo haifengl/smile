@@ -25,7 +25,7 @@ import java.io.Serializable;
  *
  * @author Haifeng Li
  */
-public interface LearningRate extends Serializable {
+public interface TimeFunction extends Serializable {
     /**
      * Returns the learning rate at a given iteration.
      * @param t the order number of current iteration.
@@ -37,7 +37,7 @@ public interface LearningRate extends Serializable {
      * @param alpha the initial learning rate.
      * @param T the number of iterations.
      */
-    static LearningRate linear(double alpha, double T) {
+    static TimeFunction linear(double alpha, double T) {
         return t -> alpha * (1.0 - Math.min(t, T-1) / T);
     }
 
@@ -48,7 +48,7 @@ public interface LearningRate extends Serializable {
      * @param alpha the initial learning rate.
      * @param C a small percentage of the number of iterations.
      */
-    static LearningRate inverse(double alpha, double C) {
+    static TimeFunction inverse(double alpha, double C) {
         return t -> alpha * C / (C + t);
     }
 
@@ -58,7 +58,7 @@ public interface LearningRate extends Serializable {
      * @param alpha the initial learning rate.
      * @param C a small percentage of the number of iterations.
      */
-    static LearningRate exp(double alpha, double C) {
+    static TimeFunction exp(double alpha, double C) {
         return t -> alpha * Math.exp(-t / C);
     }
 }

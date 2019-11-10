@@ -28,8 +28,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import smile.plot.Palette;
-import smile.vq.LatticeNeighborhood;
-import smile.vq.LearningRate;
+import smile.vq.Neighborhood;
+import smile.vq.TimeFunction;
 import smile.vq.SOM;
 import smile.math.MathEx;
 import smile.plot.Hexmap;
@@ -83,8 +83,8 @@ public class SOMDemo  extends VQDemo {
 
         double[][][] lattice = SOM.lattice(width, height, dataset[datasetIndex]);
         SOM som = new SOM(lattice,
-                LearningRate.inverse(learningRate, dataset[datasetIndex].length * epochs / 10),
-                LatticeNeighborhood.Gaussian(neighborhood, dataset[datasetIndex].length * epochs / 4));
+                TimeFunction.inverse(learningRate, dataset[datasetIndex].length * epochs / 10),
+                Neighborhood.Gaussian(neighborhood, dataset[datasetIndex].length * epochs / 4));
 
         JPanel pane = new JPanel(new GridLayout(1, 2));
         PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
