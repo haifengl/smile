@@ -15,12 +15,10 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.clustering;
+package smile.vq;
 
 import smile.data.USPS;
 import smile.math.MathEx;
-import smile.validation.RandIndex;
-import smile.validation.AdjustedRandIndex;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -59,43 +57,31 @@ public class BIRCHTest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = USPS.x;
-        int[] y = USPS.y;
         double[][] testx = USPS.testx;
-        int[] testy = USPS.testy;
-            
-        BIRCH birch = new BIRCH(x[0].length, 5, 16.0);
-        for (int i = 0; i < 20; i++) {
-            int[] index = MathEx.permutate(x.length);
-            for (int j = 0; j < x.length; j++) {
-                birch.add(x[index[j]]);
-            }
-        }
-            
-        birch.partition(10);
-            
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
 
-        int[] p = new int[x.length];
+        BIRCH model = new BIRCH(x[0].length, 5, 5, 6.0);
         for (int i = 0; i < x.length; i++) {
-            p[i] = birch.predict(x[i]);
+            model.update(x[i]);
         }
-            
-        double r = rand.measure(y, p);
-        double r2 = ari.measure(y, p);
-        System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.7663, r, 1E-4);
-        assertEquals(0.2816, r2, 1E-4);
-            
-        p = new int[testx.length];
-        for (int i = 0; i < testx.length; i++) {
-            p[i] = birch.predict(testx[i]);
+
+        double error = 0.0;
+        for (double[] xi : x) {
+            double[] yi = model.quantize(xi).get();
+            error += MathEx.distance(xi, yi);
         }
-            
-        r = rand.measure(testy, p);
-        r2 = ari.measure(testy, p);
-        System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.7651, r, 1E-4);
-        assertEquals(0.2769, r2, 1E-4);
+        error /= x.length;
+        System.out.format("Training Quantization Error = %.4f%n", error);
+        assertEquals(5.9017, error, 1E-4);
+
+        error = 0.0;
+        for (double[] xi : testx) {
+            double[] yi = model.quantize(xi).get();
+            error += MathEx.distance(xi, yi);
+        }
+        error /= testx.length;
+
+        System.out.format("Test Quantization Error = %.4f%n", error);
+        assertEquals(7.3498, error, 1E-4);
+
     }
 }

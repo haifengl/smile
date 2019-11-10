@@ -17,17 +17,15 @@
 
 package smile.demo.vq;
 
-import java.awt.Dimension;
+import java.awt.*;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
-import smile.clustering.BIRCH;
-import smile.clustering.Clustering;
-import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;
+import smile.vq.BIRCH;
 
 /**
  *
@@ -39,22 +37,22 @@ public class BIRCHDemo extends VQDemo {
     JTextField BNumberField;
     int B = 5;
 
+    JTextField LNumberField;
+    int L = 5;
+
     JTextField TNumberField;
     double T = 0.5;
 
-    JTextField minPtsNumberField;
-    int minPts = 5;
-
     public BIRCHDemo() {
         BNumberField = new JTextField(Integer.toString(B), 5);
+        LNumberField = new JTextField(Integer.toString(L), 5);
         TNumberField = new JTextField(Double.toString(T), 5);
-        minPtsNumberField = new JTextField(Integer.toString(minPts), 5);
         optionPane.add(new JLabel("B:"));
         optionPane.add(BNumberField);
+        optionPane.add(new JLabel("L:"));
+        optionPane.add(LNumberField);
         optionPane.add(new JLabel("T:"));
         optionPane.add(TNumberField);
-        optionPane.add(new JLabel("minPts:"));
-        optionPane.add(minPtsNumberField);
     }
 
     @Override
@@ -71,6 +69,17 @@ public class BIRCHDemo extends VQDemo {
         }
 
         try {
+            L = Integer.parseInt(LNumberField.getText().trim());
+            if (L < 2) {
+                JOptionPane.showMessageDialog(this, "Invalid L: " + L, ERROR, JOptionPane.ERROR_MESSAGE);
+                return null;
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Invalid L: " + LNumberField.getText(), ERROR, JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+
+        try {
             T = Double.parseDouble(TNumberField.getText().trim());
             if (T <= 0) {
                 JOptionPane.showMessageDialog(this, "Invalid T: " + T, ERROR, JOptionPane.ERROR_MESSAGE);
@@ -81,51 +90,39 @@ public class BIRCHDemo extends VQDemo {
             return null;
         }
 
-        try {
-            minPts = Integer.parseInt(minPtsNumberField.getText().trim());
-            if (minPts < 0) {
-                JOptionPane.showMessageDialog(this, "Invalid minPts: " + minPts, ERROR, JOptionPane.ERROR_MESSAGE);
-                return null;
+        BIRCH birch = new BIRCH(2, B, L, T);
+
+        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
+
+        int period = dataset[datasetIndex].length / 10;
+        Thread thread = new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Invalid minPts: " + minPtsNumberField.getText(), ERROR, JOptionPane.ERROR_MESSAGE);
-            return null;
-        }
 
-        long clock = System.currentTimeMillis();
-        BIRCH birch = new BIRCH(2, B, T);
-        for (int i = 0; i < dataset[datasetIndex].length; i++)
-            birch.add(dataset[datasetIndex][i]);
 
-        if (birch.partition(clusterNumber, minPts) < clusterNumber) {
-            JOptionPane.showMessageDialog(this, "The number of non-outlier leaves is less than " + clusterNumber + ". Try larger T.", "ERROR", JOptionPane.ERROR_MESSAGE);
-            return null;
-        }
+            for (int i = 0; i < dataset[datasetIndex].length; i++) {
+                birch.update(dataset[datasetIndex][i]);
 
-        int[] membership = new int[dataset[datasetIndex].length];
-        int[] clusterSize = new int[clusterNumber];
-        for (int i = 0; i < dataset[datasetIndex].length; i++) {
-            membership[i] = birch.predict(dataset[datasetIndex][i]);
-            if (membership[i] != Clustering.OUTLIER) {
-                clusterSize[membership[i]]++;
-            }
-        }
-        System.out.format("BIRCH clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
+                if ((i + 1) % 100 == 0) {
+                    plot.clear();
+                    plot.points(dataset[datasetIndex], pointLegend);
+                    double[][] neurons = birch.centroids();
+                    plot.points(neurons, '@', Color.RED);
+                    plot.repaint();
 
-        PlotCanvas plot = ScatterPlot.plot(birch.centroids(), '@');
-        for (int k = 0; k < clusterNumber; k++) {
-            if (clusterSize[k] > 0) {
-                double[][] cluster = new double[clusterSize[k]][];
-                for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (membership[i] == k) {
-                        cluster[j++] = dataset[datasetIndex][i];
+                    try {
+                        Thread.sleep(100);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
-
-                plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
             }
-        }
-        plot.points(birch.centroids(), '@');
+        });
+        thread.start();
+
         return plot;
     }
 
