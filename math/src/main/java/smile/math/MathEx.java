@@ -30,6 +30,7 @@ import java.util.stream.LongStream;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.Sort;
+import smile.util.IntPair;
 import smile.util.SparseArray;
 
 import static java.lang.Math.abs;
@@ -1304,6 +1305,27 @@ public class MathEx {
         }
 
         return which;
+    }
+
+    /**
+     * Returns the index of maximum value of an array.
+     */
+    public static IntPair whichMax(double[][] x) {
+        double m = Double.NEGATIVE_INFINITY;
+        int whichRow = 0;
+        int whichCol = 0;
+
+        for (int i = 0; i < x.length; i++) {
+            for (int j = 0; j < x[i].length; j++) {
+                if (x[i][j] > m) {
+                    m = x[i][j];
+                    whichRow = i;
+                    whichCol = j;
+                }
+            }
+        }
+
+        return new IntPair(whichRow, whichCol);
     }
 
     /**

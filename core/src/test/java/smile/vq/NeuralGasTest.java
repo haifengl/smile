@@ -64,10 +64,10 @@ public class NeuralGasTest {
         double[][] testx = USPS.testx;
 
         int epochs = 20;
-        NeuralGas model = new NeuralGas(NeuralGas.random(400, x),
+        NeuralGas model = new NeuralGas(NeuralGas.seed(400, x),
                 LearningRate.exp(0.3, x.length * epochs / 2),
                 LearningRate.exp(30, x.length * epochs / 8),
-                LearningRate.exp(20, x.length * epochs / -2));
+                x.length * 2);
 
         for (int i = 0; i < epochs; i++) {
             for (int j : MathEx.permutate(x.length)) {
