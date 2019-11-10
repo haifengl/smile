@@ -20,7 +20,8 @@ package smile.vq;
 import java.io.Serializable;
 
 /**
- * The learning rate function.
+ * A time-dependent function, e.g. the learning rate function,
+ * 1-dimensional neighborhood function, etc.
  *
  * @author Haifeng Li
  */

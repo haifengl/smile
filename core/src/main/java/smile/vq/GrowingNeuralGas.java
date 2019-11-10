@@ -20,10 +20,7 @@ package smile.vq;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import smile.clustering.Clustering;
-import smile.clustering.HierarchicalClustering;
-import smile.clustering.linkage.Linkage;
-import smile.clustering.linkage.UPGMALinkage;
+import java.util.Optional;
 import smile.sort.HeapSelect;
 import smile.math.MathEx;
 
@@ -54,7 +51,7 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class GrowingNeuralGas implements Clustering<double[]> {
+public class GrowingNeuralGas implements VectorQuantizer {
     /**
      * The neuron vertex in the growing neural gas network.
      */
@@ -184,10 +181,6 @@ public class GrowingNeuralGas implements Clustering<double[]> {
      * Neurons in the neural network.
      */
     private LinkedList<Node> nodes = new LinkedList<>();
-    /**
-     * Cluster labels of neurons.
-     */
-    private int[] y;
 
     /**
      * Constructor.
@@ -373,48 +366,18 @@ public class GrowingNeuralGas implements Clustering<double[]> {
         }
     }
 
-    /**
-     * Clustering neurons into k clusters.
-     * @param k the number of clusters.
-     */
-    public void partition(int k) {
-        double[][] x = new double[nodes.size()][];
-        for (int i = 0; i < x.length; i++) {
-            x[i] = nodes.get(i).w;
-        }
-
-        Linkage linkage = UPGMALinkage.of(x);
-        HierarchicalClustering hc = HierarchicalClustering.fit(linkage);
-        y = hc.partition(k);
-    }
-
-    /**
-     * Cluster a new instance to the nearest neuron.
-     * @param x a new instance.
-     * @return the cluster label. If the method partition() was called,
-     * this is the cluster id of nearest neuron. Otherwise, it is just
-     * the index of neuron.
-     */
     @Override
-    public int predict(double[] x) {
+    public Optional<double[]> quantize(double[] x) {
         double minDist = Double.MAX_VALUE;
-        int bestCluster = 0;
+        double[] w = null;
 
-        int i = 0;
         for (Node neuron : nodes) {
             double dist = MathEx.squaredDistance(x, neuron.w);
             if (dist < minDist) {
-                minDist = dist;
-                bestCluster = i;
+                w = neuron.w;
             }
-            i++;
         }
 
-        if (y == null || y.length != nodes.size()) {
-            return bestCluster;
-        } else {
-
-            return y[bestCluster];
-        }
+        return Optional.ofNullable(w);
     }
 }
