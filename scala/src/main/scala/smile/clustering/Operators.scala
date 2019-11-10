@@ -20,7 +20,6 @@ package smile.clustering
 import java.util.function.ToDoubleBiFunction
 
 import smile.clustering.linkage._
-import smile.data.SparseDataset
 import smile.math.distance._
 import smile.math.matrix.DenseMatrix
 import smile.neighbor.RNNSearch

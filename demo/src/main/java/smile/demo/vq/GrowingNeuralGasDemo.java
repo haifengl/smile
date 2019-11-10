@@ -17,11 +17,13 @@
 
 package smile.demo.vq;
 
+import java.util.Arrays;
 import java.awt.Dimension;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+
+import smile.math.MathEx;
 import smile.vq.GrowingNeuralGas;
-import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;
 
@@ -36,30 +38,47 @@ public class GrowingNeuralGasDemo extends VQDemo {
 
     @Override
     public JComponent learn() {
-        long clock = System.currentTimeMillis();
-        GrowingNeuralGas gas = new GrowingNeuralGas(2, 0.05, 0.0006, 88, 200,  0.5, 0.9995);
+        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
 
-        for (int loop = 0; loop < 25; loop++) {
-            for (double[] x : dataset[datasetIndex]) {
-                gas.update(x);
+        int period = dataset[datasetIndex].length / 10;
+        Thread thread = new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }
 
-        System.out.format("Growing Neural Gas clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
+            GrowingNeuralGas gas = new GrowingNeuralGas(2);//(2, 0.05, 0.0006, 88, 200,  0.5, 0.9995);
 
-        GrowingNeuralGas.Neuron[] neurons = gas.neurons();
-        double[][] x = new double[neurons.length][];
-        for (int i = 0; i < x.length; i++)
-            x[i] = neurons[i].w;
+            for (int i = 0, k = 0; i < epochs; i++) {
+                for (int j : MathEx.permutate(dataset[datasetIndex].length)) {
+                    gas.update(dataset[datasetIndex][j]);
 
-        PlotCanvas plot = ScatterPlot.plot(x, '@');
+                    if (++k % period == 0) {
+                        plot.clear();
+                        plot.points(dataset[datasetIndex], pointLegend);
+                        GrowingNeuralGas.Neuron[] neurons = gas.neurons();
+                        double[][] w = Arrays.stream(neurons).map(neuron -> neuron.w).toArray(double[][]::new);
+                        plot.points(w, '@');
 
-        for (int i = 0; i < neurons.length; i++) {
-            for (int j = 0; j < neurons[i].neighbors.length; j++) {
-                plot.line(neurons[i].w, neurons[i].neighbors[j].w);
+                        for (GrowingNeuralGas.Neuron neuron : neurons) {
+                            for (GrowingNeuralGas.Edge e : neuron.edges) {
+                                plot.line(neuron.w, e.neighbor.w);
+                            }
+                        }
+                        plot.repaint();
+
+                        try {
+                            Thread.sleep(100);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                System.out.format("%s epoch finishes%n", smile.util.Strings.ordinal(i+1));
             }
-        }
-        plot.points(x, '@');
+        });
+        thread.start();
 
         return plot;
     }
