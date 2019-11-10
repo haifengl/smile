@@ -25,7 +25,7 @@ import java.io.Serializable;
  *
  * @author Haifeng Li
  */
-public interface LatticeNeighborhood extends Serializable {
+public interface Neighborhood extends Serializable {
     /**
      * Returns the changing rate of neighborhood at a given iteration.
      * @param i the row distance of topology from the the winner neuron.
@@ -45,7 +45,7 @@ public interface LatticeNeighborhood extends Serializable {
      *
      * @param radius the radius of neighborhood.
      */
-    static LatticeNeighborhood bubble(int radius) {
+    static Neighborhood bubble(int radius) {
         return (i, j, t) -> Math.abs(i) < radius && Math.abs(j) < radius ? 1 : 0;
     }
 
@@ -54,7 +54,7 @@ public interface LatticeNeighborhood extends Serializable {
      * @param sigma the initial radius of neighborhood.
      * @param T the number of iterations.
      */
-    static LatticeNeighborhood Gaussian(double sigma, double T) {
+    static Neighborhood Gaussian(double sigma, double T) {
         return (i, j, t) -> {
             double s = sigma * Math.exp(-t / T);
             double gamma = -0.5 / (s * s);

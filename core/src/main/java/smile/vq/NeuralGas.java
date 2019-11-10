@@ -95,11 +95,11 @@ public class NeuralGas implements VectorQuantizer {
     /**
      * The learning rate function.
      */
-    private LearningRate alpha;
+    private TimeFunction alpha;
     /**
      * The neighborhood function.
      */
-    private LearningRate theta;
+    private TimeFunction theta;
     /**
      * The lifetime of connections.
      */
@@ -123,9 +123,9 @@ public class NeuralGas implements VectorQuantizer {
      * @param alpha the learning rate function.
      * @param theta the neighborhood function.
      * @param lifetime the neuron connection lifetime, usually the number of
-     *                 iterations of one or two epochs.
+     *                 iterations for one or two epochs.
      */
-    public NeuralGas(double[][] neurons, LearningRate alpha, LearningRate theta, int lifetime) {
+    public NeuralGas(double[][] neurons, TimeFunction alpha, TimeFunction theta, int lifetime) {
         this.neurons = IntStream.range(0, neurons.length).mapToObj(i -> new Neuron(i, neurons[i].clone())).toArray(Neuron[]::new);
         this.alpha = alpha;
         this.theta = theta;

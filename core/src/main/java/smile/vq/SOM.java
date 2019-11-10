@@ -133,11 +133,11 @@ public class SOM implements VectorQuantizer {
     /**
      * The learning rate function.
      */
-    private LearningRate alpha;
+    private TimeFunction alpha;
     /**
      * The neighborhood function.
      */
-    private LatticeNeighborhood theta;
+    private Neighborhood theta;
     /**
      * The current iteration.
      */
@@ -153,7 +153,7 @@ public class SOM implements VectorQuantizer {
      * @param alpha the learning rate function.
      * @param theta the neighborhood function.
      */
-    public SOM(double[][][] neurons, LearningRate alpha, LatticeNeighborhood theta) {
+    public SOM(double[][][] neurons, TimeFunction alpha, Neighborhood theta) {
         this.alpha = alpha;
         this.theta = theta;
         this.nrows = neurons.length;

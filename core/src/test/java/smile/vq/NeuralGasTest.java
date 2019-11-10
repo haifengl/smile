@@ -19,10 +19,6 @@ package smile.vq;
 
 import smile.data.USPS;
 import smile.math.MathEx;
-import smile.validation.MutualInformation;
-import smile.validation.NormalizedMutualInformation;
-import smile.validation.RandIndex;
-import smile.validation.AdjustedRandIndex;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -65,8 +61,8 @@ public class NeuralGasTest {
 
         int epochs = 20;
         NeuralGas model = new NeuralGas(NeuralGas.seed(400, x),
-                LearningRate.exp(0.3, x.length * epochs / 2),
-                LearningRate.exp(30, x.length * epochs / 8),
+                TimeFunction.exp(0.3, x.length * epochs / 2),
+                TimeFunction.exp(30, x.length * epochs / 8),
                 x.length * 2);
 
         for (int i = 0; i < epochs; i++) {

@@ -22,7 +22,7 @@ import javax.swing.*;
 
 import smile.graph.Graph;
 import smile.math.MathEx;
-import smile.vq.LearningRate;
+import smile.vq.TimeFunction;
 import smile.vq.NeuralGas;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;
@@ -55,8 +55,8 @@ public class NeuralGasDemo extends VQDemo {
         }
 
         NeuralGas gas = new NeuralGas(NeuralGas.seed(numNeurons, dataset[datasetIndex]),
-                LearningRate.exp(learningRate, dataset[datasetIndex].length * epochs / 2),
-                LearningRate.exp(neighborhood, dataset[datasetIndex].length * epochs / 8),
+                TimeFunction.exp(learningRate, dataset[datasetIndex].length * epochs / 2),
+                TimeFunction.exp(neighborhood, dataset[datasetIndex].length * epochs / 8),
                 2 * dataset[datasetIndex].length);
 
         PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);

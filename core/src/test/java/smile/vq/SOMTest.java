@@ -95,8 +95,8 @@ public class SOMTest {
         int epochs = 20;
         double[][][] lattice = SOM.lattice(20, 20, x);
         SOM model = new SOM(lattice,
-                LearningRate.inverse(0.85, x.length * epochs / 10),
-                LatticeNeighborhood.Gaussian(5, x.length * epochs / 4));
+                TimeFunction.inverse(0.85, x.length * epochs / 10),
+                Neighborhood.Gaussian(5, x.length * epochs / 4));
 
         for (int i = 0; i < epochs; i++) {
             for (int j : MathEx.permutate(x.length)) {
