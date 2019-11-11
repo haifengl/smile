@@ -28,7 +28,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import smile.plot.Palette;
-import smile.util.TimeFunction;
+import smile.math.TimeFunction;
 import smile.vq.Neighborhood;
 import smile.vq.SOM;
 import smile.math.MathEx;

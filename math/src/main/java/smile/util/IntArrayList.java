@@ -205,7 +205,7 @@ public final class IntArrayList implements Serializable {
         if (index == 0) {
             // data at the front
             System.arraycopy(data, 1, data, 0, size - 1);
-        } else if (size - 1 == index) {
+        } else if (index == size - 1) {
             // no copy to make, decrementing pos "deletes" values at
             // the end
         } else {
