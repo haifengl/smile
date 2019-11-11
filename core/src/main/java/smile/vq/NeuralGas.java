@@ -27,7 +27,7 @@ import smile.graph.Graph;
 import smile.graph.Graph.Edge;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
-import smile.util.TimeFunction;
+import smile.math.TimeFunction;
 
 /**
  * Neural Gas soft competitive learning algorithm. Neural Gas is inspired

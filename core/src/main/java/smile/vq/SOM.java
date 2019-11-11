@@ -25,7 +25,7 @@ import smile.clustering.CentroidClustering;
 import smile.math.MathEx;
 import smile.mds.MDS;
 import smile.sort.QuickSort;
-import smile.util.TimeFunction;
+import smile.math.TimeFunction;
 
 /**
  * Self-Organizing Map. An SOM is a unsupervised learning method to produce
