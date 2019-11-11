@@ -25,6 +25,7 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.io.CSV;
+import smile.math.MathEx;
 import smile.util.Paths;
 import smile.validation.RandIndex;
 import smile.validation.AdjustedRandIndex;
@@ -36,6 +37,8 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.stream.IntStream;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -62,52 +65,39 @@ public class NeuralMapTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class NeuralMap.
-     */
     @Test(expected = Test.None.class)
     public void testUSPS() {
         System.out.println("USPS");
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = USPS.x;
-        int[] y = USPS.y;
         double[][] testx = USPS.testx;
-        int[] testy = USPS.testy;
 
-        NeuralMap cortex = new NeuralMap(x[0].length, 8.0, 0.05, 0.0006, 5, 3);
-
-        for (int i = 0; i < 5; i++) {
-            for (double[] xi : x) {
-                cortex.update(xi);
+        NeuralMap model = new NeuralMap(x[0].length, 6, 3, 10.0, 0.2, 0.006, 2*x.length);
+        for (int epoch = 1; epoch <= 5; epoch++) {
+            for (int i = 0; i < x.length; i++) {
+                model.update(x[i]);
             }
+            System.out.format("%d neurons after %d epochs%n", model.neurons().length, epoch);
         }
 
-        cortex.purge(16);
-        cortex.partition(10);
-            
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
+        double error = 0.0;
+        for (double[] xi : x) {
+            double[] yi = model.quantize(xi).get();
+            error += MathEx.distance(xi, yi);
+        }
+        error /= x.length;
+        System.out.format("Training Quantization Error = %.4f%n", error);
+        assertEquals(5.9017, error, 1E-4);
 
-        int[] p = new int[x.length];
-        for (int i = 0; i < x.length; i++) {
-            p[i] = cortex.predict(x[i]);
+        error = 0.0;
+        for (double[] xi : testx) {
+            double[] yi = model.quantize(xi).get();
+            error += MathEx.distance(xi, yi);
         }
-            
-        double r = rand.measure(y, p);
-        double r2 = ari.measure(y, p);
-        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        //assertTrue(r > 0.65);
-        //assertTrue(r2 > 0.18);
-            
-        p = new int[testx.length];
-        for (int i = 0; i < testx.length; i++) {
-            p[i] = cortex.predict(testx[i]);
-        }
-            
-        r = rand.measure(testy, p);
-        r2 = ari.measure(testy, p);
-        System.out.format("Testing rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        //assertTrue(r > 0.65);
-        //assertTrue(r2 > 0.18);
+        error /= testx.length;
+
+        System.out.format("Test Quantization Error = %.4f%n", error);
+        assertEquals(6.2258, error, 1E-4);
     }
 }

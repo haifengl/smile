@@ -65,51 +65,39 @@ public class GrowingNeuralGasTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class GrowingNeuralGas.
-     */
     @Test(expected = Test.None.class)
     public void testUSPS() {
         System.out.println("USPS");
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         double[][] x = USPS.x;
-        int[] y = USPS.y;
         double[][] testx = USPS.testx;
-        int[] testy = USPS.testy;
 
-        GrowingNeuralGas gng = new GrowingNeuralGas(x[0].length);
-        for (int i = 0; i < 10; i++) {
-            int[] index = MathEx.permutate(x.length);
-            for (int j = 0; j < x.length; j++) {
-                gng.update(x[index[j]]);
+        GrowingNeuralGas model = new GrowingNeuralGas(x[0].length);
+        for (int epoch = 1; epoch <= 20; epoch++) {
+            for (int i = 0; i < x.length; i++) {
+                model.update(x[i]);
             }
+            System.out.format("%d neurons after %d epochs%n", model.neurons().length, epoch);
         }
-            
-        gng.partition(10);
-            
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
 
-        int[] p = new int[x.length];
-        for (int i = 0; i < x.length; i++) {
-            p[i] = gng.predict(x[i]);
+        double error = 0.0;
+        for (double[] xi : x) {
+            double[] yi = model.quantize(xi).get();
+            error += MathEx.distance(xi, yi);
         }
-            
-        double r = rand.measure(y, p);
-        double r2 = ari.measure(y, p);
-        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.85);
-        assertTrue(r2 > 0.40);
-            
-        p = new int[testx.length];
-        for (int i = 0; i < testx.length; i++) {
-            p[i] = gng.predict(testx[i]);
+        error /= x.length;
+        System.out.format("Training Quantization Error = %.4f%n", error);
+        assertEquals(4.7692, error, 1E-4);
+
+        error = 0.0;
+        for (double[] xi : testx) {
+            double[] yi = model.quantize(xi).get();
+            error += MathEx.distance(xi, yi);
         }
-            
-        r = rand.measure(testy, p);
-        r2 = ari.measure(testy, p);
-        System.out.format("Testing rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.85);
-        assertTrue(r2 > 0.40);
+        error /= testx.length;
+
+        System.out.format("Test Quantization Error = %.4f%n", error);
+        assertEquals(6.2282, error, 1E-4);
     }
 }

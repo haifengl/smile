@@ -19,6 +19,7 @@ package smile.vq;
 
 import smile.data.USPS;
 import smile.math.MathEx;
+import smile.math.TimeFunction;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

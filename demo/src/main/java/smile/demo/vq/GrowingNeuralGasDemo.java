@@ -24,6 +24,8 @@ import javax.swing.JFrame;
 
 import smile.math.MathEx;
 import smile.vq.GrowingNeuralGas;
+import smile.vq.hebb.Edge;
+import smile.vq.hebb.Neuron;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;
 
@@ -57,12 +59,12 @@ public class GrowingNeuralGasDemo extends VQDemo {
                     if (++k % period == 0) {
                         plot.clear();
                         plot.points(dataset[datasetIndex], pointLegend);
-                        GrowingNeuralGas.Neuron[] neurons = gas.neurons();
+                        Neuron[] neurons = gas.neurons();
                         double[][] w = Arrays.stream(neurons).map(neuron -> neuron.w).toArray(double[][]::new);
                         plot.points(w, '@');
 
-                        for (GrowingNeuralGas.Neuron neuron : neurons) {
-                            for (GrowingNeuralGas.Edge e : neuron.edges) {
+                        for (Neuron neuron : neurons) {
+                            for (Edge e : neuron.edges) {
                                 plot.line(neuron.w, e.neighbor.w);
                             }
                         }

@@ -26,7 +26,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import smile.math.MathEx;
-import smile.vq.GrowingNeuralGas;
+import smile.vq.hebb.Edge;
+import smile.vq.hebb.Neuron;
 import smile.vq.NeuralMap;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;
@@ -70,7 +71,7 @@ public class NeuralMapDemo extends VQDemo {
                 e.printStackTrace();
             }
 
-            NeuralMap cortex = new NeuralMap(2, T, 0.2, 0.006, 5, 3);
+            NeuralMap cortex = new NeuralMap(2, 5, 3, T, learningRate, learningRate/30, 3*dataset[datasetIndex].length);
 
             for (int i = 0, k = 0; i < epochs; i++) {
                 for (int j : MathEx.permutate(dataset[datasetIndex].length)) {
@@ -79,13 +80,13 @@ public class NeuralMapDemo extends VQDemo {
                     if (++k % period == 0) {
                         plot.clear();
                         plot.points(dataset[datasetIndex], pointLegend);
-                        java.util.List<NeuralMap.Neuron> neurons = cortex.neurons();
-                        double[][] w = neurons.stream().map(neuron -> neuron.w).toArray(double[][]::new);
+                        Neuron[] neurons = cortex.neurons();
+                        double[][] w = Arrays.stream(neurons).map(neuron -> neuron.w).toArray(double[][]::new);
                         plot.points(w, '@');
 
-                        for (NeuralMap.Neuron neuron : neurons) {
-                            for (NeuralMap.Neuron e : neuron.neighbors) {
-                                plot.line(neuron.w, e.w);
+                        for (Neuron neuron : neurons) {
+                            for (Edge edge : neuron.edges) {
+                                plot.line(neuron.w, edge.neighbor.w);
                             }
                         }
                         plot.repaint();
@@ -96,9 +97,9 @@ public class NeuralMapDemo extends VQDemo {
                             e.printStackTrace();
                         }
                     }
-
-                    cortex.purge(16);
                 }
+
+                cortex.clean();
                 System.out.format("%s epoch finishes%n", smile.util.Strings.ordinal(i+1));
             }
         });

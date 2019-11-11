@@ -1119,57 +1119,57 @@ public class MathEx {
      * Returns the minimum value of an array.
      */
     public static int min(int[] x) {
-        int m = x[0];
+        int min = x[0];
 
         for (int n : x) {
-            if (n < m) {
-                m = n;
+            if (n < min) {
+                min = n;
             }
         }
 
-        return m;
+        return min;
     }
 
     /**
      * Returns the minimum value of an array.
      */
     public static float min(float[] x) {
-        float m = Float.POSITIVE_INFINITY;
+        float min = Float.POSITIVE_INFINITY;
 
         for (float n : x) {
-            if (n < m) {
-                m = n;
+            if (n < min) {
+                min = n;
             }
         }
 
-        return m;
+        return min;
     }
 
     /**
      * Returns the minimum value of an array.
      */
     public static double min(double[] x) {
-        double m = Double.POSITIVE_INFINITY;
+        double min = Double.POSITIVE_INFINITY;
 
         for (double n : x) {
-            if (n < m) {
-                m = n;
+            if (n < min) {
+                min = n;
             }
         }
 
-        return m;
+        return min;
     }
 
     /**
      * Returns the index of minimum value of an array.
      */
     public static int whichMin(int[] x) {
-        int m = x[0];
+        int min = x[0];
         int which = 0;
 
         for (int i = 1; i < x.length; i++) {
-            if (x[i] < m) {
-                m = x[i];
+            if (x[i] < min) {
+                min = x[i];
                 which = i;
             }
         }
@@ -1181,12 +1181,12 @@ public class MathEx {
      * Returns the index of minimum value of an array.
      */
     public static int whichMin(float[] x) {
-        float m = Float.POSITIVE_INFINITY;
+        float min = Float.POSITIVE_INFINITY;
         int which = 0;
 
         for (int i = 0; i < x.length; i++) {
-            if (x[i] < m) {
-                m = x[i];
+            if (x[i] < min) {
+                min = x[i];
                 which = i;
             }
         }
@@ -1198,12 +1198,12 @@ public class MathEx {
      * Returns the index of minimum value of an array.
      */
     public static int whichMin(double[] x) {
-        double m = Double.POSITIVE_INFINITY;
+        double min = Double.POSITIVE_INFINITY;
         int which = 0;
 
         for (int i = 0; i < x.length; i++) {
-            if (x[i] < m) {
-                m = x[i];
+            if (x[i] < min) {
+                min = x[i];
                 which = i;
             }
         }
@@ -1212,60 +1212,81 @@ public class MathEx {
     }
 
     /**
-     * Returns the maximum value of an array.
+     * Returns the index of minimum value of an array.
      */
-    public static int max(int[] x) {
-        int m = x[0];
+    public static IntPair whichMin(double[][] x) {
+        double min = Double.POSITIVE_INFINITY;
+        int whichRow = 0;
+        int whichCol = 0;
 
-        for (int n : x) {
-            if (n > m) {
-                m = n;
+        for (int i = 0; i < x.length; i++) {
+            for (int j = 0; j < x[i].length; j++) {
+                if (x[i][j] < min) {
+                    min = x[i][j];
+                    whichRow = i;
+                    whichCol = j;
+                }
             }
         }
 
-        return m;
+        return new IntPair(whichRow, whichCol);
+    }
+
+    /**
+     * Returns the maximum value of an array.
+     */
+    public static int max(int[] x) {
+        int max = x[0];
+
+        for (int n : x) {
+            if (n > max) {
+                max = n;
+            }
+        }
+
+        return max;
     }
 
     /**
      * Returns the maximum value of an array.
      */
     public static float max(float[] x) {
-        float m = Float.NEGATIVE_INFINITY;
+        float max = Float.NEGATIVE_INFINITY;
 
         for (float n : x) {
-            if (n > m) {
-                m = n;
+            if (n > max) {
+                max = n;
             }
         }
 
-        return m;
+        return max;
     }
 
     /**
      * Returns the maximum value of an array.
      */
     public static double max(double[] x) {
-        double m = Double.NEGATIVE_INFINITY;
+        double max = Double.NEGATIVE_INFINITY;
 
         for (double n : x) {
-            if (n > m) {
-                m = n;
+            if (n > max) {
+                max = n;
             }
         }
 
-        return m;
+        return max;
     }
 
     /**
      * Returns the index of maximum value of an array.
      */
     public static int whichMax(int[] x) {
-        int m = x[0];
+        int max = x[0];
         int which = 0;
 
         for (int i = 1; i < x.length; i++) {
-            if (x[i] > m) {
-                m = x[i];
+            if (x[i] > max) {
+                max = x[i];
                 which = i;
             }
         }
@@ -1277,12 +1298,12 @@ public class MathEx {
      * Returns the index of maximum value of an array.
      */
     public static int whichMax(float[] x) {
-        float m = Float.NEGATIVE_INFINITY;
+        float max = Float.NEGATIVE_INFINITY;
         int which = 0;
 
         for (int i = 0; i < x.length; i++) {
-            if (x[i] > m) {
-                m = x[i];
+            if (x[i] > max) {
+                max = x[i];
                 which = i;
             }
         }
@@ -1294,12 +1315,12 @@ public class MathEx {
      * Returns the index of maximum value of an array.
      */
     public static int whichMax(double[] x) {
-        double m = Double.NEGATIVE_INFINITY;
+        double max = Double.NEGATIVE_INFINITY;
         int which = 0;
 
         for (int i = 0; i < x.length; i++) {
-            if (x[i] > m) {
-                m = x[i];
+            if (x[i] > max) {
+                max = x[i];
                 which = i;
             }
         }
@@ -1311,14 +1332,14 @@ public class MathEx {
      * Returns the index of maximum value of an array.
      */
     public static IntPair whichMax(double[][] x) {
-        double m = Double.NEGATIVE_INFINITY;
+        double max = Double.NEGATIVE_INFINITY;
         int whichRow = 0;
         int whichCol = 0;
 
         for (int i = 0; i < x.length; i++) {
             for (int j = 0; j < x[i].length; j++) {
-                if (x[i][j] > m) {
-                    m = x[i][j];
+                if (x[i][j] > max) {
+                    max = x[i][j];
                     whichRow = i;
                     whichCol = j;
                 }
@@ -1332,68 +1353,68 @@ public class MathEx {
      * Returns the minimum of a matrix.
      */
     public static int min(int[][] matrix) {
-        int m = matrix[0][0];
+        int min = matrix[0][0];
 
         for (int[] x : matrix) {
             for (int y : x) {
-                if (m > y) {
-                    m = y;
+                if (min > y) {
+                    min = y;
                 }
             }
         }
 
-        return m;
+        return min;
     }
 
     /**
      * Returns the minimum of a matrix.
      */
     public static double min(double[][] matrix) {
-        double m = Double.POSITIVE_INFINITY;
+        double min = Double.POSITIVE_INFINITY;
 
         for (double[] x : matrix) {
             for (double y : x) {
-                if (m > y) {
-                    m = y;
+                if (min > y) {
+                    min = y;
                 }
             }
         }
 
-        return m;
+        return min;
     }
 
     /**
      * Returns the maximum of a matrix.
      */
     public static int max(int[][] matrix) {
-        int m = matrix[0][0];
+        int max = matrix[0][0];
 
         for (int[] x : matrix) {
             for (int y : x) {
-                if (m < y) {
-                    m = y;
+                if (max < y) {
+                    max = y;
                 }
             }
         }
 
-        return m;
+        return max;
     }
 
     /**
      * Returns the maximum of a matrix.
      */
     public static double max(double[][] matrix) {
-        double m = Double.NEGATIVE_INFINITY;
+        double max = Double.NEGATIVE_INFINITY;
 
         for (double[] x : matrix) {
             for (double y : x) {
-                if (m < y) {
-                    m = y;
+                if (max < y) {
+                    max = y;
                 }
             }
         }
 
-        return m;
+        return max;
     }
 
     /**
