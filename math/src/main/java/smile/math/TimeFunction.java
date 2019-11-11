@@ -33,6 +33,14 @@ public interface TimeFunction extends Serializable {
     double of(int t);
 
     /**
+     * Returns the constant learning rate.
+     * @param alpha the learning rate.
+     */
+    static TimeFunction constant(double alpha) {
+        return t -> alpha;
+    }
+
+    /**
      * Returns the linear learning rate lambda (alpha * (1 - t/T)).
      * @param alpha the initial learning rate.
      * @param T the number of iterations.

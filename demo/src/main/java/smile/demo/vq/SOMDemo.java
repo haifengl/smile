@@ -83,7 +83,7 @@ public class SOMDemo  extends VQDemo {
 
         double[][][] lattice = SOM.lattice(width, height, dataset[datasetIndex]);
         SOM som = new SOM(lattice,
-                TimeFunction.inverse(learningRate, dataset[datasetIndex].length * epochs / 10),
+                TimeFunction.constant(learningRate),
                 Neighborhood.Gaussian(neighborhood, dataset[datasetIndex].length * epochs / 4));
 
         JPanel pane = new JPanel(new GridLayout(1, 2));

@@ -20,6 +20,7 @@ package smile.vq;
 import smile.clustering.KMeans;
 import smile.data.USPS;
 import smile.math.MathEx;
+import smile.math.TimeFunction;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -95,25 +96,24 @@ public class SOMTest {
         int epochs = 20;
         double[][][] lattice = SOM.lattice(20, 20, x);
         SOM model = new SOM(lattice,
-                TimeFunction.inverse(0.85, x.length * epochs / 10),
-                Neighborhood.Gaussian(5, x.length * epochs / 4));
+                TimeFunction.constant(0.1),
+                Neighborhood.Gaussian(1, x.length * epochs / 4));
 
         for (int i = 0; i < epochs; i++) {
             for (int j : MathEx.permutate(x.length)) {
                 model.update(x[j]);
             }
+
+            double error = 0.0;
+            for (double[] xi : x) {
+                double[] yi = model.quantize(xi).get();
+                error += MathEx.distance(xi, yi);
+            }
+            error /= x.length;
+            System.out.format("Training Quantization Error = %.4f after %d epochs%n", error, (i+1));
         }
 
         double error = 0.0;
-        for (double[] xi : x) {
-            double[] yi = model.quantize(xi).get();
-            error += MathEx.distance(xi, yi);
-        }
-        error /= x.length;
-        System.out.format("Training Quantization Error = %.4f%n", error);
-        assertEquals(5.7262, error, 1E-4);
-
-        error = 0.0;
         for (double[] xi : testx) {
             double[] yi = model.quantize(xi).get();
             error += MathEx.distance(xi, yi);
@@ -121,6 +121,6 @@ public class SOMTest {
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.5487, error, 1E-4);
+        assertEquals(6.5794, error, 1E-4);
     }
 }
