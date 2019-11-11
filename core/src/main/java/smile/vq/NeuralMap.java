@@ -18,10 +18,15 @@
 package smile.vq;
 
 import java.io.Serializable;
-import java.util.*;
-import smile.sort.HeapSelect;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 import smile.math.MathEx;
-import smile.stat.distribution.GaussianDistribution;
+import smile.neighbor.MutableLSH;
+import smile.neighbor.Neighbor;
+import smile.vq.hebb.Neuron;
+import smile.vq.hebb.Edge;
 
 /**
  * NeuralMap is an efficient competitive learning algorithm inspired by growing
@@ -42,341 +47,17 @@ public class NeuralMap implements VectorQuantizer {
     private static final long serialVersionUID = 2L;
 
     /**
-     * The neurons in the network.
+     * The number of signals processed so far.
      */
-    public static class Neuron implements Serializable {
-        /**
-         * The number of samples associated with this neuron.
-         */
-        public int n = 1;
-        /**
-         * Reference vector.
-         */
-        public final double[] w;
-        /**
-         * Connected neighbors.
-         */
-        public final LinkedList<Neuron> neighbors = new LinkedList<>();
-
-        /**
-         * Constructor.
-         * @param w the reference vector.
-         */
-        public Neuron(double[] w) {
-            this.w = w;
-        }
-    }
-
-    /**
-     * The object encapsulates the results of nearest neighbor search.
-     */
-    class Neighbor implements Comparable<Neighbor> {
-
-        /**
-         * The neighbor neuron.
-         */
-        Neuron neuron;
-        /**
-         * The distance between the query and the neighbor.
-         */
-        double distance;
-
-        /**
-         * Constructor.
-         * @param neuron the neighbor neuron.
-         * @param distance the distance between the query and the neighbor.
-         */
-        Neighbor(Neuron neuron, double distance) {
-            this.neuron = neuron;
-            this.distance = distance;
-        }
-
-        @Override
-        public int compareTo(Neighbor o) {
-            return Double.compare(distance, o.distance);
-        }
-    }
-
-    /**
-     * Locality-Sensitive Hashing (LSH) is an algorithm for solving the
-     * (approximate/exact) Nearest Neighbor Search in high dimensional spaces
-     * by performing probabilistic dimension reduction of data. The basic idea
-     * is to hash the input items so that similar items are mapped to the same
-     * buckets with high probability (the number of buckets being much smaller
-     * than the universe of possible input items). This class implements a
-     * space-efficient LSH algorithm in Euclidean spaces.
-     */
-    class LSH {
-
-        /**
-         * The hash function for data in Euclidean spaces.
-         */
-        class Hash {
-
-            /**
-             * The object in the hash table.
-             */
-            class Item {
-
-                /**
-                 * The bucket id given by the universal bucket hashing.
-                 */
-                int bucket;
-                /**
-                 * The neuron object.
-                 */
-                Neuron neuron;
-
-                /**
-                 * Constructor
-                 */
-                Item(int bucket, Neuron neuron) {
-                    this.bucket = bucket;
-                    this.neuron = neuron;
-                }
-            }
-            /**
-             * The random vectors with entries chosen independently from a Gaussian
-             * distribution.
-             */
-            double[][] a;
-            /**
-             * Real numbers chosen uniformly from the range [0, w].
-             */
-            double[] b;
-            /**
-             * Hash table.
-             */
-            LinkedList<Item>[] table;
-
-            /**
-             * Constructor.
-             */
-            @SuppressWarnings("unchecked")
-            Hash() {
-                a = new double[k][d];
-                b = new double[k];
-
-                for (int i = 0; i < k; i++) {
-                    for (int j = 0; j < d; j++) {
-                        a[i][j] = GaussianDistribution.getInstance().rand();
-                    }
-
-                    b[i] = MathEx.random(0, w);
-                }
-
-                LinkedList<Item> list = new LinkedList<>();
-                table = (LinkedList<Item>[]) java.lang.reflect.Array.newInstance(list.getClass(), H);
-            }
-
-            /**
-             * Returns the raw hash value of given vector x.
-             * @param x the vector to be hashed.
-             * @param m the m-<i>th</i> hash function to be employed.
-             * @return the raw hash value.
-             */
-            double hash(double[] x, int m) {
-                double r = b[m];
-                for (int j = 0; j < d; j++) {
-                    r += a[m][j] * x[j];
-                }
-                return r / w;
-            }
-
-            /**
-             * Apply hash functions on given vector x.
-             * @param x the vector to be hashed.
-             * @return the bucket of hash table for given vector x.
-             */
-            int hash(double[] x) {
-                long r = 0;
-                for (int i = 0; i < k; i++) {
-                    double ri = hash(x, i);
-                    r += c[i] * (int) Math.floor(ri);
-                }
-
-                int h = (int) (r % P);
-                if (h < 0) {
-                    h += P;
-                }
-
-                return h;
-            }
-
-            /**
-             * Insert an item into the hash table.
-             */
-            void add(Neuron neuron) {
-                int bucket = hash(neuron.w);
-                int i = bucket % H;
-
-                if (table[i] == null) {
-                    table[i] = new LinkedList<>();
-                }
-
-                table[i].add(new Item(bucket, neuron));
-            }
-        }
-        
-        /**
-         * Hash functions.
-         */
-        Hash[] hash;
-        /**
-         * The size of hash table.
-         */
-        int H;
-        /**
-         * The number of random projection hash functions.
-         */
-        int k;
-        /**
-         * The hash function is defined as floor((a * x + b) / w). The value
-         * of w determines the bucket interval.
-         */
-        double w;
-        /**
-         * The random integer used for universal bucket hashing.
-         */
-        int[] c;
-        /**
-         * The prime number in universal bucket hashing.
-         */
-        int P = 2147483647;
-
-        /**
-         * Constructor.
-         * @param L the number of hash tables.
-         * @param k the number of random projection hash functions.
-         * @param w the bucket interval.
-         */
-        LSH(int L, int k, double w) {
-            this(L, k, w, 1017881);
-        }
-
-        /**
-         * Constructor.
-         * @param L the number of hash tables.
-         * @param k the number of random projection hash functions.
-         * @param w the bucket interval.
-         * @param H the number of buckets of hash tables.
-         */
-        LSH(int L, int k, double w, int H) {
-            this.k = k;
-            this.w = w;
-            this.H = H;
-
-            hash = new Hash[L];
-
-            c = new int[k];
-            for (int i = 0; i < c.length; i++) {
-                c[i] = MathEx.randomInt(P);
-            }
-
-            for (int i = 0; i < L; i++) {
-                hash[i] = new Hash();
-            }
-        }
-
-        /**
-         * Insert a neuron to the hash table.
-         */
-        void add(Neuron neuron) {
-            for (int i = 0; i < hash.length; i++) {
-                hash[i].add(neuron);
-            }
-        }
-
-        /**
-         * Remove a neuron to the hash table.
-         */
-        void remove(Neuron neuron) {
-            for (int i = 0; i < hash.length; i++) {
-                int bucket = hash[i].hash(neuron.w);
-
-                LinkedList<Hash.Item> bin = hash[i].table[bucket % H];
-                if (bin != null) {
-                    for (Hash.Item e : bin) {
-                        if (e.bucket == bucket && e.neuron == neuron) {
-                            bin.remove(e);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        /**
-         * Returns the nearest neighbor of x.
-         */
-        Neighbor nearest(double[] x) {
-            Neighbor neighbor = new Neighbor(null, Double.MAX_VALUE);
-
-            for (int i = 0; i < hash.length; i++) {
-                int bucket = hash[i].hash(x);
-                LinkedList<Hash.Item> bin = hash[i].table[bucket % H];
-                if (bin != null) {
-                    for (Hash.Item e : bin) {
-                        if (e.bucket == bucket) {
-                            double distance = MathEx.distance(x, e.neuron.w);
-                            if (distance < neighbor.distance) {
-                                neighbor.distance = distance;
-                                neighbor.neuron = e.neuron;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return neighbor;
-        }
-
-        /**
-         * Returns the k-nearest neighbors of x.
-         */
-        int knn(double[] x, Neighbor[] neighbors) {
-            int hit = 0;
-            HeapSelect<Neighbor> heap = new HeapSelect<>(neighbors);
-
-            for (int i = 0; i < hash.length; i++) {
-                int bucket = hash[i].hash(x);
-                LinkedList<Hash.Item> bin = hash[i].table[bucket % H];
-                if (bin != null) {
-                    for (Hash.Item e : bin) {
-                        if (e.bucket == bucket) {
-                            boolean existed = false;
-                            for (Neighbor n : neighbors) {
-                                if (n != null && e.neuron == n.neuron) {
-                                    existed = true;
-                                    break;
-                                }
-                            }
-
-                            if (!existed) {
-                                //hit++;
-                                double distance = MathEx.distance(x, e.neuron.w);
-                                if (heap.peek() == null || distance < heap.peek().distance) {
-                                    heap.add(new Neighbor(e.neuron, distance));
-                                    hit++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            return hit;
-        }
-    }
-    
-    /**
-     * The dimensionality of signals.
-     */
-    private int d;
+    private int t = 0;
     /**
      * The distance radius to activate a neuron for a given signal.
      */
     private double r;
+    /**
+     * The maximum age of edges.
+     */
+    private int edgeLifetime = 50;
     /**
      * The learning rate to update nearest neuron.
      */
@@ -388,177 +69,134 @@ public class NeuralMap implements VectorQuantizer {
     /**
      * Neurons in the neural network.
      */
-    private LSH lsh;
-    /**
-     * The list of neurons.
-     */
-    private List<Neuron> neurons = new ArrayList<>();
+    private MutableLSH<Neuron> lsh;
 
     /**
      * Constructor.
      * @param d the dimensionality of signals.
+     * @param L the number of hash tables.
+     * @param k the number of random projection hash functions.
      * @param r the distance radius to activate a neuron for a given signal.
      * @param epsBest the learning rate to update activated neuron.
      * @param epsNeighbor the learning rate to update neighbors of activated neuron.
-     * @param L the number of hash tables.
-     * @param k the number of random projection hash functions.
+     * @param edgeLifetime the maximum age of edges.
      */
-    public NeuralMap(int d, double r, double epsBest, double epsNeighbor, int L, int k) {
-        this.d = d;
+    public NeuralMap(int d, int L, int k, double r, double epsBest, double epsNeighbor, int edgeLifetime) {
         this.r = r;
+        this.lsh = new MutableLSH<>(d, L, k, 4 * r);
         this.epsBest = epsBest;
         this.epsNeighbor = epsNeighbor;
-        lsh = new LSH(L, k, 4 * r);
+        this.edgeLifetime = edgeLifetime;
     }
 
     /**
      * Update the network with a new signal.
      */
     public void update(double[] x) {
+        t++;
+
         // Find the nearest (s1) and second nearest (s2) neuron to x.
-        Neighbor[] top2 = new Neighbor[2];
-        int k = lsh.knn(x, top2);
+        Neighbor<double[], Neuron>[] top2 = lsh.knn(x, 2);
 
-        double dist = Double.MAX_VALUE;
-        Neuron neuron = null;
-        if (k == 0) {
-            neuron = new Neuron(x.clone());
-            lsh.add(neuron);
-            neurons.add(neuron);
+        if (top2.length == 0 || top2[0].distance > r) {
+            double[] w = x.clone();
+            Neuron neuron = new Neuron(w);
+            lsh.put(w, neuron);
+
+            if (top2.length > 0) {
+                Neuron s1 = top2[0].value;
+                s1.addEdge(neuron, t);
+                neuron.addEdge(s1, t);
+            }
             return;
-        } else if (k == 1) {
-            dist = top2[0].distance;
+        }
 
-            if (dist <= r) {
-                neuron = top2[0].neuron;
-                neuron.n++;
-                lsh.remove(neuron);
-                for (int i = 0; i < d; i++) {
-                    neuron.w[i] += epsBest * (x[i] - neuron.w[i]);
-                }
-                lsh.add(neuron);
+        // Find the nearest (s1) and second nearest (s2) neuron to x.
+        Neuron s1 = top2[0].value;
+        Neuron s2 = top2.length == 2 ? top2[1].value : null;
 
-            } else {
-                neuron = new Neuron(x.clone());
-                lsh.add(neuron);
-                neurons.add(neuron);
+        // update s1
+        lsh.remove(s1.w, s1);
+        s1.update(x, epsBest);
+        lsh.put(s1.w, s1);
 
-                Neuron second = top2[0].neuron;
-                neuron.neighbors.add(second);
-                second.neighbors.add(neuron);
-            }
-        } else {
-            dist = top2[1].distance;
-            if (dist <= r) {
-                neuron = top2[1].neuron;
-                lsh.remove(neuron);
-                for (int i = 0; i < d; i++) {
-                    neuron.w[i] += epsBest * (x[i] - neuron.w[i]);
-                }
-                lsh.add(neuron);
+        boolean addEdge = true;
+        for (Edge edge : s1.edges) {
+            // Update s1's direct topological neighbors towards x.
+            Neuron neighbor = edge.neighbor;
+            lsh.remove(neighbor.w, neighbor);
+            neighbor.update(x, epsNeighbor);
+            lsh.put(neighbor.w, neighbor);
 
-                Neuron second = top2[0].neuron;
-                second.n++;
-                boolean connected = false;
-                for (Neuron neighbor : neuron.neighbors) {
-                    if (neighbor == second) {
-                        connected = true;
-                        break;
-                    }
-                }
-
-                if (!connected) {
-                    neuron.neighbors.add(second);
-                    second.neighbors.add(neuron);
-                }
-            } else {
-                neuron = new Neuron(x.clone());
-                lsh.add(neuron);
-                neurons.add(neuron);
-
-                Neuron second = top2[1].neuron;
-                neuron.neighbors.add(second);
-                second.neighbors.add(neuron);
+            // Set the age to zero if s1 and s2 are already connected.
+            if (neighbor == s2) {
+                edge.age = t;
+                s2.setEdgeAge(s1, t);
+                addEdge = false;
             }
         }
 
-        // update the neighbors of activated neuron.
-        for (Iterator<Neuron> iter = neuron.neighbors.iterator(); iter.hasNext(); ) {
-            Neuron neighbor = iter.next();
-            lsh.remove(neighbor);
-            for (int i = 0; i < d; i++) {
-                neighbor.w[i] += epsNeighbor * (x[i] - neighbor.w[i]);
-            }
+        // Connect s1 and s2 if they are not neighbor yet.
+        if (addEdge && s2 != null) {
+            s1.addEdge(s2, t);
+            s2.addEdge(s1, t);
 
-            if (MathEx.distance(neuron.w, neighbor.w) > 2 * r) {
-                neighbor.neighbors.remove(neuron);
+            lsh.remove(s2.w, s2);
+            s2.update(x, epsNeighbor);
+            lsh.put(s2.w, s2);
+        }
+
+        // Remove edges with an age larger than the threshold
+        /*
+        for (Iterator<Edge> iter = s1.edges.iterator(); iter.hasNext();) {
+            Edge edge = iter.next();
+            if (t - edge.age > edgeLifetime) {
                 iter.remove();
-            }
 
-            if (!neighbor.neighbors.isEmpty()) {
-                lsh.add(neighbor);
-            } else {
-                neurons.remove(neighbor);
+                Neuron neighbor = edge.neighbor;
+                neighbor.removeEdge(s1);
+                // Remove a neuron if it has no emanating edges
+                if (neighbor.edges.isEmpty()) {
+                    lsh.remove(neighbor.w, neighbor);
+                }
             }
         }
-
-        if (neuron.neighbors.isEmpty()) {
-            lsh.remove(neuron);
-            neurons.remove(neuron);
-        }
+         */
     }
 
     /**
      * Returns the set of neurons.
      */
-    public List<Neuron> neurons() {
-        return neurons;
+    public Neuron[] neurons() {
+        List<Neuron> neurons = lsh.values();
+        return neurons.toArray(new Neuron[neurons.size()]);
     }
     
     /**
-     * Removes neurons with the number of samples less than a given threshold.
-     * The neurons without neighbors will also be removed.
-     * @param minPts neurons will be removed if the number of its points is
-     * less than minPts.
-     * @return the number of neurons after purging.
+     * Removes the edges beyond lifetime and neurons without emanating edges.
      */
-    public int purge(int minPts) {
-        List<Neuron> outliers = new ArrayList<>();
-        for (Neuron neuron : neurons) {
-            if (neuron.n < minPts) {
-                outliers.add(neuron);
+    public void clean() {
+        ArrayList<Neuron> noise = new ArrayList<>();
+        for (Neuron neuron : lsh.values()) {
+            for (Iterator<Edge> iter = neuron.edges.iterator(); iter.hasNext();) {
+                Edge edge = iter.next();
+                if (t - edge.age > edgeLifetime) {
+                    iter.remove();
+                }
+            }
+
+            if (neuron.edges.isEmpty()) {
+                noise.add(neuron);
             }
         }
-        
-        neurons.removeAll(outliers);
-        for (Neuron neuron : neurons) {
-            neuron.neighbors.removeAll(outliers);
+
+        for (Neuron neuron : noise) {
+            lsh.remove(neuron.w, neuron);
         }
-        
-        outliers.clear();
-        for (Neuron neuron : neurons) {
-            if (neuron.neighbors.isEmpty()) {
-                outliers.add(neuron);
-            }
-        }
-        
-        neurons.removeAll(outliers);
-        return neurons.size();
     }
 
     @Override
     public Optional<double[]> quantize(double[] x) {
-        double minDist = Double.MAX_VALUE;
-        double[] w = null;
-
-        for (Neuron neuron : neurons) {
-            double dist = MathEx.squaredDistance(x, neuron.w);
-            if (dist < minDist) {
-                minDist = dist;
-                w = neuron.w;
-            }
-        }
-
-        return Optional.ofNullable(w);
+        return Optional.ofNullable(lsh.nearest(x)).map(neighbor -> neighbor.key);
     }
 }

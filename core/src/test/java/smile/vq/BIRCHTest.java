@@ -82,6 +82,5 @@ public class BIRCHTest {
 
         System.out.format("Test Quantization Error = %.4f%n", error);
         assertEquals(7.3498, error, 1E-4);
-
     }
 }

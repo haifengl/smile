@@ -142,7 +142,7 @@ public class Hash implements Serializable {
      * @param x the vector to be hashed.
      * @return the bucket of hash table for given vector x.
      */
-    int hash(double[] x) {
+    public int hash(double[] x) {
         double[] h = new double[k];
         a.ax(x, h);
 

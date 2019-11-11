@@ -55,28 +55,28 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
     /**
      * The keys of data objects.
      */
-    ArrayList<double[]> keys;
+    protected ArrayList<double[]> keys;
     /**
      * The data objects.
      */
-    ArrayList<E> data;
+    protected ArrayList<E> data;
     /**
      * Hash functions.
      */
-    List<Hash> hash;
+    protected List<Hash> hash;
     /**
      * The size of hash table.
      */
-    int H;
+    protected int H;
     /**
      * The number of random projections per hash value.
      */
-    int k;
+    protected int k;
     /**
      * The width of projection. The hash function is defined as floor((a * x + b) / w). The value
      * of w determines the bucket interval.
      */
-    double w;
+    protected double w;
 
     /**
      * Constructor.

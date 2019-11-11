@@ -19,9 +19,9 @@ package smile.vq;
 
 import java.io.Serializable;
 import java.util.*;
-
-import smile.sort.HeapSelect;
 import smile.math.MathEx;
+import smile.vq.hebb.Edge;
+import smile.vq.hebb.Neuron;
 
 /**
  * Growing Neural Gas. As an extension of Neural Gas, Growing Neural Gas
@@ -52,77 +52,6 @@ import smile.math.MathEx;
  */
 public class GrowingNeuralGas implements VectorQuantizer {
     private static final long serialVersionUID = 2L;
-
-    /**
-     * The neuron vertex in the growing neural gas network.
-     */
-    public static class Neuron implements Serializable {
-        /**
-         * The reference vector.
-         */
-        public final double[] w;
-        /**
-         * The direct connected neighbors.
-         */
-        public final List<Edge> edges;
-        /**
-         * Local error measurement.
-         */
-        public double error;
-
-        /**
-         * Constructor.
-         */
-        public Neuron(double[] w, double error) {
-            this.w = w;
-            this.error = error;
-            this.edges = new LinkedList<>();
-        }
-
-        /** Adds an edge. */
-        public void addEdge(Neuron neighbor) {
-            edges.add(new Edge(neighbor));
-        }
-
-        /** Removes an edge. */
-        public void removeEdge(Neuron neighbor) {
-            for (Iterator<Edge> iter = edges.iterator(); iter.hasNext();) {
-                Edge edge = iter.next();
-                if (edge.neighbor == neighbor) {
-                    iter.remove();
-                    return;
-                }
-            }
-        }
-
-        /** Increments the age of all edges emanating from the neuron. */
-        public void age() {
-            for (Edge edge : edges) {
-                edge.age++;
-            }
-        }
-    }
-
-    /**
-     * Connection between neurons.
-     */
-    public static class Edge implements Serializable {
-        /**
-         * The neighbor neuron.
-         */
-        public final Neuron neighbor;
-        /**
-         * The age of this edges.
-         */
-        public int age = 0;
-
-        /**
-         * Constructor.
-         */
-        public Edge(Neuron neighbor) {
-            this.neighbor = neighbor;
-        }
-    }
 
     /**
      * An utility class for sorting.
@@ -254,49 +183,44 @@ public class GrowingNeuralGas implements VectorQuantizer {
         neurons.stream().parallel().forEach(node -> node.distance(x));
         Collections.sort(neurons);
 
-        Node s1 = neurons.get(0);
-        Node s2 = neurons.get(1);
+        Neuron s1 = neurons.get(0).neuron;
+        Neuron s2 = neurons.get(1).neuron;
 
-        s1.neuron.age();
+        s1.age();
 
         // update s1
-        s1.neuron.error += neurons.get(0).distance;
-        double[] w = s1.neuron.w;
-        for (int i = 0; i < d; i++) {
-            w[i] += epsBest * (x[i] - w[i]);
-        }
+        s1.error += neurons.get(0).distance;
+        s1.update(x, epsBest);
+        // Increase the edge of all edges emanating from s1.
+        s1.age();
 
         boolean addEdge = true;
-        for (Edge edge : s1.neuron.edges) {
+        for (Edge edge : s1.edges) {
             // Update s1's direct topological neighbors towards x.
             Neuron neighbor = edge.neighbor;
-            w = neighbor.w;
-            for (int i = 0; i < d; i++) {
-                w[i] += epsNeighbor * (x[i] - w[i]);
-            }
-
-            // Increase the edge of all edges emanating from s1.
-            edge.age++;
+            neighbor.update(x, epsNeighbor);
 
             // Set the age to zero if s1 and s2 are already connected.
-            if (neighbor == s2.neuron) {
+            if (neighbor == s2) {
                 edge.age = 0;
+                s2.setEdgeAge(s1, 0);
                 addEdge = false;
             }
         }
 
         // Connect s1 and s2 if they are not neighbor yet.
         if (addEdge) {
-            s1.neuron.addEdge(s2.neuron);
-            s2.neuron.addEdge(s1.neuron);
+            s1.addEdge(s2);
+            s2.addEdge(s1);
+            s2.update(x, epsNeighbor);
         }
 
         // Remove edges with an age larger than the threshold
-        for (Iterator<Edge> iter = s1.neuron.edges.iterator(); iter.hasNext();) {
+        for (Iterator<Edge> iter = s1.edges.iterator(); iter.hasNext();) {
             Edge edge = iter.next();
             if (edge.age > edgeLifetime) {
                 iter.remove();
-                edge.neighbor.removeEdge(s1.neuron);
+                edge.neighbor.removeEdge(s1);
                 // Remove a neuron if it has no emanating edges
                 if (edge.neighbor.edges.isEmpty()) {
                     neurons.removeIf(node -> node.neuron == edge.neighbor);
@@ -307,7 +231,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
         // Add a new neuron if the number of input signals processed so far
         // is an integer multiple of lambda.
         if (t % lambda == 0) {
-            // Determine the neuron qith the maximum accumulated error.
+            // Determine the neuron with the maximum accumulated error.
             Neuron q = neurons.get(0).neuron;
             for (Node node : neurons) {
                 if (node.neuron.error > q.error)
@@ -326,7 +250,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
             f.error *= alpha;
 
             // Insert a new neuron halfway between q and f.
-            w = new double[d];
+            double[] w = new double[d];
             for (int i = 0; i < d; i++) {
                 w[i] += (q.w[i] + f.w[i]) / 2;
             }
