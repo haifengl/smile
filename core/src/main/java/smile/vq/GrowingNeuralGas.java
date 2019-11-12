@@ -18,6 +18,7 @@
 package smile.vq;
 
 import java.util.*;
+import smile.sort.HeapSelect;
 import smile.vq.hebb.Edge;
 import smile.vq.hebb.Neuron;
 
@@ -89,6 +90,10 @@ public class GrowingNeuralGas implements VectorQuantizer {
      * Neurons in the neural network.
      */
     private ArrayList<Neuron> neurons = new ArrayList<>();
+    /**
+     * The workspace to find nearest neighbors.
+     */
+    private Neuron[] top2 = new Neuron[2];
 
     /**
      * Constructor.
@@ -130,11 +135,16 @@ public class GrowingNeuralGas implements VectorQuantizer {
         }
 
         // Find the nearest (s1) and second nearest (s2) neuron to x.
-        neurons.stream().parallel().forEach(node -> node.distance(x));
-        Collections.sort(neurons);
+        neurons.stream().parallel().forEach(neuron -> neuron.distance(x));
 
-        Neuron s1 = neurons.get(0);
-        Neuron s2 = neurons.get(1);
+        Arrays.fill(top2, null);
+        HeapSelect<Neuron> heap = new HeapSelect<>(top2);
+        for (Neuron neuron : neurons) {
+            heap.add(neuron);
+        }
+
+        Neuron s1 = top2[1];
+        Neuron s2 = top2[0];
 
         // update s1
         s1.update(x, epsBest);
@@ -236,8 +246,15 @@ public class GrowingNeuralGas implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
-        neurons.stream().parallel().forEach(node -> node.distance(x));
-        Collections.sort(neurons);
-        return neurons.get(0).w;
+        neurons.stream().parallel().forEach(neuron -> neuron.distance(x));
+
+        Neuron bmu = neurons.get(0);
+        for (Neuron neuron : neurons) {
+            if (neuron.distance < bmu.distance) {
+                bmu = neuron;
+            }
+        }
+
+        return bmu.w;
     }
 }

@@ -70,21 +70,21 @@ public class NeuralMapTest {
 
         double error = 0.0;
         for (double[] xi : x) {
-            double[] yi = model.quantize(xi).get();
+            double[] yi = model.quantize(xi);
             error += MathEx.distance(xi, yi);
         }
         error /= x.length;
         System.out.format("Training Quantization Error = %.4f%n", error);
-        assertEquals(6.0678, error, 1E-4);
+        assertEquals(6.0510, error, 1E-4);
 
         error = 0.0;
         for (double[] xi : testx) {
-            double[] yi = model.quantize(xi).get();
+            double[] yi = model.quantize(xi);
             error += MathEx.distance(xi, yi);
         }
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.9454, error, 1E-4);
+        assertEquals(6.9368, error, 1E-4);
     }
 }

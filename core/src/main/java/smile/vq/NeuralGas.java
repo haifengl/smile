@@ -179,7 +179,9 @@ public class NeuralGas implements VectorQuantizer {
     public void update(double[] x) {
         int k = neurons.length;
         int d = x.length;
-        sortNeurons(x);
+        
+        IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
+        QuickSort.sort(dist, neurons);
 
         double rate = alpha.of(t);
         for (int i = 0; i < k; i++) {
@@ -199,13 +201,7 @@ public class NeuralGas implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
-        sortNeurons(x);
-        return neurons[MathEx.whichMin(dist)].w;
-    }
-
-    /** Sorts the neurons by their distances to the input observation. */
-    private void sortNeurons(double[] x) {
         IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
-        QuickSort.sort(dist, neurons);
+        return neurons[MathEx.whichMin(dist)].w;
     }
 }

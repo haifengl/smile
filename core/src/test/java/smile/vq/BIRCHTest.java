@@ -66,7 +66,7 @@ public class BIRCHTest {
 
         double error = 0.0;
         for (double[] xi : x) {
-            double[] yi = model.quantize(xi).get();
+            double[] yi = model.quantize(xi);
             error += MathEx.distance(xi, yi);
         }
         error /= x.length;
@@ -75,7 +75,7 @@ public class BIRCHTest {
 
         error = 0.0;
         for (double[] xi : testx) {
-            double[] yi = model.quantize(xi).get();
+            double[] yi = model.quantize(xi);
             error += MathEx.distance(xi, yi);
         }
         error /= testx.length;

@@ -17,10 +17,8 @@
 
 package smile.vq;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Optional;
+import java.util.*;
+import smile.sort.HeapSelect;
 import smile.vq.hebb.Neuron;
 import smile.vq.hebb.Edge;
 
@@ -70,6 +68,11 @@ public class NeuralMap implements VectorQuantizer {
      */
     private ArrayList<Neuron> neurons = new ArrayList<>();
     /**
+     * The workspace to find nearest neighbors.
+     */
+    private Neuron[] top2 = new Neuron[2];
+
+    /**
      * Constructor.
      * @param r the distance threshold to activate the nearest neuron of a signal.
      * @param epsBest the learning rate to update activated neuron.
@@ -96,10 +99,15 @@ public class NeuralMap implements VectorQuantizer {
 
         // Find the nearest (s1) and second nearest (s2) neuron to x.
         neurons.stream().parallel().forEach(neuron -> neuron.distance(x));
-        Collections.sort(neurons);
 
-        Neuron s1 = neurons.get(0);
-        Neuron s2 = neurons.get(1);
+        Arrays.fill(top2, null);
+        HeapSelect<Neuron> heap = new HeapSelect<>(top2);
+        for (Neuron neuron : neurons) {
+            heap.add(neuron);
+        }
+
+        Neuron s1 = top2[1];
+        Neuron s2 = top2[0];
 
         if (s1.distance > r) {
             Neuron neuron = new Neuron(x.clone());
@@ -207,7 +215,14 @@ public class NeuralMap implements VectorQuantizer {
     @Override
     public double[] quantize(double[] x) {
         neurons.stream().parallel().forEach(node -> node.distance(x));
-        Collections.sort(neurons);
-        return neurons.get(0).w;
+
+        Neuron bmu = neurons.get(0);
+        for (Neuron neuron : neurons) {
+            if (neuron.distance < bmu.distance) {
+                bmu = neuron;
+            }
+        }
+
+        return bmu.w;
     }
 }

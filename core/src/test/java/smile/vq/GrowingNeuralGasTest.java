@@ -69,7 +69,7 @@ public class GrowingNeuralGasTest {
 
         double error = 0.0;
         for (double[] xi : x) {
-            double[] yi = model.quantize(xi).get();
+            double[] yi = model.quantize(xi);
             error += MathEx.distance(xi, yi);
         }
         error /= x.length;
@@ -78,7 +78,7 @@ public class GrowingNeuralGasTest {
 
         error = 0.0;
         for (double[] xi : testx) {
-            double[] yi = model.quantize(xi).get();
+            double[] yi = model.quantize(xi);
             error += MathEx.distance(xi, yi);
         }
         error /= testx.length;
