@@ -41,9 +41,9 @@ public class Neuron implements Comparable<Neuron>, Serializable {
      */
     public double distance = Double.MAX_VALUE;
     /**
-     * The local error measurement.
+     * The local counter variable (e.g. the accumulated error, freshness, etc.)
      */
-    public double error;
+    public double counter;
 
     /**
      * Constructor.
@@ -55,9 +55,9 @@ public class Neuron implements Comparable<Neuron>, Serializable {
     /**
      * Constructor.
      */
-    public Neuron(double[] w, double error) {
+    public Neuron(double[] w, double counter) {
         this.w = w;
-        this.error = error;
+        this.counter = counter;
         this.edges = new LinkedList<>();
     }
 

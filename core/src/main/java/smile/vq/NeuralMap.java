@@ -62,22 +62,27 @@ public class NeuralMap implements VectorQuantizer {
      */
     private double epsNeighbor = 0.006;
     /**
+     * Decrease the freshness of all neurons by multiply them with beta.
+     */
+    private double beta = 0.995;
+    /**
      * Neurons in the neural network.
      */
     private ArrayList<Neuron> neurons = new ArrayList<>();
     /**
      * Constructor.
-     * @param d the dimensionality of signals.
-     * @param r the distance radius to activate a neuron for a given signal.
+     * @param r the distance threshold to activate the nearest neuron of a signal.
      * @param epsBest the learning rate to update activated neuron.
      * @param epsNeighbor the learning rate to update neighbors of activated neuron.
      * @param edgeLifetime the maximum age of edges.
+     * @param beta decrease the freshness of all neurons by multiply them with beta.
      */
-    public NeuralMap(int d, double r, double epsBest, double epsNeighbor, int edgeLifetime) {
+    public NeuralMap(double r, double epsBest, double epsNeighbor, int edgeLifetime, double beta) {
         this.r = r;
         this.epsBest = epsBest;
         this.epsNeighbor = epsNeighbor;
         this.edgeLifetime = edgeLifetime;
+        this.beta = beta;
     }
 
     @Override
@@ -99,17 +104,24 @@ public class NeuralMap implements VectorQuantizer {
         if (s1.distance > r) {
             Neuron neuron = new Neuron(x.clone());
             neurons.add(neuron);
+            return;
+        }
 
-            s1.addEdge(neuron, t);
-            neuron.addEdge(s1, t);
+        if (s2.distance > r) {
+            Neuron neuron = new Neuron(x.clone());
+            neurons.add(neuron);
 
-            s2.addEdge(neuron, t);
-            neuron.addEdge(s2, t);
+            s1.addEdge(neuron);
+            neuron.addEdge(s1);
             return;
         }
 
         // update s1
         s1.update(x, epsBest);
+        // Increase the freshness of neuron.
+        s1.counter += 1;
+        // Increase the edge of all edges emanating from s1.
+        s1.age();
 
         boolean addEdge = true;
         for (Edge edge : s1.edges) {
@@ -119,23 +131,23 @@ public class NeuralMap implements VectorQuantizer {
 
             // Set the age to zero if s1 and s2 are already connected.
             if (neighbor == s2) {
-                edge.age = t;
-                s2.setEdgeAge(s1, t);
+                edge.age = 0;
+                s2.setEdgeAge(s1, 0);
                 addEdge = false;
             }
         }
 
         // Connect s1 and s2 if they are not neighbor yet.
         if (addEdge) {
-            s1.addEdge(s2, t);
-            s2.addEdge(s1, t);
+            s1.addEdge(s2);
+            s2.addEdge(s1);
             s2.update(x, epsNeighbor);
         }
 
         // Remove edges with an age larger than the threshold
         for (Iterator<Edge> iter = s1.edges.iterator(); iter.hasNext();) {
             Edge edge = iter.next();
-            if (t - edge.age > edgeLifetime) {
+            if (edge.age > edgeLifetime) {
                 iter.remove();
 
                 Neuron neighbor = edge.neighbor;
@@ -145,6 +157,11 @@ public class NeuralMap implements VectorQuantizer {
                     neurons.removeIf(neuron -> neuron == edge.neighbor);
                 }
             }
+        }
+
+        // Decrease all error variables.
+        for (Neuron neuron : neurons) {
+            neuron.counter *= beta;
         }
     }
 
@@ -156,15 +173,26 @@ public class NeuralMap implements VectorQuantizer {
     }
     
     /**
-     * Removes the edges beyond lifetime and neurons without emanating edges.
+     * Removes staled neurons and the edges beyond lifetime.
+     * Neurons without emanating edges will be removed too.
+     * @param eps the freshness threshold of neurons. It should
+     *            be a small value (e.g. 1E-7).
      */
-    public void clean() {
+    public void clear(double eps) {
         ArrayList<Neuron> noise = new ArrayList<>();
         for (Neuron neuron : neurons) {
-            for (Iterator<Edge> iter = neuron.edges.iterator(); iter.hasNext();) {
-                Edge edge = iter.next();
-                if (t - edge.age > edgeLifetime) {
-                    iter.remove();
+            if (neuron.counter < eps) {
+                for (Edge edge : neuron.edges) {
+                    edge.neighbor.removeEdge(neuron);
+                }
+                neuron.edges.clear();
+            } else {
+                for (Iterator<Edge> iter = neuron.edges.iterator(); iter.hasNext(); ) {
+                    Edge edge = iter.next();
+                    if (edge.age > edgeLifetime) {
+                        edge.neighbor.removeEdge(neuron);
+                        iter.remove();
+                    }
                 }
             }
 

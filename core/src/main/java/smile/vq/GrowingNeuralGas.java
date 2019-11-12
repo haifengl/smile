@@ -82,7 +82,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
      */
     private double alpha = 0.5;
     /**
-     * Decrease all error variables by multiply them with de.
+     * Decrease all error variables by multiply them with beta.
      */
     private double beta = 0.995;
     /**
@@ -120,14 +120,6 @@ public class GrowingNeuralGas implements VectorQuantizer {
         this.beta = beta;
     }
 
-    /**
-     * Returns the neurons in the network.
-     * @return the neurons in the network. 
-     */
-    public Neuron[] neurons() {
-        return neurons.toArray(new Neuron[neurons.size()]);
-    }
-
     @Override
     public void update(double[] x) {
         t++;
@@ -144,11 +136,10 @@ public class GrowingNeuralGas implements VectorQuantizer {
         Neuron s1 = neurons.get(0);
         Neuron s2 = neurons.get(1);
 
-        s1.age();
-
         // update s1
-        s1.error += s1.distance * s1.distance;
         s1.update(x, epsBest);
+        // update local counter of squared distance
+        s1.counter += s1.distance * s1.distance;
         // Increase the edge of all edges emanating from s1.
         s1.age();
 
@@ -178,10 +169,12 @@ public class GrowingNeuralGas implements VectorQuantizer {
             Edge edge = iter.next();
             if (edge.age > edgeLifetime) {
                 iter.remove();
-                edge.neighbor.removeEdge(s1);
+
+                Neuron neighbor = edge.neighbor;
+                neighbor.removeEdge(s1);
                 // Remove a neuron if it has no emanating edges
-                if (edge.neighbor.edges.isEmpty()) {
-                    neurons.removeIf(neuron -> neuron == edge.neighbor);
+                if (neighbor.edges.isEmpty()) {
+                    neurons.removeIf(neuron -> neuron == neighbor);
                 }
             }
         }
@@ -192,20 +185,22 @@ public class GrowingNeuralGas implements VectorQuantizer {
             // Determine the neuron with the maximum accumulated error.
             Neuron q = neurons.get(0);
             for (Neuron neuron : neurons) {
-                if (neuron.error > q.error)
+                if (neuron.counter > q.counter) {
                     q = neuron;
+                }
             }
 
             // Find the neighbor of q with the largest error variable.
             Neuron f = q.edges.get(0).neighbor;
             for (Edge edge : q.edges) {
-                if (edge.neighbor.error > f.error)
+                if (edge.neighbor.counter > f.counter) {
                     f = edge.neighbor;
+                }
             }
 
             // Decrease the error variables of q and f.
-            q.error *= alpha;
-            f.error *= alpha;
+            q.counter *= alpha;
+            f.counter *= alpha;
 
             // Insert a new neuron halfway between q and f.
             double[] w = new double[d];
@@ -213,7 +208,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
                 w[i] += (q.w[i] + f.w[i]) / 2;
             }
 
-            Neuron r = new Neuron(w, q.error);
+            Neuron r = new Neuron(w, q.counter);
             neurons.add(r);
 
             // Remove the connection (q, f) and add connections (q, r) and (r, f)
@@ -227,8 +222,16 @@ public class GrowingNeuralGas implements VectorQuantizer {
 
         // Decrease all error variables.
         for (Neuron neuron : neurons) {
-            neuron.error *= beta;
+            neuron.counter *= beta;
         }
+    }
+
+    /**
+     * Returns the neurons in the network.
+     * @return the neurons in the network.
+     */
+    public Neuron[] neurons() {
+        return neurons.toArray(new Neuron[neurons.size()]);
     }
 
     @Override
